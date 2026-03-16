@@ -1,0 +1,1177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>10 Days in Kenya: The Ultimate First-Timer's Itinerary — Klickenya</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300;12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=Lora:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+
+/* ═══════════ TOKENS ═══════════════════════════════════════════ */
+:root {
+  --canvas:    #FAFAF8;
+  --white:     #FFFFFF;
+  --surface:   #F4F2EE;
+  --surface2:  #EDEAE4;
+  --border:    #E4E0D8;
+  --border2:   #D5D0C7;
+  --text:      #18160F;
+  --text2:     #5C574E;
+  --text3:     #9B9589;
+  --amber:     #E8A020;
+  --amber-dim: rgba(232,160,32,.11);
+  --amber-glow:rgba(232,160,32,.28);
+  --dark:      #18160F;
+  --teal:      #0D7377;
+  --r-sm:  10px;
+  --r-md:  16px;
+  --r-lg:  22px;
+  --r-xl:  30px;
+  --sh-xs: 0 1px 4px rgba(0,0,0,.05);
+  --sh-sm: 0 2px 10px rgba(0,0,0,.06), 0 0 0 1px rgba(0,0,0,.03);
+  --sh-md: 0 8px 28px rgba(0,0,0,.08), 0 0 0 1px rgba(0,0,0,.03);
+  --sh-lg: 0 20px 50px rgba(0,0,0,.10), 0 0 0 1px rgba(0,0,0,.03);
+}
+
+/* ═══════════ RESET ════════════════════════════════════════════ */
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;font-size:16px;}
+body{
+  font-family:'Geist',sans-serif;
+  background:var(--canvas);
+  color:var(--text);
+  overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;
+  line-height:1;
+}
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px;}
+img{display:block;max-width:100%;}
+a{text-decoration:none;color:inherit;}
+button{font-family:'Geist',sans-serif;cursor:pointer;border:none;background:none;}
+
+/* ═══════════ PROGRESS BAR ═════════════════════════════════════ */
+#progress-bar {
+  position:fixed;top:0;left:0;z-index:500;
+  height:3px;width:0%;
+  background:linear-gradient(90deg, var(--amber), #F5C842, var(--amber));
+  background-size:200% 100%;
+  animation:shimmer 2s linear infinite;
+  transition:width .1s linear;
+}
+@keyframes shimmer{to{background-position:200% center;}}
+
+/* ═══════════ NAV ══════════════════════════════════════════════ */
+#nav {
+  position:fixed;top:0;left:0;right:0;z-index:400;height:62px;
+  display:flex;align-items:center;padding:0 40px;
+  background:rgba(250,250,248,.96);
+  backdrop-filter:blur(20px) saturate(180%);
+  border-bottom:1px solid var(--border);
+  transition:box-shadow .3s;
+}
+#nav.scrolled{box-shadow:0 2px 20px rgba(0,0,0,.06);}
+.nav-inner{width:100%;display:flex;align-items:center;justify-content:space-between;gap:16px;}
+.nav-logo{display:flex;align-items:center;gap:9px;}
+.nav-logo-icon{width:30px;height:30px;border-radius:8px;background:var(--text);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.nav-logo-name{font-family:'Bricolage Grotesque',sans-serif;font-size:17px;font-weight:700;color:var(--text);letter-spacing:-.03em;}
+.nav-back{display:flex;align-items:center;gap:6px;padding:8px 14px;border-radius:50px;font-size:13.5px;font-weight:600;color:var(--text2);border:1px solid var(--border);transition:all .2s;}
+.nav-back:hover{background:var(--surface);}
+.nav-right{display:flex;align-items:center;gap:8px;}
+.nav-share{display:flex;align-items:center;gap:6px;padding:8px 16px;border-radius:50px;font-size:13.5px;font-weight:600;color:var(--text2);border:1px solid var(--border);transition:all .2s;}
+.nav-share:hover{background:var(--surface);}
+.nav-cta{padding:8px 18px;border-radius:50px;font-size:13.5px;font-weight:700;background:var(--text);color:#fff;transition:opacity .2s;}
+.nav-cta:hover{opacity:.85;}
+
+/* ═══════════ HERO ═════════════════════════════════════════════ */
+.post-hero {
+  position:relative;
+  height:88vh;min-height:580px;
+  margin-top:62px;
+  overflow:hidden;
+  background:var(--dark);
+}
+.post-hero-img {
+  width:100%;height:100%;object-fit:cover;
+  opacity:.75;
+  transform:scale(1.04);
+  transition:transform 8s ease;
+}
+.post-hero-img.loaded{transform:scale(1);}
+.post-hero-overlay {
+  position:absolute;inset:0;
+  background:
+    linear-gradient(to bottom, rgba(24,22,15,.15) 0%, rgba(24,22,15,0) 30%, rgba(24,22,15,.6) 65%, rgba(24,22,15,.95) 100%);
+}
+.post-hero-content {
+  position:absolute;bottom:0;left:0;right:0;
+  padding:0 48px 52px;
+  max-width:900px;
+}
+
+/* category chip */
+.post-category {
+  display:inline-flex;align-items:center;gap:8px;
+  background:rgba(232,160,32,.18);
+  border:1px solid rgba(232,160,32,.35);
+  border-radius:50px;padding:5px 14px;
+  font-size:12px;font-weight:800;
+  color:#F5C842;letter-spacing:.06em;text-transform:uppercase;
+  margin-bottom:18px;
+}
+.cat-dot{width:5px;height:5px;border-radius:50%;background:var(--amber);}
+
+.post-title {
+  font-family:'Bricolage Grotesque',sans-serif;
+  font-size:clamp(36px,5.5vw,72px);
+  font-weight:800;color:#fff;
+  letter-spacing:-.04em;line-height:1.0;
+  margin-bottom:20px;
+}
+.post-subtitle {
+  font-family:'Lora',serif;
+  font-size:clamp(16px,2vw,21px);
+  color:rgba(255,255,255,.65);
+  line-height:1.6;font-style:italic;
+  margin-bottom:28px;max-width:620px;
+}
+.post-meta-row {
+  display:flex;align-items:center;gap:20px;flex-wrap:wrap;
+}
+.post-author {
+  display:flex;align-items:center;gap:10px;
+}
+.author-av {
+  width:36px;height:36px;border-radius:50%;overflow:hidden;
+  background:linear-gradient(135deg,var(--amber),var(--teal));
+  border:2px solid rgba(255,255,255,.3);
+  display:flex;align-items:center;justify-content:center;
+  font-weight:800;color:#fff;font-size:13px;flex-shrink:0;
+}
+.author-name{font-size:13.5px;font-weight:700;color:#fff;}
+.author-role{font-size:12px;color:rgba(255,255,255,.45);}
+.post-meta-sep{width:1px;height:16px;background:rgba(255,255,255,.2);}
+.post-meta-item{font-size:13px;color:rgba(255,255,255,.45);}
+
+/* scroll hint */
+.scroll-hint {
+  position:absolute;bottom:24px;right:48px;
+  display:flex;flex-direction:column;align-items:center;gap:6px;
+  opacity:.5;animation:float 2.5s ease infinite;
+}
+@keyframes float{0%,100%{transform:translateY(0);}50%{transform:translateY(-6px);}}
+.scroll-hint span{font-size:11px;font-weight:600;color:#fff;letter-spacing:.06em;text-transform:uppercase;}
+
+/* ═══════════ ARTICLE LAYOUT ═══════════════════════════════════ */
+.article-wrap {
+  max-width:1280px;margin:0 auto;
+  padding:72px 48px 100px;
+  display:grid;
+  grid-template-columns:1fr 320px;
+  gap:72px;
+  align-items:start;
+}
+.article-main{min-width:0;}
+
+/* ═══════════ INTRO SECTION ════════════════════════════════════ */
+.intro-block {
+  border-left:3px solid var(--amber);
+  padding:0 0 0 24px;
+  margin-bottom:48px;
+}
+.intro-block p {
+  font-family:'Lora',serif;
+  font-size:20px;line-height:1.75;
+  color:var(--text2);font-style:italic;
+}
+
+/* ═══════════ QUICK FACTS CARD ═════════════════════════════════ */
+.qf-card {
+  background:var(--dark);
+  border-radius:var(--r-xl);
+  padding:32px;
+  margin:40px 0;
+  position:relative;overflow:hidden;
+}
+.qf-card-bg{
+  position:absolute;inset:0;
+  background:radial-gradient(ellipse at 80% 20%,rgba(232,160,32,.12),transparent 60%),
+             radial-gradient(ellipse at 20% 80%,rgba(13,115,119,.08),transparent 60%);
+}
+.qf-card-inner{position:relative;z-index:1;}
+.qf-card-title{
+  font-family:'Bricolage Grotesque',sans-serif;
+  font-size:13px;font-weight:800;
+  letter-spacing:.08em;text-transform:uppercase;
+  color:var(--amber);margin-bottom:20px;
+}
+.qf-grid {
+  display:grid;grid-template-columns:repeat(3,1fr);
+  gap:16px;
+}
+.qf-item{padding:16px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:var(--r-md);}
+.qf-icon{font-size:22px;margin-bottom:8px;}
+.qf-label{font-size:11px;font-weight:700;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;}
+.qf-val{font-size:15px;font-weight:700;color:#fff;}
+
+/* ═══════════ BODY TYPOGRAPHY ══════════════════════════════════ */
+.body-text{
+  font-family:'Lora',serif;
+  font-size:18px;line-height:1.8;
+  color:var(--text2);
+  margin-bottom:24px;
+}
+.body-text strong{color:var(--text);font-weight:700;}
+.body-text a{color:var(--text);border-bottom:1.5px solid var(--amber);padding-bottom:1px;transition:color .2s;}
+.body-text a:hover{color:var(--amber);}
+
+/* section headings */
+.section-anchor{
+  position:relative;
+  font-family:'Bricolage Grotesque',sans-serif;
+  font-size:clamp(26px,3vw,38px);
+  font-weight:800;color:var(--text);
+  letter-spacing:-.03em;line-height:1.15;
+  margin:56px 0 20px;
+  padding-top:8px;
+}
+.section-anchor::before{
+  content:'';
+  display:block;
+  height:3px;width:32px;
+  background:var(--amber);
+  border-radius:2px;
+  margin-bottom:16px;
+}
+.subsection-title{
+  font-family:'Bricolage Grotesque',sans-serif;
+  font-size:22px;font-weight:700;
+  color:var(--text);letter-spacing:-.02em;
+  margin:36px 0 14px;
+}
+
+/* ═══════════ PULL QUOTE ════════════════════════════════════════ */
+.pull-quote {
+  margin:48px 0;
+  padding:32px 36px;
+  border-radius:var(--r-xl);
+  background:var(--surface);
+  border:1px solid var(--border);
+  position:relative;
+  overflow:hidden;
+}
+.pull-quote::before{
+  content:'\201C';
+  position:absolute;top:-20px;left:24px;
+  font-family:'Lora',serif;font-size:140px;font-weight:700;
+  color:var(--amber);opacity:.15;line-height:1;
+}
+.pull-quote p {
+  font-family:'Lora',serif;
+  font-size:22px;line-height:1.65;
+  color:var(--text);font-style:italic;
+  font-weight:500;position:relative;z-index:1;
+}
+.pull-quote cite {
+  display:block;margin-top:14px;
+  font-family:'Geist',sans-serif;
+  font-size:13px;font-weight:700;
+  color:var(--text3);letter-spacing:.02em;
+  font-style:normal;
+}
+
+/* ═══════════ TIP CARD ══════════════════════════════════════════ */
+.tip-card {
+  margin:36px 0;
+  padding:22px 24px;
+  border-radius:var(--r-lg);
+  background:var(--amber-dim);
+  border:1.5px solid rgba(232,160,32,.2);
+  display:flex;gap:14px;align-items:flex-start;
+}
+.tip-icon{font-size:20px;flex-shrink:0;margin-top:2px;}
+.tip-label{font-size:11px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--amber);margin-bottom:6px;}
+.tip-text{font-size:14.5px;color:var(--text2);line-height:1.65;}
+.tip-text strong{color:var(--text);}
+
+.tip-card.warning{background:rgba(220,38,38,.06);border-color:rgba(220,38,38,.2);}
+.tip-card.warning .tip-icon{filter:none;}
+.tip-card.warning .tip-label{color:#DC2626;}
+
+.tip-card.teal{background:rgba(13,115,119,.08);border-color:rgba(13,115,119,.2);}
+.tip-card.teal .tip-label{color:var(--teal);}
+
+/* ═══════════ DAY CARD ══════════════════════════════════════════ */
+.day-card {
+  margin:32px 0;
+  border:1px solid var(--border);
+  border-radius:var(--r-xl);
+  overflow:hidden;
+  transition:box-shadow .25s;
+}
+.day-card:hover{box-shadow:var(--sh-md);}
+.day-card-header {
+  display:flex;align-items:center;gap:0;
+  cursor:pointer;
+  background:var(--white);
+  transition:background .2s;
+}
+.day-card-header:hover{background:var(--surface);}
+.day-number {
+  width:80px;flex-shrink:0;
+  padding:22px 20px;
+  background:var(--dark);
+  text-align:center;
+}
+.day-num-label{font-size:9.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.35);margin-bottom:4px;}
+.day-num-val{
+  font-family:'Bricolage Grotesque',sans-serif;
+  font-size:28px;font-weight:800;color:#fff;
+  line-height:1;letter-spacing:-.03em;
+}
+.day-card-info{flex:1;padding:22px 24px;}
+.day-card-location{
+  font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--amber);margin-bottom:4px;
+}
+.day-card-title{
+  font-family:'Bricolage Grotesque',sans-serif;
+  font-size:18px;font-weight:700;color:var(--text);letter-spacing:-.02em;
+}
+.day-card-meta{font-size:13px;color:var(--text3);margin-top:4px;}
+.day-card-chevron{padding:22px 20px;flex-shrink:0;transition:transform .3s;}
+.day-card.open .day-card-chevron{transform:rotate(180deg);}
+.day-card-body{
+  padding:0 24px;max-height:0;overflow:hidden;
+  transition:max-height .4s ease,padding .4s ease;
+  background:var(--white);border-top:0px solid var(--border);
+}
+.day-card.open .day-card-body{
+  max-height:600px;padding:24px 24px 28px;
+  border-top:1px solid var(--border);
+}
+.day-timeline{display:flex;flex-direction:column;gap:0;}
+.dt-item{display:flex;gap:16px;padding:12px 0;}
+.dt-time{
+  flex-shrink:0;font-size:12px;font-weight:700;
+  color:var(--amber);min-width:65px;padding-top:1px;
+}
+.dt-content{}
+.dt-title{font-size:14.5px;font-weight:700;color:var(--text);margin-bottom:2px;}
+.dt-desc{font-size:13.5px;color:var(--text2);line-height:1.6;}
+.dt-badge{
+  display:inline-flex;align-items:center;gap:4px;
+  background:var(--surface2);border-radius:50px;
+  padding:2px 9px;font-size:11px;font-weight:700;color:var(--text2);
+  margin-top:5px;
+}
+
+/* day cost summary */
+.day-cost{
+  display:flex;gap:12px;flex-wrap:wrap;margin-top:16px;
+  padding-top:16px;border-top:1px solid var(--border);
+}
+.cost-pill{
+  padding:5px 13px;border-radius:50px;
+  font-size:12px;font-weight:700;
+  background:var(--surface);border:1px solid var(--border);color:var(--text2);
+}
+
+/* ═══════════ PHOTO ROW ═════════════════════════════════════════ */
+.photo-row{
+  display:grid;gap:10px;
+  margin:40px 0;
+}
+.photo-row.cols-2{grid-template-columns:1fr 1fr;}
+.photo-row.cols-3{grid-template-columns:2fr 1fr 1fr;}
+.photo-row.cols-3-rev{grid-template-columns:1fr 1fr 2fr;}
+.photo-cell{
+  border-radius:var(--r-lg);overflow:hidden;
+  background:var(--surface2);
+}
+.photo-cell img{
+  width:100%;height:100%;object-fit:cover;
+  display:block;transition:transform .6s ease;
+}
+.photo-cell:hover img{transform:scale(1.04);}
+.photo-cell.tall{aspect-ratio:3/4;}
+.photo-cell.wide{aspect-ratio:16/9;}
+.photo-cell.square{aspect-ratio:1;}
+.photo-caption{
+  font-size:12.5px;color:var(--text3);
+  margin-top:10px;font-style:italic;text-align:center;
+}
+
+/* ═══════════ STAT CALLOUT ══════════════════════════════════════ */
+.stat-row {
+  display:grid;grid-template-columns:repeat(3,1fr);
+  gap:16px;margin:40px 0;
+}
+.stat-box{
+  padding:24px;border-radius:var(--r-lg);
+  border:1px solid var(--border);background:var(--white);
+  text-align:center;
+  transition:box-shadow .25s,transform .25s;
+}
+.stat-box:hover{box-shadow:var(--sh-sm);transform:translateY(-2px);}
+.stat-num{
+  font-family:'Bricolage Grotesque',sans-serif;
+  font-size:36px;font-weight:800;
+  color:var(--text);letter-spacing:-.04em;line-height:1;
+  margin-bottom:6px;
+}
+.stat-label{font-size:13px;color:var(--text2);}
+
+/* ═══════════ BUDGET TABLE ══════════════════════════════════════ */
+.budget-table{
+  width:100%;border-collapse:collapse;
+  margin:24px 0;border-radius:var(--r-lg);overflow:hidden;
+  border:1px solid var(--border);
+}
+.budget-table thead{background:var(--dark);}
+.budget-table thead th{
+  padding:14px 18px;text-align:left;
+  font-size:11.5px;font-weight:800;
+  letter-spacing:.06em;text-transform:uppercase;
+  color:rgba(255,255,255,.5);
+}
+.budget-table tbody tr{border-bottom:1px solid var(--border);}
+.budget-table tbody tr:last-child{border-bottom:none;}
+.budget-table tbody tr:nth-child(even){background:var(--surface);}
+.budget-table tbody td{padding:13px 18px;font-size:14.5px;color:var(--text2);}
+.budget-table tbody td:first-child{font-weight:600;color:var(--text);}
+.budget-table tbody td:last-child{font-weight:700;color:var(--text);}
+.budget-table tfoot td{
+  padding:14px 18px;background:var(--amber-dim);
+  font-size:15px;font-weight:800;color:var(--text);
+  border-top:2px solid rgba(232,160,32,.2);
+}
+
+/* ═══════════ PACKING LIST ══════════════════════════════════════ */
+.packing-grid{
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:10px;margin-top:16px;
+}
+.pack-item{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 14px;border-radius:var(--r-md);
+  background:var(--surface);border:1px solid var(--border);
+  font-size:14px;color:var(--text2);cursor:pointer;
+  transition:background .2s;
+  user-select:none;
+}
+.pack-item:hover{background:var(--surface2);}
+.pack-item.checked{background:rgba(13,115,119,.08);border-color:rgba(13,115,119,.2);color:var(--text);text-decoration:line-through;text-decoration-color:var(--teal);}
+.pack-check{
+  width:18px;height:18px;border-radius:5px;border:1.5px solid var(--border2);
+  flex-shrink:0;display:flex;align-items:center;justify-content:center;
+  transition:all .2s;
+}
+.pack-item.checked .pack-check{background:var(--teal);border-color:var(--teal);}
+.pack-icon{font-size:16px;flex-shrink:0;}
+.pack-progress{
+  height:4px;background:var(--border);border-radius:2px;
+  margin-top:14px;overflow:hidden;
+}
+.pack-progress-fill{height:100%;background:var(--teal);border-radius:2px;transition:width .4s ease;}
+.pack-progress-label{font-size:12.5px;color:var(--text3);margin-top:6px;font-weight:500;}
+
+/* ═══════════ LISTING CARDS (sidebar + inline) ═════════════════ */
+.listing-card-inline{
+  display:flex;gap:14px;align-items:center;
+  padding:14px;border-radius:var(--r-lg);
+  border:1px solid var(--border);background:var(--white);
+  margin:10px 0;transition:box-shadow .2s,transform .2s;cursor:pointer;
+}
+.listing-card-inline:hover{box-shadow:var(--sh-sm);transform:translateY(-2px);}
+.lc-img{width:68px;height:68px;border-radius:var(--r-md);overflow:hidden;flex-shrink:0;background:var(--surface2);}
+.lc-img img{width:100%;height:100%;object-fit:cover;}
+.lc-info{flex:1;min-width:0;}
+.lc-type{font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--amber);margin-bottom:3px;}
+.lc-name{font-size:14px;font-weight:700;color:var(--text);margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.lc-meta{font-size:12.5px;color:var(--text3);}
+.lc-price{flex-shrink:0;text-align:right;}
+.lc-price .val{font-family:'Bricolage Grotesque',sans-serif;font-size:16px;font-weight:800;color:var(--text);display:block;}
+.lc-price .unit{font-size:11px;color:var(--text3);}
+.lc-btn{
+  flex-shrink:0;padding:7px 14px;border-radius:50px;
+  background:var(--dark);color:#fff;font-size:12.5px;font-weight:700;
+  white-space:nowrap;transition:opacity .2s;
+}
+.lc-btn:hover{opacity:.8;}
+
+/* ═══════════ SHARE SECTION ════════════════════════════════════ */
+.share-section{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:24px 28px;
+  border:1px solid var(--border);border-radius:var(--r-xl);
+  background:var(--surface);
+  margin:56px 0 0;flex-wrap:wrap;gap:16px;
+}
+.share-text h3{font-family:'Bricolage Grotesque',sans-serif;font-size:18px;font-weight:700;letter-spacing:-.02em;margin-bottom:4px;}
+.share-text p{font-size:13.5px;color:var(--text2);}
+.share-btns{display:flex;gap:8px;flex-wrap:wrap;}
+.share-btn{
+  padding:9px 16px;border-radius:50px;
+  font-size:13px;font-weight:700;
+  border:1.5px solid var(--border);color:var(--text);
+  display:flex;align-items:center;gap:6px;
+  transition:all .2s;
+}
+.share-btn:hover{background:var(--white);box-shadow:var(--sh-xs);}
+
+/* author bio */
+.author-bio{
+  display:flex;gap:20px;align-items:flex-start;
+  padding:28px;border-radius:var(--r-xl);
+  background:var(--white);border:1px solid var(--border);
+  margin-top:20px;
+}
+.bio-av{
+  width:60px;height:60px;border-radius:50%;flex-shrink:0;
+  background:linear-gradient(135deg,var(--amber),var(--teal));
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Bricolage Grotesque',sans-serif;font-size:22px;font-weight:800;color:#fff;
+}
+.bio-name{font-family:'Bricolage Grotesque',sans-serif;font-size:18px;font-weight:700;letter-spacing:-.02em;margin-bottom:4px;}
+.bio-role{font-size:12.5px;color:var(--amber);font-weight:700;margin-bottom:10px;letter-spacing:.02em;}
+.bio-text{font-size:14px;color:var(--text2);line-height:1.65;}
+
+/* ═══════════ SIDEBAR ══════════════════════════════════════════ */
+.sidebar{position:sticky;top:80px;display:flex;flex-direction:column;gap:20px;}
+
+/* TOC */
+.toc-card{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:var(--r-xl);padding:24px;
+  box-shadow:var(--sh-xs);
+}
+.toc-title{font-size:11.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);margin-bottom:16px;}
+.toc-list{list-style:none;display:flex;flex-direction:column;gap:2px;}
+.toc-item{
+  display:flex;align-items:center;gap:10px;
+  padding:9px 12px;border-radius:var(--r-md);
+  font-size:13.5px;font-weight:500;color:var(--text2);
+  cursor:pointer;transition:all .2s;
+}
+.toc-item:hover{background:var(--surface);color:var(--text);}
+.toc-item.active{background:var(--amber-dim);color:var(--text);font-weight:700;}
+.toc-num{
+  font-size:10px;font-weight:800;min-width:20px;height:20px;
+  border-radius:50%;background:var(--surface2);
+  display:flex;align-items:center;justify-content:center;
+  color:var(--text3);flex-shrink:0;transition:all .2s;
+}
+.toc-item.active .toc-num{background:var(--amber);color:#fff;}
+
+/* Read time */
+.read-meta{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 16px;background:var(--surface);border-radius:var(--r-md);
+  margin-bottom:4px;
+}
+.rm-item{text-align:center;}
+.rm-val{font-size:16px;font-weight:800;font-family:'Bricolage Grotesque',sans-serif;color:var(--text);}
+.rm-label{font-size:11px;color:var(--text3);font-weight:600;}
+
+/* Sidebar listings */
+.sidebar-listings-card{
+  background:var(--white);border:1px solid var(--border);
+  border-radius:var(--r-xl);padding:22px;
+}
+.sl-title{
+  font-family:'Bricolage Grotesque',sans-serif;
+  font-size:16px;font-weight:700;letter-spacing:-.02em;
+  margin-bottom:16px;
+}
+.sl-card{
+  display:flex;gap:12px;align-items:center;
+  padding:12px 0;border-bottom:1px solid var(--border);
+  cursor:pointer;transition:opacity .2s;
+}
+.sl-card:last-child{border-bottom:none;}
+.sl-card:hover{opacity:.75;}
+.sl-img{width:54px;height:54px;border-radius:var(--r-md);overflow:hidden;flex-shrink:0;background:var(--surface2);}
+.sl-img img{width:100%;height:100%;object-fit:cover;}
+.sl-name{font-size:13.5px;font-weight:700;color:var(--text);margin-bottom:2px;}
+.sl-meta{font-size:12px;color:var(--text3);}
+.sl-price{margin-left:auto;flex-shrink:0;font-size:13px;font-weight:800;color:var(--text);}
+
+/* Newsletter */
+.newsletter-card{
+  background:var(--dark);border-radius:var(--r-xl);padding:24px;
+  position:relative;overflow:hidden;
+}
+.nl-glow{position:absolute;width:200px;height:200px;border-radius:50%;background:radial-gradient(circle,rgba(232,160,32,.15),transparent);top:-60px;right:-60px;pointer-events:none;}
+.nl-title{font-family:'Bricolage Grotesque',sans-serif;font-size:18px;font-weight:700;color:#fff;letter-spacing:-.02em;margin-bottom:6px;}
+.nl-sub{font-size:13px;color:rgba(255,255,255,.4);margin-bottom:18px;line-height:1.6;}
+.nl-input{
+  width:100%;padding:11px 14px;border-radius:var(--r-md);
+  background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);
+  font-size:14px;color:#fff;outline:none;margin-bottom:10px;
+  font-family:'Geist',sans-serif;transition:border-color .2s;
+}
+.nl-input::placeholder{color:rgba(255,255,255,.3);}
+.nl-input:focus{border-color:rgba(232,160,32,.4);}
+.nl-btn{
+  width:100%;padding:12px;border-radius:var(--r-md);
+  background:var(--amber);color:var(--dark);
+  font-size:14px;font-weight:800;
+  transition:opacity .2s;
+}
+.nl-btn:hover{opacity:.85;}
+.nl-note{font-size:11.5px;color:rgba(255,255,255,.25);text-align:center;margin-top:8px;}
+
+/* ═══════════ ANIMATIONS ════════════════════════════════════════ */
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+.au{animation:fadeUp .6s cubic-bezier(.22,1,.36,1) both;}
+.d1{animation-delay:.08s}.d2{animation-delay:.16s}.d3{animation-delay:.24s}
+.sr{opacity:0;transform:translateY(20px);transition:opacity .65s ease,transform .65s ease;}
+.sr.on{opacity:1;transform:translateY(0);}
+.sr-r{opacity:0;transform:translateX(20px);transition:opacity .65s ease,transform .65s ease;}
+.sr-r.on{opacity:1;transform:translateX(0);}
+
+/* ═══════════ RESPONSIVE ════════════════════════════════════════ */
+@media(max-width:1100px){
+  .article-wrap{grid-template-columns:1fr;gap:40px;padding:48px 32px 80px;}
+  .sidebar{position:static;}
+  .toc-card{display:none;}
+  .qf-grid{grid-template-columns:repeat(2,1fr);}
+}
+@media(max-width:768px){
+  #nav{padding:0 20px;}
+  .post-hero-content{padding:0 24px 40px;}
+  .article-wrap{padding:36px 20px 72px;}
+  .photo-row.cols-3,.photo-row.cols-3-rev{grid-template-columns:1fr 1fr;}
+  .stat-row{grid-template-columns:1fr 1fr;}
+  .packing-grid{grid-template-columns:1fr;}
+  .qf-grid{grid-template-columns:1fr 1fr;}
+  .budget-table{font-size:13px;}
+}
+@media(max-width:480px){
+  .photo-row.cols-2,.photo-row.cols-3,.photo-row.cols-3-rev{grid-template-columns:1fr;}
+  .stat-row{grid-template-columns:1fr;}
+  .scroll-hint{display:none;}
+}
+</style>
+</head>
+<body>
+
+<!-- PROGRESS BAR -->
+<div id="progress-bar"></div>
+
+<!-- ═══════════ NAV -->
+<nav id="nav">
+  <div class="nav-inner">
+    <a href="klickenya-v3.html" class="nav-logo">
+      <div class="nav-logo-icon">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      </div>
+      <span class="nav-logo-name">klickenya</span>
+    </a>
+
+    <div style="display:flex;align-items:center;gap:8px;">
+      <a href="klickenya-v3.html" class="nav-back">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg>
+        Back
+      </a>
+      <a href="#" class="nav-back" style="color:var(--text2);">✦ Journal</a>
+    </div>
+
+    <div class="nav-right">
+      <button class="nav-share" id="nav-share-btn" onclick="shareArticle()">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+        Share
+      </button>
+      <a href="stay.html" class="nav-cta">Book your trip →</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ═══════════ HERO -->
+<div class="post-hero">
+  <img class="post-hero-img" id="hero-img"
+    src="https://images.unsplash.com/photo-1516426122078-c23e76319801?w=1800&q=90"
+    alt="Maasai Mara at golden hour"
+    onload="this.classList.add('loaded')"/>
+  <div class="post-hero-overlay"></div>
+
+  <div class="post-hero-content">
+    <div class="post-category au">
+      <span class="cat-dot"></span>
+      Travel Guide · Kenya
+    </div>
+    <h1 class="post-title au d1">10 Days in Kenya:<br/>The Ultimate<br/>First-Timer's Guide</h1>
+    <p class="post-subtitle au d2">From Nairobi's electric food scene to the raw silence of the Mara — a day-by-day itinerary, honest budget breakdown, and everything we wished we knew before landing.</p>
+    <div class="post-meta-row au d3">
+      <div class="post-author">
+        <div class="author-av">JK</div>
+        <div>
+          <p class="author-name">James Kariuki</p>
+          <p class="author-role">Travel Editor, Klickenya</p>
+        </div>
+      </div>
+      <div class="post-meta-sep"></div>
+      <span class="post-meta-item">March 2026</span>
+      <div class="post-meta-sep"></div>
+      <span class="post-meta-item">☕ 12 min read</span>
+      <div class="post-meta-sep"></div>
+      <span class="post-meta-item">👁 14,820 views</span>
+    </div>
+  </div>
+
+  <div class="scroll-hint">
+    <svg width="18" height="18" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24"><path d="m7 10 5 5 5-5"/></svg>
+    <span>Scroll</span>
+  </div>
+</div>
+
+<!-- ═══════════ ARTICLE -->
+<div class="article-wrap">
+
+  <!-- ──────── MAIN COLUMN ──────── -->
+  <article class="article-main">
+
+    <!-- Intro -->
+    <div class="intro-block au">
+      <p>Kenya doesn't ease you in. It hits you immediately — the scale of the sky over the Rift Valley, the chaos and beauty of Nairobi's streets, the surreal stillness of an elephant walking ten metres from your vehicle. We spent 10 days designing the ideal first-timer's route, balancing wildlife, culture, coast, and city. This is exactly what we'd do — and what we'd skip.</p>
+    </div>
+
+    <!-- Quick Facts -->
+    <div class="qf-card sr">
+      <div class="qf-card-bg"></div>
+      <div class="qf-card-inner">
+        <p class="qf-card-title">✦ Trip at a glance</p>
+        <div class="qf-grid">
+          <div class="qf-item"><div class="qf-icon">📅</div><div class="qf-label">Duration</div><div class="qf-val">10 days</div></div>
+          <div class="qf-item"><div class="qf-icon">💰</div><div class="qf-label">Budget (mid-range)</div><div class="qf-val">KSh 180,000–240,000</div></div>
+          <div class="qf-item"><div class="qf-icon">🌤</div><div class="qf-label">Best time</div><div class="qf-val">Jul–Oct, Jan–Feb</div></div>
+          <div class="qf-item"><div class="qf-icon">✈️</div><div class="qf-label">Gateway city</div><div class="qf-val">Nairobi (JKIA)</div></div>
+          <div class="qf-item"><div class="qf-icon">💳</div><div class="qf-label">Currency</div><div class="qf-val">KES · M-Pesa everywhere</div></div>
+          <div class="qf-item"><div class="qf-icon">🗣</div><div class="qf-label">Languages</div><div class="qf-val">English &amp; Swahili</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── SECTION 1 ── -->
+    <h2 class="section-anchor sr" id="s-nairobi">Days 1–2: Nairobi</h2>
+
+    <p class="body-text sr">Most first-timers treat Nairobi as a transit city. That's a mistake. <strong>Nairobi is one of Africa's most dynamic capitals</strong> — a city of world-class restaurants, vibrant art galleries, and an outdoor scene that will surprise you. Give it two full days before heading into the wild.</p>
+
+    <div class="photo-row cols-3 sr">
+      <div class="photo-cell wide"><img src="https://images.unsplash.com/photo-1611348586804-61bf6c080437?w=900&q=80" loading="lazy" alt="Nairobi skyline"/></div>
+      <div class="photo-cell square"><img src="https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=500&q=80" loading="lazy" alt="Nairobi food scene"/></div>
+      <div class="photo-cell square"><img src="https://images.unsplash.com/photo-1517760444937-f6397edcbbcd?w=500&q=80" loading="lazy" alt="Nairobi market"/></div>
+    </div>
+    <p class="photo-caption">Left: Nairobi CBD from Westlands. Right: the city's legendary food and market culture.</p>
+
+    <div class="day-card sr" id="day1">
+      <div class="day-card-header" onclick="toggleDay('day1')">
+        <div class="day-number"><div class="day-num-label">Day</div><div class="day-num-val">01</div></div>
+        <div class="day-card-info">
+          <p class="day-card-location">📍 Nairobi</p>
+          <p class="day-card-title">Arrive, settle, explore Westlands</p>
+          <p class="day-card-meta">Rooftop sundowners · Carnivore dinner · City walk</p>
+        </div>
+        <div class="day-card-chevron">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
+        </div>
+      </div>
+      <div class="day-card-body">
+        <div class="day-timeline">
+          <div class="dt-item"><span class="dt-time">2:00 PM</span><div><p class="dt-title">Check into your Westlands loft</p><p class="dt-desc">Drop your bags and acclimate. Westlands puts you 5 mins from everything good in the city.</p><span class="dt-badge">🏠 Stay</span></div></div>
+          <div class="dt-item"><span class="dt-time">4:00 PM</span><div><p class="dt-title">Westgate Mall & Sarit Centre wander</p><p class="dt-desc">Pick up a local SIM (Safaricom), grab a fresh juice, and people-watch from a café terrace.</p></div></div>
+          <div class="dt-item"><span class="dt-time">6:00 PM</span><div><p class="dt-title">Rooftop sundowners at Brew Bistro</p><p class="dt-desc">The best rooftop in Westlands. Order a Dawa (vodka-honey-lime) and watch the city turn golden.</p><span class="dt-badge">🍹 Must-do</span></div></div>
+          <div class="dt-item"><span class="dt-time">8:00 PM</span><div><p class="dt-title">Dinner at Carnivore Restaurant</p><p class="dt-desc">A Nairobi institution since 1980. Rotisserie meats on Maasai swords, bottomless sides, and enough atmosphere to last a lifetime.</p><span class="dt-badge">🍖 Iconic</span></div></div>
+        </div>
+        <div class="day-cost">
+          <span class="cost-pill">🏠 Stay: KSh 4,800</span>
+          <span class="cost-pill">🍽 Food: KSh 3,500</span>
+          <span class="cost-pill">🚕 Transport: KSh 800</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="day-card sr" id="day2">
+      <div class="day-card-header" onclick="toggleDay('day2')">
+        <div class="day-number"><div class="day-num-label">Day</div><div class="day-num-val">02</div></div>
+        <div class="day-card-info">
+          <p class="day-card-location">📍 Nairobi</p>
+          <p class="day-card-title">Giraffe Centre · Karen Blixen · Kibera arts</p>
+          <p class="day-card-meta">Wildlife · History · Culture · Photography</p>
+        </div>
+        <div class="day-card-chevron">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
+        </div>
+      </div>
+      <div class="day-card-body">
+        <div class="day-timeline">
+          <div class="dt-item"><span class="dt-time">8:30 AM</span><div><p class="dt-title">Giraffe Centre</p><p class="dt-desc">Feed Rothschild giraffes at eye level from the raised platform. One of the best wildlife encounters you can have within 20 minutes of a capital city.</p><span class="dt-badge">🦒 Highlight</span></div></div>
+          <div class="dt-item"><span class="dt-time">11:00 AM</span><div><p class="dt-title">Karen Blixen Museum</p><p class="dt-desc">The original Out of Africa farmhouse, perfectly preserved. The views of the Ngong Hills haven't changed since 1931.</p></div></div>
+          <div class="dt-item"><span class="dt-time">1:30 PM</span><div><p class="dt-title">Lunch at Talisman, Karen</p><p class="dt-desc">Garden restaurant in a colonial-era house. The pan-fried tilapia and passion fruit cheesecake are non-negotiable.</p></div></div>
+          <div class="dt-item"><span class="dt-time">4:00 PM</span><div><p class="dt-title">Kibera arts walk</p><p class="dt-desc">One of Africa's most vibrant creative scenes. Visit the Maasai Mbili gallery and buy directly from artists at fair prices.</p><span class="dt-badge">🎨 Unmissable</span></div></div>
+        </div>
+        <div class="day-cost">
+          <span class="cost-pill">🎫 Entries: KSh 2,200</span>
+          <span class="cost-pill">🍽 Food: KSh 2,800</span>
+          <span class="cost-pill">🚕 Transport: KSh 1,200</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="tip-card sr">
+      <span class="tip-icon">💡</span>
+      <div>
+        <p class="tip-label">Pro tip — Getting around Nairobi</p>
+        <p class="tip-text">Download the <strong>Little (Uber for Kenya)</strong> app before you land. Always negotiate matatu fares before boarding. Bolt is also reliable. Avoid hailing unmarked taxis at night — always use apps.</p>
+      </div>
+    </div>
+
+    <!-- Inline listing card -->
+    <div class="sr">
+      <p style="font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--text3);margin-bottom:10px;">📍 Where to stay in Nairobi</p>
+      <a href="stay.html" class="listing-card-inline">
+        <div class="lc-img"><img src="https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=200&q=80" loading="lazy" alt=""/></div>
+        <div class="lc-info">
+          <p class="lc-type">🏠 Entire apartment</p>
+          <p class="lc-name">Sunset Loft, Westlands</p>
+          <p class="lc-meta">⭐ 4.97 · 128 reviews · Superhost</p>
+        </div>
+        <div class="lc-price"><span class="val">KSh 4,800</span><span class="unit">/ night</span></div>
+        <span class="lc-btn">View →</span>
+      </a>
+    </div>
+
+    <!-- ── SECTION 2 ── -->
+    <h2 class="section-anchor sr" id="s-mara">Days 3–5: Maasai Mara</h2>
+
+    <p class="body-text sr">If there's one reason to come to Kenya, this is it. The Maasai Mara National Reserve is one of the last great wildlife spectacles on earth. Three days gives you enough time to experience it properly — including a sunrise drive on day four that will rearrange your understanding of what's possible.</p>
+
+    <div class="pull-quote sr">
+      <p>"The moment you see a lion pride in the golden grass — you understand, on a cellular level, why humans came from this place."</p>
+      <cite>— James Kariuki, after his third Mara visit</cite>
+    </div>
+
+    <div class="stat-row sr">
+      <div class="stat-box"><div class="stat-num">1,510</div><div class="stat-label">km² of protected reserve</div></div>
+      <div class="stat-box"><div class="stat-num">95+</div><div class="stat-label">mammal species recorded</div></div>
+      <div class="stat-box"><div class="stat-num">570+</div><div class="stat-label">bird species</div></div>
+    </div>
+
+    <div class="day-card sr" id="day3">
+      <div class="day-card-header" onclick="toggleDay('day3')">
+        <div class="day-number"><div class="day-num-label">Day</div><div class="day-num-val">03</div></div>
+        <div class="day-card-info">
+          <p class="day-card-location">📍 Nairobi → Maasai Mara</p>
+          <p class="day-card-title">Transfer day · Afternoon game drive</p>
+          <p class="day-card-meta">3.5hr drive · Sunset through the Mara</p>
+        </div>
+        <div class="day-card-chevron"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></div>
+      </div>
+      <div class="day-card-body">
+        <div class="day-timeline">
+          <div class="dt-item"><span class="dt-time">6:00 AM</span><div><p class="dt-title">Early morning departure</p><p class="dt-desc">Leave Nairobi before sunrise to avoid traffic. Stop at Narok town for breakfast — the chapati-and-egg stalls are exceptional.</p></div></div>
+          <div class="dt-item"><span class="dt-time">9:30 AM</span><div><p class="dt-title">Enter the Mara</p><p class="dt-desc">Gate briefing, vehicle check. Your guide will immediately begin tracking — the animals don't wait for introductions.</p></div></div>
+          <div class="dt-item"><span class="dt-time">4:00 PM</span><div><p class="dt-title">Sunset game drive</p><p class="dt-desc">The best light of the day. Position yourself near the Mara River for hippo activity and potential leopard sightings in the riverine forest.</p><span class="dt-badge">🌅 Golden hour</span></div></div>
+        </div>
+        <div class="day-cost"><span class="cost-pill">🚗 Drive or fly: KSh 2,000–18,000</span><span class="cost-pill">🏕 Camp: KSh 8,000</span></div>
+      </div>
+    </div>
+
+    <div class="photo-row cols-3-rev sr">
+      <div class="photo-cell square"><img src="https://images.unsplash.com/photo-1519741497674-611481863552?w=500&q=80" loading="lazy" alt="Mara wildlife"/></div>
+      <div class="photo-cell square"><img src="https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?w=500&q=80" loading="lazy" alt="Mara landscape"/></div>
+      <div class="photo-cell wide"><img src="https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?w=900&q=80" loading="lazy" alt="Mount Kenya"/></div>
+    </div>
+
+    <div class="tip-card teal sr">
+      <span class="tip-icon">🚁</span>
+      <div>
+        <p class="tip-label">Upgrade worth considering</p>
+        <p class="tip-text">The <strong>hot air balloon safari at dawn</strong> costs around KSh 30,000 per person — but floating over 500 wildebeest as the sun rises is one of the most extraordinary things a human can experience. Book directly through your camp, 2–3 days in advance.</p>
+      </div>
+    </div>
+
+    <!-- Activity card -->
+    <div class="sr">
+      <p style="font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--text3);margin-bottom:10px;">🦁 Book this experience</p>
+      <a href="activity.html" class="listing-card-inline">
+        <div class="lc-img"><img src="https://images.unsplash.com/photo-1516426122078-c23e76319801?w=200&q=80" loading="lazy" alt=""/></div>
+        <div class="lc-info">
+          <p class="lc-type">🌍 Safari Experience</p>
+          <p class="lc-name">Maasai Mara Full-Day Game Drive</p>
+          <p class="lc-meta">⭐ 5.0 · 89 reviews · James Mwangi</p>
+        </div>
+        <div class="lc-price"><span class="val">KSh 12,000</span><span class="unit">/ person</span></div>
+        <span class="lc-btn">Book →</span>
+      </a>
+    </div>
+
+    <!-- ── SECTION 3 ── -->
+    <h2 class="section-anchor sr" id="s-coast">Days 6–8: The Coast</h2>
+
+    <p class="body-text sr">After the intensity of the Mara, the <strong>Kenya coast delivers a completely different magic</strong>: coral-blue water, 14th-century Swahili architecture, and a languid, salt-kissed pace of life. We recommend splitting these three days between Diani Beach and a quick trip to Lamu — one of Africa's most beautifully preserved medieval towns.</p>
+
+    <div class="photo-row cols-2 sr">
+      <div class="photo-cell wide"><img src="https://images.unsplash.com/photo-1506953823976-52e1fdc0149a?w=800&q=80" loading="lazy" alt="Diani Beach"/></div>
+      <div class="photo-cell wide"><img src="https://images.unsplash.com/photo-1559128010-7c1ad6e1b6a5?w=800&q=80" loading="lazy" alt="Lamu Old Town"/></div>
+    </div>
+    <p class="photo-caption">Left: Diani Beach, Kwale County. Right: Lamu Old Town — UNESCO World Heritage Site, founded in the 14th century.</p>
+
+    <div class="tip-card warning sr">
+      <span class="tip-icon">⚠️</span>
+      <div>
+        <p class="tip-label">Don't make this mistake</p>
+        <p class="tip-text">Don't fly directly from Nairobi to the coast without booking accommodation in advance — especially if you're visiting during December–January high season. Diani fills up completely. Book at least <strong>3 weeks ahead</strong> on Klickenya.</p>
+      </div>
+    </div>
+
+    <!-- ── SECTION 4 ── -->
+    <h2 class="section-anchor sr" id="s-budget">Budget breakdown</h2>
+
+    <p class="body-text sr">Kenya is genuinely mid-range friendly if you plan ahead. Here's a realistic breakdown for a solo traveller over 10 days — mix of budget and comfort choices.</p>
+
+    <table class="budget-table sr">
+      <thead>
+        <tr>
+          <th>Category</th>
+          <th>Details</th>
+          <th>Estimate (10 days)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>✈️ Flights (domestic)</td><td>Nairobi–Mombasa return</td><td>KSh 12,000</td></tr>
+        <tr><td>🏠 Accommodation</td><td>Mix of lofts, tented camps, coastal cottages</td><td>KSh 58,000</td></tr>
+        <tr><td>🦁 Safari & activities</td><td>2× game drives, 1× beach experience, entries</td><td>KSh 35,000</td></tr>
+        <tr><td>🍽 Food & drink</td><td>Mix of local restaurants and nicer dinners</td><td>KSh 28,000</td></tr>
+        <tr><td>🚗 Ground transport</td><td>Rideshares, matatus, boat transfers</td><td>KSh 8,000</td></tr>
+        <tr><td>🎫 Entry fees</td><td>National parks, museums, cultural sites</td><td>KSh 6,000</td></tr>
+        <tr><td>🛍 Shopping & misc</td><td>Crafts, souvenirs, tips for guides</td><td>KSh 12,000</td></tr>
+      </tbody>
+      <tfoot>
+        <tr><td colspan="2"><strong>Total estimate (mid-range)</strong></td><td><strong>KSh 159,000</strong></td></tr>
+      </tfoot>
+    </table>
+
+    <!-- ── SECTION 5 ── -->
+    <h2 class="section-anchor sr" id="s-packing">Packing list</h2>
+    <p class="body-text sr">Kenya demands smart packing — you need layers for cold Mara mornings, light clothes for the coast, and a good camera for everything in between. Tick items off as you pack.</p>
+
+    <div class="sr">
+      <div class="packing-grid" id="pack-grid">
+        <div class="pack-item" onclick="togglePack(this)"><div class="pack-check"><svg width="10" height="10" fill="none" stroke="white" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div><span class="pack-icon">🌅</span><span>Neutral-coloured safari clothes</span></div>
+        <div class="pack-item" onclick="togglePack(this)"><div class="pack-check"><svg width="10" height="10" fill="none" stroke="white" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div><span class="pack-icon">🧥</span><span>Light fleece (cold Mara mornings)</span></div>
+        <div class="pack-item" onclick="togglePack(this)"><div class="pack-check"><svg width="10" height="10" fill="none" stroke="white" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div><span class="pack-icon">☀️</span><span>SPF 50+ sunscreen</span></div>
+        <div class="pack-item" onclick="togglePack(this)"><div class="pack-check"><svg width="10" height="10" fill="none" stroke="white" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div><span class="pack-icon">📷</span><span>Camera with long lens (200mm+)</span></div>
+        <div class="pack-item" onclick="togglePack(this)"><div class="pack-check"><svg width="10" height="10" fill="none" stroke="white" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div><span class="pack-icon">🦟</span><span>Malaria prophylaxis + DEET</span></div>
+        <div class="pack-item" onclick="togglePack(this)"><div class="pack-check"><svg width="10" height="10" fill="none" stroke="white" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div><span class="pack-icon">💊</span><span>Travel medical kit</span></div>
+        <div class="pack-item" onclick="togglePack(this)"><div class="pack-check"><svg width="10" height="10" fill="none" stroke="white" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div><span class="pack-icon">📱</span><span>Power bank (long safari days)</span></div>
+        <div class="pack-item" onclick="togglePack(this)"><div class="pack-check"><svg width="10" height="10" fill="none" stroke="white" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div><span class="pack-icon">🩴</span><span>Sandals for the coast</span></div>
+        <div class="pack-item" onclick="togglePack(this)"><div class="pack-check"><svg width="10" height="10" fill="none" stroke="white" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div><span class="pack-icon">👙</span><span>Swimwear (obvious, often forgotten)</span></div>
+        <div class="pack-item" onclick="togglePack(this)"><div class="pack-check"><svg width="10" height="10" fill="none" stroke="white" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div><span class="pack-icon">🌂</span><span>Compact rain cover</span></div>
+        <div class="pack-item" onclick="togglePack(this)"><div class="pack-check"><svg width="10" height="10" fill="none" stroke="white" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div><span class="pack-icon">📕</span><span>Field guide to East African mammals</span></div>
+        <div class="pack-item" onclick="togglePack(this)"><div class="pack-check"><svg width="10" height="10" fill="none" stroke="white" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div><span class="pack-icon">👓</span><span>Polarised sunglasses</span></div>
+      </div>
+      <div class="pack-progress"><div class="pack-progress-fill" id="pack-fill" style="width:0%"></div></div>
+      <p class="pack-progress-label" id="pack-label">0 / 12 items packed</p>
+    </div>
+
+    <!-- ── SECTION 6 ── -->
+    <h2 class="section-anchor sr" id="s-events">Events worth timing your trip around</h2>
+    <p class="body-text sr">If you can align your visit with one of Kenya's signature events, do it. They add a completely different layer to the trip.</p>
+
+    <div class="sr">
+      <a href="event.html" class="listing-card-inline">
+        <div class="lc-img"><img src="https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=200&q=80" loading="lazy" alt=""/></div>
+        <div class="lc-info">
+          <p class="lc-type">🎵 Music festival</p>
+          <p class="lc-name">Blankets &amp; Wine — Nairobi</p>
+          <p class="lc-meta">22 Mar · Ngong Racecourse · 482 going</p>
+        </div>
+        <div class="lc-price"><span class="val">KSh 2,500</span><span class="unit">from</span></div>
+        <span class="lc-btn">Get tickets →</span>
+      </a>
+    </div>
+
+    <!-- Share -->
+    <div class="share-section sr">
+      <div class="share-text">
+        <h3>Found this helpful?</h3>
+        <p>Share it with someone planning a Kenya trip</p>
+      </div>
+      <div class="share-btns">
+        <button class="share-btn" onclick="shareArticle()">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+          Share
+        </button>
+        <button class="share-btn">
+          𝕏 Post
+        </button>
+        <button class="share-btn" onclick="copyLink()">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
+          Copy link
+        </button>
+      </div>
+    </div>
+
+    <!-- Author bio -->
+    <div class="author-bio sr">
+      <div class="bio-av">JK</div>
+      <div>
+        <p class="bio-name">James Kariuki</p>
+        <p class="bio-role">Travel Editor, Klickenya · 12 years exploring Kenya</p>
+        <p class="bio-text">Born in Kisumu, raised in Nairobi, perpetually somewhere on a red dirt road. James has visited all 47 counties and believes the best meal in Kenya is the nyama choma at a roadside jiko in Naivasha at midnight. He writes about places he's actually been.</p>
+      </div>
+    </div>
+
+  </article>
+
+  <!-- ──────── SIDEBAR ──────── -->
+  <aside class="sidebar">
+
+    <!-- Read time card -->
+    <div class="toc-card sr-r">
+      <div class="read-meta">
+        <div class="rm-item"><div class="rm-val">12</div><div class="rm-label">min read</div></div>
+        <div style="width:1px;height:32px;background:var(--border);"></div>
+        <div class="rm-item"><div class="rm-val" id="prog-pct">0%</div><div class="rm-label">progress</div></div>
+        <div style="width:1px;height:32px;background:var(--border);"></div>
+        <div class="rm-item"><div class="rm-val">14.8K</div><div class="rm-label">views</div></div>
+      </div>
+
+      <p class="toc-title">In this guide</p>
+      <ul class="toc-list" id="toc">
+        <li class="toc-item active" onclick="scrollTo('s-nairobi')" data-target="s-nairobi"><span class="toc-num">1</span>Days 1–2: Nairobi</li>
+        <li class="toc-item" onclick="scrollTo('s-mara')" data-target="s-mara"><span class="toc-num">2</span>Days 3–5: Maasai Mara</li>
+        <li class="toc-item" onclick="scrollTo('s-coast')" data-target="s-coast"><span class="toc-num">3</span>Days 6–8: The Coast</li>
+        <li class="toc-item" onclick="scrollTo('s-budget')" data-target="s-budget"><span class="toc-num">4</span>Budget breakdown</li>
+        <li class="toc-item" onclick="scrollTo('s-packing')" data-target="s-packing"><span class="toc-num">5</span>Packing list</li>
+        <li class="toc-item" onclick="scrollTo('s-events')" data-target="s-events"><span class="toc-num">6</span>Events</li>
+      </ul>
+    </div>
+
+    <!-- Listings -->
+    <div class="sidebar-listings-card sr-r">
+      <p class="sl-title">Places in this guide</p>
+      <a href="stay.html" class="sl-card">
+        <div class="sl-img"><img src="https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=150&q=80" loading="lazy" alt=""/></div>
+        <div><p class="sl-name">Sunset Loft, Westlands</p><p class="sl-meta">🏠 Stay · Nairobi</p></div>
+        <span class="sl-price">KSh 4,800</span>
+      </a>
+      <a href="activity.html" class="sl-card">
+        <div class="sl-img"><img src="https://images.unsplash.com/photo-1516426122078-c23e76319801?w=150&q=80" loading="lazy" alt=""/></div>
+        <div><p class="sl-name">Mara Game Drive</p><p class="sl-meta">🦁 Experience · Narok</p></div>
+        <span class="sl-price">KSh 12,000</span>
+      </a>
+      <a href="event.html" class="sl-card">
+        <div class="sl-img"><img src="https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=150&q=80" loading="lazy" alt=""/></div>
+        <div><p class="sl-name">Blankets &amp; Wine</p><p class="sl-meta">🎵 Event · 22 Mar</p></div>
+        <span class="sl-price">KSh 2,500</span>
+      </a>
+      <a href="stay.html" class="sl-card">
+        <div class="sl-img"><img src="https://images.unsplash.com/photo-1506953823976-52e1fdc0149a?w=150&q=80" loading="lazy" alt=""/></div>
+        <div><p class="sl-name">Diani Beach Cottage</p><p class="sl-meta">🏠 Stay · Kwale</p></div>
+        <span class="sl-price">KSh 9,200</span>
+      </a>
+    </div>
+
+    <!-- Newsletter -->
+    <div class="newsletter-card sr-r">
+      <div class="nl-glow"></div>
+      <p class="nl-title">Kenya travel updates</p>
+      <p class="nl-sub">Weekly guides, hidden gems, and exclusive deals from across Kenya. No spam.</p>
+      <input class="nl-input" type="email" placeholder="your@email.com" id="nl-email"/>
+      <button class="nl-btn" onclick="subscribe()">Subscribe free →</button>
+      <p class="nl-note">Join 28,000+ subscribers · Unsubscribe anytime</p>
+    </div>
+
+  </aside>
+
+</div><!-- /article-wrap -->
+
+<script>
+/* ── PROGRESS BAR ── */
+const bar = document.getElementById('progress-bar');
+const pct = document.getElementById('prog-pct');
+window.addEventListener('scroll', () => {
+  const h = document.documentElement;
+  const p = (h.scrollTop / (h.scrollHeight - h.clientHeight)) * 100;
+  bar.style.width = p + '%';
+  if (pct) pct.textContent = Math.round(p) + '%';
+  document.getElementById('nav').classList.toggle('scrolled', h.scrollTop > 40);
+  updateTOC();
+}, { passive: true });
+
+/* ── TOC ACTIVE STATE ── */
+const sections = ['s-nairobi','s-mara','s-coast','s-budget','s-packing','s-events'];
+function updateTOC() {
+  let current = sections[0];
+  sections.forEach(id => {
+    const el = document.getElementById(id);
+    if (el && el.getBoundingClientRect().top < 120) current = id;
+  });
+  document.querySelectorAll('.toc-item').forEach(item => {
+    item.classList.toggle('active', item.dataset.target === current);
+  });
+}
+
+/* ── SMOOTH SCROLL TO SECTION ── */
+function scrollTo(id) {
+  const el = document.getElementById(id);
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+/* ── DAY ACCORDION ── */
+function toggleDay(id) {
+  const card = document.getElementById(id);
+  card.classList.toggle('open');
+}
+// Open day 1 by default
+document.getElementById('day1').classList.add('open');
+
+/* ── PACKING LIST ── */
+let packedCount = 0;
+const totalItems = document.querySelectorAll('.pack-item').length;
+function togglePack(el) {
+  el.classList.toggle('checked');
+  packedCount = document.querySelectorAll('.pack-item.checked').length;
+  const p = Math.round((packedCount / totalItems) * 100);
+  document.getElementById('pack-fill').style.width = p + '%';
+  document.getElementById('pack-label').textContent = packedCount + ' / ' + totalItems + ' items packed';
+}
+
+/* ── SHARE ── */
+function shareArticle() {
+  if (navigator.share) {
+    navigator.share({ title: '10 Days in Kenya — Klickenya', url: window.location.href });
+  } else {
+    copyLink();
+  }
+}
+function copyLink() {
+  navigator.clipboard.writeText(window.location.href).then(() => {
+    const btn = document.querySelector('.share-btn:last-child');
+    if (btn) { btn.textContent = '✓ Copied!'; setTimeout(() => btn.innerHTML = '<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg> Copy link', 2000); }
+  });
+}
+
+/* ── NEWSLETTER ── */
+function subscribe() {
+  const val = document.getElementById('nl-email').value;
+  if (val && val.includes('@')) {
+    document.getElementById('nl-email').value = '✓ You\'re subscribed!';
+    document.getElementById('nl-email').disabled = true;
+    document.querySelector('.nl-btn').textContent = 'Welcome to the club 🎉';
+    document.querySelector('.nl-btn').style.background = 'var(--teal)';
+  }
+}
+
+/* ── SCROLL REVEAL ── */
+const io = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('on'); });
+}, { threshold: 0.08, rootMargin: '0px 0px -30px 0px' });
+document.querySelectorAll('.sr, .sr-r').forEach(el => io.observe(el));
+</script>
+</body>
+</html>

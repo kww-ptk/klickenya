@@ -1,0 +1,103 @@
+@import "tailwindcss";
+
+/* ─── Klickenya Design Tokens ─────────────────────────────────── */
+
+@theme inline {
+  /* Colors */
+  --color-dark: #16130C;
+  --color-canvas: #FAFAF8;
+  --color-surface: #F4F1EC;
+  --color-surface2: #EDE9E2;
+  --color-border: #E2DDD5;
+  --color-text: #16130C;
+  --color-text2: #5E5848;
+  --color-text3: #9C9485;
+  --color-amber: #E8A020;
+  --color-amber2: #F5C842;
+  --color-amber-dim: rgba(232, 160, 32, 0.10);
+  --color-purple: #6B2D8B;
+  --color-purple2: #8B4DAB;
+  --color-purple-dark: #4A1F63;
+  --color-purple-dim: rgba(107, 45, 139, 0.10);
+  --color-teal: #0D7377;
+  --color-green: #16A34A;
+  --color-white: #FFFFFF;
+
+  /* Font families */
+  --font-display: "Bricolage Grotesque", sans-serif;
+  --font-body: "Geist", sans-serif;
+  --font-mono: "Geist Mono", monospace;
+
+  /* Border radius */
+  --radius-sm: 10px;
+  --radius-md: 16px;
+  --radius-lg: 22px;
+  --radius-xl: 30px;
+
+  /* Shadows */
+  --shadow-xs: 0 1px 3px rgba(0, 0, 0, 0.06);
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.06), 0 0 0 1px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(0, 0, 0, 0.04);
+  --shadow-lg: 0 20px 48px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.04);
+  --shadow-xl: 0 32px 64px rgba(0, 0, 0, 0.16);
+}
+
+/* ─── Base Styles ─────────────────────────────────────────────── */
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--color-canvas);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 10px;
+}
+
+/* ─── Animations ──────────────────────────────────────────────── */
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes marquee {
+  to { transform: translateX(-50%); }
+}
+
+.animate-fade-up {
+  animation: fadeUp 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.4s ease both;
+}
+
+.animate-marquee {
+  animation: marquee 35s linear infinite;
+}

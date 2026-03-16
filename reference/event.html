@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Blankets & Wine — Klickenya Events</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --canvas:#FFFFFF;--surface:#F7F5F2;--surface2:#F0EDE8;
+  --border:#E8E4DE;--border2:#D8D3CC;
+  --text:#1A1714;--text2:#6B6560;--text3:#A09A93;
+  --amber:#E8A020;--amber-dim:rgba(232,160,32,.12);--amber-glow:rgba(232,160,32,.25);
+  --dark:#111008;--green:#16A34A;--purple:#7C3AED;
+  --r-sm:12px;--r-md:18px;--r-lg:24px;--r-xl:32px;
+  --sh-xs:0 1px 3px rgba(0,0,0,.06);
+  --sh-sm:0 2px 8px rgba(0,0,0,.06),0 0 0 1px rgba(0,0,0,.04);
+  --sh-md:0 8px 24px rgba(0,0,0,.08),0 0 0 1px rgba(0,0,0,.04);
+  --sh-lg:0 20px 48px rgba(0,0,0,.12),0 0 0 1px rgba(0,0,0,.04);
+  --sh-xl:0 32px 64px rgba(0,0,0,.16);
+}
+*{margin:0;padding:0;box-sizing:border-box;}html{scroll-behavior:smooth;}
+body{font-family:'Geist',sans-serif;background:var(--canvas);color:var(--text);overflow-x:hidden;-webkit-font-smoothing:antialiased;}
+::-webkit-scrollbar{width:5px;}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:10px;}
+img{display:block;}a{text-decoration:none;color:inherit;}
+button{font-family:'Geist',sans-serif;cursor:pointer;border:none;background:none;}
+input,select{font-family:'Geist',sans-serif;}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
+@keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+@keyframes gradientShift{0%{background-position:0% 50%;}50%{background-position:100% 50%;}100%{background-position:0% 50%;}}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.5;}}
+@keyframes countUp{from{opacity:0;transform:scale(.8);}to{opacity:1;transform:scale(1);}}
+
+.au{animation:fadeUp .55s cubic-bezier(.22,1,.36,1) both;}
+.ai{animation:fadeIn .4s ease both;}
+.d1{animation-delay:.07s}.d2{animation-delay:.14s}.d3{animation-delay:.21s}.d4{animation-delay:.28s}
+.sr{opacity:0;transform:translateY(18px);transition:opacity .6s ease,transform .6s ease;}
+.sr.on{opacity:1;transform:translateY(0);}
+
+/* ── NAV ── */
+#nav{
+  position:fixed;top:0;left:0;right:0;z-index:200;height:68px;
+  display:flex;align-items:center;padding:0 48px;
+  background:rgba(255,255,255,.95);backdrop-filter:blur(24px) saturate(180%);
+  border-bottom:1px solid var(--border);
+}
+.nav-inner{width:100%;display:flex;align-items:center;justify-content:space-between;gap:16px;}
+.nav-logo{display:flex;align-items:center;gap:9px;}
+.nav-logo-icon{width:32px;height:32px;border-radius:9px;background:var(--text);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.nav-logo-name{font-family:'Bricolage Grotesque',sans-serif;font-size:18px;font-weight:700;color:var(--text);letter-spacing:-.03em;}
+.nav-back{display:flex;align-items:center;gap:7px;padding:9px 16px;border-radius:50px;font-size:14px;font-weight:600;color:var(--text2);border:1px solid var(--border);transition:all .2s;}
+.nav-back:hover{background:var(--surface);}
+.nav-actions{display:flex;gap:8px;align-items:center;}
+.btn-icon{width:38px;height:38px;border-radius:50%;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;transition:box-shadow .2s;}
+.btn-icon:hover{box-shadow:var(--sh-sm);}
+.btn-dark{padding:9px 20px;border-radius:50px;font-size:14px;font-weight:600;background:var(--text);color:#fff;transition:opacity .2s;}
+.btn-dark:hover{opacity:.85;}
+
+/* ── EVENT COVER (Luma style) ── */
+.event-cover{
+  margin-top:68px;
+  position:relative;
+  background:var(--dark);
+  overflow:hidden;
+}
+.event-cover-bg{
+  position:absolute;inset:0;
+  background:linear-gradient(135deg,#1a0533 0%,#0d2b1a 40%,#1a1000 100%);
+  animation:gradientShift 12s ease infinite;
+  background-size:200% 200%;
+}
+/* Decorative blobs */
+.cover-blob{position:absolute;border-radius:50%;filter:blur(80px);pointer-events:none;}
+.blob1{width:500px;height:500px;background:rgba(232,160,32,.15);top:-100px;right:-100px;}
+.blob2{width:400px;height:400px;background:rgba(124,58,237,.1);bottom:-50px;left:-50px;}
+.blob3{width:300px;height:300px;background:rgba(13,115,119,.12);top:50%;left:30%;}
+
+.event-cover-inner{
+  position:relative;z-index:2;
+  max-width:1280px;margin:0 auto;padding:64px 48px;
+  display:grid;grid-template-columns:1fr auto;gap:48px;align-items:start;
+}
+
+/* Left — event info */
+.event-cover-left{}
+.event-organiser{display:flex;align-items:center;gap:10px;margin-bottom:20px;}
+.org-av{width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);overflow:hidden;display:flex;align-items:center;justify-content:center;}
+.org-av img{width:100%;height:100%;object-fit:cover;}
+.org-name{font-size:13.5px;font-weight:600;color:rgba(255,255,255,.6);}
+.org-verified{color:rgba(232,160,32,.8);font-size:12px;margin-left:2px;}
+
+.event-title{
+  font-family:'Bricolage Grotesque',sans-serif;
+  font-size:clamp(36px,5vw,64px);
+  font-weight:800;color:#fff;
+  letter-spacing:-.04em;line-height:1.0;margin-bottom:24px;
+}
+
+.event-tags{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:28px;}
+.event-tag{
+  padding:5px 14px;border-radius:50px;
+  font-size:12px;font-weight:700;letter-spacing:.02em;
+  border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.55);
+  background:rgba(255,255,255,.05);
+}
+.event-tag.primary{background:rgba(232,160,32,.15);border-color:rgba(232,160,32,.35);color:#F5C842;}
+
+.event-cover-meta{display:flex;flex-direction:column;gap:14px;}
+.cover-meta-row{display:flex;align-items:flex-start;gap:14px;}
+.meta-icon-wrap{
+  width:38px;height:38px;border-radius:10px;flex-shrink:0;
+  background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);
+  display:flex;align-items:center;justify-content:center;
+}
+.meta-label{font-size:12px;font-weight:600;color:rgba(255,255,255,.4);margin-bottom:2px;letter-spacing:.02em;}
+.meta-value{font-size:15px;font-weight:600;color:#fff;}
+.meta-sub{font-size:12.5px;color:rgba(255,255,255,.4);margin-top:1px;}
+
+/* Right — cover image */
+.event-cover-right{flex-shrink:0;}
+.event-poster{
+  width:280px;border-radius:var(--r-xl);overflow:hidden;
+  box-shadow:0 32px 80px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.08);
+  position:relative;
+}
+.event-poster img{width:100%;aspect-ratio:3/4;object-fit:cover;}
+.event-poster-overlay{
+  position:absolute;bottom:0;left:0;right:0;
+  padding:20px 16px;
+  background:linear-gradient(to top,rgba(0,0,0,.8),transparent);
+}
+.poster-date-badge{
+  display:inline-flex;flex-direction:column;align-items:center;
+  background:rgba(255,255,255,.95);border-radius:var(--r-sm);
+  padding:10px 14px;box-shadow:var(--sh-md);
+}
+.poster-month{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--amber);}
+.poster-day{font-family:'Bricolage Grotesque',sans-serif;font-size:28px;font-weight:800;color:var(--text);line-height:1;}
+.poster-year{font-size:11px;font-weight:600;color:var(--text3);}
+
+/* Countdown */
+.event-countdown{
+  margin-top:28px;
+  display:flex;gap:12px;
+}
+.cd-block{
+  background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);
+  border-radius:var(--r-md);padding:14px 16px;text-align:center;min-width:70px;
+}
+.cd-num{font-family:'Bricolage Grotesque',sans-serif;font-size:28px;font-weight:800;color:#fff;line-height:1;letter-spacing:-.03em;}
+.cd-label{font-size:10.5px;font-weight:600;color:rgba(255,255,255,.35);letter-spacing:.06em;text-transform:uppercase;margin-top:4px;}
+
+/* ── BODY ── */
+.page-body{max-width:1280px;margin:0 auto;padding:48px 48px 80px;display:grid;grid-template-columns:1fr 360px;gap:60px;align-items:start;}
+.main-col{min-width:0;}
+.divider{border:none;border-top:1px solid var(--border);margin:32px 0;}
+.sec-title{font-family:'Bricolage Grotesque',sans-serif;font-size:22px;font-weight:700;letter-spacing:-.02em;color:var(--text);}
+
+/* ── GOING STRIP (Luma style) ── */
+.going-strip{
+  display:flex;align-items:center;gap:16px;
+  padding:18px 24px;
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r-lg);margin-bottom:32px;
+}
+.going-avatars{display:flex;align-items:center;}
+.going-av{
+  width:32px;height:32px;border-radius:50%;
+  border:2px solid var(--canvas);
+  overflow:hidden;margin-left:-8px;
+  background:linear-gradient(135deg,var(--amber),#0D7377);
+  display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;font-size:11px;
+}
+.going-av:first-child{margin-left:0;}
+.going-av img{width:100%;height:100%;object-fit:cover;}
+.going-count{font-size:14.5px;font-weight:600;color:var(--text);}
+.going-count span{color:var(--text2);font-weight:400;}
+.going-live{display:flex;align-items:center;gap:6px;margin-left:auto;font-size:13px;font-weight:600;color:var(--green);}
+.live-dot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:pulse 1.5s ease infinite;}
+
+/* ── DESCRIPTION ── */
+.description{font-size:15.5px;color:var(--text2);line-height:1.75;}
+
+/* ── LINE UP ── */
+.lineup{display:flex;flex-direction:column;gap:3px;margin-top:16px;}
+.lineup-item{
+  display:flex;align-items:center;gap:16px;
+  padding:16px 18px;
+  border-radius:var(--r-md);
+  transition:background .2s;cursor:pointer;
+}
+.lineup-item:hover{background:var(--surface);}
+.lineup-num{font-size:13px;font-weight:700;color:var(--text3);min-width:20px;}
+.lineup-av{width:44px;height:44px;border-radius:50%;overflow:hidden;background:var(--surface2);flex-shrink:0;}
+.lineup-av img{width:100%;height:100%;object-fit:cover;}
+.lineup-name{font-size:15px;font-weight:700;flex:1;}
+.lineup-role{font-size:13px;color:var(--text2);}
+.lineup-time{font-size:13px;font-weight:600;color:var(--amber);}
+.lineup-headliner{background:var(--amber-dim);border:1px solid var(--amber-glow);}
+.lineup-headliner .lineup-name::after{content:'Headliner';display:inline-block;background:var(--amber);color:#fff;font-size:10px;font-weight:800;padding:2px 8px;border-radius:50px;margin-left:8px;vertical-align:middle;}
+
+/* ── SCHEDULE ── */
+.schedule{display:flex;flex-direction:column;gap:12px;margin-top:16px;}
+.sch-item{display:flex;gap:14px;padding:16px;border-radius:var(--r-md);background:var(--surface);border:1px solid var(--border);transition:border-color .2s;}
+.sch-item:hover{border-color:var(--border2);}
+.sch-time{font-size:13px;font-weight:700;color:var(--amber);min-width:65px;padding-top:1px;}
+.sch-title{font-size:15px;font-weight:700;margin-bottom:3px;}
+.sch-desc{font-size:13px;color:var(--text2);}
+.sch-badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:50px;font-size:10.5px;font-weight:700;background:rgba(124,58,237,.1);color:var(--purple);margin-top:5px;}
+
+/* ── FAQ ── */
+.faq{display:flex;flex-direction:column;gap:2px;margin-top:16px;}
+.faq-item{border:1px solid var(--border);border-radius:var(--r-md);overflow:hidden;}
+.faq-q{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:16px 18px;cursor:pointer;
+  font-size:15px;font-weight:600;
+  transition:background .2s;
+}
+.faq-q:hover{background:var(--surface);}
+.faq-q svg{flex-shrink:0;transition:transform .25s;}
+.faq-item.open .faq-q svg{transform:rotate(45deg);}
+.faq-a{
+  font-size:14.5px;color:var(--text2);line-height:1.7;
+  padding:0 18px;max-height:0;overflow:hidden;
+  transition:max-height .35s ease,padding .35s ease;
+}
+.faq-item.open .faq-a{max-height:200px;padding:0 18px 16px;}
+
+/* ── RELATED EVENTS ── */
+.related-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:20px;}
+.rel-card{
+  border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;
+  cursor:pointer;transition:box-shadow .25s,transform .25s;
+}
+.rel-card:hover{box-shadow:var(--sh-md);transform:translateY(-3px);}
+.rel-cover{height:120px;overflow:hidden;background:var(--surface2);position:relative;}
+.rel-cover img{width:100%;height:100%;object-fit:cover;transition:transform .5s;}
+.rel-card:hover .rel-cover img{transform:scale(1.06);}
+.rel-date-badge{position:absolute;top:10px;left:10px;background:rgba(255,255,255,.95);backdrop-filter:blur(8px);border-radius:8px;padding:5px 9px;text-align:center;}
+.rdb-month{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--amber);}
+.rdb-day{font-family:'Bricolage Grotesque',sans-serif;font-size:18px;font-weight:800;color:var(--text);line-height:1;}
+.rel-body{padding:14px 14px 16px;}
+.rel-title{font-size:14px;font-weight:700;margin-bottom:4px;line-height:1.3;}
+.rel-meta{font-size:12px;color:var(--text2);}
+.rel-price{font-size:13px;font-weight:700;color:var(--amber);margin-top:6px;}
+
+/* ── BOOKING CARD ── */
+.booking-card{
+  position:sticky;top:88px;
+  background:var(--canvas);border:1px solid var(--border);
+  border-radius:var(--r-xl);padding:28px;
+  box-shadow:var(--sh-lg);overflow:hidden;
+}
+/* subtle gradient top */
+.booking-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,var(--amber),#F5C842,var(--amber));
+  background-size:200% 100%;animation:gradientShift 3s linear infinite;
+}
+
+.ticket-types{display:flex;flex-direction:column;gap:10px;margin:20px 0;}
+.ticket-type{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:14px 16px;border:1.5px solid var(--border);border-radius:var(--r-md);
+  cursor:pointer;transition:all .2s;
+}
+.ticket-type:hover{border-color:var(--border2);}
+.ticket-type.selected{border-color:var(--amber);background:var(--amber-dim);}
+.ticket-radio{
+  width:18px;height:18px;border-radius:50%;border:2px solid var(--border2);
+  flex-shrink:0;display:flex;align-items:center;justify-content:center;
+  transition:border-color .2s;
+}
+.ticket-type.selected .ticket-radio{border-color:var(--amber);}
+.ticket-radio-dot{width:8px;height:8px;border-radius:50%;background:var(--amber);opacity:0;transition:opacity .2s;}
+.ticket-type.selected .ticket-radio-dot{opacity:1;}
+.ticket-info{flex:1;}
+.ticket-name{font-size:14px;font-weight:700;}
+.ticket-desc{font-size:12.5px;color:var(--text2);margin-top:2px;}
+.ticket-price-col{text-align:right;}
+.ticket-price{font-family:'Bricolage Grotesque',sans-serif;font-size:18px;font-weight:800;color:var(--text);}
+.ticket-avail{font-size:11px;color:var(--green);font-weight:600;margin-top:2px;}
+.ticket-avail.low{color:#E85820;}
+
+/* Quantity row */
+.qty-row{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border);
+  margin-bottom:16px;
+}
+.qty-label{font-size:14px;font-weight:600;color:var(--text2);}
+.qty-ctrl{display:flex;align-items:center;gap:12px;}
+.qty-btn{width:30px;height:30px;border-radius:50%;border:1.5px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--text2);transition:all .2s;line-height:1;}
+.qty-btn:hover{border-color:var(--text);color:var(--text);}
+.qty-num{font-size:15px;font-weight:800;min-width:18px;text-align:center;}
+
+/* Promo */
+.promo-row{display:flex;gap:8px;margin-bottom:16px;}
+.promo-input{flex:1;padding:10px 14px;border:1.5px solid var(--border);border-radius:var(--r-md);font-size:14px;outline:none;transition:border-color .2s;}
+.promo-input:focus{border-color:var(--amber);}
+.promo-input::placeholder{color:var(--text3);}
+.promo-apply{padding:10px 16px;border-radius:var(--r-md);border:1.5px solid var(--border);font-size:13.5px;font-weight:700;color:var(--text);transition:all .2s;}
+.promo-apply:hover{background:var(--surface);}
+
+.btn-book{
+  width:100%;padding:15px;border-radius:var(--r-md);
+  background:linear-gradient(135deg,var(--amber),#D4900A);
+  color:#fff;font-size:16px;font-weight:700;
+  box-shadow:0 8px 24px var(--amber-glow);
+  transition:transform .15s,box-shadow .2s;margin-bottom:12px;
+}
+.btn-book:hover{transform:translateY(-2px);box-shadow:0 12px 32px var(--amber-glow);}
+.book-note{text-align:center;font-size:12.5px;color:var(--text3);}
+
+.price-breakdown{margin-top:20px;border-top:1px solid var(--border);padding-top:18px;display:flex;flex-direction:column;gap:10px;}
+.pb-row{display:flex;justify-content:space-between;font-size:14px;color:var(--text2);}
+.pb-row span:last-child{font-weight:500;color:var(--text);}
+.pb-total{display:flex;justify-content:space-between;font-size:15.5px;font-weight:700;color:var(--text);border-top:1px solid var(--border);padding-top:14px;margin-top:4px;}
+
+/* Urgency banner */
+.urgency-banner{
+  display:flex;align-items:center;gap:8px;
+  padding:10px 14px;border-radius:var(--r-md);
+  background:rgba(232,88,32,.08);border:1px solid rgba(232,88,32,.2);
+  font-size:13px;font-weight:600;color:#C44A10;
+  margin-bottom:16px;
+}
+
+/* ── MOBILE BAR ── */
+#mbar{display:none;position:fixed;bottom:0;left:0;right:0;z-index:300;background:rgba(255,255,255,.97);backdrop-filter:blur(20px);border-top:1px solid var(--border);padding:12px 24px max(12px,env(safe-area-inset-bottom));align-items:center;justify-content:space-between;gap:16px;}
+.mbar-price .val{font-family:'Bricolage Grotesque',sans-serif;font-size:20px;font-weight:800;}
+.mbar-price .unit{font-size:13px;color:var(--text2);}
+.btn-book-mob{padding:14px 28px;border-radius:50px;background:linear-gradient(135deg,var(--amber),#D4900A);color:#fff;font-size:15px;font-weight:700;box-shadow:0 6px 20px var(--amber-glow);}
+
+/* ── RESPONSIVE ── */
+@media(max-width:1024px){
+  .event-cover-inner{grid-template-columns:1fr;padding:48px 24px;}
+  .event-cover-right{display:flex;gap:20px;align-items:flex-start;}
+  .event-poster{width:200px;}
+  .event-countdown{margin-top:0;}
+  .page-body{grid-template-columns:1fr;padding:32px 24px 80px;}
+  .booking-card{display:none;}
+  #mbar{display:flex;}
+  body{padding-bottom:76px;}
+  .related-grid{grid-template-columns:1fr 1fr;}
+}
+@media(max-width:640px){
+  #nav{padding:0 20px;}
+  .event-cover-right{flex-direction:column;}
+  .event-poster{width:100%;}
+  .event-countdown{display:grid;grid-template-columns:repeat(4,1fr);}
+  .event-title{font-size:32px;}
+  .related-grid{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav id="nav">
+  <div class="nav-inner">
+    <a href="klickenya-v3.html" class="nav-logo">
+      <div class="nav-logo-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      </div>
+      <span class="nav-logo-name">klickenya</span>
+    </a>
+    <a href="klickenya-v3.html" class="nav-back">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg>
+      Back to events
+    </a>
+    <div class="nav-actions">
+      <button class="btn-icon" id="share-btn" title="Share">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+      </button>
+      <button class="btn-icon" id="save-btn" title="Save">
+        <svg id="heart-icon" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+      </button>
+      <button class="btn-dark">Sign in</button>
+    </div>
+  </div>
+</nav>
+
+<!-- EVENT COVER -->
+<div class="event-cover">
+  <div class="event-cover-bg"></div>
+  <div class="cover-blob blob1"></div>
+  <div class="cover-blob blob2"></div>
+  <div class="cover-blob blob3"></div>
+
+  <div class="event-cover-inner">
+    <!-- Left -->
+    <div class="event-cover-left">
+      <div class="event-organiser au">
+        <div class="org-av">
+          <svg width="16" height="16" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        </div>
+        <span class="org-name">Safaricom PLC · <span class="org-verified">✓ Verified organiser</span></span>
+      </div>
+
+      <h1 class="event-title au d1">Blankets<br/>&amp; Wine</h1>
+
+      <div class="event-tags au d2">
+        <span class="event-tag primary">🎵 Music Festival</span>
+        <span class="event-tag">🍷 Wine & Food</span>
+        <span class="event-tag">🎨 Arts & Culture</span>
+        <span class="event-tag">🏟️ Nairobi</span>
+      </div>
+
+      <div class="event-cover-meta au d3">
+        <div class="cover-meta-row">
+          <div class="meta-icon-wrap">
+            <svg width="16" height="16" fill="none" stroke="rgba(255,255,255,.6)" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          </div>
+          <div>
+            <p class="meta-label">Date & Time</p>
+            <p class="meta-value">Saturday, 22 March 2026</p>
+            <p class="meta-sub">Doors open 2:00 PM · Music starts 3:00 PM · Ends 10:00 PM</p>
+          </div>
+        </div>
+        <div class="cover-meta-row">
+          <div class="meta-icon-wrap">
+            <svg width="16" height="16" fill="none" stroke="rgba(255,255,255,.6)" stroke-width="2" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          </div>
+          <div>
+            <p class="meta-label">Location</p>
+            <p class="meta-value">Ngong Racecourse, Nairobi</p>
+            <p class="meta-sub">Ngong Rd, Ngong, Nairobi · Free parking available</p>
+          </div>
+        </div>
+        <div class="cover-meta-row">
+          <div class="meta-icon-wrap">
+            <svg width="16" height="16" fill="none" stroke="rgba(255,255,255,.6)" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+          </div>
+          <div>
+            <p class="meta-label">Attendance</p>
+            <p class="meta-value" id="going-count-hero">482 people going</p>
+            <p class="meta-sub">⚡ Selling fast — only 87 tickets left</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Countdown -->
+      <div class="event-countdown au d4">
+        <div class="cd-block"><div class="cd-num" id="cd-days">12</div><div class="cd-label">Days</div></div>
+        <div class="cd-block"><div class="cd-num" id="cd-hours">08</div><div class="cd-label">Hours</div></div>
+        <div class="cd-block"><div class="cd-num" id="cd-mins">34</div><div class="cd-label">Mins</div></div>
+        <div class="cd-block"><div class="cd-num" id="cd-secs">17</div><div class="cd-label">Secs</div></div>
+      </div>
+    </div>
+
+    <!-- Right — Poster -->
+    <div class="event-cover-right au d2">
+      <div class="event-poster">
+        <img src="https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=600&q=90" alt="Blankets & Wine"/>
+        <div class="event-poster-overlay">
+          <div class="poster-date-badge">
+            <span class="poster-month">MAR</span>
+            <span class="poster-day">22</span>
+            <span class="poster-year">2026</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE BODY -->
+<div class="page-body">
+  <div class="main-col">
+
+    <!-- Going strip -->
+    <div class="going-strip au">
+      <div class="going-avatars" id="going-avatars">
+        <div class="going-av">AM</div>
+        <div class="going-av" style="background:linear-gradient(135deg,#0D7377,#E8A020)">DK</div>
+        <div class="going-av" style="background:linear-gradient(135deg,#9B59B6,#E8A020)">SW</div>
+        <div class="going-av" style="background:linear-gradient(135deg,#E74C3C,#9B59B6)">PO</div>
+        <div class="going-av" style="background:linear-gradient(135deg,#2ECC71,#0D7377)">TN</div>
+      </div>
+      <p class="going-count"><strong id="going-num">482</strong> <span>people are going</span></p>
+      <div class="going-live">
+        <span class="live-dot"></span>
+        Selling fast
+      </div>
+    </div>
+
+    <!-- Description -->
+    <div class="sr">
+      <h2 class="sec-title" style="margin-bottom:16px;">About this event</h2>
+      <p class="description">
+        Kenya's most beloved outdoor music and lifestyle festival returns to Ngong Racecourse for its landmark 2026 edition. Blankets & Wine is the definitive afternoon-to-evening experience — spread your blanket on the grass, uncork a bottle, and let the music wash over you as the Nairobi skyline glows behind the stage.
+      </p>
+      <p class="description" style="margin-top:14px;">
+        This edition features an extraordinary lineup of Afrobeats, Afro-soul, R&B, and jazz artists from across East Africa and the continent. Curated food stalls from Nairobi's top restaurants, craft wine and spirits bars, artisan markets, and live art installations complete the experience.
+      </p>
+      <p class="description" style="margin-top:14px;">
+        Bring your blanket, your crew, and your appetite — for music, food, and pure Nairobi magic.
+      </p>
+    </div>
+
+    <hr class="divider"/>
+
+    <!-- Lineup -->
+    <div class="sr">
+      <h2 class="sec-title" style="margin-bottom:20px;">🎤 Artist lineup</h2>
+      <div class="lineup">
+        <div class="lineup-item lineup-headliner">
+          <span class="lineup-num">01</span>
+          <div class="lineup-av"><img src="https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=100&q=80" alt=""/></div>
+          <div style="flex:1;"><p class="lineup-name">Sauti Sol</p><p class="lineup-role">Afropop · Nairobi, Kenya</p></div>
+          <span class="lineup-time">8:00 PM</span>
+        </div>
+        <div class="lineup-item">
+          <span class="lineup-num">02</span>
+          <div class="lineup-av"><img src="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=100&q=80" alt=""/></div>
+          <div style="flex:1;"><p class="lineup-name">Nandy</p><p class="lineup-role">Bongo Flava · Dar es Salaam, TZ</p></div>
+          <span class="lineup-time">6:30 PM</span>
+        </div>
+        <div class="lineup-item">
+          <span class="lineup-num">03</span>
+          <div class="lineup-av"><img src="https://images.unsplash.com/photo-1501386761578-eaa54b9e9cdf?w=100&q=80" alt=""/></div>
+          <div style="flex:1;"><p class="lineup-name">Bien</p><p class="lineup-role">Afrosoul · Nairobi, Kenya</p></div>
+          <span class="lineup-time">5:15 PM</span>
+        </div>
+        <div class="lineup-item">
+          <span class="lineup-num">04</span>
+          <div class="lineup-av"><img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&q=80" alt=""/></div>
+          <div style="flex:1;"><p class="lineup-name">Bensoul</p><p class="lineup-role">Neo-Soul · Nairobi, Kenya</p></div>
+          <span class="lineup-time">4:00 PM</span>
+        </div>
+        <div class="lineup-item">
+          <span class="lineup-num">05</span>
+          <div class="lineup-av"><img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&q=80" alt=""/></div>
+          <div style="flex:1;"><p class="lineup-name">Nviiri the Storyteller</p><p class="lineup-role">Afropop · Nairobi, Kenya</p></div>
+          <span class="lineup-time">3:00 PM</span>
+        </div>
+      </div>
+    </div>
+
+    <hr class="divider"/>
+
+    <!-- Schedule -->
+    <div class="sr">
+      <h2 class="sec-title" style="margin-bottom:20px;">📅 Event schedule</h2>
+      <div class="schedule">
+        <div class="sch-item"><span class="sch-time">2:00 PM</span><div><p class="sch-title">Gates Open</p><p class="sch-desc">Entry & wristband collection. Early access to food stalls and artisan market.</p></div></div>
+        <div class="sch-item"><span class="sch-time">3:00 PM</span><div><p class="sch-title">Opening Set — Nviiri the Storyteller</p><p class="sch-desc">The afternoon begins with neo-soul and crowd-favourite originals.</p><span class="sch-badge">🎵 Live music</span></div></div>
+        <div class="sch-item"><span class="sch-time">4:15 PM</span><div><p class="sch-title">Wine & Food Hour</p><p class="sch-desc">Curated food pairing session with KWS winemakers. Included in VIP tickets.</p><span class="sch-badge">🍷 Tasting</span></div></div>
+        <div class="sch-item"><span class="sch-time">5:15 PM</span><div><p class="sch-title">Bien — Solo Set</p><p class="sch-desc">Intimate Afrosoul set from Sauti Sol's lead vocalist performing his debut solo catalogue.</p><span class="sch-badge">🎵 Live music</span></div></div>
+        <div class="sch-item"><span class="sch-time">6:30 PM</span><div><p class="sch-title">Nandy</p><p class="sch-desc">Tanzania's biggest star brings Bongo Flava vibes. Expect fan favourites and new material.</p><span class="sch-badge">🎵 Live music</span></div></div>
+        <div class="sch-item"><span class="sch-time">8:00 PM</span><div><p class="sch-title">Sauti Sol — Headline Set</p><p class="sch-desc">The full band takes the stage for a career-spanning headline performance. Don't miss this.</p><span class="sch-badge">⭐ Headliner</span></div></div>
+        <div class="sch-item"><span class="sch-time">10:00 PM</span><div><p class="sch-title">Event closes</p><p class="sch-desc">Shuttle buses available from the venue to Westlands and CBD.</p></div></div>
+      </div>
+    </div>
+
+    <hr class="divider"/>
+
+    <!-- FAQs -->
+    <div class="sr">
+      <h2 class="sec-title" style="margin-bottom:20px;">Frequently asked questions</h2>
+      <div class="faq" id="faq">
+        <div class="faq-item">
+          <div class="faq-q" onclick="toggleFaq(this)">
+            What should I bring?
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </div>
+          <div class="faq-a">Bring your blanket or picnic mat, a valid ID for age-restricted areas, comfortable shoes, sunscreen for the afternoon, and a light jacket for the evening. Outside food and alcohol are not permitted.</div>
+        </div>
+        <div class="faq-item">
+          <div class="faq-q" onclick="toggleFaq(this)">
+            Is there parking available?
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </div>
+          <div class="faq-a">Yes — Ngong Racecourse has 2,000+ parking spaces. Parking is free for all ticket holders. Shuttles from Westlands (every 30 mins) and the CBD (hourly) are also available from 1:30 PM.</div>
+        </div>
+        <div class="faq-item">
+          <div class="faq-q" onclick="toggleFaq(this)">
+            Can I pay with M-Pesa?
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </div>
+          <div class="faq-a">Absolutely. Klickenya accepts M-Pesa, Visa, Mastercard, and bank transfer. You'll receive a QR code ticket instantly via SMS and email after payment.</div>
+        </div>
+        <div class="faq-item">
+          <div class="faq-q" onclick="toggleFaq(this)">
+            What's the refund policy?
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </div>
+          <div class="faq-a">Full refund if cancelled 7+ days before the event. 50% refund between 3–7 days. No refund within 72 hours. Tickets are fully transferable up to 24 hours before the event.</div>
+        </div>
+        <div class="faq-item">
+          <div class="faq-q" onclick="toggleFaq(this)">
+            Is this event kid-friendly?
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </div>
+          <div class="faq-a">Children under 12 enter free with a paying adult. There is a dedicated family zone with activities. The alcohol areas are age-restricted (18+). The event is family-friendly until 8 PM.</div>
+        </div>
+      </div>
+    </div>
+
+    <hr class="divider"/>
+
+    <!-- Related events -->
+    <div class="sr">
+      <h2 class="sec-title" style="margin-bottom:0;">More events in Nairobi</h2>
+      <div class="related-grid">
+        <a href="event.html" class="rel-card">
+          <div class="rel-cover"><img src="https://images.unsplash.com/photo-1415201364774-f6f0bb35f28f?w=400&q=80" loading="lazy" alt=""/><div class="rel-date-badge"><p class="rdb-month">APR</p><p class="rdb-day">5</p></div></div>
+          <div class="rel-body"><p class="rel-title">Nairobi Jazz Festival</p><p class="rel-meta">Alliance Française · 6:00 PM</p><p class="rel-price">KSh 1,800</p></div>
+        </a>
+        <a href="event.html" class="rel-card">
+          <div class="rel-cover"><img src="https://images.unsplash.com/photo-1555244162-803834f70033?w=400&q=80" loading="lazy" alt=""/><div class="rel-date-badge"><p class="rdb-month">MAY</p><p class="rdb-day">17</p></div></div>
+          <div class="rel-body"><p class="rel-title">Nairobi Food Festival</p><p class="rel-meta">Uhuru Park · 10:00 AM</p><p class="rel-price">KSh 500</p></div>
+        </a>
+        <a href="event.html" class="rel-card">
+          <div class="rel-cover"><img src="https://images.unsplash.com/photo-1506953823976-52e1fdc0149a?w=400&q=80" loading="lazy" alt=""/><div class="rel-date-badge"><p class="rdb-month">MAY</p><p class="rdb-day">3</p></div></div>
+          <div class="rel-body"><p class="rel-title">Diani Beach Marathon</p><p class="rel-meta">Diani Beach · 6:00 AM</p><p class="rel-price">KSh 1,200</p></div>
+        </a>
+      </div>
+    </div>
+
+  </div><!-- /main-col -->
+
+  <!-- BOOKING CARD -->
+  <div>
+    <div class="booking-card au d3">
+      <!-- Urgency -->
+      <div class="urgency-banner">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        Only 87 tickets remaining
+      </div>
+
+      <!-- Ticket types -->
+      <p style="font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--text);margin-bottom:8px;">Select ticket type</p>
+      <div class="ticket-types" id="ticket-types">
+        <div class="ticket-type selected" onclick="selectTicket(this,2500,'General Admission')">
+          <div class="ticket-radio"><div class="ticket-radio-dot"></div></div>
+          <div class="ticket-info"><p class="ticket-name">General Admission</p><p class="ticket-desc">Lawn access, food stalls, 1 welcome drink</p></div>
+          <div class="ticket-price-col"><p class="ticket-price">2,500</p><p class="ticket-avail">240 left</p></div>
+        </div>
+        <div class="ticket-type" onclick="selectTicket(this,5000,'VIP')">
+          <div class="ticket-radio"><div class="ticket-radio-dot"></div></div>
+          <div class="ticket-info"><p class="ticket-name">VIP</p><p class="ticket-desc">Reserved seating, premium bar, wine pairing</p></div>
+          <div class="ticket-price-col"><p class="ticket-price">5,000</p><p class="ticket-avail low">32 left</p></div>
+        </div>
+        <div class="ticket-type" onclick="selectTicket(this,12000,'VVIP Table')">
+          <div class="ticket-radio"><div class="ticket-radio-dot"></div></div>
+          <div class="ticket-info"><p class="ticket-name">VVIP Table</p><p class="ticket-desc">Private table, butler service, backstage access</p></div>
+          <div class="ticket-price-col"><p class="ticket-price">12,000</p><p class="ticket-avail low">5 left</p></div>
+        </div>
+      </div>
+
+      <!-- Quantity -->
+      <div class="qty-row">
+        <span class="qty-label">Quantity</span>
+        <div class="qty-ctrl">
+          <button class="qty-btn" id="qm">−</button>
+          <span class="qty-num" id="qn">1</span>
+          <button class="qty-btn" id="qp">+</button>
+        </div>
+      </div>
+
+      <!-- Promo code -->
+      <div class="promo-row">
+        <input class="promo-input" placeholder="Promo code" id="promo-input"/>
+        <button class="promo-apply" onclick="applyPromo()">Apply</button>
+      </div>
+
+      <button class="btn-book" onclick="handleBook()">Get tickets</button>
+      <p class="book-note">Instant QR delivery · Pay with M-Pesa or card</p>
+
+      <div class="price-breakdown">
+        <div class="pb-row"><span id="ticket-line">KSh 2,500 × 1 ticket</span><span id="base-cost">KSh 2,500</span></div>
+        <div class="pb-row"><span>Service fee (6%)</span><span id="svc-fee">KSh 150</span></div>
+        <div id="discount-row" class="pb-row" style="display:none;color:var(--green);"><span>Promo discount</span><span id="discount-val">− KSh 0</span></div>
+        <div class="pb-total"><span>Total</span><span id="total-cost">KSh 2,650</span></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- MOBILE BAR -->
+<div id="mbar">
+  <div class="mbar-price">
+    <span class="val" id="mob-price">KSh 2,500</span>
+    <span class="unit"> · <span id="mob-type">General</span></span>
+  </div>
+  <button class="btn-book-mob" onclick="handleBook()">Get tickets</button>
+</div>
+
+<script>
+// ── Ticket selection ──
+let ticketPrice=2500, ticketName='General Admission', qty=1, promoApplied=false;
+
+function selectTicket(el, price, name){
+  document.querySelectorAll('.ticket-type').forEach(t=>{
+    t.classList.remove('selected');
+    t.querySelector('.ticket-radio-dot').style.opacity='0';
+  });
+  el.classList.add('selected');
+  el.querySelector('.ticket-radio-dot').style.opacity='1';
+  ticketPrice=price; ticketName=name;
+  document.getElementById('mob-price').textContent='KSh '+price.toLocaleString();
+  document.getElementById('mob-type').textContent=name.split(' ')[0];
+  recalc();
+}
+
+// ── Quantity ──
+document.getElementById('qp').onclick=()=>{if(qty<10){qty++;document.getElementById('qn').textContent=qty;recalc();}};
+document.getElementById('qm').onclick=()=>{if(qty>1){qty--;document.getElementById('qn').textContent=qty;recalc();}};
+
+function recalc(){
+  const base=ticketPrice*qty;
+  const svc=Math.round(base*.06);
+  const disc=promoApplied?Math.round(base*.1):0;
+  const total=base+svc-disc;
+  document.getElementById('ticket-line').textContent='KSh '+ticketPrice.toLocaleString()+' × '+qty+' ticket'+(qty>1?'s':'');
+  document.getElementById('base-cost').textContent='KSh '+base.toLocaleString();
+  document.getElementById('svc-fee').textContent='KSh '+svc.toLocaleString();
+  document.getElementById('total-cost').textContent='KSh '+total.toLocaleString();
+  if(promoApplied){
+    document.getElementById('discount-row').style.display='flex';
+    document.getElementById('discount-val').textContent='− KSh '+disc.toLocaleString();
+  }
+}
+
+// ── Promo ──
+function applyPromo(){
+  const v=document.getElementById('promo-input').value.trim().toUpperCase();
+  if(v==='KLICK10'||v==='SAFARICOM'){
+    promoApplied=true;
+    document.getElementById('promo-input').style.borderColor='var(--green)';
+    document.getElementById('promo-input').value='✓ '+v+' applied (10% off)';
+    document.getElementById('promo-input').disabled=true;
+    recalc();
+  } else {
+    document.getElementById('promo-input').style.borderColor='#DC2626';
+    setTimeout(()=>document.getElementById('promo-input').style.borderColor='var(--border)',2000);
+  }
+}
+
+// ── Book ──
+function handleBook(){
+  const total=ticketPrice*qty+Math.round(ticketPrice*qty*.06)-(promoApplied?Math.round(ticketPrice*qty*.1):0);
+  alert('🎉 Booking Blankets & Wine!\n\n• '+ticketName+' × '+qty+'\n• 22 March 2026 · 3:00 PM\n• Ngong Racecourse, Nairobi\n• Total: KSh '+total.toLocaleString()+'\n\nA QR ticket will be sent to your phone via M-Pesa confirmation.');
+}
+
+// ── Save ──
+let saved=false;
+document.getElementById('save-btn').onclick=function(){
+  saved=!saved;
+  const h=document.getElementById('heart-icon');
+  h.setAttribute('fill',saved?'#E8A020':'none');
+  h.setAttribute('stroke',saved?'#E8A020':'currentColor');
+};
+
+// ── Countdown ──
+function updateCountdown(){
+  const target=new Date('2026-03-22T15:00:00');
+  const now=new Date();
+  const diff=target-now;
+  if(diff<=0)return;
+  const d=Math.floor(diff/86400000);
+  const h=Math.floor((diff%86400000)/3600000);
+  const m=Math.floor((diff%3600000)/60000);
+  const s=Math.floor((diff%60000)/1000);
+  document.getElementById('cd-days').textContent=String(d).padStart(2,'0');
+  document.getElementById('cd-hours').textContent=String(h).padStart(2,'0');
+  document.getElementById('cd-mins').textContent=String(m).padStart(2,'0');
+  document.getElementById('cd-secs').textContent=String(s).padStart(2,'0');
+}
+updateCountdown();
+setInterval(updateCountdown,1000);
+
+// ── FAQ ──
+function toggleFaq(el){
+  const item=el.parentElement;
+  const isOpen=item.classList.contains('open');
+  document.querySelectorAll('.faq-item').forEach(f=>f.classList.remove('open'));
+  if(!isOpen)item.classList.add('open');
+}
+
+// ── Scroll reveal ──
+document.querySelectorAll('.sr').forEach(el=>
+  new IntersectionObserver(e=>{e.forEach(x=>{if(x.isIntersecting)x.target.classList.add('on');});},{threshold:.1}).observe(el)
+);
+
+// ── Animated going counter ──
+let goingBase=482;
+setInterval(()=>{
+  if(Math.random()<.3){
+    goingBase+=Math.floor(Math.random()*3)+1;
+    document.getElementById('going-num').textContent=goingBase.toLocaleString();
+    document.getElementById('going-count-hero').textContent=goingBase.toLocaleString()+' people going';
+  }
+},4000);
+</script>
+</body>
+</html>

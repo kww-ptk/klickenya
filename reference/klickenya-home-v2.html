@@ -1,0 +1,1274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Klickenya — Discover Kenya</title>
+<style>
+/* ─── TOKENS ─────────────────────────────────────────────────── */
+:root {
+  --canvas:    #FFFFFF;
+  --surface:   #F7F5F2;
+  --surface2:  #F0EDE8;
+  --border:    #E8E4DE;
+  --border2:   #D8D3CC;
+  --text:      #1A1714;
+  --text2:     #6B6560;
+  --text3:     #A09A93;
+  --gold:      #E8A020;
+  --gold-dim:  rgba(232,160,32,0.12);
+  --gold-glow: rgba(232,160,32,0.25);
+  --purple:    #8B4DAB;
+  --purple-dim:rgba(139,77,171,0.10);
+  --dark:      #111008;
+  --r-sm: 12px;
+  --r-md: 18px;
+  --r-lg: 24px;
+  --r-xl: 32px;
+  --sh-xs: 0 1px 3px rgba(0,0,0,.06);
+  --sh-sm: 0 2px 8px rgba(0,0,0,.06), 0 0 0 1px rgba(0,0,0,.04);
+  --sh-md: 0 8px 24px rgba(0,0,0,.08), 0 0 0 1px rgba(0,0,0,.04);
+  --sh-lg: 0 20px 48px rgba(0,0,0,.12), 0 0 0 1px rgba(0,0,0,.04);
+  --sh-xl: 0 32px 64px rgba(0,0,0,.16);
+}
+
+/* ─── RESET ───────────────────────────────────────────────────── */
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;font-size:16px;}
+body{
+  font-family: Helvetica Neue, Helvetica, Arial, sans-serif;
+  background:var(--canvas);color:var(--text);
+  overflow-x:hidden;-webkit-font-smoothing:antialiased;
+}
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:10px;}
+img{display:block;max-width:100%;}
+a{text-decoration:none;color:inherit;}
+button{font-family:inherit;cursor:pointer;border:none;background:none;}
+input,select{font-family:inherit;}
+
+/* ─── TYPOGRAPHY SCALE ────────────────────────────────────────── */
+.display {
+  font-size: clamp(42px, 6.5vw, 84px);
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 1.0;
+}
+.heading {
+  font-size: clamp(22px, 2.8vw, 34px);
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+}
+.label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* ─── ANIMATIONS ──────────────────────────────────────────────── */
+@keyframes fadeUp  {from{opacity:0;transform:translateY(18px);}to{opacity:1;transform:none;}}
+@keyframes fadeIn  {from{opacity:0;}to{opacity:1;}}
+@keyframes marquee {to{transform:translateX(-50%);}}
+@keyframes dotPulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.5;transform:scale(1.5);}}
+@keyframes kenBurns{0%{transform:scale(1.07);}100%{transform:scale(1);}}
+
+.au{animation:fadeUp .55s cubic-bezier(.22,1,.36,1) both;}
+.ai{animation:fadeIn .4s ease both;}
+.d1{animation-delay:.06s}.d2{animation-delay:.12s}.d3{animation-delay:.18s}
+.d4{animation-delay:.24s}.d5{animation-delay:.30s}
+
+.sr{opacity:0;transform:translateY(22px);transition:opacity .65s ease,transform .65s ease;}
+.sr.on{opacity:1;transform:none;}
+.sr-l{opacity:0;transform:translateX(-22px);transition:opacity .65s ease,transform .65s ease;}
+.sr-l.on{opacity:1;transform:none;}
+.sr-r{opacity:0;transform:translateX(22px);transition:opacity .65s ease,transform .65s ease;}
+.sr-r.on{opacity:1;transform:none;}
+
+/* ─── NAV ─────────────────────────────────────────────────────── */
+#nav {
+  position:fixed;top:0;left:0;right:0;z-index:200;
+  height:68px;display:flex;align-items:center;
+  padding:0 40px;
+  transition:background .3s,box-shadow .3s,border-color .3s;
+  border-bottom:1px solid transparent;
+}
+/* Sticky state: clean white */
+#nav.solid {
+  background:rgba(255,255,255,.96);
+  backdrop-filter:blur(24px) saturate(180%);
+  -webkit-backdrop-filter:blur(24px) saturate(180%);
+  border-bottom-color:var(--border);
+  box-shadow:0 1px 0 var(--border);
+}
+.nav-inner{width:100%;display:flex;align-items:center;justify-content:space-between;gap:24px;}
+
+/* Logo */
+.nav-logo{display:flex;align-items:center;gap:10px;flex-shrink:0;}
+.nav-logo-icon{
+  width:32px;height:32px;border-radius:9px;flex-shrink:0;
+  background:var(--purple);
+  display:flex;align-items:center;justify-content:center;
+}
+.nav-logo-icon svg{width:17px;height:17px;}
+.nav-logo-name{
+  font-size:17px;font-weight:700;letter-spacing:-.03em;
+  color:var(--text);
+}
+/* On hero (transparent nav), logo is white */
+#nav:not(.solid) .nav-logo-name{color:#fff;}
+#nav:not(.solid) .nav-link{color:rgba(255,255,255,.8);}
+#nav:not(.solid) .nav-link:hover{background:rgba(255,255,255,.12);color:#fff;}
+#nav:not(.solid) .btn-host{color:rgba(255,255,255,.85);border-color:rgba(255,255,255,.25);}
+#nav:not(.solid) .btn-host:hover{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.4);}
+#nav:not(.solid) .btn-signin{background:#fff;color:var(--text);}
+
+/* Search pill — appears on scroll */
+.nav-search-pill{
+  flex:1;max-width:340px;
+  display:flex;align-items:center;
+  background:var(--canvas);border:1px solid var(--border);
+  border-radius:50px;padding:8px 8px 8px 18px;
+  box-shadow:var(--sh-sm);cursor:pointer;
+  opacity:0;transform:translateY(-6px);
+  transition:opacity .3s,transform .3s,box-shadow .2s;
+  pointer-events:none;
+}
+#nav.solid .nav-search-pill{opacity:1;transform:none;pointer-events:all;}
+.nav-search-pill:hover{box-shadow:var(--sh-md);}
+.nav-pill-text{flex:1;font-size:13px;font-weight:600;color:var(--text2);}
+.nav-pill-sep{width:1px;height:16px;background:var(--border);margin:0 10px;}
+/* Purple search button in nav pill */
+.nav-pill-btn{
+  width:32px;height:32px;border-radius:50%;
+  background:var(--purple);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.nav-pill-btn svg{width:14px;height:14px;}
+
+.nav-links{display:flex;gap:2px;align-items:center;}
+.nav-link{
+  padding:8px 14px;border-radius:50px;
+  font-size:14px;font-weight:500;color:var(--text2);
+  transition:background .2s,color .2s;
+}
+.nav-link:hover{background:var(--surface);color:var(--text);}
+.nav-link.active{color:var(--text);font-weight:600;}
+
+.nav-actions{display:flex;align-items:center;gap:8px;flex-shrink:0;}
+.btn-host{
+  padding:8px 16px;border-radius:50px;
+  font-size:13.5px;font-weight:600;color:var(--text);
+  border:1px solid var(--border);
+  transition:all .2s;
+}
+.btn-host:hover{border-color:var(--text);}
+/* Purple sign in button on sticky white nav */
+.btn-signin{
+  padding:9px 20px;border-radius:50px;
+  font-size:13.5px;font-weight:600;
+  background:var(--purple);color:#fff;
+  box-shadow:0 2px 8px rgba(139,77,171,.3);
+  transition:opacity .2s,transform .15s,box-shadow .2s;
+}
+.btn-signin:hover{opacity:.9;transform:translateY(-1px);box-shadow:0 4px 14px rgba(139,77,171,.4);}
+#nav:not(.solid) .btn-signin{background:#fff;color:var(--text);box-shadow:0 2px 8px rgba(0,0,0,.15);}
+#nav:not(.solid) .btn-signin:hover{opacity:.9;}
+
+.nav-menu-btn{display:none;width:36px;height:36px;border-radius:50%;border:1px solid rgba(255,255,255,.3);align-items:center;justify-content:center;flex-direction:column;gap:4px;}
+#nav.solid .nav-menu-btn{border-color:var(--border);}
+.nav-menu-btn span{width:16px;height:1.5px;background:currentColor;border-radius:2px;color:#fff;}
+#nav.solid .nav-menu-btn span{color:var(--text);}
+
+/* ─── HERO ────────────────────────────────────────────────────── */
+#hero{
+  min-height:100svh;padding:0;
+  position:relative;overflow:hidden;
+  display:flex;flex-direction:column;
+}
+.hero-mosaic{
+  position:absolute;inset:0;
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr;
+  grid-template-rows:1fr 1fr;
+  gap:3px;
+}
+.mosaic-cell{overflow:hidden;position:relative;}
+.mosaic-cell img{width:100%;height:100%;object-fit:cover;animation:kenBurns 12s ease-out forwards;}
+.mosaic-cell:nth-child(2) img{animation-delay:1s;}
+.mosaic-cell:nth-child(3) img{animation-delay:2s;}
+.mosaic-cell:nth-child(4) img{animation-delay:.5s;}
+.mosaic-cell:nth-child(5) img{animation-delay:1.5s;}
+.mosaic-cell:nth-child(6) img{animation-delay:2.5s;}
+.hero-mosaic-overlay{
+  position:absolute;inset:0;z-index:1;
+  background:
+    linear-gradient(to bottom,rgba(0,0,0,.52) 0%,rgba(0,0,0,.08) 30%,rgba(0,0,0,.04) 50%,rgba(0,0,0,.58) 85%,rgba(0,0,0,.78) 100%),
+    linear-gradient(to right,rgba(0,0,0,.18),transparent 40%,transparent 60%,rgba(0,0,0,.18));
+}
+
+.hero-content{
+  position:relative;z-index:2;
+  flex:1;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  padding:120px 24px 40px;
+  text-align:center;
+}
+
+.hero-eyebrow{
+  display:inline-flex;align-items:center;gap:8px;
+  background:rgba(255,255,255,.1);backdrop-filter:blur(12px);
+  border:1px solid rgba(255,255,255,.18);
+  border-radius:50px;padding:6px 16px;
+  font-size:12.5px;font-weight:600;color:rgba(255,255,255,.9);
+  margin-bottom:28px;
+}
+.eyebrow-dot{width:6px;height:6px;border-radius:50%;background:var(--gold);animation:dotPulse 2s ease infinite;}
+
+.hero-h1{
+  font-size:clamp(44px,7vw,88px);
+  font-weight:700;color:#fff;
+  line-height:1.0;letter-spacing:-.04em;
+  margin-bottom:20px;
+}
+.hero-h1 .line2{
+  display:block;
+  background:linear-gradient(135deg,#fff 0%,rgba(255,255,255,.6) 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.hero-h1 .highlight{
+  -webkit-text-fill-color:initial;
+  color:var(--gold);
+}
+
+.hero-sub{
+  font-size:clamp(16px,2vw,19px);color:rgba(255,255,255,.62);
+  max-width:480px;line-height:1.65;margin-bottom:48px;font-weight:400;
+}
+
+/* ─── SEARCH BOX ──────────────────────────────────────────────── */
+.search-box{
+  width:100%;max-width:820px;
+  background:rgba(255,255,255,.97);
+  backdrop-filter:blur(20px);
+  border-radius:var(--r-xl);
+  box-shadow:var(--sh-xl), 0 0 0 1px rgba(255,255,255,.2);
+  overflow:hidden;
+}
+.search-tabs{
+  display:flex;gap:0;border-bottom:1px solid var(--border);
+  padding:0 4px;overflow-x:auto;scrollbar-width:none;
+}
+.search-tabs::-webkit-scrollbar{display:none;}
+.search-tab{
+  flex-shrink:0;padding:14px 18px;font-size:13.5px;font-weight:600;
+  color:var(--text3);border-bottom:2px solid transparent;
+  transition:color .2s,border-color .2s;white-space:nowrap;
+}
+.search-tab:hover{color:var(--text);}
+/* Purple active tab underline */
+.search-tab.active{color:var(--purple);border-bottom-color:var(--purple);}
+
+.search-fields{display:flex;align-items:stretch;gap:0;padding:12px 12px 12px 0;}
+.search-field{
+  flex:1;display:flex;flex-direction:column;gap:3px;
+  padding:10px 14px 10px 20px;
+  border-right:1px solid var(--border);
+  cursor:text;transition:background .2s;border-radius:14px;
+}
+.search-field:hover{background:var(--surface);}
+.search-field:last-of-type{border-right:none;}
+.search-field label{font-size:10.5px;font-weight:700;color:var(--text);letter-spacing:.04em;text-transform:uppercase;}
+.search-field input,.search-field select{
+  border:none;background:transparent;outline:none;
+  font-family:inherit;font-size:14px;font-weight:400;
+  color:var(--text2);width:100%;
+}
+.search-field input::placeholder{color:var(--text3);}
+.search-field select{appearance:none;color:var(--text2);}
+
+.guests-ctrl{display:flex;align-items:center;gap:10px;}
+.guests-btn{
+  width:26px;height:26px;border-radius:50%;
+  border:1.5px solid var(--border2);
+  display:flex;align-items:center;justify-content:center;
+  font-size:16px;color:var(--text2);
+  transition:border-color .2s,color .2s;line-height:1;
+}
+.guests-btn:hover{border-color:var(--purple);color:var(--purple);}
+.guests-count{font-size:14px;font-weight:600;min-width:14px;text-align:center;}
+
+/* Purple search go button */
+.search-go{
+  flex-shrink:0;width:52px;height:52px;border-radius:var(--r-md);
+  background:var(--purple);
+  display:flex;align-items:center;justify-content:center;
+  margin:auto 0 auto 4px;
+  transition:background .2s,transform .15s,box-shadow .2s;
+  box-shadow:0 4px 14px rgba(139,77,171,.35);
+}
+.search-go:hover{background:#9B5ABF;transform:scale(1.05);box-shadow:0 6px 20px rgba(139,77,171,.45);}
+.search-go svg{width:20px;height:20px;}
+
+.hero-stats{
+  display:flex;gap:32px;margin-top:36px;
+  flex-wrap:wrap;justify-content:center;
+}
+.hero-stat{text-align:center;}
+.hero-stat-val{font-size:22px;font-weight:700;color:#fff;letter-spacing:-.03em;}
+.hero-stat-label{font-size:12px;color:rgba(255,255,255,.48);margin-top:2px;font-weight:400;}
+
+/* ─── CATEGORY NAV ────────────────────────────────────────────── */
+#cat-nav{
+  position:sticky;top:67px;z-index:100;
+  background:rgba(255,255,255,.97);
+  backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);
+}
+.cat-nav-inner{
+  display:flex;align-items:center;gap:0;
+  padding:0 40px;
+  overflow-x:auto;scrollbar-width:none;
+}
+.cat-nav-inner::-webkit-scrollbar{display:none;}
+.cat-item{
+  flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:7px;
+  padding:14px 20px;
+  border-bottom:2px solid transparent;
+  transition:border-color .2s,opacity .2s;
+  cursor:pointer;opacity:.5;min-width:72px;
+}
+.cat-item:hover{opacity:.85;}
+/* Purple active indicator */
+.cat-item.active{border-bottom-color:var(--purple);opacity:1;}
+.cat-item.active .cat-item-label{color:var(--purple);}
+.cat-item-icon{font-size:22px;line-height:1;}
+.cat-item-label{font-size:11.5px;font-weight:600;color:var(--text);white-space:nowrap;transition:color .2s;}
+
+.filter-btn{
+  flex-shrink:0;margin-left:auto;
+  display:flex;align-items:center;gap:7px;
+  padding:10px 16px;border-radius:10px;
+  border:1px solid var(--border);font-size:13px;font-weight:600;
+  transition:box-shadow .2s,border-color .2s;white-space:nowrap;
+}
+.filter-btn:hover{box-shadow:var(--sh-sm);border-color:var(--purple);color:var(--purple);}
+
+/* ─── SECTION UTILS ───────────────────────────────────────────── */
+.section{padding:72px 40px;}
+.section-sm{padding:48px 40px;}
+.container{max-width:1280px;margin:0 auto;}
+
+.section-header{
+  display:flex;align-items:flex-end;justify-content:space-between;
+  margin-bottom:32px;gap:16px;flex-wrap:wrap;
+}
+.section-label{
+  font-size:11px;font-weight:700;letter-spacing:.09em;
+  text-transform:uppercase;color:var(--purple);margin-bottom:6px;
+}
+.section-title{
+  font-size:clamp(24px,3vw,34px);font-weight:600;
+  letter-spacing:-.03em;color:var(--text);line-height:1.15;
+}
+.section-sub{font-size:14px;color:var(--text2);margin-top:6px;line-height:1.5;font-weight:400;}
+.view-all{
+  flex-shrink:0;font-size:13.5px;font-weight:600;color:var(--text);
+  padding:9px 18px;border-radius:50px;border:1.5px solid var(--border);
+  transition:box-shadow .2s,border-color .2s,color .2s;white-space:nowrap;
+}
+.view-all:hover{box-shadow:var(--sh-sm);border-color:var(--purple);color:var(--purple);}
+
+/* ─── LISTING CARD ────────────────────────────────────────────── */
+.listings-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
+  gap:28px 22px;
+}
+.listing-card{cursor:pointer;}
+.listing-card-media{
+  position:relative;border-radius:var(--r-lg);overflow:hidden;
+  aspect-ratio:1/.85;background:var(--surface2);
+}
+.listing-card-media img{width:100%;height:100%;object-fit:cover;transition:transform .5s ease;}
+.listing-card:hover .listing-card-media img{transform:scale(1.04);}
+
+.listing-badge{
+  position:absolute;top:14px;left:14px;
+  background:rgba(255,255,255,.95);backdrop-filter:blur(8px);
+  border-radius:50px;padding:4px 11px;
+  font-size:11px;font-weight:700;color:var(--text);
+  box-shadow:var(--sh-xs);
+}
+.listing-badge.new{background:var(--purple);color:#fff;}
+
+.listing-save{
+  position:absolute;top:12px;right:12px;
+  width:32px;height:32px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  background:rgba(255,255,255,.22);backdrop-filter:blur(8px);
+  transition:background .2s,transform .2s;
+}
+.listing-save:hover{background:rgba(255,255,255,.5);transform:scale(1.1);}
+.listing-save svg{filter:drop-shadow(0 1px 3px rgba(0,0,0,.3));}
+
+.listing-dots{
+  position:absolute;bottom:10px;left:50%;transform:translateX(-50%);
+  display:flex;gap:4px;opacity:0;transition:opacity .2s;
+}
+.listing-card:hover .listing-dots{opacity:1;}
+.listing-dot{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.55);}
+.listing-dot.active{background:#fff;}
+
+.listing-card-body{padding:14px 2px 0;}
+.listing-card-row{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;}
+.listing-card-name{font-size:14.5px;font-weight:600;color:var(--text);line-height:1.35;flex:1;}
+.listing-card-rating{display:flex;align-items:center;gap:4px;flex-shrink:0;font-size:13.5px;font-weight:600;}
+.listing-card-meta{font-size:13px;color:var(--text2);margin-top:2px;font-weight:400;}
+.listing-card-price{margin-top:6px;font-size:14.5px;font-weight:600;}
+.listing-card-price span{color:var(--text2);font-weight:400;}
+
+/* ─── MARQUEE ─────────────────────────────────────────────────── */
+.marquee-wrap{background:var(--text);padding:16px 0;overflow:hidden;}
+.marquee-track{display:flex;white-space:nowrap;animation:marquee 35s linear infinite;}
+.marquee-item{
+  display:inline-flex;align-items:center;gap:10px;
+  padding:0 28px;font-size:13px;font-weight:500;
+  color:rgba(255,255,255,.28);flex-shrink:0;
+}
+.marquee-sep{color:var(--gold);font-size:6px;}
+
+/* ─── EVENTS ──────────────────────────────────────────────────── */
+.hscroll-wrap{position:relative;}
+.hscroll{
+  display:flex;gap:18px;
+  overflow-x:auto;scrollbar-width:none;
+  padding-bottom:4px;scroll-snap-type:x mandatory;
+}
+.hscroll::-webkit-scrollbar{display:none;}
+.hscroll>*{scroll-snap-align:start;flex-shrink:0;}
+.hscroll-arrow{
+  position:absolute;top:50%;transform:translateY(-50%);
+  width:38px;height:38px;border-radius:50%;
+  background:#fff;border:1px solid var(--border);box-shadow:var(--sh-md);
+  display:flex;align-items:center;justify-content:center;z-index:10;
+  transition:box-shadow .2s,transform .2s;
+}
+.hscroll-arrow:hover{box-shadow:var(--sh-lg);transform:translateY(-50%) scale(1.05);}
+.hscroll-arrow.prev{left:-18px;}
+.hscroll-arrow.next{right:-18px;}
+
+.event-card{
+  width:296px;background:var(--canvas);
+  border:1px solid var(--border);border-radius:var(--r-xl);overflow:hidden;
+  transition:box-shadow .25s,transform .25s;cursor:pointer;
+}
+.event-card:hover{box-shadow:var(--sh-lg);transform:translateY(-4px);}
+.event-card-cover{height:160px;position:relative;overflow:hidden;background:var(--surface2);}
+.event-card-cover img{width:100%;height:100%;object-fit:cover;transition:transform .5s;}
+.event-card:hover .event-card-cover img{transform:scale(1.05);}
+.event-card-cover-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.4),transparent 50%);}
+.event-card-date-badge{
+  position:absolute;top:14px;left:14px;
+  background:rgba(255,255,255,.96);backdrop-filter:blur(10px);
+  border-radius:12px;padding:6px 10px;text-align:center;
+  box-shadow:var(--sh-sm);min-width:44px;
+}
+.event-date-month{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--purple);}
+.event-date-day{font-size:20px;font-weight:700;color:var(--text);line-height:1;}
+.event-card-body{padding:18px 20px 20px;}
+.event-host-row{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+.event-host-avatar{width:22px;height:22px;border-radius:50%;overflow:hidden;flex-shrink:0;background:var(--surface2);}
+.event-host-avatar img{width:100%;height:100%;object-fit:cover;}
+.event-host-name{font-size:12px;font-weight:600;color:var(--text2);}
+.event-title{font-size:17px;font-weight:600;color:var(--text);line-height:1.3;margin-bottom:10px;letter-spacing:-.01em;}
+.event-meta{display:flex;flex-wrap:wrap;gap:10px;}
+.event-meta-item{display:flex;align-items:center;gap:5px;font-size:12.5px;color:var(--text2);}
+.event-card-foot{
+  padding:12px 20px 14px;border-top:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.event-going{display:flex;align-items:center;}
+.event-going-av{width:22px;height:22px;border-radius:50%;border:2px solid #fff;overflow:hidden;margin-left:-6px;background:var(--surface2);}
+.event-going-av:first-child{margin-left:0;}
+.event-going-av img{width:100%;height:100%;object-fit:cover;}
+.event-going-count{font-size:12px;font-weight:600;color:var(--text2);margin-left:8px;}
+.event-price-tag{
+  background:var(--gold-dim);border:1px solid var(--gold-glow);
+  border-radius:50px;padding:4px 12px;font-size:12.5px;font-weight:700;color:var(--gold);
+}
+.event-price-tag.free{background:rgba(22,163,74,.08);border-color:rgba(22,163,74,.2);color:#16A34A;}
+
+/* ─── DESTINATIONS ────────────────────────────────────────────── */
+#destinations{background:var(--surface);}
+.bento{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  grid-template-rows:260px 200px;
+  gap:14px;
+}
+.bento-cell{
+  border-radius:var(--r-lg);overflow:hidden;
+  position:relative;cursor:pointer;background:var(--surface2);
+}
+.bento-cell img{width:100%;height:100%;object-fit:cover;transition:transform .6s ease;}
+.bento-cell:hover img{transform:scale(1.05);}
+.bento-cell-overlay{
+  position:absolute;inset:0;
+  background:linear-gradient(to top,rgba(0,0,0,.7) 0%,transparent 55%);
+  transition:background .4s;
+}
+.bento-cell:hover .bento-cell-overlay{background:linear-gradient(to top,rgba(0,0,0,.8) 0%,transparent 55%);}
+.bento-cell-body{position:absolute;bottom:18px;left:18px;right:18px;}
+.bento-cell-name{font-size:17px;font-weight:600;color:#fff;letter-spacing:-.01em;margin-bottom:3px;}
+.bento-cell-meta{font-size:12px;color:rgba(255,255,255,.52);display:flex;align-items:center;gap:6px;}
+.bento-cell-count{
+  position:absolute;top:14px;right:14px;
+  background:rgba(0,0,0,.32);backdrop-filter:blur(8px);
+  border:1px solid rgba(255,255,255,.1);border-radius:50px;
+  padding:3px 10px;font-size:11px;font-weight:600;color:rgba(255,255,255,.78);
+}
+.bento-1{grid-column:span 2;grid-row:span 2;}
+.bento-1 .bento-cell-name{font-size:24px;}
+.bento-tall{grid-row:span 2;}
+
+/* ─── HOW IT WORKS ────────────────────────────────────────────── */
+#how{background:var(--canvas);}
+.how-grid{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:2px;
+  border-radius:var(--r-xl);border:1px solid var(--border);overflow:hidden;margin-top:48px;
+}
+.how-card{
+  padding:40px 32px;background:var(--canvas);
+  border-right:1px solid var(--border);transition:background .3s;
+}
+.how-card:last-child{border-right:none;}
+.how-card:hover{background:var(--surface);}
+.how-step-num{
+  font-size:56px;font-weight:700;
+  color:var(--border);line-height:1;margin-bottom:24px;
+  transition:color .3s;letter-spacing:-.05em;
+}
+.how-card:hover .how-step-num{color:var(--purple);}
+.how-icon-wrap{
+  width:44px;height:44px;border-radius:var(--r-sm);
+  background:var(--purple-dim);margin-bottom:16px;
+  display:flex;align-items:center;justify-content:center;font-size:20px;
+}
+.how-card h3{font-size:17px;font-weight:600;margin-bottom:10px;letter-spacing:-.01em;}
+.how-card p{font-size:13.5px;color:var(--text2);line-height:1.65;font-weight:400;}
+
+/* ─── HOST SECTION ────────────────────────────────────────────── */
+#host{background:var(--dark);position:relative;overflow:hidden;}
+.host-inner{display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:center;}
+.host-left .eyebrow{
+  display:inline-flex;align-items:center;gap:7px;
+  background:rgba(232,160,32,.14);border:1px solid rgba(232,160,32,.28);
+  border-radius:50px;padding:5px 14px;
+  font-size:11.5px;font-weight:700;color:var(--gold);
+  letter-spacing:.05em;text-transform:uppercase;margin-bottom:20px;
+}
+.host-left h2{
+  font-size:clamp(32px,4vw,50px);font-weight:700;
+  color:#fff;letter-spacing:-.04em;line-height:1.08;margin-bottom:20px;
+}
+.host-left h2 em{font-style:normal;color:var(--gold);}
+.host-left p{font-size:16px;color:rgba(255,255,255,.48);line-height:1.7;margin-bottom:36px;max-width:420px;font-weight:400;}
+.host-cta-btns{display:flex;gap:12px;flex-wrap:wrap;}
+.btn-gold{
+  padding:13px 26px;border-radius:50px;
+  background:var(--gold);color:var(--dark);
+  font-size:15px;font-weight:700;
+  box-shadow:0 6px 20px rgba(232,160,32,.32);
+  transition:transform .15s,box-shadow .2s;
+}
+.btn-gold:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(232,160,32,.42);}
+.btn-outline-white{
+  padding:13px 26px;border-radius:50px;
+  border:1.5px solid rgba(255,255,255,.18);color:rgba(255,255,255,.75);
+  font-size:15px;font-weight:600;
+  transition:border-color .2s,color .2s;
+}
+.btn-outline-white:hover{border-color:rgba(255,255,255,.45);color:#fff;}
+
+.host-cards{display:flex;flex-direction:column;gap:14px;position:relative;}
+.host-card{
+  background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.07);
+  border-radius:var(--r-lg);padding:22px 24px;backdrop-filter:blur(10px);
+  transition:background .3s,transform .3s;
+}
+.host-card:hover{background:rgba(255,255,255,.08);transform:translateX(-4px);}
+.host-card-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
+.host-card-title{font-size:13.5px;font-weight:600;color:rgba(255,255,255,.65);}
+.host-card-badge{background:rgba(22,163,74,.14);border:1px solid rgba(22,163,74,.28);border-radius:50px;padding:3px 10px;font-size:11px;font-weight:700;color:#4ADE80;}
+.host-card-amount{font-size:30px;font-weight:700;color:#fff;letter-spacing:-.04em;}
+.host-card-sub{font-size:12px;color:rgba(255,255,255,.32);margin-top:3px;font-weight:400;}
+.host-card-bar{height:3px;background:rgba(255,255,255,.07);border-radius:2px;margin-top:16px;overflow:hidden;}
+.host-card-bar-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--gold),#F5C842);}
+.host-glow{
+  position:absolute;pointer-events:none;width:600px;height:600px;border-radius:50%;
+  background:radial-gradient(circle,rgba(232,160,32,.07),transparent 65%);
+  top:50%;right:-100px;transform:translateY(-50%);
+}
+
+/* ─── STATS ───────────────────────────────────────────────────── */
+#stats{background:linear-gradient(135deg,var(--gold) 0%,#E89020 100%);padding:64px 40px;}
+.stats-row{display:flex;justify-content:center;gap:0;flex-wrap:wrap;max-width:900px;margin:0 auto;}
+.stat-item{
+  flex:1;min-width:160px;text-align:center;
+  padding:20px 32px;border-right:1px solid rgba(255,255,255,.2);
+}
+.stat-item:last-child{border-right:none;}
+.stat-val{font-size:clamp(34px,5vw,50px);font-weight:700;color:#fff;line-height:1;letter-spacing:-.04em;}
+.stat-label{font-size:13px;color:rgba(255,255,255,.68);margin-top:6px;font-weight:400;}
+
+/* ─── TESTIMONIALS ────────────────────────────────────────────── */
+#testimonials{background:var(--surface);}
+.t-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;}
+.t-card{
+  background:var(--canvas);border:1px solid var(--border);
+  border-radius:var(--r-xl);padding:30px;
+  transition:box-shadow .25s,transform .25s;
+}
+.t-card:hover{box-shadow:var(--sh-md);transform:translateY(-3px);}
+.t-stars{display:flex;gap:2px;margin-bottom:16px;}
+.t-star{color:var(--gold);font-size:14px;}
+.t-text{font-size:15px;font-weight:400;line-height:1.65;color:var(--text);margin-bottom:24px;}
+.t-author{display:flex;align-items:center;gap:12px;}
+.t-av{
+  width:38px;height:38px;border-radius:50%;flex-shrink:0;
+  background:linear-gradient(135deg,var(--purple),var(--gold));
+  display:flex;align-items:center;justify-content:center;
+  font-weight:700;color:#fff;font-size:13px;
+}
+.t-name{font-size:13.5px;font-weight:600;color:var(--text);}
+.t-meta{font-size:12px;color:var(--text3);margin-top:1px;font-weight:400;}
+
+/* ─── FOOTER ──────────────────────────────────────────────────── */
+footer{background:var(--text);padding:72px 40px 0;}
+.footer-grid{
+  display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:48px;
+  padding-bottom:56px;border-bottom:1px solid rgba(255,255,255,.06);
+}
+.footer-brand-name{font-size:20px;font-weight:700;color:#fff;letter-spacing:-.03em;margin-bottom:14px;}
+.footer-brand p{font-size:13.5px;color:rgba(255,255,255,.32);line-height:1.7;max-width:260px;margin-bottom:24px;font-weight:400;}
+.footer-socials{display:flex;gap:8px;}
+.fsocial{
+  width:34px;height:34px;border-radius:9px;
+  background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.07);
+  display:flex;align-items:center;justify-content:center;
+  font-size:13px;color:rgba(255,255,255,.35);
+  transition:background .2s,color .2s;
+}
+.fsocial:hover{background:rgba(255,255,255,.1);color:rgba(255,255,255,.8);}
+.footer-col h4{font-size:12px;font-weight:700;color:rgba(255,255,255,.45);letter-spacing:.05em;text-transform:uppercase;margin-bottom:18px;}
+.footer-col a{display:block;font-size:13.5px;color:rgba(255,255,255,.32);margin-bottom:11px;transition:color .2s;font-weight:400;}
+.footer-col a:hover{color:rgba(255,255,255,.82);}
+.footer-bottom{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:20px 0;flex-wrap:wrap;gap:12px;
+}
+.footer-bottom p{font-size:12.5px;color:rgba(255,255,255,.2);font-weight:400;}
+.footer-bottom-links{display:flex;gap:20px;}
+.footer-bottom-links a{font-size:12.5px;color:rgba(255,255,255,.2);transition:color .2s;font-weight:400;}
+.footer-bottom-links a:hover{color:rgba(255,255,255,.55);}
+
+/* ─── MOBILE NAV ──────────────────────────────────────────────── */
+#mobile-nav{
+  display:none;position:fixed;bottom:0;left:0;right:0;z-index:300;
+  background:rgba(255,255,255,.97);backdrop-filter:blur(24px);
+  border-top:1px solid var(--border);
+  padding:8px 0 max(8px,env(safe-area-inset-bottom));
+}
+.mnav-inner{display:flex;}
+.mnav-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:5px 0;}
+.mnav-icon{width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;transition:background .2s;}
+.mnav-btn.active .mnav-icon{background:var(--purple-dim);}
+.mnav-label{font-size:10px;font-weight:600;color:var(--text3);}
+.mnav-btn.active .mnav-label{color:var(--purple);}
+
+/* ─── RESPONSIVE ──────────────────────────────────────────────── */
+@media(max-width:1100px){
+  .bento{grid-template-columns:repeat(2,1fr);grid-template-rows:auto;}
+  .bento-1{grid-column:span 2;}
+  .bento-tall{grid-row:span 1;}
+  .how-grid{grid-template-columns:repeat(2,1fr);}
+  .how-card:nth-child(2){border-right:none;}
+  .how-card:nth-child(3),.how-card:nth-child(4){border-top:1px solid var(--border);}
+  .host-inner{grid-template-columns:1fr;gap:48px;}
+  .footer-grid{grid-template-columns:1fr 1fr;}
+}
+@media(max-width:768px){
+  #nav{padding:0 20px;}
+  .nav-links,.btn-host{display:none;}
+  .nav-menu-btn{display:flex;}
+  .nav-search-pill{display:none;}
+  .section,.section-sm{padding:56px 20px;}
+  #destinations,#how,#host,#stats{padding:56px 20px;}
+  footer{padding:56px 20px 0;}
+  .bento{grid-template-columns:1fr 1fr;}
+  .bento-1{grid-column:span 2;}
+  .t-grid{grid-template-columns:1fr;}
+  .stats-row{flex-direction:column;gap:0;}
+  .stat-item{border-right:none;border-bottom:1px solid rgba(255,255,255,.2);}
+  .stat-item:last-child{border-bottom:none;}
+  .cat-nav-inner{padding:0 20px;}
+  .hscroll-arrow{display:none;}
+  #mobile-nav{display:block;}
+  body{padding-bottom:72px;}
+  .footer-grid{grid-template-columns:1fr;}
+  .search-fields{flex-direction:column;gap:0;}
+  .search-field{border-right:none;border-bottom:1px solid var(--border);}
+  .search-field:last-of-type{border-bottom:none;}
+  .search-go{width:100%;border-radius:14px;height:48px;margin-top:4px;}
+  .listings-grid{grid-template-columns:repeat(2,1fr);gap:20px 14px;}
+  .how-grid{grid-template-columns:1fr;}
+  .how-card{border-right:none!important;border-bottom:1px solid var(--border);}
+  .how-card:last-child{border-bottom:none;}
+}
+@media(max-width:480px){
+  .listings-grid{grid-template-columns:1fr;}
+  .bento{grid-template-columns:1fr;}
+  .bento-1{grid-column:span 1;}
+  .hero-h1{font-size:38px;}
+}
+</style>
+</head>
+<body>
+
+<!-- ═══ NAV ════ -->
+<nav id="nav">
+  <div class="nav-inner">
+    <a href="#" class="nav-logo">
+      <div class="nav-logo-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M5 3v18M5 12l8-9M5 12l8 9"/>
+        </svg>
+      </div>
+      <span class="nav-logo-name">klickenya</span>
+    </a>
+
+    <div class="nav-search-pill" id="nav-pill">
+      <span class="nav-pill-text">Anywhere · Any week · Any type</span>
+      <div class="nav-pill-sep"></div>
+      <div class="nav-pill-btn">
+        <svg width="14" height="14" fill="none" stroke="white" stroke-width="2.5" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      </div>
+    </div>
+
+    <div class="nav-links">
+      <a href="#explore" class="nav-link active">Explore</a>
+      <a href="#events" class="nav-link">Events</a>
+      <a href="#destinations" class="nav-link">Destinations</a>
+      <a href="#host" class="nav-link">Host</a>
+    </div>
+
+    <div class="nav-actions">
+      <button class="btn-host">List your space</button>
+      <button class="btn-signin">Sign in</button>
+      <button class="nav-menu-btn" id="menu-btn">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<!-- ═══ HERO ════ -->
+<section id="hero">
+  <div class="hero-mosaic">
+    <div class="mosaic-cell"><img src="https://images.unsplash.com/photo-1516426122078-c23e76319801?w=900&q=85" loading="eager" alt=""/></div>
+    <div class="mosaic-cell"><img src="https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=900&q=85" loading="eager" alt=""/></div>
+    <div class="mosaic-cell"><img src="https://images.unsplash.com/photo-1506953823976-52e1fdc0149a?w=900&q=85" loading="eager" alt=""/></div>
+    <div class="mosaic-cell"><img src="https://images.unsplash.com/photo-1575818839709-56a3dfa71d79?w=900&q=85" loading="eager" alt=""/></div>
+    <div class="mosaic-cell"><img src="https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?w=900&q=85" loading="eager" alt=""/></div>
+    <div class="mosaic-cell"><img src="https://images.unsplash.com/photo-1559128010-7c1ad6e1b6a5?w=900&q=85" loading="eager" alt=""/></div>
+  </div>
+  <div class="hero-mosaic-overlay"></div>
+
+  <div class="hero-content">
+    <div class="hero-eyebrow au">
+      <span class="eyebrow-dot"></span>
+      Kenya's #1 booking platform · 50K+ listings
+    </div>
+    <h1 class="hero-h1 au d1">
+      Discover<br/>
+      <span class="line2">extraordinary <span class="highlight" id="hero-word">Kenya</span></span>
+    </h1>
+    <p class="hero-sub au d2">Book stays, experiences, events, rentals and services — from Nairobi to Lamu, Mara to Mombasa.</p>
+
+    <div class="search-box au d3" id="search-box">
+      <div class="search-tabs">
+        <button class="search-tab active" data-tab="stays">🏠 Stays</button>
+        <button class="search-tab" data-tab="experiences">🌍 Experiences</button>
+        <button class="search-tab" data-tab="events">🎉 Events</button>
+        <button class="search-tab" data-tab="rentals">🚗 Rentals</button>
+        <button class="search-tab" data-tab="services">✂️ Services</button>
+      </div>
+      <div class="search-fields" id="search-fields">
+        <div class="search-field">
+          <label>Where</label>
+          <input type="text" placeholder="Search destinations"/>
+        </div>
+        <div class="search-field" id="sf-checkin">
+          <label>Check in</label>
+          <input type="date"/>
+        </div>
+        <div class="search-field" id="sf-checkout">
+          <label>Check out</label>
+          <input type="date"/>
+        </div>
+        <div class="search-field">
+          <label>Guests</label>
+          <div class="guests-ctrl">
+            <button class="guests-btn" id="g-minus">−</button>
+            <span class="guests-count" id="g-count">1</span>
+            <button class="guests-btn" id="g-plus">+</button>
+          </div>
+        </div>
+        <button class="search-go">
+          <svg fill="none" stroke="white" stroke-width="2.5" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="hero-stats au d4">
+      <div class="hero-stat"><div class="hero-stat-val">50K+</div><div class="hero-stat-label">Listings</div></div>
+      <div class="hero-stat"><div class="hero-stat-val">120K+</div><div class="hero-stat-label">Travellers</div></div>
+      <div class="hero-stat"><div class="hero-stat-val">47</div><div class="hero-stat-label">Counties</div></div>
+      <div class="hero-stat"><div class="hero-stat-val">4.9★</div><div class="hero-stat-label">Rating</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ CATEGORY NAV ════ -->
+<div id="cat-nav">
+  <div class="cat-nav-inner">
+    <div class="cat-item active" data-c="all"><span class="cat-item-icon">✨</span><span class="cat-item-label">All</span></div>
+    <div class="cat-item" data-c="stays"><span class="cat-item-icon">🏠</span><span class="cat-item-label">Stays</span></div>
+    <div class="cat-item" data-c="safari"><span class="cat-item-icon">🦁</span><span class="cat-item-label">Safari</span></div>
+    <div class="cat-item" data-c="beach"><span class="cat-item-icon">🏖️</span><span class="cat-item-label">Beach</span></div>
+    <div class="cat-item" data-c="events"><span class="cat-item-icon">🎉</span><span class="cat-item-label">Events</span></div>
+    <div class="cat-item" data-c="rentals"><span class="cat-item-icon">🚗</span><span class="cat-item-label">Rentals</span></div>
+    <div class="cat-item" data-c="services"><span class="cat-item-icon">✂️</span><span class="cat-item-label">Services</span></div>
+    <div class="cat-item" data-c="mountain"><span class="cat-item-icon">⛰️</span><span class="cat-item-label">Mountain</span></div>
+    <div class="cat-item" data-c="lake"><span class="cat-item-icon">🌊</span><span class="cat-item-label">Lakeside</span></div>
+    <div class="cat-item" data-c="culture"><span class="cat-item-icon">🎨</span><span class="cat-item-label">Culture</span></div>
+    <button class="filter-btn">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
+      Filters
+    </button>
+  </div>
+</div>
+
+<!-- ═══ LISTINGS ════ -->
+<section class="section" id="explore">
+  <div class="container">
+    <div class="section-header sr">
+      <div>
+        <div class="section-label">Featured picks</div>
+        <h2 class="section-title">Top picks for you</h2>
+        <p class="section-sub">Handpicked listings across Kenya, updated daily</p>
+      </div>
+      <a href="#" class="view-all">View all →</a>
+    </div>
+    <div class="listings-grid" id="listings-grid"></div>
+  </div>
+</section>
+
+<!-- ═══ MARQUEE ════ -->
+<div class="marquee-wrap">
+  <div class="marquee-track" id="marquee"></div>
+</div>
+
+<!-- ═══ EVENTS ════ -->
+<section class="section" id="events" style="background:var(--surface);">
+  <div class="container">
+    <div class="section-header sr">
+      <div>
+        <div class="section-label">What's happening</div>
+        <h2 class="section-title">Upcoming events</h2>
+        <p class="section-sub">Concerts, festivals, workshops and more</p>
+      </div>
+      <a href="#" class="view-all">All events →</a>
+    </div>
+    <div class="hscroll-wrap">
+      <button class="hscroll-arrow prev" onclick="scrollSection('events-scroll',-1)">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg>
+      </button>
+      <div class="hscroll" id="events-scroll"></div>
+      <button class="hscroll-arrow next" onclick="scrollSection('events-scroll',1)">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ DESTINATIONS ════ -->
+<section class="section" id="destinations">
+  <div class="container">
+    <div class="section-header sr">
+      <div>
+        <div class="section-label">Explore by place</div>
+        <h2 class="section-title">Iconic destinations</h2>
+        <p class="section-sub">47 counties, endless possibilities</p>
+      </div>
+      <a href="#" class="view-all">Explore all →</a>
+    </div>
+    <div class="bento sr">
+      <div class="bento-cell bento-1">
+        <img src="https://images.unsplash.com/photo-1516426122078-c23e76319801?w=1000&q=85" loading="lazy" alt="Maasai Mara"/>
+        <div class="bento-cell-overlay"></div>
+        <span class="bento-cell-count">410 listings</span>
+        <div class="bento-cell-body">
+          <p class="bento-cell-name">Maasai Mara</p>
+          <div class="bento-cell-meta">Narok County · Wildlife Reserve</div>
+        </div>
+      </div>
+      <div class="bento-cell">
+        <img src="https://images.unsplash.com/photo-1611348586804-61bf6c080437?w=600&q=85" loading="lazy" alt="Nairobi"/>
+        <div class="bento-cell-overlay"></div>
+        <span class="bento-cell-count">2,840 listings</span>
+        <div class="bento-cell-body"><p class="bento-cell-name">Nairobi</p><div class="bento-cell-meta">Capital City</div></div>
+      </div>
+      <div class="bento-cell">
+        <img src="https://images.unsplash.com/photo-1575818839709-56a3dfa71d79?w=600&q=85" loading="lazy" alt="Mombasa"/>
+        <div class="bento-cell-overlay"></div>
+        <span class="bento-cell-count">1,230 listings</span>
+        <div class="bento-cell-body"><p class="bento-cell-name">Mombasa</p><div class="bento-cell-meta">Coast Province</div></div>
+      </div>
+      <div class="bento-cell">
+        <img src="https://images.unsplash.com/photo-1506953823976-52e1fdc0149a?w=600&q=85" loading="lazy" alt="Diani"/>
+        <div class="bento-cell-overlay"></div>
+        <span class="bento-cell-count">620 listings</span>
+        <div class="bento-cell-body"><p class="bento-cell-name">Diani Beach</p><div class="bento-cell-meta">Kwale County</div></div>
+      </div>
+      <div class="bento-cell">
+        <img src="https://images.unsplash.com/photo-1559128010-7c1ad6e1b6a5?w=600&q=85" loading="lazy" alt="Lamu"/>
+        <div class="bento-cell-overlay"></div>
+        <span class="bento-cell-count">290 listings</span>
+        <div class="bento-cell-body"><p class="bento-cell-name">Lamu</p><div class="bento-cell-meta">UNESCO World Heritage</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ HOW IT WORKS ════ -->
+<section class="section" id="how">
+  <div class="container">
+    <div class="section-header sr" style="justify-content:flex-start;">
+      <div>
+        <div class="section-label">Simple process</div>
+        <h2 class="section-title">How Klickenya works</h2>
+        <p class="section-sub">From discovery to check-in in four steps</p>
+      </div>
+    </div>
+    <div class="how-grid">
+      <div class="how-card sr"><div class="how-step-num">01</div><div class="how-icon-wrap">🔍</div><h3>Search &amp; Discover</h3><p>Browse verified listings across all 47 counties — from city apartments to remote safari camps.</p></div>
+      <div class="how-card sr d2"><div class="how-step-num">02</div><div class="how-icon-wrap">📅</div><h3>Pick Your Dates</h3><p>Real-time availability calendars. Choose dates, guests, and add-ons with no double bookings.</p></div>
+      <div class="how-card sr d3"><div class="how-step-num">03</div><div class="how-icon-wrap">💳</div><h3>Pay with M-Pesa</h3><p>Pay securely via M-Pesa, card, or bank transfer. Funds held until your experience is complete.</p></div>
+      <div class="how-card sr d4"><div class="how-step-num">04</div><div class="how-icon-wrap">🎉</div><h3>Enjoy &amp; Review</h3><p>Show your QR code, check in, and experience the best of Kenya. Leave a review after.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ STATS ════ -->
+<section id="stats">
+  <div class="stats-row">
+    <div class="stat-item sr"><p class="stat-val">50K+</p><p class="stat-label">Listings across Kenya</p></div>
+    <div class="stat-item sr d2"><p class="stat-val">120K+</p><p class="stat-label">Happy travellers</p></div>
+    <div class="stat-item sr d3"><p class="stat-val">47</p><p class="stat-label">Counties covered</p></div>
+    <div class="stat-item sr d4"><p class="stat-val">4.9★</p><p class="stat-label">Average rating</p></div>
+  </div>
+</section>
+
+<!-- ═══ HOST ════ -->
+<section class="section" id="host">
+  <div class="host-glow"></div>
+  <div class="container">
+    <div class="host-inner">
+      <div class="host-left sr-l">
+        <div class="eyebrow">✦ For hosts &amp; providers</div>
+        <h2>Turn your space<br/>into <em>income</em></h2>
+        <p>Join 12,000+ hosts across Kenya. Whether it's a spare room, a safari jeep, or a skill — list it in 10 minutes and start earning.</p>
+        <div class="host-cta-btns">
+          <button class="btn-gold">Start listing for free</button>
+          <button class="btn-outline-white">Learn how it works</button>
+        </div>
+      </div>
+      <div class="host-cards sr-r">
+        <div class="host-card">
+          <div class="host-card-top">
+            <span class="host-card-title">This month's earnings</span>
+            <span class="host-card-badge">↑ 23%</span>
+          </div>
+          <p class="host-card-amount">KSh 84,500</p>
+          <p class="host-card-sub">Across 14 bookings · Westlands, Nairobi</p>
+          <div class="host-card-bar"><div class="host-card-bar-fill" style="width:72%"></div></div>
+        </div>
+        <div class="host-card">
+          <div class="host-card-top">
+            <span class="host-card-title">Diani Cottage — This Week</span>
+            <span class="host-card-badge">↑ 8%</span>
+          </div>
+          <p class="host-card-amount">KSh 27,600</p>
+          <p class="host-card-sub">3 nights booked · 94% occupancy</p>
+          <div class="host-card-bar"><div class="host-card-bar-fill" style="width:94%"></div></div>
+        </div>
+        <div class="host-card">
+          <div class="host-card-top">
+            <span class="host-card-title">Safari Experience Bookings</span>
+            <span class="host-card-badge">Fully booked</span>
+          </div>
+          <p class="host-card-amount">KSh 48,000</p>
+          <p class="host-card-sub">4 groups · ⭐ 5.0 this month</p>
+          <div class="host-card-bar"><div class="host-card-bar-fill" style="width:100%"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ TESTIMONIALS ════ -->
+<section class="section" id="testimonials">
+  <div class="container">
+    <div class="section-header sr">
+      <div>
+        <div class="section-label">Reviews</div>
+        <h2 class="section-title">Loved across Kenya</h2>
+        <p class="section-sub">Real reviews from real travellers and hosts</p>
+      </div>
+    </div>
+    <div class="t-grid">
+      <div class="t-card sr">
+        <div class="t-stars"><span class="t-star">★</span><span class="t-star">★</span><span class="t-star">★</span><span class="t-star">★</span><span class="t-star">★</span></div>
+        <p class="t-text">"Booked a Maasai Mara safari through Klickenya and it was flawless. QR check-in at the gate, instant M-Pesa payment, incredible experience."</p>
+        <div class="t-author"><div class="t-av">AM</div><div><p class="t-name">Amina Mohamed</p><p class="t-meta">Nairobi · Safari Booking</p></div></div>
+      </div>
+      <div class="t-card sr d2">
+        <div class="t-stars"><span class="t-star">★</span><span class="t-star">★</span><span class="t-star">★</span><span class="t-star">★</span><span class="t-star">★</span></div>
+        <p class="t-text">"Found an incredible beach cottage in Diani I'd never have discovered otherwise. Paid with M-Pesa in seconds. Zero friction from start to finish."</p>
+        <div class="t-author"><div class="t-av" style="background:linear-gradient(135deg,#0D7377,#E8A020)">DK</div><div><p class="t-name">David Kamau</p><p class="t-meta">Kisumu · Beach Stay</p></div></div>
+      </div>
+      <div class="t-card sr d3">
+        <div class="t-stars"><span class="t-star">★</span><span class="t-star">★</span><span class="t-star">★</span><span class="t-star">★</span><span class="t-star">★</span></div>
+        <p class="t-text">"As a host, Klickenya transformed my guesthouse. Fully booked every weekend now. The dashboard is incredibly intuitive and the payouts are instant."</p>
+        <div class="t-author"><div class="t-av" style="background:linear-gradient(135deg,#8B4DAB,#E8A020)">SW</div><div><p class="t-name">Sarah Wanjiku</p><p class="t-meta">Host · Westlands, Nairobi</p></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ FOOTER ════ -->
+<footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <p class="footer-brand-name">klickenya</p>
+      <p>Kenya's favourite platform for booking stays, experiences, events, rentals and services across all 47 counties.</p>
+      <div class="footer-socials">
+        <a href="#" class="fsocial">𝕏</a>
+        <a href="#" class="fsocial">in</a>
+        <a href="#" class="fsocial">f</a>
+        <a href="#" class="fsocial">📷</a>
+      </div>
+    </div>
+    <div class="footer-col">
+      <h4>Explore</h4>
+      <a href="#">Stays</a><a href="#">Experiences</a><a href="#">Events</a><a href="#">Rentals</a><a href="#">Services</a>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <a href="#">About</a><a href="#">Blog</a><a href="#">Careers</a><a href="#">Press</a><a href="#">Contact</a>
+    </div>
+    <div class="footer-col">
+      <h4>Support</h4>
+      <a href="#">Help Centre</a><a href="#">Safety</a><a href="#">Cancellations</a><a href="#">Host resources</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p>© 2026 Klickenya Ltd. All rights reserved.</p>
+    <div class="footer-bottom-links"><a href="#">Privacy</a><a href="#">Terms</a><a href="#">Cookies</a></div>
+  </div>
+</footer>
+
+<!-- ═══ MOBILE NAV ════ -->
+<nav id="mobile-nav">
+  <div class="mnav-inner">
+    <button class="mnav-btn active" id="mn0">
+      <div class="mnav-icon"><svg width="18" height="18" fill="none" stroke="var(--purple)" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg></div>
+      <span class="mnav-label">Home</span>
+    </button>
+    <button class="mnav-btn" id="mn1">
+      <div class="mnav-icon"><svg width="18" height="18" fill="none" stroke="var(--text3)" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></div>
+      <span class="mnav-label">Search</span>
+    </button>
+    <button class="mnav-btn" id="mn2">
+      <div class="mnav-icon"><svg width="18" height="18" fill="none" stroke="var(--text3)" stroke-width="2" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg></div>
+      <span class="mnav-label">Saved</span>
+    </button>
+    <button class="mnav-btn" id="mn3">
+      <div class="mnav-icon"><svg width="18" height="18" fill="none" stroke="var(--text3)" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+      <span class="mnav-label">Profile</span>
+    </button>
+  </div>
+</nav>
+
+<script>
+/* DATA */
+const LISTINGS=[
+  {title:"Maasai Mara Game Drive",city:"Narok",price:"12,000",unit:"person",rating:"5.0",reviews:89,type:"Experience",badge:"",img:"https://images.unsplash.com/photo-1516426122078-c23e76319801?w=700&q=80"},
+  {title:"Sunset Loft, Westlands",city:"Nairobi",price:"4,800",unit:"night",rating:"4.97",reviews:128,type:"Stay",badge:"Guest fav",img:"https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=700&q=80"},
+  {title:"Oceanfront Cottage, Diani",city:"Kwale",price:"9,200",unit:"night",rating:"4.95",reviews:74,type:"Stay",badge:"New",img:"https://images.unsplash.com/photo-1499793983690-e29da59ef1c2?w=700&q=80"},
+  {title:"Blankets & Wine Festival",city:"Nairobi",price:"2,500",unit:"ticket",rating:"4.9",reviews:312,type:"Event",badge:"Selling fast",img:"https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=700&q=80"},
+  {title:"Toyota Land Cruiser V8",city:"Nairobi",price:"8,500",unit:"day",rating:"4.8",reviews:56,type:"Rental",badge:"",img:"https://images.unsplash.com/photo-1519641471654-76ce0107ad1b?w=700&q=80"},
+  {title:"Private Chef, Nairobi",city:"Nairobi",price:"6,500",unit:"session",rating:"4.9",reviews:41,type:"Service",badge:"Trending",img:"https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=700&q=80"},
+  {title:"Mount Kenya Trek",city:"Nyeri",price:"15,000",unit:"person",rating:"5.0",reviews:33,type:"Experience",badge:"Top rated",img:"https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?w=700&q=80"},
+  {title:"Lamu Heritage Tour",city:"Lamu",price:"3,500",unit:"person",rating:"4.92",reviews:87,type:"Experience",badge:"",img:"https://images.unsplash.com/photo-1559128010-7c1ad6e1b6a5?w=700&q=80"},
+];
+const EVENTS=[
+  {title:"Blankets & Wine",org:"Safaricom",date:{m:"MAR",d:"22"},price:"KSh 2,500",free:false,going:482,img:"https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=600&q=80",loc:"Ngong Racecourse, Nairobi",time:"3:00 PM"},
+  {title:"Nairobi Jazz Festival",org:"Alliance Française",date:{m:"APR",d:"5"},price:"KSh 1,800",free:false,going:231,img:"https://images.unsplash.com/photo-1415201364774-f6f0bb35f28f?w=600&q=80",loc:"Alliance Française, Nairobi",time:"6:00 PM"},
+  {title:"Lamu Cultural Festival",org:"Lamu County",date:{m:"APR",d:"12"},price:"Free",free:true,going:1240,img:"https://images.unsplash.com/photo-1559128010-7c1ad6e1b6a5?w=600&q=80",loc:"Lamu Old Town",time:"All day"},
+  {title:"Diani Beach Marathon",org:"Sport Kenya",date:{m:"MAY",d:"3"},price:"KSh 1,200",free:false,going:654,img:"https://images.unsplash.com/photo-1506953823976-52e1fdc0149a?w=600&q=80",loc:"Diani Beach, Kwale",time:"6:00 AM"},
+  {title:"Nairobi Food Festival",org:"Kenya Tourism",date:{m:"MAY",d:"17"},price:"KSh 500",free:false,going:893,img:"https://images.unsplash.com/photo-1555244162-803834f70033?w=600&q=80",loc:"Uhuru Park, Nairobi",time:"10:00 AM"},
+];
+const MARQUEE_ITEMS=["Maasai Mara Safari","Diani Beach Stays","Nairobi City Breaks","Lamu Heritage Tours","Mount Kenya Treks","Mombasa Cultural Experiences","Lake Nakuru Flamingos","Amboseli Elephant Safaris","Kisumu Lakeside Villas","Nanyuki Ranch Retreats"];
+const HERO_WORDS=["Kenya","Nairobi","Mombasa","Diani","Mara","Lamu"];
+
+/* BUILD LISTINGS */
+const grid=document.getElementById('listings-grid');
+LISTINGS.forEach((l,i)=>{
+  grid.innerHTML+=`
+  <div class="listing-card au" style="animation-delay:${i*.06}s">
+    <div class="listing-card-media">
+      <img src="${l.img}" loading="lazy" alt="${l.title}"/>
+      ${l.badge?`<span class="listing-badge${l.badge==='New'?' new':''}">${l.badge}</span>`:''}
+      <button class="listing-save" onclick="toggleSave(this)">
+        <svg id="sv${i}" width="18" height="18" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24">
+          <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
+        </svg>
+      </button>
+      <div class="listing-dots"><div class="listing-dot active"></div><div class="listing-dot"></div><div class="listing-dot"></div></div>
+    </div>
+    <div class="listing-card-body">
+      <div class="listing-card-row">
+        <span class="listing-card-name">${l.title}</span>
+        <span class="listing-card-rating">
+          <svg width="12" height="12" fill="#E8A020" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+          ${l.rating}
+        </span>
+      </div>
+      <p class="listing-card-meta">${l.city} · ${l.reviews} reviews · ${l.type}</p>
+      <p class="listing-card-price"><strong>KSh ${l.price}</strong> <span>/ ${l.unit}</span></p>
+    </div>
+  </div>`;
+});
+
+/* BUILD EVENTS */
+const evScroll=document.getElementById('events-scroll');
+const AV=["https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=50&q=80","https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=50&q=80","https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=50&q=80"];
+EVENTS.forEach(e=>{
+  evScroll.innerHTML+=`
+  <div class="event-card">
+    <div class="event-card-cover">
+      <img src="${e.img}" loading="lazy" alt="${e.title}"/>
+      <div class="event-card-cover-overlay"></div>
+      <div class="event-card-date-badge">
+        <p class="event-date-month">${e.date.m}</p>
+        <p class="event-date-day">${e.date.d}</p>
+      </div>
+    </div>
+    <div class="event-card-body">
+      <div class="event-host-row">
+        <div class="event-host-avatar"><img src="${AV[0]}" alt=""/></div>
+        <span class="event-host-name">${e.org}</span>
+      </div>
+      <h3 class="event-title">${e.title}</h3>
+      <div class="event-meta">
+        <span class="event-meta-item"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>${e.loc}</span>
+        <span class="event-meta-item"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>${e.time}</span>
+      </div>
+    </div>
+    <div class="event-card-foot">
+      <div class="event-going">
+        ${AV.map(a=>`<div class="event-going-av"><img src="${a}" alt=""/></div>`).join('')}
+        <span class="event-going-count">${e.going.toLocaleString()} going</span>
+      </div>
+      <span class="event-price-tag${e.free?' free':''}">${e.price}</span>
+    </div>
+  </div>`;
+});
+
+/* MARQUEE */
+const mq=document.getElementById('marquee');
+mq.innerHTML=[...MARQUEE_ITEMS,...MARQUEE_ITEMS].map(t=>`<span class="marquee-item">${t}<span class="marquee-sep">●</span></span>`).join('');
+
+/* HERO WORD CYCLE */
+let wi=0;
+const hw=document.getElementById('hero-word');
+hw.style.transition='opacity .3s ease,transform .3s ease';
+setInterval(()=>{
+  wi=(wi+1)%HERO_WORDS.length;
+  hw.style.opacity='0';hw.style.transform='translateY(8px)';
+  setTimeout(()=>{hw.textContent=HERO_WORDS[wi];hw.style.opacity='1';hw.style.transform='none';},300);
+},2400);
+
+/* NAV SCROLL */
+const nav=document.getElementById('nav');
+window.addEventListener('scroll',()=>{nav.classList.toggle('solid',window.scrollY>60);},{passive:true});
+
+/* CAT NAV */
+document.querySelectorAll('.cat-item').forEach(c=>{
+  c.addEventListener('click',()=>{
+    document.querySelectorAll('.cat-item').forEach(x=>x.classList.remove('active'));
+    c.classList.add('active');
+  });
+});
+
+/* SEARCH TABS */
+document.querySelectorAll('.search-tab').forEach(t=>{
+  t.addEventListener('click',()=>{
+    document.querySelectorAll('.search-tab').forEach(x=>x.classList.remove('active'));
+    t.classList.add('active');
+    const tab=t.dataset.tab;
+    const ci=document.getElementById('sf-checkin');
+    const co=document.getElementById('sf-checkout');
+    if(tab==='stays'||tab==='rentals'){ci.style.display='';co.style.display='';}
+    else{ci.style.display='none';co.style.display='none';}
+  });
+});
+
+/* GUESTS */
+let guests=1;
+document.getElementById('g-plus').onclick=()=>{guests++;document.getElementById('g-count').textContent=guests;};
+document.getElementById('g-minus').onclick=()=>{if(guests>1){guests--;document.getElementById('g-count').textContent=guests;}};
+
+/* SAVE */
+function toggleSave(btn){
+  const svg=btn.querySelector('svg');
+  const saved=svg.getAttribute('fill')==='#8B4DAB';
+  svg.setAttribute('fill',saved?'none':'#8B4DAB');
+  svg.setAttribute('stroke',saved?'white':'#8B4DAB');
+  btn.style.transform=saved?'':'scale(1.2)';
+  setTimeout(()=>btn.style.transform='',200);
+}
+
+/* SCROLL */
+function scrollSection(id,dir){document.getElementById(id).scrollBy({left:dir*320,behavior:'smooth'});}
+
+/* REVEAL */
+const observer=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{if(e.isIntersecting)e.target.classList.add('on');});
+},{threshold:.1,rootMargin:'0px 0px -40px 0px'});
+document.querySelectorAll('.sr,.sr-l,.sr-r').forEach(el=>observer.observe(el));
+
+/* MOBILE NAV */
+document.querySelectorAll('[id^=mn]').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('[id^=mn]').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+  });
+});
+</script>
+</body>
+</html>

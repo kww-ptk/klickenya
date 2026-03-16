@@ -1,0 +1,1773 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Klickenya Property — Buy, Sell & Rent in Kenya</title>
+<style>
+/* ─── TOKENS ──────────────────────────────────────────────────── */
+:root {
+  --canvas:      #FFFFFF;
+  --surface:     #F7F5F2;
+  --surface2:    #F0EDE8;
+  --border:      #E8E4DE;
+  --border2:     #D8D3CC;
+  --text:        #1A1714;
+  --text2:       #6B6560;
+  --text3:       #A09A93;
+  --gold:        #E8A020;
+  --gold-dim:    rgba(232,160,32,0.12);
+  --gold-glow:   rgba(232,160,32,0.25);
+  --purple:      #8B4DAB;
+  --purple-dim:  rgba(139,77,171,0.10);
+  --purple-mid:  rgba(139,77,171,0.18);
+  --dark:        #111008;
+  --green:       #16A34A;
+  --green-dim:   rgba(22,163,74,0.10);
+  --r-sm: 10px;
+  --r-md: 16px;
+  --r-lg: 22px;
+  --r-xl: 30px;
+  --sh-xs: 0 1px 3px rgba(0,0,0,.06);
+  --sh-sm: 0 2px 8px rgba(0,0,0,.07), 0 0 0 1px rgba(0,0,0,.04);
+  --sh-md: 0 8px 28px rgba(0,0,0,.09), 0 0 0 1px rgba(0,0,0,.04);
+  --sh-lg: 0 20px 52px rgba(0,0,0,.13), 0 0 0 1px rgba(0,0,0,.04);
+  --sh-xl: 0 32px 72px rgba(0,0,0,.18);
+}
+
+/* ─── RESET ───────────────────────────────────────────────────── */
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; font-size:16px; }
+body {
+  font-family: Helvetica Neue, Helvetica, Arial, sans-serif;
+  background: var(--canvas); color: var(--text);
+  overflow-x: hidden; -webkit-font-smoothing: antialiased;
+}
+::-webkit-scrollbar { width:5px; height:5px; }
+::-webkit-scrollbar-thumb { background:var(--border2); border-radius:10px; }
+img { display:block; max-width:100%; }
+a { text-decoration:none; color:inherit; }
+button { font-family:inherit; cursor:pointer; border:none; background:none; }
+input, select { font-family:inherit; }
+
+/* ─── ANIMATIONS ──────────────────────────────────────────────── */
+@keyframes fadeUp   { from{opacity:0;transform:translateY(20px);} to{opacity:1;transform:none;} }
+@keyframes fadeIn   { from{opacity:0;} to{opacity:1;} }
+@keyframes pulseGlow{ 0%,100%{opacity:.6;} 50%{opacity:1;} }
+@keyframes countUp  { from{opacity:0;transform:translateY(10px);} to{opacity:1;transform:none;} }
+@keyframes shimmer  { 0%{background-position:-200% center;} 100%{background-position:200% center;} }
+
+.au  { animation: fadeUp .55s cubic-bezier(.22,1,.36,1) both; }
+.ai  { animation: fadeIn .5s ease both; }
+.d1{animation-delay:.07s} .d2{animation-delay:.14s} .d3{animation-delay:.21s}
+.d4{animation-delay:.28s} .d5{animation-delay:.35s} .d6{animation-delay:.42s}
+
+.sr   { opacity:0; transform:translateY(24px); transition:opacity .7s ease, transform .7s ease; }
+.sr.on{ opacity:1; transform:none; }
+.sr-l { opacity:0; transform:translateX(-24px); transition:opacity .7s ease, transform .7s ease; }
+.sr-l.on{ opacity:1; transform:none; }
+.sr-r { opacity:0; transform:translateX(24px); transition:opacity .7s ease, transform .7s ease; }
+.sr-r.on{ opacity:1; transform:none; }
+
+/* ═══════════════════════════════════════
+   NAV
+═══════════════════════════════════════ */
+#nav {
+  position:fixed; top:0; left:0; right:0; z-index:300;
+  height:66px; display:flex; align-items:center;
+  padding:0 40px;
+  transition: background .3s, border-color .3s, box-shadow .3s;
+  border-bottom: 1px solid transparent;
+}
+#nav.solid {
+  background: rgba(255,255,255,.97);
+  backdrop-filter: blur(24px) saturate(180%);
+  border-bottom-color: var(--border);
+  box-shadow: 0 1px 0 var(--border);
+}
+.nav-inner { width:100%; display:flex; align-items:center; justify-content:space-between; gap:20px; }
+
+.nav-logo { display:flex; align-items:center; gap:10px; flex-shrink:0; }
+.nav-logo-icon {
+  width:32px; height:32px; border-radius:9px;
+  background: var(--purple);
+  display:flex; align-items:center; justify-content:center; flex-shrink:0;
+}
+.nav-logo-icon svg { width:17px; height:17px; }
+.nav-logo-name { font-size:17px; font-weight:700; letter-spacing:-.03em; color:var(--text); }
+#nav:not(.solid) .nav-logo-name { color:#fff; }
+.nav-logo-tag {
+  padding:3px 9px; border-radius:50px;
+  background:var(--gold-dim); border:1px solid var(--gold-glow);
+  font-size:10.5px; font-weight:700; color:var(--gold);
+  margin-left:4px;
+}
+
+/* Search pill in nav */
+.nav-pill {
+  flex:1; max-width:300px;
+  display:flex; align-items:center;
+  background:var(--canvas); border:1px solid var(--border);
+  border-radius:50px; padding:7px 7px 7px 16px;
+  box-shadow:var(--sh-sm); cursor:pointer;
+  opacity:0; transform:translateY(-5px);
+  transition: opacity .3s, transform .3s, box-shadow .2s;
+  pointer-events:none;
+}
+#nav.solid .nav-pill { opacity:1; transform:none; pointer-events:all; }
+.nav-pill:hover { box-shadow:var(--sh-md); }
+.nav-pill-text { flex:1; font-size:13px; font-weight:600; color:var(--text2); }
+.nav-pill-sep { width:1px; height:14px; background:var(--border); margin:0 10px; }
+.nav-pill-btn {
+  width:30px; height:30px; border-radius:50%;
+  background:var(--purple);
+  display:flex; align-items:center; justify-content:center; flex-shrink:0;
+}
+.nav-pill-btn svg { width:14px; height:14px; }
+
+.nav-links { display:flex; gap:2px; align-items:center; }
+.nav-link {
+  padding:7px 13px; border-radius:50px;
+  font-size:13.5px; font-weight:500; color:rgba(255,255,255,.75);
+  transition: background .2s, color .2s;
+}
+.nav-link:hover { background:rgba(255,255,255,.12); color:#fff; }
+.nav-link.active { color:#fff; font-weight:600; }
+#nav.solid .nav-link { color:var(--text2); }
+#nav.solid .nav-link:hover { background:var(--surface); color:var(--text); }
+#nav.solid .nav-link.active { color:var(--text); }
+
+.nav-actions { display:flex; align-items:center; gap:8px; flex-shrink:0; }
+.btn-ghost {
+  padding:8px 16px; border-radius:50px;
+  font-size:13px; font-weight:600;
+  color:rgba(255,255,255,.8); border:1px solid rgba(255,255,255,.25);
+  transition:all .2s;
+}
+.btn-ghost:hover { border-color:rgba(255,255,255,.5); color:#fff; }
+#nav.solid .btn-ghost { color:var(--text); border-color:var(--border); }
+#nav.solid .btn-ghost:hover { border-color:var(--purple); color:var(--purple); }
+.btn-primary {
+  padding:8px 20px; border-radius:50px;
+  font-size:13px; font-weight:600;
+  background:var(--purple); color:#fff;
+  box-shadow:0 2px 10px rgba(139,77,171,.3);
+  transition:all .2s;
+}
+.btn-primary:hover { opacity:.9; transform:translateY(-1px); box-shadow:0 4px 16px rgba(139,77,171,.4); }
+
+/* ═══════════════════════════════════════
+   HERO
+═══════════════════════════════════════ */
+#hero {
+  min-height: 100svh;
+  position: relative; overflow: hidden;
+  display: flex; flex-direction: column;
+  background: var(--dark);
+}
+
+/* Background: real estate lifestyle photography grid */
+.hero-bg {
+  position: absolute; inset: 0;
+  display: grid;
+  grid-template-columns: 1.2fr 0.9fr 0.9fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 3px;
+}
+.hero-bg-cell { overflow:hidden; }
+.hero-bg-cell img { width:100%; height:100%; object-fit:cover; transform:scale(1.06); animation: heroZoom 12s ease-out forwards; }
+.hero-bg-cell:nth-child(2) img { animation-delay:.8s; }
+.hero-bg-cell:nth-child(3) img { animation-delay:1.6s; }
+.hero-bg-cell:nth-child(4) img { animation-delay:.4s; }
+.hero-bg-cell:nth-child(5) img { animation-delay:1.2s; }
+.hero-bg-cell:nth-child(6) img { animation-delay:2s; }
+@keyframes heroZoom { 0%{transform:scale(1.07);} 100%{transform:scale(1);} }
+
+.hero-overlay {
+  position: absolute; inset: 0; z-index:1;
+  background:
+    linear-gradient(to bottom, rgba(17,16,8,.6) 0%, rgba(17,16,8,.1) 30%, rgba(17,16,8,.05) 50%, rgba(17,16,8,.65) 85%, rgba(17,16,8,.88) 100%),
+    linear-gradient(to right, rgba(17,16,8,.25), transparent 40%, transparent 60%, rgba(17,16,8,.2));
+}
+
+.hero-content {
+  position: relative; z-index:2;
+  flex:1; display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  padding: 110px 24px 36px;
+  text-align: center;
+}
+
+.hero-badge {
+  display:inline-flex; align-items:center; gap:8px;
+  background:rgba(255,255,255,.08); backdrop-filter:blur(12px);
+  border:1px solid rgba(255,255,255,.15);
+  border-radius:50px; padding:6px 16px;
+  font-size:12px; font-weight:600; color:rgba(255,255,255,.85);
+  margin-bottom:24px;
+}
+.badge-pulse { width:6px; height:6px; border-radius:50%; background:var(--gold); animation:pulseGlow 2s ease infinite; }
+
+.hero-h1 {
+  font-size: clamp(42px, 6.5vw, 84px);
+  font-weight: 700; letter-spacing: -.04em; line-height: .97;
+  color: #fff; margin-bottom: 20px;
+}
+.hero-h1 em { font-style:normal; color:var(--gold); }
+.hero-h1 .ghost {
+  display:block;
+  background: linear-gradient(135deg, #fff 0%, rgba(255,255,255,.55) 100%);
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+}
+
+.hero-sub {
+  font-size: clamp(15px,1.8vw,18px);
+  color: rgba(255,255,255,.55); max-width:460px;
+  line-height:1.65; margin-bottom:40px; font-weight:400;
+}
+
+/* ─── SEARCH BOX ──────────────────────────────────────────────── */
+.search-box {
+  width:100%; max-width:860px;
+  background:rgba(255,255,255,.97);
+  backdrop-filter:blur(20px);
+  border-radius:var(--r-xl);
+  box-shadow:var(--sh-xl), 0 0 0 1px rgba(255,255,255,.15);
+  overflow:hidden;
+}
+.search-tabs {
+  display:flex; border-bottom:1px solid var(--border);
+  padding: 0 6px;
+  overflow-x:auto; scrollbar-width:none;
+}
+.search-tabs::-webkit-scrollbar { display:none; }
+.search-tab {
+  flex-shrink:0; padding:13px 18px;
+  font-size:13px; font-weight:600;
+  color:var(--text3); border-bottom:2px solid transparent;
+  transition:color .2s, border-color .2s; white-space:nowrap;
+}
+.search-tab:hover { color:var(--text); }
+.search-tab.active { color:var(--purple); border-bottom-color:var(--purple); }
+
+.search-fields {
+  display:flex; align-items:stretch; gap:0;
+  padding:10px 10px 10px 0;
+}
+.sf {
+  flex:1; display:flex; flex-direction:column; gap:2px;
+  padding:10px 14px 10px 18px;
+  border-right:1px solid var(--border);
+  cursor:text; transition:background .2s; border-radius:12px;
+}
+.sf:hover { background:var(--surface); }
+.sf:last-of-type { border-right:none; }
+.sf label { font-size:10px; font-weight:700; color:var(--text); letter-spacing:.05em; text-transform:uppercase; }
+.sf input, .sf select {
+  border:none; background:transparent; outline:none;
+  font-size:14px; font-weight:500; color:var(--text2); width:100%;
+}
+.sf input::placeholder { color:var(--text3); }
+.sf select { appearance:none; color:var(--text2); cursor:pointer; }
+
+.price-range { display:flex; align-items:center; gap:6px; }
+.price-range input { flex:1; min-width:0; }
+.price-sep { font-size:12px; color:var(--text3); flex-shrink:0; }
+
+.search-go {
+  flex-shrink:0; padding:0 28px; border-radius:var(--r-lg);
+  background:var(--purple); color:#fff;
+  font-size:14px; font-weight:700;
+  display:flex; align-items:center; gap:8px;
+  margin:auto 0 auto 4px;
+  box-shadow:0 4px 16px rgba(139,77,171,.35);
+  transition:all .2s; height:52px;
+}
+.search-go:hover { background:#9B5ABF; transform:scale(1.02); box-shadow:0 6px 22px rgba(139,77,171,.45); }
+.search-go svg { width:16px; height:16px; }
+
+/* Hero stats bar */
+.hero-stats {
+  position:relative; z-index:2;
+  display:flex; align-items:center; justify-content:center;
+  gap:0; padding:0 24px 32px; flex-wrap:wrap;
+}
+.hstat {
+  padding:14px 28px; text-align:center;
+  border-right:1px solid rgba(255,255,255,.1);
+}
+.hstat:last-child { border-right:none; }
+.hstat-num { font-size:24px; font-weight:700; color:var(--gold); letter-spacing:-.03em; line-height:1; }
+.hstat-label { font-size:12px; color:rgba(255,255,255,.4); margin-top:3px; font-weight:400; }
+
+/* ═══════════════════════════════════════
+   CATEGORY TABS
+═══════════════════════════════════════ */
+#cat-bar {
+  position:sticky; top:65px; z-index:200;
+  background:rgba(255,255,255,.97);
+  backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);
+}
+.cat-bar-inner {
+  display:flex; align-items:center; gap:0;
+  padding:0 40px;
+  overflow-x:auto; scrollbar-width:none;
+}
+.cat-bar-inner::-webkit-scrollbar { display:none; }
+.cat-tab {
+  flex-shrink:0; display:flex; flex-direction:column; align-items:center; gap:6px;
+  padding:13px 20px;
+  border-bottom:2px solid transparent;
+  transition:border-color .2s, opacity .2s;
+  cursor:pointer; opacity:.5; min-width:80px;
+}
+.cat-tab:hover { opacity:.85; }
+.cat-tab.active { border-bottom-color:var(--purple); opacity:1; }
+.cat-tab.active .cat-tab-label { color:var(--purple); }
+.cat-tab-icon { font-size:20px; line-height:1; }
+.cat-tab-label { font-size:11.5px; font-weight:600; color:var(--text); white-space:nowrap; transition:color .2s; }
+
+.cat-bar-right {
+  margin-left:auto; flex-shrink:0;
+  display:flex; align-items:center; gap:8px;
+  padding-left:20px; border-left:1px solid var(--border);
+}
+.sort-select {
+  padding:8px 12px; border-radius:var(--r-sm);
+  border:1px solid var(--border);
+  font-size:13px; font-weight:600; color:var(--text2);
+  appearance:none; cursor:pointer; background:var(--canvas);
+  transition:border-color .2s;
+}
+.sort-select:hover { border-color:var(--purple); }
+.map-toggle-btn {
+  display:flex; align-items:center; gap:6px;
+  padding:8px 14px; border-radius:var(--r-sm);
+  border:1px solid var(--border);
+  font-size:13px; font-weight:600; color:var(--text2);
+  transition:all .2s;
+}
+.map-toggle-btn:hover { border-color:var(--purple); color:var(--purple); }
+.map-toggle-btn svg { width:14px; height:14px; }
+
+/* ═══════════════════════════════════════
+   SECTION UTILS
+═══════════════════════════════════════ */
+.section { padding:72px 40px; }
+.container { max-width:1320px; margin:0 auto; }
+
+.section-hd {
+  display:flex; align-items:flex-end; justify-content:space-between;
+  margin-bottom:32px; gap:16px; flex-wrap:wrap;
+}
+.section-label {
+  font-size:11px; font-weight:700; letter-spacing:.09em;
+  text-transform:uppercase; color:var(--purple); margin-bottom:6px;
+}
+.section-title {
+  font-size:clamp(22px,2.8vw,34px); font-weight:600;
+  letter-spacing:-.03em; line-height:1.1; color:var(--text);
+}
+.section-sub { font-size:14px; color:var(--text2); margin-top:5px; line-height:1.55; font-weight:400; }
+.view-all {
+  flex-shrink:0; font-size:13.5px; font-weight:600; color:var(--text);
+  padding:9px 18px; border-radius:50px; border:1.5px solid var(--border);
+  transition:all .2s; white-space:nowrap;
+}
+.view-all:hover { border-color:var(--purple); color:var(--purple); }
+
+/* ═══════════════════════════════════════
+   PROPERTY CARDS
+═══════════════════════════════════════ */
+.prop-grid {
+  display:grid;
+  grid-template-columns:repeat(auto-fill, minmax(290px,1fr));
+  gap:24px 20px;
+}
+.prop-card {
+  background:var(--canvas);
+  border:1px solid var(--border);
+  border-radius:var(--r-lg); overflow:hidden;
+  transition:box-shadow .25s, transform .25s;
+  cursor:pointer;
+}
+.prop-card:hover { box-shadow:var(--sh-lg); transform:translateY(-4px); }
+
+.prop-media {
+  position:relative; height:210px;
+  overflow:hidden; background:var(--surface2);
+}
+.prop-media img { width:100%; height:100%; object-fit:cover; transition:transform .5s ease; }
+.prop-card:hover .prop-media img { transform:scale(1.04); }
+
+/* Status badge */
+.prop-status {
+  position:absolute; top:14px; left:14px;
+  padding:4px 11px; border-radius:50px;
+  font-size:11px; font-weight:700;
+  backdrop-filter:blur(8px);
+}
+.ps-sale    { background:rgba(139,77,171,.88); color:#fff; }
+.ps-rent    { background:rgba(22,163,74,.88);  color:#fff; }
+.ps-land    { background:rgba(232,160,32,.9);  color:var(--dark); }
+.ps-offer   { background:rgba(17,16,8,.8);     color:#fff; }
+.ps-new     { background:rgba(37,99,235,.88);  color:#fff; }
+
+/* Save / heart */
+.prop-save {
+  position:absolute; top:12px; right:12px;
+  width:32px; height:32px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  background:rgba(255,255,255,.22); backdrop-filter:blur(8px);
+  transition:background .2s, transform .2s;
+}
+.prop-save:hover { background:rgba(255,255,255,.5); transform:scale(1.1); }
+.prop-save svg { filter:drop-shadow(0 1px 3px rgba(0,0,0,.3)); }
+
+/* Photo dots */
+.prop-dots {
+  position:absolute; bottom:10px; left:50%; transform:translateX(-50%);
+  display:flex; gap:4px; opacity:0; transition:opacity .2s;
+}
+.prop-card:hover .prop-dots { opacity:1; }
+.prop-dot { width:5px; height:5px; border-radius:50%; background:rgba(255,255,255,.55); }
+.prop-dot.on { background:#fff; }
+
+.prop-body { padding:16px 18px 18px; }
+
+/* Price row */
+.prop-price-row { display:flex; align-items:baseline; gap:6px; margin-bottom:6px; }
+.prop-price { font-size:20px; font-weight:700; color:var(--text); letter-spacing:-.02em; }
+.prop-price-unit { font-size:13px; font-weight:400; color:var(--text2); }
+.prop-price-badge {
+  margin-left:auto;
+  padding:3px 10px; border-radius:50px;
+  font-size:11px; font-weight:700;
+}
+.ppb-reduced { background:rgba(22,163,74,.1); color:var(--green); }
+.ppb-popular { background:var(--gold-dim); color:var(--gold); }
+
+.prop-title { font-size:15px; font-weight:600; color:var(--text); line-height:1.35; margin-bottom:5px; }
+.prop-location {
+  display:flex; align-items:center; gap:5px;
+  font-size:13px; color:var(--text3); margin-bottom:12px;
+}
+.prop-location svg { width:12px; height:12px; flex-shrink:0; }
+
+/* Spec pills row */
+.prop-specs {
+  display:flex; gap:6px; flex-wrap:wrap;
+  padding-top:12px; border-top:1px solid var(--border);
+}
+.spec {
+  display:flex; align-items:center; gap:4px;
+  padding:4px 10px; border-radius:50px;
+  background:var(--surface); border:1px solid var(--border);
+  font-size:12px; font-weight:600; color:var(--text2);
+}
+.spec svg { width:12px; height:12px; flex-shrink:0; }
+
+/* ═══════════════════════════════════════
+   FEATURED / HERO CARD (large)
+═══════════════════════════════════════ */
+.featured-grid {
+  display:grid;
+  grid-template-columns:1.5fr 1fr;
+  grid-template-rows:auto auto;
+  gap:20px;
+  margin-bottom:24px;
+}
+.prop-card-lg { grid-row:span 2; }
+.prop-card-lg .prop-media { height:320px; }
+.prop-card-lg .prop-price { font-size:26px; }
+.prop-card-lg .prop-title { font-size:17px; }
+
+/* ═══════════════════════════════════════
+   NEIGHBOURHOOD SECTION
+═══════════════════════════════════════ */
+#neighbourhoods { background:var(--surface); }
+.nbhd-grid {
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:14px;
+}
+.nbhd-card {
+  position:relative; border-radius:var(--r-lg); overflow:hidden;
+  cursor:pointer; background:var(--surface2);
+  aspect-ratio:3/4;
+}
+.nbhd-card img { width:100%; height:100%; object-fit:cover; transition:transform .6s ease; }
+.nbhd-card:hover img { transform:scale(1.06); }
+.nbhd-overlay {
+  position:absolute; inset:0;
+  background:linear-gradient(to top, rgba(17,16,8,.82) 0%, rgba(17,16,8,.1) 55%, transparent 100%);
+  transition:background .3s;
+}
+.nbhd-card:hover .nbhd-overlay {
+  background:linear-gradient(to top, rgba(17,16,8,.9) 0%, rgba(17,16,8,.3) 65%, transparent 100%);
+}
+.nbhd-body { position:absolute; bottom:0; left:0; right:0; padding:18px 18px 20px; }
+.nbhd-name { font-size:18px; font-weight:700; color:#fff; letter-spacing:-.02em; margin-bottom:4px; }
+.nbhd-meta { font-size:12px; color:rgba(255,255,255,.55); margin-bottom:10px; }
+.nbhd-stats { display:flex; gap:10px; }
+.nbhd-stat {
+  padding:4px 10px; border-radius:50px;
+  background:rgba(255,255,255,.12); backdrop-filter:blur(8px);
+  font-size:11px; font-weight:600; color:rgba(255,255,255,.8);
+}
+.nbhd-stat.gold { background:rgba(232,160,32,.2); color:var(--gold); }
+/* View button appears on hover */
+.nbhd-view {
+  position:absolute; top:14px; right:14px;
+  padding:6px 14px; border-radius:50px;
+  background:rgba(255,255,255,.12); backdrop-filter:blur(8px);
+  border:1px solid rgba(255,255,255,.2);
+  font-size:12px; font-weight:600; color:#fff;
+  opacity:0; transform:translateY(-4px);
+  transition:opacity .25s, transform .25s;
+}
+.nbhd-card:hover .nbhd-view { opacity:1; transform:none; }
+
+/* ═══════════════════════════════════════
+   MARKET DATA STRIP
+═══════════════════════════════════════ */
+#market-data {
+  background:var(--dark);
+  padding:56px 40px;
+}
+.market-inner {
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:60px; align-items:center;
+}
+.market-left .section-label { color:var(--gold); }
+.market-left .section-title { color:#fff; }
+.market-left .section-sub { color:rgba(255,255,255,.45); }
+.market-cards { display:flex; flex-direction:column; gap:12px; margin-top:28px; }
+.market-card {
+  display:flex; align-items:center; gap:16px;
+  background:rgba(255,255,255,.05);
+  border:1px solid rgba(255,255,255,.07);
+  border-radius:var(--r-md); padding:16px 20px;
+  transition:background .2s;
+}
+.market-card:hover { background:rgba(255,255,255,.09); }
+.mc-icon {
+  width:40px; height:40px; border-radius:var(--r-sm);
+  background:rgba(232,160,32,.12);
+  display:flex; align-items:center; justify-content:center;
+  font-size:18px; flex-shrink:0;
+}
+.mc-body { flex:1; }
+.mc-label { font-size:12px; color:rgba(255,255,255,.4); margin-bottom:2px; font-weight:500; }
+.mc-value { font-size:20px; font-weight:700; color:#fff; letter-spacing:-.03em; }
+.mc-change {
+  flex-shrink:0;
+  padding:3px 10px; border-radius:50px;
+  font-size:11.5px; font-weight:700;
+}
+.mc-up   { background:rgba(22,163,74,.15);  color:#4ADE80; }
+.mc-down { background:rgba(220,38,38,.15);  color:#F87171; }
+
+/* Price bar chart */
+.market-chart { }
+.market-chart-title { font-size:13px; font-weight:600; color:rgba(255,255,255,.5); margin-bottom:20px; letter-spacing:.02em; text-transform:uppercase; }
+.chart-bars { display:flex; align-items:flex-end; gap:10px; height:160px; }
+.bar-wrap { flex:1; display:flex; flex-direction:column; align-items:center; gap:8px; height:100%; }
+.bar-track { flex:1; width:100%; display:flex; flex-direction:column; justify-content:flex-end; }
+.bar-fill {
+  width:100%; border-radius:4px 4px 0 0;
+  background:linear-gradient(to top, var(--purple), rgba(139,77,171,.4));
+  transition:height .6s cubic-bezier(.22,1,.36,1);
+  position:relative;
+}
+.bar-fill.gold-bar {
+  background:linear-gradient(to top, var(--gold), rgba(232,160,32,.4));
+}
+.bar-fill:hover::after {
+  content:attr(data-val);
+  position:absolute; bottom:100%; left:50%; transform:translateX(-50%);
+  background:rgba(17,16,8,.9); color:#fff;
+  font-size:11px; font-weight:700; padding:4px 8px; border-radius:6px;
+  white-space:nowrap; margin-bottom:4px;
+}
+.bar-label { font-size:11px; color:rgba(255,255,255,.3); text-align:center; font-weight:500; }
+
+/* ═══════════════════════════════════════
+   MAP TEASER
+═══════════════════════════════════════ */
+.map-teaser-section { background:var(--surface); }
+.map-teaser-inner {
+  display:grid;
+  grid-template-columns:1fr 1.3fr;
+  gap:48px; align-items:center;
+}
+.map-teaser-left .section-title { margin-bottom:14px; }
+.map-teaser-left p { font-size:15px; color:var(--text2); line-height:1.7; margin-bottom:24px; }
+.map-features { display:flex; flex-direction:column; gap:10px; margin-bottom:28px; }
+.map-feat { display:flex; align-items:center; gap:10px; font-size:14px; color:var(--text2); }
+.map-feat-dot { width:8px; height:8px; border-radius:50%; background:var(--purple); flex-shrink:0; }
+.map-cta {
+  display:inline-flex; align-items:center; gap:8px;
+  padding:12px 24px; border-radius:50px;
+  background:var(--purple); color:#fff;
+  font-size:14px; font-weight:700;
+  box-shadow:0 4px 14px rgba(139,77,171,.3);
+  transition:all .2s;
+}
+.map-cta:hover { transform:translateY(-2px); box-shadow:0 8px 22px rgba(139,77,171,.4); }
+
+/* Map preview mockup */
+.map-preview {
+  position:relative; border-radius:var(--r-xl);
+  overflow:hidden; height:400px;
+  box-shadow:var(--sh-xl);
+  background:#E8E4DC;
+}
+.map-preview img { width:100%; height:100%; object-fit:cover; }
+.map-preview-overlay {
+  position:absolute; inset:0;
+  background:rgba(255,255,255,.05);
+  pointer-events:none;
+}
+/* Simulated map pins */
+.map-pin {
+  position:absolute;
+  transform:translate(-50%,-100%);
+}
+.mp-bubble {
+  background:var(--purple); color:#fff;
+  padding:5px 12px; border-radius:50px;
+  font-size:12px; font-weight:700;
+  box-shadow:0 4px 12px rgba(139,77,171,.4);
+  white-space:nowrap; cursor:pointer;
+  transition:transform .2s, background .2s;
+}
+.mp-bubble:hover { transform:scale(1.05); background:#9B5ABF; }
+.mp-bubble.gold { background:var(--gold); color:var(--dark); box-shadow:0 4px 12px rgba(232,160,32,.4); }
+.mp-bubble.gold:hover { background:#F5C842; }
+.mp-bubble::after {
+  content:'';
+  position:absolute; top:100%; left:50%; transform:translateX(-50%);
+  border:5px solid transparent; border-top-color:var(--purple);
+}
+.mp-bubble.gold::after { border-top-color:var(--gold); }
+/* Map UI chrome */
+.map-ui {
+  position:absolute; top:14px; left:14px; right:14px;
+  display:flex; gap:8px;
+}
+.map-search-bar {
+  flex:1; background:rgba(255,255,255,.96);
+  border-radius:50px; padding:9px 16px;
+  font-size:13px; font-weight:500; color:var(--text2);
+  box-shadow:var(--sh-sm);
+  display:flex; align-items:center; gap:8px;
+}
+.map-search-bar svg { width:14px; height:14px; color:var(--text3); flex-shrink:0; }
+.map-zoom {
+  display:flex; flex-direction:column;
+  background:rgba(255,255,255,.96); border-radius:var(--r-sm);
+  overflow:hidden; box-shadow:var(--sh-sm);
+}
+.mz-btn {
+  width:36px; height:36px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:18px; font-weight:700; color:var(--text2);
+  cursor:pointer; transition:background .15s;
+  border-bottom:1px solid var(--border);
+}
+.mz-btn:last-child { border-bottom:none; }
+.mz-btn:hover { background:var(--surface); }
+/* Results count chip */
+.map-results-chip {
+  position:absolute; bottom:14px; left:50%; transform:translateX(-50%);
+  background:rgba(17,16,8,.85); backdrop-filter:blur(10px);
+  color:#fff; padding:8px 18px; border-radius:50px;
+  font-size:13px; font-weight:600;
+  box-shadow:var(--sh-md); white-space:nowrap;
+  cursor:pointer; transition:background .2s;
+}
+.map-results-chip:hover { background:var(--purple); }
+
+/* ═══════════════════════════════════════
+   AGENTS SECTION
+═══════════════════════════════════════ */
+#agents { background:var(--canvas); }
+.agents-grid {
+  display:grid;
+  grid-template-columns:repeat(auto-fill, minmax(240px,1fr));
+  gap:18px;
+}
+.agent-card {
+  background:var(--canvas);
+  border:1px solid var(--border); border-radius:var(--r-lg);
+  padding:24px 20px 20px;
+  transition:box-shadow .25s, transform .25s;
+  cursor:pointer;
+  text-align:center;
+}
+.agent-card:hover { box-shadow:var(--sh-md); transform:translateY(-3px); }
+.agent-avatar-wrap { position:relative; display:inline-block; margin-bottom:12px; }
+.agent-avatar {
+  width:72px; height:72px; border-radius:50%;
+  object-fit:cover; border:3px solid var(--canvas);
+  box-shadow:0 0 0 2px var(--border);
+}
+.agent-verified {
+  position:absolute; bottom:2px; right:2px;
+  width:22px; height:22px; border-radius:50%;
+  background:var(--purple); border:2px solid var(--canvas);
+  display:flex; align-items:center; justify-content:center;
+}
+.agent-verified svg { width:11px; height:11px; }
+.agent-name { font-size:15px; font-weight:700; color:var(--text); margin-bottom:3px; }
+.agent-agency { font-size:12.5px; color:var(--text3); margin-bottom:10px; font-weight:400; }
+.agent-rating {
+  display:inline-flex; align-items:center; gap:4px;
+  font-size:13px; font-weight:600; color:var(--text);
+  margin-bottom:12px;
+}
+.agent-rating svg { fill:var(--gold); }
+.agent-tags { display:flex; flex-wrap:wrap; gap:5px; justify-content:center; margin-bottom:16px; }
+.agent-tag {
+  padding:3px 9px; border-radius:50px;
+  background:var(--purple-dim); border:1px solid var(--purple-mid);
+  font-size:11px; font-weight:600; color:var(--purple);
+}
+.agent-stats { display:flex; gap:0; border-top:1px solid var(--border); padding-top:14px; }
+.as-item { flex:1; text-align:center; border-right:1px solid var(--border); }
+.as-item:last-child { border-right:none; }
+.as-num { font-size:16px; font-weight:700; color:var(--text); }
+.as-label { font-size:11px; color:var(--text3); margin-top:1px; font-weight:400; }
+
+/* ═══════════════════════════════════════
+   VALUATION CTA SECTION
+═══════════════════════════════════════ */
+#valuation {
+  background:linear-gradient(135deg, #6B2D8B 0%, #8B4DAB 50%, #9B5ABF 100%);
+  position:relative; overflow:hidden;
+}
+.val-inner {
+  display:grid; grid-template-columns:1fr 1fr;
+  gap:60px; align-items:center;
+  padding:80px 40px;
+  max-width:1320px; margin:0 auto;
+}
+/* Decorative circles */
+.val-deco {
+  position:absolute; border-radius:50%; pointer-events:none;
+}
+.val-deco-1 {
+  width:500px; height:500px;
+  background:radial-gradient(circle, rgba(245,200,66,.12) 0%, transparent 65%);
+  top:-100px; right:-100px;
+}
+.val-deco-2 {
+  width:300px; height:300px;
+  background:radial-gradient(circle, rgba(255,255,255,.06) 0%, transparent 65%);
+  bottom:-60px; left:20%;
+}
+.val-left .section-label { color:rgba(245,200,66,.8); }
+.val-title {
+  font-size:clamp(30px,4vw,50px); font-weight:700;
+  color:#fff; letter-spacing:-.04em; line-height:1.05;
+  margin-bottom:16px;
+}
+.val-title em { font-style:normal; color:var(--gold); }
+.val-desc { font-size:16px; color:rgba(255,255,255,.5); line-height:1.7; margin-bottom:32px; font-weight:400; }
+.val-ctas { display:flex; gap:12px; flex-wrap:wrap; }
+.val-btn-primary {
+  padding:13px 26px; border-radius:50px;
+  background:var(--gold); color:var(--dark);
+  font-size:15px; font-weight:700;
+  box-shadow:0 6px 20px rgba(232,160,32,.35);
+  transition:all .2s;
+}
+.val-btn-primary:hover { transform:translateY(-2px); box-shadow:0 10px 28px rgba(232,160,32,.45); }
+.val-btn-ghost {
+  padding:13px 26px; border-radius:50px;
+  border:1.5px solid rgba(255,255,255,.2); color:rgba(255,255,255,.75);
+  font-size:15px; font-weight:600;
+  transition:all .2s;
+}
+.val-btn-ghost:hover { border-color:rgba(255,255,255,.5); color:#fff; }
+
+/* Valuation form card */
+.val-card {
+  background:rgba(255,255,255,.97);
+  border-radius:var(--r-xl); padding:32px 28px;
+  box-shadow:var(--sh-xl);
+}
+.val-card-title { font-size:18px; font-weight:700; color:var(--text); margin-bottom:6px; }
+.val-card-sub { font-size:13px; color:var(--text2); margin-bottom:24px; font-weight:400; }
+.val-field { margin-bottom:14px; }
+.val-field label { display:block; font-size:11px; font-weight:700; color:var(--text); letter-spacing:.05em; text-transform:uppercase; margin-bottom:6px; }
+.val-field input, .val-field select {
+  width:100%; padding:11px 14px;
+  border:1.5px solid var(--border); border-radius:var(--r-sm);
+  font-size:14px; font-weight:400; color:var(--text);
+  background:var(--canvas); outline:none;
+  transition:border-color .2s;
+}
+.val-field input:focus, .val-field select:focus { border-color:var(--purple); }
+.val-field-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.val-btn {
+  width:100%; padding:14px; border-radius:var(--r-md);
+  background:var(--purple); color:#fff;
+  font-size:14.5px; font-weight:700;
+  box-shadow:0 4px 14px rgba(139,77,171,.35);
+  transition:all .2s; margin-top:6px;
+}
+.val-btn:hover { background:#9B5ABF; transform:translateY(-1px); }
+.val-disclaimer { font-size:11.5px; color:var(--text3); text-align:center; margin-top:12px; line-height:1.5; font-weight:400; }
+
+/* ═══════════════════════════════════════
+   NEW DEVELOPMENTS
+═══════════════════════════════════════ */
+#developments { background:var(--surface); }
+.dev-scroll {
+  display:flex; gap:18px;
+  overflow-x:auto; scrollbar-width:none;
+  padding-bottom:4px;
+}
+.dev-scroll::-webkit-scrollbar { display:none; }
+.dev-card {
+  flex-shrink:0; width:320px;
+  background:var(--canvas); border:1px solid var(--border);
+  border-radius:var(--r-lg); overflow:hidden;
+  transition:box-shadow .25s, transform .25s; cursor:pointer;
+}
+.dev-card:hover { box-shadow:var(--sh-lg); transform:translateY(-4px); }
+.dev-media { position:relative; height:200px; overflow:hidden; background:var(--surface2); }
+.dev-media img { width:100%; height:100%; object-fit:cover; transition:transform .5s; }
+.dev-card:hover .dev-media img { transform:scale(1.04); }
+.dev-badge {
+  position:absolute; top:14px; left:14px;
+  padding:4px 11px; border-radius:50px;
+  font-size:11px; font-weight:700;
+  background:rgba(37,99,235,.88); color:#fff;
+}
+.dev-completion {
+  position:absolute; bottom:0; left:0; right:0;
+  background:rgba(17,16,8,.7); backdrop-filter:blur(6px);
+  padding:8px 14px; display:flex; align-items:center; gap:10px;
+}
+.dev-progress-track {
+  flex:1; height:4px; background:rgba(255,255,255,.2); border-radius:2px;
+}
+.dev-progress-fill { height:100%; border-radius:2px; background:var(--gold); }
+.dev-pct { font-size:11px; font-weight:700; color:var(--gold); flex-shrink:0; }
+.dev-body { padding:16px 18px 18px; }
+.dev-dev { font-size:11.5px; font-weight:600; color:var(--purple); margin-bottom:4px; text-transform:uppercase; letter-spacing:.04em; }
+.dev-name { font-size:16px; font-weight:700; color:var(--text); margin-bottom:4px; letter-spacing:-.01em; }
+.dev-loc { font-size:13px; color:var(--text3); margin-bottom:12px; }
+.dev-price { font-size:15px; font-weight:700; color:var(--text); }
+.dev-price span { font-size:12.5px; font-weight:400; color:var(--text3); }
+.dev-units {
+  display:inline-block; margin-top:8px;
+  padding:4px 11px; border-radius:50px;
+  background:var(--surface); border:1px solid var(--border);
+  font-size:11.5px; font-weight:600; color:var(--text2);
+}
+
+/* ═══════════════════════════════════════
+   MORTGAGE CALCULATOR BANNER
+═══════════════════════════════════════ */
+.mortgage-banner {
+  background:var(--dark);
+  padding:56px 40px;
+}
+.mortgage-inner {
+  max-width:1320px; margin:0 auto;
+  display:grid; grid-template-columns:1fr 1fr;
+  gap:60px; align-items:center;
+}
+.mb-left .section-title { color:#fff; }
+.mb-left .section-label { color:var(--gold); }
+.mb-left p { font-size:15px; color:rgba(255,255,255,.45); line-height:1.7; margin-top:10px; font-weight:400; }
+.mort-calc {
+  background:rgba(255,255,255,.05);
+  border:1px solid rgba(255,255,255,.07);
+  border-radius:var(--r-xl); padding:28px;
+}
+.mort-slider-wrap { margin-bottom:18px; }
+.mort-slider-label {
+  display:flex; justify-content:space-between; align-items:baseline;
+  margin-bottom:8px;
+}
+.msl-name { font-size:13px; font-weight:600; color:rgba(255,255,255,.55); }
+.msl-val { font-size:16px; font-weight:700; color:#fff; letter-spacing:-.02em; }
+.mort-slider {
+  width:100%; height:4px;
+  -webkit-appearance:none; appearance:none;
+  background:rgba(255,255,255,.1); border-radius:2px; outline:none;
+  cursor:pointer;
+}
+.mort-slider::-webkit-slider-thumb {
+  -webkit-appearance:none; appearance:none;
+  width:18px; height:18px; border-radius:50%;
+  background:var(--purple); cursor:pointer;
+  box-shadow:0 0 0 3px rgba(139,77,171,.3);
+  transition:box-shadow .2s;
+}
+.mort-slider::-webkit-slider-thumb:hover { box-shadow:0 0 0 5px rgba(139,77,171,.3); }
+.mort-result {
+  background:rgba(139,77,171,.15);
+  border:1px solid rgba(139,77,171,.2);
+  border-radius:var(--r-md); padding:16px 20px;
+  margin-top:20px;
+  display:flex; align-items:center; justify-content:space-between; gap:12px;
+}
+.mort-monthly-label { font-size:13px; color:rgba(255,255,255,.45); margin-bottom:3px; }
+.mort-monthly { font-size:28px; font-weight:700; color:#fff; letter-spacing:-.04em; }
+.mort-apply {
+  padding:10px 20px; border-radius:50px;
+  background:var(--gold); color:var(--dark);
+  font-size:13px; font-weight:700; white-space:nowrap;
+  transition:transform .15s; flex-shrink:0;
+}
+.mort-apply:hover { transform:scale(1.04); }
+
+/* ═══════════════════════════════════════
+   FOOTER
+═══════════════════════════════════════ */
+footer { background:var(--dark); padding:64px 40px 0; }
+.footer-grid {
+  display:grid; grid-template-columns:2fr 1fr 1fr 1fr;
+  gap:48px; padding-bottom:52px;
+  border-bottom:1px solid rgba(255,255,255,.06);
+}
+.footer-logo-row { display:flex; align-items:center; gap:10px; margin-bottom:14px; }
+.footer-logo-icon {
+  width:32px; height:32px; border-radius:9px;
+  background:var(--purple);
+  display:flex; align-items:center; justify-content:center;
+}
+.footer-logo-icon svg { width:17px; height:17px; }
+.footer-brand-name { font-size:17px; font-weight:700; color:#fff; letter-spacing:-.03em; }
+.footer-brand-name span { color:var(--gold); }
+.footer-brand p { font-size:13.5px; color:rgba(255,255,255,.3); line-height:1.7; max-width:260px; margin-bottom:20px; font-weight:400; }
+.footer-socials { display:flex; gap:8px; }
+.fsocial {
+  width:34px; height:34px; border-radius:9px;
+  background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.07);
+  display:flex; align-items:center; justify-content:center;
+  font-size:13px; color:rgba(255,255,255,.35);
+  transition:background .2s, color .2s;
+}
+.fsocial:hover { background:rgba(255,255,255,.1); color:rgba(255,255,255,.8); }
+.footer-col h4 { font-size:12px; font-weight:700; color:rgba(255,255,255,.4); letter-spacing:.05em; text-transform:uppercase; margin-bottom:16px; }
+.footer-col a { display:block; font-size:13.5px; color:rgba(255,255,255,.3); margin-bottom:10px; transition:color .2s; font-weight:400; }
+.footer-col a:hover { color:rgba(255,255,255,.8); }
+.footer-bottom {
+  display:flex; justify-content:space-between; align-items:center;
+  padding:18px 0; flex-wrap:wrap; gap:12px;
+}
+.footer-bottom p { font-size:12.5px; color:rgba(255,255,255,.2); font-weight:400; }
+.footer-legal { display:flex; gap:18px; }
+.footer-legal a { font-size:12.5px; color:rgba(255,255,255,.2); transition:color .2s; font-weight:400; }
+.footer-legal a:hover { color:rgba(255,255,255,.5); }
+
+/* ═══════════════════════════════════════
+   RESPONSIVE
+═══════════════════════════════════════ */
+@media(max-width:1100px) {
+  .featured-grid { grid-template-columns:1fr 1fr; }
+  .prop-card-lg { grid-row:span 1; }
+  .prop-card-lg .prop-media { height:210px; }
+  .nbhd-grid { grid-template-columns:repeat(2,1fr); }
+  .market-inner,.map-teaser-inner,.mortgage-inner,.val-inner { grid-template-columns:1fr; gap:40px; }
+  .footer-grid { grid-template-columns:1fr 1fr; }
+}
+@media(max-width:768px) {
+  #nav { padding:0 20px; }
+  .nav-links, .btn-ghost { display:none; }
+  .section { padding:56px 20px; }
+  #market-data, .mortgage-banner { padding:56px 20px; }
+  #valuation .val-inner { padding:56px 20px; }
+  footer { padding:56px 20px 0; }
+  .prop-grid { grid-template-columns:1fr; }
+  .featured-grid { grid-template-columns:1fr; }
+  .nbhd-grid { grid-template-columns:repeat(2,1fr); }
+  .agents-grid { grid-template-columns:1fr 1fr; }
+  .hero-stats .hstat { padding:10px 16px; }
+  .hstat-num { font-size:18px; }
+  .hero-h1 { font-size:38px; }
+  .footer-grid { grid-template-columns:1fr; }
+  .cat-bar-inner { padding:0 20px; }
+}
+@media(max-width:480px) {
+  .nbhd-grid { grid-template-columns:1fr; }
+  .agents-grid { grid-template-columns:1fr; }
+  .val-field-row { grid-template-columns:1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══ NAV ════════════════════════════════════════════════ -->
+<nav id="nav">
+  <div class="nav-inner">
+    <a href="/property" class="nav-logo">
+      <div class="nav-logo-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M5 3v18M5 12l8-9M5 12l8 9"/>
+        </svg>
+      </div>
+      <span class="nav-logo-name">klickenya</span>
+      <span class="nav-logo-tag">Property</span>
+    </a>
+
+    <div class="nav-pill" id="nav-pill">
+      <span class="nav-pill-text">Search properties…</span>
+      <div class="nav-pill-sep"></div>
+      <div class="nav-pill-btn">
+        <svg viewBox="0 0 16 16" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><circle cx="7" cy="7" r="4.5"/><path d="M11 11l2.5 2.5"/></svg>
+      </div>
+    </div>
+
+    <div class="nav-links">
+      <a href="/property/for-sale" class="nav-link">Buy</a>
+      <a href="/property/for-rent" class="nav-link">Rent</a>
+      <a href="/property/land" class="nav-link">Land</a>
+      <a href="/neighbourhoods" class="nav-link">Neighbourhoods</a>
+      <a href="/agents" class="nav-link">Agents</a>
+      <a href="/tools/property-valuation" class="nav-link">Valuation</a>
+    </div>
+
+    <div class="nav-actions">
+      <button class="btn-ghost">List a property</button>
+      <button class="btn-primary">Sign in</button>
+    </div>
+  </div>
+</nav>
+
+<!-- ═══ HERO ════════════════════════════════════════════════ -->
+<section id="hero">
+  <!-- Background mosaic of property photos -->
+  <div class="hero-bg">
+    <div class="hero-bg-cell"><img src="https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=900&q=85" alt=""/></div>
+    <div class="hero-bg-cell"><img src="https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=900&q=85" alt=""/></div>
+    <div class="hero-bg-cell"><img src="https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=900&q=85" alt=""/></div>
+    <div class="hero-bg-cell"><img src="https://images.unsplash.com/photo-1572120360610-d971b9d7767c?w=900&q=85" alt=""/></div>
+    <div class="hero-bg-cell"><img src="https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=900&q=85" alt=""/></div>
+    <div class="hero-bg-cell"><img src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=900&q=85" alt=""/></div>
+  </div>
+  <div class="hero-overlay"></div>
+
+  <div class="hero-content">
+    <div class="hero-badge au">
+      <span class="badge-pulse"></span>
+      Kenya's property marketplace · 12,000+ listings
+    </div>
+    <h1 class="hero-h1 au d1">
+      Find your home<br/>
+      in <em>Kenya</em>
+      <span class="ghost">Buy · Sell · Rent</span>
+    </h1>
+    <p class="hero-sub au d2">Browse verified properties for sale and rent across Nairobi, Mombasa, and all 47 counties. Instant AI valuations. Verified agents.</p>
+
+    <!-- Search box -->
+    <div class="search-box au d3">
+      <div class="search-tabs">
+        <button class="search-tab active" data-tab="buy">🏠 Buy</button>
+        <button class="search-tab" data-tab="rent">🔑 Rent</button>
+        <button class="search-tab" data-tab="land">🌍 Land</button>
+        <button class="search-tab" data-tab="commercial">🏢 Commercial</button>
+        <button class="search-tab" data-tab="newdev">🏗 New Developments</button>
+      </div>
+      <div class="search-fields">
+        <div class="sf">
+          <label>Location</label>
+          <input type="text" placeholder="Nairobi, Kilimani, Westlands…"/>
+        </div>
+        <div class="sf">
+          <label>Property type</label>
+          <select>
+            <option value="">Any type</option>
+            <option>Apartment</option>
+            <option>House</option>
+            <option>Villa</option>
+            <option>Studio</option>
+            <option>Townhouse</option>
+          </select>
+        </div>
+        <div class="sf">
+          <label>Bedrooms</label>
+          <select>
+            <option value="">Any</option>
+            <option>Studio</option>
+            <option>1 bed</option>
+            <option>2 beds</option>
+            <option>3 beds</option>
+            <option>4+ beds</option>
+          </select>
+        </div>
+        <div class="sf">
+          <label>Price range (KES)</label>
+          <div class="price-range">
+            <input type="text" placeholder="Min"/>
+            <span class="price-sep">—</span>
+            <input type="text" placeholder="Max"/>
+          </div>
+        </div>
+        <button class="search-go">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="7" cy="7" r="4.5"/><path d="M11 11l2.5 2.5"/></svg>
+          Search
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="hero-stats ai d4">
+    <div class="hstat"><div class="hstat-num">12,400+</div><div class="hstat-label">Active listings</div></div>
+    <div class="hstat"><div class="hstat-num">47</div><div class="hstat-label">Counties covered</div></div>
+    <div class="hstat"><div class="hstat-num">850+</div><div class="hstat-label">Verified agents</div></div>
+    <div class="hstat"><div class="hstat-num">Free</div><div class="hstat-label">AI valuation tool</div></div>
+  </div>
+</section>
+
+<!-- ═══ CATEGORY BAR ════════════════════════════════════════ -->
+<div id="cat-bar">
+  <div class="cat-bar-inner">
+    <div class="cat-tab active" data-c="all"><span class="cat-tab-icon">✨</span><span class="cat-tab-label">All</span></div>
+    <div class="cat-tab" data-c="sale"><span class="cat-tab-icon">🏠</span><span class="cat-tab-label">For Sale</span></div>
+    <div class="cat-tab" data-c="rent"><span class="cat-tab-icon">🔑</span><span class="cat-tab-label">For Rent</span></div>
+    <div class="cat-tab" data-c="land"><span class="cat-tab-icon">🌍</span><span class="cat-tab-label">Land</span></div>
+    <div class="cat-tab" data-c="commercial"><span class="cat-tab-icon">🏢</span><span class="cat-tab-label">Commercial</span></div>
+    <div class="cat-tab" data-c="new"><span class="cat-tab-icon">🏗</span><span class="cat-tab-label">New Builds</span></div>
+    <div class="cat-tab" data-c="luxury"><span class="cat-tab-icon">💎</span><span class="cat-tab-label">Luxury</span></div>
+    <div class="cat-tab" data-c="student"><span class="cat-tab-icon">🎓</span><span class="cat-tab-label">Student</span></div>
+    <div class="cat-bar-right">
+      <select class="sort-select">
+        <option>Newest first</option>
+        <option>Price: low–high</option>
+        <option>Price: high–low</option>
+        <option>Most saved</option>
+      </select>
+      <button class="map-toggle-btn">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="1" y="4" width="14" height="9" rx="1"/><path d="M5 4V2M11 4V2M1 8h14"/></svg>
+        Map view
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ FEATURED LISTINGS ════════════════════════════════════ -->
+<section class="section" id="listings">
+  <div class="container">
+    <div class="section-hd sr">
+      <div>
+        <div class="section-label">Editor's picks</div>
+        <h2 class="section-title">Featured properties</h2>
+        <p class="section-sub">Verified listings from trusted agents across Kenya</p>
+      </div>
+      <a href="/property/for-sale" class="view-all">View all →</a>
+    </div>
+
+    <!-- Featured grid: 1 large + 2 stacked -->
+    <div class="featured-grid sr d1" id="featured-grid">
+      <!-- Built by JS -->
+    </div>
+
+    <!-- Standard grid -->
+    <div class="prop-grid" id="prop-grid">
+      <!-- Built by JS -->
+    </div>
+  </div>
+</section>
+
+<!-- ═══ NEIGHBOURHOODS ════════════════════════════════════════ -->
+<section class="section" id="neighbourhoods">
+  <div class="container">
+    <div class="section-hd sr">
+      <div>
+        <div class="section-label">Explore by area</div>
+        <h2 class="section-title">Popular neighbourhoods</h2>
+        <p class="section-sub">Price trends, amenities, and local insights for every area</p>
+      </div>
+      <a href="/neighbourhoods" class="view-all">All guides →</a>
+    </div>
+    <div class="nbhd-grid sr d1">
+      <div class="nbhd-card">
+        <img src="https://images.unsplash.com/photo-1611348586804-61bf6c080437?w=600&q=85" alt="Kilimani"/>
+        <div class="nbhd-overlay"></div>
+        <div class="nbhd-view">Explore →</div>
+        <div class="nbhd-body">
+          <div class="nbhd-name">Kilimani</div>
+          <div class="nbhd-meta">Nairobi · Upmarket residential</div>
+          <div class="nbhd-stats">
+            <span class="nbhd-stat">840 listings</span>
+            <span class="nbhd-stat gold">KSh 18M avg</span>
+          </div>
+        </div>
+      </div>
+      <div class="nbhd-card">
+        <img src="https://images.unsplash.com/photo-1617195920950-1145bf9a9c72?w=600&q=85" alt="Westlands"/>
+        <div class="nbhd-overlay"></div>
+        <div class="nbhd-view">Explore →</div>
+        <div class="nbhd-body">
+          <div class="nbhd-name">Westlands</div>
+          <div class="nbhd-meta">Nairobi · Business & lifestyle</div>
+          <div class="nbhd-stats">
+            <span class="nbhd-stat">620 listings</span>
+            <span class="nbhd-stat gold">KSh 22M avg</span>
+          </div>
+        </div>
+      </div>
+      <div class="nbhd-card">
+        <img src="https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=600&q=85" alt="Karen"/>
+        <div class="nbhd-overlay"></div>
+        <div class="nbhd-view">Explore →</div>
+        <div class="nbhd-body">
+          <div class="nbhd-name">Karen</div>
+          <div class="nbhd-meta">Nairobi · Leafy suburban</div>
+          <div class="nbhd-stats">
+            <span class="nbhd-stat">380 listings</span>
+            <span class="nbhd-stat gold">KSh 45M avg</span>
+          </div>
+        </div>
+      </div>
+      <div class="nbhd-card">
+        <img src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&q=85" alt="Nyali"/>
+        <div class="nbhd-overlay"></div>
+        <div class="nbhd-view">Explore →</div>
+        <div class="nbhd-body">
+          <div class="nbhd-name">Nyali</div>
+          <div class="nbhd-meta">Mombasa · Coastal premium</div>
+          <div class="nbhd-stats">
+            <span class="nbhd-stat">290 listings</span>
+            <span class="nbhd-stat gold">KSh 12M avg</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ MARKET DATA ════════════════════════════════════════════ -->
+<div id="market-data">
+  <div class="container">
+    <div class="market-inner">
+      <div class="market-left sr-l">
+        <div class="section-label">Market intelligence</div>
+        <h2 class="section-title" style="color:#fff;">Kenya property<br/>market at a glance</h2>
+        <p class="section-sub" style="color:rgba(255,255,255,.45);margin-top:10px;">Live data from 12,400+ listings across Kenya. Updated weekly.</p>
+        <div class="market-cards">
+          <div class="market-card">
+            <div class="mc-icon">🏙</div>
+            <div class="mc-body">
+              <div class="mc-label">Avg. price/sqm · Nairobi</div>
+              <div class="mc-value">KSh 124,500</div>
+            </div>
+            <span class="mc-change mc-up">↑ 8.2%</span>
+          </div>
+          <div class="market-card">
+            <div class="mc-icon">🔑</div>
+            <div class="mc-body">
+              <div class="mc-label">Avg. rent · 2BR Nairobi</div>
+              <div class="mc-value">KSh 68,000 / mo</div>
+            </div>
+            <span class="mc-change mc-up">↑ 4.1%</span>
+          </div>
+          <div class="market-card">
+            <div class="mc-icon">📊</div>
+            <div class="mc-body">
+              <div class="mc-label">Avg. rental yield · Nairobi</div>
+              <div class="mc-value">6.8% p.a.</div>
+            </div>
+            <span class="mc-change mc-down">↓ 0.3%</span>
+          </div>
+          <div class="market-card">
+            <div class="mc-icon">⏱</div>
+            <div class="mc-body">
+              <div class="mc-label">Avg. days on market</div>
+              <div class="mc-value">42 days</div>
+            </div>
+            <span class="mc-change mc-down">↓ 6 days</span>
+          </div>
+        </div>
+      </div>
+      <div class="market-chart sr-r">
+        <div class="market-chart-title">Avg. price / sqm by neighbourhood (KSh '000)</div>
+        <div class="chart-bars" id="price-chart"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MAP TEASER ════════════════════════════════════════════ -->
+<section class="section map-teaser-section">
+  <div class="container">
+    <div class="map-teaser-inner">
+      <div class="map-teaser-left sr-l">
+        <div class="section-label">Map search</div>
+        <h2 class="section-title">Draw your search<br/>on the map</h2>
+        <p>Draw a boundary on the map and instantly see every property inside it. Coming in Q2 2026 — sign up for early access.</p>
+        <div class="map-features">
+          <div class="map-feat"><span class="map-feat-dot"></span>Draw any shape — circle, polygon, freehand</div>
+          <div class="map-feat"><span class="map-feat-dot"></span>See commute times to your workplace or school</div>
+          <div class="map-feat"><span class="map-feat-dot"></span>Filter by price, beds, property type on the map</div>
+          <div class="map-feat"><span class="map-feat-dot"></span>Save searches and get alerts for new listings</div>
+        </div>
+        <a href="#" class="map-cta">
+          Get early access →
+        </a>
+      </div>
+      <div class="sr-r">
+        <!-- Map preview mockup -->
+        <div class="map-preview">
+          <img src="https://images.unsplash.com/photo-1576085898323-218337e3e43c?w=900&q=80" alt="Map"/>
+          <div class="map-preview-overlay"></div>
+          <!-- Fake pins -->
+          <div class="map-pin" style="left:38%;top:42%"><div class="mp-bubble">KSh 12M</div></div>
+          <div class="map-pin" style="left:55%;top:35%"><div class="mp-bubble gold">KSh 8.5M</div></div>
+          <div class="map-pin" style="left:28%;top:56%"><div class="mp-bubble">KSh 22M</div></div>
+          <div class="map-pin" style="left:65%;top:52%"><div class="mp-bubble">KSh 6M</div></div>
+          <div class="map-pin" style="left:48%;top:62%"><div class="mp-bubble gold">KSh 18M</div></div>
+          <!-- Map UI chrome -->
+          <div class="map-ui">
+            <div class="map-search-bar">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="7" cy="7" r="4.5"/><path d="M11 11l2.5 2.5"/></svg>
+              Search on map…
+            </div>
+            <div class="map-zoom">
+              <button class="mz-btn">+</button>
+              <button class="mz-btn">−</button>
+            </div>
+          </div>
+          <div class="map-results-chip">📍 248 properties in this area</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ NEW DEVELOPMENTS ══════════════════════════════════════ -->
+<section class="section" id="developments">
+  <div class="container">
+    <div class="section-hd sr">
+      <div>
+        <div class="section-label">Off-plan & new builds</div>
+        <h2 class="section-title">New developments</h2>
+        <p class="section-sub">Buy direct from developers — often at pre-launch pricing</p>
+      </div>
+      <a href="/property/new-developments" class="view-all">All projects →</a>
+    </div>
+    <div class="dev-scroll sr d1" id="dev-scroll">
+      <!-- Built by JS -->
+    </div>
+  </div>
+</section>
+
+<!-- ═══ AGENTS ════════════════════════════════════════════════ -->
+<section class="section" id="agents">
+  <div class="container">
+    <div class="section-hd sr">
+      <div>
+        <div class="section-label">Trusted professionals</div>
+        <h2 class="section-title">Top agents in Nairobi</h2>
+        <p class="section-sub">Verified, licensed, and reviewed by real buyers and sellers</p>
+      </div>
+      <a href="/agents" class="view-all">Find agents →</a>
+    </div>
+    <div class="agents-grid sr d1" id="agents-grid">
+      <!-- Built by JS -->
+    </div>
+  </div>
+</section>
+
+<!-- ═══ VALUATION CTA ════════════════════════════════════════ -->
+<section id="valuation">
+  <div class="val-deco val-deco-1"></div>
+  <div class="val-deco val-deco-2"></div>
+  <div class="val-inner">
+    <div class="val-left sr-l">
+      <div class="section-label">AI-powered</div>
+      <h2 class="val-title">What's your home worth in <em>2026</em>?</h2>
+      <p class="val-desc">Get an instant AI-powered property valuation based on comparable sales in your area. Used by 8,000+ Kenyans every month — completely free.</p>
+      <div class="val-ctas">
+        <a href="#" class="val-btn-primary">Try the valuation tool →</a>
+        <a href="#" class="val-btn-ghost">How it works</a>
+      </div>
+    </div>
+    <div class="sr-r">
+      <div class="val-card">
+        <div class="val-card-title">Instant property valuation</div>
+        <div class="val-card-sub">Free estimate · Results in 10 seconds</div>
+        <div class="val-field">
+          <label>Property address</label>
+          <input type="text" placeholder="e.g. Kilimani, Nairobi"/>
+        </div>
+        <div class="val-field-row">
+          <div class="val-field">
+            <label>Property type</label>
+            <select>
+              <option>Apartment</option>
+              <option>House</option>
+              <option>Villa</option>
+              <option>Townhouse</option>
+            </select>
+          </div>
+          <div class="val-field">
+            <label>Bedrooms</label>
+            <select>
+              <option>1 bed</option>
+              <option>2 beds</option>
+              <option>3 beds</option>
+              <option>4+ beds</option>
+            </select>
+          </div>
+        </div>
+        <div class="val-field-row">
+          <div class="val-field">
+            <label>Size (sqm)</label>
+            <input type="number" placeholder="e.g. 120"/>
+          </div>
+          <div class="val-field">
+            <label>Condition</label>
+            <select>
+              <option>Excellent</option>
+              <option>Good</option>
+              <option>Fair</option>
+              <option>Needs work</option>
+            </select>
+          </div>
+        </div>
+        <button class="val-btn" id="val-btn" onclick="runValuation()">
+          Get free valuation →
+        </button>
+        <!-- Result area, hidden until button clicked -->
+        <div id="val-result" style="display:none;margin-top:16px;padding:16px;border-radius:12px;background:var(--purple-dim);border:1px solid var(--purple-mid);">
+          <div style="font-size:11px;font-weight:700;color:var(--purple);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;">Estimated value</div>
+          <div style="font-size:28px;font-weight:700;color:var(--text);letter-spacing:-.04em;margin-bottom:4px;">KSh 14.2M — 16.8M</div>
+          <div style="font-size:12.5px;color:var(--text2);">Based on 12 comparable sales in Kilimani (last 90 days)</div>
+        </div>
+        <p class="val-disclaimer">Estimates are indicative only and do not constitute a formal valuation. For a certified report, contact a registered valuer.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ MORTGAGE CALCULATOR ══════════════════════════════════ -->
+<div class="mortgage-banner">
+  <div class="mortgage-inner">
+    <div class="mb-left sr-l">
+      <div class="section-label">Financial tools</div>
+      <h2 class="section-title" style="color:#fff;">Calculate your<br/>mortgage</h2>
+      <p>Based on current rates from KCB, Equity, Co-op, and NCBA. Updated monthly.</p>
+    </div>
+    <div class="mort-calc sr-r">
+      <div class="mort-slider-wrap">
+        <div class="mort-slider-label">
+          <span class="msl-name">Property price</span>
+          <span class="msl-val" id="sl-price-val">KSh 8,000,000</span>
+        </div>
+        <input type="range" class="mort-slider" id="sl-price" min="1000000" max="50000000" step="500000" value="8000000" oninput="updateMort()"/>
+      </div>
+      <div class="mort-slider-wrap">
+        <div class="mort-slider-label">
+          <span class="msl-name">Down payment</span>
+          <span class="msl-val" id="sl-down-val">20% · KSh 1,600,000</span>
+        </div>
+        <input type="range" class="mort-slider" id="sl-down" min="10" max="50" step="5" value="20" oninput="updateMort()"/>
+      </div>
+      <div class="mort-slider-wrap">
+        <div class="mort-slider-label">
+          <span class="msl-name">Loan term</span>
+          <span class="msl-val" id="sl-term-val">20 years</span>
+        </div>
+        <input type="range" class="mort-slider" id="sl-term" min="5" max="25" step="5" value="20" oninput="updateMort()"/>
+      </div>
+      <div class="mort-result">
+        <div>
+          <div class="mort-monthly-label">Monthly payment (at 13.5% p.a.)</div>
+          <div class="mort-monthly" id="mort-monthly">KSh 92,400</div>
+        </div>
+        <button class="mort-apply" onclick="alert('Redirecting to mortgage application...')">Apply now →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ FOOTER ════════════════════════════════════════════════ -->
+<footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <div class="footer-logo-row">
+        <div class="footer-logo-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3v18M5 12l8-9M5 12l8 9"/></svg>
+        </div>
+        <span class="footer-brand-name">klickenya <span>property</span></span>
+      </div>
+      <p>Kenya's trusted property marketplace. Buy, sell and rent verified properties across all 47 counties. Powered by AI valuations and 850+ verified agents.</p>
+      <div class="footer-socials">
+        <a href="#" class="fsocial">𝕏</a>
+        <a href="#" class="fsocial">in</a>
+        <a href="#" class="fsocial">f</a>
+        <a href="#" class="fsocial">📷</a>
+      </div>
+    </div>
+    <div class="footer-col">
+      <h4>Browse</h4>
+      <a href="#">Properties for sale</a>
+      <a href="#">Properties for rent</a>
+      <a href="#">Land for sale</a>
+      <a href="#">New developments</a>
+      <a href="#">Commercial property</a>
+    </div>
+    <div class="footer-col">
+      <h4>Tools</h4>
+      <a href="#">Property valuation</a>
+      <a href="#">Mortgage calculator</a>
+      <a href="#">Rental yield tool</a>
+      <a href="#">Market data</a>
+      <a href="#">Neighbourhood guides</a>
+    </div>
+    <div class="footer-col">
+      <h4>Agents</h4>
+      <a href="#">Find an agent</a>
+      <a href="#">List a property</a>
+      <a href="#">Agent subscriptions</a>
+      <a href="#">Developer listings</a>
+      <a href="#">Help Centre</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p>© 2026 Klickenya Ltd. All rights reserved.</p>
+    <div class="footer-legal">
+      <a href="#">Privacy</a>
+      <a href="#">Terms</a>
+      <a href="#">Cookie policy</a>
+      <a href="#">EARB compliance</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+/* ════ DATA ════════════════════════════════════════════════════ */
+const PROPERTIES = [
+  { id:1, title:"3-Bedroom Apartment, Kilimani",    loc:"Kilimani, Nairobi",     price:"KSh 14,500,000", priceUnit:"",         status:"sale", badge:"ps-sale",  badgeTxt:"For Sale",    beds:3, baths:2, sqm:148, img:"https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=800&q=80", extra:"ppb-popular|Hot deal" },
+  { id:2, title:"Modern Studio, Westlands",          loc:"Westlands, Nairobi",    price:"KSh 45,000",     priceUnit:"/month",   status:"rent", badge:"ps-rent",  badgeTxt:"For Rent",    beds:0, baths:1, sqm:42,  img:"https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800&q=80", extra:"" },
+  { id:3, title:"4-Bedroom Villa with Pool, Karen",  loc:"Karen, Nairobi",        price:"KSh 68,000,000", priceUnit:"",         status:"sale", badge:"ps-sale",  badgeTxt:"For Sale",    beds:4, baths:4, sqm:620, img:"https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=800&q=80", extra:"ppb-reduced|Price reduced" },
+  { id:4, title:"2-Bedroom Apt, Nyali Mombasa",      loc:"Nyali, Mombasa",        price:"KSh 9,800,000",  priceUnit:"",         status:"sale", badge:"ps-sale",  badgeTxt:"For Sale",    beds:2, baths:2, sqm:98,  img:"https://images.unsplash.com/photo-1572120360610-d971b9d7767c?w=800&q=80", extra:"" },
+  { id:5, title:"½ Acre Plot, Ruaka",                loc:"Ruaka, Kiambu",         price:"KSh 7,500,000",  priceUnit:"",         status:"land", badge:"ps-land",  badgeTxt:"Land",        beds:0, baths:0, sqm:0,   img:"https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=80", extra:"" },
+  { id:6, title:"Bedsitter, South B",                loc:"South B, Nairobi",      price:"KSh 18,000",     priceUnit:"/month",   status:"rent", badge:"ps-rent",  badgeTxt:"For Rent",    beds:0, baths:1, sqm:28,  img:"https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=800&q=80", extra:"" },
+  { id:7, title:"Penthouse, Upper Hill",             loc:"Upper Hill, Nairobi",   price:"KSh 32,000,000", priceUnit:"",         status:"sale", badge:"ps-new",   badgeTxt:"New listing", beds:4, baths:3, sqm:320, img:"https://images.unsplash.com/photo-1617195920950-1145bf9a9c72?w=800&q=80", extra:"ppb-popular|Popular" },
+  { id:8, title:"Commercial Office, Upperhill",      loc:"Upper Hill, Nairobi",   price:"KSh 280,000",    priceUnit:"/month",   status:"rent", badge:"ps-offer", badgeTxt:"Under offer", beds:0, baths:3, sqm:450, img:"https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=800&q=80", extra:"" },
+];
+
+const DEVELOPMENTS = [
+  { name:"The Pinnacle Residences", dev:"Sanlam Homes", loc:"Kilimani, Nairobi", price:"From KSh 8.5M", progress:65, badge:"Off-plan", units:"24 units left", img:"https://images.unsplash.com/photo-1486325212027-8081e485255e?w=700&q=80" },
+  { name:"Riviera Gardens Phase 2",  dev:"Optiven Group",  loc:"Ruaka, Kiambu",  price:"From KSh 3.2M", progress:40, badge:"Pre-launch", units:"Phase 2 open", img:"https://images.unsplash.com/photo-1497366216548-37526070297c?w=700&q=80" },
+  { name:"Ocean View Suites",        dev:"Hass Consult",   loc:"Nyali, Mombasa", price:"From KSh 11M",  progress:80, badge:"Completing soon", units:"8 units left", img:"https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=700&q=80" },
+  { name:"The Greens, Tatu City",    dev:"Tatu City",      loc:"Ruiru, Kiambu",  price:"From KSh 5.8M", progress:25, badge:"Off-plan", units:"Phase 1 open", img:"https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=700&q=80" },
+  { name:"Lavington Square",         dev:"Mi Vida Homes",  loc:"Lavington, Nairobi", price:"From KSh 18M", progress:55, badge:"Under construction", units:"12 units left", img:"https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=700&q=80" },
+];
+
+const AGENTS = [
+  { name:"James Kariuki", agency:"Knight Frank Kenya", rating:"4.9", reviews:62, tags:["Luxury","Nairobi CBD"], listings:28, sales:14, img:"https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&q=80" },
+  { name:"Amina Hassan",  agency:"Hass Consult",       rating:"4.8", reviews:41, tags:["Mombasa","Coastal"], listings:19, sales:9,  img:"https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&q=80" },
+  { name:"Peter Njoroge", agency:"Pam Golding Kenya",  rating:"5.0", reviews:33, tags:["Karen","Lavington"], listings:15, sales:8,  img:"https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&q=80" },
+  { name:"Sarah Waweru",  agency:"Regent Management",  rating:"4.9", reviews:55, tags:["Westlands","Kilimani"], listings:32, sales:18, img:"https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150&q=80" },
+];
+
+const CHART_DATA = [
+  { label:"Kilimani", val:124, highlight:true },
+  { label:"Westlands", val:138, highlight:false },
+  { label:"Karen", val:95, highlight:false },
+  { label:"Lavington", val:112, highlight:false },
+  { label:"Upperhill", val:165, highlight:false },
+  { label:"Nyali", val:78, highlight:true },
+];
+
+/* ════ BUILD FEATURED GRID ═════════════════════════════════════ */
+function propCard(p, large=false) {
+  const [priceBadgeClass, priceBadgeText] = p.extra ? p.extra.split('|') : ['',''];
+  const specs = [];
+  if (p.beds > 0) specs.push(`<span class="spec"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1 6h14v6H1zM1 6V4h6v2M9 6V4h6v2"/></svg>${p.beds} bed${p.beds!==1?'s':''}</span>`);
+  if (p.baths > 0) specs.push(`<span class="spec"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 10h12M2 10V8a5 5 0 0110 0v2"/></svg>${p.baths} bath${p.baths!==1?'s':''}</span>`);
+  if (p.sqm > 0) specs.push(`<span class="spec"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="2" width="12" height="12" rx="1"/></svg>${p.sqm} m²</span>`);
+  return `
+  <div class="prop-card${large?' prop-card-lg':''}">
+    <div class="prop-media">
+      <img src="${p.img}" loading="lazy" alt="${p.title}"/>
+      <span class="prop-status ${p.badge}">${p.badgeTxt}</span>
+      <button class="prop-save" onclick="toggleSave(this)">
+        <svg width="16" height="16" fill="none" stroke="white" stroke-width="2.2" viewBox="0 0 24 24" style="filter:drop-shadow(0 1px 3px rgba(0,0,0,.35))">
+          <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
+        </svg>
+      </button>
+      <div class="prop-dots"><div class="prop-dot on"></div><div class="prop-dot"></div><div class="prop-dot"></div></div>
+    </div>
+    <div class="prop-body">
+      <div class="prop-price-row">
+        <span class="prop-price">${p.price}</span>
+        ${p.priceUnit ? `<span class="prop-price-unit">${p.priceUnit}</span>` : ''}
+        ${priceBadgeText ? `<span class="prop-price-badge ${priceBadgeClass}">${priceBadgeText}</span>` : ''}
+      </div>
+      <div class="prop-title">${p.title}</div>
+      <div class="prop-location">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 1.5A4.5 4.5 0 003.5 6c0 3 4.5 8.5 4.5 8.5S12.5 9 12.5 6A4.5 4.5 0 008 1.5z"/><circle cx="8" cy="6" r="1.5"/></svg>
+        ${p.loc}
+      </div>
+      <div class="prop-specs">${specs.join('')}</div>
+    </div>
+  </div>`;
+}
+
+const featGrid = document.getElementById('featured-grid');
+featGrid.innerHTML = propCard(PROPERTIES[0], true) + propCard(PROPERTIES[1]) + propCard(PROPERTIES[2]);
+
+const propGrid = document.getElementById('prop-grid');
+PROPERTIES.slice(3).forEach((p,i) => {
+  const div = document.createElement('div');
+  div.innerHTML = propCard(p);
+  div.firstElementChild.classList.add('au');
+  div.firstElementChild.style.animationDelay = `${i*.07}s`;
+  propGrid.appendChild(div.firstElementChild);
+});
+
+/* ════ BUILD DEVELOPMENTS ══════════════════════════════════════ */
+const devScroll = document.getElementById('dev-scroll');
+DEVELOPMENTS.forEach(d => {
+  devScroll.innerHTML += `
+  <div class="dev-card">
+    <div class="dev-media">
+      <img src="${d.img}" loading="lazy" alt="${d.name}"/>
+      <span class="dev-badge">${d.badge}</span>
+      <div class="dev-completion">
+        <div class="dev-progress-track"><div class="dev-progress-fill" style="width:${d.progress}%"></div></div>
+        <span class="dev-pct">${d.progress}%</span>
+      </div>
+    </div>
+    <div class="dev-body">
+      <div class="dev-dev">${d.dev}</div>
+      <div class="dev-name">${d.name}</div>
+      <div class="dev-loc">📍 ${d.loc}</div>
+      <div class="dev-price">${d.price} <span>· per unit</span></div>
+      <div class="dev-units">${d.units}</div>
+    </div>
+  </div>`;
+});
+
+/* ════ BUILD AGENTS ════════════════════════════════════════════ */
+const agentGrid = document.getElementById('agents-grid');
+AGENTS.forEach(a => {
+  const stars = '★'.repeat(5);
+  agentGrid.innerHTML += `
+  <div class="agent-card">
+    <div class="agent-avatar-wrap">
+      <img class="agent-avatar" src="${a.img}" loading="lazy" alt="${a.name}"/>
+      <div class="agent-verified">
+        <svg viewBox="0 0 12 12" fill="white"><path d="M4.5 9L1.5 6 2.6 4.9 4.5 6.8 9.4 1.9 10.5 3z"/></svg>
+      </div>
+    </div>
+    <div class="agent-name">${a.name}</div>
+    <div class="agent-agency">${a.agency}</div>
+    <div class="agent-rating">
+      <svg width="13" height="13" viewBox="0 0 12 12"><path d="M6 1l1.3 2.6 2.9.4-2.1 2 .5 2.9L6 7.6 3.4 8.9l.5-2.9-2.1-2 2.9-.4z"/></svg>
+      ${a.rating} <span style="font-weight:400;color:var(--text3);font-size:12px;">(${a.reviews} reviews)</span>
+    </div>
+    <div class="agent-tags">${a.tags.map(t=>`<span class="agent-tag">${t}</span>`).join('')}</div>
+    <div class="agent-stats">
+      <div class="as-item"><div class="as-num">${a.listings}</div><div class="as-label">Listings</div></div>
+      <div class="as-item"><div class="as-num">${a.sales}</div><div class="as-label">Sales</div></div>
+      <div class="as-item"><div class="as-num">5.0</div><div class="as-label">Response</div></div>
+    </div>
+  </div>`;
+});
+
+/* ════ BUILD CHART ═════════════════════════════════════════════ */
+const chart = document.getElementById('price-chart');
+const maxVal = Math.max(...CHART_DATA.map(d=>d.val));
+CHART_DATA.forEach(d => {
+  const pct = Math.round((d.val / maxVal)*100);
+  chart.innerHTML += `
+  <div class="bar-wrap">
+    <div class="bar-track">
+      <div class="bar-fill${d.highlight?' gold-bar':''}" style="height:${pct}%" data-val="KSh ${d.val}K/sqm"></div>
+    </div>
+    <div class="bar-label">${d.label}</div>
+  </div>`;
+});
+
+/* ════ NAV SCROLL ══════════════════════════════════════════════ */
+const nav = document.getElementById('nav');
+window.addEventListener('scroll', () => {
+  nav.classList.toggle('solid', window.scrollY > 60);
+}, {passive:true});
+
+/* ════ CAT TABS ════════════════════════════════════════════════ */
+document.querySelectorAll('.cat-tab').forEach(t => {
+  t.addEventListener('click', () => {
+    document.querySelectorAll('.cat-tab').forEach(x => x.classList.remove('active'));
+    t.classList.add('active');
+  });
+});
+
+/* ════ SEARCH TABS ═════════════════════════════════════════════ */
+document.querySelectorAll('.search-tab').forEach(t => {
+  t.addEventListener('click', () => {
+    document.querySelectorAll('.search-tab').forEach(x => x.classList.remove('active'));
+    t.classList.add('active');
+  });
+});
+
+/* ════ SAVE TOGGLE ═════════════════════════════════════════════ */
+function toggleSave(btn) {
+  const svg = btn.querySelector('svg');
+  const saved = svg.getAttribute('fill') === '#8B4DAB';
+  svg.setAttribute('fill', saved ? 'none' : '#8B4DAB');
+  svg.setAttribute('stroke', saved ? 'white' : '#8B4DAB');
+  btn.style.transform = saved ? '' : 'scale(1.2)';
+  setTimeout(() => btn.style.transform = '', 200);
+}
+
+/* ════ MORTGAGE CALC ════════════════════════════════════════════ */
+function fmtKes(n) {
+  if (n >= 1000000) return 'KSh ' + (n/1000000).toFixed(1) + 'M';
+  if (n >= 1000) return 'KSh ' + Math.round(n/1000) + 'K';
+  return 'KSh ' + n;
+}
+function updateMort() {
+  const price = +document.getElementById('sl-price').value;
+  const downPct = +document.getElementById('sl-down').value;
+  const term = +document.getElementById('sl-term').value;
+  const down = price * downPct / 100;
+  const loan = price - down;
+  const rate = 13.5 / 100 / 12;
+  const n = term * 12;
+  const monthly = loan * rate * Math.pow(1+rate,n) / (Math.pow(1+rate,n)-1);
+  document.getElementById('sl-price-val').textContent = fmtKes(price);
+  document.getElementById('sl-down-val').textContent = downPct + '% · ' + fmtKes(down);
+  document.getElementById('sl-term-val').textContent = term + ' years';
+  document.getElementById('mort-monthly').textContent = 'KSh ' + Math.round(monthly).toLocaleString();
+}
+
+/* ════ VALUATION DEMO ══════════════════════════════════════════ */
+function runValuation() {
+  const btn = document.getElementById('val-btn');
+  const result = document.getElementById('val-result');
+  btn.textContent = 'Calculating…';
+  btn.style.opacity = '.7';
+  setTimeout(() => {
+    btn.textContent = '✓ Valuation complete';
+    btn.style.background = 'var(--green)';
+    btn.style.opacity = '1';
+    result.style.display = 'block';
+    result.scrollIntoView({behavior:'smooth', block:'nearest'});
+  }, 1800);
+}
+
+/* ════ SCROLL REVEAL ════════════════════════════════════════════ */
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('on'); });
+}, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+document.querySelectorAll('.sr, .sr-l, .sr-r').forEach(el => observer.observe(el));
+</script>
+</body>
+</html>

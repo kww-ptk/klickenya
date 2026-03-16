@@ -1,0 +1,17 @@
+{
+  "name": "klickenya",
+  "private": true,
+  "scripts": {
+    "dev": "pnpm --filter @klickenya/web dev",
+    "dev:studio": "pnpm --filter @klickenya/studio dev",
+    "dev:all": "pnpm --parallel --filter @klickenya/web --filter @klickenya/studio dev",
+    "build": "pnpm --filter @klickenya/web build",
+    "build:studio": "pnpm --filter @klickenya/studio build",
+    "lint": "pnpm --filter @klickenya/web lint",
+    "typecheck": "pnpm --filter @klickenya/web tsc --noEmit"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "packageManager": "pnpm@9.15.4"
+}

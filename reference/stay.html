@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Sunset Loft, Westlands — Klickenya</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+/* ── TOKENS ── */
+:root{
+  --canvas:#FFFFFF;--surface:#F7F5F2;--surface2:#F0EDE8;
+  --border:#E8E4DE;--border2:#D8D3CC;
+  --text:#1A1714;--text2:#6B6560;--text3:#A09A93;
+  --amber:#E8A020;--amber-dim:rgba(232,160,32,.12);--amber-glow:rgba(232,160,32,.25);
+  --dark:#111008;--green:#16A34A;
+  --r-sm:12px;--r-md:18px;--r-lg:24px;--r-xl:32px;
+  --sh-xs:0 1px 3px rgba(0,0,0,.06);
+  --sh-sm:0 2px 8px rgba(0,0,0,.06),0 0 0 1px rgba(0,0,0,.04);
+  --sh-md:0 8px 24px rgba(0,0,0,.08),0 0 0 1px rgba(0,0,0,.04);
+  --sh-lg:0 20px 48px rgba(0,0,0,.12),0 0 0 1px rgba(0,0,0,.04);
+  --sh-xl:0 32px 64px rgba(0,0,0,.16);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{font-family:'Geist',sans-serif;background:var(--canvas);color:var(--text);overflow-x:hidden;-webkit-font-smoothing:antialiased;}
+::-webkit-scrollbar{width:5px;}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:10px;}
+img{display:block;}a{text-decoration:none;color:inherit;}
+button{font-family:'Geist',sans-serif;cursor:pointer;border:none;background:none;}
+input,select{font-family:'Geist',sans-serif;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
+.au{animation:fadeUp .5s cubic-bezier(.22,1,.36,1) both;}
+.d1{animation-delay:.06s}.d2{animation-delay:.12s}.d3{animation-delay:.18s}
+.sr{opacity:0;transform:translateY(18px);transition:opacity .6s ease,transform .6s ease;}
+.sr.on{opacity:1;transform:translateY(0);}
+
+/* ── NAV ── */
+#nav{
+  position:fixed;top:0;left:0;right:0;z-index:200;height:68px;
+  display:flex;align-items:center;padding:0 48px;
+  background:rgba(255,255,255,.95);backdrop-filter:blur(24px);
+  border-bottom:1px solid var(--border);
+}
+.nav-inner{width:100%;display:flex;align-items:center;justify-content:space-between;gap:16px;}
+.nav-logo{display:flex;align-items:center;gap:9px;}
+.nav-logo-icon{width:32px;height:32px;border-radius:9px;background:var(--text);display:flex;align-items:center;justify-content:center;}
+.nav-logo-name{font-family:'Bricolage Grotesque',sans-serif;font-size:18px;font-weight:700;color:var(--text);letter-spacing:-.03em;}
+.nav-back{display:flex;align-items:center;gap:7px;padding:9px 16px;border-radius:50px;font-size:14px;font-weight:600;color:var(--text2);border:1px solid var(--border);transition:all .2s;}
+.nav-back:hover{background:var(--surface);box-shadow:var(--sh-xs);}
+.nav-actions{display:flex;gap:8px;align-items:center;}
+.btn-icon{width:38px;height:38px;border-radius:50%;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;transition:box-shadow .2s;}
+.btn-icon:hover{box-shadow:var(--sh-sm);}
+.btn-dark{padding:9px 20px;border-radius:50px;font-size:14px;font-weight:600;background:var(--text);color:#fff;transition:opacity .2s;}
+.btn-dark:hover{opacity:.85;}
+
+/* ── GALLERY ── */
+.gallery{display:grid;grid-template-columns:2fr 1fr 1fr;grid-template-rows:280px 280px;gap:10px;border-radius:var(--r-xl);overflow:hidden;margin-top:88px;}
+.gallery-cell{overflow:hidden;position:relative;background:var(--surface2);}
+.gallery-cell img{width:100%;height:100%;object-fit:cover;transition:transform .6s ease;}
+.gallery-cell:hover img{transform:scale(1.04);}
+.gallery-main{grid-row:span 2;}
+.gallery-btn{
+  position:absolute;bottom:16px;right:16px;
+  background:rgba(255,255,255,.95);border:1px solid var(--border);
+  border-radius:50px;padding:8px 16px;font-size:13px;font-weight:700;
+  display:flex;align-items:center;gap:7px;box-shadow:var(--sh-sm);
+  transition:box-shadow .2s;
+}
+.gallery-btn:hover{box-shadow:var(--sh-md);}
+
+/* ── LAYOUT ── */
+.page-body{max-width:1280px;margin:0 auto;padding:40px 48px 80px;display:grid;grid-template-columns:1fr 380px;gap:60px;align-items:start;}
+.main-col{min-width:0;}
+
+/* ── HEADER ── */
+.listing-header{margin-bottom:28px;}
+.listing-badge-row{display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap;}
+.listing-type-badge{
+  background:var(--amber-dim);border:1px solid var(--amber-glow);
+  border-radius:50px;padding:4px 13px;
+  font-size:12px;font-weight:700;color:var(--amber);letter-spacing:.03em;
+}
+.listing-badge{
+  background:var(--surface2);border-radius:50px;
+  padding:4px 12px;font-size:12px;font-weight:600;color:var(--text2);
+}
+.listing-title{font-family:'Bricolage Grotesque',sans-serif;font-size:clamp(28px,3.5vw,42px);font-weight:800;color:var(--text);letter-spacing:-.03em;line-height:1.1;margin-bottom:14px;}
+.listing-meta-row{display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
+.rating-pill{display:flex;align-items:center;gap:5px;font-size:14px;font-weight:700;}
+.meta-sep{color:var(--border2);}
+.meta-item{font-size:14px;color:var(--text2);}
+.meta-item strong{color:var(--text);font-weight:600;}
+
+/* ── DIVIDER ── */
+.divider{border:none;border-top:1px solid var(--border);margin:32px 0;}
+
+/* ── HOST ROW ── */
+.host-row{display:flex;align-items:center;gap:16px;margin-bottom:8px;}
+.host-av{width:52px;height:52px;border-radius:50%;overflow:hidden;background:linear-gradient(135deg,var(--amber),#0D7377);display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff;font-size:18px;flex-shrink:0;}
+.host-av img{width:100%;height:100%;object-fit:cover;}
+.host-name{font-family:'Bricolage Grotesque',sans-serif;font-size:18px;font-weight:700;letter-spacing:-.02em;}
+.host-sub{font-size:13.5px;color:var(--text2);margin-top:2px;}
+.superhost-badge{display:inline-flex;align-items:center;gap:5px;background:var(--surface2);border-radius:50px;padding:4px 12px;font-size:12px;font-weight:700;color:var(--text);}
+
+/* ── HIGHLIGHTS ── */
+.highlights{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:24px 0;}
+.highlight{display:flex;gap:14px;align-items:flex-start;padding:18px;background:var(--surface);border-radius:var(--r-md);border:1px solid var(--border);}
+.highlight-icon{font-size:22px;flex-shrink:0;line-height:1;}
+.highlight-title{font-size:14px;font-weight:700;color:var(--text);margin-bottom:3px;}
+.highlight-desc{font-size:13px;color:var(--text2);line-height:1.5;}
+
+/* ── DESCRIPTION ── */
+.description{font-size:15.5px;color:var(--text2);line-height:1.75;}
+.read-more{display:inline-flex;align-items:center;gap:5px;font-size:14.5px;font-weight:700;color:var(--text);border-bottom:2px solid var(--text);padding-bottom:1px;margin-top:16px;transition:color .2s;}
+.read-more:hover{color:var(--amber);border-color:var(--amber);}
+
+/* ── AMENITIES ── */
+.amenities-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:20px;}
+.amenity{display:flex;align-items:center;gap:11px;font-size:14.5px;color:var(--text2);padding:4px 0;}
+.amenity svg{flex-shrink:0;color:var(--text);}
+.amenity.crossed{color:var(--text3);text-decoration:line-through;}
+
+/* ── MAP PREVIEW ── */
+.map-preview{height:280px;border-radius:var(--r-lg);overflow:hidden;background:var(--surface2);position:relative;border:1px solid var(--border);}
+.map-placeholder{width:100%;height:100%;object-fit:cover;}
+.map-pin{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--text);color:#fff;font-size:12px;font-weight:700;padding:6px 14px;border-radius:50px;box-shadow:var(--sh-md);white-space:nowrap;}
+
+/* ── RATING OVERVIEW ── */
+.rating-overview{display:flex;gap:40px;align-items:center;margin-bottom:28px;}
+.rating-big{text-align:center;}
+.rating-big .num{font-family:'Bricolage Grotesque',sans-serif;font-size:56px;font-weight:800;color:var(--text);letter-spacing:-.04em;line-height:1;}
+.rating-big .stars{display:flex;justify-content:center;gap:3px;margin:6px 0;}
+.rating-big .count{font-size:13px;color:var(--text2);}
+.rating-bars{flex:1;display:flex;flex-direction:column;gap:8px;}
+.rbar-row{display:flex;align-items:center;gap:10px;}
+.rbar-label{font-size:13px;color:var(--text2);white-space:nowrap;min-width:80px;}
+.rbar{flex:1;height:4px;background:var(--surface2);border-radius:2px;overflow:hidden;}
+.rbar-fill{height:100%;border-radius:2px;background:var(--text);}
+.rbar-val{font-size:13px;font-weight:600;min-width:28px;text-align:right;}
+
+/* ── SECTION TITLE ── */
+.sec-title{font-family:'Bricolage Grotesque',sans-serif;font-size:22px;font-weight:700;letter-spacing:-.02em;color:var(--text);margin-bottom:20px;}
+
+/* ── SIMILAR ROW ── */
+.similar-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:20px;}
+.sim-card{cursor:pointer;}
+.sim-img{border-radius:var(--r-lg);overflow:hidden;aspect-ratio:4/3;background:var(--surface2);margin-bottom:12px;}
+.sim-img img{width:100%;height:100%;object-fit:cover;transition:transform .5s;}
+.sim-card:hover .sim-img img{transform:scale(1.05);}
+.sim-name{font-size:15px;font-weight:600;margin-bottom:3px;}
+.sim-meta{font-size:13px;color:var(--text2);margin-bottom:5px;}
+.sim-price{font-size:15px;font-weight:700;}
+.sim-price span{font-size:13px;color:var(--text2);font-weight:400;}
+
+/* ── BOOKING CARD ── */
+.booking-card{
+  position:sticky;top:88px;background:var(--canvas);
+  border:1px solid var(--border);border-radius:var(--r-xl);
+  padding:28px;box-shadow:var(--sh-lg);
+}
+.bc-price .main{font-family:'Bricolage Grotesque',sans-serif;font-size:26px;font-weight:800;letter-spacing:-.03em;}
+.bc-price .unit{font-size:15px;color:var(--text2);}
+.bc-rating{display:flex;align-items:center;gap:6px;margin-top:6px;font-size:13.5px;color:var(--text2);}
+.bc-fields{border:1.5px solid var(--border2);border-radius:var(--r-md);overflow:hidden;margin:20px 0 12px;}
+.bc-row{display:grid;grid-template-columns:1fr 1fr;}
+.bc-field{padding:11px 14px;transition:background .2s;}
+.bc-field:hover{background:var(--surface);}
+.bc-field:first-child,.bc-field:nth-child(3){border-right:1px solid var(--border2);}
+.bc-field.span2{grid-column:span 2;border-top:1px solid var(--border2);}
+.bc-field:nth-child(3),.bc-field:nth-child(4),.bc-field.span2{border-top:1px solid var(--border2);}
+.bc-label{font-size:10px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;margin-bottom:3px;}
+.bc-input{border:none;background:transparent;outline:none;font-size:14px;font-weight:500;color:var(--text2);width:100%;}
+.bc-input::placeholder{color:var(--text3);}
+.g-row{display:flex;align-items:center;justify-content:space-between;}
+.g-ctrl{display:flex;align-items:center;gap:10px;}
+.g-btn{width:26px;height:26px;border-radius:50%;border:1.5px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--text2);transition:border-color .2s;line-height:1;}
+.g-btn:hover{border-color:var(--text);}
+.g-num{font-size:14px;font-weight:700;min-width:14px;text-align:center;}
+.btn-book{
+  width:100%;padding:15px;border-radius:var(--r-md);
+  background:linear-gradient(135deg,var(--amber),#D4900A);
+  color:#fff;font-size:16px;font-weight:700;letter-spacing:-.01em;
+  box-shadow:0 8px 24px var(--amber-glow);
+  transition:transform .15s,box-shadow .2s;margin-bottom:12px;
+}
+.btn-book:hover{transform:translateY(-2px);box-shadow:0 12px 32px var(--amber-glow);}
+.book-note{text-align:center;font-size:12.5px;color:var(--text3);}
+.price-breakdown{margin-top:20px;border-top:1px solid var(--border);padding-top:18px;display:flex;flex-direction:column;gap:10px;}
+.pb-row{display:flex;justify-content:space-between;font-size:14px;color:var(--text2);}
+.pb-row span:last-child{font-weight:500;color:var(--text);}
+.pb-total{display:flex;justify-content:space-between;font-size:15.5px;font-weight:700;color:var(--text);border-top:1px solid var(--border);padding-top:14px;margin-top:4px;}
+
+/* ── MOBILE BAR ── */
+#mbar{display:none;position:fixed;bottom:0;left:0;right:0;z-index:300;background:rgba(255,255,255,.97);backdrop-filter:blur(20px);border-top:1px solid var(--border);padding:12px 24px max(12px,env(safe-area-inset-bottom));align-items:center;justify-content:space-between;gap:16px;}
+.mbar-price .val{font-family:'Bricolage Grotesque',sans-serif;font-size:20px;font-weight:800;}
+.mbar-price .unit{font-size:13px;color:var(--text2);}
+.btn-book-mob{padding:14px 28px;border-radius:50px;background:linear-gradient(135deg,var(--amber),#D4900A);color:#fff;font-size:15px;font-weight:700;box-shadow:0 6px 20px var(--amber-glow);}
+
+/* ── RESPONSIVE ── */
+@media(max-width:1024px){
+  .page-body{grid-template-columns:1fr;padding:32px 24px 80px;}
+  .booking-card{display:none;}
+  #mbar{display:flex;}
+  body{padding-bottom:76px;}
+  .gallery{grid-template-rows:220px 220px;}
+  .amenities-grid{grid-template-columns:repeat(2,1fr);}
+  .similar-grid{grid-template-columns:repeat(2,1fr);}
+  .highlights{grid-template-columns:1fr;}
+}
+@media(max-width:640px){
+  #nav{padding:0 20px;}
+  .gallery{grid-template-columns:1fr 1fr;grid-template-rows:200px;height:200px;}
+  .gallery-main{grid-row:span 1;}
+  .gallery-cell:nth-child(3),.gallery-cell:nth-child(4),.gallery-cell:nth-child(5){display:none;}
+  .amenities-grid{grid-template-columns:1fr 1fr;}
+  .similar-grid{grid-template-columns:1fr;}
+  .rating-overview{flex-direction:column;align-items:flex-start;gap:20px;}
+  .page-body{padding:24px 16px 80px;}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav id="nav">
+  <div class="nav-inner">
+    <a href="klickenya-v3.html" class="nav-logo">
+      <div class="nav-logo-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      </div>
+      <span class="nav-logo-name">klickenya</span>
+    </a>
+    <a href="klickenya-v3.html" class="nav-back">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg>
+      Back to search
+    </a>
+    <div class="nav-actions">
+      <button class="btn-icon" id="share-btn" title="Share">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+      </button>
+      <button class="btn-icon" id="save-btn" title="Save">
+        <svg id="heart-icon" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+      </button>
+      <button class="btn-dark">Sign in</button>
+    </div>
+  </div>
+</nav>
+
+<!-- GALLERY -->
+<div style="max-width:1280px;margin:0 auto;padding:0 48px;">
+  <div class="gallery au">
+    <div class="gallery-cell gallery-main">
+      <img src="https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=1200&q=90" alt="Living room"/>
+      <button class="gallery-btn">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        Show all photos
+      </button>
+    </div>
+    <div class="gallery-cell"><img src="https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=600&q=85" alt="Bedroom"/></div>
+    <div class="gallery-cell"><img src="https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=600&q=85" alt="Kitchen"/></div>
+    <div class="gallery-cell"><img src="https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=600&q=85" alt="Bathroom"/></div>
+    <div class="gallery-cell"><img src="https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=600&q=85" alt="View"/></div>
+  </div>
+</div>
+
+<!-- BODY -->
+<div class="page-body">
+
+  <!-- MAIN COL -->
+  <div class="main-col">
+
+    <!-- Header -->
+    <div class="listing-header au">
+      <div class="listing-badge-row">
+        <span class="listing-type-badge">🏠 Entire apartment</span>
+        <span class="listing-badge">⭐ Guest favourite</span>
+        <span class="listing-badge">✓ Superhost</span>
+      </div>
+      <h1 class="listing-title">Sunset Loft, Westlands</h1>
+      <div class="listing-meta-row">
+        <div class="rating-pill">
+          <svg width="14" height="14" fill="#E8A020" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+          4.97
+        </div>
+        <span class="meta-sep">·</span>
+        <span class="meta-item"><strong>128</strong> reviews</span>
+        <span class="meta-sep">·</span>
+        <span class="meta-item">📍 Westlands, Nairobi</span>
+        <span class="meta-sep">·</span>
+        <span class="meta-item">2 guests · 1 bed · 1 bath</span>
+      </div>
+    </div>
+
+    <hr class="divider"/>
+
+    <!-- Host -->
+    <div class="au d1">
+      <div class="host-row">
+        <div class="host-av">SK</div>
+        <div>
+          <p class="host-name">Hosted by Sarah Kamau</p>
+          <p class="host-sub">Superhost · 3 years hosting · Responds within an hour</p>
+        </div>
+        <span class="superhost-badge" style="margin-left:auto;">🏅 Superhost</span>
+      </div>
+    </div>
+
+    <hr class="divider"/>
+
+    <!-- Highlights -->
+    <div class="highlights au d2">
+      <div class="highlight">
+        <span class="highlight-icon">🏅</span>
+        <div>
+          <p class="highlight-title">Sarah is a Superhost</p>
+          <p class="highlight-desc">Superhosts are experienced, highly rated hosts who are committed to providing great stays.</p>
+        </div>
+      </div>
+      <div class="highlight">
+        <span class="highlight-icon">📍</span>
+        <div>
+          <p class="highlight-title">Great location</p>
+          <p class="highlight-desc">95% of recent guests gave the location a 5-star rating. 5 mins walk to Westgate Mall.</p>
+        </div>
+      </div>
+      <div class="highlight">
+        <span class="highlight-icon">🚪</span>
+        <div>
+          <p class="highlight-title">Self check-in</p>
+          <p class="highlight-desc">Check yourself in with the smart lock via the Klickenya app. No waiting required.</p>
+        </div>
+      </div>
+      <div class="highlight">
+        <span class="highlight-icon">🗓️</span>
+        <div>
+          <p class="highlight-title">Free cancellation</p>
+          <p class="highlight-desc">Cancel before check-in for a full refund. Flexible cancellation policy.</p>
+        </div>
+      </div>
+    </div>
+
+    <hr class="divider"/>
+
+    <!-- Description -->
+    <div class="sr">
+      <h2 class="sec-title">About this space</h2>
+      <p class="description">
+        Welcome to the Sunset Loft — a beautifully curated studio apartment on the 18th floor of the iconic 14 Riverside building in Westlands, Nairobi. Floor-to-ceiling windows frame a breathtaking panoramic view of the Nairobi skyline, bathed in warm amber light as the sun sets over the city.
+      </p>
+      <p class="description" style="margin-top:14px;">
+        The space features premium Kenyan hardwood floors, a fully equipped kitchen with Italian espresso machine, high-speed WiFi, and a private balcony perfect for morning coffee. The bedroom is separated by a sliding wooden partition, offering privacy while maintaining the open, airy feel of the loft.
+      </p>
+      <p class="description" style="margin-top:14px;">
+        Located 2 minutes walk from Westgate Mall and 5 minutes from the vibrant Westlands dining scene — over 40 restaurants within walking distance.
+      </p>
+      <a href="#" class="read-more">Read more ↓</a>
+    </div>
+
+    <hr class="divider"/>
+
+    <!-- Amenities -->
+    <div class="sr">
+      <h2 class="sec-title">What this place offers</h2>
+      <div class="amenities-grid">
+        <div class="amenity"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>Fast WiFi — 500 Mbps</div>
+        <div class="amenity"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>55" Smart TV — Netflix</div>
+        <div class="amenity"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>Espresso machine</div>
+        <div class="amenity"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11L2 12v6a2 2 0 002 2h16a2 2 0 002-2v-6l-3.45-6.89A2 2 0 0016.76 4H7.24a2 2 0 00-1.79 1.11z"/></svg>Dedicated workspace</div>
+        <div class="amenity"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>City panorama view</div>
+        <div class="amenity"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Private balcony</div>
+        <div class="amenity"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>24/7 concierge</div>
+        <div class="amenity"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="1" y="3" width="15" height="13" rx="1"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>Free parking</div>
+        <div class="amenity crossed"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>No EV charger</div>
+        <div class="amenity crossed"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>No pets allowed</div>
+      </div>
+    </div>
+
+    <hr class="divider"/>
+
+    <!-- MAP -->
+    <div class="sr">
+      <h2 class="sec-title">Where you'll be</h2>
+      <p style="font-size:14.5px;color:var(--text2);margin-bottom:16px;">Westlands, Nairobi · Close to restaurants, malls, and nightlife</p>
+      <div class="map-preview">
+        <img class="map-placeholder" src="https://images.unsplash.com/photo-1611348586804-61bf6c080437?w=1000&q=80" alt="Nairobi map"/>
+        <div style="position:absolute;inset:0;background:rgba(0,0,0,.25);"></div>
+        <div class="map-pin">📍 Westlands, Nairobi</div>
+      </div>
+    </div>
+
+    <hr class="divider"/>
+
+    <!-- Reviews -->
+    <div class="sr">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;">
+        <h2 class="sec-title" style="margin-bottom:0;">⭐ 4.97 · 128 reviews</h2>
+      </div>
+      <div class="rating-overview">
+        <div class="rating-big">
+          <div class="num">4.97</div>
+          <div class="stars">
+            <svg width="16" height="16" fill="#E8A020" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            <svg width="16" height="16" fill="#E8A020" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            <svg width="16" height="16" fill="#E8A020" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            <svg width="16" height="16" fill="#E8A020" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            <svg width="16" height="16" fill="#E8A020" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+          </div>
+          <div class="count">Guest favourite</div>
+        </div>
+        <div class="rating-bars">
+          <div class="rbar-row"><span class="rbar-label">Cleanliness</span><div class="rbar"><div class="rbar-fill" style="width:99%"></div></div><span class="rbar-val">5.0</span></div>
+          <div class="rbar-row"><span class="rbar-label">Accuracy</span><div class="rbar"><div class="rbar-fill" style="width:97%"></div></div><span class="rbar-val">4.9</span></div>
+          <div class="rbar-row"><span class="rbar-label">Check-in</span><div class="rbar"><div class="rbar-fill" style="width:99%"></div></div><span class="rbar-val">5.0</span></div>
+          <div class="rbar-row"><span class="rbar-label">Location</span><div class="rbar"><div class="rbar-fill" style="width:97%"></div></div><span class="rbar-val">4.9</span></div>
+          <div class="rbar-row"><span class="rbar-label">Value</span><div class="rbar"><div class="rbar-fill" style="width:95%"></div></div><span class="rbar-val">4.8</span></div>
+        </div>
+      </div>
+
+      <!-- Review cards -->
+      <div id="reviews-list">
+        <div class="review-card">
+          <div class="review-header">
+            <div class="review-av">AM</div>
+            <div>
+              <p class="review-name">Amina M.</p>
+              <div class="review-stars">⭐⭐⭐⭐⭐</div>
+            </div>
+            <span style="margin-left:auto;font-size:13px;color:var(--text3);">March 2026</span>
+          </div>
+          <p class="review-text">"Absolutely stunning apartment! The view from the balcony at sunset was incredible — exactly like the photos. Sarah was incredibly responsive and had local restaurant recommendations ready for us. The espresso machine was a huge bonus. Will 100% be back."</p>
+        </div>
+        <div class="review-card">
+          <div class="review-header">
+            <div class="review-av" style="background:linear-gradient(135deg,#0D7377,#E8A020)">DK</div>
+            <div>
+              <p class="review-name">David K.</p>
+              <div class="review-stars">⭐⭐⭐⭐⭐</div>
+            </div>
+            <span style="margin-left:auto;font-size:13px;color:var(--text3);">February 2026</span>
+          </div>
+          <p class="review-text">"Perfect for a business trip. Super fast WiFi, great workspace, and the self check-in was seamless. The location in Westlands is unbeatable — 2 minutes to Westgate and tons of dining options. Highly recommend."</p>
+        </div>
+        <div class="review-card">
+          <div class="review-header">
+            <div class="review-av" style="background:linear-gradient(135deg,#9B59B6,#E8A020)">SW</div>
+            <div>
+              <p class="review-name">Sophie W.</p>
+              <div class="review-stars">⭐⭐⭐⭐⭐</div>
+            </div>
+            <span style="margin-left:auto;font-size:13px;color:var(--text3);">January 2026</span>
+          </div>
+          <p class="review-text">"One of the best Airbnb-style stays I've had in Nairobi. The loft is exactly as described — stylish, clean, and extremely well-equipped. Sarah went above and beyond to make us feel at home."</p>
+        </div>
+      </div>
+      <button style="margin-top:20px;padding:12px 24px;border-radius:50px;border:1.5px solid var(--border);font-size:14px;font-weight:600;transition:box-shadow .2s;" onmouseover="this.style.boxShadow='0 2px 8px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow='none'">Show all 128 reviews</button>
+    </div>
+
+    <hr class="divider"/>
+
+    <!-- Similar -->
+    <div class="sr">
+      <h2 class="sec-title">More stays in Nairobi</h2>
+      <div class="similar-grid">
+        <a href="stay.html" class="sim-card">
+          <div class="sim-img"><img src="https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=500&q=80" loading="lazy" alt=""/></div>
+          <p class="sim-name">Kilimani Garden Flat</p>
+          <p class="sim-meta">Kilimani · ⭐ 4.91 · 64 reviews</p>
+          <p class="sim-price">KSh 3,800 <span>/ night</span></p>
+        </a>
+        <a href="stay.html" class="sim-card">
+          <div class="sim-img"><img src="https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=500&q=80" loading="lazy" alt=""/></div>
+          <p class="sim-name">Karen Cottage with Pool</p>
+          <p class="sim-meta">Karen · ⭐ 4.94 · 89 reviews</p>
+          <p class="sim-price">KSh 7,200 <span>/ night</span></p>
+        </a>
+        <a href="stay.html" class="sim-card">
+          <div class="sim-img"><img src="https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=500&q=80" loading="lazy" alt=""/></div>
+          <p class="sim-name">Lavington Penthouse</p>
+          <p class="sim-meta">Lavington · ⭐ 4.88 · 47 reviews</p>
+          <p class="sim-price">KSh 9,500 <span>/ night</span></p>
+        </a>
+      </div>
+    </div>
+
+  </div><!-- /main-col -->
+
+  <!-- BOOKING CARD -->
+  <div>
+    <div class="booking-card au d2">
+      <div class="bc-price">
+        <span class="main">KSh 4,800</span> <span class="unit">/ night</span>
+        <div class="bc-rating">
+          <svg width="13" height="13" fill="#E8A020" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+          4.97 · 128 reviews · Superhost
+        </div>
+      </div>
+
+      <div class="bc-fields">
+        <div class="bc-row">
+          <div class="bc-field">
+            <label>Check-in</label>
+            <input type="date" class="bc-input" id="checkin"/>
+          </div>
+          <div class="bc-field">
+            <label>Check-out</label>
+            <input type="date" class="bc-input" id="checkout"/>
+          </div>
+        </div>
+        <div class="bc-field span2">
+          <label>Guests</label>
+          <div class="g-row">
+            <span id="guest-label">1 guest</span>
+            <div class="g-ctrl">
+              <button class="g-btn" id="gm">−</button>
+              <span class="g-num" id="gn">1</span>
+              <button class="g-btn" id="gp">+</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn-book" onclick="handleBook()">Reserve now</button>
+      <p class="book-note">You won't be charged yet · Free cancellation</p>
+
+      <div class="price-breakdown" id="price-breakdown">
+        <div class="pb-row"><span>KSh 4,800 × <span id="nights-label">3</span> nights</span><span id="base-cost">KSh 14,400</span></div>
+        <div class="pb-row"><span>Cleaning fee</span><span>KSh 800</span></div>
+        <div class="pb-row"><span>Service fee</span><span id="service-fee">KSh 2,280</span></div>
+        <div class="pb-total"><span>Total before taxes</span><span id="total-cost">KSh 17,480</span></div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /page-body -->
+
+<!-- MOBILE BAR -->
+<div id="mbar">
+  <div class="mbar-price">
+    <span class="val">KSh 4,800</span>
+    <span class="unit"> / night · ⭐ 4.97</span>
+  </div>
+  <button class="btn-book-mob" onclick="handleBook()">Reserve</button>
+</div>
+
+<script>
+// ── Guests ──
+let g=1;
+document.getElementById('gp').onclick=()=>{if(g<4){g++;update();}};
+document.getElementById('gm').onclick=()=>{if(g>1){g--;update();}};
+function update(){
+  document.getElementById('gn').textContent=g;
+  document.getElementById('guest-label').textContent=g+' guest'+(g>1?'s':'');
+  recalc();
+}
+
+// ── Dates ──
+const ci=document.getElementById('checkin');
+const co=document.getElementById('checkout');
+// default: today + 3 nights
+const d=new Date();
+ci.value=d.toISOString().split('T')[0];
+d.setDate(d.getDate()+3);
+co.value=d.toISOString().split('T')[0];
+ci.onchange=co.onchange=recalc;
+
+function recalc(){
+  const a=new Date(ci.value),b=new Date(co.value);
+  const nights=Math.max(1,Math.round((b-a)/(86400000)));
+  const base=4800*nights;
+  const svc=Math.round(base*.15);
+  const total=base+800+svc;
+  document.getElementById('nights-label').textContent=nights;
+  document.getElementById('base-cost').textContent='KSh '+base.toLocaleString();
+  document.getElementById('service-fee').textContent='KSh '+svc.toLocaleString();
+  document.getElementById('total-cost').textContent='KSh '+total.toLocaleString();
+}
+recalc();
+
+// ── Book ──
+function handleBook(){
+  alert('🎉 Booking flow would open here!\n\nSummary:\n• Sunset Loft, Westlands\n• Check-in: '+ci.value+'\n• Check-out: '+co.value+'\n• Guests: '+g+'\n\nPayment via M-Pesa or card.');
+}
+
+// ── Save ──
+let saved=false;
+document.getElementById('save-btn').onclick=function(){
+  saved=!saved;
+  const h=document.getElementById('heart-icon');
+  h.setAttribute('fill',saved?'#E8A020':'none');
+  h.setAttribute('stroke',saved?'#E8A020':'currentColor');
+};
+
+// ── Scroll reveal ──
+new IntersectionObserver(e=>{e.forEach(x=>{if(x.isIntersecting)x.target.classList.add('on');});},{threshold:.1})
+  .observe(...[].concat(...['sr'].map(c=>[...document.querySelectorAll('.'+c)])));
+document.querySelectorAll('.sr').forEach(el=>new IntersectionObserver(e=>{e.forEach(x=>{if(x.isIntersecting)x.target.classList.add('on');});},{threshold:.1}).observe(el));
+</script>
+</body>
+</html>
