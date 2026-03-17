@@ -207,6 +207,18 @@ export async function searchProperties(
   return (data ?? []) as Property[];
 }
 
+export async function searchBlogPosts(
+  query: string
+): Promise<BlogPost[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("search_blog_posts", {
+    query,
+  });
+
+  if (error) throw error;
+  return (data ?? []) as BlogPost[];
+}
+
 // ─── Real Estate ────────────────────────────────────────────
 
 export async function getProperties(opts?: {

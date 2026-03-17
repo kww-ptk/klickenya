@@ -8,11 +8,198 @@ export type UserRole = 'admin' | 'host' | 'guest'
 
 export type BookingType = 'contact_form' | 'instant' | 'request'
 
-export type PropertyType = 'for-sale' | 'for-rent' | 'land'
+export type PriceUnit = 'night' | 'person' | 'day' | 'session' | 'ticket'
 
-export type PropertyStatus = 'available' | 'under-offer' | 'sold' | 'let'
+export type PropertyCategory = 'for-sale' | 'for-rent' | 'land' | 'commercial'
 
-// ─── Database Interfaces ────────────────────────────────────────
+export type PropertyType = 'apartment' | 'house' | 'villa' | 'studio' | 'townhouse' | 'land' | 'commercial'
+
+export type PropertyStatus = 'available' | 'under-offer' | 'sold' | 'let' | 'draft'
+
+export type AgentTier = 'free' | 'basic' | 'pro' | 'agency'
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type PortableTextBlock = any
+
+// ─── Sanity Primitives ──────────────────────────────────────────
+
+export interface SanityImage {
+  asset: {
+    _id: string
+    url: string
+    metadata: { dimensions: { width: number; height: number } }
+  }
+  alt?: string
+  hotspot?: { x: number; y: number }
+  crop?: { top: number; bottom: number; left: number; right: number }
+}
+
+export interface SanitySlug {
+  current: string
+  _type: 'slug'
+}
+
+export interface SanityReference {
+  _ref: string
+  _type: 'reference'
+}
+
+// ─── Sanity Document Types ──────────────────────────────────────
+
+/** Listing from Sanity (card fields) */
+export interface SanityListing {
+  _id: string
+  title: string
+  slug: SanitySlug
+  type: ListingType
+  status: ListingStatus
+  city: string
+  county?: string
+  price: number
+  priceUnit: PriceUnit
+  coverPhoto?: SanityImage
+  tags?: string[]
+}
+
+/** Full listing (detail page) */
+export interface SanityListingFull extends SanityListing {
+  description?: PortableTextBlock[]
+  photos: SanityImage[]
+  amenities?: string[]
+  address?: string
+  maxGuests?: number
+  bookingType: BookingType
+  seoTitle?: string
+  seoDescription?: string
+}
+
+/** Property from Sanity (card fields) */
+export interface SanityProperty {
+  _id: string
+  title: string
+  slug: SanitySlug
+  listingCategory: PropertyCategory
+  propertyType?: PropertyType
+  status: PropertyStatus
+  price: number
+  priceType: 'total' | 'per-month'
+  bedrooms?: number
+  bathrooms?: number
+  sizeSqm?: number
+  neighbourhood: string
+  city: string
+  coverPhoto?: SanityImage
+}
+
+/** Full property (detail page) */
+export interface SanityPropertyFull extends SanityProperty {
+  description?: PortableTextBlock[]
+  photos: SanityImage[]
+  features?: string[]
+  landSizeAcres?: number
+  yearBuilt?: number
+  county?: string
+  lat?: number
+  lng?: number
+  isNewDevelopment?: boolean
+  agent?: SanityAgent
+  seoTitle?: string
+  seoDescription?: string
+}
+
+/** Blog post (card) */
+export interface SanityBlogPost {
+  _id: string
+  title: string
+  slug: SanitySlug
+  excerpt: string
+  coverImage: SanityImage
+  tags?: string[]
+  publishedAt: string
+  readingTime?: number
+  author: { name: string; avatar?: SanityImage }
+}
+
+/** Blog post (full) */
+export interface SanityBlogPostFull extends SanityBlogPost {
+  body: PortableTextBlock[]
+  relatedListings?: SanityListing[]
+  seoTitle?: string
+  seoDescription?: string
+}
+
+/** Agent */
+export interface SanityAgent {
+  _id: string
+  displayName: string
+  slug: SanitySlug
+  photo?: SanityImage
+  agencyName?: string
+  licenceNumber?: string
+  isVerified: boolean
+  bio?: string
+  phone?: string
+  email?: string
+  specialisations?: string[]
+  serviceAreas?: string[]
+  subscriptionTier: AgentTier
+}
+
+/** Destination */
+export interface SanityDestination {
+  _id: string
+  name: string
+  slug: SanitySlug
+  heroImage: SanityImage
+  tagline?: string
+  description?: PortableTextBlock[]
+  highlights?: Array<{ icon: string; text: string }>
+  county?: string
+  relatedListings?: SanityListing[]
+}
+
+/** Neighbourhood */
+export interface SanityNeighbourhood {
+  _id: string
+  name: string
+  slug: SanitySlug
+  city: string
+  heroImage: SanityImage
+  tagline?: string
+  description?: PortableTextBlock[]
+  avgPriceForSale?: number
+  avgPriceForRent?: number
+  avgPriceSqm?: number
+  avgRentalYield?: number
+  highlights?: string[]
+  commuteInfo?: string
+  relatedProperties?: SanityProperty[]
+}
+
+/** Site settings */
+export interface SanitySettings {
+  siteName: string
+  tagline?: string
+  contactEmail?: string
+  contactPhone?: string
+  primaryCTA?: string
+  heroImages?: SanityImage[]
+  navLinks?: Array<{ label: string; href: string; isExternal?: boolean }>
+  footerColumns?: Array<{
+    heading: string
+    links: Array<{ label: string; href: string }>
+  }>
+  socialLinks?: {
+    twitter?: string
+    instagram?: string
+    facebook?: string
+    linkedin?: string
+    whatsapp?: string
+  }
+  stats?: Array<{ value: string; label: string }>
+}
+
+// ─── Database Interfaces (Supabase) ────────────────────────────
 
 export interface User {
   id: string
@@ -41,7 +228,7 @@ export interface Listing {
   latitude?: number
   longitude?: number
   price: number
-  price_unit: string // e.g. "night", "person", "ticket", "day"
+  price_unit: string
   currency: string
   images: string[]
   amenities?: string[]
@@ -55,18 +242,14 @@ export interface Listing {
   bedrooms?: number
   beds?: number
   bathrooms?: number
-  // Event-specific
   event_date?: string
   event_end_date?: string
   event_venue?: string
   event_organiser?: string
-  // Experience-specific
   duration_hours?: number
   group_size?: number
   languages?: string[]
-  // AI-ready (V2)
   embedding?: number[]
-  // Timestamps
   created_at: string
   updated_at: string
   published_at?: string
@@ -85,7 +268,6 @@ export interface BlogPost {
   tags: string[]
   read_time_minutes: number
   published_at: string
-  // AI-ready (V2)
   embedding?: number[]
   created_at: string
   updated_at: string
@@ -112,7 +294,7 @@ export interface ContactRequest {
 export interface Property {
   id: string
   sanity_id?: string
-  type: PropertyType
+  type: PropertyCategory
   status: PropertyStatus
   title: string
   slug: string
@@ -137,7 +319,6 @@ export interface Property {
   agent_name?: string
   agent_phone?: string
   agent_avatar?: string
-  // AI-ready (V2)
   embedding?: number[]
   created_at: string
   updated_at: string

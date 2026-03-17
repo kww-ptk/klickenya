@@ -1,0 +1,18 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "Next.js Web",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "@klickenya/web", "dev"],
+      "port": 3000,
+      "autoPort": true
+    },
+    {
+      "name": "Sanity Studio",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "@klickenya/studio", "dev"],
+      "port": 3333
+    }
+  ]
+}
