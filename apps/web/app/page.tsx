@@ -133,12 +133,16 @@ export default async function HomePage() {
           />
         </div>
 
-        {/* Dark overlay gradient */}
+        {/* Dark overlay with 3D gradient effect */}
         <div
           className="absolute inset-0 z-[1]"
           style={{
-            background:
-              "linear-gradient(to bottom, rgba(0,0,0,.52) 0%, rgba(0,0,0,.08) 30%, rgba(0,0,0,.04) 50%, rgba(0,0,0,.58) 85%, rgba(0,0,0,.78) 100%)",
+            background: `
+              linear-gradient(to bottom, rgba(0,0,0,.65) 0%, rgba(0,0,0,.30) 35%, rgba(0,0,0,.20) 50%, rgba(0,0,0,.55) 80%, rgba(0,0,0,.85) 100%),
+              radial-gradient(ellipse 120% 60% at 50% 0%, rgba(107,45,139,0.25) 0%, transparent 60%),
+              radial-gradient(ellipse 80% 50% at 20% 100%, rgba(232,160,32,0.15) 0%, transparent 50%),
+              radial-gradient(ellipse 60% 40% at 85% 70%, rgba(107,45,139,0.12) 0%, transparent 50%)
+            `,
           }}
         />
 
