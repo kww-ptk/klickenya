@@ -284,7 +284,7 @@ export default async function BlogPostPage({
             <article className="min-w-0">
               {/* Body content */}
               <div className="sr">
-                <PortableTextRenderer value={post.body || []} className="" />
+                <PortableTextRenderer value={post.body || []} className="" slug={post.slug?.current} />
               </div>
 
               {/* ── Share section ─────────────────────────────── */}

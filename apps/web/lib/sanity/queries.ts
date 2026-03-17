@@ -145,7 +145,16 @@ export const BLOG_POST_BY_SLUG_QUERY = groq`
     title,
     slug,
     excerpt,
-    body,
+    body[]{
+      ...,
+      _type == "inlineListingBlock" => {
+        ...,
+        "listing": listing->{
+          _id, title, slug, type, city, price, priceUnit, tags,
+          "coverPhoto": photos[0]{ ${IMAGE_FIELDS} }
+        }
+      }
+    },
     tags,
     readingTime,
     publishedAt,

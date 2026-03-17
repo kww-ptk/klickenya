@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "seed:blog": "npx tsx scripts/seed-blog-posts.ts"
   },
   "dependencies": {
     "@portabletext/react": "^6.0.3",

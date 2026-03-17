@@ -3,6 +3,7 @@ import { structureTool } from 'sanity/structure'
 import { visionTool } from '@sanity/vision'
 import { schemaTypes } from './schemaTypes'
 import type { StructureBuilder } from 'sanity/structure'
+import { aiActionsPlugin } from './plugins/ai-actions'
 
 const singletonTypes = new Set(['siteSettings'])
 
@@ -63,6 +64,7 @@ export default defineConfig({
   plugins: [
     structureTool({ structure }),
     visionTool(),
+    aiActionsPlugin(),
   ],
 
   schema: {

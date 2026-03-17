@@ -7,6 +7,23 @@ import page from '../schemas/page'
 import siteSettings from '../schemas/siteSettings'
 import author from '../schemas/author'
 import agent from '../schemas/agent'
+import {
+  quickFactsBlock,
+  tipCardBlock,
+  dayCardBlock,
+  photoRowBlock,
+  statRowBlock,
+  budgetTableBlock,
+  packingListBlock,
+  pullQuoteBlock,
+  inlineListingBlock,
+  compareTableBlock,
+  verdictCardBlock,
+  whoIsItForBlock,
+  destinationSectionBlock,
+  distanceChipsBlock,
+  deciderGridBlock,
+} from '../schemas/blocks'
 
 export const schemaTypes = [
   listing,
@@ -18,4 +35,19 @@ export const schemaTypes = [
   siteSettings,
   author,
   agent,
+  quickFactsBlock,
+  tipCardBlock,
+  dayCardBlock,
+  photoRowBlock,
+  statRowBlock,
+  budgetTableBlock,
+  packingListBlock,
+  pullQuoteBlock,
+  inlineListingBlock,
+  compareTableBlock,
+  verdictCardBlock,
+  whoIsItForBlock,
+  destinationSectionBlock,
+  distanceChipsBlock,
+  deciderGridBlock,
 ]
