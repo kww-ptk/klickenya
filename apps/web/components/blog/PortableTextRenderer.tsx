@@ -32,35 +32,10 @@ function makeComponents(slug?: string): PortableTextComponents {
         </p>
       ),
       h2: ({ children, value }) => {
-        const text =
-          (value as { children?: { text?: string }[] })?.children
-            ?.map((c) => c.text || "")
-            .join("") || "";
-        const id = text
-          .toLowerCase()
-          .replace(/[^a-z0-9]+/g, "-")
-          .replace(/(^-|-$)/g, "");
-        return (
-        <div id={id} className="mt-12 mb-4 scroll-mt-[88px]">
-          <h2 className="font-bold text-[clamp(24px,3vw,32px)] tracking-[-0.03em] text-[var(--color-text,#16130C)] leading-[1.15]">
-            {children}
-          </h2>
-          <svg
-            viewBox="0 0 120 8"
-            className="mt-2 w-[80px] h-[8px]"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M2 6C20 2 40 2 60 4C80 6 100 3 118 2"
-              stroke="#E8A020"
-              strokeWidth="3"
-              strokeLinecap="round"
-              opacity="0.6"
-            />
-          </svg>
-        </div>
-        );
+        const raw = value as { children?: { text?: string }[] };
+        const text = raw?.children?.map((c) => c.text ?? "").join("") ?? "";
+        const id = text.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+        return <div id={id} className="mt-12 mb-4 scroll-mt-[88px]"><h2 className="font-bold text-[clamp(24px,3vw,32px)] tracking-[-0.03em] text-[var(--color-text,#16130C)] leading-[1.15]">{children}</h2><svg viewBox="0 0 120 8" className="mt-2 w-[80px] h-[8px]" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2 6C20 2 40 2 60 4C80 6 100 3 118 2" stroke="#E8A020" strokeWidth="3" strokeLinecap="round" opacity="0.6" /></svg></div>;
       },
       h3: ({ children }) => (
         <h3 className="font-bold text-[22px] tracking-[-0.02em] text-[var(--color-text,#16130C)] leading-[1.25] mt-9 mb-3">

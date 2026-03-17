@@ -167,7 +167,7 @@ export default async function BlogPostPage({
         <Nav transparent={false} />
 
         {/* ── Hero ─────────────────────────────────────────────── */}
-        <section className="relative w-full mt-[68px] h-[55vh] md:h-[82vh] min-h-[360px] md:min-h-[520px] overflow-hidden">
+        <section className="relative w-full mt-[68px] min-h-[480px] h-auto md:h-[82vh] md:min-h-[520px] overflow-hidden">
           {/* Cover image with Ken Burns */}
           {heroImageUrl && (
             <div className="absolute inset-0 animate-[kenBurns_20s_ease-out_forwards]">
@@ -189,8 +189,8 @@ export default async function BlogPostPage({
           {/* Gradient overlay */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/10" />
 
-          {/* Content at bottom */}
-          <div className="absolute bottom-0 left-0 right-0 px-5 md:px-10 pb-12 md:pb-16">
+          {/* Content — flows naturally on mobile, pinned to bottom on desktop */}
+          <div className="relative md:absolute md:bottom-0 md:left-0 md:right-0 px-5 md:px-10 pt-8 pb-8 md:pt-0 md:pb-16">
             <div className="max-w-[1280px] mx-auto">
               {/* Category chip */}
               {post.tags?.[0] && (
@@ -200,13 +200,13 @@ export default async function BlogPostPage({
               )}
 
               {/* Title */}
-              <h1 className="font-display font-[800] text-[clamp(36px,5.5vw,72px)] leading-[1.05] tracking-[-0.03em] text-white max-w-[900px] mb-4">
+              <h1 className="font-display font-[800] text-[clamp(28px,5.5vw,72px)] leading-[1.05] tracking-[-0.03em] text-white max-w-[900px] mb-3">
                 {post.title}
               </h1>
 
-              {/* Excerpt */}
+              {/* Excerpt — hidden on mobile to save space */}
               {post.excerpt && (
-                <p className="text-[clamp(16px,1.8vw,20px)] italic text-white/65 max-w-[640px] leading-[1.5] mb-6">
+                <p className="hidden md:block text-[clamp(16px,1.8vw,20px)] italic text-white/65 max-w-[640px] leading-[1.5] mb-6">
                   {post.excerpt}
                 </p>
               )}
@@ -261,8 +261,8 @@ export default async function BlogPostPage({
             </div>
           </div>
 
-          {/* Scroll hint */}
-          <div className="absolute bottom-6 right-6 md:right-10 flex flex-col items-center gap-1.5 text-white/40 animate-[float_2.5s_ease-in-out_infinite]">
+          {/* Scroll hint — desktop only */}
+          <div className="hidden md:flex absolute bottom-6 right-10 flex-col items-center gap-1.5 text-white/40 animate-[float_2.5s_ease-in-out_infinite]">
             <svg
               width="20"
               height="20"
