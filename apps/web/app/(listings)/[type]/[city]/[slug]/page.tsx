@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { Star, MapPin, ChevronRight, Check } from "lucide-react";
-import { sanityClient } from "@/lib/sanity/client";
+import { sanityClient, sanityFetch } from "@/lib/sanity/client";
 import {
   LISTING_BY_SLUG_QUERY,
   LISTING_SLUGS_QUERY,
@@ -17,6 +17,7 @@ import { PortableTextRenderer } from "@/components/blog/PortableTextRenderer";
 import { cn } from "@/lib/utils";
 import type { ListingCardProps } from "@/components/listings/ListingCard";
 
+export const dynamic = 'force-static';
 export const revalidate = 3600;
 
 /* ── Type mapping ────────────────────────────────── */
@@ -195,7 +196,10 @@ export default async function ListingDetailPage({ params }: PageProps) {
   if (!isValidType(type)) notFound();
 
   const sanityType = TYPE_TO_SANITY[type];
-  const listing = await sanityClient.fetch(LISTING_BY_SLUG_QUERY, { slug });
+  const { data: listing } = await sanityFetch({
+    query: LISTING_BY_SLUG_QUERY,
+    params: { slug },
+  });
 
   if (!listing) notFound();
 
@@ -210,10 +214,9 @@ export default async function ListingDetailPage({ params }: PageProps) {
   );
 
   // Similar listings
-  const similar = await sanityClient.fetch(SIMILAR_LISTINGS_QUERY, {
-    type: sanityType,
-    city: cityName,
-    slug,
+  const { data: similar } = await sanityFetch({
+    query: SIMILAR_LISTINGS_QUERY,
+    params: { type: sanityType, city: cityName, slug },
   });
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

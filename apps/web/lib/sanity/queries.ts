@@ -178,6 +178,20 @@ export const ALL_BLOG_TAGS_QUERY = groq`
   array::unique(*[_type == "blogPost" && status == "published"].tags[])
 `
 
+export const LATEST_BLOG_POSTS_QUERY = groq`
+  *[_type == "blogPost" && status == "published"] | order(publishedAt desc) [0...3] {
+    _id,
+    title,
+    slug,
+    excerpt,
+    tags,
+    readingTime,
+    publishedAt,
+    "coverImage": coverImage{ ${IMAGE_FIELDS} },
+    "author": author->{name, slug, avatar{asset->{_id, url}}}
+  }
+`
+
 // ── Real Estate: Properties ───────────────────────
 
 export const PROPERTIES_QUERY = groq`
@@ -330,6 +344,28 @@ export const DESTINATIONS_QUERY = groq`
   }
 `
 
+export const HOMEPAGE_DESTINATIONS_QUERY = groq`
+  *[_type == "destination" && slug.current in ["watamu", "kilifi", "diani", "nairobi", "lamu"]] {
+    _id,
+    name,
+    slug,
+    tagline,
+    county,
+    "heroImage": heroImage{ ${IMAGE_FIELDS} }
+  }
+`
+
+export const ALL_DESTINATIONS_QUERY = groq`
+  *[_type == "destination"] | order(name asc) {
+    _id,
+    name,
+    slug,
+    tagline,
+    description,
+    "coverImage": heroImage{ ${IMAGE_FIELDS} }
+  }
+`
+
 export const DESTINATION_BY_SLUG_QUERY = groq`
   *[_type == "destination" && slug.current == $slug][0] {
     _id,
@@ -382,6 +418,50 @@ export const NEIGHBOURHOOD_BY_SLUG_QUERY = groq`
     "relatedProperties": relatedProperties[]->{
       ${PROPERTY_CARD_FIELDS}
     }
+  }
+`
+
+// ── Events ──────────────────────────────────────
+
+export const EVENTS_QUERY = groq`
+  *[_type == "listing" && type == "event"] | order(_createdAt desc) [0...12] {
+    ${LISTING_CARD_FIELDS}
+  }
+`
+
+// ── Home Page ────────────────────────────────────
+
+export const HOME_PAGE_QUERY = groq`
+  *[_type == "homePage"][0]{
+    heroEyebrow,
+    heroTitle,
+    heroHighlight,
+    heroSubtitle,
+    heroStats,
+    "heroImages": heroImages[].asset->url,
+    featuredTitle,
+    featuredSubtitle,
+    eventsTitle,
+    eventsSubtitle,
+    destinationsTitle,
+    destinationsSubtitle,
+    howItWorksTitle,
+    howItWorksSubtitle,
+    howItWorksSteps,
+    statsBar,
+    hostEyebrow,
+    hostTitle,
+    hostHighlight,
+    hostDescription,
+    hostCtaPrimary,
+    hostCtaPrimaryLink,
+    hostCtaSecondary,
+    hostCtaSecondaryLink,
+    testimonialsTitle,
+    testimonialsSubtitle,
+    testimonials,
+    metaTitle,
+    metaDescription
   }
 `
 

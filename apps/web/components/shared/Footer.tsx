@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { SwooshDivider } from "./SwooshDivider";
 
 interface FooterLink {
@@ -24,8 +25,9 @@ const DEFAULT_EXPLORE: FooterLink[] = [
 
 const DEFAULT_COMPANY: FooterLink[] = [
   { href: "/about", label: "About us" },
+  { href: "/how-it-works", label: "How it works" },
   { href: "/journal", label: "Journal" },
-  { href: "/careers", label: "Careers" },
+  { href: "/how-it-works#ambassador", label: "Become an ambassador" },
   { href: "/contact", label: "Contact" },
 ];
 
@@ -56,23 +58,16 @@ function Footer({
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[2fr_1fr_1fr_1fr] gap-12 pt-16 pb-14 border-b border-white/[0.06]">
           {/* Brand column */}
           <div>
-            <div className="flex items-center gap-2.5 mb-4">
-              <div className="size-8 rounded-[9px] bg-white/10 flex items-center justify-center">
-                <svg
-                  width="17"
-                  height="17"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="white"
-                  strokeWidth="2.4"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M5 3v18M5 12l8-9M5 12l8 9" />
-                </svg>
-              </div>
+            <div className="flex items-center gap-2 mb-4">
+              <Image
+                src="/logo-profile.jpg"
+                alt="Klickenya"
+                width={36}
+                height={36}
+                className="size-9 rounded-[10px] object-cover shrink-0"
+              />
               <span className="text-[20px] font-bold text-white tracking-[-0.03em]">
-                <span className="text-amber">k</span>lickenya
+                Klic<span className="text-amber">K</span>enya
               </span>
             </div>
             <p className="text-[13.5px] text-white/32 leading-[1.7] max-w-[260px] mb-6">
@@ -111,13 +106,17 @@ function Footer({
             &copy; {new Date().getFullYear()} Klickenya. All rights reserved.
           </p>
           <div className="flex gap-5">
-            {["Privacy", "Terms", "Sitemap"].map((item) => (
+            {[
+              { label: "Privacy", href: "/privacy" },
+              { label: "Terms", href: "/terms" },
+              { label: "Sitemap", href: "/sitemap-page" },
+            ].map((item) => (
               <Link
-                key={item}
-                href={`/${item.toLowerCase()}`}
+                key={item.href}
+                href={item.href}
                 className="text-[12.5px] text-white/20 hover:text-white/55 transition-colors"
               >
-                {item}
+                {item.label}
               </Link>
             ))}
           </div>

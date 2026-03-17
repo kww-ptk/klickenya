@@ -11,13 +11,14 @@ import {
   BarChart3,
   Wallet,
 } from "lucide-react";
-import { sanityClient } from "@/lib/sanity/client";
+import { sanityFetch } from "@/lib/sanity/client";
 import {
   LISTINGS_QUERY,
-  DESTINATIONS_QUERY,
+  HOMEPAGE_DESTINATIONS_QUERY,
   SITE_SETTINGS_QUERY,
+  HOME_PAGE_QUERY,
+  LATEST_BLOG_POSTS_QUERY,
 } from "@/lib/sanity/queries";
-import { imageUrl } from "@/lib/sanity/image";
 import { Nav } from "@/components/shared/Nav";
 import { Footer } from "@/components/shared/Footer";
 import { ListingCard } from "@/components/listings/ListingCard";
@@ -26,18 +27,28 @@ import { HeroSearch } from "@/components/home/HeroSearch";
 import { MarqueeTicker } from "@/components/home/MarqueeTicker";
 import { MobileBottomNav } from "@/components/home/MobileBottomNav";
 import { EventCard } from "@/components/home/EventCard";
+import { PostCard } from "@/components/blog/PostCard";
+import { DestinationBentoGrid } from "@/components/destinations/DestinationBentoGrid";
+import type { DestinationDisplay } from "@/components/destinations/DestinationBentoGrid";
+import { urlForImage } from "@/lib/sanity/image";
 
 export const revalidate = 3600;
 
 export async function generateMetadata(): Promise<Metadata> {
+  const homePageResult = await sanityFetch({ query: HOME_PAGE_QUERY }).catch(() => ({ data: null }));
+  const homePage = homePageResult.data as any;
+
+  const title = homePage?.metaTitle ?? "Klickenya — Discover Kenya";
+  const description =
+    homePage?.metaDescription ??
+    "Kenya's all-in-one booking marketplace for stays, experiences, events, rentals, restaurants, and services. Discover the best of Kenya.";
+
   return {
-    title: "Klickenya — Discover Kenya",
-    description:
-      "Kenya's all-in-one booking marketplace for stays, experiences, events, rentals, restaurants, and services. Discover the best of Kenya.",
+    title,
+    description,
     openGraph: {
-      title: "Klickenya — Discover Kenya",
-      description:
-        "Kenya's all-in-one booking marketplace for stays, experiences, events, rentals, restaurants, and services.",
+      title,
+      description,
       siteName: "Klickenya",
       type: "website",
       locale: "en_KE",
@@ -69,32 +80,43 @@ interface SanityDestination {
 }
 
 async function getData() {
-  const [listings, destinations, settings] = await Promise.all([
-    sanityClient.fetch<SanityListing[]>(LISTINGS_QUERY).catch(() => []),
-    sanityClient.fetch<SanityDestination[]>(DESTINATIONS_QUERY).catch(() => []),
-    sanityClient.fetch(SITE_SETTINGS_QUERY).catch(() => null),
+  const [listingsResult, destinationsResult, settingsResult, homePageResult, blogPostsResult] = await Promise.all([
+    sanityFetch({ query: LISTINGS_QUERY }).catch(() => ({ data: [] })),
+    sanityFetch({ query: HOMEPAGE_DESTINATIONS_QUERY }).catch(() => ({ data: [] })),
+    sanityFetch({ query: SITE_SETTINGS_QUERY }).catch(() => ({ data: null })),
+    sanityFetch({ query: HOME_PAGE_QUERY }).catch(() => ({ data: null })),
+    sanityFetch({ query: LATEST_BLOG_POSTS_QUERY }).catch(() => ({ data: [] })),
   ]);
 
-  return { listings, destinations, settings };
+  return {
+    listings: listingsResult.data as SanityListing[],
+    destinations: destinationsResult.data as SanityDestination[],
+    settings: settingsResult.data,
+    homePage: homePageResult.data as any,
+    blogPosts: (blogPostsResult.data ?? []) as any[],
+  };
 }
 
 /* ─── Page ───────────────────────────────────────── */
 
 export default async function HomePage() {
-  const { listings, destinations } = await getData();
+  const { listings, destinations, homePage, blogPosts } = await getData();
 
   const featuredListings = listings.slice(0, 8);
 
-  const featuredDestinations: DestinationDisplay[] =
-    destinations.length > 0
-      ? destinations.slice(0, 5).map((d, i) => ({
-          name: d.name,
-          slug: d.slug.current,
-          tagline: d.tagline ?? d.county ?? "",
-          color: DESTINATION_COLORS[i % DESTINATION_COLORS.length],
-          imageUrl: d.heroImage?.asset?.url,
-        }))
-      : PLACEHOLDER_DESTINATIONS;
+  // CMS arrays with hardcoded fallbacks
+  const heroStats = homePage?.heroStats?.length ? homePage.heroStats : HERO_STATS;
+  const statsBar = homePage?.statsBar?.length ? homePage.statsBar : STATS_BAR;
+  const howItWorksSteps = homePage?.howItWorksSteps?.length ? homePage.howItWorksSteps : null;
+  const testimonials = homePage?.testimonials?.length ? homePage.testimonials : TESTIMONIALS;
+
+  const bentoDestinations: DestinationDisplay[] = destinations.map((d) => ({
+    name: d.name,
+    slug: d.slug.current,
+    tagline: d.tagline ?? "",
+    color: "",
+    imageUrl: d.heroImage?.asset?.url,
+  }));
 
   return (
     <>
@@ -136,7 +158,7 @@ export default async function HomePage() {
               <span className="relative inline-flex rounded-full size-2 bg-amber" />
             </span>
             <span className="text-[13px] font-semibold text-white/85 tracking-[0.01em]">
-              Discover Kenya
+              {homePage?.heroEyebrow ?? "Discover Kenya"}
             </span>
           </div>
 
@@ -148,9 +170,9 @@ export default async function HomePage() {
               animationDelay: "0.1s",
             }}
           >
-            Discover the best of
+            {homePage?.heroTitle ?? "Discover the best of"}
             <br />
-            <span className="text-amber">Kenya</span>
+            <span className="text-amber">{homePage?.heroHighlight ?? "Kenya"}</span>
           </h1>
 
           {/* Subtitle */}
@@ -162,8 +184,7 @@ export default async function HomePage() {
               animationDelay: "0.2s",
             }}
           >
-            Book unique stays, experiences, events, restaurants, and services across all 47
-            counties — all in one place.
+            {homePage?.heroSubtitle ?? "Book unique stays, experiences, events, restaurants, and services across all 47 counties — all in one place."}
           </p>
 
           {/* Search box */}
@@ -179,7 +200,7 @@ export default async function HomePage() {
             className="flex flex-wrap items-center justify-center gap-8 md:gap-12 mt-12 animate-fade-up"
             style={{ animationDelay: "0.45s" }}
           >
-            {HERO_STATS.map((stat) => (
+            {heroStats.map((stat: { value: string; label: string }) => (
               <div key={stat.label} className="flex flex-col items-center">
                 <span className="text-[22px] md:text-[26px] font-bold text-white tracking-[-0.02em]">
                   {stat.value}
@@ -201,10 +222,10 @@ export default async function HomePage() {
         <div className="flex items-end justify-between mb-8">
           <div>
             <h2 className="font-display text-[clamp(24px,3.5vw,34px)] font-bold text-text tracking-[-0.03em]">
-              Featured stays &amp; experiences
+              {homePage?.featuredTitle ?? "Featured stays & experiences"}
             </h2>
             <p className="text-text2 text-[15px] mt-1.5">
-              Hand-picked places and activities across Kenya
+              {homePage?.featuredSubtitle ?? "Hand-picked places and activities across Kenya"}
             </p>
           </div>
           <Link
@@ -253,10 +274,10 @@ export default async function HomePage() {
           <div className="flex items-end justify-between mb-8">
             <div>
               <h2 className="font-display text-[clamp(24px,3.5vw,34px)] font-bold text-text tracking-[-0.03em]">
-                Upcoming events
+                {homePage?.eventsTitle ?? "Upcoming events"}
               </h2>
               <p className="text-text2 text-[15px] mt-1.5">
-                Live music, food festivals, cultural celebrations and more
+                {homePage?.eventsSubtitle ?? "Live music, food festivals, cultural celebrations and more"}
               </p>
             </div>
             <Link
@@ -280,10 +301,10 @@ export default async function HomePage() {
         <div className="flex items-end justify-between mb-8">
           <div>
             <h2 className="font-display text-[clamp(24px,3.5vw,34px)] font-bold text-text tracking-[-0.03em]">
-              Explore destinations
+              {homePage?.destinationsTitle ?? "Explore destinations"}
             </h2>
             <p className="text-text2 text-[15px] mt-1.5">
-              From coast to highlands, discover Kenya&apos;s most loved places
+              {homePage?.destinationsSubtitle ?? "From coast to highlands, discover Kenya\u2019s most loved places"}
             </p>
           </div>
           <Link
@@ -294,80 +315,47 @@ export default async function HomePage() {
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 md:grid-rows-[260px_200px] gap-4">
-          {featuredDestinations.map((dest, i) => {
-            const gridClass =
-              i === 0
-                ? "md:col-span-2 md:row-span-2"
-                : i === 3
-                  ? "md:row-span-2"
-                  : "";
-
-            return (
-              <Link
-                key={dest.name}
-                href={`/destinations/${dest.slug}`}
-                className={`relative rounded-[24px] overflow-hidden group min-h-[200px] ${gridClass}`}
-              >
-                <div
-                  className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
-                  style={{
-                    backgroundColor: dest.color,
-                    backgroundImage: dest.imageUrl
-                      ? `url(${dest.imageUrl})`
-                      : undefined,
-                  }}
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/10 to-transparent" />
-                <div className="absolute bottom-0 left-0 right-0 p-5">
-                  <h3 className="text-white font-semibold text-[18px] leading-tight">
-                    {dest.name}
-                  </h3>
-                  <p className="text-white/60 text-[13px] mt-1">
-                    {dest.tagline}
-                  </p>
-                </div>
-              </Link>
-            );
-          })}
-        </div>
+        <DestinationBentoGrid destinations={bentoDestinations} />
       </section>
 
       {/* ─── HOW IT WORKS ─────────────────────────── */}
       <section className="max-w-[1280px] mx-auto px-5 md:px-10 py-14 md:py-20">
         <div className="text-center mb-12">
           <h2 className="font-display text-[clamp(24px,3.5vw,34px)] font-bold text-text tracking-[-0.03em]">
-            How it works
+            {homePage?.howItWorksTitle ?? "How it works"}
           </h2>
           <p className="text-text2 text-[15px] mt-2 max-w-[480px] mx-auto">
-            Book anything in Kenya in just a few simple steps
+            {homePage?.howItWorksSubtitle ?? "Book anything in Kenya in just a few simple steps"}
           </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-4 rounded-[32px] border border-border overflow-hidden">
-          {HOW_IT_WORKS.map((step, i) => (
-            <div
-              key={step.title}
-              className={`group p-8 transition-colors duration-300 hover:bg-surface ${
-                i < HOW_IT_WORKS.length - 1
-                  ? "border-b md:border-b-0 md:border-r border-border"
-                  : ""
-              }`}
-            >
-              <span className="inline-flex items-center justify-center size-[56px] rounded-[16px] bg-surface text-text3 text-[22px] font-bold mb-5 transition-colors duration-300 group-hover:bg-purple-dim group-hover:text-purple">
-                {String(i + 1).padStart(2, "0")}
-              </span>
-              <div className="size-11 rounded-[14px] bg-purple-dim flex items-center justify-center mb-4">
-                {step.icon}
+          {HOW_IT_WORKS.map((step, i) => {
+            const cmsStep = howItWorksSteps?.[i];
+            return (
+              <div
+                key={step.title}
+                className={`group p-8 transition-colors duration-300 hover:bg-surface ${
+                  i < HOW_IT_WORKS.length - 1
+                    ? "border-b md:border-b-0 md:border-r border-border"
+                    : ""
+                }`}
+              >
+                <span className="inline-flex items-center justify-center size-[56px] rounded-[16px] bg-surface text-text3 text-[22px] font-bold mb-5 transition-colors duration-300 group-hover:bg-purple-dim group-hover:text-purple">
+                  {String(i + 1).padStart(2, "0")}
+                </span>
+                <div className="size-11 rounded-[14px] bg-purple-dim flex items-center justify-center mb-4">
+                  {step.icon}
+                </div>
+                <h3 className="text-[16px] font-semibold text-text mb-2">
+                  {cmsStep?.title ?? step.title}
+                </h3>
+                <p className="text-[13.5px] text-text2 leading-[1.65]">
+                  {cmsStep?.description ?? step.description}
+                </p>
               </div>
-              <h3 className="text-[16px] font-semibold text-text mb-2">
-                {step.title}
-              </h3>
-              <p className="text-[13.5px] text-text2 leading-[1.65]">
-                {step.description}
-              </p>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </section>
 
@@ -380,7 +368,7 @@ export default async function HomePage() {
       >
         <div className="max-w-[1280px] mx-auto px-5 md:px-10">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-4 text-center">
-            {STATS_BAR.map((stat) => (
+            {statsBar.map((stat: { value: string; label: string }) => (
               <div key={stat.label}>
                 <p
                   className="font-display font-bold text-white tracking-[-0.03em]"
@@ -406,33 +394,31 @@ export default async function HomePage() {
               <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber/10 border border-amber/20 mb-6">
                 <span className="size-1.5 rounded-full bg-amber" />
                 <span className="text-[12px] font-semibold text-amber tracking-[0.02em]">
-                  For hosts
+                  {homePage?.hostEyebrow ?? "For hosts"}
                 </span>
               </div>
 
               <h2 className="font-display text-[clamp(28px,4vw,44px)] font-bold text-white tracking-[-0.03em] leading-[1.1] mb-5">
-                Earn more as a{" "}
-                <span className="text-amber">host</span>
+                {homePage?.hostTitle ?? "Earn more as a"}{" "}
+                <span className="text-amber">{homePage?.hostHighlight ?? "host"}</span>
               </h2>
 
               <p className="text-white/45 text-[16px] leading-[1.7] max-w-[440px] mb-8">
-                List your stay, experience, or service on Klickenya and reach
-                thousands of travellers exploring Kenya. No hidden fees, instant
-                payouts, and a dedicated support team.
+                {homePage?.hostDescription ?? "List your stay, experience, or service on Klickenya and reach thousands of travellers exploring Kenya. No hidden fees, instant payouts, and a dedicated support team."}
               </p>
 
               <div className="flex flex-wrap gap-3">
                 <Link
-                  href="/list"
+                  href={homePage?.hostCtaPrimaryLink ?? "/how-it-works"}
                   className="inline-flex items-center justify-center px-7 py-3.5 rounded-full bg-amber text-dark font-semibold text-[15px] shadow-[0_4px_14px_rgba(232,160,32,0.35)] hover:shadow-[0_6px_20px_rgba(232,160,32,0.45)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200"
                 >
-                  Start hosting
+                  {homePage?.hostCtaPrimary ?? "Start hosting"}
                 </Link>
                 <Link
-                  href="/hosting"
+                  href={homePage?.hostCtaSecondaryLink ?? "/how-it-works"}
                   className="inline-flex items-center justify-center px-7 py-3.5 rounded-full border border-white/20 text-white/80 font-semibold text-[15px] hover:bg-white/5 hover:border-white/35 transition-all duration-200"
                 >
-                  Learn more
+                  {homePage?.hostCtaSecondary ?? "Learn more"}
                 </Link>
               </div>
             </div>
@@ -521,52 +507,134 @@ export default async function HomePage() {
         <div className="max-w-[1280px] mx-auto px-5 md:px-10">
           <div className="text-center mb-12">
             <h2 className="font-display text-[clamp(24px,3.5vw,34px)] font-bold text-text tracking-[-0.03em]">
-              What our guests say
+              {homePage?.testimonialsTitle ?? "What our guests say"}
             </h2>
             <p className="text-text2 text-[15px] mt-2">
-              Real stories from travellers across Kenya
+              {homePage?.testimonialsSubtitle ?? "Real stories from travellers across Kenya"}
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            {TESTIMONIALS.map((t, i) => (
-              <div
-                key={i}
-                className="bg-white rounded-[32px] p-7 border border-border"
-              >
-                {/* Stars */}
-                <div className="flex gap-0.5 mb-4">
-                  {Array.from({ length: 5 }).map((_, j) => (
-                    <Star
-                      key={j}
-                      className="size-4 fill-amber text-amber"
-                    />
-                  ))}
-                </div>
-                {/* Quote */}
-                <p className="text-[14.5px] text-text leading-[1.65] mb-6">
-                  &ldquo;{t.quote}&rdquo;
-                </p>
-                {/* Author */}
-                <div className="flex items-center gap-3">
-                  <div
-                    className="size-10 rounded-full flex items-center justify-center text-[14px] font-bold text-white"
-                    style={{
-                      background: `linear-gradient(135deg, ${t.avatarFrom}, ${t.avatarTo})`,
-                    }}
-                  >
-                    {t.initials}
+            {testimonials.map((t: any, i: number) => {
+              const fallback = TESTIMONIALS[i];
+              const avatarFrom = t.avatarFrom ?? fallback?.avatarFrom ?? "#E8A020";
+              const avatarTo = t.avatarTo ?? fallback?.avatarTo ?? "#E89020";
+              return (
+                <div
+                  key={i}
+                  className="bg-white rounded-[32px] p-7 border border-border"
+                >
+                  {/* Stars */}
+                  <div className="flex gap-0.5 mb-4">
+                    {Array.from({ length: 5 }).map((_, j) => (
+                      <Star
+                        key={j}
+                        className="size-4 fill-amber text-amber"
+                      />
+                    ))}
                   </div>
-                  <div>
-                    <p className="text-[14px] font-semibold text-text">
-                      {t.name}
-                    </p>
-                    <p className="text-[12.5px] text-text3">{t.meta}</p>
+                  {/* Quote */}
+                  <p className="text-[14.5px] text-text leading-[1.65] mb-6">
+                    &ldquo;{t.quote}&rdquo;
+                  </p>
+                  {/* Author */}
+                  <div className="flex items-center gap-3">
+                    <div
+                      className="size-10 rounded-full flex items-center justify-center text-[14px] font-bold text-white"
+                      style={{
+                        background: `linear-gradient(135deg, ${avatarFrom}, ${avatarTo})`,
+                      }}
+                    >
+                      {t.initials}
+                    </div>
+                    <div>
+                      <p className="text-[14px] font-semibold text-text">
+                        {t.name}
+                      </p>
+                      <p className="text-[12.5px] text-text3">{t.meta}</p>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
+        </div>
+      </section>
+
+      {/* ─── LATEST FROM THE JOURNAL ────────────────── */}
+      <section className="bg-surface py-14 md:py-20">
+        <div className="max-w-[1280px] mx-auto px-5 md:px-10">
+          <div className="text-center mb-12">
+            <h2 className="font-display text-[clamp(24px,3.5vw,34px)] font-bold text-text tracking-[-0.03em]">
+              Latest from the Journal
+            </h2>
+            <p className="text-text2 text-[15px] mt-2">
+              Stories, guides, and tips for exploring Kenya
+            </p>
+          </div>
+
+          {blogPosts.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {blogPosts.map((post: any) => {
+                const coverUrl = post.coverImage
+                  ? urlForImage(post.coverImage).width(800).url()
+                  : "";
+                return (
+                  <PostCard
+                    key={post._id}
+                    slug={post.slug?.current ?? post.slug ?? ""}
+                    title={post.title ?? "Untitled"}
+                    excerpt={post.excerpt ?? ""}
+                    coverImage={coverUrl}
+                    category={post.tags?.[0] ?? "Guide"}
+                    authorName={post.author?.name ?? "Klickenya"}
+                    authorAvatar={post.author?.avatar?.asset?.url}
+                    publishedAt={post.publishedAt ?? new Date().toISOString()}
+                    readTimeMinutes={post.readingTime ?? 5}
+                  />
+                );
+              })}
+            </div>
+          ) : (
+            <div className="text-center py-12 rounded-[24px] border border-border bg-white">
+              <p className="text-text2 text-[16px] mb-2">Coming soon</p>
+              <p className="text-text3 text-[14px]">
+                We&apos;re working on stories, guides, and tips for exploring Kenya.
+              </p>
+            </div>
+          )}
+
+          <div className="text-center mt-10">
+            <Link
+              href="/journal"
+              className="inline-flex items-center text-[15px] font-semibold text-amber hover:underline"
+            >
+              View all articles &rarr;
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* ─── WANT TO LIST CTA ──────────────────────── */}
+      <section className="bg-[#111008] py-16 md:py-20">
+        <div className="max-w-[1280px] mx-auto px-5 md:px-10 text-center">
+          <div className="inline-block mb-6 px-4 py-1.5 rounded-full bg-amber/10 border border-amber/20">
+            <span className="text-[12px] font-semibold text-amber tracking-[0.02em]">
+              For hosts &amp; businesses
+            </span>
+          </div>
+          <h2 className="font-display text-[clamp(28px,4vw,44px)] font-bold text-white tracking-[-0.03em] leading-[1.1] mb-4">
+            Want to add your listing?
+          </h2>
+          <p className="text-white/50 text-[16px] leading-[1.7] max-w-[560px] mx-auto mb-8">
+            List your stay, experience, restaurant, or property on Klickenya. It&apos;s free during our launch phase.
+          </p>
+          <Link
+            href="/how-it-works"
+            className="inline-flex items-center justify-center px-8 py-4 rounded-full bg-amber text-dark font-semibold text-[15px] shadow-[0_4px_14px_rgba(232,160,32,0.35)] hover:shadow-[0_6px_20px_rgba(232,160,32,0.45)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200"
+          >
+            Learn how it works &rarr;
+          </Link>
         </div>
       </section>
 
@@ -592,22 +660,6 @@ export default async function HomePage() {
 }
 
 /* ─── Types & static data ────────────────────────── */
-
-interface DestinationDisplay {
-  name: string;
-  slug: string;
-  tagline: string;
-  color: string;
-  imageUrl?: string;
-}
-
-const DESTINATION_COLORS = [
-  "#6B4E3D",
-  "#2D6B7A",
-  "#3D5A3E",
-  "#8B6B4E",
-  "#4A5E6B",
-];
 
 const HERO_STATS = [
   { value: "2,500+", label: "Listings" },
@@ -749,39 +801,6 @@ const PLACEHOLDER_LISTINGS = [
     href: "/stays/samburu",
     rating: 4.9,
     reviewCount: 43,
-  },
-];
-
-const PLACEHOLDER_DESTINATIONS = [
-  {
-    name: "Maasai Mara",
-    slug: "maasai-mara",
-    tagline: "The world's greatest wildlife reserve",
-    color: "#6B4E3D",
-  },
-  {
-    name: "Diani Beach",
-    slug: "diani-beach",
-    tagline: "White sands & turquoise waters",
-    color: "#2D6B7A",
-  },
-  {
-    name: "Nairobi",
-    slug: "nairobi",
-    tagline: "The green city in the sun",
-    color: "#3D5A3E",
-  },
-  {
-    name: "Lamu Island",
-    slug: "lamu-island",
-    tagline: "Swahili heritage & tranquility",
-    color: "#8B6B4E",
-  },
-  {
-    name: "Mount Kenya",
-    slug: "mount-kenya",
-    tagline: "Africa's second highest peak",
-    color: "#4A5E6B",
   },
 ];
 

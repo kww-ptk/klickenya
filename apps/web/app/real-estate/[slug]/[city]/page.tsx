@@ -2,7 +2,7 @@ import { type Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
-import { sanityClient } from "@/lib/sanity/client";
+import { sanityClient, sanityFetch } from "@/lib/sanity/client";
 import {
   PROPERTIES_BY_CATEGORY_CITY_QUERY,
   PROPERTY_SLUGS_QUERY,
@@ -14,6 +14,7 @@ import { PropertyCategoryNav } from "@/components/real-estate/PropertyCategoryNa
 import { PropertyCard } from "@/components/real-estate/PropertyCard";
 import { PropertyGrid } from "@/components/real-estate/PropertyGrid";
 
+export const dynamic = 'force-static';
 export const revalidate = 3600;
 
 /* ── Category mapping ──────────────────────────────── */
@@ -129,9 +130,10 @@ export default async function CategoryCityPage({ params }: PageProps) {
   const label = CATEGORY_LABELS[category];
   const cityName = capitalize(city);
 
-  const properties = await sanityClient
-    .fetch(PROPERTIES_BY_CATEGORY_CITY_QUERY, { category, city: cityName })
-    .catch(() => []);
+  const { data: properties } = await sanityFetch({
+    query: PROPERTIES_BY_CATEGORY_CITY_QUERY,
+    params: { category, city: cityName },
+  }).catch(() => ({ data: [] }));
 
   const cards = ((properties ?? []) as unknown[]).map(mapPropertyToCard);
 

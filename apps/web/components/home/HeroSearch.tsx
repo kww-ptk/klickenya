@@ -38,7 +38,7 @@ function HeroSearch() {
               Location
             </span>
             <span className="text-[14px] text-text2 truncate w-full text-left">
-              Anywhere in Kenya
+              Try &lsquo;Watamu&rsquo; or &lsquo;Kilifi Coast&rsquo;...
             </span>
           </button>
 

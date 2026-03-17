@@ -2,7 +2,7 @@ import { type Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { sanityClient } from "@/lib/sanity/client";
+import { sanityClient, sanityFetch } from "@/lib/sanity/client";
 import {
   BLOG_POST_BY_SLUG_QUERY,
   BLOG_POST_SLUGS_QUERY,
@@ -14,6 +14,7 @@ import { Footer } from "@/components/shared/Footer";
 import { BlogPostClient, NewsletterForm, ShareButtons } from "@/components/blog/BlogPostClient";
 
 /* ── ISR ────────────────────────────────────────────────────────── */
+export const dynamic = 'force-static';
 export const revalidate = 3600;
 
 /* ── Type mapping for listing hrefs ─────────────────────────────── */
@@ -87,7 +88,10 @@ export default async function BlogPostPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const post = await sanityClient.fetch(BLOG_POST_BY_SLUG_QUERY, { slug });
+  const { data: post } = await sanityFetch({
+    query: BLOG_POST_BY_SLUG_QUERY,
+    params: { slug },
+  });
 
   if (!post) {
     notFound();

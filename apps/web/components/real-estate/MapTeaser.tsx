@@ -45,17 +45,37 @@ function MapTeaser() {
           </ul>
 
           <Link
-            href="/early-access"
+            href="/real-estate"
             className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-purple2 text-white text-[14px] font-bold shadow-[0_4px_14px_rgba(139,77,171,0.3)] hover:-translate-y-0.5 hover:shadow-[0_8px_22px_rgba(139,77,171,0.4)] transition-all"
           >
-            Get early access &rarr;
+            Browse all properties &rarr;
           </Link>
         </div>
 
         {/* Right — Map Mockup */}
         <div className="relative rounded-[30px] overflow-hidden h-[400px] shadow-xl bg-[#E8E4DC]">
-          {/* Placeholder background */}
-          <div className="absolute inset-0 bg-surface2 bg-gradient-to-br from-surface2 to-[#D5D0C8]" />
+          {/* Map-like background with grid lines */}
+          <div className="absolute inset-0 bg-gradient-to-br from-[#E8E4DC] via-[#D9D5CC] to-[#CEC9BF]" />
+          <div
+            className="absolute inset-0 opacity-[0.12]"
+            style={{
+              backgroundImage:
+                'linear-gradient(to right, #8B4DAB 1px, transparent 1px), linear-gradient(to bottom, #8B4DAB 1px, transparent 1px)',
+              backgroundSize: '60px 60px',
+            }}
+          />
+          {/* Faux roads */}
+          <div className="absolute inset-0 opacity-[0.08]">
+            <div className="absolute top-[30%] left-0 right-0 h-[2px] bg-zinc-700" />
+            <div className="absolute top-[55%] left-0 right-0 h-[2px] bg-zinc-700 rotate-[3deg]" />
+            <div className="absolute left-[25%] top-0 bottom-0 w-[2px] bg-zinc-700" />
+            <div className="absolute left-[60%] top-0 bottom-0 w-[2px] bg-zinc-700 rotate-[-2deg]" />
+            <div className="absolute top-[20%] left-[10%] right-[30%] h-[1.5px] bg-zinc-600 rotate-[15deg]" />
+            <div className="absolute top-[70%] left-[20%] right-[10%] h-[1.5px] bg-zinc-600 rotate-[-8deg]" />
+          </div>
+          {/* Green patches (parks) */}
+          <div className="absolute top-[18%] left-[15%] w-[80px] h-[50px] rounded-[40%] bg-[#B5C9A1]/30" />
+          <div className="absolute top-[60%] left-[70%] w-[100px] h-[60px] rounded-[40%] bg-[#B5C9A1]/25" />
 
           {/* Overlay */}
           <div className="absolute inset-0 bg-white/5" />

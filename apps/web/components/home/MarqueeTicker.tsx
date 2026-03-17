@@ -1,21 +1,20 @@
 "use client";
 
 const DESTINATIONS = [
-  "Nairobi",
-  "Diani Beach",
-  "Maasai Mara",
-  "Lamu Island",
-  "Mount Kenya",
-  "Lake Nakuru",
   "Watamu",
-  "Amboseli",
-  "Malindi",
-  "Naivasha",
-  "Nanyuki",
   "Kilifi",
-  "Tsavo",
-  "Samburu",
+  "Diani Beach",
+  "Nairobi",
+  "Lamu",
+  "Amboseli",
+  "Maasai Mara",
+  "Nanyuki",
+  "Malindi",
+  "Zanzibar",
+  "Vipingo",
+  "Nyali",
   "Mombasa",
+  "Nakuru",
   "Kisumu",
 ];
 

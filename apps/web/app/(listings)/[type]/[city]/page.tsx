@@ -1,7 +1,7 @@
 import { type Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { sanityClient } from "@/lib/sanity/client";
+import { sanityClient, sanityFetch } from "@/lib/sanity/client";
 import {
   LISTINGS_BY_TYPE_CITY_QUERY,
   LISTING_SLUGS_QUERY,
@@ -11,6 +11,7 @@ import { ListingGrid } from "@/components/listings/ListingGrid";
 import { JsonLd } from "@/components/seo/JsonLd";
 import type { ListingCardProps } from "@/components/listings/ListingCard";
 
+export const dynamic = 'force-static';
 export const revalidate = 3600;
 
 /* ── Type mapping ────────────────────────────────── */
@@ -112,9 +113,9 @@ export default async function CityPage({ params }: PageProps) {
   const label = TYPE_LABELS[type];
   const cityName = capitalize(city);
 
-  const listings = await sanityClient.fetch(LISTINGS_BY_TYPE_CITY_QUERY, {
-    type: sanityType,
-    city: cityName,
+  const { data: listings } = await sanityFetch({
+    query: LISTINGS_BY_TYPE_CITY_QUERY,
+    params: { type: sanityType, city: cityName },
   });
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

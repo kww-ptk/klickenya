@@ -2,10 +2,11 @@ import { type Metadata } from "next";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { sanityClient } from "@/lib/sanity/client";
+import { sanityClient, sanityFetch } from "@/lib/sanity/client";
 import {
   DESTINATION_BY_SLUG_QUERY,
   DESTINATIONS_QUERY,
+  HOMEPAGE_DESTINATIONS_QUERY,
 } from "@/lib/sanity/queries";
 import { urlForImage } from "@/lib/sanity/image";
 import { Nav } from "@/components/shared/Nav";
@@ -14,7 +15,9 @@ import { PortableTextRenderer } from "@/components/blog/PortableTextRenderer";
 import { ListingGrid } from "@/components/listings/ListingGrid";
 import { JsonLd } from "@/components/seo/JsonLd";
 import type { ListingCardProps } from "@/components/listings/ListingCard";
+import { DestinationBentoGrid } from "@/components/destinations/DestinationBentoGrid";
 
+export const dynamic = 'force-static';
 export const revalidate = 3600;
 
 /* ── Type mapping for related listings ───────────── */
@@ -87,9 +90,15 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 export default async function DestinationPage({ params }: PageProps) {
   const { slug } = await params;
 
-  const destination = await sanityClient.fetch(DESTINATION_BY_SLUG_QUERY, {
-    slug,
-  });
+  const [{ data: destination }, { data: allDestinations }] = await Promise.all([
+    sanityFetch({
+      query: DESTINATION_BY_SLUG_QUERY,
+      params: { slug },
+    }),
+    sanityFetch({ query: HOMEPAGE_DESTINATIONS_QUERY }).catch(() => ({
+      data: [],
+    })),
+  ]);
 
   if (!destination) notFound();
 
@@ -250,6 +259,39 @@ export default async function DestinationPage({ params }: PageProps) {
           <ListingGrid listings={relatedCards} columns={4} />
         </section>
       )}
+
+      {/* ── Explore more destinations ────────── */}
+      <section className="bg-surface py-14 md:py-20">
+        <div className="max-w-[1280px] mx-auto px-5 md:px-10">
+          <div className="flex items-end justify-between mb-8">
+            <div>
+              <h2 className="font-display text-[clamp(24px,3vw,34px)] font-bold tracking-[-0.03em] text-dark">
+                Explore more destinations
+              </h2>
+              <p className="text-text2 text-[15px] mt-1.5">
+                Discover other amazing places across Kenya
+              </p>
+            </div>
+            <Link
+              href="/destinations"
+              className="hidden md:flex text-[14px] font-semibold text-amber hover:underline shrink-0"
+            >
+              View all
+            </Link>
+          </div>
+
+          <DestinationBentoGrid
+            destinations={((allDestinations ?? []) as any[]).map((d: any) => ({
+              name: d.name,
+              slug: d.slug?.current ?? d.slug ?? "",
+              tagline: d.tagline ?? "",
+              color: "",
+              imageUrl: d.heroImage?.asset?.url,
+            }))}
+            currentSlug={slug}
+          />
+        </div>
+      </section>
 
       <Footer />
     </>

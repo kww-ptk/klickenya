@@ -1,6 +1,6 @@
 import { type Metadata } from "next";
 import Link from "next/link";
-import { sanityClient } from "@/lib/sanity/client";
+import { sanityFetch } from "@/lib/sanity/client";
 import {
   FEATURED_PROPERTIES_QUERY,
   PROPERTIES_QUERY,
@@ -21,7 +21,7 @@ import { MarketDataStrip } from "@/components/real-estate/MarketDataStrip";
 import { MapTeaser } from "@/components/real-estate/MapTeaser";
 import { ValuationCTA } from "@/components/real-estate/ValuationCTA";
 import { NewDevelopments } from "@/components/real-estate/NewDevelopments";
-import { MortgageCalculator } from "@/components/real-estate/MortgageCalculator";
+import { ROICalculator } from "@/components/real-estate/ROICalculator";
 
 export const revalidate = 3600;
 
@@ -92,14 +92,20 @@ function mapAgent(a: any) {
 /* ── Page ──────────────────────────────────────────── */
 
 export default async function RealEstateHomePage() {
-  const [featured, properties, developments, neighbourhoods, agents] =
+  const [featuredResult, propertiesResult, developmentsResult, neighbourhoodsResult, agentsResult] =
     await Promise.all([
-      sanityClient.fetch(FEATURED_PROPERTIES_QUERY).catch(() => []),
-      sanityClient.fetch(PROPERTIES_QUERY).catch(() => []),
-      sanityClient.fetch(NEW_DEVELOPMENTS_QUERY).catch(() => []),
-      sanityClient.fetch(NEIGHBOURHOODS_QUERY).catch(() => []),
-      sanityClient.fetch(AGENTS_QUERY).catch(() => []),
+      sanityFetch({ query: FEATURED_PROPERTIES_QUERY }).catch(() => ({ data: [] })),
+      sanityFetch({ query: PROPERTIES_QUERY }).catch(() => ({ data: [] })),
+      sanityFetch({ query: NEW_DEVELOPMENTS_QUERY }).catch(() => ({ data: [] })),
+      sanityFetch({ query: NEIGHBOURHOODS_QUERY }).catch(() => ({ data: [] })),
+      sanityFetch({ query: AGENTS_QUERY }).catch(() => ({ data: [] })),
     ]);
+
+  const featured = featuredResult.data;
+  const properties = propertiesResult.data;
+  const developments = developmentsResult.data;
+  const neighbourhoods = neighbourhoodsResult.data;
+  const agents = agentsResult.data;
 
   const featuredCards = ((featured ?? []) as unknown[]).map(mapPropertyToCard);
   const heroFeatured = featuredCards.slice(0, 3);
@@ -249,8 +255,26 @@ export default async function RealEstateHomePage() {
         </section>
       )}
 
-      {/* ── Mortgage Calculator ────────────── */}
-      <MortgageCalculator />
+      {/* ── ROI Calculator ───────────────── */}
+      <ROICalculator />
+
+      {/* ── Want to list CTA ────────────────── */}
+      <section className="bg-[#111008] py-16 md:py-20">
+        <div className="max-w-[1320px] mx-auto px-5 md:px-10 text-center">
+          <h2 className="font-display text-[clamp(28px,4vw,44px)] font-bold text-white tracking-[-0.03em] leading-[1.1] mb-4">
+            Want to list your property?
+          </h2>
+          <p className="text-white/50 text-[16px] leading-[1.7] max-w-[560px] mx-auto mb-8">
+            Get your property in front of buyers and renters across Kenya. Listing is free during our launch phase.
+          </p>
+          <Link
+            href="/how-it-works"
+            className="inline-flex items-center justify-center px-8 py-4 rounded-full bg-amber text-dark font-semibold text-[15px] shadow-[0_4px_14px_rgba(232,160,32,0.35)] hover:shadow-[0_6px_20px_rgba(232,160,32,0.45)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200"
+          >
+            Get started &rarr;
+          </Link>
+        </div>
+      </section>
 
       {/* ── Footer ─────────────────────────── */}
       <Footer />

@@ -1,11 +1,12 @@
 import { type Metadata } from "next";
 import { notFound } from "next/navigation";
-import { sanityClient } from "@/lib/sanity/client";
+import { sanityFetch } from "@/lib/sanity/client";
 import { LISTINGS_BY_TYPE_QUERY } from "@/lib/sanity/queries";
 import { urlForImage } from "@/lib/sanity/image";
 import { ListingGrid } from "@/components/listings/ListingGrid";
 import type { ListingCardProps } from "@/components/listings/ListingCard";
 
+export const dynamic = 'force-static';
 export const revalidate = 3600;
 
 /* ── Type mapping ────────────────────────────────── */
@@ -94,8 +95,9 @@ export default async function TypePage({ params }: PageProps) {
   const sanityType = TYPE_TO_SANITY[type];
   const label = TYPE_LABELS[type];
 
-  const listings = await sanityClient.fetch(LISTINGS_BY_TYPE_QUERY, {
-    type: sanityType,
+  const { data: listings } = await sanityFetch({
+    query: LISTINGS_BY_TYPE_QUERY,
+    params: { type: sanityType },
   });
 
   const cards: ListingCardProps[] = (listings ?? []).map(

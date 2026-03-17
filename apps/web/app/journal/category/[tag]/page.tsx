@@ -1,7 +1,7 @@
 import { type Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { sanityClient } from "@/lib/sanity/client";
+import { sanityClient, sanityFetch } from "@/lib/sanity/client";
 import { BLOG_POSTS_BY_TAG_QUERY, ALL_BLOG_TAGS_QUERY } from "@/lib/sanity/queries";
 import { urlForImage } from "@/lib/sanity/image";
 import { Nav } from "@/components/shared/Nav";
@@ -69,10 +69,10 @@ export default async function JournalTagPage({
   // Convert URL slug to query-friendly format: "budget-travel" → "budget travel"
   const normalizedTag = tag.replace(/-/g, " ").toLowerCase();
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const posts: BlogPost[] = await sanityClient.fetch(BLOG_POSTS_BY_TAG_QUERY, {
-    tag: normalizedTag,
-  } as any);
+  const { data: posts } = await sanityFetch({
+    query: BLOG_POSTS_BY_TAG_QUERY,
+    params: { tag: normalizedTag } as Record<string, string>,
+  }) as { data: BlogPost[]; sourceMap: unknown; tags: string[] };
 
   const label = tag.split("-").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
 

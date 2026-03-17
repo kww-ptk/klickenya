@@ -7,6 +7,7 @@ import page from '../schemas/page'
 import siteSettings from '../schemas/siteSettings'
 import author from '../schemas/author'
 import agent from '../schemas/agent'
+import homePage from '../schemas/homePage'
 import {
   quickFactsBlock,
   tipCardBlock,
@@ -35,6 +36,7 @@ export const schemaTypes = [
   siteSettings,
   author,
   agent,
+  homePage,
   quickFactsBlock,
   tipCardBlock,
   dayCardBlock,

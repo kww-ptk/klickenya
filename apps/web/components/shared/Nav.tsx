@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useState } from "react";
 import { Search, Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -37,28 +38,21 @@ function Nav({ transparent = false }: NavProps) {
       >
         <div className="w-full flex items-center justify-between gap-5">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2.5 shrink-0">
-            <div className="size-8 rounded-[9px] bg-dark flex items-center justify-center shrink-0">
-              <svg
-                width="17"
-                height="17"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="white"
-                strokeWidth="2.4"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M5 3v18M5 12l8-9M5 12l8 9" />
-              </svg>
-            </div>
+          <Link href="/" className="flex items-center gap-2 shrink-0">
+            <Image
+              src="/logo-profile.jpg"
+              alt="Klickenya"
+              width={36}
+              height={36}
+              className="size-9 rounded-[10px] object-cover shrink-0"
+            />
             <span
               className={cn(
                 "text-[17px] font-bold tracking-[-0.03em]",
                 solid ? "text-text" : "text-white"
               )}
             >
-              <span className="text-amber">k</span>lickenya
+              Klic<span className="text-amber">K</span>enya
             </span>
           </Link>
 
@@ -113,18 +107,20 @@ function Nav({ transparent = false }: NavProps) {
 
           {/* Desktop actions */}
           <div className="hidden md:flex items-center gap-2 shrink-0">
-            <Button
-              variant="ghost"
-              size="sm"
-              className={cn(
-                "border",
-                solid
-                  ? "border-border text-text hover:border-dark"
-                  : "border-white/25 text-white/85 hover:bg-white/12 hover:border-white/40"
-              )}
-            >
-              List your space
-            </Button>
+            <Link href="/how-it-works">
+              <Button
+                variant="ghost"
+                size="sm"
+                className={cn(
+                  "border",
+                  solid
+                    ? "border-border text-text hover:border-dark"
+                    : "border-white/25 text-white/85 hover:bg-white/12 hover:border-white/40"
+                )}
+              >
+                List your space
+              </Button>
+            </Link>
             <Button
               variant="secondary"
               size="sm"
@@ -172,7 +168,7 @@ function Nav({ transparent = false }: NavProps) {
             ))}
             <hr className="my-3 border-border" />
             <Link
-              href="/list"
+              href="/how-it-works"
               onClick={() => setMobileOpen(false)}
               className="px-4 py-3 rounded-xl text-[16px] font-semibold text-text2 hover:bg-surface transition-colors"
             >

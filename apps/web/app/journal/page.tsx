@@ -1,7 +1,7 @@
 import { type Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { sanityClient } from "@/lib/sanity/client";
+import { sanityFetch } from "@/lib/sanity/client";
 import { BLOG_POSTS_QUERY } from "@/lib/sanity/queries";
 import { urlForImage } from "@/lib/sanity/image";
 import { Nav } from "@/components/shared/Nav";
@@ -55,7 +55,8 @@ export async function generateMetadata(): Promise<Metadata> {
 /* ─── Data fetching ──────────────────────────────── */
 
 async function getPosts(): Promise<SanityBlogPost[]> {
-  return sanityClient.fetch<SanityBlogPost[]>(BLOG_POSTS_QUERY).catch(() => []);
+  const { data } = await sanityFetch({ query: BLOG_POSTS_QUERY }).catch(() => ({ data: [] }));
+  return data as SanityBlogPost[];
 }
 
 /* ─── Helpers ────────────────────────────────────── */

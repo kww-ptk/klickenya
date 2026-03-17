@@ -9,6 +9,7 @@
     "start": "sanity start"
   },
   "dependencies": {
+    "@sanity/presentation": "^2.0.0",
     "@sanity/vision": "^3.86.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

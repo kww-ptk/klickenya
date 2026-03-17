@@ -1,11 +1,12 @@
 import { defineConfig } from 'sanity'
 import { structureTool } from 'sanity/structure'
+import { presentationTool } from 'sanity/presentation'
 import { visionTool } from '@sanity/vision'
 import { schemaTypes } from './schemaTypes'
 import type { StructureBuilder } from 'sanity/structure'
 import { aiActionsPlugin } from './plugins/ai-actions'
 
-const singletonTypes = new Set(['siteSettings'])
+const singletonTypes = new Set(['siteSettings', 'homePage'])
 
 function structure(S: StructureBuilder) {
   return S.list()
@@ -39,6 +40,14 @@ function structure(S: StructureBuilder) {
       S.documentTypeListItem('destination').title('Destinations'),
       S.divider(),
 
+      S.listItem()
+        .title('Home Page')
+        .id('homePage')
+        .child(
+          S.document()
+            .schemaType('homePage')
+            .documentId('homePage')
+        ),
       S.documentTypeListItem('page').title('Static Pages'),
       S.listItem()
         .title('Site Settings')
@@ -63,6 +72,14 @@ export default defineConfig({
 
   plugins: [
     structureTool({ structure }),
+    presentationTool({
+      previewUrl: {
+        origin: process.env.SANITY_STUDIO_PREVIEW_URL || 'http://localhost:3000',
+        previewMode: {
+          enable: '/api/draft-mode/enable',
+        },
+      },
+    }),
     visionTool(),
     aiActionsPlugin(),
   ],
