@@ -206,7 +206,7 @@ export default async function BlogPostPage({
 
               {/* Excerpt — hidden on mobile to save space */}
               {post.excerpt && (
-                <p className="hidden md:block text-[clamp(16px,1.8vw,20px)] italic text-white/65 max-w-[640px] leading-[1.5] mb-6">
+                <p className="text-[15px] md:text-[clamp(16px,1.8vw,20px)] italic text-white/65 max-w-[640px] leading-[1.5] mb-4 md:mb-6">
                   {post.excerpt}
                 </p>
               )}

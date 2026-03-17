@@ -169,8 +169,8 @@ export default async function JournalPage() {
         <section className="max-w-[1280px] mx-auto px-5 md:px-10 pb-14 md:pb-20">
           <Link
             href={`/journal/${featuredPost.slug.current}`}
-            className="group relative block w-full rounded-[var(--radius-xl)] overflow-hidden"
-            style={{ aspectRatio: "16 / 9", maxHeight: "500px" }}
+            className="group relative block w-full rounded-[var(--radius-xl)] overflow-hidden min-h-[340px] md:min-h-0"
+            style={{ aspectRatio: "16 / 9", maxHeight: "600px" }}
           >
             {/* Background image */}
             {getCoverUrl(featuredPost, 1200) ? (
