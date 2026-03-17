@@ -25,7 +25,6 @@ import { ListingCard } from "@/components/listings/ListingCard";
 import { CategoryNav } from "@/components/listings/CategoryNav";
 import { HeroSearch } from "@/components/home/HeroSearch";
 import { MarqueeTicker } from "@/components/home/MarqueeTicker";
-import { MobileBottomNav } from "@/components/home/MobileBottomNav";
 import { EventCard } from "@/components/home/EventCard";
 import { PostCard } from "@/components/blog/PostCard";
 import { DestinationBentoGrid } from "@/components/destinations/DestinationBentoGrid";
@@ -638,10 +637,7 @@ export default async function HomePage() {
       {/* ─── FOOTER ───────────────────────────────── */}
       <Footer />
 
-      {/* ─── MOBILE BOTTOM NAV ────────────────────── */}
-      <MobileBottomNav />
-
-    </>
+</>
   );
 }
 

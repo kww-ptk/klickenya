@@ -4,6 +4,7 @@ import { Bricolage_Grotesque } from "next/font/google";
 import { VisualEditing } from "next-sanity/visual-editing";
 import { SanityLive } from "@/lib/sanity/client";
 import { draftMode } from "next/headers";
+import { MobileBottomNav } from "@/components/home/MobileBottomNav";
 import "./globals.css";
 
 const geist = Geist({
@@ -118,6 +119,7 @@ export default async function RootLayout({
         className={`${geist.variable} ${geistMono.variable} ${bricolage.variable} antialiased`}
       >
         {children}
+        <MobileBottomNav />
         <SanityLive />
         {isDraftMode && <VisualEditing />}
       </body>

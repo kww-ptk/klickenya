@@ -1,32 +1,36 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
-import { Compass, CalendarDays, Building2, BookOpen, Sparkles } from "lucide-react";
+import { usePathname } from "next/navigation";
+import { Compass, CalendarDays, Building2, BookOpen, Map } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
-  { id: "explore", label: "Explore", icon: Compass, href: "/stays" },
-  { id: "events", label: "Events", icon: CalendarDays, href: "/events" },
-  { id: "property", label: "Property", icon: Building2, href: "/real-estate" },
-  { id: "journal", label: "Journal", icon: BookOpen, href: "/journal" },
-  { id: "experiences", label: "Experiences", icon: Sparkles, href: "/stays?category=experiences" },
+  { id: "explore",     label: "Explore",     icon: Compass,      href: "/stays",                      match: ["/stays"] },
+  { id: "events",      label: "Events",      icon: CalendarDays, href: "/events",                     match: ["/events"] },
+  { id: "experiences", label: "Experiences", icon: Map,          href: "/stays?category=experiences", match: [] },
+  { id: "property",    label: "Property",    icon: Building2,    href: "/real-estate",                match: ["/real-estate"] },
+  { id: "journal",     label: "Journal",     icon: BookOpen,     href: "/journal",                    match: ["/journal"] },
 ] as const;
 
+// Routes where the bottom nav should be hidden
+const HIDDEN_ROUTES = ["/admin", "/studio", "/api"];
+
 function MobileBottomNav() {
-  const [active, setActive] = useState("explore");
+  const pathname = usePathname();
+
+  if (HIDDEN_ROUTES.some((r) => pathname.startsWith(r))) return null;
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-[200] md:hidden bg-white border-t border-border pb-[env(safe-area-inset-bottom)]">
       <div className="flex items-center justify-around px-2 py-1.5">
         {NAV_ITEMS.map((item) => {
-          const isActive = active === item.id;
+          const isActive = item.match.some((m) => pathname === m || pathname.startsWith(m + "/"));
           const Icon = item.icon;
           return (
             <Link
               key={item.id}
               href={item.href}
-              onClick={() => setActive(item.id)}
               className={cn(
                 "flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-all duration-200 min-w-[56px]",
                 isActive && "bg-purple-dim"
