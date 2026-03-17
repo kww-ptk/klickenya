@@ -2,15 +2,15 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Compass, CalendarDays, Building2, BookOpen, User } from "lucide-react";
+import { Compass, CalendarDays, Building2, BookOpen, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
   { id: "explore", label: "Explore", icon: Compass, href: "/stays" },
   { id: "events", label: "Events", icon: CalendarDays, href: "/events" },
-  { id: "property", label: "Property", icon: Building2, href: "/property" },
+  { id: "property", label: "Property", icon: Building2, href: "/real-estate" },
   { id: "journal", label: "Journal", icon: BookOpen, href: "/journal" },
-  { id: "profile", label: "Profile", icon: User, href: "/profile" },
+  { id: "experiences", label: "Experiences", icon: Sparkles, href: "/stays?category=experiences" },
 ] as const;
 
 function MobileBottomNav() {

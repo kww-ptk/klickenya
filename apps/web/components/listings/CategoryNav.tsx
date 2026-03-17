@@ -9,20 +9,21 @@ interface Category {
   id: string;
   icon: string;
   label: string;
+  href?: string;
 }
 
 const CATEGORIES: Category[] = [
-  { id: "all", icon: "✨", label: "All" },
-  { id: "stays", icon: "🏠", label: "Stays" },
-  { id: "safari", icon: "🦁", label: "Safari" },
-  { id: "beach", icon: "🏖️", label: "Beach" },
-  { id: "events", icon: "🎉", label: "Events" },
-  { id: "restaurants", icon: "🍽️", label: "Restaurants" },
-  { id: "rentals", icon: "🚗", label: "Rentals" },
-  { id: "services", icon: "✂️", label: "Services" },
-  { id: "mountain", icon: "⛰️", label: "Mountain" },
-  { id: "lakeside", icon: "🌊", label: "Lakeside" },
-  { id: "culture", icon: "🎨", label: "Culture" },
+  { id: "all", icon: "✨", label: "All", href: "/stays" },
+  { id: "stays", icon: "🏠", label: "Stays", href: "/stays" },
+  { id: "experiences", icon: "🦁", label: "Experiences", href: "/stays?category=experiences" },
+  { id: "beach", icon: "🏖️", label: "Beach", href: "/stays?category=beach" },
+  { id: "events", icon: "🎉", label: "Events", href: "/events" },
+  { id: "restaurants", icon: "🍽️", label: "Restaurants", href: "/stays?category=restaurants" },
+  { id: "rentals", icon: "🚗", label: "Rentals", href: "/stays?category=rentals" },
+  { id: "services", icon: "✂️", label: "Services", href: "/stays?category=services" },
+  { id: "mountain", icon: "⛰️", label: "Mountain", href: "/stays?category=mountain" },
+  { id: "lakeside", icon: "🌊", label: "Lakeside", href: "/stays?category=lakeside" },
+  { id: "culture", icon: "🎨", label: "Culture", href: "/stays?category=culture" },
 ];
 
 interface CategoryNavProps {
@@ -53,8 +54,9 @@ function CategoryNav({
       <div className="relative">
         <div className="flex items-center gap-0 px-5 md:px-10 overflow-x-auto scrollbar-none">
           {CATEGORIES.map((cat) => (
-            <button
+            <Link
               key={cat.id}
+              href={cat.href ?? "/stays"}
               onClick={() => handleSelect(cat.id)}
               className={cn(
                 "shrink-0 flex flex-col items-center gap-[7px] px-5 py-3.5 border-b-2 transition-all duration-200 cursor-pointer min-w-[72px]",
@@ -72,7 +74,7 @@ function CategoryNav({
               >
                 {cat.label}
               </span>
-            </button>
+            </Link>
           ))}
 
           {/* Real Estate link */}
