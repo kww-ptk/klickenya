@@ -1,6 +1,6 @@
 // ─── Enums ──────────────────────────────────────────────────────
 
-export type ListingType = 'stay' | 'experience' | 'event' | 'rental' | 'service'
+export type ListingType = 'stay' | 'experience' | 'event' | 'rental' | 'service' | 'restaurant'
 
 export type ListingStatus = 'draft' | 'published' | 'archived'
 
@@ -69,6 +69,12 @@ export interface SanityListingFull extends SanityListing {
   address?: string
   maxGuests?: number
   bookingType: BookingType
+  hostName?: string
+  highlights?: Array<{ emoji: string; title: string; description: string }>
+  cuisine?: string[]
+  priceRange?: 'budget' | 'mid-range' | 'fine-dining'
+  openingHours?: string
+  reservationRequired?: boolean
   seoTitle?: string
   seoDescription?: string
 }
@@ -102,6 +108,11 @@ export interface SanityPropertyFull extends SanityProperty {
   lat?: number
   lng?: number
   isNewDevelopment?: boolean
+  isFeatured?: boolean
+  previousPrice?: number
+  completionPercentage?: number
+  developerName?: string
+  unitsAvailable?: number
   agent?: SanityAgent
   seoTitle?: string
   seoDescription?: string

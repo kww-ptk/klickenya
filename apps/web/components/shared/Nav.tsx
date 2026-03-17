@@ -11,8 +11,9 @@ interface NavProps {
   transparent?: boolean;
 }
 
-const NAV_LINKS = [
+const NAV_LINKS: Array<{ href: string; label: string; badge?: string }> = [
   { href: "/stays", label: "Explore" },
+  { href: "/real-estate", label: "Real Estate", badge: "Property" },
   { href: "/events", label: "Events" },
   { href: "/destinations", label: "Destinations" },
   { href: "/journal", label: "Journal" },
@@ -94,13 +95,18 @@ function Nav({ transparent = false }: NavProps) {
                 key={link.href}
                 href={link.href}
                 className={cn(
-                  "px-3.5 py-2 rounded-full text-[14px] font-medium transition-colors duration-200",
+                  "px-3.5 py-2 rounded-full text-[14px] font-medium transition-colors duration-200 flex items-center gap-1.5",
                   solid
                     ? "text-text2 hover:bg-surface hover:text-text"
                     : "text-white/80 hover:bg-white/12 hover:text-white"
                 )}
               >
                 {link.label}
+                {link.badge && (
+                  <span className="px-2 py-0.5 rounded-full bg-amber/12 border border-amber/25 text-[10.5px] font-bold text-amber">
+                    {link.badge}
+                  </span>
+                )}
               </Link>
             ))}
           </div>

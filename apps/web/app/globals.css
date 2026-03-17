@@ -134,3 +134,34 @@ body {
   opacity: 1;
   transform: translateX(0);
 }
+
+.sr-l {
+  opacity: 0;
+  transform: translateX(-20px);
+  transition: opacity 0.65s ease, transform 0.65s ease;
+}
+
+.sr-l.on {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* ─── Real Estate Animations ─────────────────────────────────── */
+
+@keyframes heroZoom {
+  from { transform: scale(1.07); }
+  to { transform: scale(1); }
+}
+
+@keyframes barGrow {
+  from { height: 0; }
+}
+
+@keyframes pulseGlow {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+/* Scrollbar-less containers */
+.scrollbar-none::-webkit-scrollbar { display: none; }
+.scrollbar-none { scrollbar-width: none; }

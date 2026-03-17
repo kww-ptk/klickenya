@@ -21,7 +21,7 @@ export const revalidate = 3600;
 
 /* ── Type mapping ────────────────────────────────── */
 
-const VALID_TYPES = ["stays", "experiences", "events", "rentals", "services"] as const;
+const VALID_TYPES = ["stays", "experiences", "events", "rentals", "services", "restaurants"] as const;
 type UrlType = (typeof VALID_TYPES)[number];
 
 const TYPE_TO_SANITY: Record<UrlType, string> = {
@@ -30,6 +30,7 @@ const TYPE_TO_SANITY: Record<UrlType, string> = {
   events: "event",
   rentals: "rental",
   services: "service",
+  restaurants: "restaurant",
 };
 
 const TYPE_LABELS: Record<UrlType, string> = {
@@ -38,6 +39,7 @@ const TYPE_LABELS: Record<UrlType, string> = {
   events: "Events",
   rentals: "Rentals",
   services: "Services",
+  restaurants: "Restaurants",
 };
 
 const SINGULAR_LABELS: Record<string, string> = {
@@ -46,6 +48,7 @@ const SINGULAR_LABELS: Record<string, string> = {
   event: "Event",
   rental: "Rental",
   service: "Service",
+  restaurant: "Restaurant",
 };
 
 function isValidType(type: string): type is UrlType {
@@ -57,45 +60,6 @@ function capitalize(str: string): string {
     .split("-")
     .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
     .join(" ");
-}
-
-/* ── Default highlights per type ─────────────────── */
-
-function getDefaultHighlights(type: string) {
-  const highlights: Record<string, { icon: string; title: string; description: string }[]> = {
-    stay: [
-      { icon: "🏡", title: "Entire place", description: "You'll have the whole space to yourself" },
-      { icon: "✨", title: "Enhanced clean", description: "This host follows enhanced cleaning protocols" },
-      { icon: "🔑", title: "Self check-in", description: "Check yourself in with the lockbox" },
-      { icon: "📍", title: "Great location", description: "95% of recent guests gave the location a 5-star rating" },
-    ],
-    experience: [
-      { icon: "🎯", title: "Small group", description: "Limited to 10 guests for a personal experience" },
-      { icon: "🗣️", title: "Expert host", description: "Led by a verified local expert" },
-      { icon: "📸", title: "Photo worthy", description: "Guests love sharing photos from this experience" },
-      { icon: "⏱️", title: "Flexible timing", description: "Free cancellation up to 24 hours before" },
-    ],
-    event: [
-      { icon: "🎉", title: "Curated event", description: "Handpicked and verified by our team" },
-      { icon: "🎵", title: "Entertainment", description: "Live entertainment and immersive activities" },
-      { icon: "🍽️", title: "Food & drink", description: "Refreshments included in the ticket price" },
-      { icon: "📍", title: "Prime venue", description: "Hosted at a top-rated venue in the city" },
-    ],
-    rental: [
-      { icon: "🚗", title: "Well maintained", description: "Regularly serviced and in excellent condition" },
-      { icon: "🛡️", title: "Insurance included", description: "Comprehensive coverage for peace of mind" },
-      { icon: "📞", title: "24/7 support", description: "Roadside assistance available anytime" },
-      { icon: "💳", title: "Flexible payment", description: "Pay per day, week, or month" },
-    ],
-    service: [
-      { icon: "⭐", title: "Top rated", description: "Consistently rated 5 stars by customers" },
-      { icon: "✅", title: "Verified provider", description: "Identity and qualifications verified" },
-      { icon: "🔄", title: "Satisfaction guaranteed", description: "Full refund if you're not satisfied" },
-      { icon: "💬", title: "Fast response", description: "Usually responds within 1 hour" },
-    ],
-  };
-
-  return highlights[type] ?? highlights.stay;
 }
 
 /* ── JSON-LD helpers ─────────────────────────────── */
@@ -127,6 +91,12 @@ function buildJsonLd(listing: any, urlType: UrlType, photoUrls: string[]) {
       return {
         ...base,
         "@type": "TouristAttraction",
+      };
+    case "restaurant":
+      return {
+        ...base,
+        "@type": "Restaurant",
+        servesCuisine: listing.cuisine,
       };
     case "event":
       return {
@@ -266,13 +236,18 @@ export default async function ListingDetailPage({ params }: PageProps) {
     };
   });
 
-  const highlights = getDefaultHighlights(sanityType);
+  const highlights: { emoji: string; title: string; description: string }[] =
+    listing.highlights ?? [];
   const amenities: string[] = listing.amenities ?? [];
   const jsonLd = buildJsonLd(listing, type, photos);
 
-  // Host initials from title (stub since we don't have host data)
-  const hostName = "Host";
-  const hostInitials = "H";
+  const hostName = listing.hostName || "Klickenya";
+  const hostInitials = hostName
+    .split(/\s+/)
+    .map((w: string) => w[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
 
   return (
     <>
@@ -416,23 +391,26 @@ export default async function ListingDetailPage({ params }: PageProps) {
             <hr className="border-border mb-7" />
 
             {/* Highlights grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-7">
-              {highlights.map((h) => (
-                <div key={h.title} className="flex gap-3.5">
-                  <span className="text-[26px] shrink-0 mt-0.5">{h.icon}</span>
-                  <div>
-                    <p className="text-[14.5px] font-semibold text-text">
-                      {h.title}
-                    </p>
-                    <p className="text-[13px] text-text2 leading-[1.5]">
-                      {h.description}
-                    </p>
-                  </div>
+            {highlights.length > 0 && (
+              <>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-7">
+                  {highlights.map((h) => (
+                    <div key={h.title} className="flex gap-3.5">
+                      <span className="text-[26px] shrink-0 mt-0.5">{h.emoji}</span>
+                      <div>
+                        <p className="text-[14.5px] font-semibold text-text">
+                          {h.title}
+                        </p>
+                        <p className="text-[13px] text-text2 leading-[1.5]">
+                          {h.description}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-
-            <hr className="border-border mb-7" />
+                <hr className="border-border mb-7" />
+              </>
+            )}
 
             {/* Description */}
             {listing.description && (
@@ -467,6 +445,60 @@ export default async function ListingDetailPage({ params }: PageProps) {
                     </div>
                   ))}
                 </div>
+              </div>
+            )}
+
+            {/* Restaurant details */}
+            {sanityType === "restaurant" && (
+              <div className="mb-7">
+                <h2 className="font-display text-[22px] font-bold tracking-[-0.02em] text-dark mb-5">
+                  Restaurant details
+                </h2>
+
+                {/* Cuisine tags */}
+                {listing.cuisine && listing.cuisine.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    {listing.cuisine.map((c: string) => (
+                      <span
+                        key={c}
+                        className="inline-block rounded-full bg-purple/10 text-purple px-3 py-1 text-[13px] font-semibold"
+                      >
+                        {c}
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+                {/* Price range badge */}
+                {listing.priceRange && (
+                  <div className="mb-4">
+                    <span className="inline-block rounded-full bg-amber/15 text-amber px-3 py-1 text-[13px] font-bold uppercase tracking-wide">
+                      {listing.priceRange}
+                    </span>
+                  </div>
+                )}
+
+                {/* Opening hours */}
+                {listing.openingHours && (
+                  <div className="mb-4">
+                    <h3 className="text-[14.5px] font-semibold text-text mb-1">
+                      Opening Hours
+                    </h3>
+                    <p className="text-[14px] text-text2 whitespace-pre-line">
+                      {listing.openingHours}
+                    </p>
+                  </div>
+                )}
+
+                {/* Reservation notice */}
+                {listing.reservationRequired && (
+                  <div className="flex items-center gap-2 rounded-[16px] bg-surface px-4 py-3">
+                    <span className="text-[18px]">📅</span>
+                    <p className="text-[14px] font-semibold text-text">
+                      Reservation required
+                    </p>
+                  </div>
+                )}
               </div>
             )}
           </div>

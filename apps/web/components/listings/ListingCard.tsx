@@ -6,14 +6,14 @@ import Link from "next/link";
 import { Heart, Star } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-type ListingType = "stay" | "experience" | "event" | "rental" | "service";
+type ListingType = "stay" | "experience" | "event" | "rental" | "service" | "restaurant";
 
 interface ListingCardProps {
   id: string;
   title: string;
   city: string;
-  price: number;
-  priceUnit: string;
+  price: number | null;
+  priceUnit?: string;
   rating?: number;
   reviewCount?: number;
   type: ListingType;
@@ -42,6 +42,7 @@ function ListingCard({
     event: "Event",
     rental: "Rental",
     service: "Service",
+    restaurant: "Restaurant",
   };
 
   return (
@@ -116,9 +117,9 @@ function ListingCard({
       <div className="pt-3.5 px-0.5">
         <div className="flex justify-between items-start gap-2">
           <p className="text-[14.5px] font-semibold text-text leading-[1.35] line-clamp-1 flex-1">
-            {title}
+            {title || "Untitled"}
           </p>
-          {rating && (
+          {rating != null && rating > 0 && (
             <span className="flex items-center gap-1 shrink-0 text-[13.5px] font-semibold">
               <Star className="size-3.5 fill-amber text-amber" />
               {rating.toFixed(1)}
@@ -126,14 +127,20 @@ function ListingCard({
           )}
         </div>
         <p className="mt-0.5 text-[13px] text-text2">
-          {city}
+          {city || "Kenya"}
           {reviewCount ? ` · ${reviewCount} reviews` : ""}
           {" · "}
           {typeLabels[type]}
         </p>
         <p className="mt-1.5 text-[14.5px] font-semibold">
-          KSh {price.toLocaleString()}{" "}
-          <span className="text-text2 font-normal">/ {priceUnit}</span>
+          {price != null ? (
+            <>
+              KSh {price.toLocaleString()}{" "}
+              <span className="text-text2 font-normal">/ {priceUnit || "night"}</span>
+            </>
+          ) : (
+            <span className="text-text2">Price on request</span>
+          )}
         </p>
       </div>
     </Link>

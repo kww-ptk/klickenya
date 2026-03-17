@@ -37,6 +37,12 @@ const PROPERTY_CARD_FIELDS = `
   sizeSqm,
   neighbourhood,
   city,
+  isNewDevelopment,
+  isFeatured,
+  previousPrice,
+  completionPercentage,
+  developerName,
+  unitsAvailable,
   "coverPhoto": photos[0]{ ${IMAGE_FIELDS} }
 `
 
@@ -78,6 +84,12 @@ export const LISTING_BY_SLUG_QUERY = groq`
     photos[]{ ${IMAGE_FIELDS} },
     amenities,
     tags,
+    hostName,
+    highlights,
+    cuisine,
+    priceRange,
+    openingHours,
+    reservationRequired,
     seoTitle,
     seoDescription
   }
@@ -207,6 +219,11 @@ export const PROPERTY_BY_SLUG_QUERY = groq`
     description,
     photos[]{ ${IMAGE_FIELDS} },
     isNewDevelopment,
+    isFeatured,
+    previousPrice,
+    completionPercentage,
+    developerName,
+    unitsAvailable,
     seoTitle,
     seoDescription,
     "agent": agent->{
@@ -238,6 +255,55 @@ export const PROPERTY_SLUGS_QUERY = groq`
 
 export const SIMILAR_PROPERTIES_QUERY = groq`
   *[_type == "property" && status == "available" && listingCategory == $category && lower(neighbourhood) == lower($neighbourhood) && slug.current != $slug] | order(_createdAt desc) [0...3] {
+    ${PROPERTY_CARD_FIELDS}
+  }
+`
+
+export const FEATURED_PROPERTIES_QUERY = groq`
+  *[_type == "property" && status == "available" && isFeatured == true] | order(_createdAt desc) [0...6] {
+    ${PROPERTY_CARD_FIELDS}
+  }
+`
+
+export const NEW_DEVELOPMENTS_QUERY = groq`
+  *[_type == "property" && status == "available" && isNewDevelopment == true] | order(_createdAt desc) {
+    ${PROPERTY_CARD_FIELDS}
+  }
+`
+
+export const AGENTS_QUERY = groq`
+  *[_type == "agent"] | order(displayName asc) {
+    _id,
+    displayName,
+    slug,
+    photo{ asset->{_id, url, metadata{dimensions}}, alt, hotspot, crop },
+    agencyName,
+    isVerified,
+    specialisations,
+    subscriptionTier
+  }
+`
+
+export const AGENT_BY_SLUG_QUERY = groq`
+  *[_type == "agent" && slug.current == $slug][0] {
+    _id,
+    displayName,
+    slug,
+    photo{ asset->{_id, url, metadata{dimensions}}, alt, hotspot, crop },
+    agencyName,
+    licenceNumber,
+    isVerified,
+    bio,
+    phone,
+    email,
+    specialisations,
+    serviceAreas,
+    subscriptionTier
+  }
+`
+
+export const PROPERTIES_BY_AGENT_QUERY = groq`
+  *[_type == "property" && status == "available" && agent._ref == $agentId] | order(_createdAt desc) {
     ${PROPERTY_CARD_FIELDS}
   }
 `

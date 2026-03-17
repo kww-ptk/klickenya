@@ -33,11 +33,11 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: "Klickenya — Discover Kenya",
     description:
-      "Kenya's all-in-one booking marketplace for stays, experiences, events, rentals, and services. Discover the best of Kenya.",
+      "Kenya's all-in-one booking marketplace for stays, experiences, events, rentals, restaurants, and services. Discover the best of Kenya.",
     openGraph: {
       title: "Klickenya — Discover Kenya",
       description:
-        "Kenya's all-in-one booking marketplace for stays, experiences, events, rentals, and services.",
+        "Kenya's all-in-one booking marketplace for stays, experiences, events, rentals, restaurants, and services.",
       siteName: "Klickenya",
       type: "website",
       locale: "en_KE",
@@ -51,7 +51,7 @@ interface SanityListing {
   _id: string;
   title: string;
   slug: { current: string };
-  type: "stay" | "experience" | "event" | "rental" | "service";
+  type: "stay" | "experience" | "event" | "rental" | "service" | "restaurant";
   city: string;
   price: number;
   priceUnit: string;
@@ -162,7 +162,7 @@ export default async function HomePage() {
               animationDelay: "0.2s",
             }}
           >
-            Book unique stays, experiences, events, and services across all 47
+            Book unique stays, experiences, events, restaurants, and services across all 47
             counties — all in one place.
           </p>
 

@@ -18,6 +18,7 @@ const CATEGORIES: Category[] = [
   { id: "events", icon: "🎉", label: "Events" },
   { id: "rentals", icon: "🚗", label: "Rentals" },
   { id: "services", icon: "✂️", label: "Services" },
+  { id: "restaurants", icon: "🍽️", label: "Restaurants" },
   { id: "mountain", icon: "⛰️", label: "Mountain" },
   { id: "lakeside", icon: "🌊", label: "Lakeside" },
   { id: "culture", icon: "🎨", label: "Culture" },

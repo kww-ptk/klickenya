@@ -16,9 +16,10 @@ const DEFAULT_EXPLORE: FooterLink[] = [
   { href: "/stays", label: "Stays" },
   { href: "/experiences", label: "Experiences" },
   { href: "/events", label: "Events" },
+  { href: "/restaurants", label: "Restaurants" },
   { href: "/rentals", label: "Rentals" },
   { href: "/services", label: "Services" },
-  { href: "/property", label: "Property" },
+  { href: "/real-estate", label: "Property" },
 ];
 
 const DEFAULT_COMPANY: FooterLink[] = [

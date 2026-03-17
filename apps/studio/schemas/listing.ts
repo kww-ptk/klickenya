@@ -50,6 +50,7 @@ export default defineType({
           { title: 'Event', value: 'event' },
           { title: 'Rental', value: 'rental' },
           { title: 'Service', value: 'service' },
+          { title: 'Restaurant', value: 'restaurant' },
         ],
         layout: 'radio',
       },
@@ -177,6 +178,83 @@ export default defineType({
       type: 'array',
       of: [{ type: 'string' }],
       description: "Keywords for search e.g. 'luxury', 'family-friendly', 'beachfront'",
+    }),
+    defineField({
+      name: 'hostName',
+      title: 'Host name',
+      type: 'string',
+      description: 'Name of the person or business hosting this listing',
+    }),
+    defineField({
+      name: 'highlights',
+      title: 'Highlights',
+      type: 'array',
+      description: 'Up to 6 key features shown on the listing page',
+      of: [
+        {
+          type: 'object',
+          fields: [
+            { name: 'emoji', title: 'Emoji', type: 'string', validation: (rule: any) => rule.required() },
+            { name: 'title', title: 'Title', type: 'string', validation: (rule: any) => rule.required() },
+            { name: 'description', title: 'Description', type: 'string', validation: (rule: any) => rule.required() },
+          ],
+          preview: {
+            select: { title: 'title', subtitle: 'description', media: 'emoji' },
+            prepare({ title, subtitle, media }: { title?: string; subtitle?: string; media?: string }) {
+              return { title: `${media ?? ''} ${title ?? ''}`, subtitle }
+            },
+          },
+        },
+      ],
+      validation: (rule) => rule.max(6),
+    }),
+    defineField({
+      name: 'cuisine',
+      title: 'Cuisine',
+      type: 'array',
+      of: [{ type: 'string' }],
+      options: {
+        list: [
+          { title: 'Kenyan', value: 'Kenyan' },
+          { title: 'Swahili', value: 'Swahili' },
+          { title: 'Indian', value: 'Indian' },
+          { title: 'Chinese', value: 'Chinese' },
+          { title: 'Italian', value: 'Italian' },
+          { title: 'Mediterranean', value: 'Mediterranean' },
+          { title: 'BBQ', value: 'BBQ' },
+          { title: 'Seafood', value: 'Seafood' },
+          { title: 'Vegetarian', value: 'Vegetarian' },
+          { title: 'Fast Food', value: 'Fast Food' },
+        ],
+      },
+      hidden: ({document}: {document: {type?: string}}) => document?.type !== 'restaurant',
+    }),
+    defineField({
+      name: 'priceRange',
+      title: 'Price Range',
+      type: 'string',
+      options: {
+        list: [
+          { title: 'Budget', value: 'budget' },
+          { title: 'Mid-Range', value: 'mid-range' },
+          { title: 'Fine Dining', value: 'fine-dining' },
+        ],
+      },
+      hidden: ({document}: {document: {type?: string}}) => document?.type !== 'restaurant',
+    }),
+    defineField({
+      name: 'openingHours',
+      title: 'Opening Hours',
+      type: 'text',
+      rows: 3,
+      hidden: ({document}: {document: {type?: string}}) => document?.type !== 'restaurant',
+    }),
+    defineField({
+      name: 'reservationRequired',
+      title: 'Reservation Required',
+      type: 'boolean',
+      initialValue: false,
+      hidden: ({document}: {document: {type?: string}}) => document?.type !== 'restaurant',
     }),
     defineField({
       name: 'seoTitle',

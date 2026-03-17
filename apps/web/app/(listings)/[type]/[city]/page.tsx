@@ -15,7 +15,7 @@ export const revalidate = 3600;
 
 /* ── Type mapping ────────────────────────────────── */
 
-const VALID_TYPES = ["stays", "experiences", "events", "rentals", "services"] as const;
+const VALID_TYPES = ["stays", "experiences", "events", "rentals", "services", "restaurants"] as const;
 type UrlType = (typeof VALID_TYPES)[number];
 
 const TYPE_TO_SANITY: Record<UrlType, string> = {
@@ -24,6 +24,7 @@ const TYPE_TO_SANITY: Record<UrlType, string> = {
   events: "event",
   rentals: "rental",
   services: "service",
+  restaurants: "restaurant",
 };
 
 const TYPE_LABELS: Record<UrlType, string> = {
@@ -32,6 +33,7 @@ const TYPE_LABELS: Record<UrlType, string> = {
   events: "Events",
   rentals: "Rentals",
   services: "Services",
+  restaurants: "Restaurants",
 };
 
 function isValidType(type: string): type is UrlType {
