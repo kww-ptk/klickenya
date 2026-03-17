@@ -287,7 +287,7 @@ export default async function BlogPostPage({
             {/* ── Main column ───────────────────────────────────── */}
             <article className="min-w-0">
               {/* Body content */}
-              <div className="sr">
+              <div>
                 <PortableTextRenderer value={post.body || []} className="" slug={post.slug?.current} />
               </div>
 

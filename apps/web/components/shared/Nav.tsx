@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
 import { Search, Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useScrollPosition } from "@/hooks/useScrollPosition";
@@ -23,6 +24,12 @@ const NAV_LINKS: Array<{ href: string; label: string; badge?: string }> = [
 function Nav({ transparent = false }: NavProps) {
   const scrolled = useScrollPosition(50);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const pathname = usePathname();
+
+  // Close mobile menu on route change
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [pathname]);
 
   const solid = !transparent || scrolled;
 
@@ -160,7 +167,6 @@ function Nav({ transparent = false }: NavProps) {
               <Link
                 key={link.href}
                 href={link.href}
-                onClick={() => setMobileOpen(false)}
                 className="px-4 py-3 rounded-xl text-[16px] font-semibold text-text hover:bg-surface transition-colors flex items-center gap-2"
               >
                 {link.label}
@@ -174,7 +180,6 @@ function Nav({ transparent = false }: NavProps) {
             <hr className="my-3 border-border" />
             <Link
               href="/how-it-works"
-              onClick={() => setMobileOpen(false)}
               className="px-4 py-3 rounded-xl text-[16px] font-semibold text-text2 hover:bg-surface transition-colors"
             >
               List your space
