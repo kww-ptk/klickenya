@@ -31,8 +31,17 @@ function makeComponents(slug?: string): PortableTextComponents {
           {children}
         </p>
       ),
-      h2: ({ children }) => (
-        <div className="mt-12 mb-4">
+      h2: ({ children, value }) => {
+        const text =
+          (value as { children?: { text?: string }[] })?.children
+            ?.map((c) => c.text || "")
+            .join("") || "";
+        const id = text
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, "-")
+          .replace(/(^-|-$)/g, "");
+        return (
+        <div id={id} className="mt-12 mb-4 scroll-mt-[88px]">
           <h2 className="font-bold text-[clamp(24px,3vw,32px)] tracking-[-0.03em] text-[var(--color-text,#16130C)] leading-[1.15]">
             {children}
           </h2>
@@ -51,7 +60,8 @@ function makeComponents(slug?: string): PortableTextComponents {
             />
           </svg>
         </div>
-      ),
+        );
+      },
       h3: ({ children }) => (
         <h3 className="font-bold text-[22px] tracking-[-0.02em] text-[var(--color-text,#16130C)] leading-[1.25] mt-9 mb-3">
           {children}
