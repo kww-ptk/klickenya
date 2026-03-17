@@ -167,7 +167,7 @@ export default async function BlogPostPage({
         <Nav transparent={false} />
 
         {/* ── Hero ─────────────────────────────────────────────── */}
-        <section className="relative w-full h-[60vh] md:h-[88vh] min-h-[400px] md:min-h-[520px] overflow-hidden">
+        <section className="relative w-full mt-[68px] h-[55vh] md:h-[82vh] min-h-[360px] md:min-h-[520px] overflow-hidden">
           {/* Cover image with Ken Burns */}
           {heroImageUrl && (
             <div className="absolute inset-0 animate-[kenBurns_20s_ease-out_forwards]">
@@ -286,6 +286,30 @@ export default async function BlogPostPage({
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-10 lg:gap-[72px]">
             {/* ── Main column ───────────────────────────────────── */}
             <article className="min-w-0">
+
+              {/* ── Mobile TOC ── visible only on mobile, before body */}
+              {tocItems.length > 0 && (
+                <div className="lg:hidden mb-8 bg-surface rounded-[18px] border border-border p-5">
+                  <p className="text-[11px] font-bold text-text2 uppercase tracking-[0.06em] mb-3">
+                    In this guide
+                  </p>
+                  <div className="flex flex-col gap-1">
+                    {tocItems.map((item, i) => (
+                      <a
+                        key={item.id}
+                        href={`#${item.id}`}
+                        className="flex items-center gap-3 py-2 text-[14px] text-text2 hover:text-amber transition-colors"
+                      >
+                        <span className="flex items-center justify-center size-6 rounded-full border border-border bg-white text-[11px] font-semibold text-text3 shrink-0">
+                          {i + 1}
+                        </span>
+                        <span>{item.text}</span>
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Body content */}
               <div>
                 <PortableTextRenderer value={post.body || []} className="" slug={post.slug?.current} />
