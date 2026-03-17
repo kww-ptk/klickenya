@@ -124,20 +124,13 @@ export default async function HomePage() {
 
       {/* ─── HERO ─────────────────────────────────── */}
       <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-        {/* Photo mosaic background */}
-        <div className="absolute inset-0 grid grid-cols-3 grid-rows-2 gap-[3px]">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div
-              key={i}
-              className="bg-surface2 overflow-hidden"
-              style={{
-                animation: `kenBurns 12s ease-in-out infinite alternate`,
-                animationDelay: `${i * 1.8}s`,
-              }}
-            >
-              <div className="w-full h-full bg-gradient-to-br from-surface2 to-border" />
-            </div>
-          ))}
+        {/* Hero background image */}
+        <div className="absolute inset-0">
+          <img
+            src="https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?w=1920&q=80&auto=format&fit=crop"
+            alt=""
+            className="w-full h-full object-cover"
+          />
         </div>
 
         {/* Dark overlay gradient */}
@@ -644,17 +637,6 @@ export default async function HomePage() {
       {/* ─── MOBILE BOTTOM NAV ────────────────────── */}
       <MobileBottomNav />
 
-      {/* Ken Burns animation keyframes */}
-      <style
-        dangerouslySetInnerHTML={{
-          __html: `
-            @keyframes kenBurns {
-              from { transform: scale(1.07); }
-              to { transform: scale(1); }
-            }
-          `,
-        }}
-      />
     </>
   );
 }

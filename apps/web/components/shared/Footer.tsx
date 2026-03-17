@@ -55,8 +55,8 @@ function Footer({
 
       <div className="max-w-[1280px] mx-auto px-5 md:px-10">
         {/* Main grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[2fr_1fr_1fr_1fr] gap-12 pt-16 pb-14 border-b border-white/[0.06]">
-          {/* Brand column */}
+        <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr_1fr_1fr] gap-12 pt-16 pb-14 border-b border-white/[0.06]">
+          {/* Brand column - full width on mobile */}
           <div>
             <div className="flex items-center gap-2 mb-4">
               <Image
@@ -94,10 +94,12 @@ function Footer({
             </div>
           </div>
 
-          {/* Link columns */}
-          <FooterLinkColumn title="Explore" links={exploreLinks} />
-          <FooterLinkColumn title="Company" links={companyLinks} />
-          <FooterLinkColumn title="Support" links={supportLinks} />
+          {/* Link columns - 2 cols on mobile, 3 individual on desktop */}
+          <div className="grid grid-cols-2 gap-8 lg:contents">
+            <FooterLinkColumn title="Explore" links={exploreLinks} />
+            <FooterLinkColumn title="Company" links={companyLinks} />
+            <FooterLinkColumn title="Support" links={supportLinks} />
+          </div>
         </div>
 
         {/* Bottom bar */}

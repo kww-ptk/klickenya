@@ -161,9 +161,14 @@ function Nav({ transparent = false }: NavProps) {
                 key={link.href}
                 href={link.href}
                 onClick={() => setMobileOpen(false)}
-                className="px-4 py-3 rounded-xl text-[16px] font-semibold text-text hover:bg-surface transition-colors"
+                className="px-4 py-3 rounded-xl text-[16px] font-semibold text-text hover:bg-surface transition-colors flex items-center gap-2"
               >
                 {link.label}
+                {link.badge && (
+                  <span className="px-2 py-0.5 rounded-full bg-amber/12 border border-amber/25 text-[10.5px] font-bold text-amber">
+                    {link.badge}
+                  </span>
+                )}
               </Link>
             ))}
             <hr className="my-3 border-border" />

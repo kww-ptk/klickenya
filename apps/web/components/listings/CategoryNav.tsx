@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { SlidersHorizontal } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -16,9 +17,9 @@ const CATEGORIES: Category[] = [
   { id: "safari", icon: "🦁", label: "Safari" },
   { id: "beach", icon: "🏖️", label: "Beach" },
   { id: "events", icon: "🎉", label: "Events" },
+  { id: "restaurants", icon: "🍽️", label: "Restaurants" },
   { id: "rentals", icon: "🚗", label: "Rentals" },
   { id: "services", icon: "✂️", label: "Services" },
-  { id: "restaurants", icon: "🍽️", label: "Restaurants" },
   { id: "mountain", icon: "⛰️", label: "Mountain" },
   { id: "lakeside", icon: "🌊", label: "Lakeside" },
   { id: "culture", icon: "🎨", label: "Culture" },
@@ -49,38 +50,54 @@ function CategoryNav({
         className
       )}
     >
-      <div className="flex items-center gap-0 px-5 md:px-10 overflow-x-auto scrollbar-none">
-        {CATEGORIES.map((cat) => (
-          <button
-            key={cat.id}
-            onClick={() => handleSelect(cat.id)}
-            className={cn(
-              "shrink-0 flex flex-col items-center gap-[7px] px-5 py-3.5 border-b-2 transition-all duration-200 cursor-pointer min-w-[72px]",
-              active === cat.id
-                ? "border-amber opacity-100"
-                : "border-transparent opacity-50 hover:opacity-[0.85]"
-            )}
-          >
-            <span className="text-[22px] leading-none">{cat.icon}</span>
-            <span
+      <div className="relative">
+        <div className="flex items-center gap-0 px-5 md:px-10 overflow-x-auto scrollbar-none">
+          {CATEGORIES.map((cat) => (
+            <button
+              key={cat.id}
+              onClick={() => handleSelect(cat.id)}
               className={cn(
-                "text-[11.5px] font-semibold whitespace-nowrap transition-colors",
-                active === cat.id ? "text-amber" : "text-text"
+                "shrink-0 flex flex-col items-center gap-[7px] px-5 py-3.5 border-b-2 transition-all duration-200 cursor-pointer min-w-[72px]",
+                active === cat.id
+                  ? "border-amber opacity-100"
+                  : "border-transparent opacity-50 hover:opacity-[0.85]"
               )}
             >
-              {cat.label}
-            </span>
-          </button>
-        ))}
+              <span className="text-[22px] leading-none">{cat.icon}</span>
+              <span
+                className={cn(
+                  "text-[11.5px] font-semibold whitespace-nowrap transition-colors",
+                  active === cat.id ? "text-amber" : "text-text"
+                )}
+              >
+                {cat.label}
+              </span>
+            </button>
+          ))}
 
-        {/* Filters button */}
-        <button
-          onClick={onFiltersClick}
-          className="shrink-0 ml-auto flex items-center gap-[7px] px-4 py-2.5 rounded-[10px] border border-border text-[13px] font-semibold whitespace-nowrap transition-all duration-200 hover:shadow-sm hover:border-amber hover:text-amber"
-        >
-          <SlidersHorizontal className="size-[15px]" />
-          Filters
-        </button>
+          {/* Real Estate link */}
+          <Link
+            href="/real-estate"
+            className="shrink-0 flex flex-col items-center gap-[7px] px-5 py-3.5 border-b-2 border-transparent opacity-50 hover:opacity-[0.85] transition-all duration-200 min-w-[72px]"
+          >
+            <span className="text-[22px] leading-none">🏢</span>
+            <span className="text-[11.5px] font-semibold whitespace-nowrap text-text">
+              Real Estate
+            </span>
+          </Link>
+
+          {/* Filters button */}
+          <button
+            onClick={onFiltersClick}
+            className="shrink-0 ml-auto flex items-center gap-[7px] px-4 py-2.5 rounded-[10px] border border-border text-[13px] font-semibold whitespace-nowrap transition-all duration-200 hover:shadow-sm hover:border-amber hover:text-amber"
+          >
+            <SlidersHorizontal className="size-[15px]" />
+            Filters
+          </button>
+        </div>
+
+        {/* Scroll fade indicator (mobile only) */}
+        <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-white to-transparent pointer-events-none md:hidden" />
       </div>
     </div>
   );

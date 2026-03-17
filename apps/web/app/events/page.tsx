@@ -313,7 +313,7 @@ export default async function EventsPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 [&>div>a]:w-full [&>div>a]:shrink">
+        <div className="flex gap-5 overflow-x-auto scrollbar-none pb-4 -mx-5 px-5 md:mx-0 md:px-0 md:grid md:grid-cols-2 lg:grid-cols-4 [&>div]:shrink-0 [&>div]:w-[280px] md:[&>div]:w-auto md:[&>div]:shrink">
           {events.map((event, i) => (
             <div key={i}>
               <EventCard {...event} />

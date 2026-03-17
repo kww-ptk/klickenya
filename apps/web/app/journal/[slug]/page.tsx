@@ -167,7 +167,7 @@ export default async function BlogPostPage({
         <Nav transparent={false} />
 
         {/* ── Hero ─────────────────────────────────────────────── */}
-        <section className="relative w-full h-[88vh] min-h-[520px] overflow-hidden">
+        <section className="relative w-full h-[60vh] md:h-[88vh] min-h-[400px] md:min-h-[520px] overflow-hidden">
           {/* Cover image with Ken Burns */}
           {heroImageUrl && (
             <div className="absolute inset-0 animate-[kenBurns_20s_ease-out_forwards]">
