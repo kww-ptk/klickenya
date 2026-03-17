@@ -2,8 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod/v4";
 import { createClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
+import { sanityClient } from "@/lib/sanity/client";
+import { sendToGHL } from "@/lib/integrations/ghl";
+import { propertyEnquiryConfirmationHtml } from "@/components/emails/PropertyEnquiryConfirmation";
+import { propertyEnquiryNotificationHtml } from "@/components/emails/PropertyEnquiryNotification";
 
-/* ---------- Supabase (service role for server-side inserts) ---------- */
+/* ---------- Supabase ---------- */
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -12,28 +16,35 @@ const supabase = createClient(
 
 /* ---------- Validation ---------- */
 
+const kenyanPhone = /^(\+254|0)[17]\d{8}$/;
+
 const enquirySchema = z.object({
   propertyId: z.string().min(1),
   propertyTitle: z.string().min(1),
   name: z.string().min(2, "Name must be at least 2 characters"),
   email: z.email("Invalid email address"),
-  phone: z.string().optional(),
-  message: z.string().min(10, "Message must be at least 10 characters"),
+  phone: z.string().regex(kenyanPhone, "Enter a valid Kenyan phone number (07XX or +254...)"),
+  enquiryType: z.enum([
+    "I want to buy",
+    "I want to rent",
+    "I want to arrange a viewing",
+    "I want more information",
+  ]),
+  message: z.string().optional(),
+  mortgageInterest: z.boolean().default(false),
 });
 
-/* ---------- Rate limiter: 10 requests per minute per IP ---------- */
+/* ---------- Rate limiter ---------- */
 
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
 
 function isRateLimited(ip: string): boolean {
   const now = Date.now();
   const entry = rateLimitMap.get(ip);
-
   if (!entry || now > entry.resetAt) {
     rateLimitMap.set(ip, { count: 1, resetAt: now + 60_000 });
     return false;
   }
-
   entry.count++;
   return entry.count > 10;
 }
@@ -63,24 +74,25 @@ export async function POST(request: NextRequest) {
         message: issue.message,
       }));
       return NextResponse.json(
-        { success: false, errors: fieldErrors },
+        { success: false, error: fieldErrors[0]?.message ?? "Validation failed", errors: fieldErrors },
         { status: 400 }
       );
     }
 
-    const { propertyId, propertyTitle, name, email, phone, message } =
-      parsed.data;
+    const data = parsed.data;
 
     /* Save to Supabase */
-    const { data, error: dbError } = await supabase
+    const { data: row, error: dbError } = await supabase
       .from("property_enquiries")
       .insert({
-        property_id: propertyId,
-        property_title: propertyTitle,
-        name,
-        email,
-        phone: phone ?? null,
-        message,
+        property_id: data.propertyId,
+        property_title: data.propertyTitle,
+        name: data.name,
+        email: data.email,
+        phone: data.phone,
+        enquiry_type: data.enquiryType,
+        message: data.message ?? null,
+        mortgage_interest: data.mortgageInterest,
         status: "new",
       })
       .select("id")
@@ -94,33 +106,99 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    /* Send admin notification email via Resend (non-blocking) */
-    if (process.env.RESEND_API_KEY && process.env.ADMIN_EMAIL) {
+    /* Fetch property notification emails + agent info from Sanity */
+    let notificationEmails: string[] = [];
+    let agentName: string | undefined;
+    let agentPhone: string | undefined;
+    let propertySlug: string | undefined;
+
+    try {
+      const property = await sanityClient.fetch<{
+        notificationEmail1?: string;
+        notificationEmail2?: string;
+        slug?: { current?: string };
+        agent?: { displayName?: string; phone?: string };
+      }>(
+        `*[_type == "property" && _id == $id][0]{
+          notificationEmail1, notificationEmail2, slug,
+          "agent": agent->{ displayName, phone }
+        }`,
+        { id: data.propertyId }
+      );
+      if (property?.notificationEmail1) notificationEmails.push(property.notificationEmail1);
+      if (property?.notificationEmail2) notificationEmails.push(property.notificationEmail2);
+      agentName = property?.agent?.displayName;
+      agentPhone = property?.agent?.phone;
+      propertySlug = property?.slug?.current;
+    } catch {
+      // Non-blocking
+    }
+
+    /* Send emails via Resend */
+    if (process.env.RESEND_API_KEY) {
       try {
         const resend = new Resend(process.env.RESEND_API_KEY);
+
+        // Confirmation to enquirer
         await resend.emails.send({
           from: "Klickenya <hello@klickenya.com>",
-          to: process.env.ADMIN_EMAIL,
-          subject: `New enquiry: ${propertyTitle}`,
-          html: `
-            <h2>New Property Enquiry</h2>
-            <p><strong>Property:</strong> ${propertyTitle}</p>
-            <p><strong>Property ID:</strong> ${propertyId}</p>
-            <hr />
-            <p><strong>Name:</strong> ${name}</p>
-            <p><strong>Email:</strong> ${email}</p>
-            ${phone ? `<p><strong>Phone:</strong> ${phone}</p>` : ""}
-            <p><strong>Message:</strong></p>
-            <p>${message}</p>
-          `,
+          to: data.email,
+          subject: `Your enquiry: ${data.propertyTitle}`,
+          html: propertyEnquiryConfirmationHtml({
+            enquirerName: data.name,
+            propertyTitle: data.propertyTitle,
+            enquiryType: data.enquiryType,
+            agentName,
+            agentPhone,
+          }),
         });
+
+        // Notification to admin + property notification emails
+        const adminEmail = process.env.ADMIN_EMAIL;
+        const allRecipients = [
+          ...(adminEmail ? [adminEmail] : []),
+          ...notificationEmails,
+        ].filter((e, i, arr) => arr.indexOf(e) === i); // deduplicate
+
+        if (allRecipients.length > 0) {
+          const propertyUrl = propertySlug
+            ? `https://klickenya.com/real-estate/${propertySlug}`
+            : `https://klickenya.com/real-estate`;
+
+          await resend.emails.send({
+            from: "Klickenya <hello@klickenya.com>",
+            to: allRecipients,
+            subject: `New property enquiry: ${data.propertyTitle}`,
+            html: propertyEnquiryNotificationHtml({
+              propertyTitle: data.propertyTitle,
+              propertyUrl,
+              enquirerName: data.name,
+              enquirerEmail: data.email,
+              enquirerPhone: data.phone,
+              enquiryType: data.enquiryType,
+              mortgageInterest: data.mortgageInterest,
+              message: data.message,
+            }),
+          });
+        }
       } catch (emailError) {
-        // Log but don't fail the enquiry if email sending fails
-        console.error("Admin notification email error:", emailError);
+        console.error("Email send error:", emailError);
       }
     }
 
-    return NextResponse.json({ success: true, id: data.id }, { status: 201 });
+    /* Send to GHL */
+    sendToGHL("property_enquiry.created", {
+      enquiryId: row.id,
+      propertyId: data.propertyId,
+      propertyTitle: data.propertyTitle,
+      enquiryType: data.enquiryType,
+      mortgageInterest: data.mortgageInterest,
+      name: data.name,
+      email: data.email,
+      phone: data.phone,
+    });
+
+    return NextResponse.json({ success: true, id: row.id }, { status: 201 });
   } catch (err) {
     console.error("Property enquiry error:", err);
     return NextResponse.json(

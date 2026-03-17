@@ -624,6 +624,8 @@ async function PropertyDetailView({ slug }: { slug: string }) {
                 <PropertyEnquiryForm
                   propertyId={property._id}
                   propertyTitle={property.title}
+                  price={property.price}
+                  priceType={property.priceType}
                   agentName={agent?.displayName}
                 />
               </div>
@@ -677,6 +679,8 @@ async function PropertyDetailView({ slug }: { slug: string }) {
           <PropertyEnquiryForm
             propertyId={property._id}
             propertyTitle={property.title}
+            price={property.price}
+            priceType={property.priceType}
             agentName={agent?.displayName}
           />
         </div>

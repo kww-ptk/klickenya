@@ -14,7 +14,7 @@ export const revalidate = 3600;
 
 export async function generateStaticParams() {
   const tags: string[] = await sanityClient.fetch(ALL_BLOG_TAGS_QUERY);
-  return tags.map((tag) => ({ tag }));
+  return tags.map((t) => ({ tag: t.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "") }));
 }
 
 /* ---------- Metadata ---------- */
@@ -26,7 +26,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { tag } = await params;
 
-  const label = tag.charAt(0).toUpperCase() + tag.slice(1);
+  const label = tag.split("-").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
 
   return {
     title: `${label} Travel Articles — Klickenya`,
@@ -66,12 +66,15 @@ export default async function JournalTagPage({
     notFound();
   }
 
+  // Convert URL slug to query-friendly format: "budget-travel" → "budget travel"
+  const normalizedTag = tag.replace(/-/g, " ").toLowerCase();
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const posts: BlogPost[] = await sanityClient.fetch(BLOG_POSTS_BY_TAG_QUERY, {
-    tag,
+    tag: normalizedTag,
   } as any);
 
-  const label = tag.charAt(0).toUpperCase() + tag.slice(1);
+  const label = tag.split("-").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
 
   return (
     <>

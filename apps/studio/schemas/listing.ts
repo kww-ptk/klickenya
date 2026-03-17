@@ -23,6 +23,10 @@ export default defineType({
   name: 'listing',
   title: 'Listing',
   type: 'document',
+  groups: [
+    { name: 'details', title: 'Details', default: true },
+    { name: 'notifications', title: 'Notifications' },
+  ],
   fields: [
     defineField({
       name: 'title',
@@ -30,6 +34,7 @@ export default defineType({
       type: 'string',
       description: "Clear, searchable title e.g. 'Maasai Mara Full-Day Game Drive'",
       validation: (rule) => rule.required(),
+      group: 'details',
     }),
     defineField({
       name: 'slug',
@@ -38,6 +43,7 @@ export default defineType({
       description: 'Auto-generated from title. Used in the URL.',
       options: { source: 'title', maxLength: 96 },
       validation: (rule) => rule.required(),
+      group: 'details',
     }),
     defineField({
       name: 'type',
@@ -55,6 +61,7 @@ export default defineType({
         layout: 'radio',
       },
       validation: (rule) => rule.required(),
+      group: 'details',
     }),
     defineField({
       name: 'status',
@@ -69,12 +76,14 @@ export default defineType({
         layout: 'radio',
       },
       initialValue: 'draft',
+      group: 'details',
     }),
     defineField({
       name: 'city',
       title: 'City',
       type: 'string',
       validation: (rule) => rule.required(),
+      group: 'details',
     }),
     defineField({
       name: 'county',
@@ -83,12 +92,14 @@ export default defineType({
       options: {
         list: KENYAN_COUNTIES.map((c) => ({ title: c, value: c })),
       },
+      group: 'details',
     }),
     defineField({
       name: 'address',
       title: 'Address',
       type: 'text',
       rows: 2,
+      group: 'details',
     }),
     defineField({
       name: 'price',
@@ -96,6 +107,7 @@ export default defineType({
       type: 'number',
       description: 'Price in KES',
       validation: (rule) => rule.min(0),
+      group: 'details',
     }),
     defineField({
       name: 'priceUnit',
@@ -110,6 +122,7 @@ export default defineType({
           { title: 'Per Ticket', value: 'ticket' },
         ],
       },
+      group: 'details',
     }),
     defineField({
       name: 'bookingType',
@@ -123,18 +136,21 @@ export default defineType({
         ],
       },
       initialValue: 'contact_form',
+      group: 'details',
     }),
     defineField({
       name: 'maxGuests',
       title: 'Maximum guests',
       type: 'number',
       validation: (rule) => rule.min(1),
+      group: 'details',
     }),
     defineField({
       name: 'description',
       title: 'Description',
       type: 'array',
       of: [{ type: 'block' }],
+      group: 'details',
     }),
     defineField({
       name: 'photos',
@@ -162,6 +178,7 @@ export default defineType({
           }
           return true
         }),
+      group: 'details',
     }),
     defineField({
       name: 'amenities',
@@ -171,6 +188,7 @@ export default defineType({
       options: {
         list: AMENITIES.map((a) => ({ title: a, value: a })),
       },
+      group: 'details',
     }),
     defineField({
       name: 'tags',
@@ -178,12 +196,14 @@ export default defineType({
       type: 'array',
       of: [{ type: 'string' }],
       description: "Keywords for search e.g. 'luxury', 'family-friendly', 'beachfront'",
+      group: 'details',
     }),
     defineField({
       name: 'hostName',
       title: 'Host name',
       type: 'string',
       description: 'Name of the person or business hosting this listing',
+      group: 'details',
     }),
     defineField({
       name: 'highlights',
@@ -207,6 +227,7 @@ export default defineType({
         },
       ],
       validation: (rule) => rule.max(6),
+      group: 'details',
     }),
     defineField({
       name: 'cuisine',
@@ -228,6 +249,7 @@ export default defineType({
         ],
       },
       hidden: ({document}: {document: {type?: string}}) => document?.type !== 'restaurant',
+      group: 'details',
     }),
     defineField({
       name: 'priceRange',
@@ -241,6 +263,7 @@ export default defineType({
         ],
       },
       hidden: ({document}: {document: {type?: string}}) => document?.type !== 'restaurant',
+      group: 'details',
     }),
     defineField({
       name: 'openingHours',
@@ -248,6 +271,7 @@ export default defineType({
       type: 'text',
       rows: 3,
       hidden: ({document}: {document: {type?: string}}) => document?.type !== 'restaurant',
+      group: 'details',
     }),
     defineField({
       name: 'reservationRequired',
@@ -255,12 +279,30 @@ export default defineType({
       type: 'boolean',
       initialValue: false,
       hidden: ({document}: {document: {type?: string}}) => document?.type !== 'restaurant',
+      group: 'details',
+    }),
+    defineField({
+      name: 'notificationEmail1',
+      title: 'Notification email 1 (e.g. host email)',
+      type: 'string',
+      description: 'Enquiries for this listing will also be sent here',
+      validation: (rule) => rule.email(),
+      group: 'notifications',
+    }),
+    defineField({
+      name: 'notificationEmail2',
+      title: 'Notification email 2 (e.g. co-host or manager)',
+      type: 'string',
+      description: 'A second address to copy on all enquiries',
+      validation: (rule) => rule.email(),
+      group: 'notifications',
     }),
     defineField({
       name: 'seoTitle',
       title: 'SEO title (overrides default)',
       type: 'string',
       validation: (rule) => rule.max(60),
+      group: 'details',
     }),
     defineField({
       name: 'seoDescription',
@@ -268,6 +310,7 @@ export default defineType({
       type: 'text',
       rows: 3,
       validation: (rule) => rule.max(160),
+      group: 'details',
     }),
   ],
   preview: {

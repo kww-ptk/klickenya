@@ -126,7 +126,7 @@ export const BLOG_POSTS_QUERY = groq`
 `
 
 export const BLOG_POSTS_BY_TAG_QUERY = groq`
-  *[_type == "blogPost" && status == "published" && $tag in tags] | order(publishedAt desc) {
+  *[_type == "blogPost" && status == "published" && count(tags[lower(@) == $tag]) > 0] | order(publishedAt desc) {
     _id,
     title,
     slug,

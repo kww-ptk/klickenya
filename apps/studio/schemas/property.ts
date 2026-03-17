@@ -23,6 +23,10 @@ export default defineType({
   name: 'property',
   title: 'Property',
   type: 'document',
+  groups: [
+    { name: 'details', title: 'Details', default: true },
+    { name: 'notifications', title: 'Notifications' },
+  ],
   fields: [
     defineField({
       name: 'title',
@@ -30,6 +34,7 @@ export default defineType({
       type: 'string',
       description: "e.g. '3-Bedroom Apartment in Kilimani'",
       validation: (rule) => rule.required(),
+      group: 'details',
     }),
     defineField({
       name: 'slug',
@@ -37,6 +42,7 @@ export default defineType({
       type: 'slug',
       options: { source: 'title', maxLength: 96 },
       validation: (rule) => rule.required(),
+      group: 'details',
     }),
     defineField({
       name: 'listingCategory',
@@ -52,6 +58,7 @@ export default defineType({
         layout: 'radio',
       },
       validation: (rule) => rule.required(),
+      group: 'details',
     }),
     defineField({
       name: 'propertyType',
@@ -68,6 +75,7 @@ export default defineType({
           { title: 'Commercial', value: 'commercial' },
         ],
       },
+      group: 'details',
     }),
     defineField({
       name: 'status',
@@ -83,6 +91,7 @@ export default defineType({
         ],
       },
       initialValue: 'draft',
+      group: 'details',
     }),
     defineField({
       name: 'price',
@@ -90,6 +99,7 @@ export default defineType({
       type: 'number',
       description: 'Price in KES',
       validation: (rule) => rule.required().min(0),
+      group: 'details',
     }),
     defineField({
       name: 'priceType',
@@ -102,31 +112,37 @@ export default defineType({
         ],
       },
       initialValue: 'total',
+      group: 'details',
     }),
     defineField({
       name: 'bedrooms',
       title: 'Bedrooms',
       type: 'number',
+      group: 'details',
     }),
     defineField({
       name: 'bathrooms',
       title: 'Bathrooms',
       type: 'number',
+      group: 'details',
     }),
     defineField({
       name: 'sizeSqm',
       title: 'Floor area (sqm)',
       type: 'number',
+      group: 'details',
     }),
     defineField({
       name: 'landSizeAcres',
       title: 'Land size (acres) — for land listings',
       type: 'number',
+      group: 'details',
     }),
     defineField({
       name: 'yearBuilt',
       title: 'Year Built',
       type: 'number',
+      group: 'details',
     }),
     defineField({
       name: 'neighbourhood',
@@ -134,12 +150,14 @@ export default defineType({
       type: 'string',
       description: 'e.g. Kilimani, Westlands, Karen',
       validation: (rule) => rule.required(),
+      group: 'details',
     }),
     defineField({
       name: 'city',
       title: 'City',
       type: 'string',
       validation: (rule) => rule.required(),
+      group: 'details',
     }),
     defineField({
       name: 'county',
@@ -148,16 +166,19 @@ export default defineType({
       options: {
         list: KENYAN_COUNTIES.map((c) => ({ title: c, value: c })),
       },
+      group: 'details',
     }),
     defineField({
       name: 'lat',
       title: 'Latitude',
       type: 'number',
+      group: 'details',
     }),
     defineField({
       name: 'lng',
       title: 'Longitude',
       type: 'number',
+      group: 'details',
     }),
     defineField({
       name: 'features',
@@ -167,12 +188,14 @@ export default defineType({
       options: {
         list: PROPERTY_FEATURES.map((f) => ({ title: f, value: f })),
       },
+      group: 'details',
     }),
     defineField({
       name: 'description',
       title: 'Description',
       type: 'array',
       of: [{ type: 'block' }],
+      group: 'details',
     }),
     defineField({
       name: 'photos',
@@ -200,18 +223,21 @@ export default defineType({
           }
           return true
         }),
+      group: 'details',
     }),
     defineField({
       name: 'isNewDevelopment',
       title: 'New development / off-plan',
       type: 'boolean',
       initialValue: false,
+      group: 'details',
     }),
     defineField({
       name: 'agent',
       title: 'Agent',
       type: 'reference',
       to: [{ type: 'agent' }],
+      group: 'details',
     }),
     defineField({
       name: 'isFeatured',
@@ -219,12 +245,14 @@ export default defineType({
       type: 'boolean',
       description: 'Show in featured properties section',
       initialValue: false,
+      group: 'details',
     }),
     defineField({
       name: 'previousPrice',
       title: 'Previous Price',
       type: 'number',
       description: "Previous price — shows 'Reduced' badge if set",
+      group: 'details',
     }),
     defineField({
       name: 'completionPercentage',
@@ -233,6 +261,7 @@ export default defineType({
       description: 'Completion % for new developments',
       validation: (rule) => rule.min(0).max(100),
       hidden: ({document}: {document: {isNewDevelopment?: boolean}}) => !document?.isNewDevelopment,
+      group: 'details',
     }),
     defineField({
       name: 'developerName',
@@ -240,6 +269,7 @@ export default defineType({
       type: 'string',
       description: 'Developer/builder name',
       hidden: ({document}: {document: {isNewDevelopment?: boolean}}) => !document?.isNewDevelopment,
+      group: 'details',
     }),
     defineField({
       name: 'unitsAvailable',
@@ -247,12 +277,30 @@ export default defineType({
       type: 'number',
       description: 'Units still available',
       hidden: ({document}: {document: {isNewDevelopment?: boolean}}) => !document?.isNewDevelopment,
+      group: 'details',
+    }),
+    defineField({
+      name: 'notificationEmail1',
+      title: 'Notification email 1 (e.g. agent email)',
+      type: 'string',
+      description: 'Enquiries will also be sent here',
+      validation: (rule) => rule.email(),
+      group: 'notifications',
+    }),
+    defineField({
+      name: 'notificationEmail2',
+      title: 'Notification email 2 (e.g. agency admin)',
+      type: 'string',
+      description: 'A second address to copy on all enquiries',
+      validation: (rule) => rule.email(),
+      group: 'notifications',
     }),
     defineField({
       name: 'seoTitle',
       title: 'SEO title (overrides default)',
       type: 'string',
       validation: (rule) => rule.max(60),
+      group: 'details',
     }),
     defineField({
       name: 'seoDescription',
@@ -260,6 +308,7 @@ export default defineType({
       type: 'text',
       rows: 3,
       validation: (rule) => rule.max(160),
+      group: 'details',
     }),
   ],
   preview: {
