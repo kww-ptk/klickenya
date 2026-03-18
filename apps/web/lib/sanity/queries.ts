@@ -380,6 +380,9 @@ export const DESTINATION_BY_SLUG_QUERY = groq`
     "heroImage": heroImage{ ${IMAGE_FIELDS} },
     "relatedListings": relatedListings[]->{
       ${LISTING_CARD_FIELDS}
+    },
+    "cityListings": *[_type == "listing" && status == "published" && lower(city) == lower(^.name)] | order(_createdAt desc) [0...12] {
+      ${LISTING_CARD_FIELDS}
     }
   }
 `

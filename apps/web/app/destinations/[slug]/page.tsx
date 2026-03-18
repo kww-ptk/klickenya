@@ -109,16 +109,15 @@ export default async function DestinationPage({ params }: PageProps) {
   const highlights: { title: string; description: string }[] =
     destination.highlights ?? [];
 
-  // Related listings
+  // Merge curated related listings + dynamic city listings (deduplicated)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const relatedCards: ListingCardProps[] = (destination.relatedListings ?? []).map((l: any) => {
+  const mapListing = (l: any): ListingCardProps => {
     const lSlug = l.slug?.current ?? l.slug ?? "";
     const lCity = (l.city ?? "").toLowerCase().replace(/\s+/g, "-");
     const urlType = SANITY_TYPE_TO_URL[l.type] ?? "stays";
     const photoUrl = l.coverPhoto
       ? urlForImage(l.coverPhoto).width(800).url()
       : "";
-
     return {
       id: l._id,
       title: l.title ?? "Untitled",
@@ -129,7 +128,13 @@ export default async function DestinationPage({ params }: PageProps) {
       photos: photoUrl ? [photoUrl] : [],
       href: `/${urlType}/${lCity}/${lSlug}`,
     };
-  });
+  };
+
+  const curatedCards = (destination.relatedListings ?? []).map(mapListing);
+  const cityCards = (destination.cityListings ?? []).map(mapListing);
+  const seenIds = new Set(curatedCards.map((c: ListingCardProps) => c.id));
+  const dynamicCards = cityCards.filter((c: ListingCardProps) => !seenIds.has(c.id));
+  const relatedCards = [...curatedCards, ...dynamicCards];
 
   const jsonLd = {
     "@context": "https://schema.org",
