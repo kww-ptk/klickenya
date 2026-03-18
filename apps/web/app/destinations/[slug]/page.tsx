@@ -213,42 +213,117 @@ export default async function DestinationPage({ params }: PageProps) {
         </nav>
       </div>
 
-      {/* ── Description ─────────────────────── */}
-      {destination.description && (
-        <section className="max-w-[1280px] mx-auto px-5 md:px-10 py-12">
-          <h2 className="font-display text-[clamp(24px,3vw,34px)] font-bold tracking-[-0.03em] text-dark mb-6">
-            About {destination.name}
-          </h2>
-          <PortableTextRenderer
-            value={destination.description}
-            className="max-w-[760px]"
-          />
-        </section>
-      )}
-
-      {/* ── Highlights ──────────────────────── */}
-      {highlights.length > 0 && (
-        <section className="max-w-[1280px] mx-auto px-5 md:px-10 pb-12">
-          <h2 className="font-display text-[clamp(22px,2.5vw,30px)] font-bold tracking-[-0.02em] text-dark mb-6">
-            Highlights
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {highlights.map((h, i) => (
-              <div
-                key={i}
-                className="border border-border rounded-[var(--radius-lg)] p-6 bg-white hover:shadow-sm transition-shadow"
-              >
-                <h3 className="text-[16px] font-semibold text-text mb-2">
-                  {h.title}
-                </h3>
-                <p className="text-[14px] text-text2 leading-[1.65]">
-                  {h.description}
-                </p>
+      {/* ── Main content + Sidebar ─────────── */}
+      <section className="max-w-[1280px] mx-auto px-5 md:px-10 py-12">
+        <div className="flex flex-col lg:flex-row gap-10">
+          {/* Left: Description */}
+          <div className="flex-1 min-w-0">
+            {destination.description && (
+              <div className="mb-10">
+                <h2 className="font-display text-[clamp(24px,3vw,34px)] font-bold tracking-[-0.03em] text-dark mb-6">
+                  About {destination.name}
+                </h2>
+                <PortableTextRenderer
+                  value={destination.description}
+                  className=""
+                />
               </div>
-            ))}
+            )}
+
+            {/* Highlights */}
+            {highlights.length > 0 && (
+              <div className="mb-10">
+                <h2 className="font-display text-[clamp(22px,2.5vw,30px)] font-bold tracking-[-0.02em] text-dark mb-6">
+                  Why visit {destination.name}
+                </h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {highlights.map((h: any, i: number) => (
+                    <div
+                      key={i}
+                      className="flex items-start gap-3 p-4 rounded-[var(--radius-lg)] bg-surface"
+                    >
+                      <span className="text-[22px] leading-none shrink-0 mt-0.5">{h.icon}</span>
+                      <p className="text-[14.5px] text-text leading-[1.6]">{h.text}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
-        </section>
-      )}
+
+          {/* Right: Sidebar */}
+          <aside className="w-full lg:w-[340px] shrink-0">
+            <div className="lg:sticky lg:top-[90px] space-y-6">
+              {/* Quick stats card */}
+              <div className="rounded-[var(--radius-xl)] border border-border bg-white p-6">
+                <h3 className="text-[15px] font-bold text-dark mb-4 flex items-center gap-2">
+                  <span className="text-amber">📍</span> {destination.name} at a Glance
+                </h3>
+                <div className="space-y-3">
+                  {destination.county && (
+                    <div className="flex justify-between text-[13.5px]">
+                      <span className="text-text2">County</span>
+                      <span className="font-semibold text-text">{destination.county}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between text-[13.5px]">
+                    <span className="text-text2">Country</span>
+                    <span className="font-semibold text-text">Kenya 🇰🇪</span>
+                  </div>
+                  {relatedCards.length > 0 && (
+                    <div className="flex justify-between text-[13.5px]">
+                      <span className="text-text2">Listings</span>
+                      <span className="font-semibold text-text">{relatedCards.length} on Klickenya</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between text-[13.5px]">
+                    <span className="text-text2">Currency</span>
+                    <span className="font-semibold text-text">KES (Kenyan Shilling)</span>
+                  </div>
+                  <div className="flex justify-between text-[13.5px]">
+                    <span className="text-text2">Language</span>
+                    <span className="font-semibold text-text">Swahili, English</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Ambassador CTA card */}
+              <div className="rounded-[var(--radius-xl)] bg-gradient-to-br from-[#6b2d8b] to-[#4a1a6b] p-6 text-white">
+                <div className="text-[28px] mb-3">🤝</div>
+                <h3 className="text-[16px] font-bold mb-2">
+                  Know {destination.name} well?
+                </h3>
+                <p className="text-[13.5px] text-white/75 leading-[1.6] mb-4">
+                  Become a Klickenya Ambassador for {destination.name}. Help travelers discover the best local spots and earn while sharing what you love.
+                </p>
+                <Link
+                  href="/how-it-works"
+                  className="inline-block w-full text-center rounded-[var(--radius-md)] bg-white text-[#6b2d8b] text-[13.5px] font-bold py-2.5 hover:bg-white/90 transition-colors"
+                >
+                  Become an Ambassador
+                </Link>
+              </div>
+
+              {/* List your space CTA */}
+              <div className="rounded-[var(--radius-xl)] border border-amber/25 bg-amber/5 p-6">
+                <div className="text-[28px] mb-3">🏠</div>
+                <h3 className="text-[15px] font-bold text-dark mb-2">
+                  Have a listing in {destination.name}?
+                </h3>
+                <p className="text-[13.5px] text-text2 leading-[1.6] mb-4">
+                  Get discovered by thousands of travelers looking for stays, experiences, and services in {destination.name}.
+                </p>
+                <Link
+                  href="/how-it-works"
+                  className="inline-block w-full text-center rounded-[var(--radius-md)] bg-amber text-white text-[13.5px] font-bold py-2.5 hover:bg-amber/90 transition-colors"
+                >
+                  List Your Space
+                </Link>
+              </div>
+            </div>
+          </aside>
+        </div>
+      </section>
 
       {/* ── Related listings ────────────────── */}
       {relatedCards.length > 0 && (
@@ -259,6 +334,34 @@ export default async function DestinationPage({ params }: PageProps) {
           <ListingGrid listings={relatedCards} columns={4} />
         </section>
       )}
+
+      {/* ── Ambassador Banner ────────────────── */}
+      <section className="max-w-[1280px] mx-auto px-5 md:px-10 pb-16">
+        <div className="relative overflow-hidden rounded-[var(--radius-xl)] bg-gradient-to-r from-[#6b2d8b] via-[#5a2378] to-[#4a1a6b] px-8 md:px-14 py-12 md:py-16">
+          <div className="absolute inset-0 opacity-10">
+            <div className="absolute top-[-50%] right-[-20%] w-[60%] h-[200%] rounded-full bg-amber/30 blur-[80px]" />
+            <div className="absolute bottom-[-30%] left-[-10%] w-[40%] h-[160%] rounded-full bg-white/20 blur-[60px]" />
+          </div>
+          <div className="relative z-10 max-w-[600px]">
+            <span className="inline-block rounded-full bg-white/15 backdrop-blur-[8px] px-3.5 py-1 text-[12px] font-bold text-white/90 mb-5">
+              📣 Ambassador Program
+            </span>
+            <h2 className="font-display text-[clamp(24px,3vw,36px)] font-bold tracking-[-0.03em] text-white leading-[1.12] mb-4">
+              Share your love for {destination.name}
+            </h2>
+            <p className="text-[15px] text-white/70 leading-[1.65] mb-6">
+              We are looking for passionate locals and frequent visitors to represent {destination.name} on Klickenya. Help travelers discover hidden gems, earn commissions, and be part of Kenya&apos;s fastest growing travel platform.
+            </p>
+            <Link
+              href="/how-it-works"
+              className="inline-flex items-center gap-2 rounded-full bg-white text-[#6b2d8b] px-7 py-3 text-[14px] font-bold hover:bg-white/90 transition-colors"
+            >
+              Learn More
+              <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" /></svg>
+            </Link>
+          </div>
+        </div>
+      </section>
 
       {/* ── Explore more destinations ────────── */}
       <section className="bg-surface py-14 md:py-20">
