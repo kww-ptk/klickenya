@@ -16,10 +16,18 @@ const NAV_ITEMS = [
 // Routes where the bottom nav should be hidden
 const HIDDEN_ROUTES = ["/admin", "/studio", "/api"];
 
+// Pattern: /<type>/<city>/<slug> — listing detail pages have 3+ segments
+function isListingDetail(path: string): boolean {
+  const types = ["stays", "experiences", "events", "rentals", "services", "restaurants"];
+  const segments = path.split("/").filter(Boolean);
+  return segments.length >= 3 && types.includes(segments[0]);
+}
+
 function MobileBottomNav() {
   const pathname = usePathname();
 
   if (HIDDEN_ROUTES.some((r) => pathname.startsWith(r))) return null;
+  if (isListingDetail(pathname)) return null;
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-[200] md:hidden bg-white border-t border-border pb-[env(safe-area-inset-bottom)]">

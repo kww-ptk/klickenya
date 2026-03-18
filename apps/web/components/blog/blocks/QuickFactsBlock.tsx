@@ -16,7 +16,7 @@ export function QuickFactsBlock({ value }: { value: QuickFactsValue }) {
             <div key={i} className="p-4 bg-white/[.04] border border-white/[.06] rounded-[16px]">
               {item.icon && <div className="text-[22px] mb-2">{item.icon}</div>}
               {item.label && <div className="text-[11px] font-bold text-white/35 uppercase tracking-[.05em] mb-1">{item.label}</div>}
-              {item.value && <div className="text-[15px] font-bold text-white">{item.value}</div>}
+              {item.value && <div className="text-[15px] font-bold text-white break-words">{item.value}</div>}
             </div>
           ))}
         </div>
