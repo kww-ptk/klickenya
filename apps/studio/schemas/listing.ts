@@ -149,7 +149,17 @@ export default defineType({
       name: 'description',
       title: 'Description',
       type: 'array',
-      of: [{ type: 'block' }],
+      of: [
+        { type: 'block' },
+        { type: 'quickFactsBlock' },
+        { type: 'tipCardBlock' },
+        { type: 'packingListBlock' },
+        { type: 'budgetTableBlock' },
+        { type: 'whoIsItForBlock' },
+        { type: 'pullQuoteBlock' },
+        { type: 'photoRowBlock' },
+        { type: 'statRowBlock' },
+      ],
       group: 'details',
     }),
     defineField({
