@@ -13,17 +13,17 @@ interface Category {
 }
 
 const CATEGORIES: Category[] = [
-  { id: "all", icon: "✨", label: "All", href: "/stays" },
+  { id: "all", icon: "✨", label: "All", href: "/" },
   { id: "stays", icon: "🏠", label: "Stays", href: "/stays" },
-  { id: "experiences", icon: "🦁", label: "Experiences", href: "/stays?category=experiences" },
-  { id: "beach", icon: "🏖️", label: "Beach", href: "/stays?category=beach" },
+  { id: "experiences", icon: "🦁", label: "Experiences", href: "/experiences" },
+  { id: "beach", icon: "🏖️", label: "Beach", href: "/destinations" },
   { id: "events", icon: "🎉", label: "Events", href: "/events" },
-  { id: "restaurants", icon: "🍽️", label: "Restaurants", href: "/stays?category=restaurants" },
-  { id: "rentals", icon: "🚗", label: "Rentals", href: "/stays?category=rentals" },
-  { id: "services", icon: "✂️", label: "Services", href: "/stays?category=services" },
-  { id: "mountain", icon: "⛰️", label: "Mountain", href: "/stays?category=mountain" },
-  { id: "lakeside", icon: "🌊", label: "Lakeside", href: "/stays?category=lakeside" },
-  { id: "culture", icon: "🎨", label: "Culture", href: "/stays?category=culture" },
+  { id: "restaurants", icon: "🍽️", label: "Restaurants", href: "/restaurants" },
+  { id: "rentals", icon: "🚗", label: "Rentals", href: "/rentals" },
+  { id: "services", icon: "✂️", label: "Services", href: "/services" },
+  { id: "mountain", icon: "⛰️", label: "Mountain", href: "/destinations" },
+  { id: "lakeside", icon: "🌊", label: "Lakeside", href: "/destinations" },
+  { id: "culture", icon: "🎨", label: "Culture", href: "/destinations" },
 ];
 
 interface CategoryNavProps {
