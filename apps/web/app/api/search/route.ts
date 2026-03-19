@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { searchListings, searchBlogPosts } from "@/lib/supabase/queries";
 import { sanityClient } from "@/lib/sanity/client";
 import { groq } from "next-sanity";
 import { adminClient } from "@/lib/supabase/admin";
@@ -20,14 +19,41 @@ function isRateLimited(ip: string): boolean {
   return entry.count > 30;
 }
 
-/* ── Sanity destination search ────────────────────── */
+/* ── Sanity search queries ────────────────────────── */
+
+const SEARCH_LISTINGS_QUERY = groq`
+  *[_type == "listing" && status == "published" && (
+    title match $q ||
+    city match $q ||
+    county match $q ||
+    description match $q ||
+    $qLower in tags[]
+  )
+    && select($type != "" => type == $type, true)
+    && select($city != "" => lower(city) == lower($city), true)
+    && select($sub != "" => subcategory == $sub, true)
+  ] | order(_createdAt desc) [0...$limit] {
+    _id,
+    title,
+    "slug": slug.current,
+    type,
+    subcategory,
+    city,
+    county,
+    price,
+    "price_unit": priceUnit,
+    "photos": photos[].asset->url,
+    tags,
+    "avg_rating": null
+  }
+`;
 
 const SEARCH_DESTINATIONS_QUERY = groq`
   *[_type == "destination" && (
     name match $q ||
     city match $q ||
     tagline match $q
-  )] | order(name asc) [0..2] {
+  )] | order(name asc) [0..5] {
     _id,
     name,
     "slug": slug.current,
@@ -37,32 +63,21 @@ const SEARCH_DESTINATIONS_QUERY = groq`
   }
 `;
 
-/* ── Trigram fallback query ───────────────────────── */
-
-async function trigramFallback(
-  query: string,
-  type?: string,
-  city?: string,
-  limit = 6
-) {
-  const supabase = adminClient;
-
-  // Build the raw SQL via rpc or use .from() with ilike as a simpler fallback
-  // Since Supabase JS client doesn't expose similarity(), use rpc with raw SQL
-  const { data, error } = await supabase.rpc("search_listings_trigram", {
-    search_query: query,
-    listing_type_filter: type ?? null,
-    city_filter: city ?? null,
-    result_limit: limit,
-  });
-
-  if (error) {
-    console.error("Trigram fallback error:", error);
-    return [];
+const SEARCH_BLOG_POSTS_QUERY = groq`
+  *[_type == "blogPost" && status == "published" && (
+    title match $q ||
+    excerpt match $q
+  )] | order(publishedAt desc) [0..3] {
+    _id,
+    title,
+    "slug": slug.current,
+    excerpt,
+    tags,
+    readingTime,
+    publishedAt,
+    "coverImage": coverImage.asset->url
   }
-
-  return data ?? [];
-}
+`;
 
 /* ── Async search log (fire-and-forget) ───────────── */
 
@@ -100,23 +115,22 @@ export async function GET(request: NextRequest) {
 
   const { searchParams } = request.nextUrl;
   const q = searchParams.get("q")?.trim() || "";
-  const type = searchParams.get("type") || undefined;
-  const city = searchParams.get("city") || undefined;
-  const subcategory = searchParams.get("sub") || undefined;
-  const tags = searchParams.get("tags")?.split(",").filter(Boolean) || [];
-  const limit = parseInt(searchParams.get("limit") || "6", 10);
+  const type = searchParams.get("type") || "";
+  const city = searchParams.get("city") || "";
+  const sub = searchParams.get("sub") || "";
+  const limit = Math.min(parseInt(searchParams.get("limit") || "12", 10), 50);
 
-  // Store but don't filter — these are used for search context
+  // Store for search context
   const checkin = searchParams.get("checkin") || undefined;
   const checkout = searchParams.get("checkout") || undefined;
   const guests = searchParams.get("guests")
     ? parseInt(searchParams.get("guests")!, 10)
     : undefined;
 
-  // Allow empty q if city is provided — return listings filtered by city
-  if (!q && !city) {
+  // Allow empty q if city or type is provided
+  if (!q && !city && !type) {
     return NextResponse.json(
-      { error: "Query or city must be provided." },
+      { error: "Query, city, or type must be provided." },
       { status: 400 }
     );
   }
@@ -129,96 +143,70 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    // Run all searches in parallel
-    const [listingsRaw, posts, destinations] = await Promise.all([
-      // 1. Supabase listings (full-text or city-only)
-      q
-        ? searchListings(q, type, city)
-        : (async () => {
-            // City-only: direct query without full-text search
-            const { createClient } = await import("@/lib/supabase/server");
-            const supabase = await createClient();
-            let query = supabase
-              .from("listings")
-              .select(
-                "id, title, slug, type, subcategory, city, county, price, price_unit, photos, avg_rating, status"
-              )
-              .eq("status", "published");
+    // Use wildcard match for Sanity's `match` operator
+    const searchTerm = q ? `${q}*` : "*";
+    const qLower = q.toLowerCase();
 
-            if (city) query = query.ilike("city", city);
-            if (type) query = query.eq("type", type);
+    // Run all Sanity searches in parallel
+    const [listings, destinations, posts] = await Promise.all([
+      // 1. Listings from Sanity
+      sanityClient
+        .fetch(SEARCH_LISTINGS_QUERY, {
+          q: searchTerm,
+          qLower,
+          type,
+          city,
+          sub,
+          limit,
+        })
+        .catch((err) => {
+          console.error("Listing search error:", err);
+          return [];
+        }),
 
-            const { data, error } = await query
-              .order("published_at", { ascending: false })
-              .limit(limit);
-
-            if (error) throw error;
-            return data ?? [];
-          })(),
-
-      // 2. Blog posts (only if q is provided)
-      q ? searchBlogPosts(q) : Promise.resolve([]),
-
-      // 3. Sanity destinations (only if q is provided)
+      // 2. Destinations from Sanity (only if q provided)
       q
         ? sanityClient
-            .fetch(SEARCH_DESTINATIONS_QUERY, { q: `${q}*` })
+            .fetch(SEARCH_DESTINATIONS_QUERY, { q: searchTerm })
+            .catch(() => [])
+        : Promise.resolve([]),
+
+      // 3. Blog posts from Sanity (only if q provided)
+      q
+        ? sanityClient
+            .fetch(SEARCH_BLOG_POSTS_QUERY, { q: searchTerm })
             .catch(() => [])
         : Promise.resolve([]),
     ]);
 
-    // ── Trigram fallback: if FTS returned fewer than 3 listings ──
-    let listings = listingsRaw;
+    // Map Sanity _id to id for frontend compatibility
+    const mappedListings = (listings ?? []).map(
+      (l: Record<string, unknown>) => ({
+        ...l,
+        id: l._id,
+      })
+    );
 
-    if (q && listings.length < 3) {
-      const trigramResults = await trigramFallback(q, type, city, limit);
-
-      // Merge without duplicates (by id)
-      const existingIds = new Set(
-        listings.map((l: Record<string, unknown>) => l.id)
-      );
-      const newResults = trigramResults.filter(
-        (r: Record<string, unknown>) => !existingIds.has(r.id)
-      );
-      listings = [...listings, ...newResults];
-    }
-
-    // Post-filter listings by subcategory and tags
-    if (subcategory) {
-      listings = listings.filter(
-        (l: Record<string, unknown>) => l.subcategory === subcategory
-      );
-    }
-    if (tags.length > 0) {
-      listings = listings.filter((l: Record<string, unknown>) =>
-        tags.every((tag) =>
-          (Array.isArray(l.tags) ? l.tags : []).includes(tag)
-        )
-      );
-    }
-
-    // Trim to limit
-    listings = listings.slice(0, limit);
-
-    const totalResults = listings.length + posts.length + destinations.length;
+    const totalResults =
+      mappedListings.length +
+      (posts ?? []).length +
+      (destinations ?? []).length;
 
     // Log search async — never blocks response
     if (q) {
-      logSearch(q, totalResults, type, city);
+      logSearch(q, totalResults, type || undefined, city || undefined);
     }
 
     return NextResponse.json({
       query: q,
-      listings,
-      posts,
-      destinations,
+      listings: mappedListings,
+      posts: posts ?? [],
+      destinations: destinations ?? [],
       total: totalResults,
-      // Echo back search context for the client
       context: {
-        type,
-        city,
-        subcategory,
-        tags: tags.length > 0 ? tags : undefined,
+        type: type || undefined,
+        city: city || undefined,
+        subcategory: sub || undefined,
         checkin,
         checkout,
         guests,

@@ -87,7 +87,10 @@ export function SearchDropdown({
 
     (res.listings ?? []).forEach((l: ListingResult) => {
       const base = TYPE_META[l.type]?.path ?? "/stays";
-      items.push({ href: `${base}/${l.slug}`, type: "listing" });
+      const citySlug = l.city
+        ? encodeURIComponent(l.city.toLowerCase().replace(/\s+/g, "-"))
+        : "kenya";
+      items.push({ href: `${base}/${citySlug}/${l.slug}`, type: "listing" });
     });
 
     return items;
@@ -268,6 +271,11 @@ export function SearchDropdown({
               {items.map((l) => {
                 const idx = itemIdx++;
                 const photo = l.photos?.[0];
+                const citySlug = l.city
+                  ? encodeURIComponent(
+                      l.city.toLowerCase().replace(/\s+/g, "-")
+                    )
+                  : "kenya";
                 const subLabel = l.subcategory
                   ? SUBCATEGORY_LABELS[l.subcategory] ?? l.subcategory
                   : null;
@@ -279,7 +287,7 @@ export function SearchDropdown({
                 return (
                   <Link
                     key={l.id}
-                    href={`${meta.path}/${l.slug}`}
+                    href={`${meta.path}/${citySlug}/${l.slug}`}
                     onClick={onClose}
                     data-search-item
                     className={cn(

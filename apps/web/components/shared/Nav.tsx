@@ -211,15 +211,33 @@ function Nav({ transparent = false }: NavProps) {
             ) : (
               /* ── Collapsed: static labels ─────── */
               <>
-                <span className="flex-1 text-[13px] font-semibold text-text2">
+                <span
+                  className="flex-1 text-[13px] font-semibold text-text2 hover:text-text transition-colors cursor-pointer"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setPillExpanded(true);
+                  }}
+                >
                   Anywhere
                 </span>
                 <span className="w-px h-4 bg-border mx-2.5" />
-                <span className="text-[13px] font-semibold text-text2">
+                <span
+                  className="text-[13px] font-semibold text-text2 hover:text-text transition-colors cursor-pointer"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setMegaOpen(true);
+                  }}
+                >
                   Any time
                 </span>
                 <span className="w-px h-4 bg-border mx-2.5" />
-                <span className="text-[13px] font-semibold text-text2">
+                <span
+                  className="text-[13px] font-semibold text-text2 hover:text-text transition-colors cursor-pointer"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setMegaOpen(true);
+                  }}
+                >
                   Any type
                 </span>
               </>

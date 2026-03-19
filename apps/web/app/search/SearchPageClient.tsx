@@ -462,20 +462,25 @@ export function SearchPageClient({
                           </span>
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                          {items.map((l) => (
-                            <ListingCard
-                              key={l.id}
-                              id={l.id}
-                              title={l.title}
-                              city={l.city ?? ""}
-                              price={l.price ?? null}
-                              priceUnit={l.price_unit}
-                              rating={l.avg_rating}
-                              type={l.type as "stay" | "experience" | "event" | "service" | "restaurant" | "rental"}
-                              photos={l.photos ?? []}
-                              href={`${meta.path}/${l.slug}`}
-                            />
-                          ))}
+                          {items.map((l) => {
+                            const citySlug = l.city
+                              ? encodeURIComponent(l.city.toLowerCase().replace(/\s+/g, "-"))
+                              : "kenya";
+                            return (
+                              <ListingCard
+                                key={l.id}
+                                id={l.id}
+                                title={l.title}
+                                city={l.city ?? ""}
+                                price={l.price ?? null}
+                                priceUnit={l.price_unit}
+                                rating={l.avg_rating}
+                                type={l.type as "stay" | "experience" | "event" | "service" | "restaurant" | "rental"}
+                                photos={l.photos ?? []}
+                                href={`${meta.path}/${citySlug}/${l.slug}`}
+                              />
+                            );
+                          })}
                         </div>
                       </div>
                     );
@@ -488,6 +493,9 @@ export function SearchPageClient({
                       const meta = TYPE_META[l.type] ?? {
                         path: "/stays",
                       };
+                      const citySlug = l.city
+                        ? encodeURIComponent(l.city.toLowerCase().replace(/\s+/g, "-"))
+                        : "kenya";
                       return (
                         <ListingCard
                           key={l.id}
@@ -499,7 +507,7 @@ export function SearchPageClient({
                           rating={l.avg_rating}
                           type={l.type as "stay" | "experience" | "event" | "service" | "restaurant" | "rental"}
                           photos={l.photos ?? []}
-                          href={`${meta.path}/${l.slug}`}
+                          href={`${meta.path}/${citySlug}/${l.slug}`}
                         />
                       );
                     })}
