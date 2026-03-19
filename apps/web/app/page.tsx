@@ -23,7 +23,7 @@ import { Nav } from "@/components/shared/Nav";
 import { Footer } from "@/components/shared/Footer";
 import { ListingCard } from "@/components/listings/ListingCard";
 import { CategoryNav } from "@/components/listings/CategoryNav";
-import { HeroSearch } from "@/components/home/HeroSearch";
+import { HeroSearchSimple } from "@/components/home/HeroSearchSimple";
 import { MarqueeTicker } from "@/components/home/MarqueeTicker";
 import { EventCard } from "@/components/home/EventCard";
 import { PostCard } from "@/components/blog/PostCard";
@@ -183,12 +183,12 @@ export default async function HomePage() {
             {homePage?.heroSubtitle ?? "Book unique stays, experiences, events, restaurants, and services across all 47 counties — all in one place."}
           </p>
 
-          {/* Search box */}
+          {/* Search bar */}
           <div
             className="w-full animate-fade-up"
             style={{ animationDelay: "0.3s" }}
           >
-            <HeroSearch />
+            <HeroSearchSimple />
           </div>
 
           {/* Stats row */}
