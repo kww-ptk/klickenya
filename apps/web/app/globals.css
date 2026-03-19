@@ -105,8 +105,8 @@ body {
 /* ─── Search Dropdown ────────────────────────────────────────── */
 
 @keyframes searchDropdown {
-  from { opacity: 0; transform: translateY(-6px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from { transform: translateY(-6px) scale(0.98); }
+  to   { transform: translateY(0) scale(1); }
 }
 
 .animate-search-dropdown {
