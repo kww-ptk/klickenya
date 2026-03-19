@@ -359,8 +359,11 @@ export function SearchDropdown({
 function Wrapper({ children }: { children: React.ReactNode }) {
   return (
     <div
-      className="absolute top-[calc(100%+8px)] left-0 right-0 z-[300] bg-white border border-border rounded-[var(--radius-xl)] overflow-hidden animate-search-dropdown"
-      style={{ boxShadow: "var(--shadow-lg)" }}
+      className="absolute top-[calc(100%+8px)] left-0 right-0 z-[300] border border-border rounded-[var(--radius-xl)] overflow-hidden animate-search-dropdown"
+      style={{
+        boxShadow: "0 12px 40px rgba(0,0,0,0.15), 0 0 0 1px rgba(0,0,0,0.04)",
+        backgroundColor: "#ffffff",
+      }}
     >
       {children}
     </div>
