@@ -2,7 +2,7 @@
 -- Run against Supabase SQL Editor
 
 -- 1. Enable pg_trgm extension for fuzzy/similarity search
-CREATE EXTENSION IF NOT EXISTS pg_trgm;
+CREATE EXTENSION IF NOT EXISTS pg_trgm SCHEMA public;
 
 -- 2. Trigram GIN indexes for fuzzy matching on title and city
 CREATE INDEX IF NOT EXISTS listings_title_trgm
@@ -39,12 +39,12 @@ AS $$
   FROM listings
   WHERE status = 'published'
     AND (
-      similarity(title, search_query) > 0.2
-      OR similarity(city, search_query) > 0.3
+      public.similarity(title, search_query) > 0.2
+      OR public.similarity(city, search_query) > 0.3
     )
-    AND (listing_type_filter IS NULL OR type = listing_type_filter)
+    AND (listing_type_filter IS NULL OR type::text = listing_type_filter)
     AND (city_filter IS NULL OR city ILIKE city_filter)
-  ORDER BY similarity(title, search_query) DESC
+  ORDER BY public.similarity(title, search_query) DESC
   LIMIT result_limit;
 $$;
 
