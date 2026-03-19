@@ -30,7 +30,7 @@ interface ListingResult {
   avg_rating?: number;
 }
 
-interface SearchResults {
+export interface SearchResults {
   query: string;
   listings: ListingResult[];
   posts: Record<string, unknown>[];
@@ -39,7 +39,8 @@ interface SearchResults {
 }
 
 interface SearchDropdownProps {
-  results: SearchResults | null;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  results: any;
   isLoading: boolean;
   isOpen: boolean;
   query: string;
@@ -72,25 +73,28 @@ export function SearchDropdown({
   const listRef = useRef<HTMLDivElement>(null);
   const [focusIndex, setFocusIndex] = useState(-1);
 
+  // Cast results
+  const res = results as SearchResults | null;
+
   // Build flat list of focusable items
   const allItems = useCallback(() => {
-    if (!results) return [];
+    if (!res) return [];
     const items: Array<{ href: string; type: "destination" | "listing" }> = [];
 
-    results.destinations.forEach((d) =>
+    (res.destinations ?? []).forEach((d: Destination) =>
       items.push({ href: `/destinations/${d.slug}`, type: "destination" })
     );
 
-    results.listings.forEach((l) => {
+    (res.listings ?? []).forEach((l: ListingResult) => {
       const base = TYPE_META[l.type]?.path ?? "/stays";
       items.push({ href: `${base}/${l.slug}`, type: "listing" });
     });
 
     return items;
-  }, [results]);
+  }, [res]);
 
   // Reset focus when results change
-  useEffect(() => setFocusIndex(-1), [results]);
+  useEffect(() => setFocusIndex(-1), [res]);
 
   // Keyboard navigation
   useEffect(() => {
@@ -132,7 +136,7 @@ export function SearchDropdown({
   if (!isOpen) return null;
 
   /* ── Loading skeleton ──────────────────────────── */
-  if (isLoading && !results) {
+  if (isLoading && !res) {
     return (
       <Wrapper>
         <div className="p-4 space-y-3">
@@ -151,7 +155,7 @@ export function SearchDropdown({
   }
 
   /* ── Empty state ───────────────────────────────── */
-  if (results && results.total === 0) {
+  if (res && res.total === 0) {
     return (
       <Wrapper>
         <div className="py-10 px-6 text-center">
@@ -179,11 +183,11 @@ export function SearchDropdown({
     );
   }
 
-  if (!results) return null;
+  if (!res) return null;
 
   /* ── Group listings by type ────────────────────── */
   const grouped: Record<string, ListingResult[]> = {};
-  results.listings.forEach((l) => {
+  (res.listings ?? []).forEach((l: ListingResult) => {
     const t = l.type || "stay";
     if (!grouped[t]) grouped[t] = [];
     if (grouped[t].length < 3) grouped[t].push(l);
@@ -195,12 +199,12 @@ export function SearchDropdown({
     <Wrapper>
       <div ref={listRef} className="max-h-[480px] overflow-y-auto">
         {/* ── Destinations ──────────────────────── */}
-        {results.destinations.length > 0 && (
+        {(res.destinations ?? []).length > 0 && (
           <div className="px-4 pt-3 pb-2">
             <p className="text-[10.5px] font-bold text-amber uppercase tracking-[0.06em] mb-2">
               📍 Destinations
             </p>
-            {results.destinations.map((d) => {
+            {(res.destinations as Destination[]).map((d) => {
               const idx = itemIdx++;
               return (
                 <Link
@@ -326,7 +330,7 @@ export function SearchDropdown({
         {/* ── Footer ───────────────────────────── */}
         <div className="flex items-center justify-between px-5 py-3 border-t border-border bg-surface/50">
           <span className="text-[12px] text-text3">
-            {results.total} result{results.total !== 1 ? "s" : ""} for
+            {res.total} result{res.total !== 1 ? "s" : ""} for
             &ldquo;{query}&rdquo;
           </span>
           <Link
