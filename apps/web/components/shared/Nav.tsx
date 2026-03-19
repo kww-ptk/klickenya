@@ -2,11 +2,13 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useState, useEffect, useRef } from "react";
-import { usePathname } from "next/navigation";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import { Search, Menu, X, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useScrollPosition } from "@/hooks/useScrollPosition";
+import { useSearch } from "@/hooks/useSearch";
+import { SearchDropdown } from "@/components/search/SearchDropdown";
 import { Button } from "@/components/ui/Button";
 import {
   SUBCATEGORIES_BY_TYPE,
@@ -34,19 +36,28 @@ const NAV_LINKS: Array<{ href: string; label: string; badge?: string }> = [
 ];
 
 function Nav({ transparent = false }: NavProps) {
+  const router = useRouter();
   const scrolled = useScrollPosition(50);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [megaOpen, setMegaOpen] = useState(false);
+  const [pillExpanded, setPillExpanded] = useState(false);
   const megaRef = useRef<HTMLDivElement>(null);
   const megaDropRef = useRef<HTMLDivElement>(null);
+  const pillRef = useRef<HTMLDivElement>(null);
+  const pillInputRef = useRef<HTMLInputElement>(null);
   const megaTimeout = useRef<ReturnType<typeof setTimeout>>(undefined);
   const pathname = usePathname();
+
+  // Search hook for the pill
+  const { query: pillQuery, setQuery: setPillQuery, results: pillResults, isLoading: pillLoading, isOpen: pillSearchOpen, setIsOpen: setPillSearchOpen, clear: pillClear } = useSearch();
 
   // Close menus on route change
   useEffect(() => {
     setMobileOpen(false);
     setMegaOpen(false);
-  }, [pathname]);
+    setPillExpanded(false);
+    pillClear();
+  }, [pathname, pillClear]);
 
   // Close mega menu when clicking outside (delayed to avoid same-click race)
   useEffect(() => {
@@ -69,6 +80,52 @@ function Nav({ transparent = false }: NavProps) {
   }, [megaOpen]);
 
   const solid = !transparent || scrolled;
+
+  // Close pill when clicking outside
+  useEffect(() => {
+    if (!pillExpanded) return;
+    function handleClick(e: MouseEvent) {
+      if (pillRef.current && !pillRef.current.contains(e.target as Node)) {
+        setPillExpanded(false);
+        pillClear();
+      }
+    }
+    const id = requestAnimationFrame(() => {
+      document.addEventListener("mousedown", handleClick);
+    });
+    return () => {
+      cancelAnimationFrame(id);
+      document.removeEventListener("mousedown", handleClick);
+    };
+  }, [pillExpanded, pillClear]);
+
+  // Close pill on Escape
+  useEffect(() => {
+    if (!pillExpanded) return;
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        setPillExpanded(false);
+        pillClear();
+      }
+    }
+    document.addEventListener("keydown", handleKey);
+    return () => document.removeEventListener("keydown", handleKey);
+  }, [pillExpanded, pillClear]);
+
+  // Auto-focus input when pill expands
+  useEffect(() => {
+    if (pillExpanded) {
+      setTimeout(() => pillInputRef.current?.focus(), 50);
+    }
+  }, [pillExpanded]);
+
+  const handlePillSearch = useCallback(() => {
+    if (pillQuery.trim()) {
+      router.push(`/search?q=${encodeURIComponent(pillQuery.trim())}`);
+      setPillExpanded(false);
+      pillClear();
+    }
+  }, [pillQuery, router, pillClear]);
 
   const handleMegaEnter = () => {
     clearTimeout(megaTimeout.current);
@@ -110,28 +167,89 @@ function Nav({ transparent = false }: NavProps) {
 
           {/* Condensed search pill — visible on scroll */}
           <div
+            ref={pillRef}
             className={cn(
-              "hidden md:flex flex-1 max-w-[340px] items-center bg-white border border-border rounded-full py-2 pl-[18px] pr-2 shadow-sm cursor-pointer transition-all duration-300",
-              "hover:shadow-md",
+              "hidden md:flex relative items-center bg-white border border-border rounded-full py-2 pl-[18px] pr-2 shadow-sm transition-all duration-200 ease-out",
+              pillExpanded
+                ? "flex-1 max-w-[560px] shadow-md"
+                : "flex-1 max-w-[340px] cursor-pointer hover:shadow-md",
               solid
                 ? "opacity-100 translate-y-0 pointer-events-auto"
                 : "opacity-0 -translate-y-1.5 pointer-events-none"
             )}
+            onClick={() => {
+              if (!pillExpanded) setPillExpanded(true);
+            }}
           >
-            <span className="flex-1 text-[13px] font-semibold text-text2">
-              Anywhere
-            </span>
-            <span className="w-px h-4 bg-border mx-2.5" />
-            <span className="text-[13px] font-semibold text-text2">
-              Any time
-            </span>
-            <span className="w-px h-4 bg-border mx-2.5" />
-            <span className="text-[13px] font-semibold text-text2">
-              Any type
-            </span>
-            <div className="ml-2 size-8 rounded-full bg-amber flex items-center justify-center shrink-0">
+            {pillExpanded ? (
+              /* ── Expanded: input mode ─────────── */
+              <>
+                <input
+                  ref={pillInputRef}
+                  type="text"
+                  value={pillQuery}
+                  onChange={(e) => setPillQuery(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") handlePillSearch();
+                  }}
+                  placeholder="Search stays, experiences, destinations..."
+                  className="flex-1 text-[13px] text-text bg-transparent outline-none placeholder:text-text3 min-w-0"
+                />
+                {pillQuery && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      pillClear();
+                      pillInputRef.current?.focus();
+                    }}
+                    className="shrink-0 size-5 rounded-full bg-surface flex items-center justify-center hover:bg-border transition-colors mr-1"
+                  >
+                    <X className="size-3 text-text3" />
+                  </button>
+                )}
+              </>
+            ) : (
+              /* ── Collapsed: static labels ─────── */
+              <>
+                <span className="flex-1 text-[13px] font-semibold text-text2">
+                  Anywhere
+                </span>
+                <span className="w-px h-4 bg-border mx-2.5" />
+                <span className="text-[13px] font-semibold text-text2">
+                  Any time
+                </span>
+                <span className="w-px h-4 bg-border mx-2.5" />
+                <span className="text-[13px] font-semibold text-text2">
+                  Any type
+                </span>
+              </>
+            )}
+
+            {/* Amber search button — always visible */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                if (pillExpanded && pillQuery.trim()) {
+                  handlePillSearch();
+                } else if (!pillExpanded) {
+                  setPillExpanded(true);
+                }
+              }}
+              className="ml-2 size-8 rounded-full bg-amber flex items-center justify-center shrink-0 hover:shadow-md transition-shadow"
+            >
               <Search className="size-3.5 text-white" strokeWidth={2.5} />
-            </div>
+            </button>
+
+            {/* Search dropdown */}
+            {pillExpanded && (
+              <SearchDropdown
+                results={pillResults}
+                isLoading={pillLoading}
+                isOpen={pillSearchOpen}
+                query={pillQuery}
+                onClose={() => setPillSearchOpen(false)}
+              />
+            )}
           </div>
 
           {/* Desktop links */}
