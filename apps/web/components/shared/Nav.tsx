@@ -14,9 +14,11 @@ interface NavProps {
 }
 
 const NAV_LINKS: Array<{ href: string; label: string; badge?: string }> = [
-  { href: "/stays", label: "Explore" },
-  { href: "/real-estate", label: "Real Estate", badge: "Property" },
+  { href: "/stays", label: "Stays" },
+  { href: "/experiences", label: "Experiences" },
   { href: "/events", label: "Events" },
+  { href: "/services", label: "Services" },
+  { href: "/real-estate", label: "Real Estate", badge: "Property" },
   { href: "/destinations", label: "Destinations" },
   { href: "/journal", label: "Journal" },
 ];
