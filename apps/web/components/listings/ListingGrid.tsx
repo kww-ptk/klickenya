@@ -16,9 +16,9 @@ const colClasses = {
 };
 
 const gapClasses = {
-  sm: "gap-4",
-  md: "gap-x-[22px] gap-y-7",
-  lg: "gap-8",
+  sm: "gap-3 sm:gap-4",
+  md: "gap-3 sm:gap-x-[22px] sm:gap-y-7",
+  lg: "gap-3 sm:gap-8",
 };
 
 function ListingGrid({
@@ -29,8 +29,13 @@ function ListingGrid({
 }: ListingGridProps) {
   return (
     <div className={cn("grid", colClasses[columns], gapClasses[gap], className)}>
-      {listings.map((listing) => (
-        <ListingCard key={listing.id} {...listing} />
+      {listings.map((listing, i) => (
+        <div key={listing.id}>
+          <ListingCard {...listing} />
+          {i < listings.length - 1 && (
+            <hr className="mt-3 border-border/60 sm:hidden" />
+          )}
+        </div>
       ))}
     </div>
   );
