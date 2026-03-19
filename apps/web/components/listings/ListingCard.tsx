@@ -63,7 +63,7 @@ function ListingCard({
               sizes="110px"
             />
           ) : (
-            <div className="absolute inset-0 flex items-center justify-center text-white/30 text-[10px] font-bold tracking-wider">K</div>
+            <img src="/klickenya-mark.svg" alt="" className="absolute inset-0 m-auto w-[40%] h-[40%] object-contain opacity-25" />
           )}
           {badge && (
             <span
