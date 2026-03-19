@@ -50,8 +50,11 @@ function ListingCard({
       {/* ── MOBILE: horizontal compact card ── */}
       <div className="flex gap-3.5 sm:hidden">
         {/* Thumbnail */}
-        <div className="relative w-[110px] h-[110px] shrink-0 rounded-[var(--radius-md)] overflow-hidden bg-surface2">
-          {photos[0] && (
+        <div
+          className="relative w-[110px] h-[110px] shrink-0 rounded-[var(--radius-md)] overflow-hidden"
+          style={!photos[0] ? { background: "linear-gradient(135deg, #6b2d8b 0%, #e8a020 100%)" } : undefined}
+        >
+          {photos[0] ? (
             <Image
               src={photos[0]}
               alt={title}
@@ -59,6 +62,8 @@ function ListingCard({
               className="object-cover"
               sizes="110px"
             />
+          ) : (
+            <div className="absolute inset-0 flex items-center justify-center text-white/30 text-[10px] font-bold tracking-wider">K</div>
           )}
           {badge && (
             <span
@@ -124,8 +129,11 @@ function ListingCard({
       {/* ── DESKTOP: vertical card (unchanged) ── */}
       <div className="hidden sm:block">
         {/* Photo area */}
-        <div className="relative aspect-[1/0.85] rounded-[var(--radius-lg)] overflow-hidden bg-surface2">
-          {photos[0] && (
+        <div
+          className="relative aspect-[1/0.85] rounded-[var(--radius-lg)] overflow-hidden"
+          style={!photos[0] ? { background: "linear-gradient(135deg, #6b2d8b 0%, #e8a020 100%)" } : undefined}
+        >
+          {photos[0] ? (
             <Image
               src={photos[0]}
               alt={title}
@@ -133,6 +141,8 @@ function ListingCard({
               className="object-cover transition-transform duration-500 ease-out group-hover:scale-[1.04]"
               sizes="(max-width: 1024px) 50vw, 25vw"
             />
+          ) : (
+            <div className="absolute inset-0 flex items-center justify-center text-white/20 text-[24px] font-bold tracking-wider">K</div>
           )}
 
           {badge && (
