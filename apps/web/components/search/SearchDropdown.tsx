@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useRef, useState, useCallback, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { SUBCATEGORY_LABELS } from "@/lib/constants/subcategories";
+import { MapPin, ArrowRight } from "lucide-react";
 
 /* ── Types ───────────────────────────────────────── */
 
@@ -45,6 +46,8 @@ interface SearchDropdownProps {
   isOpen: boolean;
   query: string;
   onClose: () => void;
+  /** Parent ref for fixed positioning */
+  anchorRef?: React.RefObject<HTMLElement | null>;
 }
 
 /* ── Type labels / paths ─────────────────────────── */
@@ -69,12 +72,38 @@ export function SearchDropdown({
   isOpen,
   query,
   onClose,
+  anchorRef,
 }: SearchDropdownProps) {
   const listRef = useRef<HTMLDivElement>(null);
   const [focusIndex, setFocusIndex] = useState(-1);
+  const [pos, setPos] = useState<{ top: number; left: number; width: number } | null>(null);
 
   // Cast results
   const res = results as SearchResults | null;
+
+  // Calculate position from anchor
+  useEffect(() => {
+    if (!isOpen || !anchorRef?.current) {
+      setPos(null);
+      return;
+    }
+    function update() {
+      if (!anchorRef?.current) return;
+      const rect = anchorRef.current.getBoundingClientRect();
+      setPos({
+        top: rect.bottom + 8,
+        left: rect.left,
+        width: rect.width,
+      });
+    }
+    update();
+    window.addEventListener("scroll", update, true);
+    window.addEventListener("resize", update);
+    return () => {
+      window.removeEventListener("scroll", update, true);
+      window.removeEventListener("resize", update);
+    };
+  }, [isOpen, anchorRef]);
 
   // Build flat list of focusable items
   const allItems = useCallback(() => {
@@ -138,29 +167,58 @@ export function SearchDropdown({
 
   if (!isOpen) return null;
 
+  // Use fixed positioning if anchor provided, otherwise absolute
+  const useFixed = !!anchorRef && !!pos;
+
+  const wrapperStyle: React.CSSProperties = useFixed
+    ? {
+        position: "fixed",
+        top: pos!.top,
+        left: pos!.left,
+        width: pos!.width,
+        zIndex: 9999,
+        backgroundColor: "#ffffff",
+        boxShadow: "0 16px 48px rgba(0,0,0,0.20), 0 0 0 1px rgba(0,0,0,0.06)",
+        borderRadius: 20,
+        overflow: "hidden",
+        isolation: "isolate",
+      }
+    : {
+        position: "absolute" as const,
+        top: "calc(100% + 8px)",
+        left: 0,
+        right: 0,
+        zIndex: 300,
+        backgroundColor: "#ffffff",
+        boxShadow: "0 16px 48px rgba(0,0,0,0.20), 0 0 0 1px rgba(0,0,0,0.06)",
+        borderRadius: 20,
+        overflow: "hidden",
+        isolation: "isolate",
+      };
+
   /* ── Loading skeleton ──────────────────────────── */
   if (isLoading && !res) {
     return (
-      <Wrapper>
-        <div className="p-4 space-y-3">
+      <div style={wrapperStyle} className="animate-search-dropdown">
+        <div className="p-5 space-y-3">
           {Array.from({ length: 4 }).map((_, i) => (
             <div key={i} className="flex items-center gap-3 animate-pulse">
-              <div className="size-12 rounded-xl bg-surface shrink-0" />
+              <div className="size-11 rounded-xl bg-neutral-100 shrink-0" />
               <div className="flex-1 space-y-2">
-                <div className="h-3.5 bg-surface rounded-full w-3/5" />
-                <div className="h-3 bg-surface rounded-full w-2/5" />
+                <div className="h-3.5 bg-neutral-100 rounded-full w-3/5" />
+                <div className="h-3 bg-neutral-100 rounded-full w-2/5" />
               </div>
             </div>
           ))}
         </div>
-      </Wrapper>
+      </div>
     );
   }
 
   /* ── Empty state ───────────────────────────────── */
   if (res && res.total === 0) {
     return (
-      <Wrapper>
+      <div style={wrapperStyle} className="animate-search-dropdown">
         <div className="py-10 px-6 text-center">
           <span className="text-[32px] block mb-2">🔍</span>
           <p className="text-[14px] font-semibold text-text mb-1">
@@ -175,14 +233,14 @@ export function SearchDropdown({
                 key={s}
                 href={`/search?q=${encodeURIComponent(s)}`}
                 onClick={onClose}
-                className="px-3 py-1 rounded-full text-[12px] font-medium bg-surface text-text2 hover:bg-amber/10 hover:text-amber transition-colors"
+                className="px-3 py-1.5 rounded-full text-[12px] font-medium bg-neutral-100 text-text2 hover:bg-amber/10 hover:text-amber transition-colors"
               >
                 {s}
               </Link>
             ))}
           </div>
         </div>
-      </Wrapper>
+      </div>
     );
   }
 
@@ -199,13 +257,13 @@ export function SearchDropdown({
   let itemIdx = 0;
 
   return (
-    <Wrapper>
-      <div ref={listRef} className="max-h-[480px] overflow-y-auto">
+    <div style={wrapperStyle} className="animate-search-dropdown">
+      <div ref={listRef} className="max-h-[420px] overflow-y-auto">
         {/* ── Destinations ──────────────────────── */}
         {(res.destinations ?? []).length > 0 && (
-          <div className="px-4 pt-3 pb-2">
-            <p className="text-[10.5px] font-bold text-amber uppercase tracking-[0.06em] mb-2">
-              📍 Destinations
+          <div className="p-3">
+            <p className="text-[10px] font-bold text-amber uppercase tracking-[0.08em] px-2 mb-1.5">
+              Destinations
             </p>
             {(res.destinations as Destination[]).map((d) => {
               const idx = itemIdx++;
@@ -219,24 +277,24 @@ export function SearchDropdown({
                     "flex items-center gap-3 px-2 py-2 rounded-xl transition-colors",
                     focusIndex === idx
                       ? "bg-amber/8"
-                      : "hover:bg-surface"
+                      : "hover:bg-neutral-50"
                   )}
                 >
                   {d.heroImage ? (
                     <Image
                       src={d.heroImage}
                       alt={d.name}
-                      width={48}
-                      height={48}
-                      className="size-12 rounded-xl object-cover shrink-0"
+                      width={44}
+                      height={44}
+                      className="size-11 rounded-lg object-cover shrink-0"
                     />
                   ) : (
-                    <div className="size-12 rounded-xl bg-gradient-to-br from-[#6B2D8B] to-[#E8A020] shrink-0 flex items-center justify-center">
-                      <span className="text-white text-[16px]">📍</span>
+                    <div className="size-11 rounded-lg bg-gradient-to-br from-[#6B2D8B] to-[#E8A020] shrink-0 flex items-center justify-center">
+                      <MapPin className="size-4 text-white" />
                     </div>
                   )}
                   <div className="min-w-0 flex-1">
-                    <p className="text-[13.5px] font-semibold text-text truncate">
+                    <p className="text-[14px] font-semibold text-text truncate">
                       {d.name}
                     </p>
                     {d.tagline && (
@@ -245,11 +303,7 @@ export function SearchDropdown({
                       </p>
                     )}
                   </div>
-                  {d.city && (
-                    <span className="text-[11px] text-text3 bg-surface px-2 py-0.5 rounded-full shrink-0">
-                      {d.city}
-                    </span>
-                  )}
+                  <ArrowRight className="size-3.5 text-text3 shrink-0" />
                 </Link>
               );
             })}
@@ -264,9 +318,9 @@ export function SearchDropdown({
             path: `/${type}`,
           };
           return (
-            <div key={type} className="px-4 pt-2 pb-2">
-              <p className="text-[10.5px] font-bold text-text3 uppercase tracking-[0.06em] mb-2">
-                {meta.icon} {meta.label} ({items.length})
+            <div key={type} className="px-3 pb-1">
+              <p className="text-[10px] font-bold text-text3 uppercase tracking-[0.08em] px-2 mb-1.5">
+                {meta.icon} {meta.label}
               </p>
               {items.map((l) => {
                 const idx = itemIdx++;
@@ -282,7 +336,7 @@ export function SearchDropdown({
                 const price =
                   l.price != null
                     ? `KSh ${l.price.toLocaleString()}`
-                    : "Price on request";
+                    : null;
 
                 return (
                   <Link
@@ -294,79 +348,56 @@ export function SearchDropdown({
                       "flex items-center gap-3 px-2 py-2 rounded-xl transition-colors",
                       focusIndex === idx
                         ? "bg-amber/8"
-                        : "hover:bg-surface"
+                        : "hover:bg-neutral-50"
                     )}
                   >
                     {photo ? (
                       <Image
                         src={photo}
                         alt={l.title}
-                        width={48}
-                        height={48}
-                        className="size-12 rounded-xl object-cover shrink-0"
+                        width={44}
+                        height={44}
+                        className="size-11 rounded-lg object-cover shrink-0"
                       />
                     ) : (
-                      <div className="size-12 rounded-xl bg-gradient-to-br from-[#6B2D8B] to-[#E8A020] shrink-0 flex items-center justify-center">
-                        <Image
-                          src="/klickenya-mark.svg"
-                          alt=""
-                          width={24}
-                          height={24}
-                          className="opacity-40"
-                        />
-                      </div>
+                      <div className="size-11 rounded-lg bg-gradient-to-br from-[#6B2D8B] to-[#E8A020] shrink-0" />
                     )}
                     <div className="min-w-0 flex-1">
-                      <p className="text-[13.5px] font-semibold text-text truncate">
+                      <p className="text-[14px] font-semibold text-text truncate">
                         {l.title}
                       </p>
                       <p className="text-[12px] text-text3 truncate">
                         {l.city}
                         {subLabel ? ` · ${subLabel}` : ""}
+                        {price ? ` · ${price}` : ""}
                       </p>
                     </div>
-                    <span className="text-[12px] font-semibold text-text2 shrink-0">
-                      {price}
-                    </span>
+                    <ArrowRight className="size-3.5 text-text3 shrink-0" />
                   </Link>
                 );
               })}
             </div>
           );
         })}
-
-        {/* ── Footer ───────────────────────────── */}
-        <div className="flex items-center justify-between px-5 py-3 border-t border-border" style={{ backgroundColor: "#f8f8f6" }}>
-          <span className="text-[12px] text-text3">
-            {res.total} result{res.total !== 1 ? "s" : ""} for
-            &ldquo;{query}&rdquo;
-          </span>
-          <Link
-            href={`/search?q=${encodeURIComponent(query)}`}
-            onClick={onClose}
-            className="text-[12.5px] font-semibold text-amber hover:underline"
-          >
-            See all results →
-          </Link>
-        </div>
       </div>
-    </Wrapper>
-  );
-}
 
-/* ── Wrapper shell ───────────────────────────────── */
-
-function Wrapper({ children }: { children: React.ReactNode }) {
-  return (
-    <div
-      className="absolute top-[calc(100%+8px)] left-0 right-0 z-[300] rounded-[var(--radius-xl)] overflow-hidden animate-search-dropdown"
-      style={{
-        boxShadow: "0 12px 40px rgba(0,0,0,0.18), 0 0 0 1px rgba(0,0,0,0.06)",
-        backgroundColor: "#ffffff",
-        isolation: "isolate",
-      }}
-    >
-      {children}
+      {/* ── Footer ───────────────────────────── */}
+      <div
+        className="flex items-center justify-between px-5 py-3 border-t border-neutral-100"
+        style={{ backgroundColor: "#f9f9f7" }}
+      >
+        <span className="text-[12px] text-text3">
+          {res.total} result{res.total !== 1 ? "s" : ""}
+        </span>
+        <Link
+          href={`/search?q=${encodeURIComponent(query)}`}
+          onClick={onClose}
+          className="text-[12.5px] font-semibold text-amber hover:underline flex items-center gap-1"
+        >
+          See all results
+          <ArrowRight className="size-3" />
+        </Link>
+      </div>
     </div>
   );
 }

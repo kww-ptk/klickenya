@@ -22,6 +22,7 @@ const CATEGORIES = [
 function HeroSearchSimple() {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
+  const barRef = useRef<HTMLDivElement>(null);
 
   const { query, setQuery, results, isLoading, isOpen, setIsOpen, clear } =
     useSearch();
@@ -50,7 +51,7 @@ function HeroSearchSimple() {
       </div>
 
       {/* Search bar */}
-      <div className="relative">
+      <div ref={barRef} className="relative">
         <div className="flex items-center bg-white rounded-full shadow-lg pl-5 pr-2 py-2">
           <Search className="size-5 text-text3 shrink-0 mr-3" />
           <input
@@ -86,18 +87,17 @@ function HeroSearchSimple() {
             <Search className="size-4.5 text-white" strokeWidth={2.5} />
           </button>
         </div>
-
-        {/* Search dropdown — wrapped in z-index container */}
-        <div className="relative z-[350]">
-          <SearchDropdown
-            results={results}
-            isLoading={isLoading}
-            isOpen={isOpen}
-            query={query}
-            onClose={() => setIsOpen(false)}
-          />
-        </div>
       </div>
+
+      {/* Dropdown rendered with fixed positioning via anchorRef */}
+      <SearchDropdown
+        results={results}
+        isLoading={isLoading}
+        isOpen={isOpen}
+        query={query}
+        onClose={() => setIsOpen(false)}
+        anchorRef={barRef}
+      />
     </div>
   );
 }
