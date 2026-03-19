@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { searchListings, searchBlogPosts } from "@/lib/supabase/queries";
 import { sanityClient } from "@/lib/sanity/client";
 import { groq } from "next-sanity";
+import { adminClient } from "@/lib/supabase/admin";
 
 // Simple in-memory rate limiter: max 30 requests per minute per IP
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
@@ -35,6 +36,54 @@ const SEARCH_DESTINATIONS_QUERY = groq`
     "heroImage": heroImage.asset->url
   }
 `;
+
+/* ── Trigram fallback query ───────────────────────── */
+
+async function trigramFallback(
+  query: string,
+  type?: string,
+  city?: string,
+  limit = 6
+) {
+  const supabase = adminClient;
+
+  // Build the raw SQL via rpc or use .from() with ilike as a simpler fallback
+  // Since Supabase JS client doesn't expose similarity(), use rpc with raw SQL
+  const { data, error } = await supabase.rpc("search_listings_trigram", {
+    search_query: query,
+    listing_type_filter: type ?? null,
+    city_filter: city ?? null,
+    result_limit: limit,
+  });
+
+  if (error) {
+    console.error("Trigram fallback error:", error);
+    return [];
+  }
+
+  return data ?? [];
+}
+
+/* ── Async search log (fire-and-forget) ───────────── */
+
+function logSearch(
+  query: string,
+  resultCount: number,
+  typeFilter?: string,
+  cityFilter?: string
+) {
+  adminClient
+    .from("search_log")
+    .insert({
+      query: query.toLowerCase().trim(),
+      result_count: resultCount,
+      type_filter: typeFilter || null,
+      city_filter: cityFilter || null,
+    })
+    .then(({ error }) => {
+      if (error) console.error("Search log error:", error);
+    });
+}
 
 export async function GET(request: NextRequest) {
   const ip =
@@ -118,9 +167,23 @@ export async function GET(request: NextRequest) {
         : Promise.resolve([]),
     ]);
 
-    // Post-filter listings by subcategory and tags
+    // ── Trigram fallback: if FTS returned fewer than 3 listings ──
     let listings = listingsRaw;
 
+    if (q && listings.length < 3) {
+      const trigramResults = await trigramFallback(q, type, city, limit);
+
+      // Merge without duplicates (by id)
+      const existingIds = new Set(
+        listings.map((l: Record<string, unknown>) => l.id)
+      );
+      const newResults = trigramResults.filter(
+        (r: Record<string, unknown>) => !existingIds.has(r.id)
+      );
+      listings = [...listings, ...newResults];
+    }
+
+    // Post-filter listings by subcategory and tags
     if (subcategory) {
       listings = listings.filter(
         (l: Record<string, unknown>) => l.subcategory === subcategory
@@ -137,12 +200,19 @@ export async function GET(request: NextRequest) {
     // Trim to limit
     listings = listings.slice(0, limit);
 
+    const totalResults = listings.length + posts.length + destinations.length;
+
+    // Log search async — never blocks response
+    if (q) {
+      logSearch(q, totalResults, type, city);
+    }
+
     return NextResponse.json({
       query: q,
       listings,
       posts,
       destinations,
-      total: listings.length + posts.length + destinations.length,
+      total: totalResults,
       // Echo back search context for the client
       context: {
         type,
