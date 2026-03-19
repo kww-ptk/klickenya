@@ -14,6 +14,7 @@ const LISTING_CARD_FIELDS = `
   title,
   slug,
   type,
+  subcategory,
   status,
   city,
   county,
@@ -60,6 +61,27 @@ export const LISTINGS_BY_TYPE_QUERY = groq`
   }
 `
 
+export const LISTINGS_FILTERED_QUERY = groq`
+  *[_type == "listing" && status == "published" && type == $type
+    && select(
+      $subcategory != "" => subcategory == $subcategory,
+      true
+    )
+    && select(
+      $city != "" => lower(city) == lower($city),
+      true
+    )
+  ] | order(_createdAt desc) [0...$limit] {
+    ${LISTING_CARD_FIELDS}
+  }
+`
+
+export const SUBCATEGORY_COUNTS_QUERY = groq`
+  *[_type == "listing" && status == "published" && type == $type] {
+    subcategory
+  }
+`
+
 export const LISTINGS_BY_TYPE_CITY_QUERY = groq`
   *[_type == "listing" && status == "published" && type == $type && lower(city) == lower($city)] | order(_createdAt desc) {
     ${LISTING_CARD_FIELDS}
@@ -72,6 +94,7 @@ export const LISTING_BY_SLUG_QUERY = groq`
     title,
     slug,
     type,
+    subcategory,
     status,
     city,
     county,
@@ -99,6 +122,7 @@ export const LISTING_SLUGS_QUERY = groq`
   *[_type == "listing" && status == "published"] {
     "slug": slug.current,
     type,
+    subcategory,
     city
   }
 `
@@ -150,7 +174,7 @@ export const BLOG_POST_BY_SLUG_QUERY = groq`
       _type == "inlineListingBlock" => {
         ...,
         "listing": listing->{
-          _id, title, slug, type, city, price, priceUnit, tags,
+          _id, title, slug, type, subcategory, city, price, priceUnit, tags,
           "coverPhoto": photos[0]{ ${IMAGE_FIELDS} }
         }
       }

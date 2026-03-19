@@ -8,6 +8,58 @@ export type UserRole = 'admin' | 'host' | 'guest'
 
 export type BookingType = 'contact_form' | 'instant' | 'request'
 
+// ─── Subcategories ──────────────────────────────────────────────
+
+export type StaySubcategory =
+  | 'villa'
+  | 'private_room'
+  | 'boutique_hotel'
+  | 'lodge_camp'
+  | 'hostel'
+  | 'unique_stay'
+
+export type ExperienceSubcategory =
+  | 'safari'
+  | 'outdoor'
+  | 'beaches'
+  | 'restaurants'
+  | 'cultural'
+  | 'wellness'
+  | 'family'
+
+export type EventSubcategory =
+  | 'parties'
+  | 'festival'
+  | 'art_culture'
+  | 'wellness_sport'
+  | 'networking'
+  | 'kids'
+  | 'other'
+
+export type ServiceSubcategory =
+  | 'rentals'
+  | 'transfers'
+  | 'private_chef'
+  | 'wellness_service'
+  | 'supermarkets'
+  | 'pharmacy'
+  | 'fundis'
+  | 'it_marketing'
+  | 'utility_shops'
+
+export type RealEstateSubcategory =
+  | 'for_sale'
+  | 'land_plots'
+  | 'commercial'
+  | 'new_developments'
+
+export type ListingSubcategory =
+  | StaySubcategory
+  | ExperienceSubcategory
+  | EventSubcategory
+  | ServiceSubcategory
+  | RealEstateSubcategory
+
 export type PriceUnit = 'night' | 'person' | 'day' | 'session' | 'ticket'
 
 export type PropertyCategory = 'for-sale' | 'for-rent' | 'land' | 'commercial'
@@ -52,13 +104,14 @@ export interface SanityListing {
   title: string
   slug: SanitySlug
   type: ListingType
+  subcategory?: ListingSubcategory
   status: ListingStatus
   city: string
   county?: string
   price: number
   priceUnit: PriceUnit
   coverPhoto?: SanityImage
-  tags?: string[]
+  tags: string[]
 }
 
 /** Full listing (detail page) */
@@ -227,11 +280,13 @@ export interface Listing {
   id: string
   sanity_id?: string
   type: ListingType
+  subcategory?: ListingSubcategory
   status: ListingStatus
   title: string
   slug: string
   description: string
   short_description?: string
+  tags: string[]
   destination: string
   city: string
   neighbourhood?: string

@@ -34,6 +34,8 @@ export async function GET(request: NextRequest) {
   const q = searchParams.get("q")?.trim();
   const type = searchParams.get("type") || undefined;
   const city = searchParams.get("city") || undefined;
+  const subcategory = searchParams.get("sub") || undefined;
+  const tags = searchParams.get("tags")?.split(",").filter(Boolean) || [];
 
   if (!q || q.length < 2) {
     return NextResponse.json(
@@ -43,10 +45,22 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const [listings, posts] = await Promise.all([
+    let [listings, posts] = await Promise.all([
       searchListings(q, type, city),
       searchBlogPosts(q),
     ]);
+
+    // Post-filter by subcategory and tags if provided
+    if (subcategory) {
+      listings = listings.filter(
+        (l: Record<string, unknown>) => l.subcategory === subcategory
+      );
+    }
+    if (tags.length > 0) {
+      listings = listings.filter((l: Record<string, unknown>) =>
+        tags.every((tag) => (Array.isArray(l.tags) ? l.tags : []).includes(tag))
+      );
+    }
 
     return NextResponse.json({ listings, posts, query: q });
   } catch (err) {

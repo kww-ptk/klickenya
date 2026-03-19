@@ -19,6 +19,41 @@ const AMENITIES = [
   'Pet Friendly', 'Wheelchair Accessible', 'Sea View', 'Mountain View',
 ]
 
+const TAG_SUGGESTIONS = [
+  // Stays
+  'beachfront', 'pool', 'garden', 'gated', 'family', 'pet-friendly', 'en-suite',
+  'breakfast-included', 'city-centre', 'rooftop', 'spa', 'restaurant', 'adults-only',
+  'design', 'all-inclusive', 'game-drive', 'tented', 'eco', 'full-board', 'dorm',
+  'co-working', 'long-stay', 'treehouse', 'houseboat', 'glamping', 'container', 'off-grid',
+  // Experiences
+  'walking', 'night-drive', 'birding', 'boat-safari', 'fly-in', 'hiking', 'climbing',
+  'surfing', 'diving', 'kayaking', 'cycling', 'zip-line', 'fine-dining', 'street-food',
+  'tasting-menu', 'vegan', 'halal', 'community', 'craft', 'music', 'dance', 'heritage',
+  'language', 'yoga', 'meditation', 'retreat', 'fitness', 'holistic', 'kids', 'educational',
+  'animal-encounter', 'interactive', 'indoor',
+  // Beaches
+  'snorkelling', 'swimming', 'white-sand', 'marine-park', 'kite-surfing', 'sunset',
+  'secluded', 'reef',
+  // Events
+  'nightlife', 'pool-party', '18+', 'bottle-service', 'outdoor', 'multi-day', 'camping',
+  'all-ages', 'food-stalls', 'gallery', 'theatre', 'comedy', 'film', 'poetry', 'exhibition',
+  'marathon', 'tournament', 'conference', 'meetup', 'workshop', 'pitch', 'startup',
+  'corporate', 'holiday-camp', 'free', 'pop-up', 'charity', 'religious', 'seasonal',
+  // Services
+  'car', '4WD', 'motorbike', 'boat', 'camping-gear', 'dive-gear', 'venue', 'airport',
+  'private-driver', 'group', 'safari-transfer', 'intercity', 'nyama-choma', 'swahili',
+  'vegetarian', 'meal-prep', 'catering', 'massage', 'facial', 'manicure', 'barber',
+  'yoga-instructor', 'delivery', 'organic', 'wholesale', 'fresh-produce', 'prescription',
+  'OTC', 'cosmetics', 'vitamins', 'plumber', 'electrician', 'carpenter', 'painter', 'tiler',
+  'welder', 'web-design', 'social-media', 'branding', 'IT-support', 'videography',
+  'hardware', 'printing', 'fuel', 'laundry', 'courier',
+  // Real Estate
+  'house', 'apartment', 'bungalow', 'mansion', 'studio', 'townhouse', 'beach-plot',
+  'agricultural', 'commercial-plot', 'residential', '1-acre', 'title-deed', 'office',
+  'retail', 'warehouse', 'showroom', 'industrial', 'off-plan', 'gated-community',
+  'serviced', 'smart-home', 'payment-plan',
+]
+
 export default defineType({
   name: 'listing',
   title: 'Listing',
@@ -61,6 +96,56 @@ export default defineType({
         layout: 'radio',
       },
       validation: (rule) => rule.required(),
+      group: 'details',
+    }),
+    defineField({
+      name: 'subcategory',
+      title: 'Subcategory',
+      type: 'string',
+      description: 'Narrows what kind of listing this is within the category',
+      options: {
+        list: [
+          // Stays
+          { title: 'Villa', value: 'villa' },
+          { title: 'Private Room', value: 'private_room' },
+          { title: 'Boutique Hotel', value: 'boutique_hotel' },
+          { title: 'Lodge / Camp', value: 'lodge_camp' },
+          { title: 'Hostel', value: 'hostel' },
+          { title: 'Unique Stay', value: 'unique_stay' },
+          // Experiences
+          { title: 'Safari', value: 'safari' },
+          { title: 'Outdoor', value: 'outdoor' },
+          { title: 'Beaches', value: 'beaches' },
+          { title: 'Restaurants', value: 'restaurants' },
+          { title: 'Cultural', value: 'cultural' },
+          { title: 'Wellness', value: 'wellness' },
+          { title: 'Family', value: 'family' },
+          // Events
+          { title: 'Parties', value: 'parties' },
+          { title: 'Festival', value: 'festival' },
+          { title: 'Art & Culture', value: 'art_culture' },
+          { title: 'Wellness & Sport', value: 'wellness_sport' },
+          { title: 'Networking', value: 'networking' },
+          { title: 'Kids', value: 'kids' },
+          { title: 'Other', value: 'other' },
+          // Services
+          { title: 'Rentals', value: 'rentals' },
+          { title: 'Transfers', value: 'transfers' },
+          { title: 'Private Chef', value: 'private_chef' },
+          { title: 'Wellness', value: 'wellness_service' },
+          { title: 'Supermarkets', value: 'supermarkets' },
+          { title: 'Pharmacy', value: 'pharmacy' },
+          { title: 'Fundis', value: 'fundis' },
+          { title: 'IT & Marketing', value: 'it_marketing' },
+          { title: 'Utility Shops', value: 'utility_shops' },
+          // Real Estate
+          { title: 'For Sale', value: 'for_sale' },
+          { title: 'Land & Plots', value: 'land_plots' },
+          { title: 'Commercial', value: 'commercial' },
+          { title: 'New Developments', value: 'new_developments' },
+        ],
+      },
+      validation: (rule) => rule.required().warning('Please select a subcategory'),
       group: 'details',
     }),
     defineField({
@@ -205,7 +290,10 @@ export default defineType({
       title: 'Tags',
       type: 'array',
       of: [{ type: 'string' }],
-      description: "Keywords for search e.g. 'luxury', 'family-friendly', 'beachfront'",
+      description: 'Select from suggestions or type custom tags for search and filtering',
+      options: {
+        list: TAG_SUGGESTIONS.map((t) => ({ title: t, value: t })),
+      },
       group: 'details',
     }),
     defineField({

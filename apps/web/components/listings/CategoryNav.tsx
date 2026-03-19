@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { SlidersHorizontal } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -9,7 +9,7 @@ interface Category {
   id: string;
   icon: string;
   label: string;
-  href?: string;
+  href: string;
 }
 
 const CATEGORIES: Category[] = [
@@ -24,7 +24,17 @@ const CATEGORIES: Category[] = [
   { id: "mountain", icon: "⛰️", label: "Mountain", href: "/destinations" },
   { id: "lakeside", icon: "🌊", label: "Lakeside", href: "/destinations" },
   { id: "culture", icon: "🎨", label: "Culture", href: "/destinations" },
+  { id: "real-estate", icon: "🏢", label: "Real Estate", href: "/real-estate" },
 ];
+
+// Map pathname to category id
+function getActiveCategory(pathname: string): string {
+  if (pathname === "/") return "all";
+  const match = CATEGORIES.find(
+    (cat) => cat.href !== "/" && cat.href !== "/destinations" && pathname.startsWith(cat.href)
+  );
+  return match?.id ?? "all";
+}
 
 interface CategoryNavProps {
   onCategoryChange?: (categoryId: string) => void;
@@ -33,16 +43,11 @@ interface CategoryNavProps {
 }
 
 function CategoryNav({
-  onCategoryChange,
   onFiltersClick,
   className,
 }: CategoryNavProps) {
-  const [active, setActive] = useState("all");
-
-  const handleSelect = (id: string) => {
-    setActive(id);
-    onCategoryChange?.(id);
-  };
+  const pathname = usePathname();
+  const active = getActiveCategory(pathname);
 
   return (
     <div
@@ -53,40 +58,31 @@ function CategoryNav({
     >
       <div className="relative">
         <div className="flex items-center gap-0 px-5 md:px-10 overflow-x-auto scrollbar-none">
-          {CATEGORIES.map((cat) => (
-            <Link
-              key={cat.id}
-              href={cat.href ?? "/stays"}
-              onClick={() => handleSelect(cat.id)}
-              className={cn(
-                "shrink-0 flex flex-col items-center gap-[7px] px-5 py-3.5 border-b-2 transition-all duration-200 cursor-pointer min-w-[72px]",
-                active === cat.id
-                  ? "border-amber opacity-100"
-                  : "border-transparent opacity-50 hover:opacity-[0.85]"
-              )}
-            >
-              <span className="text-[22px] leading-none">{cat.icon}</span>
-              <span
+          {CATEGORIES.map((cat) => {
+            const isActive = active === cat.id;
+            return (
+              <Link
+                key={cat.id}
+                href={cat.href}
                 className={cn(
-                  "text-[11.5px] font-semibold whitespace-nowrap transition-colors",
-                  active === cat.id ? "text-amber" : "text-text"
+                  "shrink-0 flex flex-col items-center gap-[7px] px-5 py-3.5 border-b-2 transition-all duration-200 cursor-pointer min-w-[72px]",
+                  isActive
+                    ? "border-amber opacity-100"
+                    : "border-transparent opacity-50 hover:opacity-[0.85]"
                 )}
               >
-                {cat.label}
-              </span>
-            </Link>
-          ))}
-
-          {/* Real Estate link */}
-          <Link
-            href="/real-estate"
-            className="shrink-0 flex flex-col items-center gap-[7px] px-5 py-3.5 border-b-2 border-transparent opacity-50 hover:opacity-[0.85] transition-all duration-200 min-w-[72px]"
-          >
-            <span className="text-[22px] leading-none">🏢</span>
-            <span className="text-[11.5px] font-semibold whitespace-nowrap text-text">
-              Real Estate
-            </span>
-          </Link>
+                <span className="text-[22px] leading-none">{cat.icon}</span>
+                <span
+                  className={cn(
+                    "text-[11.5px] font-semibold whitespace-nowrap transition-colors",
+                    isActive ? "text-amber" : "text-text"
+                  )}
+                >
+                  {cat.label}
+                </span>
+              </Link>
+            );
+          })}
 
           {/* Filters button */}
           <button

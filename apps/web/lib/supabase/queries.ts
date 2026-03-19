@@ -36,29 +36,60 @@ type ContactStatus = "new" | "responded" | "converted" | "closed";
 
 // ─── Listings ───────────────────────────────────────────────
 
-export async function getListings(opts?: {
+interface GetListingsParams {
   type?: string;
   city?: string;
+  subcategory?: string | null;
+  tags?: string[];
   status?: string;
   limit?: number;
   offset?: number;
-}): Promise<Listing[]> {
+}
+
+export async function getListings({
+  type,
+  city,
+  subcategory,
+  tags,
+  status = "published",
+  limit = 20,
+  offset = 0,
+}: GetListingsParams = {}): Promise<Listing[]> {
   const supabase = await createClient();
-  let query = supabase.from("listings").select("*");
+  let query = supabase.from("listings").select("*").eq("status", status);
 
-  if (opts?.type) query = query.eq("type", opts.type);
-  if (opts?.city) query = query.eq("city", opts.city);
-  if (opts?.status) query = query.eq("status", opts.status);
-  else query = query.eq("status", "published");
+  if (type) query = query.eq("type", type);
+  if (city) query = query.ilike("city", city);
+  if (subcategory) query = query.eq("subcategory", subcategory);
+  if (tags && tags.length > 0) query = query.contains("tags", tags);
 
-  if (opts?.limit) query = query.limit(opts.limit);
-  if (opts?.offset) query = query.range(opts.offset, opts.offset + (opts.limit ?? 20) - 1);
-
-  query = query.order("created_at", { ascending: false });
+  query = query
+    .order("published_at", { ascending: false })
+    .range(offset, offset + limit - 1);
 
   const { data, error } = await query;
   if (error) throw error;
   return (data ?? []) as Listing[];
+}
+
+export async function getSubcategoryCounts(type: string) {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("listings")
+    .select("subcategory")
+    .eq("status", "published")
+    .eq("type", type)
+    .not("subcategory", "is", null);
+
+  if (error) throw error;
+
+  const counts: Record<string, number> = {};
+  data?.forEach((row) => {
+    if (row.subcategory) {
+      counts[row.subcategory] = (counts[row.subcategory] || 0) + 1;
+    }
+  });
+  return counts;
 }
 
 export async function getListingBySlug(
