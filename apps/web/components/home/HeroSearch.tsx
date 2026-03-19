@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Search, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const TABS = ["Stays", "Experiences", "Events", "Rentals", "Services", "Restaurants"] as const;
+const TABS = ["Stays", "Experiences", "Events", "Services", "Real Estate"] as const;
 
 function HeroSearch() {
   const [activeTab, setActiveTab] = useState<(typeof TABS)[number]>("Stays");

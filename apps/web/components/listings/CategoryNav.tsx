@@ -15,23 +15,19 @@ interface Category {
 const CATEGORIES: Category[] = [
   { id: "all", icon: "✨", label: "All", href: "/" },
   { id: "stays", icon: "🏠", label: "Stays", href: "/stays" },
-  { id: "experiences", icon: "🦁", label: "Experiences", href: "/experiences" },
-  { id: "beach", icon: "🏖️", label: "Beach", href: "/destinations" },
-  { id: "events", icon: "🎉", label: "Events", href: "/events" },
-  { id: "restaurants", icon: "🍽️", label: "Restaurants", href: "/restaurants" },
-  { id: "rentals", icon: "🚗", label: "Rentals", href: "/rentals" },
-  { id: "services", icon: "✂️", label: "Services", href: "/services" },
-  { id: "mountain", icon: "⛰️", label: "Mountain", href: "/destinations" },
-  { id: "lakeside", icon: "🌊", label: "Lakeside", href: "/destinations" },
-  { id: "culture", icon: "🎨", label: "Culture", href: "/destinations" },
+  { id: "experiences", icon: "🎒", label: "Experiences", href: "/experiences" },
+  { id: "events", icon: "🎟️", label: "Events", href: "/events" },
+  { id: "services", icon: "⭐", label: "Services", href: "/services" },
   { id: "real-estate", icon: "🏢", label: "Real Estate", href: "/real-estate" },
 ];
 
 // Map pathname to category id
 function getActiveCategory(pathname: string): string {
   if (pathname === "/") return "all";
+  // Rentals and restaurants map to services
+  if (pathname.startsWith("/rentals") || pathname.startsWith("/restaurants")) return "services";
   const match = CATEGORIES.find(
-    (cat) => cat.href !== "/" && cat.href !== "/destinations" && pathname.startsWith(cat.href)
+    (cat) => cat.href !== "/" && pathname.startsWith(cat.href)
   );
   return match?.id ?? "all";
 }

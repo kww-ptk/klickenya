@@ -40,7 +40,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const title = homePage?.metaTitle ?? "Klickenya — Discover Kenya";
   const description =
     homePage?.metaDescription ??
-    "Kenya's all-in-one booking marketplace for stays, experiences, events, rentals, restaurants, and services. Discover the best of Kenya.";
+    "Kenya's all-in-one booking marketplace for stays, experiences, events, services, and real estate. Discover the best of Kenya.";
 
   return {
     title,
