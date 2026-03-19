@@ -336,7 +336,7 @@ export function SearchDropdown({
         })}
 
         {/* ── Footer ───────────────────────────── */}
-        <div className="flex items-center justify-between px-5 py-3 border-t border-border bg-surface/50">
+        <div className="flex items-center justify-between px-5 py-3 border-t border-border" style={{ backgroundColor: "#f8f8f6" }}>
           <span className="text-[12px] text-text3">
             {res.total} result{res.total !== 1 ? "s" : ""} for
             &ldquo;{query}&rdquo;
@@ -359,10 +359,11 @@ export function SearchDropdown({
 function Wrapper({ children }: { children: React.ReactNode }) {
   return (
     <div
-      className="absolute top-[calc(100%+8px)] left-0 right-0 z-[300] border border-border rounded-[var(--radius-xl)] overflow-hidden animate-search-dropdown"
+      className="absolute top-[calc(100%+8px)] left-0 right-0 z-[300] rounded-[var(--radius-xl)] overflow-hidden animate-search-dropdown"
       style={{
-        boxShadow: "0 12px 40px rgba(0,0,0,0.15), 0 0 0 1px rgba(0,0,0,0.04)",
+        boxShadow: "0 12px 40px rgba(0,0,0,0.18), 0 0 0 1px rgba(0,0,0,0.06)",
         backgroundColor: "#ffffff",
+        isolation: "isolate",
       }}
     >
       {children}
