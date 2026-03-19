@@ -122,7 +122,7 @@ export default async function HomePage() {
       <Nav transparent />
 
       {/* ─── HERO ─────────────────────────────────── */}
-      <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
+      <section className="relative min-h-screen flex items-center justify-center overflow-x-clip">
         {/* Hero background image */}
         <div className="absolute inset-0">
           <img
