@@ -8,24 +8,69 @@ interface FooterLink {
 }
 
 interface FooterProps {
-  exploreLinks?: FooterLink[];
   companyLinks?: FooterLink[];
   supportLinks?: FooterLink[];
 }
 
-const DEFAULT_EXPLORE: FooterLink[] = [
-  { href: "/stays", label: "Stays" },
-  { href: "/experiences", label: "Experiences" },
-  { href: "/events", label: "Events" },
-  { href: "/services", label: "Services" },
-  { href: "/real-estate", label: "Real Estate" },
-  { href: "/destinations", label: "Destinations" },
-  { href: "/journal", label: "Journal" },
+const CATEGORIES = [
+  {
+    label: "Stays",
+    href: "/stays",
+    subs: [
+      { href: "/stays?sub=villa", label: "Villas" },
+      { href: "/stays?sub=boutique_hotel", label: "Boutique Hotels" },
+      { href: "/stays?sub=lodge_camp", label: "Lodges & Camps" },
+      { href: "/stays?sub=hostel", label: "Hostels" },
+      { href: "/stays?sub=unique_stay", label: "Unique Stays" },
+    ],
+  },
+  {
+    label: "Experiences",
+    href: "/experiences",
+    subs: [
+      { href: "/experiences?sub=safari", label: "Safari" },
+      { href: "/experiences?sub=outdoor", label: "Outdoor" },
+      { href: "/experiences?sub=beaches", label: "Beaches" },
+      { href: "/experiences?sub=cultural", label: "Cultural" },
+      { href: "/experiences?sub=wellness", label: "Wellness" },
+    ],
+  },
+  {
+    label: "Events",
+    href: "/events",
+    subs: [
+      { href: "/events?sub=parties", label: "Parties" },
+      { href: "/events?sub=festival", label: "Festivals" },
+      { href: "/events?sub=art_culture", label: "Art & Culture" },
+      { href: "/events?sub=networking", label: "Networking" },
+    ],
+  },
+  {
+    label: "Services",
+    href: "/services",
+    subs: [
+      { href: "/services?sub=rentals", label: "Rentals" },
+      { href: "/services?sub=transfers", label: "Transfers" },
+      { href: "/services?sub=private_chef", label: "Private Chef" },
+      { href: "/services?sub=fundis", label: "Fundis" },
+    ],
+  },
+  {
+    label: "Real Estate",
+    href: "/real-estate",
+    subs: [
+      { href: "/real-estate?sub=for_sale", label: "For Sale" },
+      { href: "/real-estate?sub=land_plots", label: "Land & Plots" },
+      { href: "/real-estate?sub=commercial", label: "Commercial" },
+      { href: "/real-estate?sub=new_developments", label: "New Developments" },
+    ],
+  },
 ];
 
 const DEFAULT_COMPANY: FooterLink[] = [
   { href: "/about", label: "About us" },
   { href: "/how-it-works", label: "How it works" },
+  { href: "/destinations", label: "Destinations" },
   { href: "/journal", label: "Journal" },
   { href: "/how-it-works#ambassador", label: "Become an ambassador" },
   { href: "/contact", label: "Contact" },
@@ -36,10 +81,11 @@ const DEFAULT_SUPPORT: FooterLink[] = [
   { href: "/trust", label: "Trust & Safety" },
   { href: "/accessibility", label: "Accessibility" },
   { href: "/cancellation", label: "Cancellation policy" },
+  { href: "/privacy", label: "Privacy" },
+  { href: "/terms", label: "Terms" },
 ];
 
 function Footer({
-  exploreLinks = DEFAULT_EXPLORE,
   companyLinks = DEFAULT_COMPANY,
   supportLinks = DEFAULT_SUPPORT,
 }: FooterProps) {
@@ -54,51 +100,77 @@ function Footer({
       </div>
 
       <div className="max-w-[1280px] mx-auto px-5 md:px-10">
-        {/* Main grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr_1fr_1fr] gap-12 pt-16 pb-14 border-b border-white/[0.06]">
-          {/* Brand column - full width on mobile */}
-          <div>
-            <div className="flex items-center gap-2 mb-4">
-              <Image
-                src="/logo-profile.jpg"
-                alt="Klickenya"
-                width={36}
-                height={36}
-                className="size-9 rounded-[10px] object-cover shrink-0"
-              />
-              <span className="text-[20px] font-bold text-white tracking-[-0.03em]">
-                Klic<span className="text-amber">K</span>enya
-              </span>
+        {/* Top: Brand + Categories */}
+        <div className="pt-16 pb-10 border-b border-white/[0.06]">
+          {/* Brand row */}
+          <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-8 mb-12">
+            <div className="max-w-[280px]">
+              <div className="flex items-center gap-2 mb-4">
+                <Image
+                  src="/logo-profile.jpg"
+                  alt="Klickenya"
+                  width={36}
+                  height={36}
+                  className="size-9 rounded-[10px] object-cover shrink-0"
+                />
+                <span className="text-[20px] font-bold text-white tracking-[-0.03em]">
+                  Klic<span className="text-amber">K</span>enya
+                </span>
+              </div>
+              <p className="text-[13.5px] text-white/32 leading-[1.7] mb-6">
+                Kenya&apos;s all-in-one platform for stays, experiences, events,
+                services, and real estate. Built for Kenya.
+              </p>
+              {/* Social links */}
+              <div className="flex gap-2">
+                {[
+                  { label: "X", icon: "𝕏" },
+                  { label: "LinkedIn", icon: "in" },
+                  { label: "Instagram", icon: "IG" },
+                  { label: "Facebook", icon: "fb" },
+                ].map((s) => (
+                  <a
+                    key={s.label}
+                    href="#"
+                    aria-label={s.label}
+                    className="size-[34px] rounded-[9px] bg-white/5 border border-white/7 flex items-center justify-center text-[13px] text-white/35 hover:bg-white/10 hover:text-white/80 transition-colors duration-200"
+                  >
+                    {s.icon}
+                  </a>
+                ))}
+              </div>
             </div>
-            <p className="text-[13.5px] text-white/32 leading-[1.7] max-w-[260px] mb-6">
-              Kenya&apos;s all-in-one platform for stays, experiences, events,
-              rentals, services, and property. Built for Kenya.
-            </p>
-            {/* Social links */}
-            <div className="flex gap-2">
-              {[
-                { label: "X", icon: "𝕏" },
-                { label: "LinkedIn", icon: "in" },
-                { label: "Instagram", icon: "IG" },
-                { label: "Facebook", icon: "fb" },
-              ].map((s) => (
-                <a
-                  key={s.label}
-                  href="#"
-                  aria-label={s.label}
-                  className="size-[34px] rounded-[9px] bg-white/5 border border-white/7 flex items-center justify-center text-[13px] text-white/35 hover:bg-white/10 hover:text-white/80 transition-colors duration-200"
-                >
-                  {s.icon}
-                </a>
-              ))}
+
+            {/* Company + Support */}
+            <div className="grid grid-cols-2 gap-8 md:gap-16">
+              <FooterLinkColumn title="Company" links={companyLinks} />
+              <FooterLinkColumn title="Support" links={supportLinks} />
             </div>
           </div>
 
-          {/* Link columns - 2 cols on mobile, 3 individual on desktop */}
-          <div className="grid grid-cols-2 gap-8 lg:contents">
-            <FooterLinkColumn title="Explore" links={exploreLinks} />
-            <FooterLinkColumn title="Company" links={companyLinks} />
-            <FooterLinkColumn title="Support" links={supportLinks} />
+          {/* Categories mega-grid */}
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-8">
+            {CATEGORIES.map((cat) => (
+              <div key={cat.label}>
+                <Link
+                  href={cat.href}
+                  className="text-[13px] font-bold text-white/60 hover:text-white transition-colors mb-3 block"
+                >
+                  {cat.label}
+                </Link>
+                <div className="flex flex-col gap-2">
+                  {cat.subs.map((sub) => (
+                    <Link
+                      key={sub.href}
+                      href={sub.href}
+                      className="text-[12.5px] text-white/25 hover:text-white/65 transition-colors"
+                    >
+                      {sub.label}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            ))}
           </div>
         </div>
 
