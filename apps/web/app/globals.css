@@ -102,6 +102,17 @@ body {
   animation: marquee 35s linear infinite;
 }
 
+/* ─── Search Dropdown ────────────────────────────────────────── */
+
+@keyframes searchDropdown {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.animate-search-dropdown {
+  animation: searchDropdown 0.15s ease-out both;
+}
+
 /* ─── Blog Animations ────────────────────────────────────────── */
 
 @keyframes shimmer {
