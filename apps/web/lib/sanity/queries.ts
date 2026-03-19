@@ -456,6 +456,90 @@ export const EVENTS_QUERY = groq`
   }
 `
 
+// ── Search ───────────────────────────────────────
+
+// $q should be passed as "term*" from the caller for wildcard matching
+
+export const SEARCH_LISTINGS_QUERY = groq`
+  *[_type == "listing" && status == "published" && (
+    title match $q ||
+    city match $q ||
+    county match $q ||
+    description match $q ||
+    $qLower in tags[]
+  )
+    && select($typeFilter != "" => type == $typeFilter, true)
+    && select($cityFilter != "" => lower(city) == lower($cityFilter), true)
+    && select($subFilter != "" => subcategory == $subFilter, true)
+  ] | order(_createdAt desc) [0...$limit] {
+    _id,
+    title,
+    "slug": slug.current,
+    type,
+    subcategory,
+    city,
+    county,
+    price,
+    priceUnit,
+    "photo": photos[0].asset->url,
+    avgRating,
+    tags
+  }
+`
+
+export const SEARCH_LISTINGS_FALLBACK_QUERY = groq`
+  *[_type == "listing" && status == "published" && (
+    city match $q
+  )
+    && select($typeFilter != "" => type == $typeFilter, true)
+    && select($cityFilter != "" => lower(city) == lower($cityFilter), true)
+  ] | order(_createdAt desc) [0...6] {
+    _id,
+    title,
+    "slug": slug.current,
+    type,
+    subcategory,
+    city,
+    county,
+    price,
+    priceUnit,
+    "photo": photos[0].asset->url,
+    avgRating,
+    tags
+  }
+`
+
+export const SEARCH_DESTINATIONS_QUERY = groq`
+  *[_type == "destination" && (
+    name match $q ||
+    city match $q ||
+    tagline match $q
+  )] | order(name asc) [0..5] {
+    _id,
+    name,
+    "slug": slug.current,
+    tagline,
+    city,
+    "heroImage": heroImage.asset->url
+  }
+`
+
+export const SEARCH_BLOG_POSTS_QUERY = groq`
+  *[_type == "blogPost" && status == "published" && (
+    title match $q ||
+    excerpt match $q
+  )] | order(publishedAt desc) [0..3] {
+    _id,
+    title,
+    "slug": slug.current,
+    excerpt,
+    tags,
+    readingTime,
+    publishedAt,
+    "coverImage": coverImage.asset->url
+  }
+`
+
 // ── Home Page ────────────────────────────────────
 
 export const HOME_PAGE_QUERY = groq`
