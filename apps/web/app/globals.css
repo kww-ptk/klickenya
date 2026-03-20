@@ -113,6 +113,17 @@ body {
   animation: searchDropdown 0.18s ease-out both;
 }
 
+/* ─── Mobile Search Overlay ─────────────────────────────────── */
+
+@keyframes mobileSearchSlideUp {
+  from { opacity: 0; transform: translateY(100%); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.animate-mobile-search {
+  animation: mobileSearchSlideUp 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
 /* ─── Blog Animations ────────────────────────────────────────── */
 
 @keyframes shimmer {

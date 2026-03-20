@@ -158,7 +158,7 @@ function Nav({ transparent = false }: NavProps) {
         className={cn(
           "fixed top-0 left-0 right-0 z-[200] h-[68px] flex items-center px-5 md:px-10 transition-all duration-300 border-b",
           solid
-            ? "bg-white/96 backdrop-blur-[24px] backdrop-saturate-[180%] border-border shadow-[0_1px_0_var(--color-border)]"
+            ? "bg-white/96 backdrop-blur-[24px] backdrop-saturate-[180%] border-border shadow-[0_1px_0_var(--color-border)] max-md:-translate-y-full max-md:pointer-events-none"
             : "bg-transparent border-transparent"
         )}
       >

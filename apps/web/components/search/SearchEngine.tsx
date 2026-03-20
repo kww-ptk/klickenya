@@ -3,8 +3,9 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useState, useEffect, useRef, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { usePathname, useRouter } from "next/navigation";
-import { Search, X, MapPin } from "lucide-react";
+import { Search, X, MapPin, ArrowLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSearch } from "@/hooks/useSearch";
 import { SearchDropdown } from "@/components/search/SearchDropdown";
@@ -307,6 +308,8 @@ function SearchEngine({ variant = "hero", className, onExpandChange }: SearchEng
   const [selectedType, setSelectedType] = useState<string | null>(null);
   const [selectedSub, setSelectedSub] = useState<string | null>(null);
   const [heroFilter, setHeroFilter] = useState("");
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+  const [mobileTab, setMobileTab] = useState<"search" | "where" | "what">("search");
 
   const pillRef = useRef<HTMLDivElement>(null);
   const pillInputRef = useRef<HTMLInputElement>(null);
@@ -315,6 +318,8 @@ function SearchEngine({ variant = "hero", className, onExpandChange }: SearchEng
   const megaTimeout = useRef<ReturnType<typeof setTimeout>>(undefined);
   const heroFilterRef = useRef<HTMLInputElement>(null);
   const heroInlineRef = useRef<HTMLDivElement>(null);
+  const mobileInputRef = useRef<HTMLInputElement>(null);
+  const mobileFilterRef = useRef<HTMLInputElement>(null);
 
   const isHero = variant === "hero";
   const isNav = variant === "nav";
@@ -356,8 +361,27 @@ function SearchEngine({ variant = "hero", className, onExpandChange }: SearchEng
     setSelectedCity(null);
     setSelectedType(null);
     setSelectedSub(null);
+    setMobileSearchOpen(false);
     pillClear();
   }, [pathname, pillClear]);
+
+  // Lock body scroll when mobile search is open
+  useEffect(() => {
+    if (mobileSearchOpen) {
+      document.body.style.overflow = "hidden";
+      return () => { document.body.style.overflow = ""; };
+    }
+  }, [mobileSearchOpen]);
+
+  // Auto-focus mobile input when tab changes
+  useEffect(() => {
+    if (!mobileSearchOpen) return;
+    if (mobileTab === "search") {
+      setTimeout(() => mobileInputRef.current?.focus(), 100);
+    } else if (mobileTab === "where") {
+      setTimeout(() => mobileFilterRef.current?.focus(), 100);
+    }
+  }, [mobileSearchOpen, mobileTab]);
 
   // Close pill when clicking outside
   useEffect(() => {
@@ -454,6 +478,7 @@ function SearchEngine({ variant = "hero", className, onExpandChange }: SearchEng
     if (qs) {
       router.push(`/search?${qs}`);
       setPillExpanded(false);
+      setMobileSearchOpen(false);
       setSelectedCity(null);
       setSelectedType(null);
       setSelectedSub(null);
@@ -461,8 +486,26 @@ function SearchEngine({ variant = "hero", className, onExpandChange }: SearchEng
     }
   }, [pillQuery, selectedCity, selectedType, selectedSub, router, pillClear]);
 
+  // Check if mobile (< 768px)
+  const isMobile = () => typeof window !== "undefined" && window.innerWidth < 768;
+
+  const openMobileSearch = (tab: "search" | "where" | "what") => {
+    setMobileTab(tab);
+    setMobileSearchOpen(true);
+  };
+
+  const closeMobileSearch = () => {
+    setMobileSearchOpen(false);
+    setMobileTab("search");
+    setHeroFilter("");
+  };
+
   const handleAnyTimeClick = (e: React.MouseEvent) => {
     e.stopPropagation();
+    if (isHero && isMobile()) {
+      openMobileSearch("search");
+      return;
+    }
     setLocationOpen(false);
     setMegaOpen(false);
     setPillExpanded(true);
@@ -470,6 +513,10 @@ function SearchEngine({ variant = "hero", className, onExpandChange }: SearchEng
 
   const handleAnywhereClick = (e: React.MouseEvent) => {
     e.stopPropagation();
+    if (isHero && isMobile()) {
+      openMobileSearch("where");
+      return;
+    }
     setMegaOpen(false);
     setPillExpanded(false);
     pillClear();
@@ -478,6 +525,10 @@ function SearchEngine({ variant = "hero", className, onExpandChange }: SearchEng
 
   const handleAnyTypeClick = (e: React.MouseEvent) => {
     e.stopPropagation();
+    if (isHero && isMobile()) {
+      openMobileSearch("what");
+      return;
+    }
     setLocationOpen(false);
     setPillExpanded(false);
     pillClear();
@@ -621,7 +672,10 @@ function SearchEngine({ variant = "hero", className, onExpandChange }: SearchEng
           className
         )}
         onClick={() => {
-          // No-op: each column has its own click handler
+          // On mobile hero, tapping anywhere on the pill opens fullscreen search
+          if (isHero && isMobile()) {
+            openMobileSearch("search");
+          }
         }}
       >
         {pillExpanded ? (
@@ -899,6 +953,311 @@ function SearchEngine({ variant = "hero", className, onExpandChange }: SearchEng
         >
           {megaMenuContent}
         </MegaMenu>
+      )}
+
+      {/* ── Mobile full-page search overlay (portal to body) ──────────── */}
+      {mobileSearchOpen && typeof document !== "undefined" && createPortal(
+        <div className="fixed inset-0 z-[300] bg-white flex flex-col animate-mobile-search">
+          {/* Header */}
+          <div className="flex items-center gap-3 px-4 py-3 border-b border-border shrink-0">
+            <button
+              onClick={closeMobileSearch}
+              className="size-9 rounded-full bg-surface flex items-center justify-center shrink-0"
+            >
+              <ArrowLeft className="size-4 text-text" />
+            </button>
+
+            {/* Search input (always visible in header) */}
+            <div className="flex-1 flex items-center gap-2 bg-surface rounded-full px-4 py-2.5">
+              <Search className="size-4 text-text3 shrink-0" />
+              <input
+                ref={mobileInputRef}
+                type="text"
+                value={pillQuery}
+                onChange={(e) => {
+                  setPillQuery(e.target.value);
+                  setMobileTab("search");
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handlePillSearch();
+                }}
+                placeholder="Search stays, experiences..."
+                className="flex-1 text-[15px] text-text bg-transparent outline-none placeholder:text-text3 min-w-0"
+              />
+              {pillQuery && (
+                <button
+                  onClick={() => {
+                    pillClear();
+                    mobileInputRef.current?.focus();
+                  }}
+                  className="shrink-0"
+                >
+                  <X className="size-4 text-text3" />
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Tabs */}
+          <div className="flex border-b border-border shrink-0">
+            {(
+              [
+                { id: "search", label: "Search", icon: "🔍" },
+                { id: "where", label: selectedCity ?? "Where", icon: "📍" },
+                { id: "what", label: typeLabel ?? "What", icon: "✨" },
+              ] as const
+            ).map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setMobileTab(tab.id)}
+                className={cn(
+                  "flex-1 py-3 text-[13px] font-semibold text-center transition-colors border-b-2",
+                  mobileTab === tab.id
+                    ? "text-amber border-amber"
+                    : "text-text3 border-transparent"
+                )}
+              >
+                <span className="mr-1">{tab.icon}</span>
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Tab content */}
+          <div className="flex-1 overflow-y-auto pb-[env(safe-area-inset-bottom)]">
+            {/* ── Search tab ── */}
+            {mobileTab === "search" && (
+              <div>
+                {/* Active filters */}
+                {(selectedCity || typeLabel) && (
+                  <div className="flex items-center gap-2 px-4 pt-3 pb-1">
+                    {selectedCity && (
+                      <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-amber/10 text-amber text-[12px] font-semibold">
+                        📍 {selectedCity}
+                        <button onClick={() => setSelectedCity(null)}>
+                          <X className="size-3" />
+                        </button>
+                      </span>
+                    )}
+                    {typeLabel && (
+                      <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-purple-dim text-purple text-[12px] font-semibold">
+                        ✨ {typeLabel}
+                        <button onClick={() => { setSelectedType(null); setSelectedSub(null); }}>
+                          <X className="size-3" />
+                        </button>
+                      </span>
+                    )}
+                  </div>
+                )}
+
+                {/* Search results */}
+                {pillQuery.length >= 2 ? (
+                  <SearchDropdown
+                    results={pillResults}
+                    isLoading={pillLoading}
+                    isOpen={pillSearchOpen}
+                    query={pillQuery}
+                    onClose={() => {
+                      setPillSearchOpen(false);
+                      closeMobileSearch();
+                    }}
+                    inline
+                  />
+                ) : (
+                  /* Quick actions when no query */
+                  <div className="p-4 space-y-3">
+                    <p className="text-[12px] font-semibold text-text3 uppercase tracking-wider px-1">
+                      Popular searches
+                    </p>
+                    {["Nairobi", "Safari", "Villa", "Diani Beach", "Watamu", "Kilifi"].map((s) => (
+                      <button
+                        key={s}
+                        onClick={() => {
+                          setPillQuery(s);
+                          setMobileTab("search");
+                        }}
+                        className="w-full flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-surface transition-colors text-left"
+                      >
+                        <div className="size-9 rounded-full bg-surface flex items-center justify-center shrink-0">
+                          <Search className="size-4 text-text3" />
+                        </div>
+                        <span className="text-[14px] font-medium text-text">{s}</span>
+                        <ChevronRight className="size-4 text-text3 ml-auto shrink-0" />
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ── Where tab ── */}
+            {mobileTab === "where" && (
+              <div>
+                <div className="px-4 pt-4 pb-2">
+                  <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-surface border border-transparent focus-within:border-amber/30 transition-colors">
+                    <Search className="size-3.5 text-text3 shrink-0" />
+                    <input
+                      ref={mobileFilterRef}
+                      type="text"
+                      value={heroFilter}
+                      onChange={(e) => setHeroFilter(e.target.value)}
+                      placeholder="Search cities..."
+                      className="flex-1 text-[14px] text-text bg-transparent outline-none placeholder:text-text3 min-w-0"
+                    />
+                    {heroFilter && (
+                      <button onClick={() => { setHeroFilter(""); mobileFilterRef.current?.focus(); }}>
+                        <X className="size-3.5 text-text3" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                <div className="px-2 pb-4">
+                  {/* Anywhere */}
+                  {!heroFilter.trim() && (
+                    <>
+                      <button
+                        onClick={() => {
+                          setSelectedCity(null);
+                          if (!selectedType) setMobileTab("what");
+                          else { setMobileTab("search"); handlePillSearch(); }
+                        }}
+                        className={cn(
+                          "w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-colors text-left",
+                          selectedCity === null ? "bg-amber/5 border-l-2 border-amber" : "hover:bg-surface"
+                        )}
+                      >
+                        <div className="size-10 rounded-full bg-gradient-to-br from-amber/20 to-purple/20 flex items-center justify-center shrink-0">
+                          <span className="text-[18px]">🌍</span>
+                        </div>
+                        <div>
+                          <span className={cn("text-[15px] font-semibold", selectedCity === null ? "text-amber" : "text-text")}>
+                            Anywhere
+                          </span>
+                          <p className="text-[12px] text-text3">All locations in Kenya</p>
+                        </div>
+                      </button>
+                      <div className="h-px bg-border mx-3 my-1" />
+                    </>
+                  )}
+
+                  {/* Cities */}
+                  {heroFilteredCities.length === 0 ? (
+                    <p className="text-[14px] text-text3 text-center py-8">No cities found</p>
+                  ) : (
+                    heroFilteredCities.map((c) => {
+                      const isActive = selectedCity === c.city;
+                      return (
+                        <button
+                          key={c.city}
+                          onClick={() => {
+                            setSelectedCity(c.city);
+                            setHeroFilter("");
+                            if (!selectedType) setMobileTab("what");
+                            else { setMobileTab("search"); }
+                          }}
+                          className={cn(
+                            "w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-colors text-left",
+                            isActive ? "bg-amber/5 border-l-2 border-amber" : "hover:bg-surface"
+                          )}
+                        >
+                          {c.image ? (
+                            <Image src={c.image} alt={c.city} width={40} height={40} className="size-10 rounded-full object-cover shrink-0" />
+                          ) : (
+                            <div className="size-10 rounded-full bg-gradient-to-br from-[#6B2D8B] to-[#E8A020] flex items-center justify-center shrink-0">
+                              <MapPin className="size-4 text-white" />
+                            </div>
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <span className={cn("text-[15px] font-semibold block", isActive ? "text-amber" : "text-text")}>
+                              {c.city}
+                            </span>
+                            <span className="text-[12px] text-text3">{c.count} listings</span>
+                          </div>
+                          <ChevronRight className="size-4 text-text3 shrink-0" />
+                        </button>
+                      );
+                    })
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* ── What tab ── */}
+            {mobileTab === "what" && (
+              <div className="p-4 space-y-4">
+                {EXPLORE_CATEGORIES.map((cat) => {
+                  const subs = SUBCATEGORIES_BY_TYPE[cat.type] ?? [];
+                  const isCatActive = selectedType === cat.type && !selectedSub;
+                  return (
+                    <div key={cat.type}>
+                      <button
+                        onClick={() => {
+                          setSelectedType(cat.type);
+                          setSelectedSub(null);
+                          if (!selectedCity) setMobileTab("where");
+                          else setMobileTab("search");
+                        }}
+                        className={cn(
+                          "flex items-center gap-2 w-full text-left py-2 px-2 rounded-xl transition-colors",
+                          isCatActive ? "bg-amber/8" : "hover:bg-surface"
+                        )}
+                      >
+                        <span className="text-[20px]">{cat.icon}</span>
+                        <span className={cn(
+                          "text-[15px] font-bold",
+                          isCatActive ? "text-amber" : "text-text"
+                        )}>
+                          {cat.label}
+                        </span>
+                        <ChevronRight className="size-4 text-text3 ml-auto" />
+                      </button>
+                      <div className="flex flex-wrap gap-1.5 pl-9 pr-2 pb-2 pt-1">
+                        {subs.map((sub) => {
+                          const isSubActive = selectedType === cat.type && selectedSub === sub;
+                          return (
+                            <button
+                              key={sub}
+                              onClick={() => {
+                                setSelectedType(cat.type);
+                                setSelectedSub(sub);
+                                if (!selectedCity) setMobileTab("where");
+                                else setMobileTab("search");
+                              }}
+                              className={cn(
+                                "text-[12px] px-3 py-1.5 rounded-full border transition-colors",
+                                isSubActive
+                                  ? "bg-amber/10 border-amber/30 text-amber font-semibold"
+                                  : "bg-surface border-transparent text-text2 hover:border-amber/20 hover:text-amber"
+                              )}
+                            >
+                              {SUBCATEGORY_ICONS[sub]} {SUBCATEGORY_LABELS[sub] ?? sub}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* Bottom action bar */}
+          {(selectedCity || selectedType || pillQuery.trim()) && (
+            <div className="shrink-0 px-4 py-3 border-t border-border bg-white pb-[calc(12px+env(safe-area-inset-bottom))]">
+              <button
+                onClick={handlePillSearch}
+                className="w-full flex items-center justify-center gap-2 py-3.5 rounded-full bg-amber text-dark font-semibold text-[15px] shadow-[0_4px_14px_rgba(232,160,32,0.35)] active:scale-[0.98] transition-transform"
+              >
+                <Search className="size-4" strokeWidth={2.5} />
+                Search
+                {selectedCity && ` in ${selectedCity}`}
+              </button>
+            </div>
+          )}
+        </div>,
+        document.body
       )}
     </>
   );
