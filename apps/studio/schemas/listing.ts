@@ -91,7 +91,6 @@ export default defineType({
           { title: 'Event', value: 'event' },
           { title: 'Rental', value: 'rental' },
           { title: 'Service', value: 'service' },
-          { title: 'Restaurant', value: 'restaurant' },
         ],
         layout: 'radio',
       },
@@ -346,7 +345,7 @@ export default defineType({
           { title: 'Fast Food', value: 'Fast Food' },
         ],
       },
-      hidden: ({document}: {document: {type?: string}}) => document?.type !== 'restaurant',
+      hidden: ({document}: {document: {type?: string; subcategory?: string}}) => document?.type !== 'restaurant' && document?.subcategory !== 'restaurants',
       group: 'details',
     }),
     defineField({
@@ -360,7 +359,7 @@ export default defineType({
           { title: 'Fine Dining', value: 'fine-dining' },
         ],
       },
-      hidden: ({document}: {document: {type?: string}}) => document?.type !== 'restaurant',
+      hidden: ({document}: {document: {type?: string; subcategory?: string}}) => document?.type !== 'restaurant' && document?.subcategory !== 'restaurants',
       group: 'details',
     }),
     defineField({
@@ -368,7 +367,7 @@ export default defineType({
       title: 'Opening Hours',
       type: 'text',
       rows: 3,
-      hidden: ({document}: {document: {type?: string}}) => document?.type !== 'restaurant',
+      hidden: ({document}: {document: {type?: string; subcategory?: string}}) => document?.type !== 'restaurant' && document?.subcategory !== 'restaurants',
       group: 'details',
     }),
     defineField({
@@ -376,7 +375,7 @@ export default defineType({
       title: 'Reservation Required',
       type: 'boolean',
       initialValue: false,
-      hidden: ({document}: {document: {type?: string}}) => document?.type !== 'restaurant',
+      hidden: ({document}: {document: {type?: string; subcategory?: string}}) => document?.type !== 'restaurant' && document?.subcategory !== 'restaurants',
       group: 'details',
     }),
     defineField({
