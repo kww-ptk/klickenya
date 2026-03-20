@@ -193,10 +193,10 @@ export function SearchPageClient({
   }
 
   return (
-    <div className="min-h-screen bg-white pt-[68px]">
+    <div className="min-h-screen bg-white pt-0 md:pt-[68px]">
       {/* ── Search header ────────────────────────── */}
-      <div className="sticky top-[68px] z-[100] bg-white border-b border-border">
-        <div className="max-w-[1280px] mx-auto px-3 md:px-10 py-3 md:py-4">
+      <div className="sticky top-0 md:top-[68px] z-[100] bg-white border-b border-border">
+        <div className="max-w-[1280px] mx-auto px-3 md:px-10 pt-[max(12px,env(safe-area-inset-top))] md:pt-4 pb-3 md:pb-4">
           {/* Search input */}
           <form onSubmit={handleSearch} className="flex items-center gap-2 md:gap-3 mb-3">
             {/* Back button — mobile */}
