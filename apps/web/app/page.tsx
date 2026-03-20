@@ -22,6 +22,7 @@ import {
 import { Nav } from "@/components/shared/Nav";
 import { Footer } from "@/components/shared/Footer";
 import { ListingCard } from "@/components/listings/ListingCard";
+import { FeaturedListingsSection } from "@/components/home/FeaturedListingsSection";
 import { CategoryNav } from "@/components/listings/CategoryNav";
 import { SearchEngine } from "@/components/search/SearchEngine";
 import { MarqueeTicker } from "@/components/home/MarqueeTicker";
@@ -62,9 +63,14 @@ interface SanityListing {
   title: string;
   slug: { current: string };
   type: "stay" | "experience" | "event" | "rental" | "service" | "restaurant";
+  subcategory?: string;
   city: string;
   price: number;
   priceUnit: string;
+  priceRange?: string;
+  openingHours?: string;
+  avgRating?: number;
+  reviewCount?: number;
   tags?: string[];
   coverPhoto?: { asset?: { url?: string } };
 }
@@ -256,31 +262,27 @@ export default async function HomePage() {
         </div>
 
         {featuredListings.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-5 gap-y-10">
-            {featuredListings.map((listing) => (
-              <ListingCard
-                key={listing._id}
-                id={listing._id}
-                title={listing.title}
-                city={listing.city}
-                price={listing.price}
-                priceUnit={listing.priceUnit}
-                type={listing.type}
-                photos={
-                  listing.coverPhoto?.asset?.url
-                    ? [listing.coverPhoto.asset.url]
-                    : []
-                }
-                href={`/${listing.type}s/${listing.city?.toLowerCase()}/${listing.slug.current}`}
-              />
-            ))}
-          </div>
+          <FeaturedListingsSection
+            listings={featuredListings.map((listing) => ({
+              id: listing._id,
+              title: listing.title,
+              city: listing.city,
+              price: listing.price ?? null,
+              priceUnit: listing.priceUnit,
+              priceRange: listing.priceRange,
+              rating: listing.avgRating,
+              reviewCount: listing.reviewCount,
+              type: listing.type,
+              subcategory: listing.subcategory,
+              openingHours: listing.openingHours,
+              photos: listing.coverPhoto?.asset?.url
+                ? [listing.coverPhoto.asset.url]
+                : [],
+              href: `/${listing.type}s/${listing.city?.toLowerCase()}/${listing.slug.current}`,
+            }))}
+          />
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-5 gap-y-10">
-            {PLACEHOLDER_LISTINGS.map((listing) => (
-              <ListingCard key={listing.id} {...listing} />
-            ))}
-          </div>
+          <FeaturedListingsSection listings={PLACEHOLDER_LISTINGS} />
         )}
       </section>
 

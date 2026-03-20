@@ -20,6 +20,10 @@ const LISTING_CARD_FIELDS = `
   county,
   price,
   priceUnit,
+  priceRange,
+  openingHours,
+  avgRating,
+  reviewCount,
   tags,
   "coverPhoto": photos[0]{ ${IMAGE_FIELDS} }
 `

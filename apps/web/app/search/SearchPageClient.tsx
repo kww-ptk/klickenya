@@ -21,6 +21,9 @@ interface Listing {
   county?: string;
   price?: number;
   price_unit?: string;
+  price_range?: string;
+  opening_hours?: string;
+  review_count?: number;
   photos?: string[];
   avg_rating?: number;
   status?: string;
@@ -474,8 +477,12 @@ export function SearchPageClient({
                                 city={l.city ?? ""}
                                 price={l.price ?? null}
                                 priceUnit={l.price_unit}
+                                priceRange={l.price_range}
                                 rating={l.avg_rating}
+                                reviewCount={l.review_count}
                                 type={l.type as "stay" | "experience" | "event" | "service" | "restaurant" | "rental"}
+                                subcategory={l.subcategory}
+                                openingHours={l.opening_hours}
                                 photos={l.photos ?? []}
                                 href={`${meta.path}/${citySlug}/${l.slug}`}
                               />
@@ -504,8 +511,12 @@ export function SearchPageClient({
                           city={l.city ?? ""}
                           price={l.price ?? null}
                           priceUnit={l.price_unit}
+                          priceRange={l.price_range}
                           rating={l.avg_rating}
+                          reviewCount={l.review_count}
                           type={l.type as "stay" | "experience" | "event" | "service" | "restaurant" | "rental"}
+                          subcategory={l.subcategory}
+                          openingHours={l.opening_hours}
                           photos={l.photos ?? []}
                           href={`${meta.path}/${citySlug}/${l.slug}`}
                         />
