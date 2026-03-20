@@ -13,7 +13,7 @@ const STATUS_CONFIG = {
     color: "#22C55E",
     bg: "#F0FDF4",
     border: "#BBF7D0",
-    icon: "&#10003;",
+    icon: "✓",
     text: "Great news! Your request has been approved.",
   },
   rejected: {
@@ -21,7 +21,7 @@ const STATUS_CONFIG = {
     color: "#EF4444",
     bg: "#FEF2F2",
     border: "#FECACA",
-    icon: "&#10007;",
+    icon: "✗",
     text: "Unfortunately, your request could not be accommodated.",
   },
   pending: {
@@ -29,7 +29,7 @@ const STATUS_CONFIG = {
     color: "#F59E0B",
     bg: "#FFFBEB",
     border: "#FDE68A",
-    icon: "&#8987;",
+    icon: "⏳",
     text: "Your request is being reviewed.",
   },
   info: {
@@ -37,7 +37,7 @@ const STATUS_CONFIG = {
     color: "#3B82F6",
     bg: "#EFF6FF",
     border: "#BFDBFE",
-    icon: "&#9432;",
+    icon: "ℹ",
     text: "Here's an update regarding your enquiry.",
   },
 };
@@ -93,7 +93,9 @@ export function adminReplyHtml(props: AdminReplyProps): string {
                   <td style="background-color:${cfg.bg};border:1px solid ${cfg.border};border-radius:8px;padding:16px 20px;">
                     <table role="presentation" cellpadding="0" cellspacing="0">
                       <tr>
-                        <td style="width:36px;height:36px;min-width:36px;max-width:36px;background-color:${cfg.color};border-radius:50%;text-align:center;vertical-align:middle;color:#ffffff;font-size:18px;font-weight:700;line-height:36px;">${cfg.icon}</td>
+                        <td width="36" style="width:36px;vertical-align:middle;">
+                          <div style="width:36px;height:36px;background-color:${cfg.color};border-radius:18px;text-align:center;line-height:36px;color:#ffffff;font-size:16px;font-weight:700;display:block;">${cfg.icon}</div>
+                        </td>
                         <td style="padding-left:14px;">
                           <p style="margin:0;font-size:16px;font-weight:700;color:${cfg.color};">${cfg.label}</p>
                           <p style="margin:4px 0 0;font-size:13px;color:#666;">${cfg.text}</p>

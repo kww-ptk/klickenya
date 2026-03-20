@@ -9,7 +9,7 @@ interface ContactRequestActionsProps {
   currentNotes: string;
   guestName: string;
   listingTitle: string;
-  replyHistory: { date: string; status: string; subject: string; message: string }[];
+  replyHistory: { date: string; status: string; subject: string; message: string; isUserReply?: boolean }[];
 }
 
 export function ContactRequestActions({
@@ -340,12 +340,17 @@ export function ContactRequestActions({
                 rejected: "text-[#EF4444] bg-[#EF4444]/10",
                 pending: "text-[#F59E0B] bg-[#F59E0B]/10",
                 info: "text-[#3B82F6] bg-[#3B82F6]/10",
+                "user-reply": "text-[#8B5CF6] bg-[#8B5CF6]/10",
               };
               const cls = statusColors[entry.status] || statusColors.info;
               return (
                 <div
                   key={i}
-                  className="border border-[#F0EDE8] rounded-xl p-4 space-y-2"
+                  className={`border rounded-xl p-4 space-y-2 ${
+                    entry.isUserReply
+                      ? "border-[#8B5CF6]/30 bg-[#8B5CF6]/[0.02]"
+                      : "border-[#F0EDE8]"
+                  }`}
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">

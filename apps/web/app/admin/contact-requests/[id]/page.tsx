@@ -36,9 +36,9 @@ export default async function ContactRequestDetailPage({
   const typeMatch = notesStr.match(/^Type: (.+)$/m);
   const parsedListing = listingMatch?.[1] ?? null;
   const parsedType = typeMatch?.[1] ?? null;
-  // Split notes into original enquiry and reply history
-  const replyBlocks = notesStr.split(/\n\n--- REPLY \[/);
-  const originalNotes = replyBlocks[0] || "";
+  // Split notes into original enquiry and conversation blocks
+  const allBlocks = notesStr.split(/\n\n--- (REPLY|USER REPLY) \[/);
+  const originalNotes = allBlocks[0] || "";
 
   const enquiryLines = originalNotes
     .split("\n")
@@ -48,24 +48,43 @@ export default async function ContactRequestDetailPage({
       return [key, rest.join(": ")] as [string, string];
     });
 
-  // Parse reply history
-  const replyHistory = replyBlocks.slice(1).map((block) => {
+  // Parse conversation history (admin replies + user replies)
+  // Re-split with capture to get block type
+  const conversationParts = notesStr.split(/\n\n--- (REPLY|USER REPLY) \[/);
+  const replyHistory: { date: string; status: string; subject: string; message: string; isUserReply: boolean }[] = [];
+
+  for (let i = 1; i < conversationParts.length; i += 2) {
+    const blockType = conversationParts[i]; // "REPLY" or "USER REPLY"
+    const block = conversationParts[i + 1] || "";
+    const isUserReply = blockType === "USER REPLY";
+
     const dateMatch = block.match(/^(.+?)\] ---/);
     const statusMatch = block.match(/\nStatus: (.+)/);
     const subjectMatch = block.match(/\nSubject: (.+)/);
+    const fromMatch = block.match(/\nFrom: (.+)/);
     const date = dateMatch?.[1] ?? "";
-    const status = statusMatch?.[1] ?? "info";
+    const status = isUserReply ? "user-reply" : (statusMatch?.[1] ?? "info");
     const subject = subjectMatch?.[1] ?? "";
-    // Message is everything after the Subject line
-    const msgStart = block.indexOf("\nSubject: ");
-    const afterSubject = msgStart >= 0 ? block.slice(block.indexOf("\n", msgStart + 1) + 1) : "";
-    return {
+
+    // Message is everything after the last header line
+    const lines = block.split("\n");
+    const headerPrefixes = ["] ---", "Status:", "Subject:", "From:"];
+    let msgStartIdx = 0;
+    for (let j = 0; j < lines.length; j++) {
+      if (headerPrefixes.some((p) => lines[j].includes(p))) {
+        msgStartIdx = j + 1;
+      }
+    }
+    const message = lines.slice(msgStartIdx).join("\n").trim();
+
+    replyHistory.push({
       date: date ? new Date(date).toLocaleString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" }) : "",
       status,
-      subject,
-      message: afterSubject.trim(),
-    };
-  });
+      subject: isUserReply ? `Reply from ${fromMatch?.[1] || "user"}` : subject,
+      message,
+      isUserReply,
+    });
+  }
 
   return (
     <div className="space-y-6">

@@ -78,10 +78,18 @@ export async function POST(
     const emailSubject =
       subject || `Re: Your enquiry about ${listingTitle || "your booking"}`;
 
+    // Unique Message-ID for threading
+    const messageId = `<cr-${id}-${Date.now()}@klickenya.com>`;
+
     await resend.emails.send({
       from: "Klickenya <hello@klickenya.com>",
       to: contactRequest.email,
+      replyTo: "hello@klickenya.com",
       subject: emailSubject,
+      headers: {
+        "Message-ID": messageId,
+        "X-Klickenya-Request-ID": id,
+      },
       html: adminReplyHtml({
         guestName,
         listingTitle,
