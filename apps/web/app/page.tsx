@@ -115,8 +115,17 @@ export default async function HomePage() {
   const sanityEventCards = events.map(mapSanityEventToCard);
   const eventCards = sanityEventCards.length > 0 ? sanityEventCards : PLACEHOLDER_EVENTS;
 
-  // CMS arrays with hardcoded fallbacks
-  const heroStats = homePage?.heroStats?.length ? homePage.heroStats : HERO_STATS;
+  // Dynamic stats from actual data
+  const totalListings = listings.length;
+  const uniqueCities = new Set(listings.map((l) => l.city).filter(Boolean)).size;
+  const dynamicHeroStats = [
+    { value: `${totalListings}+`, label: "Listings" },
+    { value: `${uniqueCities}`, label: "Destinations" },
+    { value: "47", label: "Counties" },
+  ];
+
+  // CMS arrays with dynamic fallbacks
+  const heroStats = homePage?.heroStats?.length ? homePage.heroStats.slice(0, 3) : dynamicHeroStats;
   const statsBar = homePage?.statsBar?.length ? homePage.statsBar : STATS_BAR;
   const howItWorksSteps = homePage?.howItWorksSteps?.length ? homePage.howItWorksSteps : null;
   const testimonials = homePage?.testimonials?.length ? homePage.testimonials : TESTIMONIALS;
@@ -158,9 +167,9 @@ export default async function HomePage() {
         />
 
         {/* Hero content */}
-        <div className="relative z-10 flex flex-col items-center text-center px-5 w-full max-w-[960px] mx-auto pt-[140px] md:pt-[180px] pb-20 md:pb-28">
+        <div className="relative z-10 flex flex-col items-center text-center px-5 w-full max-w-[960px] mx-auto pt-[100px] md:pt-[180px] pb-12 md:pb-28">
           {/* Eyebrow badge */}
-          <div className="flex items-center gap-2.5 px-4 py-2 rounded-full bg-white/10 backdrop-blur-[16px] border border-white/15 mb-8 animate-fade-up">
+          <div className="flex items-center gap-2.5 px-4 py-2 rounded-full bg-white/10 backdrop-blur-[16px] border border-white/15 mb-5 md:mb-8 animate-fade-up">
             <span className="relative flex size-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber opacity-75" />
               <span className="relative inline-flex rounded-full size-2 bg-amber" />
@@ -172,7 +181,7 @@ export default async function HomePage() {
 
           {/* H1 */}
           <h1
-            className="font-display font-bold text-white tracking-[-0.04em] leading-[1.05] mb-5 animate-fade-up"
+            className="font-display font-bold text-white tracking-[-0.04em] leading-[1.05] mb-3 md:mb-5 animate-fade-up"
             style={{
               fontSize: "clamp(44px, 7vw, 88px)",
               animationDelay: "0.1s",
@@ -185,10 +194,10 @@ export default async function HomePage() {
 
           {/* Subtitle */}
           <p
-            className="max-w-[480px] leading-[1.65] mb-10 animate-fade-up"
+            className="max-w-[400px] md:max-w-[480px] leading-[1.55] md:leading-[1.65] mb-6 md:mb-10 animate-fade-up"
             style={{
               color: "rgba(255,255,255,.62)",
-              fontSize: "clamp(16px, 2vw, 19px)",
+              fontSize: "clamp(15px, 2vw, 19px)",
               animationDelay: "0.2s",
             }}
           >
@@ -197,7 +206,7 @@ export default async function HomePage() {
 
           {/* Category pills */}
           <div
-            className="flex items-center justify-center gap-2 mb-6 flex-wrap animate-fade-up"
+            className="flex items-center justify-center gap-1.5 md:gap-2 mb-4 md:mb-6 flex-wrap animate-fade-up"
             style={{ animationDelay: "0.25s" }}
           >
             {[
@@ -228,15 +237,15 @@ export default async function HomePage() {
 
           {/* Stats row */}
           <div
-            className="flex flex-wrap items-center justify-center gap-8 md:gap-12 mt-12 animate-fade-up"
+            className="flex items-center justify-center gap-6 md:gap-12 mt-8 md:mt-12 animate-fade-up"
             style={{ animationDelay: "0.45s" }}
           >
-            {heroStats.map((stat: { value: string; label: string }) => (
+            {heroStats.map((stat: { value: string; label: string }, i: number) => (
               <div key={stat.label} className="flex flex-col items-center">
-                <span className="text-[22px] md:text-[26px] font-bold text-white tracking-[-0.02em]">
+                <span className="text-[20px] md:text-[26px] font-bold text-white tracking-[-0.02em]">
                   {stat.value}
                 </span>
-                <span className="text-[12px] text-white/45 font-medium mt-0.5">
+                <span className="text-[11px] md:text-[12px] text-white/45 font-medium mt-0.5">
                   {stat.label}
                 </span>
               </div>

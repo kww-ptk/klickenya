@@ -109,12 +109,25 @@ function ExploreHoverMenu({
 
 function Nav({ transparent = false }: NavProps) {
   const scrolled = useScrollPosition(50);
+  const [pastHero, setPastHero] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [exploreOpen, setExploreOpen] = useState(false);
   const exploreRef = useRef<HTMLDivElement>(null);
   const exploreDropRef = useRef<HTMLDivElement>(null);
   const exploreTimeout = useRef<ReturnType<typeof setTimeout>>(undefined);
   const pathname = usePathname();
+
+  // On transparent pages (hero), delay search pill on mobile until past the hero
+  useEffect(() => {
+    if (!transparent) { setPastHero(true); return; }
+    const handleScroll = () => {
+      const vh = window.innerHeight;
+      setPastHero(window.scrollY > vh * 0.75);
+    };
+    handleScroll();
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [transparent]);
 
   // Close menus on route change
   useEffect(() => {
@@ -187,7 +200,10 @@ function Nav({ transparent = false }: NavProps) {
             className={cn(
               "flex-1 flex justify-center transition-all duration-300",
               solid
-                ? "opacity-100 translate-y-0 pointer-events-auto"
+                ? // Desktop: show as soon as scrolled; Mobile: only after hero
+                  pastHero
+                  ? "opacity-100 translate-y-0 pointer-events-auto"
+                  : "md:opacity-100 md:translate-y-0 md:pointer-events-auto opacity-0 -translate-y-1.5 pointer-events-none"
                 : "opacity-0 -translate-y-1.5 pointer-events-none"
             )}
           >
