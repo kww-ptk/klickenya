@@ -1,5 +1,7 @@
 import { defineType, defineField } from 'sanity'
 
+/* ── Constants ──────────────────────────────────────── */
+
 const KENYAN_COUNTIES = [
   'Baringo', 'Bomet', 'Bungoma', 'Busia', 'Elgeyo-Marakwet',
   'Embu', 'Garissa', 'Homa Bay', 'Isiolo', 'Kajiado',
@@ -54,22 +56,53 @@ const TAG_SUGGESTIONS = [
   'serviced', 'smart-home', 'payment-plan',
 ]
 
+/* ── Hidden helpers ─────────────────────────────────── */
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type HiddenCtx = { document?: Record<string, any> }
+
+const isRestaurant = ({ document }: HiddenCtx) =>
+  document?.subcategory === 'restaurants'
+
+const isNotRestaurant = ({ document }: HiddenCtx) =>
+  document?.subcategory !== 'restaurants'
+
+const isExperience = ({ document }: HiddenCtx) =>
+  document?.type === 'experience' && document?.subcategory !== 'restaurants'
+
+const isEvent = ({ document }: HiddenCtx) =>
+  document?.type === 'event'
+
+const isService = ({ document }: HiddenCtx) =>
+  document?.type === 'service'
+
+/* ── Schema ─────────────────────────────────────────── */
+
 export default defineType({
   name: 'listing',
   title: 'Listing',
   type: 'document',
   groups: [
-    { name: 'details', title: 'Details', default: true },
+    { name: 'general', title: 'General', default: true },
+    { name: 'media', title: 'Media' },
+    { name: 'restaurant', title: '🍽️ Restaurant' },
+    { name: 'experience', title: '🧭 Experience' },
+    { name: 'event', title: '🎫 Event' },
+    { name: 'service', title: '🔧 Service' },
+    { name: 'seo', title: 'SEO' },
     { name: 'notifications', title: 'Notifications' },
   ],
   fields: [
+    /* ═══════════════════════════════════════════════════
+       GENERAL GROUP
+       ═══════════════════════════════════════════════════ */
     defineField({
       name: 'title',
       title: 'Title',
       type: 'string',
       description: "Clear, searchable title e.g. 'Maasai Mara Full-Day Game Drive'",
       validation: (rule) => rule.required(),
-      group: 'details',
+      group: 'general',
     }),
     defineField({
       name: 'slug',
@@ -78,7 +111,7 @@ export default defineType({
       description: 'Auto-generated from title. Used in the URL.',
       options: { source: 'title', maxLength: 96 },
       validation: (rule) => rule.required(),
-      group: 'details',
+      group: 'general',
     }),
     defineField({
       name: 'type',
@@ -95,7 +128,7 @@ export default defineType({
         layout: 'radio',
       },
       validation: (rule) => rule.required(),
-      group: 'details',
+      group: 'general',
     }),
     defineField({
       name: 'subcategory',
@@ -145,7 +178,7 @@ export default defineType({
         ],
       },
       validation: (rule) => rule.required().warning('Please select a subcategory'),
-      group: 'details',
+      group: 'general',
     }),
     defineField({
       name: 'status',
@@ -160,14 +193,14 @@ export default defineType({
         layout: 'radio',
       },
       initialValue: 'draft',
-      group: 'details',
+      group: 'general',
     }),
     defineField({
       name: 'city',
       title: 'City',
       type: 'string',
       validation: (rule) => rule.required(),
-      group: 'details',
+      group: 'general',
     }),
     defineField({
       name: 'county',
@@ -176,14 +209,14 @@ export default defineType({
       options: {
         list: KENYAN_COUNTIES.map((c) => ({ title: c, value: c })),
       },
-      group: 'details',
+      group: 'general',
     }),
     defineField({
       name: 'address',
       title: 'Address',
       type: 'text',
       rows: 2,
-      group: 'details',
+      group: 'general',
     }),
     defineField({
       name: 'price',
@@ -191,7 +224,7 @@ export default defineType({
       type: 'number',
       description: 'Price in KES',
       validation: (rule) => rule.min(0),
-      group: 'details',
+      group: 'general',
     }),
     defineField({
       name: 'priceUnit',
@@ -206,7 +239,7 @@ export default defineType({
           { title: 'Per Ticket', value: 'ticket' },
         ],
       },
-      group: 'details',
+      group: 'general',
     }),
     defineField({
       name: 'bookingType',
@@ -220,14 +253,14 @@ export default defineType({
         ],
       },
       initialValue: 'contact_form',
-      group: 'details',
+      group: 'general',
     }),
     defineField({
       name: 'maxGuests',
       title: 'Maximum guests',
       type: 'number',
       validation: (rule) => rule.min(1),
-      group: 'details',
+      group: 'general',
     }),
     defineField({
       name: 'description',
@@ -244,8 +277,64 @@ export default defineType({
         { type: 'photoRowBlock' },
         { type: 'statRowBlock' },
       ],
-      group: 'details',
+      group: 'general',
     }),
+    defineField({
+      name: 'amenities',
+      title: 'Amenities',
+      type: 'array',
+      of: [{ type: 'string' }],
+      options: {
+        list: AMENITIES.map((a) => ({ title: a, value: a })),
+      },
+      group: 'general',
+    }),
+    defineField({
+      name: 'tags',
+      title: 'Tags',
+      type: 'array',
+      of: [{ type: 'string' }],
+      description: 'Select from suggestions or type custom tags for search and filtering',
+      options: {
+        list: TAG_SUGGESTIONS.map((t) => ({ title: t, value: t })),
+      },
+      group: 'general',
+    }),
+    defineField({
+      name: 'hostName',
+      title: 'Host name',
+      type: 'string',
+      description: 'Name of the person or business hosting this listing',
+      group: 'general',
+    }),
+    defineField({
+      name: 'highlights',
+      title: 'Highlights',
+      type: 'array',
+      description: 'Up to 6 key features shown on the listing page',
+      of: [
+        {
+          type: 'object',
+          fields: [
+            { name: 'emoji', title: 'Emoji', type: 'string', validation: (rule: any) => rule.required() },
+            { name: 'title', title: 'Title', type: 'string', validation: (rule: any) => rule.required() },
+            { name: 'description', title: 'Description', type: 'string', validation: (rule: any) => rule.required() },
+          ],
+          preview: {
+            select: { title: 'title', subtitle: 'description', media: 'emoji' },
+            prepare({ title, subtitle, media }: { title?: string; subtitle?: string; media?: string }) {
+              return { title: `${media ?? ''} ${title ?? ''}`, subtitle }
+            },
+          },
+        },
+      ],
+      validation: (rule) => rule.max(6),
+      group: 'general',
+    }),
+
+    /* ═══════════════════════════════════════════════════
+       MEDIA GROUP
+       ═══════════════════════════════════════════════════ */
     defineField({
       name: 'photos',
       title: 'Photos',
@@ -272,60 +361,13 @@ export default defineType({
           }
           return true
         }),
-      group: 'details',
+      group: 'media',
     }),
-    defineField({
-      name: 'amenities',
-      title: 'Amenities',
-      type: 'array',
-      of: [{ type: 'string' }],
-      options: {
-        list: AMENITIES.map((a) => ({ title: a, value: a })),
-      },
-      group: 'details',
-    }),
-    defineField({
-      name: 'tags',
-      title: 'Tags',
-      type: 'array',
-      of: [{ type: 'string' }],
-      description: 'Select from suggestions or type custom tags for search and filtering',
-      options: {
-        list: TAG_SUGGESTIONS.map((t) => ({ title: t, value: t })),
-      },
-      group: 'details',
-    }),
-    defineField({
-      name: 'hostName',
-      title: 'Host name',
-      type: 'string',
-      description: 'Name of the person or business hosting this listing',
-      group: 'details',
-    }),
-    defineField({
-      name: 'highlights',
-      title: 'Highlights',
-      type: 'array',
-      description: 'Up to 6 key features shown on the listing page',
-      of: [
-        {
-          type: 'object',
-          fields: [
-            { name: 'emoji', title: 'Emoji', type: 'string', validation: (rule: any) => rule.required() },
-            { name: 'title', title: 'Title', type: 'string', validation: (rule: any) => rule.required() },
-            { name: 'description', title: 'Description', type: 'string', validation: (rule: any) => rule.required() },
-          ],
-          preview: {
-            select: { title: 'title', subtitle: 'description', media: 'emoji' },
-            prepare({ title, subtitle, media }: { title?: string; subtitle?: string; media?: string }) {
-              return { title: `${media ?? ''} ${title ?? ''}`, subtitle }
-            },
-          },
-        },
-      ],
-      validation: (rule) => rule.max(6),
-      group: 'details',
-    }),
+
+    /* ═══════════════════════════════════════════════════
+       🍽️ RESTAURANT GROUP
+       Shown when subcategory === "restaurants"
+       ═══════════════════════════════════════════════════ */
     defineField({
       name: 'cuisine',
       title: 'Cuisine',
@@ -343,10 +385,14 @@ export default defineType({
           { title: 'Seafood', value: 'Seafood' },
           { title: 'Vegetarian', value: 'Vegetarian' },
           { title: 'Fast Food', value: 'Fast Food' },
+          { title: 'Japanese', value: 'Japanese' },
+          { title: 'French', value: 'French' },
+          { title: 'Fusion', value: 'Fusion' },
+          { title: 'Vegan', value: 'Vegan' },
         ],
       },
-      hidden: ({document}: {document: {type?: string; subcategory?: string}}) => document?.type !== 'restaurant' && document?.subcategory !== 'restaurants',
-      group: 'details',
+      hidden: isNotRestaurant,
+      group: 'restaurant',
     }),
     defineField({
       name: 'priceRange',
@@ -354,30 +400,407 @@ export default defineType({
       type: 'string',
       options: {
         list: [
-          { title: 'Budget', value: 'budget' },
-          { title: 'Mid-Range', value: 'mid-range' },
-          { title: 'Fine Dining', value: 'fine-dining' },
+          { title: '$ Budget', value: 'budget' },
+          { title: '$$ Mid-Range', value: 'mid-range' },
+          { title: '$$$ Fine Dining', value: 'fine-dining' },
         ],
       },
-      hidden: ({document}: {document: {type?: string; subcategory?: string}}) => document?.type !== 'restaurant' && document?.subcategory !== 'restaurants',
-      group: 'details',
+      hidden: isNotRestaurant,
+      group: 'restaurant',
     }),
     defineField({
       name: 'openingHours',
       title: 'Opening Hours',
       type: 'text',
       rows: 3,
-      hidden: ({document}: {document: {type?: string; subcategory?: string}}) => document?.type !== 'restaurant' && document?.subcategory !== 'restaurants',
-      group: 'details',
+      description: 'e.g. "Daily 8:00 AM – 10:30 PM" or "Mon–Sat 11 AM – 9 PM. Closed Sundays."',
+      hidden: isNotRestaurant,
+      group: 'restaurant',
+    }),
+    defineField({
+      name: 'atmosphere',
+      title: 'Atmosphere',
+      type: 'string',
+      options: {
+        list: [
+          { title: 'Casual', value: 'casual' },
+          { title: 'Romantic', value: 'romantic' },
+          { title: 'Family-Friendly', value: 'family' },
+          { title: 'Lively / Vibrant', value: 'lively' },
+          { title: 'Fine Dining', value: 'fine-dining' },
+          { title: 'Beachfront', value: 'beachfront' },
+          { title: 'Rooftop', value: 'rooftop' },
+          { title: 'Garden', value: 'garden' },
+        ],
+      },
+      hidden: isNotRestaurant,
+      group: 'restaurant',
+    }),
+    defineField({
+      name: 'menu',
+      title: 'Featured Menu Items',
+      type: 'array',
+      description: 'Highlight up to 10 signature dishes',
+      of: [
+        {
+          type: 'object',
+          fields: [
+            { name: 'name', title: 'Dish Name', type: 'string', validation: (rule: any) => rule.required() },
+            { name: 'description', title: 'Description', type: 'string' },
+            { name: 'price', title: 'Price (KES)', type: 'number' },
+          ],
+          preview: {
+            select: { title: 'name', subtitle: 'description', price: 'price' },
+            prepare({ title, subtitle, price }: { title?: string; subtitle?: string; price?: number }) {
+              return {
+                title: title ?? 'Untitled',
+                subtitle: price ? `KSh ${price} — ${subtitle ?? ''}` : subtitle ?? '',
+              }
+            },
+          },
+        },
+      ],
+      validation: (rule) => rule.max(10),
+      hidden: isNotRestaurant,
+      group: 'restaurant',
     }),
     defineField({
       name: 'reservationRequired',
       title: 'Reservation Required',
       type: 'boolean',
       initialValue: false,
-      hidden: ({document}: {document: {type?: string; subcategory?: string}}) => document?.type !== 'restaurant' && document?.subcategory !== 'restaurants',
-      group: 'details',
+      hidden: isNotRestaurant,
+      group: 'restaurant',
     }),
+
+    /* ═══════════════════════════════════════════════════
+       🧭 EXPERIENCE GROUP
+       Shown when type === "experience" AND NOT restaurant
+       ═══════════════════════════════════════════════════ */
+    defineField({
+      name: 'duration',
+      title: 'Duration',
+      type: 'string',
+      description: 'How long the experience takes',
+      options: {
+        list: [
+          { title: '1 hour', value: '1-hour' },
+          { title: '2 hours', value: '2-hours' },
+          { title: '3 hours', value: '3-hours' },
+          { title: 'Half day (4–5 hrs)', value: 'half-day' },
+          { title: 'Full day (6–8 hrs)', value: 'full-day' },
+          { title: 'Multi-day', value: 'multi-day' },
+        ],
+      },
+      hidden: ({ document }: HiddenCtx) => !isExperience({ document }),
+      group: 'experience',
+    }),
+    defineField({
+      name: 'maxGroupSize',
+      title: 'Max Group Size',
+      type: 'number',
+      description: 'Maximum participants per session',
+      validation: (rule) => rule.min(1),
+      hidden: ({ document }: HiddenCtx) => !isExperience({ document }),
+      group: 'experience',
+    }),
+    defineField({
+      name: 'difficulty',
+      title: 'Difficulty',
+      type: 'string',
+      options: {
+        list: [
+          { title: 'Easy — suitable for everyone', value: 'easy' },
+          { title: 'Moderate — basic fitness required', value: 'moderate' },
+          { title: 'Advanced — experience required', value: 'advanced' },
+        ],
+        layout: 'radio',
+      },
+      hidden: ({ document }: HiddenCtx) => !isExperience({ document }),
+      group: 'experience',
+    }),
+    defineField({
+      name: 'minAge',
+      title: 'Minimum Age',
+      type: 'number',
+      description: 'Minimum age for participants (leave blank if none)',
+      validation: (rule) => rule.min(0),
+      hidden: ({ document }: HiddenCtx) => !isExperience({ document }),
+      group: 'experience',
+    }),
+    defineField({
+      name: 'languages',
+      title: 'Languages',
+      type: 'array',
+      of: [{ type: 'string' }],
+      description: 'Languages the guide/host speaks',
+      options: {
+        list: [
+          { title: 'English', value: 'English' },
+          { title: 'Swahili', value: 'Swahili' },
+          { title: 'Italian', value: 'Italian' },
+          { title: 'French', value: 'French' },
+          { title: 'German', value: 'German' },
+          { title: 'Spanish', value: 'Spanish' },
+        ],
+      },
+      hidden: ({ document }: HiddenCtx) => !isExperience({ document }),
+      group: 'experience',
+    }),
+    defineField({
+      name: 'included',
+      title: "What's Included",
+      type: 'array',
+      of: [{ type: 'string' }],
+      description: 'e.g. "Lunch", "Park entrance fees", "Transport from hotel"',
+      hidden: ({ document }: HiddenCtx) => !isExperience({ document }),
+      group: 'experience',
+    }),
+    defineField({
+      name: 'notIncluded',
+      title: 'Not Included',
+      type: 'array',
+      of: [{ type: 'string' }],
+      description: 'e.g. "Tips", "Travel insurance", "Personal expenses"',
+      hidden: ({ document }: HiddenCtx) => !isExperience({ document }),
+      group: 'experience',
+    }),
+    defineField({
+      name: 'guideInfo',
+      title: 'Guide / Host Info',
+      type: 'text',
+      rows: 3,
+      description: 'Brief bio or credentials of the guide or host',
+      hidden: ({ document }: HiddenCtx) => !isExperience({ document }),
+      group: 'experience',
+    }),
+    defineField({
+      name: 'meetingPoint',
+      title: 'Meeting Point',
+      type: 'string',
+      description: 'Where participants should meet (e.g. "Watamu Marine Park gate")',
+      hidden: ({ document }: HiddenCtx) => !isExperience({ document }),
+      group: 'experience',
+    }),
+    defineField({
+      name: 'whatToBring',
+      title: 'What to Bring',
+      type: 'array',
+      of: [{ type: 'string' }],
+      description: 'e.g. "Sunscreen", "Comfortable shoes", "Snorkel gear (optional)"',
+      hidden: ({ document }: HiddenCtx) => !isExperience({ document }),
+      group: 'experience',
+    }),
+
+    /* ═══════════════════════════════════════════════════
+       🎫 EVENT GROUP
+       Shown when type === "event"
+       ═══════════════════════════════════════════════════ */
+    defineField({
+      name: 'eventDate',
+      title: 'Event Start Date & Time',
+      type: 'datetime',
+      description: 'When the event starts (leave blank for recurring events)',
+      hidden: ({ document }: HiddenCtx) => !isEvent({ document }),
+      group: 'event',
+    }),
+    defineField({
+      name: 'eventEndDate',
+      title: 'Event End Date & Time',
+      type: 'datetime',
+      description: 'When the event ends (optional)',
+      hidden: ({ document }: HiddenCtx) => !isEvent({ document }),
+      group: 'event',
+    }),
+    defineField({
+      name: 'venue',
+      title: 'Venue',
+      type: 'string',
+      description: 'Name of the venue (e.g. "Papa Remo Beach Club")',
+      hidden: ({ document }: HiddenCtx) => !isEvent({ document }),
+      group: 'event',
+    }),
+    defineField({
+      name: 'lineup',
+      title: 'Lineup / Schedule',
+      type: 'array',
+      description: 'Add performers, DJs, speakers, or schedule items',
+      of: [
+        {
+          type: 'object',
+          fields: [
+            { name: 'name', title: 'Name', type: 'string', validation: (rule: any) => rule.required() },
+            { name: 'role', title: 'Role', type: 'string', description: 'e.g. "DJ", "Live Band", "Speaker"' },
+            { name: 'time', title: 'Time', type: 'string', description: 'e.g. "8:00 PM – 10:00 PM"' },
+          ],
+          preview: {
+            select: { title: 'name', subtitle: 'role', time: 'time' },
+            prepare({ title, subtitle, time }: { title?: string; subtitle?: string; time?: string }) {
+              return {
+                title: title ?? 'TBA',
+                subtitle: [subtitle, time].filter(Boolean).join(' · '),
+              }
+            },
+          },
+        },
+      ],
+      hidden: ({ document }: HiddenCtx) => !isEvent({ document }),
+      group: 'event',
+    }),
+    defineField({
+      name: 'ticketTypes',
+      title: 'Ticket Types',
+      type: 'array',
+      description: 'Different ticket tiers (e.g. General, VIP, Early Bird)',
+      of: [
+        {
+          type: 'object',
+          fields: [
+            { name: 'name', title: 'Ticket Name', type: 'string', validation: (rule: any) => rule.required() },
+            { name: 'price', title: 'Price (KES)', type: 'number', validation: (rule: any) => rule.required().min(0) },
+            { name: 'description', title: 'Description', type: 'string' },
+          ],
+          preview: {
+            select: { title: 'name', price: 'price', subtitle: 'description' },
+            prepare({ title, price, subtitle }: { title?: string; price?: number; subtitle?: string }) {
+              return {
+                title: `${title ?? 'Ticket'} — KSh ${(price ?? 0).toLocaleString()}`,
+                subtitle: subtitle ?? '',
+              }
+            },
+          },
+        },
+      ],
+      hidden: ({ document }: HiddenCtx) => !isEvent({ document }),
+      group: 'event',
+    }),
+    defineField({
+      name: 'ageRestriction',
+      title: 'Age Restriction',
+      type: 'string',
+      options: {
+        list: [
+          { title: 'All Ages', value: 'all-ages' },
+          { title: '18+', value: '18+' },
+          { title: '21+', value: '21+' },
+        ],
+      },
+      hidden: ({ document }: HiddenCtx) => !isEvent({ document }),
+      group: 'event',
+    }),
+    defineField({
+      name: 'dresscode',
+      title: 'Dress Code',
+      type: 'string',
+      description: 'e.g. "Smart casual", "Beach wear", "All white"',
+      hidden: ({ document }: HiddenCtx) => !isEvent({ document }),
+      group: 'event',
+    }),
+
+    /* ═══════════════════════════════════════════════════
+       🔧 SERVICE GROUP
+       Shown when type === "service"
+       ═══════════════════════════════════════════════════ */
+    defineField({
+      name: 'serviceArea',
+      title: 'Service Area',
+      type: 'string',
+      description: 'Where this service operates (e.g. "Watamu & Kilifi", "Nationwide")',
+      hidden: ({ document }: HiddenCtx) => !isService({ document }),
+      group: 'service',
+    }),
+    defineField({
+      name: 'responseTime',
+      title: 'Typical Response Time',
+      type: 'string',
+      options: {
+        list: [
+          { title: 'Within 1 hour', value: 'within-1-hour' },
+          { title: 'Same day', value: 'same-day' },
+          { title: 'Within 24 hours', value: 'within-24-hours' },
+          { title: 'Within 48 hours', value: 'within-48-hours' },
+        ],
+      },
+      hidden: ({ document }: HiddenCtx) => !isService({ document }),
+      group: 'service',
+    }),
+    defineField({
+      name: 'isVerified',
+      title: 'Verified Provider',
+      type: 'boolean',
+      description: 'Has this provider been verified by the Klickenya team?',
+      initialValue: false,
+      hidden: ({ document }: HiddenCtx) => !isService({ document }),
+      group: 'service',
+    }),
+    defineField({
+      name: 'pricingTable',
+      title: 'Pricing Table',
+      type: 'array',
+      description: 'List services with their prices',
+      of: [
+        {
+          type: 'object',
+          fields: [
+            { name: 'service', title: 'Service', type: 'string', validation: (rule: any) => rule.required() },
+            { name: 'price', title: 'Price (KES)', type: 'number', validation: (rule: any) => rule.required().min(0) },
+            { name: 'unit', title: 'Per', type: 'string', description: 'e.g. "session", "hour", "item"' },
+          ],
+          preview: {
+            select: { title: 'service', price: 'price', unit: 'unit' },
+            prepare({ title, price, unit }: { title?: string; price?: number; unit?: string }) {
+              return {
+                title: title ?? 'Service',
+                subtitle: `KSh ${(price ?? 0).toLocaleString()}${unit ? ` / ${unit}` : ''}`,
+              }
+            },
+          },
+        },
+      ],
+      hidden: ({ document }: HiddenCtx) => !isService({ document }),
+      group: 'service',
+    }),
+    defineField({
+      name: 'providerInfo',
+      title: 'Provider Info',
+      type: 'text',
+      rows: 4,
+      description: 'Background info, qualifications, or certifications of the service provider',
+      hidden: ({ document }: HiddenCtx) => !isService({ document }),
+      group: 'service',
+    }),
+    defineField({
+      name: 'serviceTypes',
+      title: 'Service Types',
+      type: 'array',
+      of: [{ type: 'string' }],
+      description: 'Types of services offered (e.g. "Haircut", "Colour", "Braids")',
+      hidden: ({ document }: HiddenCtx) => !isService({ document }),
+      group: 'service',
+    }),
+
+    /* ═══════════════════════════════════════════════════
+       SEO GROUP
+       ═══════════════════════════════════════════════════ */
+    defineField({
+      name: 'seoTitle',
+      title: 'SEO title (overrides default)',
+      type: 'string',
+      validation: (rule) => rule.max(60),
+      group: 'seo',
+    }),
+    defineField({
+      name: 'seoDescription',
+      title: 'Meta description',
+      type: 'text',
+      rows: 3,
+      validation: (rule) => rule.max(160),
+      group: 'seo',
+    }),
+
+    /* ═══════════════════════════════════════════════════
+       NOTIFICATIONS GROUP
+       ═══════════════════════════════════════════════════ */
     defineField({
       name: 'notificationEmail1',
       title: 'Notification email 1 (e.g. host email)',
@@ -393,21 +816,6 @@ export default defineType({
       description: 'A second address to copy on all enquiries',
       validation: (rule) => rule.email(),
       group: 'notifications',
-    }),
-    defineField({
-      name: 'seoTitle',
-      title: 'SEO title (overrides default)',
-      type: 'string',
-      validation: (rule) => rule.max(60),
-      group: 'details',
-    }),
-    defineField({
-      name: 'seoDescription',
-      title: 'Meta description',
-      type: 'text',
-      rows: 3,
-      validation: (rule) => rule.max(160),
-      group: 'details',
     }),
   ],
   preview: {

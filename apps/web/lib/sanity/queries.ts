@@ -114,7 +114,40 @@ export const LISTING_BY_SLUG_QUERY = groq`
     openingHours,
     reservationRequired,
     seoTitle,
-    seoDescription
+    seoDescription,
+
+    // Restaurant fields
+    atmosphere,
+    menu[]{ name, description, price },
+
+    // Experience fields
+    duration,
+    maxGroupSize,
+    difficulty,
+    minAge,
+    languages,
+    included,
+    notIncluded,
+    guideInfo,
+    meetingPoint,
+    whatToBring,
+
+    // Event fields
+    eventDate,
+    eventEndDate,
+    venue,
+    lineup[]{ name, role, time },
+    ticketTypes[]{ name, price, description },
+    ageRestriction,
+    dresscode,
+
+    // Service fields
+    serviceArea,
+    responseTime,
+    isVerified,
+    pricingTable[]{ service, price, unit },
+    providerInfo,
+    serviceTypes
   }
 `
 

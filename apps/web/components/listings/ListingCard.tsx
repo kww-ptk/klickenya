@@ -45,6 +45,52 @@ function ListingCard({
     restaurant: "Restaurant",
   };
 
+  const ctaLabels: Record<ListingType, string> = {
+    stay: "View stay",
+    experience: "View experience",
+    event: "Get tickets",
+    rental: "View rental",
+    service: "View service",
+    restaurant: "See restaurant",
+  };
+
+  function renderPrice(size: "sm" | "md") {
+    const textClass = size === "sm" ? "text-[13.5px]" : "text-[14.5px]";
+    const unitClass = size === "sm" ? "text-text2 font-normal text-[12px]" : "text-text2 font-normal";
+
+    if (price == null) {
+      return <span className={cn("text-text2", size === "sm" ? "text-[12.5px]" : "")}>Price on request</span>;
+    }
+
+    switch (type) {
+      case "event":
+        return (
+          <span className={cn(textClass, "font-semibold")}>
+            From KSh {price.toLocaleString()}
+          </span>
+        );
+      case "service":
+        return (
+          <span className={cn(textClass, "font-semibold")}>
+            From KSh {price.toLocaleString()}
+          </span>
+        );
+      case "restaurant":
+        return (
+          <span className={cn(textClass, "font-semibold text-text2")}>
+            Restaurant
+          </span>
+        );
+      default:
+        return (
+          <span className={cn(textClass, "font-semibold")}>
+            KSh {price.toLocaleString()}{" "}
+            <span className={unitClass}>/ {priceUnit || "night"}</span>
+          </span>
+        );
+    }
+  }
+
   return (
     <Link href={href} className="group block cursor-pointer">
       {/* ── MOBILE: horizontal compact card ── */}
@@ -91,14 +137,7 @@ function ListingCard({
           </div>
           <div className="flex items-center justify-between gap-2">
             <p className="text-[13.5px] font-semibold">
-              {price != null ? (
-                <>
-                  KSh {price.toLocaleString()}{" "}
-                  <span className="text-text2 font-normal text-[12px]">/ {priceUnit || "night"}</span>
-                </>
-              ) : (
-                <span className="text-text2 text-[12.5px]">Price on request</span>
-              )}
+              {renderPrice("sm")}
             </p>
             <div className="flex items-center gap-1.5">
               {rating != null && rating > 0 && (
@@ -183,16 +222,11 @@ function ListingCard({
             />
           </button>
 
-          <div className="absolute bottom-2.5 left-1/2 -translate-x-1/2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-            {[0, 1, 2].map((i) => (
-              <span
-                key={i}
-                className={cn(
-                  "size-[5px] rounded-full",
-                  i === 0 ? "bg-white" : "bg-white/55"
-                )}
-              />
-            ))}
+          {/* Hover CTA */}
+          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-all duration-200 translate-y-1 group-hover:translate-y-0">
+            <span className="inline-block rounded-full bg-white/95 backdrop-blur-[8px] px-4 py-1.5 text-[12px] font-bold text-dark shadow-sm">
+              {ctaLabels[type]}
+            </span>
           </div>
         </div>
 
@@ -215,15 +249,8 @@ function ListingCard({
             {" · "}
             {typeLabels[type]}
           </p>
-          <p className="mt-1.5 text-[14.5px] font-semibold">
-            {price != null ? (
-              <>
-                KSh {price.toLocaleString()}{" "}
-                <span className="text-text2 font-normal">/ {priceUnit || "night"}</span>
-              </>
-            ) : (
-              <span className="text-text2">Price on request</span>
-            )}
+          <p className="mt-1.5">
+            {renderPrice("md")}
           </p>
         </div>
       </div>
