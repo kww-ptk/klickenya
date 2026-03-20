@@ -219,7 +219,7 @@ function ListingCard({
             <img src="/klickenya-mark.svg" alt="" className="absolute inset-0 m-auto w-[40%] h-[40%] object-contain opacity-25" />
           )}
           {/* Type badge */}
-          <span className="absolute top-1.5 left-1.5 rounded-full px-1.5 py-0.5 text-[9px] font-bold shadow-xs backdrop-blur-[8px] bg-amber/90 text-dark">
+          <span className="absolute top-1.5 left-1.5 rounded-full px-1.5 py-0.5 text-[9px] font-bold shadow-xs backdrop-blur-[8px] bg-white/22 text-white">
             {typeBadge.emoji} {typeBadge.label}
           </span>
         </div>
@@ -294,7 +294,7 @@ function ListingCard({
           )}
 
           {/* Type badge (top-left) */}
-          <span className="absolute top-3 left-3 rounded-full px-2.5 py-1 text-[11px] font-bold shadow-xs backdrop-blur-[8px] bg-amber/90 text-dark">
+          <span className="absolute top-3 left-3 rounded-full px-2.5 py-1 text-[11px] font-bold shadow-xs backdrop-blur-[8px] bg-white/22 text-white">
             {typeBadge.emoji} {typeBadge.label}
           </span>
 
