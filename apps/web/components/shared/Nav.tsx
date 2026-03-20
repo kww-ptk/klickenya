@@ -155,7 +155,7 @@ function Nav({ transparent = false }: NavProps) {
     };
   }, [exploreOpen]);
 
-  const solid = !transparent || scrolled;
+  const solid = !transparent || scrolled || mobileOpen;
 
   const handleExploreEnter = () => {
     clearTimeout(exploreTimeout.current);
@@ -199,11 +199,10 @@ function Nav({ transparent = false }: NavProps) {
           <div
             className={cn(
               "flex-1 flex justify-center transition-all duration-300",
+              // Mobile: completely hidden until past hero
+              !pastHero && "hidden md:flex",
               solid
-                ? // Desktop: show as soon as scrolled; Mobile: only after hero
-                  pastHero
-                  ? "opacity-100 translate-y-0 pointer-events-auto"
-                  : "md:opacity-100 md:translate-y-0 md:pointer-events-auto opacity-0 -translate-y-1.5 pointer-events-none"
+                ? "md:opacity-100 md:translate-y-0 md:pointer-events-auto opacity-100 translate-y-0 pointer-events-auto"
                 : "opacity-0 -translate-y-1.5 pointer-events-none"
             )}
           >
@@ -293,7 +292,7 @@ function Nav({ transparent = false }: NavProps) {
             onClick={() => setMobileOpen(!mobileOpen)}
             className={cn(
               "md:hidden flex size-9 items-center justify-center rounded-full border",
-              solid ? "border-border text-text" : "border-white/30 text-white"
+              solid || mobileOpen ? "border-border text-text" : "border-white/30 text-white"
             )}
             aria-label="Menu"
           >
@@ -320,6 +319,25 @@ function Nav({ transparent = false }: NavProps) {
       {mobileOpen && (
         <div className="fixed inset-0 z-[199] pt-[68px] bg-white md:hidden animate-fade-in overflow-y-auto">
           <div className="flex flex-col p-6 gap-1">
+            {/* Journal + List your space — first */}
+            {NAV_LINKS.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className="px-4 py-3 rounded-xl text-[16px] font-semibold text-text hover:bg-surface transition-colors flex items-center gap-2"
+              >
+                {link.label}
+              </Link>
+            ))}
+            <Link
+              href="/how-it-works"
+              className="px-4 py-3 rounded-xl text-[16px] font-semibold text-text hover:bg-surface transition-colors"
+            >
+              List your space
+            </Link>
+
+            <hr className="my-3 border-border" />
+
             {/* Categories with subcategories */}
             {EXPLORE_CATEGORIES.map((cat) => {
               const subs = SUBCATEGORIES_BY_TYPE[cat.type] ?? [];
@@ -347,26 +365,6 @@ function Nav({ transparent = false }: NavProps) {
               );
             })}
 
-            <hr className="my-3 border-border" />
-
-            {/* Other links */}
-            {NAV_LINKS.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className="px-4 py-3 rounded-xl text-[16px] font-semibold text-text hover:bg-surface transition-colors flex items-center gap-2"
-              >
-                {link.label}
-              </Link>
-            ))}
-
-            <hr className="my-3 border-border" />
-            <Link
-              href="/how-it-works"
-              className="px-4 py-3 rounded-xl text-[16px] font-semibold text-text2 hover:bg-surface transition-colors"
-            >
-              List your space
-            </Link>
             <div className="mt-4 pb-24">
               <Button variant="primary" size="lg" className="w-full">
                 Sign in

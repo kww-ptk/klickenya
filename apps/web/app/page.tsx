@@ -183,12 +183,19 @@ export default async function HomePage() {
           <h1
             className="font-display font-bold text-white tracking-[-0.04em] leading-[1.05] mb-3 md:mb-5 animate-fade-up"
             style={{
-              fontSize: "clamp(44px, 7vw, 88px)",
+              fontSize: "clamp(40px, 7vw, 88px)",
               animationDelay: "0.1s",
             }}
           >
-            {homePage?.heroTitle ?? "Discover the best of"}
-            <br />
+            {/* Mobile: 3-line layout */}
+            <span className="md:hidden">
+              Discover the<br />best of<br />
+            </span>
+            {/* Desktop: original layout */}
+            <span className="hidden md:inline">
+              {homePage?.heroTitle ?? "Discover the best of"}
+              <br />
+            </span>
             <span className="text-amber">{homePage?.heroHighlight ?? "Kenya"}</span>
           </h1>
 
