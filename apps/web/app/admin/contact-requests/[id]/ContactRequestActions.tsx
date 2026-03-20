@@ -27,6 +27,7 @@ export function ContactRequestActions({
   // Reply
   const [replySubject, setReplySubject] = useState("");
   const [replyMessage, setReplyMessage] = useState("");
+  const [replyStatus, setReplyStatus] = useState<string>("info");
   const [replyLoading, setReplyLoading] = useState(false);
   const [draftLoading, setDraftLoading] = useState(false);
   const [replySuccess, setReplySuccess] = useState(false);
@@ -100,6 +101,7 @@ export function ContactRequestActions({
         body: JSON.stringify({
           message: replyMessage,
           subject: replySubject,
+          status: replyStatus,
         }),
       });
       if (!res.ok) throw new Error("Failed to send reply");
@@ -255,6 +257,34 @@ export function ContactRequestActions({
               </>
             )}
           </button>
+        </div>
+
+        {/* Reply Status */}
+        <div>
+          <p className="text-[12px] text-[#9C9485] uppercase tracking-wider font-medium mb-2">
+            Response type
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {[
+              { value: "approved", label: "✓ Approved", cls: "bg-[#22C55E]/10 text-[#22C55E] border-[#22C55E]/30 hover:bg-[#22C55E]/20" },
+              { value: "rejected", label: "✗ Declined", cls: "bg-[#EF4444]/10 text-[#EF4444] border-[#EF4444]/30 hover:bg-[#EF4444]/20" },
+              { value: "pending", label: "⏳ Pending", cls: "bg-[#F59E0B]/10 text-[#F59E0B] border-[#F59E0B]/30 hover:bg-[#F59E0B]/20" },
+              { value: "info", label: "ℹ Update", cls: "bg-[#3B82F6]/10 text-[#3B82F6] border-[#3B82F6]/30 hover:bg-[#3B82F6]/20" },
+            ].map((opt) => (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => setReplyStatus(opt.value)}
+                className={`px-3 py-1.5 text-[13px] font-medium rounded-lg border transition-colors ${
+                  replyStatus === opt.value
+                    ? opt.cls + " ring-2 ring-offset-1 ring-current"
+                    : "bg-white text-[#9C9485] border-[#F0EDE8] hover:bg-[#F7F5F2]"
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
         </div>
 
         <input
