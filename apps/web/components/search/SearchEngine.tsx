@@ -502,8 +502,8 @@ function SearchEngine({ variant = "hero", className, onExpandChange }: SearchEng
 
   const handleAnyTimeClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (isHero && isMobile()) {
-      openMobileSearch("search");
+    if (isMobile()) {
+      openMobileSearch("where");
       return;
     }
     setLocationOpen(false);
@@ -513,7 +513,7 @@ function SearchEngine({ variant = "hero", className, onExpandChange }: SearchEng
 
   const handleAnywhereClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (isHero && isMobile()) {
+    if (isMobile()) {
       openMobileSearch("where");
       return;
     }
@@ -525,7 +525,7 @@ function SearchEngine({ variant = "hero", className, onExpandChange }: SearchEng
 
   const handleAnyTypeClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (isHero && isMobile()) {
+    if (isMobile()) {
       openMobileSearch("what");
       return;
     }
@@ -672,9 +672,9 @@ function SearchEngine({ variant = "hero", className, onExpandChange }: SearchEng
           className
         )}
         onClick={() => {
-          // On mobile hero, tapping anywhere on the pill opens fullscreen search
-          if (isHero && isMobile()) {
-            openMobileSearch("search");
+          // On mobile, tapping anywhere on the pill opens fullscreen search starting with "where"
+          if (isMobile()) {
+            openMobileSearch("where");
           }
         }}
       >
@@ -1120,7 +1120,14 @@ function SearchEngine({ variant = "hero", className, onExpandChange }: SearchEng
                         onClick={() => {
                           setSelectedCity(null);
                           if (!selectedType) setMobileTab("what");
-                          else { setMobileTab("search"); handlePillSearch(); }
+                          else {
+                            // Both filled — auto-search
+                            closeMobileSearch();
+                            const params = new URLSearchParams();
+                            params.set("type", selectedType);
+                            if (selectedSub) params.set("sub", selectedSub);
+                            router.push(`/search?${params.toString()}`);
+                          }
                         }}
                         className={cn(
                           "w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-colors text-left",
@@ -1154,7 +1161,15 @@ function SearchEngine({ variant = "hero", className, onExpandChange }: SearchEng
                             setSelectedCity(c.city);
                             setHeroFilter("");
                             if (!selectedType) setMobileTab("what");
-                            else { setMobileTab("search"); }
+                            else {
+                              // Both filled — auto-search
+                              closeMobileSearch();
+                              const params = new URLSearchParams();
+                              params.set("city", c.city);
+                              params.set("type", selectedType);
+                              if (selectedSub) params.set("sub", selectedSub);
+                              router.push(`/search?${params.toString()}`);
+                            }
                           }}
                           className={cn(
                             "w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-colors text-left",
@@ -1196,7 +1211,14 @@ function SearchEngine({ variant = "hero", className, onExpandChange }: SearchEng
                           setSelectedType(cat.type);
                           setSelectedSub(null);
                           if (!selectedCity) setMobileTab("where");
-                          else setMobileTab("search");
+                          else {
+                            // Both filled — auto-search
+                            closeMobileSearch();
+                            const params = new URLSearchParams();
+                            params.set("city", selectedCity);
+                            params.set("type", cat.type);
+                            router.push(`/search?${params.toString()}`);
+                          }
                         }}
                         className={cn(
                           "flex items-center gap-2 w-full text-left py-2 px-2 rounded-xl transition-colors",
@@ -1222,7 +1244,15 @@ function SearchEngine({ variant = "hero", className, onExpandChange }: SearchEng
                                 setSelectedType(cat.type);
                                 setSelectedSub(sub);
                                 if (!selectedCity) setMobileTab("where");
-                                else setMobileTab("search");
+                                else {
+                                  // Both filled — auto-search
+                                  closeMobileSearch();
+                                  const params = new URLSearchParams();
+                                  params.set("city", selectedCity);
+                                  params.set("type", cat.type);
+                                  params.set("sub", sub);
+                                  router.push(`/search?${params.toString()}`);
+                                }
                               }}
                               className={cn(
                                 "text-[12px] px-3 py-1.5 rounded-full border transition-colors",
