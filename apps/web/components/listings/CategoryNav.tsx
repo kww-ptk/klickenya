@@ -48,7 +48,7 @@ function CategoryNav({
   return (
     <div
       className={cn(
-        "sticky top-[67px] z-[100] bg-white/97 backdrop-blur-[20px] border-b border-border",
+        "sticky top-[67px] z-[100] bg-white/97 backdrop-blur-[20px] border-b border-border hidden md:block",
         className
       )}
     >
