@@ -314,6 +314,7 @@ function SearchEngine({ variant = "hero", className, onExpandChange }: SearchEng
   const megaDropRef = useRef<HTMLDivElement>(null);
   const megaTimeout = useRef<ReturnType<typeof setTimeout>>(undefined);
   const heroFilterRef = useRef<HTMLInputElement>(null);
+  const heroInlineRef = useRef<HTMLDivElement>(null);
 
   const isHero = variant === "hero";
   const isNav = variant === "nav";
@@ -362,7 +363,10 @@ function SearchEngine({ variant = "hero", className, onExpandChange }: SearchEng
   useEffect(() => {
     if (!pillExpanded) return;
     function handleClick(e: MouseEvent) {
-      if (pillRef.current && !pillRef.current.contains(e.target as Node)) {
+      const target = e.target as Node;
+      const inPill = pillRef.current?.contains(target);
+      const inHeroInline = heroInlineRef.current?.contains(target);
+      if (!inPill && !inHeroInline) {
         setPillExpanded(false);
         pillClear();
       }
@@ -769,7 +773,7 @@ function SearchEngine({ variant = "hero", className, onExpandChange }: SearchEng
 
       {/* ── Hero: inline dropdowns (push content down) ── */}
       {isHero && (locationOpen || megaOpen || (pillExpanded && pillSearchOpen)) && (
-        <div className="w-full max-w-[600px] mx-auto mt-3 animate-search-dropdown">
+        <div ref={heroInlineRef} className="w-full max-w-[600px] mx-auto mt-3 animate-search-dropdown">
           {locationOpen && (
             <div
               ref={locationDropRef}

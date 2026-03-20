@@ -122,9 +122,9 @@ export default async function HomePage() {
       <Nav transparent />
 
       {/* ─── HERO ─────────────────────────────────── */}
-      <section className="relative min-h-screen flex flex-col items-center justify-center overflow-x-clip">
-        {/* Hero background image */}
-        <div className="absolute inset-0">
+      <section className="relative min-h-screen flex flex-col items-center justify-center overflow-x-clip bg-[#0a0906]">
+        {/* Hero background image — fixed to viewport height so it doesn't shift when dropdowns expand */}
+        <div className="absolute inset-x-0 top-0 h-screen">
           <img
             src="https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?w=1920&q=80&auto=format&fit=crop"
             alt=""
@@ -132,9 +132,9 @@ export default async function HomePage() {
           />
         </div>
 
-        {/* Dark overlay with 3D gradient effect */}
+        {/* Dark overlay — also fixed to viewport height */}
         <div
-          className="absolute inset-0 z-[1]"
+          className="absolute inset-x-0 top-0 h-screen z-[1]"
           style={{
             background: `
               linear-gradient(to bottom, rgba(0,0,0,.65) 0%, rgba(0,0,0,.30) 35%, rgba(0,0,0,.20) 50%, rgba(0,0,0,.55) 80%, rgba(0,0,0,.85) 100%),
