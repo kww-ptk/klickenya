@@ -123,15 +123,12 @@ export default function PhoneInput({
   }
 
   return (
-    <div ref={ref} className={cn("relative flex", className)}>
-      {/* Country selector button */}
+    <div ref={ref} className={cn("relative flex items-center", className)}>
+      {/* Country selector button — no border, lives inside the parent border */}
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className={cn(
-          "flex items-center gap-1.5 px-3 rounded-l-xl border border-r-0 bg-transparent text-sm shrink-0 transition-colors",
-          "border-[var(--border)] hover:bg-[var(--surface2)]"
-        )}
+        className="flex items-center gap-1.5 pl-3 pr-2 bg-transparent text-sm shrink-0"
       >
         <span className="text-base">{country.flag}</span>
         <span className="text-[var(--text2)] text-xs">{dial}</span>
@@ -140,7 +137,10 @@ export default function PhoneInput({
         </svg>
       </button>
 
-      {/* Phone number input */}
+      {/* Divider */}
+      <span className="w-px h-5 bg-[var(--border)] shrink-0" />
+
+      {/* Phone number input — no border, inherits parent styling */}
       <input
         type="tel"
         value={number}
@@ -148,9 +148,7 @@ export default function PhoneInput({
         placeholder={placeholder}
         required={required}
         className={cn(
-          "flex-1 rounded-r-xl border border-l-0 px-3 py-2.5 text-sm",
-          "border-[var(--border)] bg-transparent text-[var(--text)] placeholder:text-[var(--text2)]/50",
-          "focus:outline-none focus:ring-1 focus:ring-[var(--amber)]/30",
+          "flex-1 bg-transparent px-3 py-0 text-inherit placeholder:inherit border-none outline-none focus:ring-0",
           inputClassName
         )}
       />

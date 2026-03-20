@@ -127,8 +127,7 @@ export function ListingRequestForm() {
             value={form.phone}
             onChange={(val) => update("phone", val)}
             required
-            className="rounded-xl border border-white/10 bg-white/[0.06]"
-            inputClassName="!border-0 !bg-transparent text-[14px] text-white placeholder:text-white/30 focus:!ring-0"
+            className="w-full rounded-xl border border-white/10 bg-white/[0.06] px-0 py-3 text-[14px] text-white placeholder:text-white/30"
           />
         </div>
 

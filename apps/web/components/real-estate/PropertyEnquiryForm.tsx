@@ -144,7 +144,6 @@ function PropertyEnquiryForm({
         onChange={(val) => update("phone", val)}
         required
         className={inputCls}
-        inputClassName="!border-l-0 !rounded-l-none"
       />
 
       {/* ─── Enquiry type ────────────────────────── */}

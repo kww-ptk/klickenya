@@ -507,7 +507,6 @@ function ContactForm({
           onChange={(val) => update("phone", val)}
           required
           className={inputCls}
-          inputClassName="!border-l-0 !rounded-l-none"
         />
         <textarea
           placeholder={type === "restaurant" ? "Special requests / dietary requirements (optional)" : "Message / special requests (optional)"}
