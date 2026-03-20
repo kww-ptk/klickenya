@@ -667,7 +667,7 @@ function SearchEngine({ variant = "hero", className, onExpandChange }: SearchEng
               ? "max-w-[600px] shadow-lg py-2.5 pl-[22px] pr-2 mx-auto"
               : "flex-1 max-w-[560px] py-2 pl-[18px] pr-2 shadow-md"
             : isHero
-              ? "max-w-[540px] cursor-pointer hover:shadow-md py-2.5 pl-[22px] pr-2 mx-auto"
+              ? "max-w-[540px] cursor-pointer hover:shadow-md py-3.5 md:py-2.5 pl-[22px] pr-2 mx-auto"
               : "flex-1 lg:max-w-[400px] cursor-pointer hover:shadow-md",
           className
         )}
@@ -717,15 +717,15 @@ function SearchEngine({ variant = "hero", className, onExpandChange }: SearchEng
             {/* ── Mobile + Tablet: compact single-line trigger (nav only) ─── */}
             {isNav && (
               <button
-                className="flex lg:hidden items-center gap-2 flex-1 py-2.5 pl-4 text-left min-w-0"
+                className="flex lg:hidden items-center gap-2.5 flex-1 py-3 pl-4 text-left min-w-0"
                 onClick={handleAnyTimeClick}
               >
-                <Search className="size-3.5 text-text3 shrink-0" />
+                <Search className="size-4 text-text3 shrink-0" />
                 <div className="flex flex-col min-w-0">
                   <span className={cn("font-semibold text-text leading-tight", textSize)}>
                     Try Me...
                   </span>
-                  <span className="text-[11px] text-text3 leading-tight truncate">
+                  <span className="text-[11.5px] text-text3 leading-tight truncate">
                     {selectedCity && typeLabel
                       ? `${selectedCity} · ${typeLabel}`
                       : selectedCity

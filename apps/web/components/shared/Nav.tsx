@@ -122,7 +122,7 @@ function Nav({ transparent = false }: NavProps) {
     if (!transparent) { setPastHero(true); return; }
     const handleScroll = () => {
       const vh = window.innerHeight;
-      setPastHero(window.scrollY > vh * 0.75);
+      setPastHero(window.scrollY > vh * 1.2);
     };
     handleScroll();
     window.addEventListener("scroll", handleScroll, { passive: true });
