@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 
 interface EventCardProps {
@@ -14,6 +15,7 @@ interface EventCardProps {
   hostInitials: string;
   hostName: string;
   href: string;
+  imageUrl?: string;
   imageColor?: string;
 }
 
@@ -28,6 +30,7 @@ function EventCard({
   hostInitials,
   hostName,
   href,
+  imageUrl,
   imageColor = "bg-surface2",
 }: EventCardProps) {
   return (
@@ -35,8 +38,17 @@ function EventCard({
       href={href}
       className="shrink-0 w-[296px] rounded-[32px] bg-white border border-border overflow-hidden group hover:shadow-md transition-shadow duration-300 cursor-pointer"
     >
-      {/* Cover image placeholder */}
-      <div className={`h-[160px] ${imageColor} relative overflow-hidden`}>
+      {/* Cover image */}
+      <div className={`h-[160px] ${imageUrl ? "" : imageColor} relative overflow-hidden`}>
+        {imageUrl && (
+          <Image
+            src={imageUrl}
+            alt={title}
+            fill
+            className="object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+            sizes="296px"
+          />
+        )}
         <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/10" />
         {/* Date badge */}
         <div className="absolute top-4 left-4 bg-white rounded-[14px] px-3 py-2 text-center shadow-sm min-w-[52px]">

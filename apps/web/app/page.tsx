@@ -14,6 +14,7 @@ import {
 import { sanityFetch } from "@/lib/sanity/client";
 import {
   LISTINGS_QUERY,
+  EVENTS_QUERY,
   HOMEPAGE_DESTINATIONS_QUERY,
   SITE_SETTINGS_QUERY,
   HOME_PAGE_QUERY,
@@ -31,6 +32,7 @@ import { PostCard } from "@/components/blog/PostCard";
 import { DestinationBentoGrid } from "@/components/destinations/DestinationBentoGrid";
 import type { DestinationDisplay } from "@/components/destinations/DestinationBentoGrid";
 import { urlForImage } from "@/lib/sanity/image";
+import { mapSanityEventToCard } from "@/lib/mappers/eventMapper";
 
 export const revalidate = 3600;
 
@@ -85,16 +87,18 @@ interface SanityDestination {
 }
 
 async function getData() {
-  const [listingsResult, destinationsResult, settingsResult, homePageResult, blogPostsResult] = await Promise.all([
+  const [listingsResult, destinationsResult, settingsResult, homePageResult, blogPostsResult, eventsResult] = await Promise.all([
     sanityFetch({ query: LISTINGS_QUERY }).catch(() => ({ data: [] })),
     sanityFetch({ query: HOMEPAGE_DESTINATIONS_QUERY }).catch(() => ({ data: [] })),
     sanityFetch({ query: SITE_SETTINGS_QUERY }).catch(() => ({ data: null })),
     sanityFetch({ query: HOME_PAGE_QUERY }).catch(() => ({ data: null })),
     sanityFetch({ query: LATEST_BLOG_POSTS_QUERY }).catch(() => ({ data: [] })),
+    sanityFetch({ query: EVENTS_QUERY }).catch(() => ({ data: [] })),
   ]);
 
   return {
     listings: listingsResult.data as SanityListing[],
+    events: (eventsResult.data ?? []) as any[],
     destinations: destinationsResult.data as SanityDestination[],
     settings: settingsResult.data,
     homePage: homePageResult.data as any,
@@ -105,9 +109,11 @@ async function getData() {
 /* ─── Page ───────────────────────────────────────── */
 
 export default async function HomePage() {
-  const { listings, destinations, homePage, blogPosts } = await getData();
+  const { listings, events, destinations, homePage, blogPosts } = await getData();
 
   const featuredListings = listings.slice(0, 8);
+  const sanityEventCards = events.map(mapSanityEventToCard);
+  const eventCards = sanityEventCards.length > 0 ? sanityEventCards : PLACEHOLDER_EVENTS;
 
   // CMS arrays with hardcoded fallbacks
   const heroStats = homePage?.heroStats?.length ? homePage.heroStats : HERO_STATS;
@@ -310,7 +316,7 @@ export default async function HomePage() {
           </div>
 
           <div className="flex gap-5 overflow-x-auto scrollbar-none pb-4 -mx-5 px-5 md:-mx-10 md:px-10">
-            {PLACEHOLDER_EVENTS.map((event, i) => (
+            {eventCards.map((event, i) => (
               <EventCard key={i} {...event} />
             ))}
           </div>

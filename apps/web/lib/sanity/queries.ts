@@ -488,8 +488,12 @@ export const NEIGHBOURHOOD_BY_SLUG_QUERY = groq`
 // ── Events ──────────────────────────────────────
 
 export const EVENTS_QUERY = groq`
-  *[_type == "listing" && type == "event"] | order(_createdAt desc) [0...12] {
-    ${LISTING_CARD_FIELDS}
+  *[_type == "listing" && type == "event" && status == "published"] | order(eventDate asc, _createdAt desc) [0...12] {
+    ${LISTING_CARD_FIELDS},
+    eventDate,
+    eventEndDate,
+    venue,
+    "coverPhotoUrl": photos[0].asset->url
   }
 `
 

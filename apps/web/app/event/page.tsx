@@ -183,31 +183,9 @@ const EVENT_CATEGORIES = [
   },
 ];
 
-/* ── Mapper: Sanity listing -> EventCard props ─────── */
+/* ── Mapper ────────────────────────────────────────── */
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function mapSanityEventToCard(listing: any) {
-  const createdDate = new Date(listing._createdAt ?? Date.now());
-  const monthNames = [
-    "JAN", "FEB", "MAR", "APR", "MAY", "JUN",
-    "JUL", "AUG", "SEP", "OCT", "NOV", "DEC",
-  ];
-
-  return {
-    title: listing.title ?? "Untitled Event",
-    date: listing._createdAt ?? "",
-    month: monthNames[createdDate.getMonth()],
-    day: String(createdDate.getDate()).padStart(2, "0"),
-    location: listing.city ?? "",
-    time: listing.priceUnit ?? "",
-    price: listing.price ? `KSh ${listing.price.toLocaleString()}` : "Free",
-    attending: 0,
-    hostInitials: (listing.title ?? "EV").slice(0, 2).toUpperCase(),
-    hostName: listing.city ?? "Kenya",
-    href: `/events/${listing.city?.toLowerCase() ?? "kenya"}/${listing.slug?.current ?? listing.slug ?? ""}`,
-    imageColor: "bg-[#3D5A3E]",
-  };
-}
+import { mapSanityEventToCard } from "@/lib/mappers/eventMapper";
 
 /* ── Page ──────────────────────────────────────────── */
 
