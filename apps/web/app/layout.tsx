@@ -5,6 +5,8 @@ import { VisualEditing } from "next-sanity/visual-editing";
 import { SanityLive } from "@/lib/sanity/client";
 import { draftMode } from "next/headers";
 import { MobileBottomNav } from "@/components/home/MobileBottomNav";
+import { CityCountsProvider } from "@/context/CityCountsContext";
+import { getCityCounts } from "@/lib/sanity/getCityCounts";
 import "./globals.css";
 
 const geist = Geist({
@@ -97,7 +99,10 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const { isEnabled: isDraftMode } = await draftMode();
+  const [{ isEnabled: isDraftMode }, cityCounts] = await Promise.all([
+    draftMode(),
+    getCityCounts(),
+  ]);
 
   return (
     <html lang="en">
@@ -118,8 +123,10 @@ export default async function RootLayout({
       <body
         className={`${geist.variable} ${geistMono.variable} ${bricolage.variable} antialiased`}
       >
-        {children}
-        <MobileBottomNav />
+        <CityCountsProvider cityCounts={cityCounts}>
+          {children}
+          <MobileBottomNav />
+        </CityCountsProvider>
         <SanityLive />
         {isDraftMode && <VisualEditing />}
       </body>

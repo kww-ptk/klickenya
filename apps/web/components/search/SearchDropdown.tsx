@@ -48,6 +48,8 @@ interface SearchDropdownProps {
   onClose: () => void;
   /** Parent ref for fixed positioning */
   anchorRef?: React.RefObject<HTMLElement | null>;
+  /** Render inline (no positioning wrapper) — for hero variant */
+  inline?: boolean;
 }
 
 /* ── Type labels / paths ─────────────────────────── */
@@ -73,6 +75,7 @@ export function SearchDropdown({
   query,
   onClose,
   anchorRef,
+  inline = false,
 }: SearchDropdownProps) {
   const listRef = useRef<HTMLDivElement>(null);
   const [focusIndex, setFocusIndex] = useState(-1);
@@ -167,46 +170,59 @@ export function SearchDropdown({
 
   if (!isOpen) return null;
 
-  // Use fixed positioning if anchor provided, otherwise absolute
+  // Use fixed positioning if anchor provided, otherwise absolute; inline = no wrapper
   const useFixed = !!anchorRef && !!pos;
 
-  const wrapperStyle: React.CSSProperties = useFixed
+  const wrapperStyle: React.CSSProperties = inline
     ? {
-        position: "fixed",
-        top: pos!.top,
-        left: pos!.left,
-        width: pos!.width,
-        zIndex: 9999,
+        // No positioning — rendered in-flow by parent
         backgroundColor: "#ffffff",
-        boxShadow: "0 16px 48px rgba(0,0,0,0.20), 0 0 0 1px rgba(0,0,0,0.06)",
-        borderRadius: 20,
         overflow: "hidden",
         isolation: "isolate",
       }
-    : {
-        position: "absolute" as const,
-        top: "calc(100% + 8px)",
-        left: 0,
-        right: 0,
-        zIndex: 300,
-        backgroundColor: "#ffffff",
-        boxShadow: "0 16px 48px rgba(0,0,0,0.20), 0 0 0 1px rgba(0,0,0,0.06)",
-        borderRadius: 20,
-        overflow: "hidden",
-        isolation: "isolate",
-      };
+    : useFixed
+      ? {
+          position: "fixed",
+          top: pos!.top,
+          left: pos!.left,
+          width: pos!.width,
+          zIndex: 9999,
+          backgroundColor: "#ffffff",
+          boxShadow: "0 16px 48px rgba(0,0,0,0.20), 0 0 0 1px rgba(0,0,0,0.06)",
+          borderRadius: 20,
+          overflow: "hidden",
+          isolation: "isolate",
+        }
+      : {
+          position: "absolute" as const,
+          top: "calc(100% + 8px)",
+          left: 0,
+          right: 0,
+          zIndex: 300,
+          backgroundColor: "#ffffff",
+          boxShadow: "0 16px 48px rgba(0,0,0,0.20), 0 0 0 1px rgba(0,0,0,0.06)",
+          borderRadius: 20,
+          overflow: "hidden",
+          isolation: "isolate",
+        };
 
-  /* ── Loading skeleton ──────────────────────────── */
+  /* ── Loading skeleton — shows instantly while fetching ── */
   if (isLoading && !res) {
     return (
       <div style={wrapperStyle} className="animate-search-dropdown">
-        <div className="p-5 space-y-3">
+        {/* Search context header */}
+        <div className="px-5 pt-4 pb-2">
+          <p className="text-[12px] font-medium text-text3">
+            Searching for &ldquo;<span className="text-text font-semibold">{query}</span>&rdquo;
+          </p>
+        </div>
+        <div className="px-5 pb-5 space-y-3">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="flex items-center gap-3 animate-pulse">
+            <div key={i} className="flex items-center gap-3 animate-pulse" style={{ animationDelay: `${i * 75}ms` }}>
               <div className="size-11 rounded-xl bg-neutral-100 shrink-0" />
               <div className="flex-1 space-y-2">
-                <div className="h-3.5 bg-neutral-100 rounded-full w-3/5" />
-                <div className="h-3 bg-neutral-100 rounded-full w-2/5" />
+                <div className="h-3.5 bg-neutral-100 rounded-full" style={{ width: `${65 - i * 10}%` }} />
+                <div className="h-3 bg-neutral-100 rounded-full" style={{ width: `${40 - i * 5}%` }} />
               </div>
             </div>
           ))}

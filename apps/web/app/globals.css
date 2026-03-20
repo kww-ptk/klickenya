@@ -105,12 +105,12 @@ body {
 /* ─── Search Dropdown ────────────────────────────────────────── */
 
 @keyframes searchDropdown {
-  from { transform: translateY(-6px) scale(0.98); }
-  to   { transform: translateY(0) scale(1); }
+  from { opacity: 0; transform: translateY(-8px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 .animate-search-dropdown {
-  animation: searchDropdown 0.15s ease-out both;
+  animation: searchDropdown 0.18s ease-out both;
 }
 
 /* ─── Blog Animations ────────────────────────────────────────── */

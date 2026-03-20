@@ -75,10 +75,13 @@ export function useSearch() {
       return;
     }
 
+    // Open dropdown immediately so skeleton shows while loading
     setIsLoading(true);
+    setIsOpen(true);
+
     debounceRef.current = setTimeout(() => {
       fetchResults(query);
-    }, 300);
+    }, 250);
 
     return () => clearTimeout(debounceRef.current);
   }, [query, fetchResults]);

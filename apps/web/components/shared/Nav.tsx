@@ -2,14 +2,13 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useState, useEffect, useRef, useCallback } from "react";
-import { usePathname, useRouter } from "next/navigation";
-import { Search, Menu, X, ChevronDown } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { usePathname } from "next/navigation";
+import { Menu, X, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useScrollPosition } from "@/hooks/useScrollPosition";
-import { useSearch } from "@/hooks/useSearch";
-import { SearchDropdown } from "@/components/search/SearchDropdown";
 import { Button } from "@/components/ui/Button";
+import { SearchEngine, EXPLORE_CATEGORIES } from "@/components/search/SearchEngine";
 import {
   SUBCATEGORIES_BY_TYPE,
   SUBCATEGORY_LABELS,
@@ -20,54 +19,118 @@ interface NavProps {
   transparent?: boolean;
 }
 
-/* ── Mega-menu data ──────────────────────────── */
-
-const EXPLORE_CATEGORIES = [
-  { type: "stay", label: "Stays", icon: "🏠", href: "/stays" },
-  { type: "experience", label: "Experiences", icon: "🎒", href: "/experiences" },
-  { type: "event", label: "Events", icon: "🎟️", href: "/events" },
-  { type: "service", label: "Services", icon: "⭐", href: "/services" },
-  { type: "real_estate", label: "Real Estate", icon: "🏢", href: "/real-estate" },
-];
-
 const NAV_LINKS: Array<{ href: string; label: string; badge?: string }> = [
   { href: "/destinations", label: "Destinations" },
   { href: "/journal", label: "Journal" },
 ];
 
+/* ── Explore hover menu (link-based, independent from SearchEngine) ── */
+
+function ExploreHoverMenu({
+  dropRef,
+  triggerRef,
+  onMouseEnter,
+  onMouseLeave,
+}: {
+  dropRef: React.RefObject<HTMLDivElement | null>;
+  triggerRef: React.RefObject<HTMLDivElement | null>;
+  onMouseEnter: () => void;
+  onMouseLeave: () => void;
+}) {
+  const [pos, setPos] = useState<{ left: number; width: number } | null>(null);
+
+  useEffect(() => {
+    function update() {
+      if (!triggerRef.current) return;
+      const rect = triggerRef.current.getBoundingClientRect();
+      const isMobile = window.innerWidth < 768;
+      if (isMobile) {
+        setPos({ left: 12, width: window.innerWidth - 24 });
+      } else {
+        const maxW = 720;
+        const availRight = window.innerWidth - rect.left - 16;
+        setPos({ left: rect.left, width: Math.min(maxW, availRight) });
+      }
+    }
+    update();
+    window.addEventListener("resize", update);
+    window.addEventListener("scroll", update, true);
+    return () => {
+      window.removeEventListener("resize", update);
+      window.removeEventListener("scroll", update, true);
+    };
+  }, [triggerRef]);
+
+  if (!pos) return null;
+
+  return (
+    <div
+      ref={dropRef}
+      className="fixed rounded-2xl border border-border shadow-2xl p-4 sm:p-6 animate-fade-in z-[250] max-h-[70vh] overflow-y-auto"
+      style={{ top: 68, left: pos.left, width: pos.width, backgroundColor: "#ffffff" }}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
+    >
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 sm:gap-5">
+        {EXPLORE_CATEGORIES.map((cat) => {
+          const subs = SUBCATEGORIES_BY_TYPE[cat.type] ?? [];
+          return (
+            <div key={cat.type}>
+              <Link
+                href={cat.href}
+                className="flex items-center gap-1.5 mb-3 group"
+              >
+                <span className="text-[18px]">{cat.icon}</span>
+                <span className="text-[13px] font-bold text-dark group-hover:text-amber transition-colors">
+                  {cat.label}
+                </span>
+              </Link>
+              <div className="flex flex-col gap-1">
+                {subs.map((sub) => (
+                  <Link
+                    key={sub}
+                    href={`${cat.href}?sub=${sub}`}
+                    className="text-[12px] text-text2 hover:text-amber transition-colors py-0.5 flex items-center gap-1.5"
+                  >
+                    <span className="text-[12px]">
+                      {SUBCATEGORY_ICONS[sub]}
+                    </span>
+                    {SUBCATEGORY_LABELS[sub] ?? sub}
+                  </Link>
+                ))}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function Nav({ transparent = false }: NavProps) {
-  const router = useRouter();
   const scrolled = useScrollPosition(50);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [megaOpen, setMegaOpen] = useState(false);
-  const [pillExpanded, setPillExpanded] = useState(false);
-  const megaRef = useRef<HTMLDivElement>(null);
-  const megaDropRef = useRef<HTMLDivElement>(null);
-  const pillRef = useRef<HTMLDivElement>(null);
-  const pillInputRef = useRef<HTMLInputElement>(null);
-  const megaTimeout = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const [exploreOpen, setExploreOpen] = useState(false);
+  const exploreRef = useRef<HTMLDivElement>(null);
+  const exploreDropRef = useRef<HTMLDivElement>(null);
+  const exploreTimeout = useRef<ReturnType<typeof setTimeout>>(undefined);
   const pathname = usePathname();
-
-  // Search hook for the pill
-  const { query: pillQuery, setQuery: setPillQuery, results: pillResults, isLoading: pillLoading, isOpen: pillSearchOpen, setIsOpen: setPillSearchOpen, clear: pillClear } = useSearch();
 
   // Close menus on route change
   useEffect(() => {
     setMobileOpen(false);
-    setMegaOpen(false);
-    setPillExpanded(false);
-    pillClear();
-  }, [pathname, pillClear]);
+    setExploreOpen(false);
+  }, [pathname]);
 
-  // Close mega menu when clicking outside (delayed to avoid same-click race)
+  // Close explore menu when clicking outside
   useEffect(() => {
-    if (!megaOpen) return;
+    if (!exploreOpen) return;
     function handleClick(e: MouseEvent) {
       const target = e.target as Node;
-      const inTrigger = megaRef.current?.contains(target);
-      const inDrop = megaDropRef.current?.contains(target);
+      const inTrigger = exploreRef.current?.contains(target);
+      const inDrop = exploreDropRef.current?.contains(target);
       if (!inTrigger && !inDrop) {
-        setMegaOpen(false);
+        setExploreOpen(false);
       }
     }
     const id = requestAnimationFrame(() => {
@@ -77,62 +140,16 @@ function Nav({ transparent = false }: NavProps) {
       cancelAnimationFrame(id);
       document.removeEventListener("mousedown", handleClick);
     };
-  }, [megaOpen]);
+  }, [exploreOpen]);
 
   const solid = !transparent || scrolled;
 
-  // Close pill when clicking outside
-  useEffect(() => {
-    if (!pillExpanded) return;
-    function handleClick(e: MouseEvent) {
-      if (pillRef.current && !pillRef.current.contains(e.target as Node)) {
-        setPillExpanded(false);
-        pillClear();
-      }
-    }
-    const id = requestAnimationFrame(() => {
-      document.addEventListener("mousedown", handleClick);
-    });
-    return () => {
-      cancelAnimationFrame(id);
-      document.removeEventListener("mousedown", handleClick);
-    };
-  }, [pillExpanded, pillClear]);
-
-  // Close pill on Escape
-  useEffect(() => {
-    if (!pillExpanded) return;
-    function handleKey(e: KeyboardEvent) {
-      if (e.key === "Escape") {
-        setPillExpanded(false);
-        pillClear();
-      }
-    }
-    document.addEventListener("keydown", handleKey);
-    return () => document.removeEventListener("keydown", handleKey);
-  }, [pillExpanded, pillClear]);
-
-  // Auto-focus input when pill expands
-  useEffect(() => {
-    if (pillExpanded) {
-      setTimeout(() => pillInputRef.current?.focus(), 50);
-    }
-  }, [pillExpanded]);
-
-  const handlePillSearch = useCallback(() => {
-    if (pillQuery.trim()) {
-      router.push(`/search?q=${encodeURIComponent(pillQuery.trim())}`);
-      setPillExpanded(false);
-      pillClear();
-    }
-  }, [pillQuery, router, pillClear]);
-
-  const handleMegaEnter = () => {
-    clearTimeout(megaTimeout.current);
-    setMegaOpen(true);
+  const handleExploreEnter = () => {
+    clearTimeout(exploreTimeout.current);
+    setExploreOpen(true);
   };
-  const handleMegaLeave = () => {
-    megaTimeout.current = setTimeout(() => setMegaOpen(false), 200);
+  const handleExploreLeave = () => {
+    exploreTimeout.current = setTimeout(() => setExploreOpen(false), 200);
   };
 
   return (
@@ -165,121 +182,28 @@ function Nav({ transparent = false }: NavProps) {
             </span>
           </Link>
 
-          {/* Condensed search pill — visible on scroll */}
+          {/* Search pill — SearchEngine nav variant */}
           <div
-            ref={pillRef}
             className={cn(
-              "hidden md:flex relative items-center bg-white border border-border rounded-full py-2 pl-[18px] pr-2 shadow-sm transition-all duration-200 ease-out",
-              pillExpanded
-                ? "flex-1 max-w-[560px] shadow-md"
-                : "flex-1 max-w-[340px] cursor-pointer hover:shadow-md",
+              "flex-1 flex justify-center transition-all duration-300",
               solid
                 ? "opacity-100 translate-y-0 pointer-events-auto"
                 : "opacity-0 -translate-y-1.5 pointer-events-none"
             )}
-            onClick={() => {
-              if (!pillExpanded) setPillExpanded(true);
-            }}
           >
-            {pillExpanded ? (
-              /* ── Expanded: input mode ─────────── */
-              <>
-                <input
-                  ref={pillInputRef}
-                  type="text"
-                  value={pillQuery}
-                  onChange={(e) => setPillQuery(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") handlePillSearch();
-                  }}
-                  placeholder="Search stays, experiences, destinations..."
-                  className="flex-1 text-[13px] text-text bg-transparent outline-none placeholder:text-text3 min-w-0"
-                />
-                {pillQuery && (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      pillClear();
-                      pillInputRef.current?.focus();
-                    }}
-                    className="shrink-0 size-5 rounded-full bg-surface flex items-center justify-center hover:bg-border transition-colors mr-1"
-                  >
-                    <X className="size-3 text-text3" />
-                  </button>
-                )}
-              </>
-            ) : (
-              /* ── Collapsed: static labels ─────── */
-              <>
-                <span
-                  className="flex-1 text-[13px] font-semibold text-text2 hover:text-text transition-colors cursor-pointer"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setPillExpanded(true);
-                  }}
-                >
-                  Anywhere
-                </span>
-                <span className="w-px h-4 bg-border mx-2.5" />
-                <span
-                  className="text-[13px] font-semibold text-text2 hover:text-text transition-colors cursor-pointer"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setMegaOpen(true);
-                  }}
-                >
-                  Any time
-                </span>
-                <span className="w-px h-4 bg-border mx-2.5" />
-                <span
-                  className="text-[13px] font-semibold text-text2 hover:text-text transition-colors cursor-pointer"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setMegaOpen(true);
-                  }}
-                >
-                  Any type
-                </span>
-              </>
-            )}
-
-            {/* Amber search button — always visible */}
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                if (pillExpanded && pillQuery.trim()) {
-                  handlePillSearch();
-                } else if (!pillExpanded) {
-                  setPillExpanded(true);
-                }
-              }}
-              className="ml-2 size-8 rounded-full bg-amber flex items-center justify-center shrink-0 hover:shadow-md transition-shadow"
-            >
-              <Search className="size-3.5 text-white" strokeWidth={2.5} />
-            </button>
-
-            {/* Search dropdown */}
-            {pillExpanded && (
-              <SearchDropdown
-                results={pillResults}
-                isLoading={pillLoading}
-                isOpen={pillSearchOpen}
-                query={pillQuery}
-                onClose={() => setPillSearchOpen(false)}
-              />
-            )}
+            <SearchEngine variant="nav" />
           </div>
 
           {/* Desktop links */}
           <div className="hidden md:flex items-center gap-0.5">
             {/* Explore trigger */}
             <div
-              ref={megaRef}
-              onMouseEnter={handleMegaEnter}
-              onMouseLeave={handleMegaLeave}
+              ref={exploreRef}
+              onMouseEnter={handleExploreEnter}
+              onMouseLeave={handleExploreLeave}
             >
               <button
-                onClick={() => setMegaOpen(!megaOpen)}
+                onClick={() => setExploreOpen(!exploreOpen)}
                 className={cn(
                   "px-3.5 py-2 rounded-full text-[14px] font-medium transition-colors duration-200 flex items-center gap-1",
                   solid
@@ -291,19 +215,19 @@ function Nav({ transparent = false }: NavProps) {
                 <ChevronDown
                   className={cn(
                     "size-3.5 transition-transform duration-200",
-                    megaOpen && "rotate-180"
+                    exploreOpen && "rotate-180"
                   )}
                 />
               </button>
             </div>
 
-            {/* Other nav links */}
+            {/* Other nav links — hidden below xl to give pill room */}
             {NAV_LINKS.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
                 className={cn(
-                  "px-3.5 py-2 rounded-full text-[14px] font-medium transition-colors duration-200 flex items-center gap-1.5",
+                  "hidden xl:flex px-3.5 py-2 rounded-full text-[14px] font-medium transition-colors duration-200 items-center gap-1.5",
                   solid
                     ? "text-text2 hover:bg-surface hover:text-text"
                     : "text-white/80 hover:bg-white/12 hover:text-white"
@@ -366,48 +290,14 @@ function Nav({ transparent = false }: NavProps) {
         </div>
       </nav>
 
-      {/* Mega menu — rendered outside nav to escape stacking context */}
-      {megaOpen && (
-        <div
-          ref={megaDropRef}
-          className="fixed left-1/2 -translate-x-1/2 w-[720px] rounded-2xl border border-border shadow-2xl p-6 animate-fade-in z-[250] hidden md:block"
-          style={{ top: 68, backgroundColor: '#ffffff' }}
-          onMouseEnter={handleMegaEnter}
-          onMouseLeave={handleMegaLeave}
-        >
-          <div className="grid grid-cols-5 gap-5">
-            {EXPLORE_CATEGORIES.map((cat) => {
-              const subs = SUBCATEGORIES_BY_TYPE[cat.type] ?? [];
-              return (
-                <div key={cat.type}>
-                  <Link
-                    href={cat.href}
-                    className="flex items-center gap-1.5 mb-3 group"
-                  >
-                    <span className="text-[18px]">{cat.icon}</span>
-                    <span className="text-[13px] font-bold text-dark group-hover:text-amber transition-colors">
-                      {cat.label}
-                    </span>
-                  </Link>
-                  <div className="flex flex-col gap-1">
-                    {subs.map((sub) => (
-                      <Link
-                        key={sub}
-                        href={`${cat.href}?sub=${sub}`}
-                        className="text-[12px] text-text2 hover:text-amber transition-colors py-0.5 flex items-center gap-1.5"
-                      >
-                        <span className="text-[12px]">
-                          {SUBCATEGORY_ICONS[sub]}
-                        </span>
-                        {SUBCATEGORY_LABELS[sub] ?? sub}
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
+      {/* Explore hover menu — link-based, independent */}
+      {exploreOpen && (
+        <ExploreHoverMenu
+          dropRef={exploreDropRef}
+          triggerRef={exploreRef}
+          onMouseEnter={handleExploreEnter}
+          onMouseLeave={handleExploreLeave}
+        />
       )}
 
       {/* Mobile menu */}

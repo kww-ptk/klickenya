@@ -23,7 +23,7 @@ import { Nav } from "@/components/shared/Nav";
 import { Footer } from "@/components/shared/Footer";
 import { ListingCard } from "@/components/listings/ListingCard";
 import { CategoryNav } from "@/components/listings/CategoryNav";
-import { HeroSearchSimple } from "@/components/home/HeroSearchSimple";
+import { SearchEngine } from "@/components/search/SearchEngine";
 import { MarqueeTicker } from "@/components/home/MarqueeTicker";
 import { EventCard } from "@/components/home/EventCard";
 import { PostCard } from "@/components/blog/PostCard";
@@ -122,7 +122,7 @@ export default async function HomePage() {
       <Nav transparent />
 
       {/* ─── HERO ─────────────────────────────────── */}
-      <section className="relative min-h-screen flex items-center justify-center overflow-x-clip">
+      <section className="relative min-h-screen flex flex-col items-center justify-center overflow-x-clip">
         {/* Hero background image */}
         <div className="absolute inset-0">
           <img
@@ -183,12 +183,35 @@ export default async function HomePage() {
             {homePage?.heroSubtitle ?? "Book unique stays, experiences, events, restaurants, and services across all 47 counties — all in one place."}
           </p>
 
+          {/* Category pills */}
+          <div
+            className="flex items-center justify-center gap-2 mb-6 flex-wrap animate-fade-up"
+            style={{ animationDelay: "0.25s" }}
+          >
+            {[
+              { label: "Stays", icon: "🏠", href: "/stays" },
+              { label: "Experiences", icon: "🎒", href: "/experiences" },
+              { label: "Events", icon: "🎟️", href: "/events" },
+              { label: "Services", icon: "⭐", href: "/services" },
+              { label: "Real Estate", icon: "🏢", href: "/real-estate" },
+            ].map((cat) => (
+              <Link
+                key={cat.href}
+                href={cat.href}
+                className="px-4 py-2 rounded-full text-[13px] font-semibold text-white/70 bg-white/8 border border-white/10 hover:bg-white/15 hover:text-white hover:border-white/20 transition-all duration-200"
+              >
+                <span className="mr-1.5">{cat.icon}</span>
+                {cat.label}
+              </Link>
+            ))}
+          </div>
+
           {/* Search bar */}
           <div
             className="w-full animate-fade-up"
             style={{ animationDelay: "0.3s" }}
           >
-            <HeroSearchSimple />
+            <SearchEngine variant="hero" />
           </div>
 
           {/* Stats row */}
