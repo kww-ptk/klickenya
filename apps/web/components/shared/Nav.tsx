@@ -195,14 +195,17 @@ function Nav({ transparent = false }: NavProps) {
             </span>
           </Link>
 
-          {/* Search pill — SearchEngine nav variant */}
+          {/* Search pill — SearchEngine nav variant
+              Mobile: completely hidden until pastHero (scrolled 120% vh)
+              Desktop: visible as soon as nav is solid (scrolled 50px) */}
           <div
             className={cn(
               "flex-1 flex justify-center transition-all duration-300",
-              // Mobile: completely hidden until past hero
-              !pastHero && "hidden md:flex",
+              // Mobile visibility gate — overrides everything else
+              !pastHero ? "hidden md:flex" : "",
+              // Desktop + mobile-after-hero visibility
               solid
-                ? "md:opacity-100 md:translate-y-0 md:pointer-events-auto opacity-100 translate-y-0 pointer-events-auto"
+                ? "opacity-100 translate-y-0 pointer-events-auto"
                 : "opacity-0 -translate-y-1.5 pointer-events-none"
             )}
           >
