@@ -92,10 +92,15 @@ export async function POST(
       }),
     });
 
-    // Update status to "responded"
+    // Append reply to notes for history tracking
+    const now = new Date().toISOString();
+    const replyLog = `\n\n--- REPLY [${now}] ---\nStatus: ${replyStatus}\nSubject: ${emailSubject}\n${message}`;
+    const updatedNotes = (contactRequest.notes || "") + replyLog;
+
+    // Update status to "responded" and save reply history
     const { error: updateError } = await adminClient
       .from("contact_requests")
-      .update({ status: "responded" })
+      .update({ status: "responded", notes: updatedNotes })
       .eq("id", id);
 
     if (updateError) {

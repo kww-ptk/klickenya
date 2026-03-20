@@ -7,12 +7,18 @@ interface ContactRequestActionsProps {
   id: string;
   currentStatus: string;
   currentNotes: string;
+  guestName: string;
+  listingTitle: string;
+  replyHistory: { date: string; status: string; subject: string; message: string }[];
 }
 
 export function ContactRequestActions({
   id,
   currentStatus,
   currentNotes,
+  guestName,
+  listingTitle,
+  replyHistory,
 }: ContactRequestActionsProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -25,7 +31,9 @@ export function ContactRequestActions({
   const [noteLoading, setNoteLoading] = useState(false);
 
   // Reply
-  const [replySubject, setReplySubject] = useState("");
+  const [replySubject, setReplySubject] = useState(
+    listingTitle ? `Re: Your enquiry about ${listingTitle}` : "Re: Your enquiry on Klickenya"
+  );
   const [replyMessage, setReplyMessage] = useState("");
   const [replyStatus, setReplyStatus] = useState<string>("info");
   const [replyLoading, setReplyLoading] = useState(false);
@@ -318,6 +326,51 @@ export function ContactRequestActions({
           )}
         </div>
       </div>
+
+      {/* Reply History */}
+      {replyHistory.length > 0 && (
+        <div className="bg-white rounded-2xl border border-[#F0EDE8] p-6 space-y-4">
+          <h2 className="text-[18px] font-display font-bold text-[#16130C]">
+            Email History
+          </h2>
+          <div className="space-y-3">
+            {replyHistory.map((entry, i) => {
+              const statusColors: Record<string, string> = {
+                approved: "text-[#22C55E] bg-[#22C55E]/10",
+                rejected: "text-[#EF4444] bg-[#EF4444]/10",
+                pending: "text-[#F59E0B] bg-[#F59E0B]/10",
+                info: "text-[#3B82F6] bg-[#3B82F6]/10",
+              };
+              const cls = statusColors[entry.status] || statusColors.info;
+              return (
+                <div
+                  key={i}
+                  className="border border-[#F0EDE8] rounded-xl p-4 space-y-2"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={`px-2 py-0.5 text-[11px] font-bold uppercase rounded-md ${cls}`}
+                      >
+                        {entry.status}
+                      </span>
+                      <span className="text-[12px] text-[#9C9485]">
+                        {entry.date}
+                      </span>
+                    </div>
+                  </div>
+                  <p className="text-[13px] text-[#16130C] font-medium">
+                    {entry.subject}
+                  </p>
+                  <p className="text-[13px] text-[#9C9485] leading-relaxed whitespace-pre-wrap">
+                    {entry.message}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

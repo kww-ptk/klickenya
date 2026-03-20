@@ -36,13 +36,36 @@ export default async function ContactRequestDetailPage({
   const typeMatch = notesStr.match(/^Type: (.+)$/m);
   const parsedListing = listingMatch?.[1] ?? null;
   const parsedType = typeMatch?.[1] ?? null;
-  const enquiryLines = notesStr
+  // Split notes into original enquiry and reply history
+  const replyBlocks = notesStr.split(/\n\n--- REPLY \[/);
+  const originalNotes = replyBlocks[0] || "";
+
+  const enquiryLines = originalNotes
     .split("\n")
     .filter((l) => !l.startsWith("Listing:") && !l.startsWith("Type:") && l.includes(": "))
     .map((l) => {
       const [key, ...rest] = l.split(": ");
       return [key, rest.join(": ")] as [string, string];
     });
+
+  // Parse reply history
+  const replyHistory = replyBlocks.slice(1).map((block) => {
+    const dateMatch = block.match(/^(.+?)\] ---/);
+    const statusMatch = block.match(/\nStatus: (.+)/);
+    const subjectMatch = block.match(/\nSubject: (.+)/);
+    const date = dateMatch?.[1] ?? "";
+    const status = statusMatch?.[1] ?? "info";
+    const subject = subjectMatch?.[1] ?? "";
+    // Message is everything after the Subject line
+    const msgStart = block.indexOf("\nSubject: ");
+    const afterSubject = msgStart >= 0 ? block.slice(block.indexOf("\n", msgStart + 1) + 1) : "";
+    return {
+      date: date ? new Date(date).toLocaleString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" }) : "",
+      status,
+      subject,
+      message: afterSubject.trim(),
+    };
+  });
 
   return (
     <div className="space-y-6">
@@ -220,6 +243,9 @@ export default async function ContactRequestDetailPage({
             id={id}
             currentStatus={request.status || "new"}
             currentNotes={request.notes || ""}
+            guestName={request.full_name || ""}
+            listingTitle={parsedListing || ""}
+            replyHistory={replyHistory}
           />
         </div>
 

@@ -93,7 +93,7 @@ export function adminReplyHtml(props: AdminReplyProps): string {
                   <td style="background-color:${cfg.bg};border:1px solid ${cfg.border};border-radius:8px;padding:16px 20px;">
                     <table role="presentation" cellpadding="0" cellspacing="0">
                       <tr>
-                        <td style="width:36px;height:36px;background-color:${cfg.color};border-radius:50%;text-align:center;vertical-align:middle;color:#ffffff;font-size:18px;font-weight:700;">${cfg.icon}</td>
+                        <td style="width:36px;height:36px;min-width:36px;max-width:36px;background-color:${cfg.color};border-radius:50%;text-align:center;vertical-align:middle;color:#ffffff;font-size:18px;font-weight:700;line-height:36px;">${cfg.icon}</td>
                         <td style="padding-left:14px;">
                           <p style="margin:0;font-size:16px;font-weight:700;color:${cfg.color};">${cfg.label}</p>
                           <p style="margin:4px 0 0;font-size:13px;color:#666;">${cfg.text}</p>
