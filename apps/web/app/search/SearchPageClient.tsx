@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { Search, X, SlidersHorizontal, Loader2 } from "lucide-react";
+import { Search, X, SlidersHorizontal, Loader2, ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ListingCard } from "@/components/listings/ListingCard";
 import { SUBCATEGORY_LABELS } from "@/lib/constants/subcategories";
@@ -196,16 +196,25 @@ export function SearchPageClient({
     <div className="min-h-screen bg-white pt-[68px]">
       {/* ── Search header ────────────────────────── */}
       <div className="sticky top-[68px] z-[100] bg-white border-b border-border">
-        <div className="max-w-[1280px] mx-auto px-5 md:px-10 py-4">
+        <div className="max-w-[1280px] mx-auto px-3 md:px-10 py-3 md:py-4">
           {/* Search input */}
-          <form onSubmit={handleSearch} className="flex gap-3 mb-3">
+          <form onSubmit={handleSearch} className="flex items-center gap-2 md:gap-3 mb-3">
+            {/* Back button — mobile */}
+            <button
+              type="button"
+              onClick={() => router.back()}
+              className="md:hidden size-9 rounded-full bg-surface flex items-center justify-center shrink-0 active:scale-95 transition-transform"
+            >
+              <ArrowLeft className="size-4 text-text" />
+            </button>
+
             <div className="flex-1 flex items-center bg-surface rounded-full px-4 py-2.5">
               <Search className="size-4 text-text3 shrink-0 mr-2" />
               <input
                 type="text"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search stays, experiences, destinations..."
+                placeholder="Search stays, experiences..."
                 className="flex-1 text-[14px] text-text bg-transparent outline-none placeholder:text-text3"
               />
               {query && (
@@ -223,7 +232,7 @@ export function SearchPageClient({
             </div>
             <button
               type="submit"
-              className="px-6 py-2.5 rounded-full bg-amber text-white text-[13px] font-semibold hover:shadow-md transition-shadow shrink-0"
+              className="hidden md:block px-6 py-2.5 rounded-full bg-amber text-white text-[13px] font-semibold hover:shadow-md transition-shadow shrink-0"
             >
               Search
             </button>
@@ -286,7 +295,7 @@ export function SearchPageClient({
       </div>
 
       {/* ── Main content ─────────────────────────── */}
-      <div className="max-w-[1280px] mx-auto px-5 md:px-10 py-8">
+      <div className="max-w-[1280px] mx-auto px-3 md:px-10 py-5 md:py-8">
         <div className="flex gap-10">
           {/* Filter sidebar — desktop only */}
           <aside className="hidden lg:block w-[240px] shrink-0">
@@ -378,29 +387,89 @@ export function SearchPageClient({
 
             {/* Empty / no query */}
             {!loading && (!results || results.total === 0) && (
-              <div className="text-center py-20">
-                <span className="text-[48px] block mb-3">🔍</span>
-                <h2 className="text-[20px] font-bold text-text mb-2">
-                  {query
-                    ? `No results for "${query}"`
-                    : "Start searching"}
-                </h2>
-                <p className="text-[14px] text-text3 mb-6 max-w-[400px] mx-auto">
-                  {query
-                    ? "Try a different search term or adjust your filters"
-                    : "Search for stays, experiences, events, and more across Kenya"}
-                </p>
-                <div className="flex flex-wrap justify-center gap-2">
-                  {SUGGESTIONS.map((s) => (
-                    <Link
-                      key={s}
-                      href={`/search?q=${encodeURIComponent(s)}`}
-                      className="px-4 py-2 rounded-full text-[13px] font-medium bg-surface text-text2 hover:bg-amber/10 hover:text-amber transition-colors border border-border"
-                    >
-                      {s}
-                    </Link>
-                  ))}
-                </div>
+              <div className="text-center py-12 md:py-20 px-4">
+                {query || cityFilter || typeFilter ? (
+                  /* ── No results found ── */
+                  <>
+                    <div className="size-20 md:size-24 rounded-full bg-surface mx-auto mb-5 flex items-center justify-center">
+                      <Search className="size-8 md:size-10 text-text3/50" />
+                    </div>
+                    <h2 className="text-[18px] md:text-[22px] font-bold text-text mb-2">
+                      No results found
+                    </h2>
+                    <p className="text-[14px] text-text3 mb-2 max-w-[360px] mx-auto">
+                      We couldn&apos;t find anything matching
+                      {query ? ` "${query}"` : ""}
+                      {cityFilter ? ` in ${cityFilter}` : ""}
+                      {typeFilter ? ` for ${TYPE_META[typeFilter]?.label ?? typeFilter}` : ""}
+                    </p>
+                    <p className="text-[13px] text-text3/70 mb-8 max-w-[360px] mx-auto">
+                      Try adjusting your filters or search for something else
+                    </p>
+
+                    {/* Quick actions */}
+                    <div className="flex flex-wrap justify-center gap-2 mb-6">
+                      {(cityFilter || typeFilter) && (
+                        <button
+                          onClick={() => {
+                            setTypeFilter("");
+                            setCityFilter("");
+                            updateUrl(query, "", "");
+                          }}
+                          className="px-4 py-2 rounded-full text-[13px] font-semibold bg-amber text-white hover:shadow-md transition-shadow"
+                        >
+                          Clear all filters
+                        </button>
+                      )}
+                      <button
+                        onClick={() => router.back()}
+                        className="px-4 py-2 rounded-full text-[13px] font-medium bg-surface text-text2 hover:bg-border transition-colors border border-border"
+                      >
+                        Go back
+                      </button>
+                    </div>
+
+                    {/* Suggestions */}
+                    <p className="text-[11px] font-bold text-text3 uppercase tracking-wider mb-3">
+                      Try searching for
+                    </p>
+                    <div className="flex flex-wrap justify-center gap-2">
+                      {SUGGESTIONS.slice(0, 6).map((s) => (
+                        <Link
+                          key={s}
+                          href={`/search?q=${encodeURIComponent(s)}`}
+                          className="px-4 py-2 rounded-full text-[13px] font-medium bg-surface text-text2 hover:bg-amber/10 hover:text-amber transition-colors border border-border"
+                        >
+                          {s}
+                        </Link>
+                      ))}
+                    </div>
+                  </>
+                ) : (
+                  /* ── Start searching ── */
+                  <>
+                    <div className="size-20 md:size-24 rounded-full bg-gradient-to-br from-amber/10 to-purple/10 mx-auto mb-5 flex items-center justify-center">
+                      <Search className="size-8 md:size-10 text-amber/60" />
+                    </div>
+                    <h2 className="text-[18px] md:text-[22px] font-bold text-text mb-2">
+                      Explore Kenya
+                    </h2>
+                    <p className="text-[14px] text-text3 mb-8 max-w-[360px] mx-auto">
+                      Search stays, experiences, events, and more across Kenya&apos;s most beautiful destinations
+                    </p>
+                    <div className="flex flex-wrap justify-center gap-2">
+                      {SUGGESTIONS.map((s) => (
+                        <Link
+                          key={s}
+                          href={`/search?q=${encodeURIComponent(s)}`}
+                          className="px-4 py-2 rounded-full text-[13px] font-medium bg-surface text-text2 hover:bg-amber/10 hover:text-amber transition-colors border border-border"
+                        >
+                          {s}
+                        </Link>
+                      ))}
+                    </div>
+                  </>
+                )}
               </div>
             )}
 
