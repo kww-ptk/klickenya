@@ -93,7 +93,7 @@ export const SUBCATEGORY_ICONS: Record<string, string> = {
   hostel: '🎒',
   unique_stay: '🌳',
   safari: '🦁',
-  outdoor: '🧗',
+  outdoor: '🏄‍♀️',
   beaches: '🏖️',
   restaurants: '🍽️',
   cultural: '🎭',
