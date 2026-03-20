@@ -14,7 +14,7 @@ function formatDate(date: string): string {
 
 type ContactRequest = {
   id: string;
-  listing_title?: string;
+  notes?: string;
   full_name: string;
   phone: string;
   created_at: string;
@@ -124,7 +124,7 @@ export default async function AdminDashboardPage() {
     // Supabase: recent 5 contact requests
     adminClient
       .from("contact_requests")
-      .select("id, listing_title, full_name, phone, created_at, status")
+      .select("id, notes, full_name, phone, created_at, status")
       .order("created_at", { ascending: false })
       .limit(5)
       .then(({ data }) => (data ?? []) as ContactRequest[]),
@@ -330,7 +330,7 @@ export default async function AdminDashboardPage() {
                 >
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-[13px] font-medium text-[#16130C]">
-                      {req.listing_title ?? "General enquiry"}
+                      {req.notes?.match(/^Listing: (.+?)(?:\s*\(|$)/m)?.[1] ?? "General enquiry"}
                     </p>
                     <p className="mt-0.5 text-[13px] text-[#9C9485]">
                       {req.full_name} &middot; {req.phone}

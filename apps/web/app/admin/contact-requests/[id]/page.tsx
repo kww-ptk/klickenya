@@ -30,10 +30,19 @@ export default async function ContactRequestDetailPage({
 
   if (!request) notFound();
 
-  const enquiryDetails =
-    typeof request.enquiry_details === "object" && request.enquiry_details
-      ? (request.enquiry_details as Record<string, unknown>)
-      : null;
+  /* Parse listing info and enquiry details from the notes field */
+  const notesStr = (request.notes as string) || "";
+  const listingMatch = notesStr.match(/^Listing: (.+?)(?:\s*\(.*?\))?\s*$/m);
+  const typeMatch = notesStr.match(/^Type: (.+)$/m);
+  const parsedListing = listingMatch?.[1] ?? null;
+  const parsedType = typeMatch?.[1] ?? null;
+  const enquiryLines = notesStr
+    .split("\n")
+    .filter((l) => !l.startsWith("Listing:") && !l.startsWith("Type:") && l.includes(": "))
+    .map((l) => {
+      const [key, ...rest] = l.split(": ");
+      return [key, rest.join(": ")] as [string, string];
+    });
 
   return (
     <div className="space-y-6">
@@ -66,7 +75,7 @@ export default async function ContactRequestDetailPage({
             Contact Request
           </h1>
           <p className="text-[14px] text-[#9C9485] mt-1">
-            from {request.name || "Unknown"} &middot;{" "}
+            from {request.full_name || "Unknown"} &middot;{" "}
             {formatDate(request.created_at)}
           </p>
         </div>
@@ -88,7 +97,7 @@ export default async function ContactRequestDetailPage({
                   Listing
                 </p>
                 <p className="text-[14px] text-[#16130C]">
-                  {request.listing_title || "\u2014"}
+                  {parsedListing || "\u2014"}
                 </p>
               </div>
               <div>
@@ -96,7 +105,7 @@ export default async function ContactRequestDetailPage({
                   Listing Type
                 </p>
                 <p className="text-[14px] text-[#16130C] capitalize">
-                  {request.listing_type || "\u2014"}
+                  {parsedType || "\u2014"}
                 </p>
               </div>
               <div>
@@ -104,7 +113,7 @@ export default async function ContactRequestDetailPage({
                   Name
                 </p>
                 <p className="text-[14px] text-[#16130C] font-medium">
-                  {request.name || "\u2014"}
+                  {request.full_name || "\u2014"}
                 </p>
               </div>
               <div>
@@ -169,23 +178,23 @@ export default async function ContactRequestDetailPage({
               </div>
             )}
 
-            {/* Enquiry Details */}
-            {enquiryDetails && Object.keys(enquiryDetails).length > 0 && (
+            {/* Enquiry Details (parsed from notes) */}
+            {enquiryLines.length > 0 && (
               <div>
                 <p className="text-[12px] text-[#9C9485] uppercase tracking-wider font-medium mb-2">
                   Enquiry Details
                 </p>
                 <div className="bg-[#F7F5F2] rounded-xl p-4 space-y-2">
-                  {Object.entries(enquiryDetails).map(([key, value]) => (
+                  {enquiryLines.map(([key, value]) => (
                     <div
                       key={key}
                       className="flex items-start gap-3 text-[14px]"
                     >
                       <span className="text-[#9C9485] capitalize min-w-[120px] shrink-0">
-                        {key.replace(/_/g, " ")}
+                        {key}
                       </span>
                       <span className="text-[#16130C]">
-                        {String(value ?? "\u2014")}
+                        {value || "\u2014"}
                       </span>
                     </div>
                   ))}
@@ -303,7 +312,7 @@ export default async function ContactRequestDetailPage({
                     d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"
                   />
                 </svg>
-                Email {request.name || "guest"}
+                Email {request.full_name || "guest"}
               </a>
             )}
             {request.phone && (
@@ -324,7 +333,7 @@ export default async function ContactRequestDetailPage({
                     d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z"
                   />
                 </svg>
-                Call {request.name || "guest"}
+                Call {request.full_name || "guest"}
               </a>
             )}
           </div>

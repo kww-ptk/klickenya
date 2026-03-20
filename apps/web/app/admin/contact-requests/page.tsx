@@ -47,7 +47,7 @@ export default async function ContactRequestsPage({
   }
 
   if (q) {
-    query = query.or(`name.ilike.%${q}%,email.ilike.%${q}%`);
+    query = query.or(`full_name.ilike.%${q}%,email.ilike.%${q}%`);
   }
 
   query = query.range(offset, offset + PER_PAGE - 1);
@@ -194,10 +194,13 @@ export default async function ContactRequestsPage({
                       {formatDate(req.created_at as string)}
                     </td>
                     <td className="px-6 py-3.5 text-[#16130C]">
-                      {truncate(req.listing_title as string, 30)}
+                      {truncate(
+                        ((req.notes as string) || "").match(/^Listing: (.+?)(?:\s*\(|$)/m)?.[1] ?? null,
+                        30
+                      )}
                     </td>
                     <td className="px-6 py-3.5 text-[#16130C] font-medium">
-                      {(req.name as string) || "\u2014"}
+                      {(req.full_name as string) || "\u2014"}
                     </td>
                     <td className="px-6 py-3.5 whitespace-nowrap">
                       {req.phone ? (
