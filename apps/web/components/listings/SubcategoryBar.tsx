@@ -44,7 +44,7 @@ export default function SubcategoryBar({
   if (!subcategories || subcategories.length === 0) return null
 
   return (
-    <div className="sticky top-[120px] z-30 bg-white border-b border-border">
+    <div className="sticky top-[68px] md:top-[120px] z-30 bg-white border-b border-border">
       <div className="flex items-center gap-2 overflow-x-auto scrollbar-none px-4 md:px-10 py-2.5">
         {/* All pill */}
         <button
