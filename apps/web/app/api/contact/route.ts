@@ -179,12 +179,11 @@ export async function POST(request: NextRequest) {
     const { data: row, error: dbError } = await supabase
       .from("contact_requests")
       .insert({
-        listing_id: data.listingId,
         full_name: data.name,
         email: data.email,
         phone: data.phone,
         message: data.message ?? null,
-        notes: `${data.listingType}: ${data.listingTitle}\n${Object.entries(enquirySummary).map(([k, v]) => `${k}: ${v}`).join("\n")}`,
+        notes: `Listing: ${data.listingTitle} (${data.listingId})\nType: ${data.listingType}\n${Object.entries(enquirySummary).map(([k, v]) => `${k}: ${v}`).join("\n")}`,
         status: "new",
       })
       .select("id")
