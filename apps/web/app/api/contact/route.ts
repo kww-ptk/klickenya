@@ -175,18 +175,16 @@ export async function POST(request: NextRequest) {
     const data = parsed.data;
     const enquirySummary = buildEnquirySummary(data);
 
-    /* Save to Supabase */
+    /* Save to Supabase — column names must match the actual table schema */
     const { data: row, error: dbError } = await supabase
       .from("contact_requests")
       .insert({
         listing_id: data.listingId,
-        listing_title: data.listingTitle,
-        listing_type: data.listingType,
-        name: data.name,
+        full_name: data.name,
         email: data.email,
         phone: data.phone,
         message: data.message ?? null,
-        enquiry_details: enquirySummary,
+        notes: `${data.listingType}: ${data.listingTitle}\n${Object.entries(enquirySummary).map(([k, v]) => `${k}: ${v}`).join("\n")}`,
         status: "new",
       })
       .select("id")
