@@ -15,7 +15,7 @@ const supabase = createClient(
 const listingRequestSchema = z.object({
   name: z.string().min(1, "Name is required"),
   email: z.email("Invalid email address"),
-  phone: z.string().min(10, "Phone number must be at least 10 digits"),
+  phone: z.string().regex(/^\+\d{7,15}$/, "Enter a valid phone number with country code"),
   listingType: z.enum([
     "Stay",
     "Experience",

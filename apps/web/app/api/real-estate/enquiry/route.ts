@@ -16,14 +16,14 @@ const supabase = createClient(
 
 /* ---------- Validation ---------- */
 
-const kenyanPhone = /^(\+254|0)[17]\d{8}$/;
+const internationalPhone = /^\+\d{7,15}$/;
 
 const enquirySchema = z.object({
   propertyId: z.string().min(1),
   propertyTitle: z.string().min(1),
   name: z.string().min(2, "Name must be at least 2 characters"),
   email: z.email("Invalid email address"),
-  phone: z.string().regex(kenyanPhone, "Enter a valid Kenyan phone number (07XX or +254...)"),
+  phone: z.string().regex(internationalPhone, "Enter a valid phone number with country code"),
   enquiryType: z.enum([
     "I want to buy",
     "I want to rent",

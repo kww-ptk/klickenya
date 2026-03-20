@@ -2,6 +2,7 @@
 
 import { useState, useMemo, type FormEvent } from "react";
 import { cn } from "@/lib/utils";
+import PhoneInput from "@/components/ui/PhoneInput";
 
 /* ─── Types ──────────────────────────────────────── */
 
@@ -501,13 +502,12 @@ function ContactForm({
           required
           className={inputCls}
         />
-        <input
-          type="tel"
-          placeholder="Phone (07XX XXX XXX or +254...)"
+        <PhoneInput
           value={form.phone}
-          onChange={(e) => update("phone", e.target.value)}
+          onChange={(val) => update("phone", val)}
           required
           className={inputCls}
+          inputClassName="!border-l-0 !rounded-l-none"
         />
         <textarea
           placeholder={type === "restaurant" ? "Special requests / dietary requirements (optional)" : "Message / special requests (optional)"}

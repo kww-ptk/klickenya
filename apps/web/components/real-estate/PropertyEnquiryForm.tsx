@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { cn } from "@/lib/utils";
+import PhoneInput from "@/components/ui/PhoneInput";
 
 /* ─── Types ──────────────────────────────────────── */
 
@@ -138,13 +139,12 @@ function PropertyEnquiryForm({
         onChange={(e) => update("email", e.target.value)}
         required
       />
-      <input
-        type="tel"
-        placeholder="Phone (07XX XXX XXX or +254...)"
-        className={inputCls}
+      <PhoneInput
         value={form.phone}
-        onChange={(e) => update("phone", e.target.value)}
+        onChange={(val) => update("phone", val)}
         required
+        className={inputCls}
+        inputClassName="!border-l-0 !rounded-l-none"
       />
 
       {/* ─── Enquiry type ────────────────────────── */}

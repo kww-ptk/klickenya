@@ -14,9 +14,9 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-/* ---------- Kenyan phone regex ---------- */
+/* ---------- International phone ---------- */
 
-const kenyanPhone = /^(\+254|0)[17]\d{8}$/;
+const internationalPhone = /^\+\d{7,15}$/;
 
 /* ---------- Schemas ---------- */
 
@@ -25,7 +25,7 @@ const baseFields = {
   listingTitle: z.string().min(1),
   name: z.string().min(2, "Name must be at least 2 characters"),
   email: z.email("Invalid email address"),
-  phone: z.string().regex(kenyanPhone, "Enter a valid Kenyan phone number (07XX or +254...)"),
+  phone: z.string().regex(internationalPhone, "Enter a valid phone number with country code"),
   message: z.string().optional(),
 };
 

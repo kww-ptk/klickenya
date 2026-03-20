@@ -1,9 +1,9 @@
 import { z } from "zod/v4";
 
 // ---------------------------------------------------------------------------
-// Kenyan phone regex: 07XX / 01XX or +254 prefix
+// International phone: must start with + and have 7-15 digits
 // ---------------------------------------------------------------------------
-export const kenyanPhoneRegex = /^(\+254|0)[17]\d{8}$/;
+export const internationalPhoneRegex = /^\+\d{7,15}$/;
 
 // ---------------------------------------------------------------------------
 // Base contact schema (shared across all listing types)
@@ -11,7 +11,7 @@ export const kenyanPhoneRegex = /^(\+254|0)[17]\d{8}$/;
 const baseContactSchema = z.object({
   name: z.string().min(2),
   email: z.email(),
-  phone: z.string().regex(kenyanPhoneRegex, "Enter a valid Kenyan phone number (07XX or +254...)"),
+  phone: z.string().regex(internationalPhoneRegex, "Enter a valid phone number with country code"),
   message: z.string().optional(),
 });
 
@@ -93,7 +93,7 @@ export const contactSchema = z.discriminatedUnion("listingType", [
 export const propertyEnquirySchema = z.object({
   name: z.string().min(2),
   email: z.email(),
-  phone: z.string().regex(kenyanPhoneRegex, "Enter a valid Kenyan phone number (07XX or +254...)"),
+  phone: z.string().regex(internationalPhoneRegex, "Enter a valid phone number with country code"),
   enquiryType: z.enum([
     "I want to buy",
     "I want to rent",

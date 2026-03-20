@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import PhoneInput from "@/components/ui/PhoneInput";
 
 const LISTING_TYPES = [
   "Stay",
@@ -122,13 +123,12 @@ export function ListingRequestForm() {
           <label className="block text-[13px] text-white/60 font-medium mb-1.5">
             Phone <span className="text-amber">*</span>
           </label>
-          <input
-            type="tel"
-            required
+          <PhoneInput
             value={form.phone}
-            onChange={(e) => update("phone", e.target.value)}
-            className="w-full rounded-xl border border-white/10 bg-white/[0.06] px-4 py-3 text-[14px] text-white placeholder:text-white/30 focus:outline-none focus:border-amber/50 focus:ring-1 focus:ring-amber/30 transition-colors"
-            placeholder="+254..."
+            onChange={(val) => update("phone", val)}
+            required
+            className="rounded-xl border border-white/10 bg-white/[0.06]"
+            inputClassName="!border-0 !bg-transparent text-[14px] text-white placeholder:text-white/30 focus:!ring-0"
           />
         </div>
 
