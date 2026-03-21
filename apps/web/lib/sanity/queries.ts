@@ -113,6 +113,25 @@ export const LISTING_BY_SLUG_QUERY = groq`
     tags,
     hostName,
     highlights,
+    rentingType,
+    rooms[] {
+      _key,
+      roomName,
+      roomDescription,
+      "photos": photos[] {
+        asset->{ _id, url, metadata { dimensions } },
+        alt,
+        hotspot,
+        crop
+      },
+      pricePerNight,
+      capacity,
+      bedType,
+      roomSizeSqm,
+      roomAmenities,
+      isAvailable,
+      quantity
+    },
     cuisine,
     priceRange,
     openingHours,

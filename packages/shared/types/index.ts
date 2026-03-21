@@ -86,6 +86,20 @@ export interface SanityImage {
   crop?: { top: number; bottom: number; left: number; right: number }
 }
 
+export interface RoomType {
+  _key: string
+  roomName: string
+  roomDescription?: any
+  photos?: SanityImage[]
+  pricePerNight: number
+  capacity: number
+  bedType?: string
+  roomSizeSqm?: number
+  roomAmenities?: string[]
+  isAvailable: boolean
+  quantity?: number
+}
+
 export interface SanitySlug {
   current: string
   _type: 'slug'
@@ -315,6 +329,8 @@ export interface Listing {
   duration_hours?: number
   group_size?: number
   languages?: string[]
+  rentingType?: 'entire_place' | 'by_room' | 'both'
+  rooms?: RoomType[]
   embedding?: number[]
   created_at: string
   updated_at: string

@@ -85,6 +85,7 @@ export default defineType({
   groups: [
     { name: 'general', title: 'General', default: true },
     { name: 'media', title: 'Media' },
+    { name: 'rooms', title: '🛏️ Rooms' },
     { name: 'restaurant', title: '🍽️ Restaurant' },
     { name: 'experience', title: '🧭 Experience' },
     { name: 'event', title: '🎫 Event' },
@@ -181,6 +182,24 @@ export default defineType({
       group: 'general',
     }),
     defineField({
+      name: 'rentingType',
+      title: 'Renting type',
+      type: 'string',
+      description:
+        'Entire place: guests book the whole property.\nBy room: guests choose a specific room.\nBoth: a toggle appears on the listing page.',
+      options: {
+        list: [
+          { title: 'Entire place only', value: 'entire_place' },
+          { title: 'By room only', value: 'by_room' },
+          { title: 'Both — guests can choose', value: 'both' },
+        ],
+        layout: 'radio',
+      },
+      initialValue: 'entire_place',
+      hidden: ({ document }: HiddenCtx) => document?.type !== 'stay',
+      group: 'general',
+    }),
+    defineField({
       name: 'status',
       title: 'Status',
       type: 'string',
@@ -222,8 +241,9 @@ export default defineType({
       name: 'price',
       title: 'Price',
       type: 'number',
-      description: 'Price in KES',
+      description: 'Price in KES. When renting type is "Both", this is the entire-property price — room prices are set per room in the Rooms tab.',
       validation: (rule) => rule.min(0),
+      hidden: ({ document }: HiddenCtx) => document?.rentingType === 'by_room',
       group: 'general',
     }),
     defineField({
@@ -362,6 +382,90 @@ export default defineType({
           return true
         }),
       group: 'media',
+    }),
+
+    /* ═══════════════════════════════════════════════════
+       🛏️ ROOMS GROUP
+       Shown when type === "stay" AND rentingType is
+       "by_room" or "both"
+       ═══════════════════════════════════════════════════ */
+    defineField({
+      name: 'rooms',
+      title: 'Rooms',
+      type: 'array',
+      description: 'Add individual rooms guests can book',
+      hidden: ({ document }: HiddenCtx) =>
+        !(document?.type === 'stay' && (document?.rentingType === 'by_room' || document?.rentingType === 'both')),
+      group: 'rooms',
+      of: [
+        {
+          type: 'object',
+          fields: [
+            { name: 'roomName', title: 'Room Name', type: 'string', validation: (rule: any) => rule.required() },
+            { name: 'roomDescription', title: 'Description', type: 'text', rows: 3 },
+            {
+              name: 'photos',
+              title: 'Photos',
+              type: 'array',
+              of: [{ type: 'image', options: { hotspot: true } }],
+              validation: (rule: any) => rule.max(8),
+            },
+            { name: 'pricePerNight', title: 'Price per night', type: 'number', description: 'KSh', validation: (rule: any) => rule.required().min(0) },
+            { name: 'capacity', title: 'Capacity (guests)', type: 'number', validation: (rule: any) => rule.required().min(1) },
+            {
+              name: 'bedType',
+              title: 'Bed Type',
+              type: 'string',
+              options: {
+                list: [
+                  { title: 'King', value: 'King' },
+                  { title: 'Queen', value: 'Queen' },
+                  { title: 'Twin', value: 'Twin' },
+                  { title: 'Double', value: 'Double' },
+                  { title: 'Single', value: 'Single' },
+                  { title: 'Bunk beds', value: 'Bunk beds' },
+                ],
+              },
+            },
+            { name: 'roomSizeSqm', title: 'Room size (sqm)', type: 'number' },
+            {
+              name: 'roomAmenities',
+              title: 'Room Amenities',
+              type: 'array',
+              of: [{ type: 'string' }],
+              options: {
+                list: [
+                  { title: 'AC', value: 'AC' },
+                  { title: 'Fan', value: 'Fan' },
+                  { title: 'Sea view', value: 'Sea view' },
+                  { title: 'Garden view', value: 'Garden view' },
+                  { title: 'Pool view', value: 'Pool view' },
+                  { title: 'Balcony', value: 'Balcony' },
+                  { title: 'Terrace', value: 'Terrace' },
+                  { title: 'Mini bar', value: 'Mini bar' },
+                  { title: 'In-room safe', value: 'In-room safe' },
+                  { title: 'Bathtub', value: 'Bathtub' },
+                  { title: 'Shower only', value: 'Shower only' },
+                  { title: 'Smart TV', value: 'Smart TV' },
+                  { title: 'Work desk', value: 'Work desk' },
+                  { title: 'Kitchenette', value: 'Kitchenette' },
+                ],
+              },
+            },
+            { name: 'isAvailable', title: 'Available', type: 'boolean', initialValue: true },
+            { name: 'quantity', title: 'Quantity', type: 'number', initialValue: 1, description: 'How many of this room type' },
+          ],
+          preview: {
+            select: { title: 'roomName', bedType: 'bedType', price: 'pricePerNight', capacity: 'capacity' },
+            prepare({ title, bedType, price, capacity }: { title?: string; bedType?: string; price?: number; capacity?: number }) {
+              return {
+                title: title ?? 'Untitled Room',
+                subtitle: [bedType, price ? `KSh ${price.toLocaleString()}/night` : null, capacity ? `${capacity} guests` : null].filter(Boolean).join(' · '),
+              }
+            },
+          },
+        },
+      ],
     }),
 
     /* ═══════════════════════════════════════════════════
