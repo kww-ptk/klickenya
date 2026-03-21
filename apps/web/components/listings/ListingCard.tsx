@@ -228,8 +228,9 @@ function ListingCard({
             {typeBadge.emoji} {typeBadge.label}
           </span>
           {isVerified && (
-            <span className="absolute bottom-1.5 left-1.5 rounded-full px-1.5 py-0.5 text-[8px] font-bold bg-[#16A34A] text-white z-10">
-              ✓ Verified
+            <span className="absolute bottom-1.5 right-1.5 z-10 flex items-center justify-center">
+              <span className="absolute size-3 rounded-full bg-[#4ADE80] animate-ping opacity-40" />
+              <span className="relative size-2.5 rounded-full bg-gradient-to-br from-[#86EFAC] to-[#16A34A] shadow-[0_0_6px_rgba(74,222,128,0.5)]" />
             </span>
           )}
         </div>
@@ -308,8 +309,9 @@ function ListingCard({
             {typeBadge.emoji} {typeBadge.label}
           </span>
           {isVerified && (
-            <span className="absolute bottom-3 left-3 rounded-full px-2.5 py-1 text-[10px] font-bold bg-[#16A34A] text-white z-10">
-              ✓ Verified
+            <span className="absolute bottom-3 right-3 z-10 flex items-center justify-center">
+              <span className="absolute size-4 rounded-full bg-[#4ADE80] animate-ping opacity-40" />
+              <span className="relative size-3 rounded-full bg-gradient-to-br from-[#86EFAC] to-[#16A34A] shadow-[0_0_8px_rgba(74,222,128,0.5)]" />
             </span>
           )}
 
