@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { SlidersHorizontal } from "lucide-react";
@@ -24,7 +25,6 @@ const CATEGORIES: Category[] = [
 // Map pathname to category id
 function getActiveCategory(pathname: string): string {
   if (pathname === "/") return "all";
-  // Rentals and restaurants map to services
   if (pathname.startsWith("/rentals") || pathname.startsWith("/restaurants")) return "services";
   const match = CATEGORIES.find(
     (cat) => cat.href !== "/" && pathname.startsWith(cat.href)
@@ -45,10 +45,35 @@ function CategoryNav({
   const pathname = usePathname();
   const active = getActiveCategory(pathname);
 
+  /* ── Hide on scroll down, show on scroll up ── */
+  const [visible, setVisible] = useState(true);
+  const lastScrollY = useRef(0);
+
+  useEffect(() => {
+    function handleScroll() {
+      const currentY = window.scrollY;
+      // Always show near the top
+      if (currentY < 100) {
+        setVisible(true);
+      } else if (currentY > lastScrollY.current + 5) {
+        // Scrolling down
+        setVisible(false);
+      } else if (currentY < lastScrollY.current - 5) {
+        // Scrolling up
+        setVisible(true);
+      }
+      lastScrollY.current = currentY;
+    }
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
   return (
     <div
       className={cn(
-        "sticky top-[67px] z-[100] bg-white/97 backdrop-blur-[20px] border-b border-border hidden md:block",
+        "sticky top-[67px] z-[100] bg-white/97 backdrop-blur-[20px] border-b border-border hidden md:block transition-transform duration-300",
+        !visible && "-translate-y-full",
         className
       )}
     >

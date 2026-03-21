@@ -12,8 +12,8 @@ interface BookingSidebarProps {
 
 function BookingSidebar(props: BookingSidebarProps) {
   return (
-    <aside className="hidden lg:block w-[380px] shrink-0">
-      <div className="sticky top-[88px] border border-border rounded-[32px] shadow-lg p-7 bg-white">
+    <aside className="hidden lg:block w-[350px] shrink-0">
+      <div className="sticky top-[76px] border border-border rounded-[24px] shadow-lg p-5 bg-white max-h-[calc(100vh-92px)] overflow-y-auto scrollbar-none">
         <ContactForm {...props} />
       </div>
     </aside>
