@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
 import { Check } from "lucide-react";
 
@@ -8,6 +11,8 @@ interface HostBadgeProps {
 }
 
 function HostBadge({ hostName, isVerified, listingSlug }: HostBadgeProps) {
+  const [showTooltip, setShowTooltip] = useState(false);
+
   const initials = hostName
     .split(/\s+/)
     .map((w) => w[0])
@@ -40,14 +45,34 @@ function HostBadge({ hostName, isVerified, listingSlug }: HostBadgeProps) {
         </div>
       </div>
 
-      {/* Right: claim link for unverified */}
+      {/* Right: unverified indicator + claim link */}
       {!isVerified && listingSlug && (
-        <Link
-          href={`/contact?listing=${encodeURIComponent(listingSlug)}`}
-          className="shrink-0 text-[12px] font-medium text-[#E8A020] hover:text-[#d4911c] transition-colors hidden sm:block"
+        <div
+          className="relative shrink-0 hidden sm:flex items-center gap-2"
+          onMouseEnter={() => setShowTooltip(true)}
+          onMouseLeave={() => setShowTooltip(false)}
         >
-          Are you the owner?
-        </Link>
+          {/* Pulsing dot */}
+          <span className="relative flex items-center justify-center size-2.5">
+            <span className="absolute size-2.5 rounded-full bg-[#E8A020] animate-ping opacity-30" />
+            <span className="relative size-2 rounded-full bg-gradient-to-br from-[#F5CE6E] to-[#E8A020]" />
+          </span>
+
+          <Link
+            href={`/contact?listing=${encodeURIComponent(listingSlug)}`}
+            className="text-[12px] font-medium text-[#9C9485] hover:text-[#E8A020] transition-colors"
+          >
+            Not verified · Are you the owner?
+          </Link>
+
+          {/* Tooltip */}
+          {showTooltip && (
+            <div className="absolute right-0 top-full mt-2 z-50 w-[220px] bg-[#16130C] text-white text-[11px] leading-[1.5] rounded-lg px-3 py-2 shadow-lg pointer-events-none">
+              This listing has not been verified yet. Information may not be fully up to date.
+              <div className="absolute -top-1 right-6 size-2 bg-[#16130C] rotate-45" />
+            </div>
+          )}
+        </div>
       )}
     </div>
   );
