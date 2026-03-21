@@ -186,7 +186,7 @@ export async function POST(req: NextRequest) {
               </table>
               <p style="margin: 24px 0 0;">
                 <a href="${listingUrl}" style="display: inline-block; background: #E8A020; color: #16130C; font-weight: 700; text-decoration: none; padding: 10px 24px; border-radius: 999px; font-size: 13px;">View listing →</a>
-                <a href="https://klickenya.sanity.studio/structure/listing;${claim.listing_sanity_id}" style="display: inline-block; margin-left: 12px; background: #16130C; color: #fff; font-weight: 700; text-decoration: none; padding: 10px 24px; border-radius: 999px; font-size: 13px;">Review in Sanity →</a>
+                <a href="https://klickenya-web.vercel.app/admin/claims/${data.claimId}" style="display: inline-block; margin-left: 12px; background: #16130C; color: #fff; font-weight: 700; text-decoration: none; padding: 10px 24px; border-radius: 999px; font-size: 13px;">Review in dashboard →</a>
               </p>
             </div>
           `,
