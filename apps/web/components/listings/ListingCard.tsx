@@ -40,7 +40,7 @@ const TYPE_BADGES: Record<string, BadgeConfig> = {
 
 const EXPERIENCE_SUB_BADGES: Record<string, BadgeConfig> = {
   safari: { emoji: "🦁", label: "Safari" },
-  outdoor: { emoji: "🧗", label: "Outdoor" },
+  outdoor: { emoji: "🏄‍♀️", label: "Outdoor" },
   beaches: { emoji: "🏖️", label: "Beach" },
   cultural: { emoji: "🎭", label: "Cultural" },
   wellness: { emoji: "🧘", label: "Wellness" },
