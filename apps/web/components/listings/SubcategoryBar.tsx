@@ -26,21 +26,28 @@ export default function SubcategoryBar({
   const subcategories = SUBCATEGORIES_BY_TYPE[type]
 
   /* ── Sync with CategoryNav hide/show ── */
-  const [categoryNavVisible, setCategoryNavVisible] = useState(true)
+  const [stickyTop, setStickyTop] = useState(68)
   const lastScrollY = useRef(0)
 
   useEffect(() => {
+    const isMd = window.innerWidth >= 768
+    // CategoryNav is ~72px tall, only on md+
+    const catNavH = isMd ? 72 : 0
+
     function handleScroll() {
       const currentY = window.scrollY
       if (currentY < 100) {
-        setCategoryNavVisible(true)
+        setStickyTop(68 + catNavH)
       } else if (currentY > lastScrollY.current + 5) {
-        setCategoryNavVisible(false)
+        setStickyTop(68) // CategoryNav hidden
       } else if (currentY < lastScrollY.current - 5) {
-        setCategoryNavVisible(true)
+        setStickyTop(68 + catNavH) // CategoryNav visible
       }
       lastScrollY.current = currentY
     }
+
+    // Set initial value
+    setStickyTop(68 + catNavH)
 
     window.addEventListener('scroll', handleScroll, { passive: true })
     return () => window.removeEventListener('scroll', handleScroll)
@@ -66,11 +73,8 @@ export default function SubcategoryBar({
 
   return (
     <div
-      className={cn(
-        'sticky z-30 bg-white border-b border-border transition-all duration-300',
-        'top-[68px]',
-        categoryNavVisible ? 'md:top-[120px]' : 'md:top-[68px]'
-      )}
+      className="sticky z-30 bg-white border-b border-border"
+      style={{ top: `${stickyTop}px`, transition: 'top 300ms ease' }}
     >
       <div className="flex items-center gap-2 overflow-x-auto scrollbar-none px-4 md:px-10 py-2.5">
         {/* All pill */}
