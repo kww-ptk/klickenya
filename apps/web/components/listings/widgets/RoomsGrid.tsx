@@ -51,7 +51,7 @@ export function RoomsGrid({ rooms, listingTitle }: RoomsGridProps) {
       <h2 className="font-display text-[22px] font-bold tracking-[-0.02em] text-dark mb-5">
         Rooms &amp; Rates
       </h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
+      <div className="flex flex-col gap-4 sm:grid sm:grid-cols-2 lg:grid-cols-3 mt-4">
         {rooms.map((room) => (
           <RoomCard key={room._key} room={room} onEnquire={handleEnquire} />
         ))}
