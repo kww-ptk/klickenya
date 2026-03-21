@@ -62,6 +62,15 @@ export const metadata: Metadata = {
     description:
       "Kenya's all-in-one booking platform. Book stays, experiences, events, rentals and services — from Nairobi to Lamu, Mara to Mombasa.",
   },
+  icons: {
+    icon: [
+      { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
+      { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+      { url: "/favicon.ico" },
+    ],
+    apple: { url: "/apple-touch-icon.png", sizes: "180x180" },
+    other: [{ rel: "manifest", url: "/site.webmanifest" }],
+  },
 };
 
 const websiteJsonLd = {
