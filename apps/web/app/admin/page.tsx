@@ -39,6 +39,16 @@ type ListingRequest = {
   status: string;
 };
 
+type ClaimRequest = {
+  id: string;
+  listing_title: string;
+  listing_type: string;
+  claimant_name: string;
+  claimant_email: string;
+  status: string;
+  created_at: string;
+};
+
 type NewsletterSubscriber = {
   id: string;
   email: string;
@@ -91,6 +101,9 @@ export default async function AdminDashboardPage() {
     recentAmbassadors,
     totalNewsletterSubs,
     recentNewsletterSubs,
+    claimRequestsThisWeek,
+    pendingClaimsCount,
+    recentClaims,
   ] = await Promise.all([
     // Sanity: total listings
     sanityClient.fetch<number>(`count(*[_type == "listing"])`),
@@ -222,6 +235,25 @@ export default async function AdminDashboardPage() {
         }
         return (data ?? []) as NewsletterSubscriber[];
       }),
+    // Claim requests this week
+    adminClient
+      .from("claim_requests")
+      .select("id", { count: "exact", head: true })
+      .gte("created_at", sevenDaysAgo)
+      .then(({ count }) => count ?? 0),
+    // Pending claims
+    adminClient
+      .from("claim_requests")
+      .select("id", { count: "exact", head: true })
+      .in("status", ["pending", "verified"])
+      .then(({ count }) => count ?? 0),
+    // Recent 5 claims
+    adminClient
+      .from("claim_requests")
+      .select("id, listing_title, listing_type, claimant_name, claimant_email, status, created_at")
+      .order("created_at", { ascending: false })
+      .limit(5)
+      .then(({ data }) => (data ?? []) as ClaimRequest[]),
   ]);
 
   const draftListings = totalListings - publishedListings;
@@ -342,6 +374,19 @@ export default async function AdminDashboardPage() {
           </p>
           <p className="mt-1 text-[13px] text-[#9C9485]">
             Newsletter Subscribers
+          </p>
+        </div>
+
+        {/* Claim Requests */}
+        <div className="rounded-2xl bg-white p-6 shadow-sm">
+          <p className="font-display text-[32px] font-bold text-[#16130C]">
+            {claimRequestsThisWeek}
+          </p>
+          <p className="mt-1 text-[13px] text-[#9C9485]">
+            Claims This Week
+          </p>
+          <p className="mt-1 text-[13px] text-[#9C9485]">
+            {pendingClaimsCount} pending review
           </p>
         </div>
       </div>
@@ -575,6 +620,51 @@ export default async function AdminDashboardPage() {
         </div>
       </div>
 
+      {/* Claim Requests */}
+      <div className="rounded-2xl bg-white shadow-sm">
+        <div className="flex items-center justify-between border-b border-[#F0EDE8] px-6 py-4">
+          <h2 className="font-display text-[16px] font-bold text-[#16130C]">
+            Claim Requests
+          </h2>
+          <Link
+            href="/admin/claims"
+            className="text-[12px] font-medium text-[#E8A020] hover:text-[#C78A1A]"
+          >
+            View all
+          </Link>
+        </div>
+        {recentClaims.length === 0 ? (
+          <p className="px-6 py-8 text-center text-[13px] text-[#9C9485]">
+            No claim requests yet.
+          </p>
+        ) : (
+          <div className="divide-y divide-[#F0EDE8]">
+            {recentClaims.map((claim) => (
+              <Link
+                key={claim.id}
+                href={`/admin/claims/${claim.id}`}
+                className="flex items-center justify-between px-6 py-3 hover:bg-[#F7F5F2] transition-colors"
+              >
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-[13px] font-medium text-[#16130C]">
+                    {claim.listing_title}
+                  </p>
+                  <p className="mt-0.5 text-[13px] text-[#9C9485]">
+                    {claim.claimant_name} &middot; {claim.claimant_email}
+                  </p>
+                </div>
+                <div className="ml-4 flex shrink-0 items-center gap-3">
+                  <span className="text-[13px] text-[#9C9485]">
+                    {formatDate(claim.created_at)}
+                  </span>
+                  <StatusBadge status={claim.status} />
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
+      </div>
+
       {/* Newsletter Subscribers */}
       <div className="rounded-2xl bg-white shadow-sm">
         <div className="flex items-center justify-between border-b border-[#F0EDE8] px-6 py-4">
@@ -636,6 +726,12 @@ export default async function AdminDashboardPage() {
           className="inline-flex items-center rounded-xl border border-[#E2DDD5] bg-white px-4 py-2.5 text-[13px] font-semibold text-[#16130C] transition-colors hover:bg-[#F9F7F4]"
         >
           Contact requests
+        </Link>
+        <Link
+          href="/admin/claims"
+          className="inline-flex items-center rounded-xl border border-[#E2DDD5] bg-white px-4 py-2.5 text-[13px] font-semibold text-[#16130C] transition-colors hover:bg-[#F9F7F4]"
+        >
+          Claim requests
         </Link>
         <Link
           href="/admin/listing-requests"
