@@ -982,7 +982,7 @@ function SearchEngine({ variant = "hero", className, onExpandChange }: SearchEng
                   if (e.key === "Enter") handlePillSearch();
                 }}
                 placeholder="Search stays, experiences..."
-                className="flex-1 text-[15px] text-text bg-transparent outline-none placeholder:text-text3 min-w-0"
+                className="flex-1 text-[16px] text-text bg-transparent outline-none placeholder:text-text3 min-w-0"
               />
               {pillQuery && (
                 <button
@@ -1102,7 +1102,7 @@ function SearchEngine({ variant = "hero", className, onExpandChange }: SearchEng
                       value={heroFilter}
                       onChange={(e) => setHeroFilter(e.target.value)}
                       placeholder="Search cities..."
-                      className="flex-1 text-[14px] text-text bg-transparent outline-none placeholder:text-text3 min-w-0"
+                      className="flex-1 text-[16px] text-text bg-transparent outline-none placeholder:text-text3 min-w-0"
                     />
                     {heroFilter && (
                       <button onClick={() => { setHeroFilter(""); mobileFilterRef.current?.focus(); }}>
