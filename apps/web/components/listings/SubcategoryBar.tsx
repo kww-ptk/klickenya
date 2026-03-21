@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useCallback } from 'react'
+import { useCallback, useState, useEffect, useRef } from 'react'
 import {
   SUBCATEGORIES_BY_TYPE,
   SUBCATEGORY_LABELS,
@@ -25,6 +25,27 @@ export default function SubcategoryBar({
 
   const subcategories = SUBCATEGORIES_BY_TYPE[type]
 
+  /* ── Sync with CategoryNav hide/show ── */
+  const [categoryNavVisible, setCategoryNavVisible] = useState(true)
+  const lastScrollY = useRef(0)
+
+  useEffect(() => {
+    function handleScroll() {
+      const currentY = window.scrollY
+      if (currentY < 100) {
+        setCategoryNavVisible(true)
+      } else if (currentY > lastScrollY.current + 5) {
+        setCategoryNavVisible(false)
+      } else if (currentY < lastScrollY.current - 5) {
+        setCategoryNavVisible(true)
+      }
+      lastScrollY.current = currentY
+    }
+
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
+
   const handleClick = useCallback(
     (sub: string | null) => {
       const params = new URLSearchParams(searchParams.toString())
@@ -44,7 +65,13 @@ export default function SubcategoryBar({
   if (!subcategories || subcategories.length === 0) return null
 
   return (
-    <div className="sticky top-[68px] md:top-[120px] z-30 bg-white border-b border-border">
+    <div
+      className={cn(
+        'sticky z-30 bg-white border-b border-border transition-all duration-300',
+        'top-[68px]',
+        categoryNavVisible ? 'md:top-[120px]' : 'md:top-[68px]'
+      )}
+    >
       <div className="flex items-center gap-2 overflow-x-auto scrollbar-none px-4 md:px-10 py-2.5">
         {/* All pill */}
         <button
