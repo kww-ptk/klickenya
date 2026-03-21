@@ -42,7 +42,7 @@ function WelcomeEmail() {
           color: "#1a1a1a",
         },
       },
-      "Welcome to Klickenya Journal"
+      "We got you! \u2728"
     ),
     React.createElement(
       "p",
@@ -54,7 +54,19 @@ function WelcomeEmail() {
           marginBottom: "16px",
         },
       },
-      "Thanks for subscribing! You'll receive our best travel stories, insider tips, and curated guides to exploring Kenya."
+      "You will be notified soon about Klickenya."
+    ),
+    React.createElement(
+      "p",
+      {
+        style: {
+          fontSize: "16px",
+          lineHeight: "1.6",
+          color: "#555",
+          marginBottom: "16px",
+        },
+      },
+      "Just so you know, you will be able to find the best that Kenya has to offer, both for residents and tourists \u2014 events, parties, tours, special deals, and much more."
     ),
     React.createElement(
       "p",
@@ -66,24 +78,24 @@ function WelcomeEmail() {
           marginBottom: "24px",
         },
       },
-      "From stunning safari destinations to hidden coastal gems, we'll keep you inspired for your next adventure."
+      "Thank you once again!"
     ),
     React.createElement(
       "a",
       {
-        href: "https://klickenya.com/journal",
+        href: "https://klickenya.com",
         style: {
           display: "inline-block",
-          backgroundColor: "#f59e0b",
-          color: "#ffffff",
+          backgroundColor: "#E8A020",
+          color: "#16130C",
           padding: "12px 24px",
           borderRadius: "9999px",
           fontSize: "14px",
-          fontWeight: 600,
+          fontWeight: 700,
           textDecoration: "none",
         },
       },
-      "Explore the Journal"
+      "Visit Klickenya"
     ),
     React.createElement(
       "p",
@@ -151,7 +163,7 @@ export async function POST(request: NextRequest) {
         await resend.emails.send({
           from: "Klickenya <hello@klickenya.com>",
           to: email,
-          subject: "Welcome to Klickenya Journal",
+          subject: "We got you! Welcome to Klickenya \u2728",
           react: React.createElement(WelcomeEmail),
         });
       } catch (emailError) {

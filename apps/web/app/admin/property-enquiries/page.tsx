@@ -1,5 +1,6 @@
 import { adminClient } from "@/lib/supabase/admin";
 import { StatusBadge } from "@/components/admin/StatusBadge";
+import { DeleteButton } from "../_components/DeleteButton";
 import Link from "next/link";
 
 const TABS = [
@@ -239,12 +240,15 @@ export default async function PropertyEnquiriesPage({
                       <StatusBadge status={(enq.status as string) || "new"} />
                     </td>
                     <td className="px-6 py-3.5 text-right">
-                      <Link
-                        href={`/admin/property-enquiries/${enq.id}`}
-                        className="text-[13px] font-medium text-[#E8A020] hover:text-[#C78A1A] transition-colors"
-                      >
-                        View
-                      </Link>
+                      <div className="flex items-center justify-end gap-3">
+                        <Link
+                          href={`/admin/property-enquiries/${enq.id}`}
+                          className="text-[13px] font-medium text-[#E8A020] hover:text-[#C78A1A] transition-colors"
+                        >
+                          View
+                        </Link>
+                        <DeleteButton table="property_enquiries" id={enq.id as string} />
+                      </div>
                     </td>
                   </tr>
                 ))

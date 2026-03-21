@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { adminClient } from "@/lib/supabase/admin";
 import { StatusBadge } from "@/components/admin/StatusBadge";
+import { DeleteButton } from "../_components/DeleteButton";
 
 export const revalidate = 0;
 
@@ -67,12 +68,15 @@ export default async function AdminClaimsPage() {
                     {new Date(claim.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
                   </td>
                   <td className="px-6 py-3">
-                    <Link
-                      href={`/admin/claims/${claim.id}`}
-                      className="text-[#E8A020] font-medium hover:underline"
-                    >
-                      View →
-                    </Link>
+                    <div className="flex items-center gap-3">
+                      <Link
+                        href={`/admin/claims/${claim.id}`}
+                        className="text-[#E8A020] font-medium hover:underline"
+                      >
+                        View →
+                      </Link>
+                      <DeleteButton table="claim_requests" id={claim.id} />
+                    </div>
                   </td>
                 </tr>
               ))}
