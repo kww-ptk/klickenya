@@ -59,7 +59,7 @@ function HostBadge({ hostName, isVerified, listingSlug }: HostBadgeProps) {
           </span>
 
           <Link
-            href={`/contact?listing=${encodeURIComponent(listingSlug)}`}
+            href={`/claim/${encodeURIComponent(listingSlug)}`}
             className="text-[12px] font-medium text-[#9C9485] hover:text-[#E8A020] transition-colors"
           >
             Not verified · Are you the owner?
