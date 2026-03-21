@@ -113,6 +113,18 @@ function MegaphoneIcon() {
   );
 }
 
+function ShieldIcon() {
+  return (
+    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"
+      />
+    </svg>
+  );
+}
+
 function GearIcon() {
   return (
     <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
@@ -143,7 +155,7 @@ export default async function AdminLayout({
   } = await supabase.auth.getUser();
 
   // Fetch unread counts (using adminClient to bypass RLS)
-  const [contactRes, enquiryRes, listingReqRes, generalContactRes, ambassadorRes] = await Promise.all([
+  const [contactRes, enquiryRes, listingReqRes, generalContactRes, ambassadorRes, claimRes] = await Promise.all([
     adminClient
       .from("contact_requests")
       .select("id", { count: "exact", head: true })
@@ -163,6 +175,10 @@ export default async function AdminLayout({
       .from("ambassador_applications")
       .select("id", { count: "exact", head: true })
       .eq("status", "new"),
+    adminClient
+      .from("claim_requests")
+      .select("id", { count: "exact", head: true })
+      .in("status", ["pending", "verified"]),
   ]);
 
   const unreadContacts = contactRes.count ?? 0;
@@ -170,6 +186,7 @@ export default async function AdminLayout({
   const unreadListingReqs = listingReqRes.count ?? 0;
   const unreadGeneralContacts = generalContactRes.count ?? 0;
   const unreadAmbassadors = ambassadorRes.count ?? 0;
+  const pendingClaims = claimRes.count ?? 0;
 
   const sanityStudioUrl =
     process.env.NEXT_PUBLIC_SANITY_STUDIO_URL || "http://localhost:3333";
@@ -229,6 +246,12 @@ export default async function AdminLayout({
             label="Ambassadors"
             icon={<MegaphoneIcon />}
             badge={unreadAmbassadors}
+          />
+          <AdminNavLink
+            href="/admin/claims"
+            label="Verification Requests"
+            icon={<ShieldIcon />}
+            badge={pendingClaims}
           />
           <AdminNavLink
             href="/admin/listings"
