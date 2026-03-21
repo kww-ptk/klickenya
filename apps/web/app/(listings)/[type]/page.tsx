@@ -114,6 +114,7 @@ function mapToCardProps(listing: any, type: UrlType): ListingCardProps {
     type: TYPE_TO_SANITY[type] as ListingCardProps["type"],
     subcategory: listing.subcategory,
     openingHours: listing.openingHours,
+    isVerified: listing.isVerified ?? false,
     photos: photoUrl ? [photoUrl] : [],
     href: `/${type}/${citySlug}/${slug}`,
   };

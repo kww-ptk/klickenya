@@ -130,6 +130,7 @@ export default async function DestinationPage({ params }: PageProps) {
       type: l.type as ListingCardProps["type"],
       subcategory: l.subcategory,
       openingHours: l.openingHours,
+      isVerified: l.isVerified ?? false,
       photos: photoUrl ? [photoUrl] : [],
       href: `/${urlType}/${lCity}/${lSlug}`,
     };

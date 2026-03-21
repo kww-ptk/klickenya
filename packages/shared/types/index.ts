@@ -126,6 +126,8 @@ export interface SanityListing {
   priceUnit: PriceUnit
   coverPhoto?: SanityImage
   tags: string[]
+  isVerified?: boolean
+  verificationStatus?: 'pending' | 'claimed' | 'verified'
 }
 
 /** Full listing (detail page) */

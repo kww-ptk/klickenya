@@ -137,6 +137,7 @@ export default async function CityPage({ params }: PageProps) {
       type: sanityType as ListingCardProps["type"],
       subcategory: l.subcategory,
       openingHours: l.openingHours,
+      isVerified: l.isVerified ?? false,
       photos: photoUrl ? [photoUrl] : [],
       href: `/${type}/${city}/${slug}`,
     };

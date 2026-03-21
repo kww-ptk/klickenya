@@ -232,6 +232,7 @@ export default async function ListingDetailPage({ params }: PageProps) {
       price: l.price ?? 0,
       priceUnit: l.priceUnit ?? "night",
       type: sanityType as ListingCardProps["type"],
+      isVerified: l.isVerified ?? false,
       photos: photoUrl ? [photoUrl] : [],
       href: `/${type}/${lCity}/${lSlug}`,
     };
