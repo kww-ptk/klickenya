@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, type FormEvent } from "react";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import PhoneInput from "@/components/ui/PhoneInput";
 
@@ -126,6 +127,10 @@ function ContactForm({
   ticketTypes,
 }: ContactFormProps) {
   const type = listingType as ListingType;
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+  const preselectedRoom = searchParams.get("room");
 
   const [form, setForm] = useState<FormFields>({
     name: "",
@@ -176,6 +181,7 @@ function ContactForm({
       email: form.email,
       phone: form.phone,
       message: form.message || undefined,
+      room: preselectedRoom ?? undefined,
     };
 
     switch (type) {
@@ -265,6 +271,25 @@ function ContactForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      {preselectedRoom && (
+        <div className="flex items-center justify-between bg-[#E8A020]/10 border border-[#E8A020]/20 rounded-xl px-4 py-3 mb-4">
+          <span className="text-sm text-[#16130C]">
+            🛏 &nbsp;
+            <span className="font-semibold text-[#E8A020]">
+              {preselectedRoom}
+            </span>
+          </span>
+          <button
+            type="button"
+            onClick={() => router.replace(pathname, { scroll: false })}
+            className="text-[#9C9485] hover:text-[#16130C] text-lg leading-none ml-3"
+            aria-label="Clear room selection"
+          >
+            ×
+          </button>
+        </div>
+      )}
+
       {/* ─── Heading ─────────────────────────────── */}
       <h3 className="font-display text-[18px] font-bold text-text tracking-[-0.02em]">
         Enquire about this listing

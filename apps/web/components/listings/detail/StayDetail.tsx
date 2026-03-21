@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import { Star, MapPin } from "lucide-react";
 import { PortableTextRenderer } from "@/components/blog/PortableTextRenderer";
 import { PhotoGallery } from "@/components/listings/widgets/PhotoGallery";
@@ -8,6 +11,7 @@ import { HostBadge } from "@/components/listings/widgets/HostBadge";
 import { SimilarListings } from "@/components/listings/widgets/SimilarListings";
 import { BookingSidebar } from "@/components/listings/widgets/BookingSidebar";
 import { MobileBookingBar } from "@/components/listings/widgets/MobileBookingBar";
+import { RentingToggle } from "../widgets/RentingToggle";
 import type { ListingCardProps } from "@/components/listings/ListingCard";
 
 /* ── Types ─────────────────────────────────────────── */
@@ -38,6 +42,7 @@ function StayDetail({
   citySlug,
   similarCards,
 }: StayDetailProps) {
+  const [rentMode, setRentMode] = useState<"entire" | "room">("entire");
   const highlights = listing.highlights ?? [];
   const amenities: string[] = listing.amenities ?? [];
   const hostName = listing.hostName || "Klickenya";
@@ -97,6 +102,14 @@ function StayDetail({
             <hr className="border-border mb-7" />
 
             <HighlightsGrid highlights={highlights} />
+
+            <RentingToggle
+              rentingType={listing.rentingType ?? "entire_place"}
+              pricePerNight={listing.price}
+              rooms={listing.rooms}
+              listingTitle={listing.title}
+              onModeChange={(mode) => setRentMode(mode)}
+            />
 
             {/* Description */}
             {listing.description && (

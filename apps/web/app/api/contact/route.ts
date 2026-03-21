@@ -27,6 +27,7 @@ const baseFields = {
   email: z.email("Invalid email address"),
   phone: z.string().regex(internationalPhone, "Enter a valid phone number with country code"),
   message: z.string().optional(),
+  room: z.string().optional(),
 };
 
 const staySchema = z.object({
@@ -183,7 +184,7 @@ export async function POST(request: NextRequest) {
         email: data.email,
         phone: data.phone,
         message: data.message ?? null,
-        notes: `Listing: ${data.listingTitle} (${data.listingId})\nType: ${data.listingType}\n${Object.entries(enquirySummary).map(([k, v]) => `${k}: ${v}`).join("\n")}`,
+        notes: `Listing: ${data.listingTitle} (${data.listingId})\nType: ${data.listingType}${data.room ? `\nRoom: ${data.room}` : ""}\n${Object.entries(enquirySummary).map(([k, v]) => `${k}: ${v}`).join("\n")}`,
         status: "new",
       })
       .select("id")
@@ -220,15 +221,20 @@ export async function POST(request: NextRequest) {
         const resend = new Resend(process.env.RESEND_API_KEY);
 
         // Confirmation to guest
+        const confirmationSummary = data.room
+          ? { "Requested room": data.room, ...enquirySummary }
+          : enquirySummary;
         await resend.emails.send({
           from: "Klickenya <hello@klickenya.com>",
           to: data.email,
-          subject: `Your enquiry: ${data.listingTitle}`,
+          subject: data.room
+            ? `Your enquiry for ${data.room} at ${data.listingTitle}`
+            : `Your enquiry: ${data.listingTitle}`,
           html: contactConfirmationHtml({
             guestName: data.name,
             listingTitle: data.listingTitle,
             listingType: data.listingType,
-            enquirySummary,
+            enquirySummary: confirmationSummary,
           }),
         });
 
@@ -242,10 +248,15 @@ export async function POST(request: NextRequest) {
         if (allRecipients.length > 0) {
           const listingUrl = `https://klickenya.com/listings/${data.listingType}/${data.listingId}`;
 
+          const notificationDetails = data.room
+            ? { "Requested room": data.room, ...enquirySummary }
+            : enquirySummary;
           await resend.emails.send({
             from: "Klickenya <hello@klickenya.com>",
             to: allRecipients,
-            subject: `New enquiry: ${data.listingTitle}`,
+            subject: data.room
+              ? `New enquiry: ${data.room} at ${data.listingTitle}`
+              : `New enquiry: ${data.listingTitle}`,
             html: contactNotificationHtml({
               listingTitle: data.listingTitle,
               listingType: data.listingType,
@@ -254,7 +265,7 @@ export async function POST(request: NextRequest) {
               guestEmail: data.email,
               guestPhone: data.phone,
               message: data.message,
-              enquiryDetails: enquirySummary,
+              enquiryDetails: notificationDetails,
             }),
           });
         }
