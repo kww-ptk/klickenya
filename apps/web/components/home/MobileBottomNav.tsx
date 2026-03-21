@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useState, useEffect } from "react";
 import { Home, Compass, CalendarDays, Star, Building2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -68,13 +69,32 @@ function isPropertyDetail(path: string): boolean {
 
 function MobileBottomNav() {
   const pathname = usePathname();
+  const [visible, setVisible] = useState(true);
+
+  const isHome = pathname === "/";
+
+  // On homepage, hide until scrolled past the hero
+  useEffect(() => {
+    if (!isHome) { setVisible(true); return; }
+    const handleScroll = () => {
+      setVisible(window.scrollY > window.innerHeight * 0.85);
+    };
+    handleScroll();
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [isHome]);
 
   if (HIDDEN_ROUTES.some((r) => pathname.startsWith(r))) return null;
   if (isListingDetail(pathname)) return null;
   if (isPropertyDetail(pathname)) return null;
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-[200] md:hidden bg-white border-t border-border pb-[env(safe-area-inset-bottom)]">
+    <nav
+      className={cn(
+        "fixed bottom-0 left-0 right-0 z-[200] md:hidden bg-white border-t border-border pb-[env(safe-area-inset-bottom)] transition-transform duration-300",
+        !visible && "translate-y-full"
+      )}
+    >
       <div className="flex items-center justify-around px-2 py-1.5">
         {NAV_ITEMS.map((item) => {
           const isActive = item.match.some(
