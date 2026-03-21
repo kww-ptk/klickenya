@@ -43,13 +43,18 @@ function ExploreHoverMenu({
     function update() {
       if (!triggerRef.current) return;
       const rect = triggerRef.current.getBoundingClientRect();
-      const isMobile = window.innerWidth < 768;
-      if (isMobile) {
-        setPos({ left: 12, width: window.innerWidth - 24 });
+      const vw = window.innerWidth;
+      if (vw < 768) {
+        setPos({ left: 12, width: vw - 24 });
       } else {
-        const maxW = 720;
-        const availRight = window.innerWidth - rect.left - 16;
-        setPos({ left: rect.left, width: Math.min(maxW, availRight) });
+        const maxW = Math.min(720, vw - 32);
+        const dropW = maxW;
+        // Center on trigger, but clamp to viewport edges
+        const triggerCenter = rect.left + rect.width / 2;
+        let left = triggerCenter - dropW / 2;
+        if (left < 16) left = 16;
+        if (left + dropW > vw - 16) left = vw - 16 - dropW;
+        setPos({ left, width: dropW });
       }
     }
     update();
