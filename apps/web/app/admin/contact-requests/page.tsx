@@ -229,7 +229,7 @@ export default async function ContactRequestsPage({
                         >
                           View
                         </Link>
-                        <DeleteButton table="contact_requests" id={req.id} />
+                        <DeleteButton table="contact_requests" id={req.id as string} />
                       </div>
                     </td>
                   </tr>
