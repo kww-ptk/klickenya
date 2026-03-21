@@ -22,6 +22,15 @@ const claimSchema = z.object({
   listingTitle: z.string(),
   listingType: z.string(),
   listingCity: z.string().optional(),
+  everythingCorrect: z.boolean().optional(),
+  incorrectFields: z.array(z.string()).optional(),
+  additionalNotes: z.string().optional(),
+  socialMediaUrl: z.string().optional(),
+  websiteUrl: z.string().optional(),
+  photoConsent: z.enum(["yes_all", "yes_logo_only", "no"]).optional(),
+  consentGiven: z.boolean(),
+  consentTimestamp: z.string(),
+  consentText: z.string(),
 });
 
 /* ---------- POST ---------- */
@@ -66,6 +75,15 @@ export async function POST(req: NextRequest) {
         otp_code: otpCode,
         otp_expires_at: otpExpiresAt,
         status: "pending",
+        everything_correct: data.everythingCorrect ?? null,
+        incorrect_fields: data.incorrectFields ?? null,
+        additional_notes: data.additionalNotes ?? null,
+        social_media_url: data.socialMediaUrl ?? null,
+        website_url: data.websiteUrl ?? null,
+        photo_consent: data.photoConsent ?? null,
+        consent_given: data.consentGiven,
+        consent_timestamp: data.consentTimestamp,
+        consent_text: data.consentText,
       })
       .select("id")
       .single();

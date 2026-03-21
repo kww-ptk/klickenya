@@ -33,6 +33,7 @@ const verifySchema = z.object({
 
 export async function POST(req: NextRequest) {
   try {
+    const ip = req.headers.get("x-forwarded-for") ?? "unknown";
     const body = await req.json();
     const data = verifySchema.parse(body);
 
@@ -91,6 +92,7 @@ export async function POST(req: NextRequest) {
       .update({
         status: "verified",
         verified_at: new Date().toISOString(),
+        claimant_ip: ip,
       })
       .eq("id", data.claimId);
 
@@ -165,6 +167,23 @@ export async function POST(req: NextRequest) {
                 <tr><td style="padding: 8px 0; color: #9C9485;">Listing</td><td style="padding: 8px 0; color: #16130C; font-weight: 600;">${claim.listing_title}</td></tr>
                 <tr><td style="padding: 8px 0; color: #9C9485;">Type</td><td style="padding: 8px 0; color: #16130C;">${claim.listing_type}</td></tr>
                 <tr><td style="padding: 8px 0; color: #9C9485;">City</td><td style="padding: 8px 0; color: #16130C;">${claim.listing_city ?? "—"}</td></tr>
+              </table>
+              <hr style="border: none; border-top: 1px solid #E2DDD5; margin: 20px 0;" />
+              <h3 style="font-size: 14px; color: #9C9485; margin: 0 0 12px; letter-spacing: 1px;">── LISTING FEEDBACK ──</h3>
+              <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                <tr><td style="padding: 6px 0; color: #9C9485; width: 140px;">Everything correct</td><td style="padding: 6px 0; color: #16130C;">${claim.everything_correct === true ? "Yes ✓" : claim.everything_correct === false ? "No ✗" : "Not answered"}</td></tr>
+                ${claim.everything_correct === false ? `<tr><td style="padding: 6px 0; color: #9C9485;">Issues reported</td><td style="padding: 6px 0; color: #16130C;">${claim.incorrect_fields?.join(", ") ?? "None specified"}</td></tr>` : ""}
+                <tr><td style="padding: 6px 0; color: #9C9485;">Additional notes</td><td style="padding: 6px 0; color: #16130C;">${claim.additional_notes ?? "None provided"}</td></tr>
+                <tr><td style="padding: 6px 0; color: #9C9485;">Website</td><td style="padding: 6px 0; color: #16130C;">${claim.website_url ?? "Not provided"}</td></tr>
+                <tr><td style="padding: 6px 0; color: #9C9485;">Social media</td><td style="padding: 6px 0; color: #16130C;">${claim.social_media_url ?? "Not provided"}</td></tr>
+                <tr><td style="padding: 6px 0; color: #9C9485;">Photo consent</td><td style="padding: 6px 0; color: #16130C;">${claim.photo_consent === "yes_all" ? "✓ Yes — use all photos" : claim.photo_consent === "yes_logo_only" ? "Logo and key photos only" : claim.photo_consent === "no" ? "✗ No — will provide own" : "Not specified"}</td></tr>
+              </table>
+              <hr style="border: none; border-top: 1px solid #E2DDD5; margin: 20px 0;" />
+              <h3 style="font-size: 14px; color: #9C9485; margin: 0 0 12px; letter-spacing: 1px;">── CONSENT ──</h3>
+              <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                <tr><td style="padding: 6px 0; color: #9C9485; width: 140px;">Terms accepted</td><td style="padding: 6px 0; color: #16130C;">Yes</td></tr>
+                <tr><td style="padding: 6px 0; color: #9C9485;">Agreed at</td><td style="padding: 6px 0; color: #16130C;">${claim.consent_timestamp ? new Date(claim.consent_timestamp).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" }) : "—"}</td></tr>
+                <tr><td style="padding: 6px 0; color: #9C9485;">IP address</td><td style="padding: 6px 0; color: #16130C;">${ip}</td></tr>
               </table>
               <p style="margin: 24px 0 0;">
                 <a href="${listingUrl}" style="display: inline-block; background: #E8A020; color: #16130C; font-weight: 700; text-decoration: none; padding: 10px 24px; border-radius: 999px; font-size: 13px;">View listing →</a>
