@@ -167,7 +167,7 @@ export default async function HomePage() {
         />
 
         {/* Hero content */}
-        <div className="relative z-10 flex flex-col items-center text-center px-5 w-full max-w-[960px] mx-auto pt-[76px] md:pt-[180px] pb-12 md:pb-28">
+        <div className="relative z-10 flex flex-col items-center text-center px-5 w-full max-w-[960px] mx-auto pt-[69px] md:pt-[180px] pb-12 md:pb-28">
           {/* Eyebrow badge */}
           <div className="flex items-center gap-2.5 px-4 py-2 rounded-full bg-white/10 backdrop-blur-[16px] border border-white/15 mb-5 md:mb-8 animate-fade-up">
             <span className="relative flex size-2">
