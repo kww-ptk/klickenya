@@ -136,10 +136,9 @@ export async function POST(req: NextRequest) {
             <p style="margin: 0 0 24px;">
               <a href="${listingUrl}" style="display: inline-block; background: #E8A020; color: #16130C; font-weight: 700; text-decoration: none; padding: 12px 28px; border-radius: 999px; font-size: 14px;">View your listing →</a>
             </p>
-            <p style="font-size: 14px; color: #5E5848; font-weight: 600; margin: 0 0 8px;">Next steps:</p>
-            <p style="font-size: 14px; color: #5E5848; margin: 0 0 4px;">→ Add more photos in Sanity Studio</p>
-            <p style="font-size: 14px; color: #5E5848; margin: 0 0 4px;">→ Update your description</p>
-            <p style="font-size: 14px; color: #5E5848; margin: 0 0 24px;">→ Set your pricing</p>
+            <p style="font-size: 14px; color: #5E5848; margin: 0 0 24px;">
+              Your approval should arrive shortly. We'll send you another email once your listing is verified.
+            </p>
             <p style="font-size: 13px; color: #9C9485; margin: 0 0 8px;">Questions? Reply to this email.</p>
             <hr style="border: none; border-top: 1px solid #E2DDD5; margin: 16px 0;" />
             <p style="font-size: 12px; color: #9C9485; margin: 0;">
