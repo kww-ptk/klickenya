@@ -8,6 +8,7 @@ import * as React from "react";
 
 const subscribeSchema = z.object({
   email: z.string().email("Please provide a valid email address"),
+  source: z.string().optional().default("website"),
 });
 
 /* ---------- Welcome email template ---------- */
@@ -114,13 +115,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { email } = parsed.data;
+    const { email, source } = parsed.data;
 
     /* Save to Supabase */
     const supabase = await createClient();
-    const { error: dbError } = await supabase
+    // Try with source column first, fallback without it if column doesn't exist yet
+    let { error: dbError } = await supabase
       .from("newsletter_subscribers")
-      .insert({ email });
+      .insert({ email, source });
+
+    if (dbError && dbError.code === "42703") {
+      // Column doesn't exist yet — insert without source
+      const res = await supabase
+        .from("newsletter_subscribers")
+        .insert({ email });
+      dbError = res.error;
+    }
 
     if (dbError) {
       // Unique constraint violation — email already subscribed

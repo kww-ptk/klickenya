@@ -39,6 +39,13 @@ type ListingRequest = {
   status: string;
 };
 
+type NewsletterSubscriber = {
+  id: string;
+  email: string;
+  source: string | null;
+  created_at: string;
+};
+
 type GeneralContact = {
   id: string;
   name: string;
@@ -82,6 +89,8 @@ export default async function AdminDashboardPage() {
     recentListingRequests,
     recentGeneralContacts,
     recentAmbassadors,
+    totalNewsletterSubs,
+    recentNewsletterSubs,
   ] = await Promise.all([
     // Sanity: total listings
     sanityClient.fetch<number>(`count(*[_type == "listing"])`),
@@ -188,6 +197,31 @@ export default async function AdminDashboardPage() {
       .order("created_at", { ascending: false })
       .limit(5)
       .then(({ data }) => (data ?? []) as AmbassadorApplication[]),
+    // Total newsletter subscribers
+    adminClient
+      .from("newsletter_subscribers")
+      .select("id", { count: "exact", head: true })
+      .then(({ count }) => count ?? 0),
+    // Recent 10 newsletter subscribers
+    adminClient
+      .from("newsletter_subscribers")
+      .select("id, email, source, created_at")
+      .order("created_at", { ascending: false })
+      .limit(10)
+      .then(({ data, error }) => {
+        if (error?.code === "42703") {
+          // source column doesn't exist yet — fetch without it
+          return adminClient
+            .from("newsletter_subscribers")
+            .select("id, email, created_at")
+            .order("created_at", { ascending: false })
+            .limit(10)
+            .then(({ data: d }) =>
+              (d ?? []).map((r: Record<string, unknown>) => ({ ...r, source: null })) as NewsletterSubscriber[]
+            );
+        }
+        return (data ?? []) as NewsletterSubscriber[];
+      }),
   ]);
 
   const draftListings = totalListings - publishedListings;
@@ -262,7 +296,7 @@ export default async function AdminDashboardPage() {
       </div>
 
       {/* New stats row */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
         {/* Listing Requests This Week */}
         <div className="rounded-2xl bg-white p-6 shadow-sm">
           <p className="font-display text-[32px] font-bold text-[#16130C]">
@@ -298,6 +332,16 @@ export default async function AdminDashboardPage() {
           <p className="mt-1 text-[13px] text-[#9C9485]">
             {approvedAmbassadorsThisWeek} approved / {pendingAmbassadors}{" "}
             pending
+          </p>
+        </div>
+
+        {/* Newsletter Subscribers */}
+        <div className="rounded-2xl bg-white p-6 shadow-sm">
+          <p className="font-display text-[32px] font-bold text-[#16130C]">
+            {totalNewsletterSubs}
+          </p>
+          <p className="mt-1 text-[13px] text-[#9C9485]">
+            Newsletter Subscribers
           </p>
         </div>
       </div>
@@ -529,6 +573,52 @@ export default async function AdminDashboardPage() {
             </div>
           )}
         </div>
+      </div>
+
+      {/* Newsletter Subscribers */}
+      <div className="rounded-2xl bg-white shadow-sm">
+        <div className="flex items-center justify-between border-b border-[#F0EDE8] px-6 py-4">
+          <h2 className="font-display text-[16px] font-bold text-[#16130C]">
+            Newsletter Subscribers
+          </h2>
+          <span className="text-[12px] text-[#9C9485]">
+            {totalNewsletterSubs} total
+          </span>
+        </div>
+        {recentNewsletterSubs.length === 0 ? (
+          <p className="px-6 py-8 text-center text-[13px] text-[#9C9485]">
+            No subscribers yet.
+          </p>
+        ) : (
+          <div className="divide-y divide-[#F0EDE8]">
+            {recentNewsletterSubs.map((sub) => (
+              <div
+                key={sub.id}
+                className="flex items-center justify-between px-6 py-3"
+              >
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-[13px] font-medium text-[#16130C]">
+                    {sub.email}
+                  </p>
+                </div>
+                <div className="ml-4 flex shrink-0 items-center gap-3">
+                  {sub.source && (
+                    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium ${
+                      sub.source === "coming-soon"
+                        ? "bg-purple-50 text-purple-700"
+                        : "bg-amber-50 text-amber-700"
+                    }`}>
+                      {sub.source}
+                    </span>
+                  )}
+                  <span className="text-[13px] text-[#9C9485]">
+                    {formatDate(sub.created_at)}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Quick actions */}

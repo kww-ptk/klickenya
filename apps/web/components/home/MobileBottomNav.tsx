@@ -45,7 +45,7 @@ const NAV_ITEMS = [
 ] as const;
 
 // Routes where the bottom nav should be hidden
-const HIDDEN_ROUTES = ["/admin", "/studio", "/api"];
+const HIDDEN_ROUTES = ["/admin", "/studio", "/api", "/coming-soon"];
 
 // Pattern: /<type>/<city>/<slug> — listing detail pages have 3+ segments
 function isListingDetail(path: string): boolean {
