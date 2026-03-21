@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { Check } from "lucide-react";
 
 interface RoomPhoto {
   asset?: { _id: string; url: string };
@@ -26,28 +27,16 @@ interface RoomCardProps {
   onEnquire: (roomName: string) => void;
 }
 
-/* Amenity → icon mapping */
-const AMENITY_ICONS: Record<string, string> = {
-  "AC": "❄️",
-  "Fan": "🌀",
-  "Sea view": "🌊",
-  "Garden view": "🌿",
-  "Pool view": "🏊",
-  "Balcony": "🪟",
-  "Terrace": "☀️",
-  "Mini bar": "🍷",
-  "In-room safe": "🔒",
-  "Bathtub": "🛁",
-  "Shower only": "🚿",
-  "Smart TV": "📺",
-  "Work desk": "💻",
-  "Kitchenette": "🍳",
-};
-
 export function RoomCard({ room, onEnquire }: RoomCardProps) {
   const photo = room.photos?.[0];
   const available = room.isAvailable !== false;
   const amenities = room.roomAmenities ?? [];
+
+  /* Build subtitle parts */
+  const meta: string[] = [];
+  if (room.capacity) meta.push(`Sleeps ${room.capacity}`);
+  if (room.bedType) meta.push(`${room.bedType} bed`);
+  if (room.roomSizeSqm) meta.push(`${room.roomSizeSqm} sqm`);
 
   return (
     <>
@@ -83,15 +72,18 @@ export function RoomCard({ room, onEnquire }: RoomCardProps) {
                 {room.roomName}
               </p>
               <p className="mt-0.5 text-[12px] text-[#9C9485] line-clamp-1">
-                👥 {room.capacity} guests
-                {room.bedType ? ` · ${room.bedType}` : ""}
-                {room.roomSizeSqm ? ` · ${room.roomSizeSqm}sqm` : ""}
+                {meta.join(" · ")}
               </p>
-              {/* Top amenities inline */}
+              {/* Top amenities with tick */}
               {amenities.length > 0 && (
-                <p className="mt-1 text-[11px] text-[#9C9485] line-clamp-1">
-                  {amenities.slice(0, 3).map((a: string) => `${AMENITY_ICONS[a] ?? "·"} ${a}`).join("  ")}
-                </p>
+                <div className="mt-1 flex items-center gap-2 text-[11px] text-[#9C9485] line-clamp-1">
+                  {amenities.slice(0, 3).map((a: string) => (
+                    <span key={a} className="inline-flex items-center gap-0.5">
+                      <Check className="size-2.5 text-[#E8A020]" strokeWidth={3} />
+                      {a}
+                    </span>
+                  ))}
+                </div>
               )}
             </div>
             <div className="flex items-center justify-between gap-2">
@@ -105,7 +97,7 @@ export function RoomCard({ room, onEnquire }: RoomCardProps) {
                   onClick={() => onEnquire(room.roomName)}
                   className="shrink-0 bg-[#E8A020] text-[#16130C] font-bold text-[10px] rounded-full px-3 py-1.5 transition-colors hover:bg-[#d4911c]"
                 >
-                  Enquire →
+                  Enquire
                 </button>
               )}
             </div>
@@ -135,42 +127,29 @@ export function RoomCard({ room, onEnquire }: RoomCardProps) {
               <span className="text-white font-bold">Unavailable</span>
             </div>
           )}
-          {/* Capacity pill */}
-          <span className="absolute top-3 left-3 rounded-full px-2.5 py-1 text-[11px] font-bold shadow-xs backdrop-blur-[8px] bg-white/22 text-white">
-            👥 {room.capacity} guests
-          </span>
         </div>
 
         {/* Body */}
         <div className="p-4">
-          <h3 className="font-display text-[16px] font-bold text-[#16130C] leading-[1.3] mb-2">
+          <h3 className="font-display text-[16px] font-bold text-[#16130C] leading-[1.3] mb-1.5">
             {room.roomName}
           </h3>
 
-          {/* Info row */}
-          <div className="flex items-center gap-2 text-[12.5px] text-[#9C9485] mb-3">
-            {room.bedType && <span>{room.bedType} bed</span>}
-            {room.bedType && room.roomSizeSqm ? <span>·</span> : null}
-            {room.roomSizeSqm != null && room.roomSizeSqm > 0 && (
-              <span>{room.roomSizeSqm} sqm</span>
-            )}
-            {room.quantity != null && room.quantity > 1 && (
-              <>
-                <span>·</span>
-                <span>{room.quantity} available</span>
-              </>
-            )}
-          </div>
+          {/* Meta row */}
+          <p className="text-[12.5px] text-[#9C9485] mb-3">
+            {meta.join(" · ")}
+            {room.quantity != null && room.quantity > 1 && ` · ${room.quantity} available`}
+          </p>
 
-          {/* Amenities as icon grid */}
+          {/* Amenities with tick */}
           {amenities.length > 0 && (
-            <div className="flex flex-wrap gap-x-3 gap-y-1.5 mb-3">
+            <div className="flex flex-wrap gap-x-4 gap-y-1.5 mb-3">
               {amenities.map((a: string) => (
                 <span
                   key={a}
-                  className="inline-flex items-center gap-1 text-[11.5px] text-[#5E5848]"
+                  className="inline-flex items-center gap-1.5 text-[12px] text-[#5E5848]"
                 >
-                  <span className="text-[13px]">{AMENITY_ICONS[a] ?? "·"}</span>
+                  <Check className="size-3 text-[#E8A020] shrink-0" strokeWidth={3} />
                   {a}
                 </span>
               ))}
@@ -191,7 +170,7 @@ export function RoomCard({ room, onEnquire }: RoomCardProps) {
                 onClick={() => onEnquire(room.roomName)}
                 className="bg-[#E8A020] text-[#16130C] font-bold text-[12px] rounded-full px-4 py-2 transition-colors hover:bg-[#d4911c]"
               >
-                Enquire →
+                Enquire
               </button>
             ) : (
               <span className="text-[12px] font-semibold text-[#9C9485]">Unavailable</span>
