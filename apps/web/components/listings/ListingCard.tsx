@@ -22,6 +22,7 @@ interface ListingCardProps {
   subcategory?: string;
   openingHours?: string;
   badge?: string;
+  isVerified?: boolean;
   photos: string[];
   href: string;
 }
@@ -117,6 +118,7 @@ function ListingCard({
   subcategory,
   openingHours,
   badge,
+  isVerified,
   photos,
   href,
 }: ListingCardProps) {
@@ -225,6 +227,11 @@ function ListingCard({
           <span className="absolute top-1.5 left-1.5 rounded-full px-1.5 py-0.5 text-[9px] font-bold shadow-xs backdrop-blur-[8px] bg-white/22 text-white">
             {typeBadge.emoji} {typeBadge.label}
           </span>
+          {isVerified && (
+            <span className="absolute bottom-1.5 left-1.5 rounded-full px-1.5 py-0.5 text-[8px] font-bold bg-[#16A34A] text-white z-10">
+              ✓ Verified
+            </span>
+          )}
         </div>
 
         {/* Info */}
@@ -300,6 +307,11 @@ function ListingCard({
           <span className="absolute top-3 left-3 rounded-full px-2.5 py-1 text-[11px] font-bold shadow-xs backdrop-blur-[8px] bg-white/22 text-white">
             {typeBadge.emoji} {typeBadge.label}
           </span>
+          {isVerified && (
+            <span className="absolute bottom-3 left-3 rounded-full px-2.5 py-1 text-[10px] font-bold bg-[#16A34A] text-white z-10">
+              ✓ Verified
+            </span>
+          )}
 
           <button
             onClick={(e) => {

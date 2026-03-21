@@ -91,6 +91,7 @@ export default defineType({
     { name: 'event', title: '🎫 Event' },
     { name: 'service', title: '🔧 Service' },
     { name: 'seo', title: 'SEO' },
+    { name: 'verification', title: '✅ Verification' },
     { name: 'notifications', title: 'Notifications' },
   ],
   fields: [
@@ -900,6 +901,32 @@ export default defineType({
       rows: 3,
       validation: (rule) => rule.max(160),
       group: 'seo',
+    }),
+
+    /* ═══════════════════════════════════════════════════
+       ✅ VERIFICATION GROUP
+       ═══════════════════════════════════════════════════ */
+    defineField({
+      name: 'isVerified',
+      title: 'Verified listing',
+      type: 'boolean',
+      description: 'Check once you have confirmed this is a real, legitimate listing',
+      initialValue: false,
+      group: 'verification',
+    }),
+    defineField({
+      name: 'verificationStatus',
+      title: 'Verification status',
+      type: 'string',
+      options: {
+        list: [
+          { title: 'Pending — not yet reviewed', value: 'pending' },
+          { title: 'Claimed — owner has been in touch', value: 'claimed' },
+          { title: 'Verified — reviewed and approved', value: 'verified' },
+        ],
+      },
+      initialValue: 'pending',
+      group: 'verification',
     }),
 
     /* ═══════════════════════════════════════════════════

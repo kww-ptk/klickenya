@@ -25,6 +25,8 @@ const LISTING_CARD_FIELDS = `
   avgRating,
   reviewCount,
   tags,
+  isVerified,
+  verificationStatus,
   "coverPhoto": photos[0]{ ${IMAGE_FIELDS} }
 `
 
@@ -138,6 +140,8 @@ export const LISTING_BY_SLUG_QUERY = groq`
     reservationRequired,
     seoTitle,
     seoDescription,
+    isVerified,
+    verificationStatus,
 
     // Restaurant fields
     atmosphere,
