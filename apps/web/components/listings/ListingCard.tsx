@@ -56,7 +56,7 @@ const SERVICE_SUB_BADGES: Record<string, BadgeConfig> = {
 
 function getTypeBadge(type: ListingType, subcategory?: string): BadgeConfig {
   if (type === "experience") {
-    return EXPERIENCE_SUB_BADGES[subcategory ?? ""] ?? { emoji: "🎒", label: "Experience" };
+    return EXPERIENCE_SUB_BADGES[subcategory ?? ""] ?? { emoji: "🌴", label: "Experience" };
   }
   if (type === "service") {
     return SERVICE_SUB_BADGES[subcategory ?? ""] ?? { emoji: "⭐", label: "Service" };

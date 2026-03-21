@@ -234,7 +234,7 @@ function Nav({ transparent = false }: NavProps) {
                     : "text-white/80 hover:bg-white/12 hover:text-white"
                 )}
               >
-                🌴 Explore
+                Explore
                 <ChevronDown
                   className={cn(
                     "size-3.5 transition-transform duration-200",

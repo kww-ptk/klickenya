@@ -220,7 +220,7 @@ export default async function HomePage() {
           >
             {[
               { label: "Stays", icon: "🏠", href: "/stays" },
-              { label: "Experiences", icon: "🎒", href: "/experiences" },
+              { label: "Experiences", icon: "🌴", href: "/experiences" },
               { label: "Events", icon: "🎟️", href: "/events" },
               { label: "Services", icon: "⭐", href: "/services" },
               { label: "Real Estate", icon: "🏢", href: "/real-estate" },

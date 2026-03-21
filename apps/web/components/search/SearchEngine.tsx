@@ -28,7 +28,7 @@ interface SearchEngineProps {
 
 const EXPLORE_CATEGORIES = [
   { type: "stay", label: "Stays", icon: "🏠", href: "/stays" },
-  { type: "experience", label: "Experiences", icon: "🎒", href: "/experiences" },
+  { type: "experience", label: "Experiences", icon: "🌴", href: "/experiences" },
   { type: "event", label: "Events", icon: "🎟️", href: "/events" },
   { type: "service", label: "Services", icon: "⭐", href: "/services" },
   { type: "real_estate", label: "Real Estate", icon: "🏢", href: "/real-estate" },

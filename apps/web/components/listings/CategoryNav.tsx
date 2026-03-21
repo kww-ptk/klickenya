@@ -16,7 +16,7 @@ interface Category {
 const CATEGORIES: Category[] = [
   { id: "all", icon: "✨", label: "All", href: "/" },
   { id: "stays", icon: "🏠", label: "Stays", href: "/stays" },
-  { id: "experiences", icon: "🎒", label: "Experiences", href: "/experiences" },
+  { id: "experiences", icon: "🌴", label: "Experiences", href: "/experiences" },
   { id: "restaurants", icon: "🍽️", label: "Restaurants", href: "/experiences?sub=restaurants" },
   { id: "events", icon: "🎟️", label: "Events", href: "/events" },
   { id: "services", icon: "⭐", label: "Services", href: "/services" },

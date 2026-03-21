@@ -57,7 +57,7 @@ interface SearchDropdownProps {
 const TYPE_META: Record<string, { icon: string; label: string; path: string }> =
   {
     stay: { icon: "🏠", label: "Stays", path: "/stays" },
-    experience: { icon: "🎒", label: "Experiences", path: "/experiences" },
+    experience: { icon: "🌴", label: "Experiences", path: "/experiences" },
     event: { icon: "🎟️", label: "Events", path: "/events" },
     service: { icon: "⭐", label: "Services", path: "/services" },
     real_estate: { icon: "🏢", label: "Real Estate", path: "/real-estate" },
