@@ -7,7 +7,6 @@ import { AmenitiesList } from "@/components/listings/widgets/AmenitiesList";
 import { SimilarListings } from "@/components/listings/widgets/SimilarListings";
 import { BookingSidebar } from "@/components/listings/widgets/BookingSidebar";
 import { MobileBookingBar } from "@/components/listings/widgets/MobileBookingBar";
-import { UnverifiedBanner } from "../widgets/UnverifiedBanner";
 import type { ListingCardProps } from "@/components/listings/ListingCard";
 
 /* ── Types ─────────────────────────────────────────── */
@@ -52,10 +51,6 @@ function ServiceDetail({
   return (
     <>
       <article className="max-w-[1280px] mx-auto px-5 md:px-10 py-8">
-        {!listing.isVerified && (
-          <UnverifiedBanner listingSlug={listing.slug.current} />
-        )}
-
         <Breadcrumb
           type={urlType}
           typeLabel={typeLabel}
