@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Heart, Star } from "lucide-react";
+import { Heart, Star, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SUBCATEGORY_LABELS } from "@/lib/constants/subcategories";
 
@@ -23,6 +23,7 @@ interface ListingCardProps {
   openingHours?: string;
   badge?: string;
   isVerified?: boolean;
+  hostName?: string;
   photos: string[];
   href: string;
 }
@@ -119,6 +120,7 @@ function ListingCard({
   openingHours,
   badge,
   isVerified,
+  hostName,
   photos,
   href,
 }: ListingCardProps) {
@@ -126,6 +128,9 @@ function ListingCard({
   const [openStatus, setOpenStatus] = useState<boolean | null>(null);
 
   const typeBadge = getTypeBadge(type, subcategory);
+  const hostInitials = hostName
+    ? hostName.split(/\s+/).map((w) => w[0]).join("").toUpperCase().slice(0, 2)
+    : null;
 
   // Client-side open/closed for restaurants
   useEffect(() => {
@@ -227,20 +232,26 @@ function ListingCard({
           <span className="absolute top-1.5 left-1.5 rounded-full px-1.5 py-0.5 text-[9px] font-bold shadow-xs backdrop-blur-[8px] bg-white/22 text-white">
             {typeBadge.emoji} {typeBadge.label}
           </span>
-          {isVerified && (
-            <span className="absolute bottom-1.5 right-1.5 z-10 flex items-center justify-center">
-              <span className="absolute size-3 rounded-full bg-[#4ADE80] animate-ping opacity-40" />
-              <span className="relative size-2.5 rounded-full bg-gradient-to-br from-[#86EFAC] to-[#16A34A] shadow-[0_0_6px_rgba(74,222,128,0.5)]" />
-            </span>
-          )}
         </div>
 
         {/* Info */}
         <div className="flex-1 min-w-0 py-0.5 flex flex-col justify-between">
           <div>
-            <p className="text-[14.5px] font-semibold text-text leading-[1.3] line-clamp-2">
-              {title || "Untitled"}
-            </p>
+            <div className="flex items-center gap-1.5">
+              {hostInitials && (
+                <div className="relative size-5 rounded-full bg-gradient-to-br from-amber to-purple flex items-center justify-center text-white text-[7px] font-bold shrink-0">
+                  {hostInitials}
+                  {isVerified && (
+                    <span className="absolute -bottom-px -right-px size-2.5 rounded-full bg-[#16A34A] border border-white flex items-center justify-center">
+                      <Check className="size-1.5 text-white" strokeWidth={4} />
+                    </span>
+                  )}
+                </div>
+              )}
+              <p className="text-[14.5px] font-semibold text-text leading-[1.3] line-clamp-1">
+                {title || "Untitled"}
+              </p>
+            </div>
             <p className="mt-1 text-[12.5px] text-text2 line-clamp-1">
               {renderSubtitle()}
             </p>
@@ -308,13 +319,6 @@ function ListingCard({
           <span className="absolute top-3 left-3 rounded-full px-2.5 py-1 text-[11px] font-bold shadow-xs backdrop-blur-[8px] bg-white/22 text-white">
             {typeBadge.emoji} {typeBadge.label}
           </span>
-          {isVerified && (
-            <span className="absolute bottom-3 right-3 z-10 flex items-center justify-center">
-              <span className="absolute size-4 rounded-full bg-[#4ADE80] animate-ping opacity-40" />
-              <span className="relative size-3 rounded-full bg-gradient-to-br from-[#86EFAC] to-[#16A34A] shadow-[0_0_8px_rgba(74,222,128,0.5)]" />
-            </span>
-          )}
-
           <button
             onClick={(e) => {
               e.preventDefault();
@@ -351,9 +355,21 @@ function ListingCard({
         {/* Body */}
         <div className="pt-3.5 px-0.5">
           <div className="flex justify-between items-start gap-2">
-            <p className="text-[14.5px] font-semibold text-text leading-[1.35] line-clamp-1 flex-1">
-              {title || "Untitled"}
-            </p>
+            <div className="flex items-center gap-2 flex-1 min-w-0">
+              {hostInitials && (
+                <div className="relative size-6 rounded-full bg-gradient-to-br from-amber to-purple flex items-center justify-center text-white text-[8px] font-bold shrink-0">
+                  {hostInitials}
+                  {isVerified && (
+                    <span className="absolute -bottom-0.5 -right-0.5 size-3 rounded-full bg-[#16A34A] border-[1.5px] border-white flex items-center justify-center">
+                      <Check className="size-2 text-white" strokeWidth={4} />
+                    </span>
+                  )}
+                </div>
+              )}
+              <p className="text-[14.5px] font-semibold text-text leading-[1.35] line-clamp-1 flex-1">
+                {title || "Untitled"}
+              </p>
+            </div>
             {rating != null && rating > 0 && (
               <span className="flex items-center gap-1 shrink-0 text-[13.5px] font-semibold">
                 <Star className="size-3.5 fill-amber text-amber" />

@@ -138,6 +138,7 @@ export default async function CityPage({ params }: PageProps) {
       subcategory: l.subcategory,
       openingHours: l.openingHours,
       isVerified: l.isVerified ?? false,
+      hostName: l.hostName,
       photos: photoUrl ? [photoUrl] : [],
       href: `/${type}/${city}/${slug}`,
     };

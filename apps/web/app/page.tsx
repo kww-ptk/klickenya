@@ -74,6 +74,7 @@ interface SanityListing {
   avgRating?: number;
   reviewCount?: number;
   tags?: string[];
+  hostName?: string;
   isVerified?: boolean;
   coverPhoto?: { asset?: { url?: string } };
 }
@@ -299,6 +300,7 @@ export default async function HomePage() {
               subcategory: listing.subcategory,
               openingHours: listing.openingHours,
               isVerified: listing.isVerified ?? false,
+              hostName: listing.hostName,
               photos: listing.coverPhoto?.asset?.url
                 ? [listing.coverPhoto.asset.url]
                 : [],

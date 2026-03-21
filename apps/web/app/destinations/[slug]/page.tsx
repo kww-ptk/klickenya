@@ -131,6 +131,7 @@ export default async function DestinationPage({ params }: PageProps) {
       subcategory: l.subcategory,
       openingHours: l.openingHours,
       isVerified: l.isVerified ?? false,
+      hostName: l.hostName,
       photos: photoUrl ? [photoUrl] : [],
       href: `/${urlType}/${lCity}/${lSlug}`,
     };

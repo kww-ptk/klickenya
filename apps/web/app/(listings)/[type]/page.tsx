@@ -115,6 +115,7 @@ function mapToCardProps(listing: any, type: UrlType): ListingCardProps {
     subcategory: listing.subcategory,
     openingHours: listing.openingHours,
     isVerified: listing.isVerified ?? false,
+    hostName: listing.hostName,
     photos: photoUrl ? [photoUrl] : [],
     href: `/${type}/${citySlug}/${slug}`,
   };

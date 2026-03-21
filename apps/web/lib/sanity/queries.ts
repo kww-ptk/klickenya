@@ -25,6 +25,7 @@ const LISTING_CARD_FIELDS = `
   avgRating,
   reviewCount,
   tags,
+  hostName,
   isVerified,
   verificationStatus,
   "coverPhoto": photos[0]{ ${IMAGE_FIELDS} }
