@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Heart, Star } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { SUBCATEGORY_LABELS } from "@/lib/constants/subcategories";
 
 type ListingType = "stay" | "experience" | "event" | "rental" | "service" | "restaurant" | "real_estate";
 
@@ -188,10 +189,12 @@ function ListingCard({
   }
 
   /* ── Subtitle line ── */
-  function renderSubtitle(size: "sm" | "md") {
+  const subcategoryLabel = subcategory ? SUBCATEGORY_LABELS[subcategory] : null;
+
+  function renderSubtitle() {
     const parts: string[] = [];
     if (city) parts.push(city);
-    parts.push(`${typeBadge.emoji} ${typeBadge.label}`);
+    if (subcategoryLabel) parts.push(subcategoryLabel);
     return parts.join(" · ");
   }
 
@@ -231,7 +234,7 @@ function ListingCard({
               {title || "Untitled"}
             </p>
             <p className="mt-1 text-[12.5px] text-text2 line-clamp-1">
-              {renderSubtitle("sm")}
+              {renderSubtitle()}
             </p>
             {/* Open Now badge (mobile) */}
             {type === "restaurant" && openStatus !== null && (
@@ -346,8 +349,7 @@ function ListingCard({
           </div>
           <div className="mt-0.5 flex items-center gap-2 text-[13px] text-text2">
             <span>
-              {city && <>{city} · </>}
-              {typeBadge.label}
+              {renderSubtitle()}
             </span>
             {/* Open Now badge (desktop) */}
             {type === "restaurant" && openStatus !== null && (
