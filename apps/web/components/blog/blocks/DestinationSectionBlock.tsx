@@ -1,9 +1,10 @@
-interface DestinationSectionValue { number?: number; pill?: string; pillColor?: 'teal' | 'blue' | 'purple'; title?: string }
+interface DestinationSectionValue { number?: number; pill?: string; pillColor?: 'teal' | 'blue' | 'purple' | 'amber'; title?: string }
 
-const pillStyles = {
+const pillStyles: Record<string, string> = {
   teal: 'bg-[rgba(13,115,119,.12)] text-[#0D7377] border-[rgba(13,115,119,.2)]',
   blue: 'bg-[rgba(37,99,235,.1)] text-[#2563EB] border-[rgba(37,99,235,.2)]',
   purple: 'bg-[rgba(139,77,171,.10)] text-[#8B4DAB] border-[rgba(139,77,171,.2)]',
+  amber: 'bg-[rgba(232,160,32,.12)] text-[#B8860B] border-[rgba(232,160,32,.2)]',
 }
 
 export function DestinationSectionBlock({ value }: { value: DestinationSectionValue }) {

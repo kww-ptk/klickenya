@@ -1,18 +1,19 @@
-interface CompareColumn { label?: string; color?: 'teal' | 'blue' | 'purple' }
+interface CompareColumn { label?: string; color?: string }
 interface CompareRow { criterion?: string; values?: string[]; winners?: number[] }
 interface CompareTableValue { columns?: CompareColumn[]; rows?: CompareRow[] }
 
-const colHeaderColor = { teal: 'text-[#7DD3B0]', blue: 'text-[#93C5FD]', purple: 'text-[#C4B5FD]' }
-const winBadgeStyle = {
+const colHeaderColor: Record<string, string> = { teal: 'text-[#7DD3B0]', blue: 'text-[#93C5FD]', purple: 'text-[#C4B5FD]', amber: 'text-[#FBBF24]' }
+const winBadgeStyle: Record<string, string> = {
   teal: 'bg-[rgba(13,115,119,.1)] text-[#0D7377]',
   blue: 'bg-[rgba(37,99,235,.1)] text-[#2563EB]',
   purple: 'bg-[rgba(139,77,171,.1)] text-[#8B4DAB]',
+  amber: 'bg-[rgba(232,160,32,.1)] text-[#B8860B]',
 }
 
 export function CompareTableBlock({ value }: { value: CompareTableValue }) {
   const { columns = [], rows = [] } = value
   return (
-    <div className="my-6 rounded-[22px] overflow-hidden border border-[#E4E0D8]">
+    <div className="my-6 rounded-[22px] overflow-x-auto border border-[#E4E0D8]">
       <table className="w-full border-collapse">
         <thead className="bg-[#18160F]">
           <tr>
