@@ -250,9 +250,10 @@ export const BLOG_POST_BY_SLUG_QUERY = groq`
       _type == "eventSliderBlock" => {
         ...,
         "events": events[]->{
-          _id, title, slug, type, subcategory, city, pricePerNight, priceUnit,
-          hostName, eventDate,
-          "mainImageUrl": mainImage.asset->url + "?w=400&h=300&fit=crop&auto=format&q=80"
+          _id, title, slug, type, subcategory, city,
+          "price": pricePerNight, priceUnit,
+          hostName, eventDate, eventEndDate, venue,
+          "coverPhotoUrl": mainImage.asset->url + "?w=400&h=300&fit=crop&auto=format&q=80"
         }
       }
     },
