@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod/v4";
 import { createClient } from "@/lib/supabase/server";
 import { Resend } from "resend";
-import * as React from "react";
 
 /* ---------- Validation ---------- */
 
@@ -13,104 +12,18 @@ const subscribeSchema = z.object({
 
 /* ---------- Welcome email template ---------- */
 
-function WelcomeEmail() {
-  return React.createElement(
-    "div",
-    {
-      style: {
-        fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
-        maxWidth: "520px",
-        margin: "0 auto",
-        padding: "40px 24px",
-        color: "#1a1a1a",
-      },
-    },
-    React.createElement("img", {
-      src: "https://klickenya.com/logo.png",
-      alt: "Klickenya",
-      width: 140,
-      height: 40,
-      style: { marginBottom: "32px" },
-    }),
-    React.createElement(
-      "h1",
-      {
-        style: {
-          fontSize: "24px",
-          fontWeight: 700,
-          marginBottom: "16px",
-          color: "#1a1a1a",
-        },
-      },
-      "We got you! \u2728"
-    ),
-    React.createElement(
-      "p",
-      {
-        style: {
-          fontSize: "16px",
-          lineHeight: "1.6",
-          color: "#555",
-          marginBottom: "16px",
-        },
-      },
-      "You will be notified soon about Klickenya."
-    ),
-    React.createElement(
-      "p",
-      {
-        style: {
-          fontSize: "16px",
-          lineHeight: "1.6",
-          color: "#555",
-          marginBottom: "16px",
-        },
-      },
-      "Just so you know, you will be able to find the best that Kenya has to offer, both for residents and tourists \u2014 events, parties, tours, special deals, and much more."
-    ),
-    React.createElement(
-      "p",
-      {
-        style: {
-          fontSize: "16px",
-          lineHeight: "1.6",
-          color: "#555",
-          marginBottom: "24px",
-        },
-      },
-      "Thank you once again!"
-    ),
-    React.createElement(
-      "a",
-      {
-        href: "https://klickenya.com",
-        style: {
-          display: "inline-block",
-          backgroundColor: "#E8A020",
-          color: "#16130C",
-          padding: "12px 24px",
-          borderRadius: "9999px",
-          fontSize: "14px",
-          fontWeight: 700,
-          textDecoration: "none",
-        },
-      },
-      "Visit Klickenya"
-    ),
-    React.createElement(
-      "p",
-      {
-        style: {
-          fontSize: "13px",
-          color: "#999",
-          marginTop: "32px",
-          borderTop: "1px solid #eee",
-          paddingTop: "16px",
-        },
-      },
-      "You're receiving this because you subscribed at klickenya.com. You can unsubscribe at any time."
-    )
-  );
+function welcomeEmailHtml(): string {
+  return `<!DOCTYPE html>
+<html><head><meta charset="utf-8"></head>
+<body style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;max-width:520px;margin:0 auto;padding:40px 24px;color:#1a1a1a;background:#ffffff;">
+  <img src="https://klickenya.com/logo.png" alt="Klickenya" width="140" height="40" style="margin-bottom:32px;">
+  <h1 style="font-size:24px;font-weight:700;margin-bottom:16px;color:#1a1a1a;">We got you! ✨</h1>
+  <p style="font-size:16px;line-height:1.6;color:#555;margin-bottom:16px;">You will be notified soon about Klickenya.</p>
+  <p style="font-size:16px;line-height:1.6;color:#555;margin-bottom:16px;">Just so you know, you will be able to find the best that Kenya has to offer, both for residents and tourists — events, parties, tours, special deals, and much more.</p>
+  <p style="font-size:16px;line-height:1.6;color:#555;margin-bottom:24px;">Thank you once again!</p>
+  <a href="https://klickenya.com" style="display:inline-block;background-color:#E8A020;color:#16130C;padding:12px 24px;border-radius:9999px;font-size:14px;font-weight:700;text-decoration:none;">Visit Klickenya</a>
+  <p style="font-size:13px;color:#999;margin-top:32px;border-top:1px solid #eee;padding-top:16px;">You're receiving this because you subscribed at klickenya.com. You can unsubscribe at any time.</p>
+</body></html>`;
 }
 
 /* ---------- POST handler ---------- */
@@ -163,8 +76,8 @@ export async function POST(request: NextRequest) {
         await resend.emails.send({
           from: "Klickenya <hello@klickenya.com>",
           to: email,
-          subject: "We got you! Welcome to Klickenya \u2728",
-          react: React.createElement(WelcomeEmail),
+          subject: "We got you! Welcome to Klickenya ✨",
+          html: welcomeEmailHtml(),
         });
       } catch (emailError) {
         // Log but don't fail the subscription if email sending fails
