@@ -167,89 +167,94 @@ export default async function BlogPostPage({
         <Nav transparent={false} />
 
         {/* ── Hero ─────────────────────────────────────────────── */}
-        <div className="mt-[68px] bg-[#FDFBF7]">
-          <div className="max-w-[1120px] mx-auto px-5 md:px-10 pt-10 md:pt-14 pb-8 md:pb-10">
-            {/* Meta + tags row */}
-            <div className="flex flex-wrap items-center gap-3 mb-6 md:mb-8">
-              {post.tags?.[0] && (
-                <span className="text-[#E8A020] text-[11px] font-bold uppercase tracking-[0.1em]">
-                  {post.tags[0]}
-                </span>
-              )}
-              {post.tags?.[0] && post.publishedAt && (
-                <span className="w-px h-3 bg-[#E2DDD5]" />
-              )}
-              {post.publishedAt && (
-                <time dateTime={formatFullDate(post.publishedAt)} className="text-[12px] text-[#9C9485] tracking-[0.02em]">
-                  {formatDate(post.publishedAt)}
-                </time>
-              )}
-              <span className="w-px h-3 bg-[#E2DDD5]" />
-              <span className="text-[12px] text-[#9C9485]">{post.readingTime || 5} min read</span>
-            </div>
+        <section className="relative mt-[68px] overflow-hidden" style={{ background: "linear-gradient(135deg, #16130C 0%, #1e1a11 50%, #16130C 100%)" }}>
+          {/* Ambient amber glow */}
+          <div className="absolute top-1/2 left-1/4 -translate-y-1/2 w-[600px] h-[600px] rounded-full opacity-[0.06] pointer-events-none" style={{ background: "radial-gradient(circle, #E8A020 0%, transparent 70%)" }} />
 
-            {/* Title */}
-            <h1 className="font-display font-[800] text-[clamp(28px,4.5vw,52px)] leading-[1.08] tracking-[-0.03em] text-[#16130C] max-w-[780px] mb-5">
-              {post.title}
-            </h1>
+          <div className="max-w-[1280px] mx-auto px-5 md:px-10">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-12 items-center py-12 md:py-16 lg:py-20">
+              {/* Left — text */}
+              <div className="relative z-10 order-2 md:order-1">
+                {/* Tag + reading time */}
+                <div className="flex items-center gap-3 mb-5">
+                  {post.tags?.[0] && (
+                    <span className="text-[#E8A020] text-[11px] font-bold uppercase tracking-[0.12em]">
+                      {post.tags[0]}
+                    </span>
+                  )}
+                  <span className="w-px h-3 bg-white/15" />
+                  <span className="text-[12px] text-white/35">{post.readingTime || 5} min read</span>
+                </div>
 
-            {/* Excerpt */}
-            {post.excerpt && (
-              <p className="text-[16px] md:text-[18px] text-[#5E5848] max-w-[620px] leading-[1.6] mb-8">
-                {post.excerpt}
-              </p>
-            )}
+                {/* Title */}
+                <h1 className="font-display font-[800] text-[clamp(26px,4vw,44px)] leading-[1.1] tracking-[-0.03em] text-white mb-5">
+                  {post.title}
+                </h1>
 
-            {/* Author */}
-            {post.author && (
-              <div className="flex items-center gap-3 mb-8 md:mb-10">
-                {post.author.avatar?.asset?.url ? (
-                  <Image
-                    src={post.author.avatar.asset.url}
-                    alt={post.author.name}
-                    width={36}
-                    height={36}
-                    className="rounded-full object-cover"
-                  />
-                ) : (
-                  <div className="size-9 rounded-full bg-[#E8A020]/10 flex items-center justify-center text-[#E8A020] font-semibold text-[14px]">
-                    {post.author.name?.[0] || "K"}
-                  </div>
+                {/* Excerpt */}
+                {post.excerpt && (
+                  <p className="text-[15px] md:text-[16px] text-white/50 max-w-[480px] leading-[1.65] mb-6">
+                    {post.excerpt}
+                  </p>
                 )}
-                <div>
-                  <span className="text-[#16130C] font-semibold text-[14px] block leading-tight">
-                    {post.author.name}
-                  </span>
-                  {post.author.role && (
-                    <span className="text-[#9C9485] text-[12px]">{post.author.role}</span>
+
+                {/* Author + date */}
+                <div className="flex items-center gap-3">
+                  {post.author && (
+                    <>
+                      {post.author.avatar?.asset?.url ? (
+                        <Image
+                          src={post.author.avatar.asset.url}
+                          alt={post.author.name}
+                          width={32}
+                          height={32}
+                          className="rounded-full object-cover ring-2 ring-[#E8A020]/20"
+                        />
+                      ) : (
+                        <div className="size-8 rounded-full bg-[#E8A020]/15 flex items-center justify-center text-[#E8A020] font-semibold text-[12px] ring-2 ring-[#E8A020]/20">
+                          {post.author.name?.[0] || "K"}
+                        </div>
+                      )}
+                      <div className="flex flex-col">
+                        <span className="text-white font-semibold text-[13px] leading-tight">
+                          {post.author.name}
+                        </span>
+                        {post.publishedAt && (
+                          <time dateTime={formatFullDate(post.publishedAt)} className="text-white/30 text-[11px]">
+                            {formatDate(post.publishedAt)}
+                          </time>
+                        )}
+                      </div>
+                    </>
                   )}
                 </div>
               </div>
-            )}
 
-            {/* Hero image — with brand border accent */}
-            {heroImageUrl && (
-              <div className="relative rounded-2xl md:rounded-[20px] overflow-hidden border-2 border-[#E8A020]/15">
-                <div className="relative w-full h-[240px] sm:h-[340px] md:h-[460px]">
-                  <Image
-                    src={heroImageUrl}
-                    alt={post.coverImage?.alt || post.title}
-                    fill
-                    priority
-                    className="object-cover"
-                    sizes="(max-width: 1120px) 100vw, 1120px"
-                  />
-                </div>
-                {/* Subtle amber corner accent */}
-                <div className="absolute top-0 left-0 w-16 h-16 pointer-events-none" style={{ background: "linear-gradient(135deg, rgba(232,160,32,0.12) 0%, transparent 60%)" }} />
-                <div className="absolute bottom-0 right-0 w-16 h-16 pointer-events-none" style={{ background: "linear-gradient(315deg, rgba(232,160,32,0.12) 0%, transparent 60%)" }} />
+              {/* Right — image */}
+              <div className="relative order-1 md:order-2">
+                {heroImageUrl && (
+                  <div className="relative rounded-2xl overflow-hidden aspect-[4/3] md:aspect-[3/2.2]">
+                    <Image
+                      src={heroImageUrl}
+                      alt={post.coverImage?.alt || post.title}
+                      fill
+                      priority
+                      className="object-cover"
+                      sizes="(max-width: 768px) 100vw, 50vw"
+                    />
+                    {/* Amber corner glow */}
+                    <div className="absolute inset-0 pointer-events-none rounded-2xl" style={{ boxShadow: "inset 0 0 60px rgba(232,160,32,0.08)" }} />
+                  </div>
+                )}
+                {/* Decorative ring behind image */}
+                <div className="hidden md:block absolute -top-4 -right-4 -bottom-4 -left-4 rounded-3xl border border-[#E8A020]/10 pointer-events-none" />
               </div>
-            )}
+            </div>
           </div>
 
-          {/* Thin amber accent line */}
-          <div className="h-px bg-gradient-to-r from-transparent via-[#E8A020]/30 to-transparent" />
-        </div>
+          {/* Bottom amber line */}
+          <div className="h-[2px] bg-gradient-to-r from-transparent via-[#E8A020]/40 to-transparent" />
+        </section>
 
         {/* ── Article layout ───────────────────────────────────── */}
         <div className="max-w-[1280px] mx-auto px-5 md:px-10 pb-12 md:pb-20">
