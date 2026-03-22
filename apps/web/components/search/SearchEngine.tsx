@@ -891,7 +891,7 @@ function SearchEngine({ variant = "hero", className, onExpandChange }: SearchEng
                         )}
                       >
                         {c.image ? (
-                          <Image src={c.image} alt={c.city} width={36} height={36} className="size-9 rounded-full object-cover shrink-0" />
+                          <Image src={c.image} alt={c.city} width={36} height={36} unoptimized className="size-9 rounded-full object-cover shrink-0" />
                         ) : (
                           <div className="size-9 rounded-full bg-gradient-to-br from-[#6B2D8B] to-[#E8A020] flex items-center justify-center shrink-0">
                             <MapPin className="size-4 text-white" />
@@ -1177,7 +1177,7 @@ function SearchEngine({ variant = "hero", className, onExpandChange }: SearchEng
                           )}
                         >
                           {c.image ? (
-                            <Image src={c.image} alt={c.city} width={40} height={40} className="size-10 rounded-full object-cover shrink-0" />
+                            <Image src={c.image} alt={c.city} width={40} height={40} unoptimized className="size-10 rounded-full object-cover shrink-0" />
                           ) : (
                             <div className="size-10 rounded-full bg-gradient-to-br from-[#6B2D8B] to-[#E8A020] flex items-center justify-center shrink-0">
                               <MapPin className="size-4 text-white" />
