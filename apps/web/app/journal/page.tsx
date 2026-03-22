@@ -6,8 +6,8 @@ import { BLOG_POSTS_QUERY } from "@/lib/sanity/queries";
 import { urlForImage } from "@/lib/sanity/image";
 import { Nav } from "@/components/shared/Nav";
 import { Footer } from "@/components/shared/Footer";
-import { PostCard } from "@/components/blog/PostCard";
 import { Badge } from "@/components/ui/Badge";
+import { JournalFilters } from "@/components/blog/JournalFilters";
 
 export const revalidate = 3600;
 
@@ -18,8 +18,13 @@ interface SanityBlogPost {
   title: string;
   slug: { current: string };
   excerpt: string;
-  tags: string[];
-  readingTime: number;
+  tags?: string[];
+  primaryCategory?: string;
+  subcategory?: string;
+  location?: string;
+  series?: string;
+  postType?: string;
+  readingTime?: number;
   publishedAt: string;
   coverImage: {
     asset?: { _id: string; url: string; metadata?: { dimensions?: { width: number; height: number } } };
@@ -78,17 +83,16 @@ function formatDate(dateStr: string): string {
   });
 }
 
-/* ─── Constants ──────────────────────────────────── */
-
-const TAG_PILLS = [
-  { label: "All", href: "/journal" },
-  { label: "Safari", href: "/journal/category/safari" },
-  { label: "Beach", href: "/journal/category/beach" },
-  { label: "Nairobi", href: "/journal/category/nairobi" },
-  { label: "Budget Travel", href: "/journal/category/budget-travel" },
-  { label: "Luxury", href: "/journal/category/luxury" },
-  { label: "Food & Culture", href: "/journal/category/food-culture" },
-];
+const CATEGORY_LABELS: Record<string, string> = {
+  destination_guide: "Guides",
+  food_restaurants: "Food",
+  where_to_stay: "Stays",
+  safari_wildlife: "Safari",
+  beaches_coast: "Beaches",
+  travel_tips: "Tips",
+  events_nightlife: "Nightlife",
+  living_in_kenya: "Living Here",
+};
 
 /* ─── Page ───────────────────────────────────────── */
 
@@ -121,6 +125,23 @@ export default async function JournalPage() {
     }),
   };
 
+  // Map posts for JournalFilters client component
+  const filterPosts = gridPosts.map((p) => ({
+    _id: p._id,
+    title: p.title,
+    slug: p.slug,
+    excerpt: p.excerpt,
+    tags: p.tags,
+    primaryCategory: p.primaryCategory,
+    location: p.location,
+    series: p.series,
+    readingTime: p.readingTime,
+    publishedAt: p.publishedAt,
+    coverImageUrl: getCoverUrl(p),
+    authorName: p.author?.name ?? "Klickenya",
+    authorAvatar: p.author?.avatar?.asset?.url,
+  }));
+
   return (
     <>
       <Nav transparent={false} />
@@ -134,7 +155,6 @@ export default async function JournalPage() {
       {/* ─── HERO ──────────────────────────────────── */}
       <section className="bg-canvas pt-32 pb-14 md:pt-40 md:pb-20">
         <div className="max-w-[1280px] mx-auto px-5 md:px-10 text-center">
-          {/* Title with amber swoosh */}
           <div className="inline-block">
             <h1
               className="font-display font-bold text-text tracking-[-0.04em] leading-[1.08]"
@@ -172,7 +192,6 @@ export default async function JournalPage() {
             className="group relative block w-full rounded-[var(--radius-xl)] overflow-hidden min-h-[340px] md:min-h-0"
             style={{ aspectRatio: "16 / 9", maxHeight: "600px" }}
           >
-            {/* Background image */}
             {getCoverUrl(featuredPost, 1200) ? (
               <Image
                 src={getCoverUrl(featuredPost, 1200)}
@@ -186,17 +205,21 @@ export default async function JournalPage() {
               <div className="absolute inset-0 bg-gradient-to-br from-surface to-border" />
             )}
 
-            {/* Gradient overlay */}
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
 
-            {/* Content */}
             <div className="absolute bottom-0 left-0 right-0 p-6 md:p-10">
-              {/* Category badge */}
-              {featuredPost.tags?.[0] && (
-                <Badge variant="amber" className="mb-4">
-                  {featuredPost.tags[0]}
+              <div className="flex items-center gap-2 mb-4">
+                <Badge variant="amber">
+                  {featuredPost.primaryCategory
+                    ? (CATEGORY_LABELS[featuredPost.primaryCategory] ?? featuredPost.tags?.[0] ?? "Travel")
+                    : (featuredPost.tags?.[0] ?? "Travel")}
                 </Badge>
-              )}
+                {featuredPost.location && (
+                  <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-white/80 bg-white/15 backdrop-blur-sm px-2.5 py-1 rounded-full">
+                    📍 {featuredPost.location.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}
+                  </span>
+                )}
+              </div>
 
               <h2 className="font-display text-white font-bold tracking-[-0.03em] leading-[1.12] mb-3 max-w-[680px] line-clamp-2" style={{ fontSize: "clamp(24px, 3.5vw, 40px)" }}>
                 {featuredPost.title}
@@ -206,7 +229,6 @@ export default async function JournalPage() {
                 {featuredPost.excerpt}
               </p>
 
-              {/* Author row */}
               <div className="flex items-center gap-3">
                 {featuredPost.author?.avatar?.asset?.url ? (
                   <Image
@@ -238,51 +260,10 @@ export default async function JournalPage() {
         </section>
       )}
 
-      {/* ─── TAG FILTER + POST GRID ────────────────── */}
+      {/* ─── FILTER + POST GRID ────────────────────── */}
       <section className="bg-surface py-14 md:py-20">
         <div className="max-w-[1280px] mx-auto px-5 md:px-10">
-          {/* Tag filter pills */}
-          <div className="flex flex-wrap gap-2.5 mb-10">
-            {TAG_PILLS.map((tag) => (
-              <Link
-                key={tag.label}
-                href={tag.href}
-                className={`inline-flex items-center px-4 py-2 rounded-full text-[13px] font-semibold transition-all duration-200 ${
-                  tag.label === "All"
-                    ? "bg-text text-canvas"
-                    : "bg-white text-text2 border border-border hover:border-amber hover:text-amber"
-                }`}
-              >
-                {tag.label}
-              </Link>
-            ))}
-          </div>
-
-          {/* Posts grid */}
-          {gridPosts.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-12">
-              {gridPosts.map((post) => (
-                <PostCard
-                  key={post._id}
-                  slug={post.slug.current}
-                  title={post.title}
-                  excerpt={post.excerpt}
-                  coverImage={getCoverUrl(post)}
-                  category={post.tags?.[0] ?? "Travel"}
-                  authorName={post.author?.name ?? "Klickenya"}
-                  authorAvatar={post.author?.avatar?.asset?.url}
-                  publishedAt={post.publishedAt}
-                  readTimeMinutes={post.readingTime ?? 5}
-                />
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-20">
-              <p className="text-text3 text-[15px]">
-                No posts yet &mdash; check back soon for travel stories and guides.
-              </p>
-            </div>
-          )}
+          <JournalFilters posts={filterPosts} />
         </div>
       </section>
 

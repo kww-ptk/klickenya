@@ -203,6 +203,11 @@ export const BLOG_POSTS_QUERY = groq`
     slug,
     excerpt,
     tags,
+    primaryCategory,
+    subcategory,
+    location,
+    series,
+    postType,
     readingTime,
     publishedAt,
     "coverImage": coverImage{ ${IMAGE_FIELDS} },
@@ -217,6 +222,11 @@ export const BLOG_POSTS_BY_TAG_QUERY = groq`
     slug,
     excerpt,
     tags,
+    primaryCategory,
+    subcategory,
+    location,
+    series,
+    postType,
     readingTime,
     publishedAt,
     "coverImage": coverImage{ ${IMAGE_FIELDS} },
@@ -258,6 +268,12 @@ export const BLOG_POST_BY_SLUG_QUERY = groq`
       }
     },
     tags,
+    primaryCategory,
+    subcategory,
+    location,
+    series,
+    postType,
+    focusKeyword,
     readingTime,
     publishedAt,
     seoTitle,
@@ -266,6 +282,14 @@ export const BLOG_POST_BY_SLUG_QUERY = groq`
     "author": author->{name, slug, avatar{asset->{_id, url}}, bio, role},
     "relatedListings": relatedListings[]->{
       ${LISTING_CARD_FIELDS}
+    },
+    "seriesPosts": *[_type == "blogPost" && status == "published" && series == ^.series && _id != ^._id] | order(publishedAt desc) [0...4] {
+      _id, title, slug, excerpt, readingTime, publishedAt,
+      "coverImage": coverImage{ ${IMAGE_FIELDS} }
+    },
+    "locationPosts": *[_type == "blogPost" && status == "published" && location == ^.location && _id != ^._id] | order(publishedAt desc) [0...3] {
+      _id, title, slug, excerpt, location, readingTime, publishedAt,
+      "coverImage": coverImage{ ${IMAGE_FIELDS} }
     }
   }
 `
@@ -287,6 +311,8 @@ export const LATEST_BLOG_POSTS_QUERY = groq`
     slug,
     excerpt,
     tags,
+    primaryCategory,
+    location,
     readingTime,
     publishedAt,
     "coverImage": coverImage{ ${IMAGE_FIELDS} },

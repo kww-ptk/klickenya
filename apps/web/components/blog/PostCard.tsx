@@ -8,6 +8,7 @@ interface PostCardProps {
   excerpt: string;
   coverImage: string;
   category: string;
+  location?: string;
   authorName: string;
   authorAvatar?: string;
   publishedAt: string;
@@ -20,6 +21,7 @@ function PostCard({
   excerpt,
   coverImage,
   category,
+  location,
   authorName,
   authorAvatar,
   publishedAt,
@@ -44,10 +46,17 @@ function PostCard({
         />
       </div>
 
-      {/* Category chip */}
-      <Badge variant="amber" className="mb-3">
-        {category}
-      </Badge>
+      {/* Category + location chips */}
+      <div className="flex items-center gap-2 mb-3">
+        <Badge variant="amber">
+          {category}
+        </Badge>
+        {location && (
+          <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#5E5848] bg-[#F4F1EC] px-2.5 py-1 rounded-full">
+            📍 {location}
+          </span>
+        )}
+      </div>
 
       {/* Title */}
       <h3 className="font-display text-[20px] font-bold text-text tracking-[-0.02em] leading-[1.25] mb-2 group-hover:text-amber transition-colors line-clamp-2">

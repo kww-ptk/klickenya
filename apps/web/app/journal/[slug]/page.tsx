@@ -187,11 +187,44 @@ export default async function BlogPostPage({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-12 items-center py-12 md:py-16 lg:py-20">
               {/* Left — text */}
               <div className="relative z-10 order-2 md:order-1">
+                {/* Breadcrumb */}
+                <nav className="flex items-center gap-1.5 text-[12px] text-[#9C9485] mb-4">
+                  <Link href="/journal" className="hover:text-[#E8A020] transition-colors">Journal</Link>
+                  {post.primaryCategory && (
+                    <>
+                      <span>›</span>
+                      <span className="text-[#5E5848]">
+                        {({
+                          destination_guide: "Guides",
+                          food_restaurants: "Food",
+                          where_to_stay: "Stays",
+                          safari_wildlife: "Safari",
+                          beaches_coast: "Beaches",
+                          travel_tips: "Tips",
+                          events_nightlife: "Nightlife",
+                          living_in_kenya: "Living Here",
+                        } as Record<string, string>)[post.primaryCategory] ?? post.primaryCategory}
+                      </span>
+                    </>
+                  )}
+                </nav>
+
                 {/* Tag + reading time */}
                 <div className="flex items-center gap-3 mb-5">
-                  {post.tags?.[0] && (
+                  {(post.primaryCategory || post.tags?.[0]) && (
                     <span className="text-[#E8A020] text-[11px] font-bold uppercase tracking-[0.12em]">
-                      {post.tags[0]}
+                      {post.primaryCategory
+                        ? ({
+                            destination_guide: "Guide",
+                            food_restaurants: "Food",
+                            where_to_stay: "Stays",
+                            safari_wildlife: "Safari",
+                            beaches_coast: "Beaches",
+                            travel_tips: "Tips",
+                            events_nightlife: "Nightlife",
+                            living_in_kenya: "Living Here",
+                          } as Record<string, string>)[post.primaryCategory] ?? post.tags?.[0]
+                        : post.tags?.[0]}
                     </span>
                   )}
                   <span className="w-px h-3 bg-[#E2DDD5]" />
@@ -340,6 +373,69 @@ export default async function BlogPostPage({
                         </p>
                       )}
                     </div>
+                  </div>
+                </div>
+              )}
+
+              {/* ── More in this series ──────────────── */}
+              {post.seriesPosts && post.seriesPosts.length > 0 && post.series && (
+                <div className="mt-14 pt-10 border-t border-border sr">
+                  <h3 className="font-display font-bold text-[20px] text-text mb-6">
+                    More in &ldquo;{post.series}&rdquo;
+                  </h3>
+                  <div className="space-y-4">
+                    {post.seriesPosts.map((sp: { _id: string; title: string; slug: { current: string }; readingTime?: number; publishedAt?: string }) => (
+                      <Link
+                        key={sp._id}
+                        href={`/journal/${sp.slug.current}`}
+                        className="flex items-start gap-3 p-3 -mx-3 rounded-xl hover:bg-surface transition-colors"
+                      >
+                        <span className="text-[#E8A020] text-lg mt-0.5">→</span>
+                        <div>
+                          <p className="text-[15px] font-semibold text-text hover:text-amber transition-colors leading-snug">
+                            {sp.title}
+                          </p>
+                          {sp.readingTime && (
+                            <p className="text-[12px] text-text3 mt-1">{sp.readingTime} min read</p>
+                          )}
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* ── More about [location] ────────────── */}
+              {post.locationPosts && post.locationPosts.length > 0 && post.location && (
+                <div className="mt-14 pt-10 border-t border-border sr">
+                  <h3 className="font-display font-bold text-[20px] text-text mb-6">
+                    More about {post.location.replace(/_/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase())}
+                  </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    {post.locationPosts.map((lp: { _id: string; title: string; slug: { current: string }; excerpt?: string; coverImage?: { asset?: { url?: string } } }) => (
+                      <Link
+                        key={lp._id}
+                        href={`/journal/${lp.slug.current}`}
+                        className="group block rounded-xl border border-border overflow-hidden hover:shadow-sm transition-shadow"
+                      >
+                        {lp.coverImage?.asset?.url && (
+                          <div className="relative aspect-[16/9]">
+                            <Image
+                              src={lp.coverImage.asset.url}
+                              alt={lp.title}
+                              fill
+                              className="object-cover group-hover:scale-[1.03] transition-transform duration-500"
+                              sizes="33vw"
+                            />
+                          </div>
+                        )}
+                        <div className="p-3">
+                          <p className="text-[14px] font-semibold text-text line-clamp-2 group-hover:text-amber transition-colors">
+                            {lp.title}
+                          </p>
+                        </div>
+                      </Link>
+                    ))}
                   </div>
                 </div>
               )}
