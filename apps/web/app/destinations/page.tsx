@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { DestinationsHeroGlow } from "@/components/destinations/DestinationsHeroGlow";
 import { sanityFetch } from "@/lib/sanity/client";
 import {
   ALL_DESTINATIONS_QUERY,
@@ -158,22 +159,16 @@ export default async function DestinationsPage() {
       <Nav transparent />
 
       {/* ── Hero ──────────────────────────────────── */}
-      <section className="relative overflow-hidden bg-zinc-950 pt-32 pb-20 md:pt-40 md:pb-28">
-        {/* Amber swoosh decoration */}
+      <section className="relative overflow-hidden pt-32 pb-20 md:pt-40 md:pb-28" style={{ background: "linear-gradient(180deg, #16130C 0%, #1a1610 40%, #1f1a12 70%, #16130C 100%)" }}>
+        {/* Static ambient glow */}
         <div
-          className="pointer-events-none absolute -top-[200px] left-1/2 -translate-x-1/2 w-[1200px] h-[600px] opacity-20"
+          className="pointer-events-none absolute top-0 left-1/2 -translate-x-1/2 w-[1400px] h-[700px] opacity-15"
           style={{
-            background:
-              "radial-gradient(ellipse at center, #f59e0b 0%, transparent 70%)",
+            background: "radial-gradient(ellipse 60% 50% at 50% 30%, #E8A020 0%, transparent 70%)",
           }}
         />
-        <div
-          className="pointer-events-none absolute bottom-0 left-0 right-0 h-[200px] opacity-10"
-          style={{
-            background:
-              "linear-gradient(135deg, #f59e0b 0%, transparent 50%, #f59e0b 100%)",
-          }}
-        />
+        {/* Mouse-tracking amber glow */}
+        <DestinationsHeroGlow />
 
         <div className="relative z-10 max-w-[960px] mx-auto px-5 md:px-10 text-center">
           <h1
@@ -181,13 +176,13 @@ export default async function DestinationsPage() {
             style={{ fontSize: "clamp(40px, 6vw, 72px)" }}
           >
             Explore Kenya&apos;s best{" "}
-            <span className="text-amber">destinations</span>
+            <span className="text-[#E8A020]">destinations</span>
           </h1>
 
           <p
             className="max-w-[600px] mx-auto leading-[1.7] mb-10"
             style={{
-              color: "rgba(255,255,255,.6)",
+              color: "rgba(255,255,255,.55)",
               fontSize: "clamp(16px, 2vw, 19px)",
             }}
           >
