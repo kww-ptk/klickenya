@@ -167,10 +167,10 @@ export default async function BlogPostPage({
         <Nav transparent={false} />
 
         {/* ── Hero ─────────────────────────────────────────────── */}
-        <section className="relative w-full mt-[68px] min-h-[480px] h-auto md:h-[82vh] md:min-h-[520px] overflow-hidden">
-          {/* Cover image with Ken Burns */}
+        <div className="mt-[68px]">
+          {/* Cover image — banner style */}
           {heroImageUrl && (
-            <div className="absolute inset-0 animate-[kenBurns_20s_ease-out_forwards]">
+            <div className="relative w-full h-[280px] sm:h-[360px] md:h-[420px] overflow-hidden">
               <Image
                 src={heroImageUrl}
                 alt={post.coverImage?.alt || post.title}
@@ -178,112 +178,80 @@ export default async function BlogPostPage({
                 priority
                 className="object-cover"
                 sizes="100vw"
-                style={{
-                  transform: "scale(1.04)",
-                  animation: "kenBurns 1.2s ease-out forwards",
-                }}
               />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-black/10" />
             </div>
           )}
 
-          {/* Gradient overlay */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/10" />
-
-          {/* Content — flows naturally on mobile, pinned to bottom on desktop */}
-          <div className="relative md:absolute md:bottom-0 md:left-0 md:right-0 px-5 md:px-10 pt-8 pb-8 md:pt-0 md:pb-16">
-            <div className="max-w-[1280px] mx-auto">
-              {/* Category chip */}
-              {post.tags?.[0] && (
-                <span className="inline-block bg-amber text-dark text-[11px] font-bold uppercase tracking-[0.06em] px-3 py-1.5 rounded-full mb-4">
-                  {post.tags[0]}
-                </span>
-              )}
-
-              {/* Title */}
-              <h1 className="font-display font-[800] text-[clamp(28px,5.5vw,72px)] leading-[1.05] tracking-[-0.03em] text-white max-w-[900px] mb-3">
-                {post.title}
-              </h1>
-
-              {/* Excerpt — hidden on mobile to save space */}
-              {post.excerpt && (
-                <p className="text-[15px] md:text-[clamp(16px,1.8vw,20px)] italic text-white/65 max-w-[640px] leading-[1.5] mb-4 md:mb-6">
-                  {post.excerpt}
-                </p>
-              )}
-
-              {/* Meta row */}
-              <div className="flex flex-wrap items-center gap-3 text-[13px] text-white/60">
-                {/* Author */}
-                {post.author && (
-                  <div className="flex items-center gap-2.5">
-                    {post.author.avatar?.asset?.url ? (
-                      <Image
-                        src={post.author.avatar.asset.url}
-                        alt={post.author.name}
-                        width={36}
-                        height={36}
-                        className="rounded-full object-cover border-2 border-white/20"
-                      />
-                    ) : (
-                      <div className="size-9 rounded-full bg-white/15 flex items-center justify-center text-white font-semibold text-[14px]">
-                        {post.author.name?.[0] || "K"}
-                      </div>
-                    )}
-                    <div className="flex flex-col">
-                      <span className="text-white font-semibold text-[14px]">
-                        {post.author.name}
-                      </span>
-                      {post.author.role && (
-                        <span className="text-white/40 text-[12px]">
-                          {post.author.role}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                <span className="w-px h-4 bg-white/20 hidden sm:block" />
-
-                {/* Date */}
-                {post.publishedAt && (
-                  <span className="hidden sm:inline">
-                    {formatDate(post.publishedAt)}
+          {/* Title + meta — below image */}
+          <div className="max-w-[820px] mx-auto px-5 md:px-10 pt-8 md:pt-10 pb-6 md:pb-8">
+            {/* Tags */}
+            {post.tags?.[0] && (
+              <div className="flex flex-wrap gap-2 mb-4">
+                {post.tags.map((tag: string) => (
+                  <span key={tag} className="inline-block bg-[#F4F1EC] text-[#5E5848] text-[11px] font-bold uppercase tracking-[0.06em] px-3 py-1.5 rounded-full">
+                    {tag}
                   </span>
-                )}
-
-                <span className="w-px h-4 bg-white/20 hidden sm:block" />
-
-                {/* Reading time */}
-                <span className="hidden sm:inline">
-                  {post.readingTime || 5} min read
-                </span>
+                ))}
               </div>
+            )}
+
+            {/* Title */}
+            <h1 className="font-display font-[800] text-[clamp(26px,4vw,48px)] leading-[1.1] tracking-[-0.03em] text-[#16130C] mb-4">
+              {post.title}
+            </h1>
+
+            {/* Excerpt */}
+            {post.excerpt && (
+              <p className="text-[15px] md:text-[17px] text-[#5E5848] max-w-[640px] leading-[1.65] mb-5">
+                {post.excerpt}
+              </p>
+            )}
+
+            {/* Meta row */}
+            <div className="flex flex-wrap items-center gap-3 text-[13px] text-[#9C9485] border-b border-[#E2DDD5] pb-6">
+              {/* Author */}
+              {post.author && (
+                <div className="flex items-center gap-2.5">
+                  {post.author.avatar?.asset?.url ? (
+                    <Image
+                      src={post.author.avatar.asset.url}
+                      alt={post.author.name}
+                      width={32}
+                      height={32}
+                      className="rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="size-8 rounded-full bg-[#E8A020]/10 flex items-center justify-center text-[#E8A020] font-semibold text-[13px]">
+                      {post.author.name?.[0] || "K"}
+                    </div>
+                  )}
+                  <span className="text-[#16130C] font-semibold text-[14px]">
+                    {post.author.name}
+                  </span>
+                </div>
+              )}
+
+              <span className="w-px h-3.5 bg-[#E2DDD5]" />
+
+              {/* Date */}
+              {post.publishedAt && (
+                <time dateTime={formatFullDate(post.publishedAt)}>
+                  {formatDate(post.publishedAt)}
+                </time>
+              )}
+
+              <span className="w-px h-3.5 bg-[#E2DDD5]" />
+
+              {/* Reading time */}
+              <span>{post.readingTime || 5} min read</span>
             </div>
           </div>
-
-          {/* Scroll hint — desktop only */}
-          <div className="hidden md:flex absolute bottom-6 right-10 flex-col items-center gap-1.5 text-white/40 animate-[float_2.5s_ease-in-out_infinite]">
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M12 5v14M19 12l-7 7-7-7" />
-            </svg>
-            <span className="text-[10px] uppercase tracking-[0.1em] font-medium">
-              Scroll
-            </span>
-          </div>
-        </section>
+        </div>
 
         {/* ── Article layout ───────────────────────────────────── */}
-        <div className="max-w-[1280px] mx-auto px-5 md:px-10 py-12 md:py-20">
-          <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-10 lg:gap-[72px]">
+        <div className="max-w-[1280px] mx-auto px-5 md:px-10 pb-12 md:pb-20">
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-10 lg:gap-16">
             {/* ── Main column ───────────────────────────────────── */}
             <article className="min-w-0">
 
@@ -482,17 +450,6 @@ export default async function BlogPostPage({
         <Footer />
       </BlogPostClient>
 
-      {/* Ken Burns keyframes */}
-      <style
-        dangerouslySetInnerHTML={{
-          __html: `
-            @keyframes kenBurns {
-              from { transform: scale(1.04); }
-              to { transform: scale(1); }
-            }
-          `,
-        }}
-      />
     </>
   );
 }
