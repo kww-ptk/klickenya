@@ -267,7 +267,7 @@ export default async function BlogPostPage({
         </section>
 
         {/* ── Article layout ───────────────────────────────────── */}
-        <div className="max-w-[1280px] mx-auto px-5 md:px-10 pb-12 md:pb-20">
+        <div className="max-w-[1280px] mx-auto px-5 md:px-10 pt-10 md:pt-16 pb-12 md:pb-20">
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-10 lg:gap-16">
             {/* ── Main column ───────────────────────────────────── */}
             <article className="min-w-0">

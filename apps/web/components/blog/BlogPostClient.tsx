@@ -110,8 +110,8 @@ function BlogPostClient({ readingTime, title, url, children }: BlogPostClientPro
 
   return (
     <>
-      {/* ── Progress bar ─────────────────────────────────────── */}
-      <div className="fixed top-0 left-0 right-0 z-[500] h-[3px]">
+      {/* ── Progress bar — below sticky nav ───────────────────── */}
+      <div className="fixed top-[68px] left-0 right-0 z-[500] h-[3px]">
         <div
           className="h-full transition-[width] duration-150 ease-out"
           style={{
