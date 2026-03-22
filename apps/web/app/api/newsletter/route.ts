@@ -16,7 +16,7 @@ function welcomeEmailHtml(): string {
   return `<!DOCTYPE html>
 <html><head><meta charset="utf-8"></head>
 <body style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;max-width:520px;margin:0 auto;padding:40px 24px;color:#1a1a1a;background:#ffffff;">
-  <img src="https://klickenya.com/logo.png" alt="Klickenya" width="140" height="40" style="margin-bottom:32px;">
+  <img src="https://klickenya.com/logo-profile.jpg" alt="Klickenya" width="48" height="48" style="margin-bottom:24px;border-radius:12px;">
   <h1 style="font-size:24px;font-weight:700;margin-bottom:16px;color:#1a1a1a;">We got you! ✨</h1>
   <p style="font-size:16px;line-height:1.6;color:#555;margin-bottom:16px;">You will be notified soon about Klickenya.</p>
   <p style="font-size:16px;line-height:1.6;color:#555;margin-bottom:16px;">Just so you know, you will be able to find the best that Kenya has to offer, both for residents and tourists — events, parties, tours, special deals, and much more.</p>
