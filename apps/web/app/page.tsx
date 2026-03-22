@@ -366,43 +366,52 @@ export default async function HomePage() {
       </section>
 
       {/* ─── HOW IT WORKS ─────────────────────────── */}
-      <section className="max-w-[1280px] mx-auto px-5 md:px-10 py-14 md:py-20">
-        <div className="text-center mb-12">
-          <h2 className="font-display text-[clamp(24px,3.5vw,34px)] font-bold text-text tracking-[-0.03em]">
-            {homePage?.howItWorksTitle ?? "How it works"}
-          </h2>
-          <p className="text-text2 text-[15px] mt-2 max-w-[480px] mx-auto">
-            {homePage?.howItWorksSubtitle ?? "Book anything in Kenya in just a few simple steps"}
-          </p>
+      <section className="relative overflow-hidden py-16 md:py-24" style={{ background: "linear-gradient(180deg, #16130C 0%, #1a1610 40%, #1f1a12 70%, #16130C 100%)" }}>
+        {/* Ambient amber glow */}
+        <div className="pointer-events-none absolute top-0 left-1/2 -translate-x-1/2 w-[1400px] h-[600px] opacity-[0.08]" style={{ background: "radial-gradient(ellipse 60% 50% at 50% 20%, #E8A020 0%, transparent 70%)" }} />
+        {/* Swoosh decoration */}
+        <div className="pointer-events-none absolute right-[-8vw] top-1/2 -translate-y-1/2 opacity-60 z-0">
+          <svg viewBox="0 0 980 1100" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-[clamp(300px,40vw,600px)] h-auto">
+            <path d="M 920 60 C 820 280, 340 380, 140 820" stroke="#E8A020" strokeWidth="40" strokeLinecap="round" fill="none" opacity=".04" />
+            <path d="M 920 60 C 820 280, 340 380, 140 820" stroke="#E8A020" strokeWidth="16" strokeLinecap="round" fill="none" opacity=".08" />
+            <path d="M 920 60 C 820 280, 340 380, 140 820" stroke="#F5C842" strokeWidth="3" strokeLinecap="round" fill="none" opacity=".15" />
+          </svg>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 rounded-[32px] border border-border overflow-hidden">
-          {HOW_IT_WORKS.map((step, i) => {
-            const cmsStep = howItWorksSteps?.[i];
-            return (
-              <div
-                key={step.title}
-                className={`group p-8 transition-colors duration-300 hover:bg-surface ${
-                  i < HOW_IT_WORKS.length - 1
-                    ? "border-b md:border-b-0 md:border-r border-border"
-                    : ""
-                }`}
-              >
-                <span className="inline-flex items-center justify-center size-[56px] rounded-[16px] bg-surface text-text3 text-[22px] font-bold mb-5 transition-colors duration-300 group-hover:bg-purple-dim group-hover:text-purple">
-                  {String(i + 1).padStart(2, "0")}
-                </span>
-                <div className="size-11 rounded-[14px] bg-purple-dim flex items-center justify-center mb-4">
-                  {step.icon}
+        <div className="relative z-10 max-w-[1280px] mx-auto px-5 md:px-10">
+          <div className="text-center mb-12">
+            <h2 className="font-display text-[clamp(24px,3.5vw,34px)] font-bold text-white tracking-[-0.03em]">
+              {homePage?.howItWorksTitle ?? "How it works"}
+            </h2>
+            <p className="text-white/50 text-[15px] mt-2 max-w-[480px] mx-auto">
+              {homePage?.howItWorksSubtitle ?? "Book anything in Kenya in just a few simple steps"}
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            {HOW_IT_WORKS.map((step, i) => {
+              const cmsStep = howItWorksSteps?.[i];
+              return (
+                <div
+                  key={step.title}
+                  className="group relative rounded-2xl border border-white/[0.06] bg-white/[0.03] backdrop-blur-sm p-7 hover:bg-white/[0.06] hover:border-[#E8A020]/20 transition-all duration-300"
+                >
+                  <span className="inline-flex items-center justify-center size-[48px] rounded-[14px] bg-[#E8A020]/10 text-[#E8A020] text-[20px] font-bold mb-5">
+                    {String(i + 1).padStart(2, "0")}
+                  </span>
+                  <div className="size-11 rounded-[14px] bg-[#E8A020]/10 flex items-center justify-center mb-4">
+                    {step.icon}
+                  </div>
+                  <h3 className="text-[16px] font-semibold text-white mb-2">
+                    {cmsStep?.title ?? step.title}
+                  </h3>
+                  <p className="text-[13.5px] text-white/50 leading-[1.65]">
+                    {cmsStep?.description ?? step.description}
+                  </p>
                 </div>
-                <h3 className="text-[16px] font-semibold text-text mb-2">
-                  {cmsStep?.title ?? step.title}
-                </h3>
-                <p className="text-[13.5px] text-text2 leading-[1.65]">
-                  {cmsStep?.description ?? step.description}
-                </p>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
       </section>
 
