@@ -167,13 +167,21 @@ export default async function BlogPostPage({
         <Nav transparent={false} />
 
         {/* ── Hero ─────────────────────────────────────────────── */}
-        <section className="relative mt-[68px] overflow-hidden" style={{ background: "linear-gradient(135deg, #16130C 0%, #1e1a11 50%, #16130C 100%)" }}>
-          {/* Klickenya swoosh — brand yellow stripe */}
-          <svg className="absolute bottom-0 left-0 w-full h-[180px] md:h-[220px] pointer-events-none opacity-[0.07]" viewBox="0 0 1440 220" fill="none" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M0 220C0 220 180 60 480 100C780 140 960 20 1200 60C1340 82 1440 40 1440 40V220H0Z" fill="#E8A020" />
-          </svg>
-          {/* Ambient amber glow */}
-          <div className="absolute top-1/2 left-1/4 -translate-y-1/2 w-[600px] h-[600px] rounded-full opacity-[0.06] pointer-events-none" style={{ background: "radial-gradient(circle, #E8A020 0%, transparent 70%)" }} />
+        <section className="relative mt-[68px] overflow-hidden bg-white">
+          {/* Klickenya swoosh — brand curve like coming soon page */}
+          <div className="absolute right-[-12vw] md:right-[-6vw] top-1/2 -translate-y-1/2 pointer-events-none opacity-80 z-0">
+            <svg viewBox="0 0 980 1100" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-[clamp(300px,50vw,700px)] h-auto">
+              <path d="M 920 60 C 820 280, 340 380, 140 820" stroke="#E8A020" strokeWidth="52" strokeLinecap="round" fill="none" opacity=".06" filter="url(#blog-glow)" />
+              <path d="M 920 60 C 820 280, 340 380, 140 820" stroke="#E8A020" strokeWidth="22" strokeLinecap="round" fill="none" opacity=".12" />
+              <path d="M 920 60 C 820 280, 340 380, 140 820" stroke="#F5C842" strokeWidth="4" strokeLinecap="round" fill="none" opacity=".25" />
+              <path d="M 880 110 C 770 320, 380 410, 190 840" stroke="#E8A020" strokeWidth="3" strokeLinecap="round" fill="none" opacity=".06" />
+              <circle cx="920" cy="60" r="8" fill="#E8A020" opacity=".15" />
+              <circle cx="140" cy="820" r="5" fill="#E8A020" opacity=".1" />
+              <defs>
+                <filter id="blog-glow" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="22" result="blur" /><feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
+              </defs>
+            </svg>
+          </div>
 
           <div className="max-w-[1280px] mx-auto px-5 md:px-10">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-12 items-center py-12 md:py-16 lg:py-20">
@@ -186,18 +194,18 @@ export default async function BlogPostPage({
                       {post.tags[0]}
                     </span>
                   )}
-                  <span className="w-px h-3 bg-white/15" />
-                  <span className="text-[12px] text-white/35">{post.readingTime || 5} min read</span>
+                  <span className="w-px h-3 bg-[#E2DDD5]" />
+                  <span className="text-[12px] text-[#9C9485]">{post.readingTime || 5} min read</span>
                 </div>
 
                 {/* Title */}
-                <h1 className="font-display font-[800] text-[clamp(26px,4vw,44px)] leading-[1.1] tracking-[-0.03em] text-white mb-5">
+                <h1 className="font-display font-[800] text-[clamp(26px,4vw,44px)] leading-[1.1] tracking-[-0.03em] text-[#16130C] mb-5">
                   {post.title}
                 </h1>
 
                 {/* Excerpt */}
                 {post.excerpt && (
-                  <p className="text-[15px] md:text-[16px] text-white/50 max-w-[480px] leading-[1.65] mb-6">
+                  <p className="text-[15px] md:text-[16px] text-[#5E5848] max-w-[480px] leading-[1.65] mb-6">
                     {post.excerpt}
                   </p>
                 )}
@@ -215,16 +223,16 @@ export default async function BlogPostPage({
                           className="rounded-full object-cover ring-2 ring-[#E8A020]/20"
                         />
                       ) : (
-                        <div className="size-8 rounded-full bg-[#E8A020]/15 flex items-center justify-center text-[#E8A020] font-semibold text-[12px] ring-2 ring-[#E8A020]/20">
+                        <div className="size-8 rounded-full bg-[#E8A020]/10 flex items-center justify-center text-[#E8A020] font-semibold text-[12px] ring-2 ring-[#E8A020]/20">
                           {post.author.name?.[0] || "K"}
                         </div>
                       )}
                       <div className="flex flex-col">
-                        <span className="text-white font-semibold text-[13px] leading-tight">
+                        <span className="text-[#16130C] font-semibold text-[13px] leading-tight">
                           {post.author.name}
                         </span>
                         {post.publishedAt && (
-                          <time dateTime={formatFullDate(post.publishedAt)} className="text-white/30 text-[11px]">
+                          <time dateTime={formatFullDate(post.publishedAt)} className="text-[#9C9485] text-[11px]">
                             {formatDate(post.publishedAt)}
                           </time>
                         )}
@@ -246,18 +254,16 @@ export default async function BlogPostPage({
                       className="object-cover"
                       sizes="(max-width: 768px) 100vw, 50vw"
                     />
-                    {/* Amber corner glow */}
-                    <div className="absolute inset-0 pointer-events-none rounded-2xl" style={{ boxShadow: "inset 0 0 60px rgba(232,160,32,0.08)" }} />
                   </div>
                 )}
                 {/* Decorative ring behind image */}
-                <div className="hidden md:block absolute -top-4 -right-4 -bottom-4 -left-4 rounded-3xl border border-[#E8A020]/10 pointer-events-none" />
+                <div className="hidden md:block absolute -top-3 -right-3 -bottom-3 -left-3 rounded-[22px] border border-[#E8A020]/15 pointer-events-none" />
               </div>
             </div>
           </div>
 
-          {/* Bottom amber line */}
-          <div className="h-[2px] bg-gradient-to-r from-transparent via-[#E8A020]/40 to-transparent" />
+          {/* Bottom divider */}
+          <div className="h-px bg-[#E2DDD5]" />
         </section>
 
         {/* ── Article layout ───────────────────────────────────── */}
