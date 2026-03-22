@@ -238,6 +238,21 @@ export const BLOG_POST_BY_SLUG_QUERY = groq`
           _id, title, slug, type, subcategory, city, price, priceUnit, tags,
           "coverPhoto": photos[0]{ ${IMAGE_FIELDS} }
         }
+      },
+      _type == "listingSliderBlock" => {
+        ...,
+        "listings": listings[]->{
+          _id, title, slug, type, subcategory, city, pricePerNight, priceUnit, rating, reviewCount,
+          "mainImageUrl": mainImage.asset->url + "?w=400&h=300&fit=crop&auto=format&q=80",
+          isVerified, hostName
+        }
+      },
+      _type == "eventSliderBlock" => {
+        ...,
+        "events": events[]->{
+          _id, title, slug, type, subcategory, city, pricePerNight, priceUnit,
+          "mainImageUrl": mainImage.asset->url + "?w=400&h=300&fit=crop&auto=format&q=80"
+        }
       }
     },
     tags,

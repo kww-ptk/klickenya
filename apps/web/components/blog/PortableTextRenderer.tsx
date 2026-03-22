@@ -21,6 +21,8 @@ import {
   DestinationSectionBlock,
   DistanceChipsBlock,
   DeciderGridBlock,
+  ListingSliderBlock,
+  EventSliderBlock,
 } from "./blocks";
 
 function makeComponents(slug?: string): PortableTextComponents {
@@ -124,6 +126,8 @@ function makeComponents(slug?: string): PortableTextComponents {
       destinationSectionBlock: ({ value }) => <DestinationSectionBlock value={value} />,
       distanceChipsBlock: ({ value }) => <DistanceChipsBlock value={value} />,
       deciderGridBlock: ({ value }) => <DeciderGridBlock value={value} />,
+      listingSliderBlock: ({ value }) => <ListingSliderBlock value={value} />,
+      eventSliderBlock: ({ value }) => <EventSliderBlock value={value} />,
     },
     list: {
       bullet: ({ children }) => (

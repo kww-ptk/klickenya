@@ -24,6 +24,8 @@ import {
   destinationSectionBlock,
   distanceChipsBlock,
   deciderGridBlock,
+  listingSliderBlock,
+  eventSliderBlock,
 } from '../schemas/blocks'
 
 export const schemaTypes = [
@@ -52,4 +54,6 @@ export const schemaTypes = [
   destinationSectionBlock,
   distanceChipsBlock,
   deciderGridBlock,
+  listingSliderBlock,
+  eventSliderBlock,
 ]

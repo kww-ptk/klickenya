@@ -13,7 +13,10 @@ const CITY_LISTINGS_QUERY = groq`
 `;
 
 const DESTINATION_IMAGES_QUERY = groq`
-  *[_type == "destination" && defined(heroImage)]{ name, "image": heroImage.asset->url }
+  *[_type == "destination" && defined(heroImage)]{
+    name,
+    "image": heroImage.asset->url + "?w=96&h=96&fit=crop&auto=format&q=75"
+  }
 `;
 
 async function fetchCityCounts(): Promise<CityCount[]> {

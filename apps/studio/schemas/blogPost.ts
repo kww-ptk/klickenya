@@ -148,6 +148,8 @@ export default defineType({
         { type: 'destinationSectionBlock' },
         { type: 'distanceChipsBlock' },
         { type: 'deciderGridBlock' },
+        { type: 'listingSliderBlock' },
+        { type: 'eventSliderBlock' },
       ],
     }),
     defineField({
