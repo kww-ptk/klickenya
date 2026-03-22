@@ -23,7 +23,7 @@ export default defineType({
             name: 'color',
             title: 'Color',
             type: 'string',
-            options: { list: ['teal', 'blue', 'purple'] },
+            options: { list: ['teal', 'blue', 'purple', 'amber', 'green', 'red'] },
           }),
           defineField({ name: 'title', title: 'Title', type: 'string' }),
           defineField({ name: 'items', title: 'Items', type: 'array', of: [{ type: 'string' }] }),
@@ -35,7 +35,7 @@ export default defineType({
           },
         },
       }],
-      validation: (rule) => rule.max(3),
+      validation: (rule) => rule.max(6),
     }),
   ],
 })
