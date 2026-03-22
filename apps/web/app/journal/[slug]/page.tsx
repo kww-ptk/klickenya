@@ -168,6 +168,10 @@ export default async function BlogPostPage({
 
         {/* ── Hero ─────────────────────────────────────────────── */}
         <section className="relative mt-[68px] overflow-hidden" style={{ background: "linear-gradient(135deg, #16130C 0%, #1e1a11 50%, #16130C 100%)" }}>
+          {/* Klickenya swoosh — brand yellow stripe */}
+          <svg className="absolute bottom-0 left-0 w-full h-[180px] md:h-[220px] pointer-events-none opacity-[0.07]" viewBox="0 0 1440 220" fill="none" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M0 220C0 220 180 60 480 100C780 140 960 20 1200 60C1340 82 1440 40 1440 40V220H0Z" fill="#E8A020" />
+          </svg>
           {/* Ambient amber glow */}
           <div className="absolute top-1/2 left-1/4 -translate-y-1/2 w-[600px] h-[600px] rounded-full opacity-[0.06] pointer-events-none" style={{ background: "radial-gradient(circle, #E8A020 0%, transparent 70%)" }} />
 
