@@ -113,7 +113,7 @@ async function getData() {
 export default async function HomePage() {
   const { listings, events, destinations, homePage, blogPosts } = await getData();
 
-  const featuredListings = listings.slice(0, 8);
+  const featuredListings = listings;
   const sanityEventCards = events.map(mapSanityEventToCard);
   const eventCards = sanityEventCards.length > 0 ? sanityEventCards : PLACEHOLDER_EVENTS;
 
