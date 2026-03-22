@@ -146,7 +146,7 @@ function Footer() {
         <div className="rounded-2xl bg-white/[0.03] border border-white/[0.06] px-6 py-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
             <p className="text-[14px] font-semibold text-white">
-              List your place on Klickenya
+              List your place or event on Klickenya
             </p>
             <p className="text-[12px] text-white/30 mt-0.5">
               Reach thousands of travellers across Kenya — it&apos;s free to get started.
@@ -154,7 +154,7 @@ function Footer() {
           </div>
           <Link
             href="/how-it-works"
-            className="shrink-0 px-5 py-2.5 bg-[#E8A020] text-[#16130C] text-[13px] font-bold rounded-full hover:bg-[#d4910f] transition-colors"
+            className="shrink-0 px-5 py-2.5 bg-[#E8A020] text-[#16130C] text-[13px] font-bold rounded-full hover:bg-[#d4910f] transition-colors animate-pulse hover:animate-none"
           >
             Get started →
           </Link>
