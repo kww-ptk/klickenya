@@ -253,7 +253,7 @@ export const BLOG_POST_BY_SLUG_QUERY = groq`
           _id, title, slug, type, subcategory, city,
           "price": pricePerNight, priceUnit,
           hostName, eventDate, eventEndDate, venue,
-          "coverPhotoUrl": mainImage.asset->url + "?w=400&h=300&fit=crop&auto=format&q=80"
+          "coverPhotoUrl": coalesce(mainImage.asset->url, photos[0].asset->url) + "?w=400&h=300&fit=crop&auto=format&q=80"
         }
       }
     },
