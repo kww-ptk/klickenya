@@ -830,15 +830,6 @@ export default defineType({
       group: 'service',
     }),
     defineField({
-      name: 'isVerified',
-      title: 'Verified Provider',
-      type: 'boolean',
-      description: 'Has this provider been verified by the Klickenya team?',
-      initialValue: false,
-      hidden: ({ document }: HiddenCtx) => !isService({ document }),
-      group: 'service',
-    }),
-    defineField({
       name: 'pricingTable',
       title: 'Pricing Table',
       type: 'array',
