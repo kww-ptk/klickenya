@@ -251,6 +251,7 @@ export const BLOG_POST_BY_SLUG_QUERY = groq`
         ...,
         "events": events[]->{
           _id, title, slug, type, subcategory, city, pricePerNight, priceUnit,
+          hostName, eventDate,
           "mainImageUrl": mainImage.asset->url + "?w=400&h=300&fit=crop&auto=format&q=80"
         }
       }
