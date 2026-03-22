@@ -154,9 +154,10 @@ function Footer() {
           </div>
           <Link
             href="/how-it-works"
-            className="shrink-0 px-5 py-2.5 bg-[#E8A020] text-[#16130C] text-[13px] font-bold rounded-full hover:bg-[#d4910f] transition-colors animate-pulse hover:animate-none"
+            className="relative shrink-0 px-5 py-2.5 bg-[#E8A020] text-[#16130C] text-[13px] font-bold rounded-full hover:bg-[#d4910f] transition-all duration-200 hover:scale-105"
           >
-            Get started →
+            <span className="absolute inset-0 rounded-full bg-[#E8A020] animate-[glow-ping_2.5s_ease-in-out_infinite] opacity-0" />
+            <span className="relative">Get started →</span>
           </Link>
         </div>
       </div>
