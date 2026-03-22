@@ -167,86 +167,88 @@ export default async function BlogPostPage({
         <Nav transparent={false} />
 
         {/* ── Hero ─────────────────────────────────────────────── */}
-        <div className="mt-[68px]">
-          {/* Cover image — banner style */}
-          {heroImageUrl && (
-            <div className="relative w-full h-[280px] sm:h-[360px] md:h-[420px] overflow-hidden">
-              <Image
-                src={heroImageUrl}
-                alt={post.coverImage?.alt || post.title}
-                fill
-                priority
-                className="object-cover"
-                sizes="100vw"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-black/10" />
+        <div className="mt-[68px] bg-[#FDFBF7]">
+          <div className="max-w-[1120px] mx-auto px-5 md:px-10 pt-10 md:pt-14 pb-8 md:pb-10">
+            {/* Meta + tags row */}
+            <div className="flex flex-wrap items-center gap-3 mb-6 md:mb-8">
+              {post.tags?.[0] && (
+                <span className="text-[#E8A020] text-[11px] font-bold uppercase tracking-[0.1em]">
+                  {post.tags[0]}
+                </span>
+              )}
+              {post.tags?.[0] && post.publishedAt && (
+                <span className="w-px h-3 bg-[#E2DDD5]" />
+              )}
+              {post.publishedAt && (
+                <time dateTime={formatFullDate(post.publishedAt)} className="text-[12px] text-[#9C9485] tracking-[0.02em]">
+                  {formatDate(post.publishedAt)}
+                </time>
+              )}
+              <span className="w-px h-3 bg-[#E2DDD5]" />
+              <span className="text-[12px] text-[#9C9485]">{post.readingTime || 5} min read</span>
             </div>
-          )}
-
-          {/* Title + meta — below image */}
-          <div className="max-w-[820px] mx-auto px-5 md:px-10 pt-8 md:pt-10 pb-6 md:pb-8">
-            {/* Tags */}
-            {post.tags?.[0] && (
-              <div className="flex flex-wrap gap-2 mb-4">
-                {post.tags.map((tag: string) => (
-                  <span key={tag} className="inline-block bg-[#F4F1EC] text-[#5E5848] text-[11px] font-bold uppercase tracking-[0.06em] px-3 py-1.5 rounded-full">
-                    {tag}
-                  </span>
-                ))}
-              </div>
-            )}
 
             {/* Title */}
-            <h1 className="font-display font-[800] text-[clamp(26px,4vw,48px)] leading-[1.1] tracking-[-0.03em] text-[#16130C] mb-4">
+            <h1 className="font-display font-[800] text-[clamp(28px,4.5vw,52px)] leading-[1.08] tracking-[-0.03em] text-[#16130C] max-w-[780px] mb-5">
               {post.title}
             </h1>
 
             {/* Excerpt */}
             {post.excerpt && (
-              <p className="text-[15px] md:text-[17px] text-[#5E5848] max-w-[640px] leading-[1.65] mb-5">
+              <p className="text-[16px] md:text-[18px] text-[#5E5848] max-w-[620px] leading-[1.6] mb-8">
                 {post.excerpt}
               </p>
             )}
 
-            {/* Meta row */}
-            <div className="flex flex-wrap items-center gap-3 text-[13px] text-[#9C9485] border-b border-[#E2DDD5] pb-6">
-              {/* Author */}
-              {post.author && (
-                <div className="flex items-center gap-2.5">
-                  {post.author.avatar?.asset?.url ? (
-                    <Image
-                      src={post.author.avatar.asset.url}
-                      alt={post.author.name}
-                      width={32}
-                      height={32}
-                      className="rounded-full object-cover"
-                    />
-                  ) : (
-                    <div className="size-8 rounded-full bg-[#E8A020]/10 flex items-center justify-center text-[#E8A020] font-semibold text-[13px]">
-                      {post.author.name?.[0] || "K"}
-                    </div>
-                  )}
-                  <span className="text-[#16130C] font-semibold text-[14px]">
+            {/* Author */}
+            {post.author && (
+              <div className="flex items-center gap-3 mb-8 md:mb-10">
+                {post.author.avatar?.asset?.url ? (
+                  <Image
+                    src={post.author.avatar.asset.url}
+                    alt={post.author.name}
+                    width={36}
+                    height={36}
+                    className="rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="size-9 rounded-full bg-[#E8A020]/10 flex items-center justify-center text-[#E8A020] font-semibold text-[14px]">
+                    {post.author.name?.[0] || "K"}
+                  </div>
+                )}
+                <div>
+                  <span className="text-[#16130C] font-semibold text-[14px] block leading-tight">
                     {post.author.name}
                   </span>
+                  {post.author.role && (
+                    <span className="text-[#9C9485] text-[12px]">{post.author.role}</span>
+                  )}
                 </div>
-              )}
+              </div>
+            )}
 
-              <span className="w-px h-3.5 bg-[#E2DDD5]" />
-
-              {/* Date */}
-              {post.publishedAt && (
-                <time dateTime={formatFullDate(post.publishedAt)}>
-                  {formatDate(post.publishedAt)}
-                </time>
-              )}
-
-              <span className="w-px h-3.5 bg-[#E2DDD5]" />
-
-              {/* Reading time */}
-              <span>{post.readingTime || 5} min read</span>
-            </div>
+            {/* Hero image — with brand border accent */}
+            {heroImageUrl && (
+              <div className="relative rounded-2xl md:rounded-[20px] overflow-hidden border-2 border-[#E8A020]/15">
+                <div className="relative w-full h-[240px] sm:h-[340px] md:h-[460px]">
+                  <Image
+                    src={heroImageUrl}
+                    alt={post.coverImage?.alt || post.title}
+                    fill
+                    priority
+                    className="object-cover"
+                    sizes="(max-width: 1120px) 100vw, 1120px"
+                  />
+                </div>
+                {/* Subtle amber corner accent */}
+                <div className="absolute top-0 left-0 w-16 h-16 pointer-events-none" style={{ background: "linear-gradient(135deg, rgba(232,160,32,0.12) 0%, transparent 60%)" }} />
+                <div className="absolute bottom-0 right-0 w-16 h-16 pointer-events-none" style={{ background: "linear-gradient(315deg, rgba(232,160,32,0.12) 0%, transparent 60%)" }} />
+              </div>
+            )}
           </div>
+
+          {/* Thin amber accent line */}
+          <div className="h-px bg-gradient-to-r from-transparent via-[#E8A020]/30 to-transparent" />
         </div>
 
         {/* ── Article layout ───────────────────────────────────── */}
