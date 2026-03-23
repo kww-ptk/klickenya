@@ -1,5 +1,6 @@
 import { sanityClient } from "@/lib/sanity/client";
 import { PropertySearchBox } from "./PropertySearchBox";
+import { MouseGlow } from "@/components/shared/MouseGlow";
 
 async function PropertyHero() {
   const count: number = await sanityClient
@@ -13,29 +14,24 @@ async function PropertyHero() {
     { value: "AI", label: "Free valuations" },
   ];
   return (
-    <section className="relative min-h-screen flex flex-col overflow-hidden bg-dark">
-      {/* Background mosaic grid */}
-      <div className="absolute inset-0 grid grid-cols-[1.2fr_0.9fr_0.9fr] grid-rows-2 gap-[3px]">
-        {[0, 1, 2, 3, 4, 5].map((i) => (
-          <div key={i} className="overflow-hidden">
-            <div
-              className="w-full h-full bg-surface2 animate-[heroZoom_25s_ease-in-out_infinite_alternate]"
-              style={{
-                animationDelay: `${i * -4}s`,
-              }}
-            />
-          </div>
-        ))}
-      </div>
-
-      {/* Overlay gradient */}
+    <section className="relative min-h-screen flex flex-col overflow-hidden" style={{ background: "linear-gradient(180deg, #16130C 0%, #1a1610 40%, #1f1a12 70%, #16130C 100%)" }}>
+      {/* Static ambient glow */}
       <div
-        className="absolute inset-0 z-[1]"
-        style={{
-          background:
-            "linear-gradient(180deg, rgba(10,10,14,0.7) 0%, rgba(10,10,14,0.55) 40%, rgba(10,10,14,0.75) 100%)",
-        }}
+        className="pointer-events-none absolute top-0 left-1/2 -translate-x-1/2 w-[1400px] h-[700px] opacity-[0.1]"
+        style={{ background: "radial-gradient(ellipse 60% 50% at 50% 30%, #E8A020 0%, transparent 70%)" }}
       />
+      {/* Swoosh decoration */}
+      <div className="pointer-events-none absolute right-[-10vw] top-1/2 -translate-y-1/2 opacity-70 z-0">
+        <svg viewBox="0 0 980 1100" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-[clamp(400px,55vw,800px)] h-auto">
+          <path d="M 920 60 C 820 280, 340 380, 140 820" stroke="#E8A020" strokeWidth="44" strokeLinecap="round" fill="none" opacity=".04" />
+          <path d="M 920 60 C 820 280, 340 380, 140 820" stroke="#E8A020" strokeWidth="18" strokeLinecap="round" fill="none" opacity=".08" />
+          <path d="M 920 60 C 820 280, 340 380, 140 820" stroke="#F5C842" strokeWidth="3" strokeLinecap="round" fill="none" opacity=".18" />
+          <circle cx="920" cy="60" r="10" fill="#E8A020" opacity=".12" />
+          <circle cx="140" cy="820" r="6" fill="#E8A020" opacity=".08" />
+        </svg>
+      </div>
+      {/* Mouse-tracking amber glow */}
+      <MouseGlow opacity={0.1} size={700} />
 
       {/* Content */}
       <div className="relative z-[2] flex-1 flex flex-col items-center justify-center px-6 pt-[110px] pb-9 text-center">
