@@ -12,7 +12,7 @@ export function DeciderGridBlock({ value }: { value: DeciderGridValue }) {
   return (
     <div className="grid grid-cols-3 gap-3.5 my-5 mb-9 max-md:grid-cols-1">
       {cards.map((card, i) => {
-        const s = cardStyles[card.color || 'teal']
+        const s = cardStyles[card.color || 'teal'] ?? cardStyles.teal
         return (
           <div key={i} className={`p-[22px] px-5 rounded-[22px] border ${s.bg} ${s.border} transition-all hover:-translate-y-[3px] hover:shadow-[0_8px_28px_rgba(0,0,0,.08),0_0_0_1px_rgba(0,0,0,.03)]`}>
             {card.label && <p className={`text-[11px] font-extrabold uppercase tracking-[.07em] mb-2.5 ${s.label}`}>{card.label}</p>}

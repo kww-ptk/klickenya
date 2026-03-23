@@ -9,7 +9,7 @@ const variantStyles = {
 
 export function VerdictCardBlock({ value }: { value: VerdictCardValue }) {
   const { variant = 'teal', label, title, pros = [], cons = [] } = value
-  const s = variantStyles[variant]
+  const s = variantStyles[variant] ?? variantStyles.teal
   return (
     <div className={`rounded-[30px] p-7 my-7 border ${s.bg} ${s.border}`}>
       {label && <p className={`text-[11px] font-extrabold tracking-[.08em] uppercase ${s.label} mb-2.5`}>{label}</p>}
