@@ -268,7 +268,7 @@ export default async function RealEstateHomePage() {
             Get your property in front of buyers and renters across Kenya. Listing is free during our launch phase.
           </p>
           <Link
-            href="/real-estate/list-property"
+            href="/how-it-works"
             className="inline-flex items-center justify-center px-8 py-4 rounded-full bg-amber text-dark font-semibold text-[15px] shadow-[0_4px_14px_rgba(232,160,32,0.35)] hover:shadow-[0_6px_20px_rgba(232,160,32,0.45)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200"
           >
             Get started &rarr;
