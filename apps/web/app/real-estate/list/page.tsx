@@ -392,42 +392,31 @@ export default function RealEstateListPage() {
   /* ══════════════════════════════════════ */
   if (step === "success") {
     return (
-      <div className="min-h-screen bg-[#FDFBF8]">
-        {/* Header */}
-        <div className="bg-[#16130C] py-6 px-4">
-          <div className="max-w-lg mx-auto flex items-center gap-3">
-            <Link href="/">
-              <Image
-                src="/klickenya-mark.svg"
-                alt="Klickenya"
-                width={32}
-                height={32}
-              />
-            </Link>
-            <span className="text-white/40 text-sm font-medium">
-              Property Listing
+      <div className="min-h-screen bg-[#FAF8F5]">
+        <div className="bg-[#16130C] px-6 py-4 flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-2">
+            <img src="/klickenya-mark.svg" alt="Klickenya" className="h-8 w-8" />
+            <span className="text-white font-bold text-lg">
+              Klic<span className="text-[#E8A020]">Kenya</span>
             </span>
-          </div>
+          </Link>
         </div>
-
-        <div className="max-w-lg mx-auto px-4 py-16">
-          <div className="bg-white rounded-2xl shadow-sm border border-[#E2DDD5] p-8 text-center">
-            <div className="w-16 h-16 rounded-full bg-green-500 flex items-center justify-center mx-auto mb-5">
-              <Check className="size-8 text-white" strokeWidth={3} />
-            </div>
-            <h2 className="text-[22px] font-bold text-[#16130C] mb-2">
-              Request received!
-            </h2>
-            <p className="text-[15px] text-[#5E5848] leading-relaxed mb-8">
-              {getSuccessMessage()}
-            </p>
-            <Link
-              href="/real-estate"
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-purple-500 text-white font-semibold text-[15px] hover:bg-purple-600 transition-colors"
-            >
-              Back to properties &rarr;
-            </Link>
+        <div className="max-w-lg mx-auto px-4 py-16 text-center">
+          <div className="w-16 h-16 rounded-full bg-[#16A34A] flex items-center justify-center mx-auto mb-5 shadow-lg">
+            <Check className="size-8 text-white" strokeWidth={3} />
           </div>
+          <h2 className="font-display text-[24px] font-bold text-[#16130C] mb-3">
+            Request received!
+          </h2>
+          <p className="text-[15px] text-[#5E5848] leading-relaxed mb-8 max-w-md mx-auto">
+            {getSuccessMessage()}
+          </p>
+          <Link
+            href="/real-estate"
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#E8A020] text-[#16130C] font-bold text-[15px] hover:bg-[#d4910f] transition-colors"
+          >
+            Back to properties →
+          </Link>
         </div>
       </div>
     );
@@ -437,42 +426,39 @@ export default function RealEstateListPage() {
   /* MAIN RENDER                           */
   /* ══════════════════════════════════════ */
   return (
-    <div className="min-h-screen bg-[#FDFBF8]">
-      {/* ── Dark header ── */}
-      <div
-        ref={headerRef}
-        className="relative overflow-hidden bg-[#16130C] px-4 py-16 md:py-20"
-      >
-        {/* Ambient glow */}
-        <div
-          className="pointer-events-none absolute inset-0 opacity-30 transition-all duration-300"
-          style={{
-            background: `radial-gradient(600px circle at ${glowPos.x}% ${glowPos.y}%, rgba(232,160,32,0.25), transparent 60%)`,
-          }}
-        />
-
-        <div className="relative z-10 max-w-lg mx-auto text-center">
-          <Link href="/" className="inline-block mb-6">
-            <Image
-              src="/klickenya-mark.svg"
-              alt="Klickenya"
-              width={40}
-              height={40}
-            />
-          </Link>
-          <h1 className="text-[28px] md:text-[34px] font-bold text-white leading-tight mb-3">
-            List on Klickenya Property
-          </h1>
-          <p className="text-[15px] text-white/60 leading-relaxed max-w-md mx-auto">
-            Tell us about yourself and your property. Our team will create your
-            listing within 24 hours &mdash; completely free.
-          </p>
-        </div>
+    <div className="min-h-screen bg-[#FAF8F5]">
+      {/* ── Header bar ── */}
+      <div className="bg-[#16130C] px-6 py-4 flex items-center justify-between">
+        <Link href="/" className="flex items-center gap-2">
+          <img src="/klickenya-mark.svg" alt="Klickenya" className="h-8 w-8" />
+          <span className="text-white font-bold text-lg">
+            Klic<span className="text-[#E8A020]">Kenya</span>
+          </span>
+        </Link>
+        <Link
+          href="/real-estate"
+          className="text-[12px] text-white/50 hover:text-white transition-colors"
+        >
+          Back to properties
+        </Link>
       </div>
 
-      {/* ── Form card ── */}
-      <div className="max-w-lg mx-auto px-4 -mt-6 pb-16">
-        <div className="bg-white rounded-2xl shadow-sm border border-[#E2DDD5] p-6 md:p-8">
+      {/* ── Two-column layout ── */}
+      <div className="max-w-6xl mx-auto px-4 md:px-8 py-8 md:py-14">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-8 lg:gap-14">
+
+          {/* ── Left: form ── */}
+          <div>
+            {/* Page heading */}
+            <h1 className="font-display text-[clamp(24px,3.5vw,32px)] font-bold text-[#16130C] mb-2 tracking-[-0.02em]">
+              List your property on Klickenya
+            </h1>
+            <p className="text-[15px] text-[#5E5848] mb-8 max-w-md">
+              Tell us about yourself and your property. Our team will create your
+              listing within 24 hours — completely free.
+            </p>
+
+            <div className="bg-white rounded-2xl shadow-sm border border-[#E2DDD5] p-6 md:p-8">
           {/* ── STEP 1: Who are you? ── */}
           <div>
             <h2 className="text-[18px] font-bold text-[#16130C] mb-1">
@@ -1237,6 +1223,85 @@ export default function RealEstateListPage() {
               </div>
             </form>
           )}
+            </div>
+          </div>
+
+          {/* ── Right: trust sidebar (desktop only) ── */}
+          <aside className="hidden lg:block">
+            <div className="sticky top-[80px] space-y-6">
+              {/* How it works */}
+              <div className="bg-white rounded-2xl border border-[#E2DDD5] p-6 shadow-sm">
+                <h3 className="text-[13px] font-bold text-[#16130C] uppercase tracking-[0.06em] mb-5">
+                  How it works
+                </h3>
+                <div className="space-y-4">
+                  {[
+                    { num: "1", label: "Tell us about yourself", desc: "Agent, owner, or developer" },
+                    { num: "2", label: "Share your property details", desc: "Type, location, price, photos" },
+                    { num: "3", label: "We create your listing", desc: "Live within 24 hours, free" },
+                  ].map((s, i) => (
+                    <div key={s.num} className="flex items-start gap-3">
+                      <span className="flex items-center justify-center size-8 rounded-full bg-purple-100 text-purple-600 text-[13px] font-bold shrink-0">
+                        {s.num}
+                      </span>
+                      <div className="pt-0.5">
+                        <p className="text-[14px] font-semibold text-[#16130C]">{s.label}</p>
+                        <p className="text-[12px] text-[#9C9485] mt-0.5">{s.desc}</p>
+                        {i < 2 && <div className="w-px h-3 bg-[#E2DDD5] ml-[15px] mt-2" />}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Why list with us */}
+              <div className="bg-white rounded-2xl border border-[#E2DDD5] p-6 shadow-sm">
+                <h3 className="text-[13px] font-bold text-[#16130C] uppercase tracking-[0.06em] mb-5">
+                  Why list with us
+                </h3>
+                <div className="space-y-4">
+                  {[
+                    { icon: "🆓", title: "Completely free", desc: "No listing fees, no commission" },
+                    { icon: "📩", title: "Direct enquiries", desc: "Buyers and renters contact you directly" },
+                    { icon: "✓", title: "Verified badge", desc: "Build trust with a green tick on your listing" },
+                    { icon: "📊", title: "Listing analytics", desc: "See views, enquiries, and performance" },
+                    { icon: "🌍", title: "Reach all of Kenya", desc: "Buyers searching across 47 counties" },
+                  ].map((item) => (
+                    <div key={item.title} className="flex items-start gap-3">
+                      <span className="flex items-center justify-center size-8 rounded-lg bg-[#F4F1EC] text-[15px] shrink-0">
+                        {item.icon}
+                      </span>
+                      <div>
+                        <p className="text-[14px] font-semibold text-[#16130C]">{item.title}</p>
+                        <p className="text-[12px] text-[#9C9485] mt-0.5">{item.desc}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Testimonial */}
+              <div className="bg-[#16130C] rounded-2xl p-6 text-center">
+                <div className="flex justify-center gap-1 mb-3">
+                  {[1, 2, 3, 4, 5].map((s) => (
+                    <span key={s} className="text-[#E8A020] text-[16px]">★</span>
+                  ))}
+                </div>
+                <p className="text-[14px] text-white/70 leading-relaxed mb-3 italic">
+                  &ldquo;Listed our development in 10 minutes. The team had it live with professional descriptions by the next morning.&rdquo;
+                </p>
+                <p className="text-[12px] text-white/40">— Property developer, Nairobi</p>
+              </div>
+
+              {/* Security */}
+              <div className="flex items-start gap-3 px-2">
+                <span className="text-[#9C9485] text-[16px] mt-0.5">🔒</span>
+                <p className="text-[12px] text-[#9C9485] leading-relaxed">
+                  Your information is encrypted and secure. We never share your personal details without consent.
+                </p>
+              </div>
+            </div>
+          </aside>
         </div>
       </div>
     </div>
