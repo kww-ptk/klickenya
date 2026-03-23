@@ -1,5 +1,6 @@
 import { type Metadata } from "next";
 import Link from "next/link";
+import { Shield, BadgeCheck, Clock, Users, TrendingUp, Building2 } from "lucide-react";
 import { sanityFetch } from "@/lib/sanity/client";
 import {
   FEATURED_PROPERTIES_QUERY,
@@ -141,17 +142,34 @@ export default async function RealEstateHomePage() {
       {/* ── Category Nav ──────────────────── */}
       <PropertyCategoryNav />
 
+      {/* ── Trust Strip ──────────────────── */}
+      <div className="border-b border-border bg-white">
+        <div className="max-w-[1320px] mx-auto px-5 md:px-10 py-5 flex items-center justify-center gap-6 md:gap-10 flex-wrap">
+          {[
+            { icon: Shield, text: "Verified listings only" },
+            { icon: BadgeCheck, text: "Licensed agents" },
+            { icon: Clock, text: "Avg. 24hr response" },
+            { icon: TrendingUp, text: "Real-time pricing" },
+          ].map((item) => (
+            <div key={item.text} className="flex items-center gap-2 text-text2">
+              <item.icon className="size-[15px] text-purple2 shrink-0" />
+              <span className="text-[12.5px] font-semibold whitespace-nowrap">{item.text}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* ── Featured Properties ────────────── */}
-      <section className="max-w-[1320px] mx-auto px-5 md:px-10 py-14">
-        <div className="flex items-end justify-between mb-8">
+      <section className="max-w-[1320px] mx-auto px-5 md:px-10 pt-20 md:pt-28 pb-20 md:pb-24">
+        <div className="flex items-end justify-between mb-10 md:mb-14">
           <div>
-            <span className="text-[11px] font-bold tracking-[0.09em] uppercase text-purple2 mb-1.5 block">
+            <span className="text-[11px] font-bold tracking-[0.09em] uppercase text-purple2 mb-2 block">
               Editor&apos;s picks
             </span>
             <h2 className="text-[clamp(26px,3vw,40px)] font-bold tracking-[-0.03em] text-text">
               Featured properties
             </h2>
-            <p className="text-[15px] text-text2 mt-1.5">
+            <p className="text-[15px] text-text2 mt-2 max-w-[440px]">
               Hand-picked listings curated by the Klickenya team.
             </p>
           </div>
@@ -172,7 +190,7 @@ export default async function RealEstateHomePage() {
         )}
 
         {moreFeatured.length > 0 && (
-          <div className="mt-6">
+          <div className="mt-8">
             <PropertyGrid variant="standard">
               {moreFeatured.map((card) => (
                 <PropertyCard key={card.id} {...card} />
@@ -183,16 +201,16 @@ export default async function RealEstateHomePage() {
       </section>
 
       {/* ── Neighbourhoods ─────────────────── */}
-      <section className="bg-surface py-14 px-5 md:px-10">
+      <section className="bg-surface py-20 md:py-28 px-5 md:px-10">
         <div className="max-w-[1320px] mx-auto">
-          <div className="mb-8">
-            <span className="text-[11px] font-bold tracking-[0.09em] uppercase text-purple2 mb-1.5 block">
+          <div className="mb-10 md:mb-14">
+            <span className="text-[11px] font-bold tracking-[0.09em] uppercase text-purple2 mb-2 block">
               Explore areas
             </span>
             <h2 className="text-[clamp(26px,3vw,40px)] font-bold tracking-[-0.03em] text-text">
               Popular neighbourhoods
             </h2>
-            <p className="text-[15px] text-text2 mt-1.5">
+            <p className="text-[15px] text-text2 mt-2 max-w-[460px]">
               Discover the best areas to buy and rent in Kenya.
             </p>
           </div>
@@ -212,23 +230,33 @@ export default async function RealEstateHomePage() {
       <MapTeaser />
 
       {/* ── Agents ─────────────────────────── */}
-      <section className="max-w-[1320px] mx-auto px-5 md:px-10 py-14">
-        <div className="mb-8">
-          <span className="text-[11px] font-bold tracking-[0.09em] uppercase text-purple2 mb-1.5 block">
-            Verified professionals
-          </span>
-          <h2 className="text-[clamp(26px,3vw,40px)] font-bold tracking-[-0.03em] text-text">
-            Top agents in Kenya
-          </h2>
-          <p className="text-[15px] text-text2 mt-1.5">
-            Work with trusted, verified property agents across the country.
-          </p>
-        </div>
+      <section className="py-20 md:py-28 px-5 md:px-10">
+        <div className="max-w-[1320px] mx-auto">
+          <div className="flex items-end justify-between mb-10 md:mb-14">
+            <div>
+              <span className="text-[11px] font-bold tracking-[0.09em] uppercase text-purple2 mb-2 block">
+                Verified professionals
+              </span>
+              <h2 className="text-[clamp(26px,3vw,40px)] font-bold tracking-[-0.03em] text-text">
+                Top agents in Kenya
+              </h2>
+              <p className="text-[15px] text-text2 mt-2 max-w-[480px]">
+                Every agent is ID-verified and vetted. Work with trusted professionals who know the local market.
+              </p>
+            </div>
+            <Link
+              href="/real-estate/agents"
+              className="text-[14px] font-semibold text-purple2 hover:underline whitespace-nowrap hidden sm:block"
+            >
+              All agents &rarr;
+            </Link>
+          </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
-          {agentCards.map((a) => (
-            <AgentCard key={a.slug} {...a} />
-          ))}
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+            {agentCards.map((a) => (
+              <AgentCard key={a.slug} {...a} />
+            ))}
+          </div>
         </div>
       </section>
 
@@ -237,15 +265,15 @@ export default async function RealEstateHomePage() {
 
       {/* ── New Developments ───────────────── */}
       {devs.length > 0 && (
-        <section className="max-w-[1320px] mx-auto px-5 md:px-10 py-14">
-          <div className="mb-8">
-            <span className="text-[11px] font-bold tracking-[0.09em] uppercase text-purple2 mb-1.5 block">
+        <section className="max-w-[1320px] mx-auto px-5 md:px-10 py-20 md:py-28">
+          <div className="mb-10 md:mb-14">
+            <span className="text-[11px] font-bold tracking-[0.09em] uppercase text-purple2 mb-2 block">
               Off-plan &amp; new builds
             </span>
             <h2 className="text-[clamp(26px,3vw,40px)] font-bold tracking-[-0.03em] text-text">
               New developments
             </h2>
-            <p className="text-[15px] text-text2 mt-1.5">
+            <p className="text-[15px] text-text2 mt-2 max-w-[480px]">
               Get in early on Kenya&apos;s newest residential and commercial
               projects.
             </p>
@@ -259,20 +287,67 @@ export default async function RealEstateHomePage() {
       <ROICalculator />
 
       {/* ── Want to list CTA ────────────────── */}
-      <section className="bg-[#111008] py-16 md:py-20">
-        <div className="max-w-[1320px] mx-auto px-5 md:px-10 text-center">
-          <h2 className="font-display text-[clamp(28px,4vw,44px)] font-bold text-white tracking-[-0.03em] leading-[1.1] mb-4">
-            Want to list your property?
-          </h2>
-          <p className="text-white/50 text-[16px] leading-[1.7] max-w-[560px] mx-auto mb-8">
-            Get your property in front of buyers and renters across Kenya. Listing is free during our launch phase.
-          </p>
-          <Link
-            href="/how-it-works"
-            className="inline-flex items-center justify-center px-8 py-4 rounded-full bg-amber text-dark font-semibold text-[15px] shadow-[0_4px_14px_rgba(232,160,32,0.35)] hover:shadow-[0_6px_20px_rgba(232,160,32,0.45)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200"
-          >
-            Get started &rarr;
-          </Link>
+      <section className="relative overflow-hidden bg-[#0C0A06]">
+        {/* Decorative gradient orbs */}
+        <div
+          className="absolute rounded-full pointer-events-none"
+          style={{
+            width: 600,
+            height: 600,
+            top: -200,
+            right: -150,
+            background: "radial-gradient(circle, rgba(232,160,32,0.06) 0%, transparent 70%)",
+          }}
+        />
+        <div
+          className="absolute rounded-full pointer-events-none"
+          style={{
+            width: 400,
+            height: 400,
+            bottom: -100,
+            left: -100,
+            background: "radial-gradient(circle, rgba(107,45,139,0.06) 0%, transparent 70%)",
+          }}
+        />
+
+        <div className="relative z-10 max-w-[1320px] mx-auto px-5 md:px-10 py-24 md:py-32">
+          <div className="max-w-[680px] mx-auto text-center">
+            <span className="inline-flex items-center gap-2 bg-amber/10 border border-amber/20 rounded-full px-4 py-1.5 text-[12px] font-bold text-amber tracking-[0.04em] uppercase mb-7">
+              <Building2 className="size-3.5" />
+              Free during launch
+            </span>
+
+            <h2 className="font-display text-[clamp(30px,4.5vw,52px)] font-bold text-white tracking-[-0.04em] leading-[1.05] mb-5">
+              List your property
+              <span className="block bg-gradient-to-r from-amber to-[#F5C842] bg-clip-text text-transparent">
+                reach millions
+              </span>
+            </h2>
+            <p className="text-white/45 text-[16px] leading-[1.75] max-w-[520px] mx-auto mb-10">
+              Get your property in front of qualified buyers and renters across Kenya. No hidden fees, no commissions during our launch phase.
+            </p>
+
+            <Link
+              href="/real-estate/list"
+              className="inline-flex items-center justify-center px-9 py-4 rounded-full bg-amber text-dark font-bold text-[15px] shadow-[0_4px_14px_rgba(232,160,32,0.35)] hover:shadow-[0_8px_24px_rgba(232,160,32,0.5)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200"
+            >
+              Get started &rarr;
+            </Link>
+
+            {/* Trust row */}
+            <div className="flex items-center justify-center gap-6 md:gap-8 mt-10 flex-wrap">
+              {[
+                { icon: Shield, label: "Secure & private" },
+                { icon: Users, label: "850+ verified agents" },
+                { icon: Clock, label: "List in under 5 min" },
+              ].map((item) => (
+                <div key={item.label} className="flex items-center gap-2">
+                  <item.icon className="size-[14px] text-white/25" />
+                  <span className="text-[12.5px] text-white/35 font-medium">{item.label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </section>
 
