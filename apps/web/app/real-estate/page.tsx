@@ -20,6 +20,7 @@ import { AgentCard } from "@/components/real-estate/AgentCard";
 import { MarketDataStrip } from "@/components/real-estate/MarketDataStrip";
 import { MapTeaser } from "@/components/real-estate/MapTeaser";
 import { ValuationCTA } from "@/components/real-estate/ValuationCTA";
+import { WhoCanList } from "@/components/real-estate/WhoCanList";
 import { NewDevelopments } from "@/components/real-estate/NewDevelopments";
 import { ROICalculator } from "@/components/real-estate/ROICalculator";
 
@@ -181,6 +182,9 @@ export default async function RealEstateHomePage() {
           </div>
         )}
       </section>
+
+      {/* ── Who Can List ────────────────────── */}
+      <WhoCanList />
 
       {/* ── Neighbourhoods ─────────────────── */}
       <section className="bg-surface py-14 px-5 md:px-10">
