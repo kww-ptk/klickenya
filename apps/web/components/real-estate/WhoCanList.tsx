@@ -12,7 +12,7 @@ const CARDS = [
     badge: "Free during launch",
     badgeClass: "bg-purple-50 text-purple-600 ring-1 ring-purple-200",
     cta: "List as an agent",
-    href: "/contact?type=agent",
+    href: "/real-estate/list",
   },
   {
     image: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=600&h=400&fit=crop&q=80",
@@ -25,7 +25,7 @@ const CARDS = [
     badge: "No commission",
     badgeClass: "bg-emerald-50 text-emerald-600 ring-1 ring-emerald-200",
     cta: "List your property",
-    href: "/how-it-works#listing-request",
+    href: "/real-estate/list",
   },
   {
     image: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=600&h=400&fit=crop&q=80",
@@ -38,7 +38,7 @@ const CARDS = [
     badge: "Premium placement",
     badgeClass: "bg-amber-50 text-amber-600 ring-1 ring-amber-200",
     cta: "Partner with us",
-    href: "/contact?type=developer",
+    href: "/real-estate/list",
   },
 ];
 
@@ -123,7 +123,7 @@ function WhoCanList() {
           <p className="text-[14px] text-[#9C9485]">
             Already have properties?{" "}
             <Link
-              href="/how-it-works#listing-request"
+              href="/real-estate/list"
               className="text-purple-600 font-semibold hover:underline"
             >
               Submit via our listing form →
