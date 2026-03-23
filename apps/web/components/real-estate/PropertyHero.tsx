@@ -1,13 +1,17 @@
+import { sanityClient } from "@/lib/sanity/client";
 import { PropertySearchBox } from "./PropertySearchBox";
 
-const stats = [
-  { value: "12,400+", label: "Active listings" },
-  { value: "47", label: "Counties covered" },
-  { value: "850+", label: "Verified agents" },
-  { value: "Free", label: "AI valuation tool" },
-];
+async function PropertyHero() {
+  const count: number = await sanityClient
+    .fetch(`count(*[_type == "property"])`)
+    .catch(() => 0);
 
-function PropertyHero() {
+  const stats = [
+    { value: count > 0 ? `${count}+` : "Growing fast", label: "Properties listed" },
+    { value: "47", label: "All counties covered" },
+    { value: "Free", label: "No commission" },
+    { value: "AI", label: "Free valuations" },
+  ];
   return (
     <section className="relative min-h-screen flex flex-col overflow-hidden bg-dark">
       {/* Background mosaic grid */}
@@ -41,7 +45,7 @@ function PropertyHero() {
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber opacity-75" />
             <span className="relative inline-flex size-[6px] rounded-full bg-amber" />
           </span>
-          Kenya&apos;s property marketplace &middot; 12,000+ listings
+          Kenya&apos;s property marketplace {count > 0 && <>&middot; {count}+ listings</>}
         </div>
 
         {/* Heading */}
