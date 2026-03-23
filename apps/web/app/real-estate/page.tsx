@@ -328,7 +328,7 @@ export default async function RealEstateHomePage() {
             </p>
 
             <Link
-              href="/how-it-works"
+              href="/real-estate/list"
               className="inline-flex items-center justify-center px-9 py-4 rounded-full bg-amber text-dark font-bold text-[15px] shadow-[0_4px_14px_rgba(232,160,32,0.35)] hover:shadow-[0_8px_24px_rgba(232,160,32,0.5)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200"
             >
               Get started &rarr;
