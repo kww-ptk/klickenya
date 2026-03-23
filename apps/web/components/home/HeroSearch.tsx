@@ -540,7 +540,7 @@ function HeroSearch() {
         <button
           onClick={handleSearch}
           disabled={navigating}
-          className="shrink-0 size-12 rounded-full bg-amber flex items-center justify-center shadow-[0_4px_14px_rgba(232,160,32,0.35)] hover:shadow-[0_6px_20px_rgba(232,160,32,0.45)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 cursor-pointer ml-1 disabled:opacity-70"
+          className="shrink-0 size-12 rounded-full bg-purple2 flex items-center justify-center shadow-[0_4px_14px_rgba(139,77,171,0.35)] hover:shadow-[0_6px_20px_rgba(139,77,171,0.45)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 cursor-pointer ml-1 disabled:opacity-70"
         >
           {navigating ? (
             <Loader2 className="size-5 text-white animate-spin" />
