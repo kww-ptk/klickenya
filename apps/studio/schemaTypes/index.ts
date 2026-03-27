@@ -26,6 +26,7 @@ import {
   deciderGridBlock,
   listingSliderBlock,
   eventSliderBlock,
+  exchangeRateBlock,
 } from '../schemas/blocks'
 
 export const schemaTypes = [
@@ -56,4 +57,5 @@ export const schemaTypes = [
   deciderGridBlock,
   listingSliderBlock,
   eventSliderBlock,
+  exchangeRateBlock,
 ]

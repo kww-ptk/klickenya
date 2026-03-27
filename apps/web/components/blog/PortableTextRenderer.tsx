@@ -24,6 +24,7 @@ import {
   ListingSliderBlock,
   EventSliderBlock,
 } from "./blocks";
+import { ExchangeRateWidget } from "./blocks/ExchangeRateWidget";
 
 function makeComponents(slug?: string): PortableTextComponents {
   return {
@@ -128,6 +129,7 @@ function makeComponents(slug?: string): PortableTextComponents {
       deciderGridBlock: ({ value }) => <DeciderGridBlock value={value} />,
       listingSliderBlock: ({ value }) => <ListingSliderBlock value={value} />,
       eventSliderBlock: ({ value }) => <EventSliderBlock value={value} />,
+      exchangeRateBlock: () => <ExchangeRateWidget />,
     },
     list: {
       bullet: ({ children }) => (

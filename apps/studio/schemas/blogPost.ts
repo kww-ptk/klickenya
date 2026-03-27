@@ -198,6 +198,7 @@ export default defineType({
         { type: 'deciderGridBlock' },
         { type: 'listingSliderBlock' },
         { type: 'eventSliderBlock' },
+        { type: 'exchangeRateBlock' },
       ],
     }),
     defineField({
