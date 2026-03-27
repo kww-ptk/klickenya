@@ -5,18 +5,18 @@ import { useEffect, useState, useCallback } from "react";
 /* ─── Static Data ─── */
 
 const MONTHLY_WIND = [
-  { month: "Jan", avg: 22, dir: "NE", season: "Kaskazi", tier: "prime" as const },
-  { month: "Feb", avg: 23, dir: "NE", season: "Kaskazi", tier: "prime" as const },
-  { month: "Mar", avg: 20, dir: "NE", season: "Kaskazi", tier: "good" as const },
-  { month: "Apr", avg: 15, dir: "NE/SE", season: "Transition", tier: "variable" as const },
-  { month: "May", avg: 18, dir: "SE", season: "Transition", tier: "variable" as const },
-  { month: "Jun", avg: 22, dir: "SE", season: "Kusi", tier: "good" as const },
-  { month: "Jul", avg: 27, dir: "SE", season: "Kusi", tier: "prime" as const },
-  { month: "Aug", avg: 25, dir: "SE", season: "Kusi", tier: "prime" as const },
-  { month: "Sep", avg: 20, dir: "SE", season: "Kusi", tier: "good" as const },
-  { month: "Oct", avg: 14, dir: "SE/NE", season: "Transition", tier: "variable" as const },
+  { month: "Jan", avg: 17, dir: "NE", season: "Kaskazi", tier: "prime" as const },
+  { month: "Feb", avg: 18, dir: "NE", season: "Kaskazi", tier: "prime" as const },
+  { month: "Mar", avg: 16, dir: "NE", season: "Kaskazi", tier: "good" as const },
+  { month: "Apr", avg: 13, dir: "NE/SE", season: "Transition", tier: "variable" as const },
+  { month: "May", avg: 15, dir: "SE", season: "Transition", tier: "variable" as const },
+  { month: "Jun", avg: 19, dir: "SE", season: "Kusi", tier: "good" as const },
+  { month: "Jul", avg: 23, dir: "SE", season: "Kusi", tier: "prime" as const },
+  { month: "Aug", avg: 22, dir: "SE", season: "Kusi", tier: "prime" as const },
+  { month: "Sep", avg: 18, dir: "SE", season: "Kusi", tier: "good" as const },
+  { month: "Oct", avg: 12, dir: "SE/NE", season: "Transition", tier: "variable" as const },
   { month: "Nov", avg: 9, dir: "Variable", season: "Calm", tier: "marginal" as const },
-  { month: "Dec", avg: 18, dir: "NE", season: "Kaskazi", tier: "good" as const },
+  { month: "Dec", avg: 15, dir: "NE", season: "Kaskazi", tier: "good" as const },
 ];
 
 const WATER_TEMP = [
