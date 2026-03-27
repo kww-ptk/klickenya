@@ -307,7 +307,7 @@ const body = [
 async function main() {
   await client.createOrReplace({
     _id: 'blog-money-exchange-atm-watamu-guide',
-    _type: 'post',
+    _type: 'blogPost',
     title: `Money, ATMs & Currency Exchange in Watamu 2026 — The Practical Guide`,
     slug: { _type: 'slug', current: 'money-exchange-atm-watamu-guide' },
     status: 'published',
