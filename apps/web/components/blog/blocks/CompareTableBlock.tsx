@@ -2,7 +2,7 @@ interface CompareColumn { label?: string; color?: string }
 interface CompareRow { criterion?: string; values?: string[]; winners?: number[] }
 interface CompareTableValue { columns?: CompareColumn[]; rows?: CompareRow[] }
 
-const colHeaderColor: Record<string, string> = { teal: 'text-[#7DD3B0]', blue: 'text-[#93C5FD]', purple: 'text-[#C4B5FD]', amber: 'text-[#FBBF24]' }
+const colHeaderColor: Record<string, string> = { teal: 'text-[#7DD3B0]', blue: 'text-[#93C5FD]', purple: 'text-[#C4B5FD]', amber: 'text-[#FBBF24]', slate: 'text-white/70' }
 const winBadgeStyle: Record<string, string> = {
   teal: 'bg-[rgba(13,115,119,.1)] text-[#0D7377]',
   blue: 'bg-[rgba(37,99,235,.1)] text-[#2563EB]',
@@ -19,7 +19,7 @@ export function CompareTableBlock({ value }: { value: CompareTableValue }) {
           <tr>
             <th className="py-3.5 px-[18px] text-left text-[11.5px] font-extrabold tracking-[.06em] uppercase text-white/30" />
             {columns.map((col, i) => (
-              <th key={i} className={`py-3.5 px-[18px] text-left text-[11.5px] font-extrabold tracking-[.06em] uppercase ${colHeaderColor[col.color || 'teal']}`}>
+              <th key={i} className={`py-3.5 px-[18px] text-left text-[11.5px] font-extrabold tracking-[.06em] uppercase ${colHeaderColor[col.color || 'teal'] || 'text-white/70'}`}>
                 {col.label}
               </th>
             ))}
