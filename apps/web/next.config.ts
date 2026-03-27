@@ -8,6 +8,11 @@ const nextConfig: NextConfig = {
         destination: "/experiences/watamu/garoda-beach",
         permanent: true,
       },
+      {
+        source: "/2024/11/06/money-exchange-atm-watamu",
+        destination: "/journal/money-exchange-atm-watamu-guide",
+        permanent: true,
+      },
     ];
   },
   images: {
