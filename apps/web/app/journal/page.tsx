@@ -125,8 +125,8 @@ export default async function JournalPage() {
     }),
   };
 
-  // Map posts for JournalFilters client component
-  const filterPosts = gridPosts.map((p) => ({
+  // Map ALL posts for JournalFilters (not just gridPosts — featured post also needs to be filterable)
+  const filterPosts = posts.map((p) => ({
     _id: p._id,
     title: p.title,
     slug: p.slug,
