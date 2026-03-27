@@ -1,6 +1,15 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  async redirects() {
+    return [
+      {
+        source: "/kenya/watamu/beach/garoda-beach",
+        destination: "/experiences/watamu/garoda-beach",
+        permanent: true,
+      },
+    ];
+  },
   images: {
     remotePatterns: [
       {
