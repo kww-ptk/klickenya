@@ -27,6 +27,7 @@ import {
   listingSliderBlock,
   eventSliderBlock,
   exchangeRateBlock,
+  windChartBlock,
 } from '../schemas/blocks'
 
 export const schemaTypes = [
@@ -58,4 +59,5 @@ export const schemaTypes = [
   listingSliderBlock,
   eventSliderBlock,
   exchangeRateBlock,
+  windChartBlock,
 ]

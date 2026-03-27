@@ -199,6 +199,7 @@ export default defineType({
         { type: 'listingSliderBlock' },
         { type: 'eventSliderBlock' },
         { type: 'exchangeRateBlock' },
+        { type: 'windChartBlock' },
       ],
     }),
     defineField({
