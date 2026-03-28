@@ -49,6 +49,7 @@ export async function createOrUpdateContact(data: {
         lastName: data.lastName,
         email: data.email,
         phone: data.phone,
+        locationId: process.env.GHL_LOCATION_ID,
       }),
     });
 
