@@ -129,15 +129,15 @@ export async function POST(req: NextRequest) {
     }
 
     /* STEP 5 — Fire GHL webhook (fire and forget) */
-    sendToGHL("listing.claim_initiated", {
+    sendToGHL("claim_initiated", {
+      listing_name: data.listingTitle,
       listing_slug: data.listingSlug,
-      listing_title: data.listingTitle,
       listing_type: data.listingType,
-      listing_city: data.listingCity,
-      owner_name: data.claimantName,
-      owner_email: data.claimantEmail,
-      owner_phone: data.claimantPhone,
-      pipeline_stage: "Contacted",
+      claimant_name: data.claimantName,
+      claimant_email: data.claimantEmail,
+      claimant_phone: data.claimantPhone,
+      listing_url: `https://klickenya.com/${data.listingType}/${data.listingSlug}`,
+      admin_url: `https://klickenya.com/admin/claims/${row.id}`,
     });
 
     /* STEP 6 — Return */

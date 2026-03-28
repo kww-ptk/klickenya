@@ -13,10 +13,14 @@ export async function sendToGHL(
   try {
     await fetch(url, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        ...(process.env.GHL_API_KEY && {
+          Authorization: `Bearer ${process.env.GHL_API_KEY}`,
+        }),
+      },
       body: JSON.stringify({
         event: eventType,
-        source: "klickenya",
         timestamp: new Date().toISOString(),
         ...payload,
       }),

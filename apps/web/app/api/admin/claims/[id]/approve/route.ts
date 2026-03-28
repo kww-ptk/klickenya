@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { createClient as createSanityClient } from "next-sanity";
 import { Resend } from "resend";
+import { sendToGHL } from "@/lib/integrations/ghl";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -95,6 +96,18 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
         console.error("Approval email error:", emailErr);
       }
 
+      // Fire GHL webhook
+      sendToGHL("verified", {
+        listing_name: claim.listing_title,
+        listing_slug: claim.listing_slug,
+        listing_type: claim.listing_type,
+        claimant_name: claim.claimant_name,
+        claimant_email: claim.claimant_email,
+        claimant_phone: claim.claimant_phone,
+        listing_url: `https://klickenya.com/${claim.listing_type}/${claim.listing_slug}`,
+        admin_url: `https://klickenya.com/admin/claims/${id}`,
+      });
+
       return NextResponse.json({ success: true, action: "approved" });
     }
 
@@ -131,6 +144,18 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
     } catch (emailErr) {
       console.error("Rejection email error:", emailErr);
     }
+
+    // Fire GHL webhook
+    sendToGHL("rejected", {
+      listing_name: claim.listing_title,
+      listing_slug: claim.listing_slug,
+      listing_type: claim.listing_type,
+      claimant_name: claim.claimant_name,
+      claimant_email: claim.claimant_email,
+      claimant_phone: claim.claimant_phone,
+      listing_url: `https://klickenya.com/${claim.listing_type}/${claim.listing_slug}`,
+      admin_url: `https://klickenya.com/admin/claims/${id}`,
+    });
 
     return NextResponse.json({ success: true, action: "rejected" });
   } catch (err) {
