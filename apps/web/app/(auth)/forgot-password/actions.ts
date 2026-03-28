@@ -12,7 +12,7 @@ export async function forgotPasswordAction(formData: FormData) {
   const supabase = await createClient();
 
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: "https://klickenya.com/login",
+    redirectTo: "https://www.klickenya.com/auth/callback?next=/reset-password",
   });
 
   if (error) {

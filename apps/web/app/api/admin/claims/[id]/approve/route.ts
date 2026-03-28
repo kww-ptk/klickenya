@@ -222,7 +222,7 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
           const { data: linkData } = await supabase.auth.admin.generateLink({
             type: "recovery",
             email: claim.claimant_email,
-            options: { redirectTo: "https://klickenya.com/dashboard" },
+            options: { redirectTo: "https://www.klickenya.com/auth/callback?next=/dashboard" },
           });
           if (linkData?.properties?.action_link) {
             setPasswordUrl = linkData.properties.action_link;
