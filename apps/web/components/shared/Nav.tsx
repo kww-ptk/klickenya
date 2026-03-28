@@ -187,7 +187,7 @@ function Nav({ transparent = false }: NavProps) {
             />
             <span
               className={cn(
-                "text-[17px] font-bold tracking-[-0.03em]",
+                "hidden sm:inline text-[17px] font-bold tracking-[-0.03em]",
                 solid ? "text-text" : "text-white"
               )}
             >
