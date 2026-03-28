@@ -3,7 +3,7 @@ import { z } from "zod/v4";
 import { createClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
 import { sanityClient } from "@/lib/sanity/client";
-import { sendToGHL } from "@/lib/integrations/ghl";
+import { createOrUpdateContact } from "@/lib/integrations/ghl";
 import { contactConfirmationHtml } from "@/components/emails/ContactConfirmation";
 import { contactNotificationHtml } from "@/components/emails/ContactNotification";
 
@@ -275,15 +275,12 @@ export async function POST(request: NextRequest) {
     }
 
     /* Send to GHL */
-    sendToGHL("contact_request.created", {
-      contactRequestId: row.id,
-      listingId: data.listingId,
-      listingTitle: data.listingTitle,
-      listingType: data.listingType,
-      name: data.name,
+    const nameParts = data.name.trim().split(/\s+/);
+    createOrUpdateContact({
+      firstName: nameParts[0],
+      lastName: nameParts.slice(1).join(" ") || "",
       email: data.email,
       phone: data.phone,
-      ...enquirySummary,
     });
 
     return NextResponse.json({ success: true, id: row.id }, { status: 201 });

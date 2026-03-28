@@ -3,7 +3,7 @@ import { z } from "zod/v4";
 import { createClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
 import { sanityClient } from "@/lib/sanity/client";
-import { sendToGHL } from "@/lib/integrations/ghl";
+import { createOrUpdateContact } from "@/lib/integrations/ghl";
 import { propertyEnquiryConfirmationHtml } from "@/components/emails/PropertyEnquiryConfirmation";
 import { propertyEnquiryNotificationHtml } from "@/components/emails/PropertyEnquiryNotification";
 
@@ -187,13 +187,10 @@ export async function POST(request: NextRequest) {
     }
 
     /* Send to GHL */
-    sendToGHL("property_enquiry.created", {
-      enquiryId: row.id,
-      propertyId: data.propertyId,
-      propertyTitle: data.propertyTitle,
-      enquiryType: data.enquiryType,
-      mortgageInterest: data.mortgageInterest,
-      name: data.name,
+    const nameParts = data.name.trim().split(/\s+/);
+    createOrUpdateContact({
+      firstName: nameParts[0],
+      lastName: nameParts.slice(1).join(" ") || "",
       email: data.email,
       phone: data.phone,
     });
