@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod/v4";
 import { createClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
-import { sendToGHL } from "@/lib/integrations/ghl";
+import { createOrUpdateContact, createOrUpdateOpportunity } from "@/lib/integrations/ghl";
 
 /* ---------- Supabase ---------- */
 
@@ -128,17 +128,40 @@ export async function POST(req: NextRequest) {
       // Don't fail the request — OTP is saved, admin can resend
     }
 
-    /* STEP 5 — Fire GHL webhook (fire and forget) */
-    sendToGHL("claim_initiated", {
-      listing_name: data.listingTitle,
-      listing_slug: data.listingSlug,
-      listing_type: data.listingType,
-      claimant_name: data.claimantName,
-      claimant_email: data.claimantEmail,
-      claimant_phone: data.claimantPhone,
-      listing_url: `https://klickenya.com/${data.listingType}/${data.listingSlug}`,
-      admin_url: `https://klickenya.com/admin/claims/${row.id}`,
-    });
+    /* STEP 5 — Create GHL contact + opportunity (fire and forget) */
+    const nameParts = data.claimantName.trim().split(/\s+/);
+    const firstName = nameParts[0];
+    const lastName = nameParts.slice(1).join(" ") || "";
+    const listingUrl = `https://klickenya.com/${data.listingType}/${data.listingSlug}`;
+
+    (async () => {
+      try {
+        const contactId = await createOrUpdateContact({
+          firstName,
+          lastName,
+          email: data.claimantEmail,
+          phone: data.claimantPhone,
+        });
+
+        if (contactId) {
+          const opportunityId = await createOrUpdateOpportunity(contactId, {
+            stageId: process.env.GHL_STAGE_CONTACTED_ID!,
+            listingName: data.listingTitle,
+            listingUrl,
+          });
+
+          await supabase
+            .from("claim_requests")
+            .update({
+              ghl_contact_id: contactId,
+              ...(opportunityId && { ghl_opportunity_id: opportunityId }),
+            })
+            .eq("id", row.id);
+        }
+      } catch {
+        // GHL failure must never break the claim flow
+      }
+    })();
 
     /* STEP 6 — Return */
     return NextResponse.json({ success: true, claimId: row.id });

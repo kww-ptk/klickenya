@@ -3,7 +3,7 @@ import { z } from "zod/v4";
 import { createClient } from "@supabase/supabase-js";
 import { createClient as createSanityClient } from "next-sanity";
 import { Resend } from "resend";
-import { sendToGHL } from "@/lib/integrations/ghl";
+import { updateOpportunityStage } from "@/lib/integrations/ghl";
 
 /* ---------- Supabase ---------- */
 
@@ -196,17 +196,13 @@ export async function POST(req: NextRequest) {
       console.error("Claim verify email error:", emailErr);
     }
 
-    /* STEP 9 — Fire GHL webhook */
-    sendToGHL("claimed", {
-      listing_name: claim.listing_title,
-      listing_slug: claim.listing_slug,
-      listing_type: claim.listing_type,
-      claimant_name: claim.claimant_name,
-      claimant_email: claim.claimant_email,
-      claimant_phone: claim.claimant_phone,
-      listing_url: `https://klickenya.com/${claim.listing_type}/${claim.listing_slug}`,
-      admin_url: `https://klickenya.com/admin/claims/${data.claimId}`,
-    });
+    /* STEP 9 — Update GHL opportunity stage */
+    if (claim.ghl_opportunity_id) {
+      updateOpportunityStage(
+        claim.ghl_opportunity_id,
+        process.env.GHL_STAGE_CLAIMED_ID!
+      );
+    }
 
     /* STEP 10 — Return */
     return NextResponse.json({
