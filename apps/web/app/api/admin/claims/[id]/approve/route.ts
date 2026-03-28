@@ -63,10 +63,132 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
         console.error("Sanity approve patch error:", sanityErr);
       }
 
-      // Send approval email to owner
+      // Step 2b — Check if host account exists
+      const { data: existingHost } = await supabase
+        .from("host_profiles")
+        .select("id, total_listings")
+        .eq("email", claim.claimant_email)
+        .single();
+
+      let hostId: string;
+      let isNewHost = false;
+
+      if (existingHost) {
+        // Existing host — increment total_listings
+        hostId = existingHost.id;
+        await supabase
+          .from("host_profiles")
+          .update({ total_listings: (existingHost.total_listings ?? 1) + 1 })
+          .eq("id", hostId);
+      } else {
+        // Step 2c — Create new host account
+        isNewHost = true;
+
+        // Create Supabase auth user
+        const { data: authData, error: authErr } = await supabase.auth.admin.createUser({
+          email: claim.claimant_email,
+          email_confirm: true,
+          user_metadata: { role: "host", name: claim.claimant_name },
+        });
+
+        if (authErr || !authData.user) {
+          console.error("Host user creation error:", authErr);
+          return NextResponse.json({ error: "Failed to create host account" }, { status: 500 });
+        }
+
+        hostId = authData.user.id;
+
+        // Generate unique slug
+        const baseSlug = claim.claimant_name
+          .toLowerCase()
+          .trim()
+          .replace(/[^a-z0-9\s-]/g, "")
+          .replace(/\s+/g, "-");
+
+        let slug = baseSlug;
+        const { count } = await supabase
+          .from("host_profiles")
+          .select("id", { count: "exact", head: true })
+          .eq("slug", slug);
+
+        if ((count ?? 0) > 0) {
+          const suffix = Math.random().toString(36).slice(2, 6);
+          slug = `${baseSlug}-${suffix}`;
+        }
+
+        // Insert host profile
+        const { error: profileErr } = await supabase
+          .from("host_profiles")
+          .insert({
+            id: hostId,
+            slug,
+            display_name: claim.claimant_name,
+            email: claim.claimant_email,
+            phone: claim.claimant_phone,
+            city: claim.listing_city ?? null,
+            website_url: claim.website_url ?? null,
+            social_url: claim.social_media_url ?? null,
+            claim_request_id: id,
+            ghl_contact_id: claim.ghl_contact_id ?? null,
+          });
+
+        if (profileErr) {
+          console.error("Host profile insert error:", profileErr);
+        }
+      }
+
+      // Step 2d — Link listing in Sanity
+      try {
+        await sanityWrite
+          .patch(claim.listing_sanity_id)
+          .set({ hostId })
+          .commit();
+      } catch (sanityErr) {
+        console.error("Sanity hostId patch error:", sanityErr);
+      }
+
+      // Generate magic login link
+      let magicLinkUrl = "https://klickenya.com/dashboard";
+      try {
+        const { data: linkData } = await supabase.auth.admin.generateLink({
+          type: "magiclink",
+          email: claim.claimant_email,
+          options: { redirectTo: "https://klickenya.com/dashboard" },
+        });
+        if (linkData?.properties?.action_link) {
+          magicLinkUrl = linkData.properties.action_link;
+        }
+      } catch (linkErr) {
+        console.error("Magic link generation error:", linkErr);
+      }
+
+      // Send approval + host account email
       try {
         const resend = new Resend(process.env.RESEND_API_KEY);
         const listingUrl = `https://klickenya.com/${claim.listing_type === "experience" ? "experiences" : claim.listing_type + "s"}/${(claim.listing_city ?? "").toLowerCase().replace(/ /g, "-")}/${claim.listing_slug}`;
+
+        const hostAccountSection = isNewHost
+          ? `
+            <hr style="border: none; border-top: 1px solid #E2DDD5; margin: 24px 0;" />
+            <p style="font-size: 15px; color: #5E5848; margin: 0 0 8px;">
+              <strong>Your Klickenya host account is ready.</strong>
+            </p>
+            <p style="font-size: 14px; color: #5E5848; margin: 0 0 24px;">
+              Use the button below to log in to your host dashboard. This link expires in 24 hours.
+            </p>
+            <p style="margin: 0 0 24px;">
+              <a href="${magicLinkUrl}" style="display: inline-block; background: #E8A020; color: #16130C; font-weight: 700; text-decoration: none; padding: 12px 28px; border-radius: 999px; font-size: 14px;">Go to your dashboard →</a>
+            </p>
+          `
+          : `
+            <hr style="border: none; border-top: 1px solid #E2DDD5; margin: 24px 0;" />
+            <p style="font-size: 14px; color: #5E5848; margin: 0 0 24px;">
+              This listing has been added to your host dashboard.
+            </p>
+            <p style="margin: 0 0 24px;">
+              <a href="${magicLinkUrl}" style="display: inline-block; background: #E8A020; color: #16130C; font-weight: 700; text-decoration: none; padding: 12px 28px; border-radius: 999px; font-size: 14px;">Go to your dashboard →</a>
+            </p>
+          `;
 
         await resend.emails.send({
           from: "Klickenya <hello@klickenya.com>",
@@ -84,6 +206,7 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
               <p style="margin: 0 0 24px;">
                 <a href="${listingUrl}" style="display: inline-block; background: #16A34A; color: #fff; font-weight: 700; text-decoration: none; padding: 12px 28px; border-radius: 999px; font-size: 14px;">View your verified listing →</a>
               </p>
+              ${hostAccountSection}
               <hr style="border: none; border-top: 1px solid #E2DDD5; margin: 16px 0;" />
               <p style="font-size: 12px; color: #9C9485; margin: 0;">
                 — The Klickenya Team<br />
