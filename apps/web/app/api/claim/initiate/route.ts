@@ -128,40 +128,38 @@ export async function POST(req: NextRequest) {
       // Don't fail the request — OTP is saved, admin can resend
     }
 
-    /* STEP 5 — Create GHL contact + opportunity (fire and forget) */
+    /* STEP 5 — Create GHL contact + opportunity */
     const nameParts = data.claimantName.trim().split(/\s+/);
     const firstName = nameParts[0];
     const lastName = nameParts.slice(1).join(" ") || "";
     const listingUrl = `https://klickenya.com/${data.listingType}/${data.listingSlug}`;
 
-    (async () => {
-      try {
-        const contactId = await createOrUpdateContact({
-          firstName,
-          lastName,
-          email: data.claimantEmail,
-          phone: data.claimantPhone,
+    try {
+      const contactId = await createOrUpdateContact({
+        firstName,
+        lastName,
+        email: data.claimantEmail,
+        phone: data.claimantPhone,
+      });
+
+      if (contactId) {
+        const opportunityId = await createOrUpdateOpportunity(contactId, {
+          stageId: GHL_STAGES.CONTACTED,
+          listingName: data.listingTitle,
+          listingUrl,
         });
 
-        if (contactId) {
-          const opportunityId = await createOrUpdateOpportunity(contactId, {
-            stageId: GHL_STAGES.CONTACTED,
-            listingName: data.listingTitle,
-            listingUrl,
-          });
-
-          await supabase
-            .from("claim_requests")
-            .update({
-              ghl_contact_id: contactId,
-              ...(opportunityId && { ghl_opportunity_id: opportunityId }),
-            })
-            .eq("id", row.id);
-        }
-      } catch {
-        // GHL failure must never break the claim flow
+        await supabase
+          .from("claim_requests")
+          .update({
+            ghl_contact_id: contactId,
+            ...(opportunityId && { ghl_opportunity_id: opportunityId }),
+          })
+          .eq("id", row.id);
       }
-    })();
+    } catch (ghlErr) {
+      console.error("GHL contact/opportunity error:", ghlErr);
+    }
 
     /* STEP 6 — Return */
     return NextResponse.json({ success: true, claimId: row.id });
