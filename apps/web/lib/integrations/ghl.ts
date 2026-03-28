@@ -41,19 +41,26 @@ export async function createOrUpdateContact(data: {
   if (!isConfigured()) return null;
 
   try {
+    const body = {
+      firstName: data.firstName || "",
+      lastName: data.lastName || "",
+      email: data.email,
+      phone: data.phone,
+      locationId: process.env.GHL_LOCATION_ID,
+    };
+    console.log("[GHL] createOrUpdateContact request:", JSON.stringify(body));
+
     const res = await fetch(`${GHL_BASE}/contacts/`, {
       method: "POST",
       headers: ghlHeaders(),
-      body: JSON.stringify({
-        firstName: data.firstName,
-        lastName: data.lastName,
-        email: data.email,
-        phone: data.phone,
-        locationId: process.env.GHL_LOCATION_ID,
-      }),
+      body: JSON.stringify(body),
     });
 
     const json = await res.json();
+    if (!res.ok) {
+      console.error("[GHL] createOrUpdateContact error:", res.status, JSON.stringify(json));
+      return null;
+    }
     return json.contact?.id ?? null;
   } catch {
     console.error("GHL createOrUpdateContact failed");
