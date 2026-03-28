@@ -32,15 +32,6 @@ export async function middleware(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname;
 
-  // Coming soon redirect: redirect root to /coming-soon
-  // Remove this block when ready to launch
-  // Bypass: visit /?preview=true to see the real homepage
-  if (pathname === "/" && !request.nextUrl.searchParams.has("preview")) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/coming-soon";
-    return NextResponse.redirect(url);
-  }
-
   // Protected routes
   const isDashboard = pathname.startsWith("/dashboard");
   const isAdmin = pathname.startsWith("/admin");
