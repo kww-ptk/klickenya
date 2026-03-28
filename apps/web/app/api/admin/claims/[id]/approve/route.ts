@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { createClient as createSanityClient } from "next-sanity";
 import { Resend } from "resend";
+import crypto from "crypto";
 import { updateOpportunityStage, GHL_STAGES } from "@/lib/integrations/ghl";
 
 const supabase = createClient(
@@ -63,40 +64,42 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
         console.error("Sanity approve patch error:", sanityErr);
       }
 
-      // Step 2b — Check if host account exists
+      // Step 2b — Check if auth user already exists (could be a guest)
+      let userId: string;
+      let isNewHost = false;
+
+      const { data: existingUsers } = await supabase.auth.admin.listUsers();
+      const existingUser = existingUsers?.users?.find(
+        (u) => u.email === claim.claimant_email
+      );
+
+      // Check if host profile already exists
       const { data: existingHost } = await supabase
         .from("host_profiles")
-        .select("id, total_listings")
+        .select("id, user_id, total_listings")
         .eq("email", claim.claimant_email)
         .single();
 
-      let hostId: string;
-      let isNewHost = false;
-
       if (existingHost) {
         // Existing host — increment total_listings
-        hostId = existingHost.id;
+        userId = existingHost.user_id;
         await supabase
           .from("host_profiles")
           .update({ total_listings: (existingHost.total_listings ?? 1) + 1 })
-          .eq("id", hostId);
-      } else {
-        // Step 2c — Create new host account
+          .eq("id", existingHost.id);
+      } else if (existingUser) {
+        // Existing guest user — promote to host
+        userId = existingUser.id;
         isNewHost = true;
 
-        // Create Supabase auth user
-        const { data: authData, error: authErr } = await supabase.auth.admin.createUser({
-          email: claim.claimant_email,
-          email_confirm: true,
+        // Update role to host
+        await supabase.auth.admin.updateUserById(userId, {
           user_metadata: { role: "host", name: claim.claimant_name },
         });
-
-        if (authErr || !authData.user) {
-          console.error("Host user creation error:", authErr);
-          return NextResponse.json({ error: "Failed to create host account" }, { status: 500 });
-        }
-
-        hostId = authData.user.id;
+        await supabase
+          .from("users")
+          .update({ role: "host" })
+          .eq("id", userId);
 
         // Generate unique slug
         const baseSlug = claim.claimant_name
@@ -112,15 +115,80 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
           .eq("slug", slug);
 
         if ((count ?? 0) > 0) {
-          const suffix = Math.random().toString(36).slice(2, 6);
-          slug = `${baseSlug}-${suffix}`;
+          slug = `${baseSlug}-${Math.random().toString(36).slice(2, 6)}`;
+        }
+
+        // Create host profile for existing user
+        const { error: profileErr } = await supabase
+          .from("host_profiles")
+          .insert({
+            user_id: userId,
+            slug,
+            display_name: claim.claimant_name,
+            email: claim.claimant_email,
+            phone: claim.claimant_phone,
+            city: claim.listing_city ?? null,
+            website_url: claim.website_url ?? null,
+            social_url: claim.social_media_url ?? null,
+            claim_request_id: id,
+            ghl_contact_id: claim.ghl_contact_id ?? null,
+          });
+
+        if (profileErr) {
+          console.error("Host profile insert error:", profileErr);
+        }
+      } else {
+        // Step 2c — Create new auth user with random password
+        isNewHost = true;
+        const randomPassword = crypto.randomBytes(32).toString("base64url");
+
+        const { data: authData, error: authErr } = await supabase.auth.admin.createUser({
+          email: claim.claimant_email,
+          password: randomPassword,
+          email_confirm: true,
+          user_metadata: { role: "host", name: claim.claimant_name },
+        });
+
+        if (authErr || !authData.user) {
+          console.error("Host user creation error:", authErr);
+          return NextResponse.json({ error: "Failed to create host account" }, { status: 500 });
+        }
+
+        userId = authData.user.id;
+
+        // Insert into users table
+        await supabase
+          .from("users")
+          .upsert({
+            id: userId,
+            email: claim.claimant_email,
+            full_name: claim.claimant_name,
+            phone: claim.claimant_phone,
+            role: "host",
+          });
+
+        // Generate unique slug
+        const baseSlug = claim.claimant_name
+          .toLowerCase()
+          .trim()
+          .replace(/[^a-z0-9\s-]/g, "")
+          .replace(/\s+/g, "-");
+
+        let slug = baseSlug;
+        const { count } = await supabase
+          .from("host_profiles")
+          .select("id", { count: "exact", head: true })
+          .eq("slug", slug);
+
+        if ((count ?? 0) > 0) {
+          slug = `${baseSlug}-${Math.random().toString(36).slice(2, 6)}`;
         }
 
         // Insert host profile
         const { error: profileErr } = await supabase
           .from("host_profiles")
           .insert({
-            id: hostId,
+            user_id: userId,
             slug,
             display_name: claim.claimant_name,
             email: claim.claimant_email,
@@ -141,25 +209,27 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
       try {
         await sanityWrite
           .patch(claim.listing_sanity_id)
-          .set({ hostId })
+          .set({ hostId: userId })
           .commit();
       } catch (sanityErr) {
         console.error("Sanity hostId patch error:", sanityErr);
       }
 
-      // Generate magic login link
-      let magicLinkUrl = "https://klickenya.com/dashboard";
-      try {
-        const { data: linkData } = await supabase.auth.admin.generateLink({
-          type: "magiclink",
-          email: claim.claimant_email,
-          options: { redirectTo: "https://klickenya.com/dashboard" },
-        });
-        if (linkData?.properties?.action_link) {
-          magicLinkUrl = linkData.properties.action_link;
+      // Generate "set your password" link
+      let setPasswordUrl = "https://klickenya.com/forgot-password";
+      if (isNewHost) {
+        try {
+          const { data: linkData } = await supabase.auth.admin.generateLink({
+            type: "recovery",
+            email: claim.claimant_email,
+            options: { redirectTo: "https://klickenya.com/dashboard" },
+          });
+          if (linkData?.properties?.action_link) {
+            setPasswordUrl = linkData.properties.action_link;
+          }
+        } catch (linkErr) {
+          console.error("Password reset link generation error:", linkErr);
         }
-      } catch (linkErr) {
-        console.error("Magic link generation error:", linkErr);
       }
 
       // Send approval + host account email
@@ -174,10 +244,10 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
               <strong>Your Klickenya host account is ready.</strong>
             </p>
             <p style="font-size: 14px; color: #5E5848; margin: 0 0 24px;">
-              Use the button below to log in to your host dashboard. This link expires in 24 hours.
+              Set your password to access your host dashboard and manage your listings.
             </p>
             <p style="margin: 0 0 24px;">
-              <a href="${magicLinkUrl}" style="display: inline-block; background: #E8A020; color: #16130C; font-weight: 700; text-decoration: none; padding: 12px 28px; border-radius: 999px; font-size: 14px;">Go to your dashboard →</a>
+              <a href="${setPasswordUrl}" style="display: inline-block; background: #E8A020; color: #16130C; font-weight: 700; text-decoration: none; padding: 12px 28px; border-radius: 999px; font-size: 14px;">Set your password →</a>
             </p>
           `
           : `
@@ -186,7 +256,7 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
               This listing has been added to your host dashboard.
             </p>
             <p style="margin: 0 0 24px;">
-              <a href="${magicLinkUrl}" style="display: inline-block; background: #E8A020; color: #16130C; font-weight: 700; text-decoration: none; padding: 12px 28px; border-radius: 999px; font-size: 14px;">Go to your dashboard →</a>
+              <a href="https://klickenya.com/dashboard" style="display: inline-block; background: #E8A020; color: #16130C; font-weight: 700; text-decoration: none; padding: 12px 28px; border-radius: 999px; font-size: 14px;">Go to your dashboard →</a>
             </p>
           `;
 

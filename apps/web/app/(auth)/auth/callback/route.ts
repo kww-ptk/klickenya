@@ -31,6 +31,24 @@ export async function GET(request: Request) {
         );
       }
 
+      // Determine redirect based on role
+      if (next === "/dashboard") {
+        const { data: profile } = await supabase
+          .from("users")
+          .select("role")
+          .eq("id", user.id)
+          .single();
+
+        const role = profile?.role;
+        const dest =
+          role === "admin"
+            ? "/admin"
+            : role === "host"
+              ? "/dashboard"
+              : "/account";
+        return NextResponse.redirect(`${origin}${dest}`);
+      }
+
       return NextResponse.redirect(`${origin}${next}`);
     }
   }
