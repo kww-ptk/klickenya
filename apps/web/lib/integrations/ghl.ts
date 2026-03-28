@@ -86,15 +86,11 @@ export async function createOrUpdateOpportunity(
       headers: ghlHeaders(),
       body: JSON.stringify({
         pipelineId: process.env.GHL_PIPELINE_ID,
-        pipelineStageId: data.stageId,
-        contactId,
+        locationId: process.env.GHL_LOCATION_ID,
         name: data.listingName,
-        customFields: [
-          { key: "plan_tier", field_value: "Basic" },
-          { key: "total_listings", field_value: 1 },
-          { key: "first_listing_name", field_value: data.listingName },
-          { key: "first_listing_url", field_value: data.listingUrl },
-        ],
+        pipelineStageId: data.stageId,
+        status: "open",
+        contactId,
       }),
     });
 
