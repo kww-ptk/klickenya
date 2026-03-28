@@ -32,7 +32,7 @@ export async function GET(request: Request) {
       }
 
       // Determine redirect based on role
-      if (next === "/dashboard") {
+      if (next === "/dashboard" && user) {
         const { data: profile } = await supabase
           .from("users")
           .select("role")
