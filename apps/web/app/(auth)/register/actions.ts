@@ -22,6 +22,7 @@ export async function registerAction(formData: FormData) {
     password,
     options: {
       data: { role: "guest", name },
+      emailRedirectTo: "https://www.klickenya.com/auth/callback",
     },
   });
 

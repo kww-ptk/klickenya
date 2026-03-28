@@ -1,13 +1,23 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { loginAction } from "./actions";
 
+const ERROR_MESSAGES: Record<string, string> = {
+  link_expired:
+    "Your confirmation link has expired. Please register again or request a new link.",
+  auth_error: "Something went wrong with authentication. Please try again.",
+};
+
 export default function LoginPage() {
-  const [error, setError] = useState<string | null>(null);
+  const searchParams = useSearchParams();
+  const urlError = searchParams.get("error");
+  const [error, setError] = useState<string | null>(
+    urlError ? ERROR_MESSAGES[urlError] ?? ERROR_MESSAGES.auth_error : null
+  );
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
 

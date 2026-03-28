@@ -6,6 +6,19 @@ export async function GET(request: Request) {
   const code = searchParams.get("code");
   const next = searchParams.get("next") ?? "/dashboard";
 
+  // Handle Supabase error redirects (expired/invalid links)
+  const errorParam = searchParams.get("error");
+  const errorDescription = searchParams.get("error_description");
+  if (errorParam) {
+    const message =
+      errorDescription?.includes("expired")
+        ? "link_expired"
+        : "auth_error";
+    return NextResponse.redirect(
+      `${origin}/login?error=${message}`
+    );
+  }
+
   if (code) {
     const supabase = await createClient();
     const { error } = await supabase.auth.exchangeCodeForSession(code);
@@ -53,6 +66,6 @@ export async function GET(request: Request) {
     }
   }
 
-  // OAuth error — redirect to login with error
-  return NextResponse.redirect(`${origin}/login`);
+  // Code exchange failed — likely expired
+  return NextResponse.redirect(`${origin}/login?error=link_expired`);
 }
