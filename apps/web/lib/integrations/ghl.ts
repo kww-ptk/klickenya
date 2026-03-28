@@ -81,20 +81,27 @@ export async function createOrUpdateOpportunity(
   if (!isConfigured()) return null;
 
   try {
+    const payload = {
+      pipelineId: process.env.GHL_PIPELINE_ID,
+      locationId: process.env.GHL_LOCATION_ID,
+      name: data.listingName,
+      pipelineStageId: data.stageId,
+      status: "open",
+      contactId,
+    };
+    console.log("[GHL] Creating opportunity with payload:", JSON.stringify(payload));
+
     const res = await fetch(`${GHL_BASE}/opportunities/`, {
       method: "POST",
       headers: ghlHeaders(),
-      body: JSON.stringify({
-        pipelineId: process.env.GHL_PIPELINE_ID,
-        locationId: process.env.GHL_LOCATION_ID,
-        name: data.listingName,
-        pipelineStageId: data.stageId,
-        status: "open",
-        contactId,
-      }),
+      body: JSON.stringify(payload),
     });
 
     const json = await res.json();
+    console.log("[GHL] Opportunity status:", res.status);
+    console.log("[GHL] Opportunity response:", JSON.stringify(json));
+
+    if (!res.ok) return null;
     return json.opportunity?.id ?? null;
   } catch {
     console.error("GHL createOrUpdateOpportunity failed");
