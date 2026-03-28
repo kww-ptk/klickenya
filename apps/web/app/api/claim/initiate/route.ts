@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod/v4";
 import { createClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
-import { createOrUpdateContact, createOrUpdateOpportunity } from "@/lib/integrations/ghl";
+import { createOrUpdateContact, createOrUpdateOpportunity, GHL_STAGES } from "@/lib/integrations/ghl";
 
 /* ---------- Supabase ---------- */
 
@@ -145,7 +145,7 @@ export async function POST(req: NextRequest) {
 
         if (contactId) {
           const opportunityId = await createOrUpdateOpportunity(contactId, {
-            stageId: process.env.GHL_STAGE_CONTACTED_ID!,
+            stageId: GHL_STAGES.CONTACTED,
             listingName: data.listingTitle,
             listingUrl,
           });

@@ -18,6 +18,18 @@ function isConfigured(): boolean {
   return !!process.env.GHL_API_KEY;
 }
 
+/* ---------- Pipeline stage IDs ---------- */
+
+export const GHL_STAGES = {
+  SCRAPED: process.env.GHL_STAGE_SCRAPED_ID!,
+  CONTACTED: process.env.GHL_STAGE_CONTACTED_ID!,
+  OPENED: process.env.GHL_STAGE_OPENED_ID!,
+  CLAIMED: process.env.GHL_STAGE_CLAIMED_ID!,
+  ACTIVE: process.env.GHL_STAGE_ACTIVE_ID!,
+  PAYING: process.env.GHL_STAGE_PAYING_ID!,
+  LOST: process.env.GHL_STAGE_LOST_ID!,
+} as const;
+
 /* ---------- Create or update contact ---------- */
 
 export async function createOrUpdateContact(data: {

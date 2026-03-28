@@ -3,7 +3,7 @@ import { z } from "zod/v4";
 import { createClient } from "@supabase/supabase-js";
 import { createClient as createSanityClient } from "next-sanity";
 import { Resend } from "resend";
-import { updateOpportunityStage } from "@/lib/integrations/ghl";
+import { updateOpportunityStage, GHL_STAGES } from "@/lib/integrations/ghl";
 
 /* ---------- Supabase ---------- */
 
@@ -200,7 +200,7 @@ export async function POST(req: NextRequest) {
     if (claim.ghl_opportunity_id) {
       updateOpportunityStage(
         claim.ghl_opportunity_id,
-        process.env.GHL_STAGE_CLAIMED_ID!
+        GHL_STAGES.CLAIMED
       );
     }
 

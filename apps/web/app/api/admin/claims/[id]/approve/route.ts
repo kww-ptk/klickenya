@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { createClient as createSanityClient } from "next-sanity";
 import { Resend } from "resend";
-import { updateOpportunityStage } from "@/lib/integrations/ghl";
+import { updateOpportunityStage, GHL_STAGES } from "@/lib/integrations/ghl";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -100,7 +100,7 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
       if (claim.ghl_opportunity_id) {
         updateOpportunityStage(
           claim.ghl_opportunity_id,
-          process.env.GHL_STAGE_ACTIVE_ID!
+          GHL_STAGES.ACTIVE
         );
       }
 
@@ -145,7 +145,7 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
     if (claim.ghl_opportunity_id) {
       updateOpportunityStage(
         claim.ghl_opportunity_id,
-        process.env.GHL_STAGE_LOST_ID!
+        GHL_STAGES.LOST
       );
     }
 
