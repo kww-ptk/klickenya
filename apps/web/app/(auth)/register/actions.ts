@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { createClient as createServiceClient } from "@supabase/supabase-js";
 
 export async function registerAction(formData: FormData) {
   const name = formData.get("name") as string;
@@ -30,9 +31,13 @@ export async function registerAction(formData: FormData) {
     return { error: error.message };
   }
 
-  // Insert into users table
+  // Insert into users table (use service role — anon client can't write before email confirmation)
   if (data.user) {
-    await supabase.from("users").upsert(
+    const serviceClient = createServiceClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+    await serviceClient.from("users").upsert(
       {
         id: data.user.id,
         email,
