@@ -394,12 +394,12 @@ function EventDetail({
             <AmenitiesList amenities={amenities} heading="What to expect" />
           </div>
 
-          {/* Right column */}
+          {/* Right column — always visible */}
           <aside className="hidden lg:block w-[350px] shrink-0">
             <div className="sticky top-[76px] space-y-6">
-              {/* Booking sidebar for paid events */}
+              {/* Ticket CTA for paid events */}
               {showBookingSidebar && (
-                <div className="border border-border rounded-[24px] shadow-lg p-5 bg-white">
+                <div className="border border-border rounded-[24px] shadow-lg p-6 bg-white">
                   <p className="text-[22px] font-bold text-dark mb-1">
                     From KSh {mobilePrice.toLocaleString()}
                   </p>
@@ -433,11 +433,12 @@ function EventDetail({
               )}
 
               {/* Related events in city */}
-              {similarCards.length > 0 && (
-                <div className="rounded-[24px] border border-border bg-white p-5">
-                  <h3 className="text-[15px] font-bold text-text mb-4">
-                    More events in {cityName}
-                  </h3>
+              <div className="rounded-[24px] border border-border bg-white p-5">
+                <h3 className="text-[15px] font-bold text-text mb-4">
+                  {similarCards.length > 0 ? `More events in ${cityName}` : "Discover events"}
+                </h3>
+
+                {similarCards.length > 0 ? (
                   <div className="space-y-4">
                     {similarCards.slice(0, 3).map((card) => (
                       <Link
@@ -471,12 +472,33 @@ function EventDetail({
                       </Link>
                     ))}
                   </div>
-                  <Link
-                    href={`/events?city=${citySlug}`}
-                    className="block mt-4 pt-3 border-t border-border text-center text-[13px] font-semibold text-purple-600 hover:text-purple-700 transition-colors"
-                  >
-                    See all events in {cityName} →
-                  </Link>
+                ) : (
+                  <p className="text-[13px] text-text2 mb-3">
+                    Check out more events happening across Kenya — parties, workshops, festivals and more.
+                  </p>
+                )}
+
+                <Link
+                  href={similarCards.length > 0 ? `/events?city=${citySlug}` : "/events-in-kenya"}
+                  className="block mt-4 pt-3 border-t border-border text-center text-[13px] font-semibold text-purple-600 hover:text-purple-700 transition-colors"
+                >
+                  {similarCards.length > 0 ? `See all events in ${cityName} →` : "Browse all events →"}
+                </Link>
+              </div>
+
+              {/* Organizer card */}
+              {organizer && (
+                <div className="rounded-[24px] border border-border bg-white p-5">
+                  <p className="text-[12px] font-semibold text-text3 uppercase tracking-wide mb-2">Organised by</p>
+                  <p className="text-[15px] font-bold text-text">{organizer}</p>
+                  {organizerSlug && (
+                    <Link
+                      href={`/hosts/${organizerSlug}`}
+                      className="inline-block mt-2 text-[13px] font-semibold text-purple-600 hover:text-purple-700 transition-colors"
+                    >
+                      View profile →
+                    </Link>
+                  )}
                 </div>
               )}
             </div>
