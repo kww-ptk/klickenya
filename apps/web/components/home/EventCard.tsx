@@ -36,7 +36,7 @@ function EventCard({
   return (
     <Link
       href={href}
-      className="shrink-0 w-[296px] rounded-[32px] bg-white border border-border overflow-hidden group hover:shadow-md transition-shadow duration-300 cursor-pointer"
+      className="shrink-0 w-[296px] md:w-full rounded-[32px] bg-white border border-border overflow-hidden group hover:shadow-md transition-shadow duration-300 cursor-pointer shadow-sm"
     >
       {/* Cover image */}
       <div className={`h-[160px] ${imageUrl ? "" : imageColor} relative overflow-hidden`}>
