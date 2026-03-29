@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
-import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { sanityClient } from "@/lib/sanity/client";
+import { DashboardShell } from "./DashboardShell";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -12,80 +13,62 @@ export default async function DashboardPage() {
     redirect("/login");
   }
 
+  // Fetch user profile
   const { data: profile } = await supabase
     .from("users")
-    .select("full_name, role")
+    .select("full_name, role, email")
     .eq("id", user.id)
     .single();
 
-  // Check if host needs to change password
-  let showPasswordBanner = false;
-  if (profile?.role === "host") {
-    const { data: hostProfile } = await supabase
-      .from("host_profiles")
-      .select("password_changed")
-      .eq("user_id", user.id)
-      .single();
+  // Fetch host profile
+  const { data: hostProfile } = await supabase
+    .from("host_profiles")
+    .select("id, display_name, plan_tier, total_listings, password_changed, user_id")
+    .eq("user_id", user.id)
+    .single();
 
-    showPasswordBanner = hostProfile?.password_changed === false;
+  // Fetch listings from Sanity where hostId matches
+  let listings: {
+    _id: string;
+    title: string;
+    slug: string;
+    type: string;
+    city: string | null;
+    coverPhoto: unknown;
+    isVerified: boolean;
+    verificationStatus: string;
+  }[] = [];
+
+  if (hostProfile) {
+    try {
+      listings = await sanityClient.fetch(
+        `*[_type == "listing" && hostId == $hostId] | order(_createdAt desc) {
+          _id,
+          title,
+          "slug": slug.current,
+          type,
+          city,
+          coverPhoto,
+          isVerified,
+          verificationStatus
+        }`,
+        { hostId: hostProfile.user_id }
+      );
+    } catch (err) {
+      console.error("Sanity listing fetch error:", err);
+    }
   }
 
+  const showPasswordBanner =
+    profile?.role === "host" && hostProfile?.password_changed === false;
+
   return (
-    <div className="min-h-screen bg-[#F7F5F2]">
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        {/* Password banner */}
-        {showPasswordBanner && (
-          <Link
-            href="/reset-password"
-            className="block mb-6 bg-[#FDF8F0] border border-[#E8A020] rounded-xl p-4 hover:bg-[#E8A020]/10 transition-colors"
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-[14px] font-semibold text-[#16130C]">
-                  Please set a permanent password for your account
-                </p>
-                <p className="text-[13px] text-[#5E5848] mt-0.5">
-                  You&apos;re using a temporary password. Change it to keep your
-                  account secure.
-                </p>
-              </div>
-              <span className="text-[#E8A020] font-bold text-sm shrink-0 ml-4">
-                Change password →
-              </span>
-            </div>
-          </Link>
-        )}
-
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-[28px] font-bold tracking-[-0.03em] text-[#16130C]">
-            Welcome, {profile?.full_name ?? "Host"}
-          </h1>
-          <p className="text-[14px] text-[#5E5848] mt-1">
-            Manage your listings and account
-          </p>
-        </div>
-
-        {/* Placeholder content */}
-        <div className="grid gap-4 md:grid-cols-2">
-          <div className="bg-white rounded-xl border border-[#E2DDD5] p-6">
-            <h2 className="text-[16px] font-semibold text-[#16130C] mb-1">
-              My listings
-            </h2>
-            <p className="text-[13px] text-[#9C9485]">
-              Your listings will appear here once approved.
-            </p>
-          </div>
-          <div className="bg-white rounded-xl border border-[#E2DDD5] p-6">
-            <h2 className="text-[16px] font-semibold text-[#16130C] mb-1">
-              Enquiries
-            </h2>
-            <p className="text-[13px] text-[#9C9485]">
-              Guest enquiries for your listings will appear here.
-            </p>
-          </div>
-        </div>
-      </div>
-    </div>
+    <DashboardShell
+      displayName={hostProfile?.display_name ?? profile?.full_name ?? "Host"}
+      email={profile?.email ?? user.email ?? ""}
+      planTier={hostProfile?.plan_tier ?? "basic"}
+      showPasswordBanner={showPasswordBanner}
+      listings={listings}
+    />
   );
 }
