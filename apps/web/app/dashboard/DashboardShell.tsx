@@ -29,18 +29,22 @@ interface DashboardShellProps {
 
 /* ---------- Helpers ---------- */
 
-const PLAN_COLORS: Record<string, { bg: string; text: string }> = {
-  basic: { bg: "bg-[#E8A020]/15", text: "text-[#E8A020]" },
-  pro: { bg: "bg-[#6B2D8B]/15", text: "text-[#6B2D8B]" },
-  agency: { bg: "bg-[#6B2D8B]/15", text: "text-[#6B2D8B]" },
-  grow: { bg: "bg-[#0D7377]/15", text: "text-[#0D7377]" },
+const PLAN_STYLES: Record<string, { bg: string; text: string; border: string }> = {
+  basic: { bg: "bg-[#E8A020]/10", text: "text-[#E8A020]", border: "border-[#E8A020]/30" },
+  pro: { bg: "bg-[#6B2D8B]/10", text: "text-[#6B2D8B]", border: "border-[#6B2D8B]/30" },
+  agency: { bg: "bg-[#6B2D8B]/10", text: "text-[#6B2D8B]", border: "border-[#6B2D8B]/30" },
+  grow: { bg: "bg-[#0D7377]/10", text: "text-[#0D7377]", border: "border-[#0D7377]/30" },
 };
 
+function getGreeting(): string {
+  const h = new Date().getHours();
+  if (h < 12) return "Good morning";
+  if (h < 18) return "Good afternoon";
+  return "Good evening";
+}
+
 function listingUrl(listing: Listing): string {
-  const typeSlug =
-    listing.type === "experience"
-      ? "experiences"
-      : listing.type + "s";
+  const typeSlug = listing.type === "experience" ? "experiences" : listing.type + "s";
   const citySlug = (listing.city ?? "").toLowerCase().replace(/ /g, "-");
   return `/${typeSlug}/${citySlug}/${listing.slug}`;
 }
@@ -56,7 +60,7 @@ export function DashboardShell({
 }: DashboardShellProps) {
   const router = useRouter();
   const firstName = displayName.split(/\s+/)[0];
-  const plan = PLAN_COLORS[planTier] ?? PLAN_COLORS.basic;
+  const plan = PLAN_STYLES[planTier] ?? PLAN_STYLES.basic;
 
   const verifiedCount = listings.filter((l) => l.isVerified).length;
   const pendingCount = listings.length - verifiedCount;
@@ -68,180 +72,203 @@ export function DashboardShell({
   }
 
   return (
-    <div className="min-h-screen bg-[#F7F5F2] pb-[env(safe-area-inset-bottom)]">
-      {/* ── Dark header ── */}
-      <div className="bg-[#16130C] px-5 pt-[max(env(safe-area-inset-top),20px)] pb-6">
-        <div className="max-w-2xl mx-auto">
-          <div className="flex items-center justify-between mb-1">
-            <h1 className="text-[24px] font-bold tracking-[-0.03em] text-white">
-              Hi, {firstName} 👋
-            </h1>
-            <div className="flex items-center gap-2">
-              <span
-                className={cn(
-                  "text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full",
-                  plan.bg,
-                  plan.text
-                )}
-              >
-                {planTier}
-              </span>
-              {planTier === "basic" && (
-                <Link
-                  href="/pricing"
-                  className="text-[12px] text-[#E8A020] font-medium hover:underline"
+    <div className="min-h-screen bg-[#FAFAF8] pb-[env(safe-area-inset-bottom,24px)]">
+      {/* ═══ DARK HEADER ═══ */}
+      <div className="relative bg-[#16130C] overflow-hidden">
+        {/* Grain texture */}
+        <div
+          className="absolute inset-0 opacity-[0.03] pointer-events-none"
+          style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`,
+            backgroundSize: "180px",
+          }}
+        />
+        {/* Subtle amber glow */}
+        <div className="absolute -bottom-20 -right-20 w-60 h-60 bg-[#E8A020]/5 rounded-full blur-3xl pointer-events-none" />
+
+        <div className="relative px-5 pt-[max(env(safe-area-inset-top),24px)] pb-7">
+          <div className="max-w-2xl mx-auto">
+            {/* Greeting + plan */}
+            <div className="flex items-start justify-between gap-3 mb-5">
+              <div>
+                <h1 className="font-[family-name:var(--font-display)] text-[26px] font-bold tracking-[-0.03em] text-white leading-tight">
+                  {getGreeting()}, {firstName}
+                </h1>
+                <p className="text-[14px] text-white/35 mt-1">
+                  Manage your listings
+                </p>
+              </div>
+              <div className="flex items-center gap-2 mt-1">
+                <span
+                  className={cn(
+                    "text-[11px] font-bold uppercase tracking-wider px-3 py-1.5 rounded-full border",
+                    plan.bg, plan.text, plan.border
+                  )}
                 >
-                  Upgrade
-                </Link>
-              )}
+                  {planTier}
+                </span>
+                {planTier === "basic" && (
+                  <Link
+                    href="/pricing"
+                    className="text-[12px] text-[#E8A020]/70 font-medium hover:text-[#E8A020] transition-colors"
+                  >
+                    Upgrade
+                  </Link>
+                )}
+              </div>
+            </div>
+
+            {/* Stat pills */}
+            <div className="flex gap-3">
+              {[
+                { label: "Total", value: listings.length, color: "text-white" },
+                { label: "Verified", value: verifiedCount, color: "text-[#16A34A]" },
+                { label: "Pending", value: pendingCount, color: "text-[#F5C842]" },
+              ].map((stat) => (
+                <div
+                  key={stat.label}
+                  className="flex-1 bg-white/[0.06] border border-white/[0.08] rounded-2xl py-3.5 px-3 text-center backdrop-blur-sm"
+                >
+                  <p
+                    className={cn(
+                      "font-[family-name:var(--font-display)] text-[24px] font-bold tracking-[-0.02em] leading-none",
+                      stat.color
+                    )}
+                  >
+                    {stat.value}
+                  </p>
+                  <p className="text-[11px] text-white/30 font-medium mt-1.5 uppercase tracking-wider">
+                    {stat.label}
+                  </p>
+                </div>
+              ))}
             </div>
           </div>
-          <p className="text-[13px] text-white/40">
-            Manage your listings and account
-          </p>
         </div>
       </div>
 
-      <div className="max-w-2xl mx-auto px-5 -mt-3">
+      {/* ═══ WHITE CONTENT ═══ */}
+      <div className="max-w-2xl mx-auto px-5 pt-5">
         {/* ── Password banner ── */}
         {showPasswordBanner && (
           <Link
             href="/reset-password"
-            className="block mb-4 bg-[#FDF8F0] border border-[#E8A020] rounded-2xl p-4 active:scale-[0.98] transition-transform"
+            className="flex items-center gap-3 mb-5 bg-[#FDF8F0] border-l-4 border-[#E8A020] rounded-xl p-4 active:scale-[0.99] transition-transform shadow-sm"
           >
-            <div className="flex items-center justify-between gap-3">
-              <div className="min-w-0">
-                <p className="text-[14px] font-semibold text-[#16130C]">
-                  Set a permanent password
-                </p>
-                <p className="text-[12px] text-[#5E5848] mt-0.5">
-                  You&apos;re using a temporary password
-                </p>
-              </div>
-              <span className="text-[#E8A020] font-bold text-[13px] shrink-0">
-                →
-              </span>
+            <div className="w-9 h-9 rounded-full bg-[#E8A020]/15 flex items-center justify-center shrink-0">
+              <span className="text-[16px]">🔒</span>
             </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-[14px] font-semibold text-[#16130C]">
+                Set a permanent password
+              </p>
+              <p className="text-[12px] text-[#5E5848] mt-0.5">
+                Secure your host account
+              </p>
+            </div>
+            <span className="text-[#E8A020] font-bold text-[16px] shrink-0">→</span>
           </Link>
         )}
 
-        {/* ── Quick stats ── */}
-        <div className="flex gap-2 mb-6 mt-4">
-          {[
-            { label: "Total", value: listings.length },
-            { label: "Verified", value: verifiedCount, color: "text-[#16A34A]" },
-            { label: "Pending", value: pendingCount, color: "text-[#E8A020]" },
-          ].map((stat) => (
-            <div
-              key={stat.label}
-              className="flex-1 bg-white rounded-2xl border border-[#E2DDD5] p-4 text-center"
-            >
-              <p
-                className={cn(
-                  "text-[22px] font-bold tracking-[-0.02em]",
-                  stat.color ?? "text-[#16130C]"
-                )}
-              >
-                {stat.value}
-              </p>
-              <p className="text-[11px] text-[#9C9485] font-medium mt-0.5">
-                {stat.label}
-              </p>
-            </div>
-          ))}
-        </div>
-
         {/* ── My Listings ── */}
         <div className="mb-6">
-          <h2 className="text-[16px] font-bold text-[#16130C] mb-3">
+          <h2 className="font-[family-name:var(--font-display)] text-[18px] font-bold text-[#16130C] tracking-[-0.02em] mb-3">
             My Listings
           </h2>
 
           {listings.length === 0 ? (
-            <div className="bg-white rounded-2xl border border-[#E2DDD5] p-8 text-center">
-              <div className="text-[36px] mb-3">📋</div>
-              <p className="text-[15px] font-semibold text-[#16130C] mb-1">
+            /* Empty state */
+            <div className="bg-white rounded-2xl border border-[#E2DDD5] p-10 text-center shadow-sm">
+              <div className="w-20 h-20 rounded-full bg-[#E8A020]/10 flex items-center justify-center mx-auto mb-4">
+                <span className="text-[36px]">🏡</span>
+              </div>
+              <p className="font-[family-name:var(--font-display)] text-[18px] font-bold text-[#16130C] mb-1">
                 No listings yet
               </p>
-              <p className="text-[13px] text-[#9C9485] mb-4">
-                Claim your first listing to get started
+              <p className="text-[14px] text-[#9C9485] mb-6 max-w-[260px] mx-auto">
+                Claim your first listing and start managing it from here
               </p>
               <Link
                 href="/"
-                className="inline-block bg-[#E8A020] text-[#16130C] font-bold text-[14px] px-6 py-3 rounded-full active:scale-[0.97] transition-transform"
+                className="inline-block bg-[#E8A020] text-[#16130C] font-bold text-[14px] px-7 h-[48px] leading-[48px] rounded-full active:scale-[0.97] transition-transform shadow-sm"
               >
                 Claim a listing →
               </Link>
             </div>
           ) : (
+            /* Listing cards */
             <div className="space-y-3">
-              {listings.map((listing) => (
+              {listings.map((listing, i) => (
                 <div
                   key={listing._id}
-                  className="bg-white rounded-2xl border border-[#E2DDD5] p-4 flex gap-4 items-start"
+                  className="bg-white rounded-2xl border border-[#E2DDD5] p-4 shadow-sm animate-[fadeSlideUp_0.4s_ease_both]"
+                  style={{ animationDelay: `${i * 80}ms` }}
                 >
-                  {/* Thumbnail */}
-                  <div className="shrink-0 w-[72px] h-[72px] rounded-xl overflow-hidden bg-[#F4F1EC]">
-                    {listing.imageUrl ? (
-                      <Image
-                        src={listing.imageUrl}
-                        alt={listing.title}
-                        width={72}
-                        height={72}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-[24px]">
-                        🏠
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Info */}
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[15px] font-semibold text-[#16130C] truncate">
-                      {listing.title}
-                    </p>
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className="text-[12px] text-[#9C9485] capitalize">
-                        {listing.type}
-                      </span>
-                      {listing.city && (
-                        <>
-                          <span className="text-[#E2DDD5]">·</span>
-                          <span className="text-[12px] text-[#9C9485]">
-                            {listing.city}
-                          </span>
-                        </>
+                  <div className="flex gap-4">
+                    {/* Thumbnail */}
+                    <div className="shrink-0 w-[80px] h-[80px] rounded-xl overflow-hidden bg-[#F4F1EC]">
+                      {listing.imageUrl ? (
+                        <Image
+                          src={listing.imageUrl}
+                          alt={listing.title}
+                          width={80}
+                          height={80}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-[28px] bg-gradient-to-br from-[#F4F1EC] to-[#E2DDD5]">
+                          🏠
+                        </div>
                       )}
                     </div>
-                    <div className="flex items-center gap-2 mt-2">
-                      {listing.isVerified ? (
-                        <span className="text-[11px] font-bold text-[#16A34A] bg-[#16A34A]/10 px-2.5 py-1 rounded-full">
-                          Verified
+
+                    {/* Info */}
+                    <div className="flex-1 min-w-0 py-0.5">
+                      <p className="text-[16px] font-semibold text-[#16130C] truncate leading-tight">
+                        {listing.title}
+                      </p>
+                      <div className="flex items-center gap-1.5 mt-1.5">
+                        <span className="text-[13px] text-[#9C9485] capitalize">
+                          {listing.type}
                         </span>
-                      ) : (
-                        <span className="text-[11px] font-bold text-[#E8A020] bg-[#E8A020]/10 px-2.5 py-1 rounded-full">
-                          Pending
-                        </span>
-                      )}
+                        {listing.city && (
+                          <>
+                            <span className="text-[#E2DDD5]">·</span>
+                            <span className="text-[13px] text-[#9C9485]">
+                              {listing.city}
+                            </span>
+                          </>
+                        )}
+                      </div>
+                      <div className="mt-2">
+                        {listing.isVerified ? (
+                          <span className="inline-flex items-center gap-1 text-[12px] font-bold text-[#16A34A] bg-[#16A34A]/8 px-2.5 py-1 rounded-full">
+                            <svg className="w-3 h-3" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                            Verified
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 text-[12px] font-bold text-[#E8A020] bg-[#E8A020]/8 px-2.5 py-1 rounded-full">
+                            <span className="w-1.5 h-1.5 rounded-full bg-[#E8A020]" />
+                            Pending review
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
 
                   {/* Actions */}
-                  <div className="shrink-0 flex flex-col gap-2">
+                  <div className="flex gap-2 mt-3 pt-3 border-t border-[#F4F1EC]">
                     <Link
                       href={listingUrl(listing)}
-                      className="text-[13px] font-semibold text-[#6B2D8B] bg-[#6B2D8B]/10 px-4 py-2.5 rounded-xl text-center min-w-[64px] active:scale-[0.96] transition-transform"
+                      className="flex-1 h-[44px] flex items-center justify-center text-[14px] font-semibold text-[#6B2D8B] bg-[#6B2D8B]/8 rounded-xl active:scale-[0.97] transition-transform"
                     >
-                      View
+                      View listing →
                     </Link>
                     <button
                       disabled
-                      className="text-[13px] font-medium text-[#9C9485] bg-[#F4F1EC] px-4 py-2.5 rounded-xl text-center min-w-[64px] cursor-not-allowed"
-                      title="Coming soon"
+                      className="flex-1 h-[44px] flex items-center justify-center text-[14px] font-medium text-[#9C9485] bg-[#F4F1EC] rounded-xl cursor-not-allowed"
                     >
-                      Edit
+                      Edit · Soon
                     </button>
                   </div>
                 </div>
@@ -251,20 +278,25 @@ export function DashboardShell({
         </div>
 
         {/* ── Account ── */}
-        <div className="bg-white rounded-2xl border border-[#E2DDD5] p-5 mb-8">
-          <h2 className="text-[16px] font-bold text-[#16130C] mb-4">
+        <div className="bg-white rounded-2xl border border-[#E2DDD5] p-5 mb-8 shadow-sm">
+          <h2 className="font-[family-name:var(--font-display)] text-[18px] font-bold text-[#16130C] tracking-[-0.02em] mb-4">
             Account
           </h2>
-          <div className="space-y-3 mb-5">
+          <div className="space-y-3.5 mb-5">
             <div className="flex justify-between items-center">
               <span className="text-[13px] text-[#9C9485]">Email</span>
-              <span className="text-[14px] text-[#16130C] font-medium truncate ml-4">
+              <span className="text-[14px] text-[#16130C] font-medium truncate ml-4 max-w-[220px]">
                 {email}
               </span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-[13px] text-[#9C9485]">Plan</span>
-              <span className="text-[14px] text-[#16130C] font-medium capitalize">
+              <span
+                className={cn(
+                  "text-[12px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border",
+                  plan.bg, plan.text, plan.border
+                )}
+              >
                 {planTier}
               </span>
             </div>
@@ -277,6 +309,14 @@ export function DashboardShell({
           </button>
         </div>
       </div>
+
+      {/* ── Animation keyframes ── */}
+      <style>{`
+        @keyframes fadeSlideUp {
+          from { opacity: 0; transform: translateY(12px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
     </div>
   );
 }

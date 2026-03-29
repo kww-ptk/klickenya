@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { usePathname } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
 import { Menu, X, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useScrollPosition } from "@/hooks/useScrollPosition";
@@ -121,6 +122,36 @@ function Nav({ transparent = false }: NavProps) {
   const exploreDropRef = useRef<HTMLDivElement>(null);
   const exploreTimeout = useRef<ReturnType<typeof setTimeout>>(undefined);
   const pathname = usePathname();
+
+  // Auth state
+  const [authState, setAuthState] = useState<{
+    loggedIn: boolean;
+    role: string | null;
+  }>({ loggedIn: false, role: null });
+
+  const checkAuth = useCallback(async () => {
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      setAuthState({ loggedIn: false, role: null });
+      return;
+    }
+    const { data: profile } = await supabase
+      .from("users")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+    setAuthState({ loggedIn: true, role: profile?.role ?? "guest" });
+  }, []);
+
+  useEffect(() => {
+    checkAuth();
+    const supabase = createClient();
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
+      checkAuth();
+    });
+    return () => subscription.unsubscribe();
+  }, [checkAuth]);
 
   // On transparent pages (hero), delay search pill on mobile until past the hero
   useEffect(() => {
@@ -282,17 +313,35 @@ function Nav({ transparent = false }: NavProps) {
                 List your space
               </Button>
             </Link>
-            <Button
-              variant="secondary"
-              size="sm"
-              className={cn(
-                solid
-                  ? "bg-dark text-white"
-                  : "bg-white text-text"
-              )}
+            <Link
+              href={
+                authState.loggedIn
+                  ? authState.role === "admin"
+                    ? "/admin"
+                    : authState.role === "host"
+                      ? "/dashboard"
+                      : "/account"
+                  : "/login"
+              }
             >
-              Sign in
-            </Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                className={cn(
+                  solid
+                    ? "bg-dark text-white"
+                    : "bg-white text-text"
+                )}
+              >
+                {authState.loggedIn
+                  ? authState.role === "admin"
+                    ? "Admin"
+                    : authState.role === "host"
+                      ? "Dashboard"
+                      : "Account"
+                  : "Sign in"}
+              </Button>
+            </Link>
           </div>
 
           {/* Mobile hamburger */}
@@ -374,9 +423,27 @@ function Nav({ transparent = false }: NavProps) {
             })}
 
             <div className="mt-4 pb-24">
-              <Button variant="primary" size="lg" className="w-full">
-                Sign in
-              </Button>
+              <Link
+                href={
+                  authState.loggedIn
+                    ? authState.role === "admin"
+                      ? "/admin"
+                      : authState.role === "host"
+                        ? "/dashboard"
+                        : "/account"
+                    : "/login"
+                }
+              >
+                <Button variant="primary" size="lg" className="w-full">
+                  {authState.loggedIn
+                    ? authState.role === "admin"
+                      ? "Admin"
+                      : authState.role === "host"
+                        ? "Dashboard"
+                        : "Account"
+                    : "Sign in"}
+                </Button>
+              </Link>
             </div>
           </div>
         </div>
