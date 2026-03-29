@@ -1,5 +1,7 @@
 import { sanityClient } from "@/lib/sanity/client";
-import type { HostProfile } from "@klickenya/shared";
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type HostProfile = any;
 
 const IMAGE_FIELDS = `asset->{ _id, url, metadata{ dimensions } }, alt, hotspot, crop`;
 

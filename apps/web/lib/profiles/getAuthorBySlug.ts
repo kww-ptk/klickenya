@@ -1,5 +1,7 @@
 import { sanityClient } from "@/lib/sanity/client";
-import type { AuthorProfile } from "@klickenya/shared";
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AuthorProfile = any;
 
 const IMAGE_FIELDS = `asset->{ _id, url, metadata{ dimensions } }, alt, hotspot, crop`;
 

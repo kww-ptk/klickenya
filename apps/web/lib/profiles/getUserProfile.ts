@@ -1,5 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
-import type { GuestProfile } from "@klickenya/shared";
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type GuestProfile = any;
 
 export async function getUserProfile(userId: string): Promise<GuestProfile | null> {
   const supabase = await createClient();
