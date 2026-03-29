@@ -65,9 +65,15 @@ function HostBadge({ hostName, hostRef, isVerified, listingSlug }: HostBadgeProp
           </div>
           <div>
             <div className="flex items-center gap-1.5">
-              <p className="text-[15px] font-semibold text-text">
-                Hosted by {displayName}
-              </p>
+              {hostRef?.slug ? (
+                <Link href={`/hosts/${hostRef.slug}`} className="text-[15px] font-semibold text-text hover:text-amber transition-colors">
+                  Hosted by {displayName}
+                </Link>
+              ) : (
+                <p className="text-[15px] font-semibold text-text">
+                  Hosted by {displayName}
+                </p>
+              )}
               {isHostVerified && (
                 <span className="text-[11px] font-semibold text-[#16A34A]">Verified</span>
               )}

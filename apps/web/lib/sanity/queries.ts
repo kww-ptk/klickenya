@@ -190,6 +190,23 @@ export const LISTING_SLUGS_QUERY = groq`
   }
 `
 
+export const HOST_BY_SLUG_QUERY = groq`
+  *[_type == "host" && slug.current == $slug][0]{
+    _id,
+    name,
+    slug,
+    photo{ ${IMAGE_FIELDS} },
+    bio,
+    website,
+    instagram,
+    facebook,
+    planTier,
+    verified,
+    createdAt,
+    "listings": listings[]->{ ${LISTING_CARD_FIELDS} }
+  }
+`
+
 export const SIMILAR_LISTINGS_QUERY = groq`
   *[_type == "listing" && status == "published" && type == $type && lower(city) == lower($city) && slug.current != $slug] | order(_createdAt desc) [0...3] {
     ${LISTING_CARD_FIELDS}
