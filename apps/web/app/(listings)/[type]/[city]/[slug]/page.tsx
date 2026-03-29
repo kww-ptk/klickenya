@@ -1,6 +1,7 @@
 import { type Metadata } from "next";
 import { notFound } from "next/navigation";
 import { sanityClient, sanityFetch } from "@/lib/sanity/client";
+import { adminClient } from "@/lib/supabase/admin";
 import {
   LISTING_BY_SLUG_QUERY,
   EVENT_BY_SLUG_QUERY,
@@ -250,6 +251,28 @@ export default async function ListingDetailPage({ params }: PageProps) {
   const effectiveSingularLabel = isRestaurant ? "Restaurant" : singularLabel;
   const effectiveSanityType = isRestaurant ? "restaurant" : sanityType;
 
+  // Fetch attendees for events
+  let attendeeCount = 0;
+  let attendees: { name: string }[] = [];
+  if (sanityType === "event") {
+    const [countRes, attendeesRes] = await Promise.all([
+      adminClient
+        .from("event_attendees")
+        .select("id", { count: "exact", head: true })
+        .eq("event_sanity_id", listing._id)
+        .eq("status", "confirmed"),
+      adminClient
+        .from("event_attendees")
+        .select("name")
+        .eq("event_sanity_id", listing._id)
+        .eq("status", "confirmed")
+        .order("joined_at", { ascending: false })
+        .limit(5),
+    ]);
+    attendeeCount = countRes.count ?? 0;
+    attendees = (attendeesRes.data ?? []) as { name: string }[];
+  }
+
   // Common props shared by all detail components
   const detailProps = {
     listing,
@@ -261,6 +284,8 @@ export default async function ListingDetailPage({ params }: PageProps) {
     cityName,
     citySlug,
     similarCards,
+    attendeeCount,
+    attendees,
   };
 
   const Detail = (() => {

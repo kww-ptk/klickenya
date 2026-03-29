@@ -3,6 +3,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Calendar } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { adminClient } from "@/lib/supabase/admin";
 import { sanityClient } from "@/lib/sanity/client";
 
 interface EventPending {
@@ -68,6 +69,22 @@ export default async function MyEventsPage() {
     );
   }
 
+  // Fetch attendee counts per event
+  const attendeeCountMap = new Map<string, number>();
+  if (sanityIds.length > 0) {
+    const { data: attendeeCounts } = await adminClient
+      .from("event_attendees")
+      .select("event_sanity_id")
+      .in("event_sanity_id", sanityIds)
+      .eq("status", "confirmed");
+    for (const row of attendeeCounts ?? []) {
+      attendeeCountMap.set(
+        row.event_sanity_id,
+        (attendeeCountMap.get(row.event_sanity_id) ?? 0) + 1
+      );
+    }
+  }
+
   return (
     <div>
       {/* Header */}
@@ -111,6 +128,7 @@ export default async function MyEventsPage() {
             const sanity = event.sanity_event_id ? sanityMap.get(event.sanity_event_id) : null;
             const status = STATUS_STYLES[event.status] ?? STATUS_STYLES.pending;
             const citySlug = (sanity?.city ?? event.city ?? "").toLowerCase().replace(/\s+/g, "-");
+            const attendees = event.sanity_event_id ? (attendeeCountMap.get(event.sanity_event_id) ?? 0) : 0;
             const eventDate = sanity?.eventDate
               ? new Date(sanity.eventDate).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })
               : null;
@@ -158,6 +176,14 @@ export default async function MyEventsPage() {
                       className="px-3.5 py-1.5 rounded-lg bg-[#E8A020]/10 text-[#E8A020] text-[12px] font-semibold hover:bg-[#E8A020]/20 transition-colors text-center"
                     >
                       View
+                    </Link>
+                  )}
+                  {event.sanity_event_id && (
+                    <Link
+                      href={`/dashboard/events/${event.id}/attendees`}
+                      className="px-3.5 py-1.5 rounded-lg bg-purple-600/10 text-purple-600 text-[12px] font-semibold hover:bg-purple-600/20 transition-colors text-center"
+                    >
+                      Attendees ({attendees})
                     </Link>
                   )}
                 </div>

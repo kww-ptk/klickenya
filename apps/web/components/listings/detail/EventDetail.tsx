@@ -11,6 +11,7 @@ import { SimilarListings } from "@/components/listings/widgets/SimilarListings";
 import { BookingSidebar } from "@/components/listings/widgets/BookingSidebar";
 import { MobileBookingBar } from "@/components/listings/widgets/MobileBookingBar";
 import { EventCountdown } from "./event/EventCountdown";
+import { WhosJoining } from "@/components/events/WhosJoining";
 import type { ListingCardProps } from "@/components/listings/ListingCard";
 
 /* ── Types ─────────────────────────────────────────── */
@@ -43,6 +44,8 @@ interface EventDetailProps {
   cityName: string;
   citySlug: string;
   similarCards: ListingCardProps[];
+  attendeeCount?: number;
+  attendees?: { name: string }[];
 }
 
 /* ── Component ─────────────────────────────────────── */
@@ -57,6 +60,8 @@ function EventDetail({
   cityName,
   citySlug,
   similarCards,
+  attendeeCount = 0,
+  attendees = [],
 }: EventDetailProps) {
   const highlights = listing.highlights ?? [];
   const amenities: string[] = listing.amenities ?? [];
@@ -484,30 +489,12 @@ function EventDetail({
               </div>
 
               {/* Who's joining */}
-              <div className="rounded-[24px] border border-border bg-white p-5">
-                <p className="text-[12px] font-semibold text-text3 uppercase tracking-wide mb-4">Who&apos;s joining</p>
-
-                {/* Placeholder attendee avatars */}
-                <div className="flex -space-x-2 mb-4">
-                  {[0, 1, 2].map((i) => (
-                    <div
-                      key={i}
-                      className="size-9 rounded-full border-2 border-white bg-gradient-to-br from-purple-400 to-amber-300"
-                    />
-                  ))}
-                  <div className="size-9 rounded-full border-2 border-white bg-surface flex items-center justify-center">
-                    <span className="text-[10px] font-bold text-text3">+</span>
-                  </div>
-                </div>
-
-                <p className="text-[13px] text-text2 mb-4">
-                  Be the first to join — show others you&apos;re going!
-                </p>
-
-                <button className="w-full py-2.5 rounded-xl bg-purple-600 text-white font-semibold text-[14px] hover:bg-purple-700 transition-colors">
-                  I want to join
-                </button>
-              </div>
+              <WhosJoining
+                eventSanityId={listing._id}
+                eventTitle={listing.title}
+                initialCount={attendeeCount}
+                attendees={attendees}
+              />
             </div>
           </aside>
         </div>
