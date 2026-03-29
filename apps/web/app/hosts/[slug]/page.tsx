@@ -128,14 +128,17 @@ export default async function HostProfilePage({ params }: PageProps) {
     <div className="min-h-screen bg-[#FAFAF8]">
       {/* ── Dark hero ── */}
       <div className="relative bg-[#16130C] overflow-hidden">
+        {/* Background SVG pattern */}
         <div
-          className="absolute inset-0 opacity-[0.03] pointer-events-none"
+          className="absolute inset-0 pointer-events-none opacity-20"
           style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`,
-            backgroundSize: "180px",
+            backgroundImage: `url("https://cdn.sanity.io/images/b9zd8u9f/production/59715b77a1b75a3d1f7bfd75ee2fbec9d5273f62-1600x900.svg?w=1800")`,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
           }}
         />
-        <div className="absolute -bottom-20 -right-20 w-60 h-60 bg-[#E8A020]/5 rounded-full blur-3xl pointer-events-none" />
+        {/* Dark overlay for readability */}
+        <div className="absolute inset-0 bg-gradient-to-b from-[#16130C]/70 via-[#16130C]/50 to-[#16130C]/90 pointer-events-none" />
 
         <div className="relative max-w-3xl mx-auto px-5 pt-8 pb-10 text-center">
           {/* Back link */}
