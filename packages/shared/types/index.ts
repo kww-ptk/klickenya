@@ -110,6 +110,20 @@ export interface SanityReference {
   _type: 'reference'
 }
 
+/** Host reference from Sanity (expanded from host->) */
+export interface HostRef {
+  _id: string
+  name: string
+  slug: string
+  photo?: SanityImage
+  bio?: string
+  website?: string
+  instagram?: string
+  facebook?: string
+  planTier?: string
+  verified?: boolean
+}
+
 // ─── Sanity Document Types ──────────────────────────────────────
 
 /** Listing from Sanity (card fields) */
@@ -128,6 +142,7 @@ export interface SanityListing {
   tags: string[]
   isVerified?: boolean
   verificationStatus?: 'pending' | 'claimed' | 'verified'
+  hostRef?: HostRef
 }
 
 /** Full listing (detail page) */
@@ -139,6 +154,7 @@ export interface SanityListingFull extends SanityListing {
   maxGuests?: number
   bookingType: BookingType
   hostName?: string
+  hostRef?: HostRef
   highlights?: Array<{ emoji: string; title: string; description: string }>
   cuisine?: string[]
   priceRange?: 'budget' | 'mid-range' | 'fine-dining'

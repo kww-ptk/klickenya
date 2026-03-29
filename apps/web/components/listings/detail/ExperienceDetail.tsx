@@ -86,7 +86,7 @@ function ExperienceDetail({
 }: ExperienceDetailProps) {
   const highlights = listing.highlights ?? [];
   const amenities: string[] = listing.amenities ?? [];
-  const hostName = listing.hostName || "Klickenya";
+  const hostName = listing.hostRef?.name ?? listing.hostName ?? "Klickenya";
   const tags: string[] = listing.tags ?? [];
 
   const difficulty = inferDifficulty(tags);
@@ -140,7 +140,7 @@ function ExperienceDetail({
               </span>
             </div>
 
-            <HostBadge hostName={hostName} isVerified={listing.isVerified} listingSlug={listing.slug?.current} />
+            <HostBadge hostName={hostName} hostRef={listing.hostRef} isVerified={listing.isVerified} listingSlug={listing.slug?.current} />
             <hr className="border-border mb-7" />
 
             {/* ── Duration / Difficulty / Group size ── */}

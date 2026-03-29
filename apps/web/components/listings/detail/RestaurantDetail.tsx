@@ -49,7 +49,7 @@ function RestaurantDetail({
 }: RestaurantDetailProps) {
   const highlights = listing.highlights ?? [];
   const amenities: string[] = listing.amenities ?? [];
-  const hostName = listing.hostName || "Klickenya";
+  const hostName = listing.hostRef?.name ?? listing.hostName ?? "Klickenya";
   const cuisine: string[] = listing.cuisine ?? [];
   const priceInfo = PRICE_RANGE_MAP[listing.priceRange ?? ""] ?? null;
 
@@ -108,7 +108,7 @@ function RestaurantDetail({
               )}
             </div>
 
-            <HostBadge hostName={hostName} isVerified={listing.isVerified} listingSlug={listing.slug?.current} />
+            <HostBadge hostName={hostName} hostRef={listing.hostRef} isVerified={listing.isVerified} listingSlug={listing.slug?.current} />
             <hr className="border-border mb-7" />
 
             <HighlightsGrid highlights={highlights} />

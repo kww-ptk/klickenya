@@ -28,7 +28,8 @@ const LISTING_CARD_FIELDS = `
   hostName,
   isVerified,
   verificationStatus,
-  "coverPhoto": photos[0]{ ${IMAGE_FIELDS} }
+  "coverPhoto": photos[0]{ ${IMAGE_FIELDS} },
+  "hostRef": host->{ _id, name, "slug": slug.current, photo{ ${IMAGE_FIELDS} }, verified }
 `
 
 const PROPERTY_CARD_FIELDS = `
@@ -143,6 +144,7 @@ export const LISTING_BY_SLUG_QUERY = groq`
     seoDescription,
     isVerified,
     verificationStatus,
+    "hostRef": host->{ _id, name, "slug": slug.current, photo{ ${IMAGE_FIELDS} }, bio, website, instagram, facebook, planTier, verified },
 
     // Restaurant fields
     atmosphere,
