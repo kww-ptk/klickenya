@@ -57,7 +57,7 @@ export function DashboardBottomNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 lg:hidden bg-white border-t border-[#E2DDD5] pb-[env(safe-area-inset-bottom)]">
+    <nav className="fixed bottom-0 left-0 right-0 z-40 lg:hidden bg-[#16130C] border-t border-white/10 pb-[env(safe-area-inset-bottom)]">
       <div className="flex items-center justify-around px-2 py-1.5">
         {TABS.map((tab) => {
           const isActive = tab.href === "/dashboard"
@@ -70,8 +70,8 @@ export function DashboardBottomNav() {
                 key={tab.href}
                 className="flex flex-col items-center gap-0.5 px-3 py-1.5 min-w-[56px] opacity-30"
               >
-                <span className="size-5 text-[#9C9485]">{tab.icon}</span>
-                <span className="text-[10px] font-medium text-[#9C9485]">{tab.label}</span>
+                <span className="size-5 text-white/25">{tab.icon}</span>
+                <span className="text-[10px] font-medium text-white/25">{tab.label}</span>
               </div>
             );
           }
@@ -82,13 +82,13 @@ export function DashboardBottomNav() {
               href={tab.href}
               className={cn(
                 "flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl min-w-[56px] transition-colors",
-                isActive && "bg-[#E8A020]/10"
+                isActive && "bg-[#E8A020]/15"
               )}
             >
-              <span className={cn("size-5", isActive ? "text-[#E8A020]" : "text-[#9C9485]")}>
+              <span className={cn("size-5", isActive ? "text-[#E8A020]" : "text-white/50")}>
                 {tab.icon}
               </span>
-              <span className={cn("text-[10px] font-semibold", isActive ? "text-[#E8A020]" : "text-[#9C9485]")}>
+              <span className={cn("text-[10px] font-semibold", isActive ? "text-[#E8A020]" : "text-white/50")}>
                 {tab.label}
               </span>
             </Link>
