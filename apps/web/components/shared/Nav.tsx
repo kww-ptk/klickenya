@@ -21,6 +21,7 @@ interface NavProps {
 }
 
 const NAV_LINKS: Array<{ href: string; label: string; badge?: string }> = [
+  { href: "/events-in-kenya", label: "Events" },
   { href: "/destinations", label: "Destinations" },
   { href: "/journal", label: "Journal" },
 ];

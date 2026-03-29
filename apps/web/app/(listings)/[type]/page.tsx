@@ -3,7 +3,9 @@ import { notFound } from "next/navigation";
 import { sanityFetch } from "@/lib/sanity/client";
 import {
   LISTINGS_FILTERED_QUERY,
+  EVENTS_FILTERED_QUERY,
   SUBCATEGORY_COUNTS_QUERY,
+  EVENT_SUBCATEGORY_COUNTS_QUERY,
 } from "@/lib/sanity/queries";
 import { urlForImage } from "@/lib/sanity/image";
 import { ListingGrid } from "@/components/listings/ListingGrid";
@@ -81,8 +83,13 @@ export async function generateMetadata({
     ? city.charAt(0).toUpperCase() + city.slice(1)
     : "Kenya";
 
-  const title = `${subLabel} in ${location} | Klickenya`;
-  const description = `Browse the best ${subLabel.toLowerCase()} in ${location}. Curated listings for unforgettable experiences.`;
+  const isEvents = type === "events";
+  const title = isEvents
+    ? `Events in ${location} ${new Date().getFullYear()} | Klickenya`
+    : `${subLabel} in ${location} | Klickenya`;
+  const description = isEvents
+    ? `Discover upcoming events in ${location} — parties, festivals, workshops and more.`
+    : `Browse the best ${subLabel.toLowerCase()} in ${location}. Curated listings for unforgettable experiences.`;
 
   return {
     title,
@@ -136,21 +143,19 @@ export default async function TypePage({ params, searchParams }: PageProps) {
   const tags = sp.tags?.split(",").filter(Boolean) || [];
   const city = sp.city || null;
 
-  // Fetch listings with filters
+  // Fetch listings with filters — use events-specific query for events
+  const isEventType = sanityType === "event";
   const { data: listings } = await sanityFetch({
-    query: LISTINGS_FILTERED_QUERY,
-    params: {
-      type: sanityType,
-      subcategory: subcategory ?? "",
-      city: city ?? "",
-      limit: 48,
-    },
+    query: isEventType ? EVENTS_FILTERED_QUERY : LISTINGS_FILTERED_QUERY,
+    params: isEventType
+      ? { subcategory: subcategory ?? "", city: city ?? "", limit: 48 }
+      : { type: sanityType, subcategory: subcategory ?? "", city: city ?? "", limit: 48 },
   });
 
   // Fetch subcategory counts
   const { data: countsData } = await sanityFetch({
-    query: SUBCATEGORY_COUNTS_QUERY,
-    params: { type: sanityType },
+    query: isEventType ? EVENT_SUBCATEGORY_COUNTS_QUERY : SUBCATEGORY_COUNTS_QUERY,
+    params: isEventType ? {} : { type: sanityType },
   });
 
   // Build counts map

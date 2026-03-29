@@ -694,6 +694,27 @@ export const EVENT_SUBCATEGORY_COUNTS_QUERY = groq`
   }
 `
 
+export const EVENTS_FILTERED_QUERY = groq`
+  *[_type == "listing" && type == "event" && status == "published"
+    && (eventDate >= now() || !defined(eventDate))
+    && select(
+      $subcategory != "" => subcategory == $subcategory,
+      true
+    )
+    && select(
+      $city != "" => lower(city) == lower($city),
+      true
+    )
+  ] | order(eventDate asc) [0...$limit] {
+    ${LISTING_CARD_FIELDS},
+    eventDate,
+    eventEndDate,
+    venue,
+    isFree,
+    priceFrom
+  }
+`
+
 // ── Search ───────────────────────────────────────
 
 // $q should be passed as "term*" from the caller for wildcard matching

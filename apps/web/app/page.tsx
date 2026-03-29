@@ -14,7 +14,7 @@ import {
 import { sanityFetch } from "@/lib/sanity/client";
 import {
   LISTINGS_QUERY,
-  EVENTS_QUERY,
+  UPCOMING_EVENTS_QUERY,
   HOMEPAGE_DESTINATIONS_QUERY,
   SITE_SETTINGS_QUERY,
   HOME_PAGE_QUERY,
@@ -96,7 +96,7 @@ async function getData() {
     sanityFetch({ query: SITE_SETTINGS_QUERY }).catch(() => ({ data: null })),
     sanityFetch({ query: HOME_PAGE_QUERY }).catch(() => ({ data: null })),
     sanityFetch({ query: LATEST_BLOG_POSTS_QUERY }).catch(() => ({ data: [] })),
-    sanityFetch({ query: EVENTS_QUERY }).catch(() => ({ data: [] })),
+    sanityFetch({ query: UPCOMING_EVENTS_QUERY, params: { limit: 8 } }).catch(() => ({ data: [] })),
   ]);
 
   return {
@@ -331,7 +331,7 @@ export default async function HomePage() {
               </p>
             </div>
             <Link
-              href="/events"
+              href="/events-in-kenya"
               className="hidden md:flex text-[14px] font-semibold text-amber hover:underline shrink-0"
             >
               View all
