@@ -60,7 +60,7 @@ export default async function AuthorProfilePage({ params }: PageProps) {
 
         {posts.length > 0 ? (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {posts.map((post) => (
+            {posts.map((post: { _id: string; slug: string; title: string; excerpt?: string; coverImageUrl?: string; publishedAt?: string; readingTime?: number }) => (
               <PostCard
                 key={post._id}
                 slug={post.slug}
