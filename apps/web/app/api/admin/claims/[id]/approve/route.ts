@@ -215,6 +215,23 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
         console.error("Sanity hostId patch error:", sanityErr);
       }
 
+      // Generate password reset link for new hosts
+      let setPasswordUrl = `https://www.klickenya.com/forgot-password?email=${encodeURIComponent(claim.claimant_email)}`;
+      if (isNewHost) {
+        try {
+          const { data: linkData } = await supabase.auth.admin.generateLink({
+            type: "recovery",
+            email: claim.claimant_email,
+            options: { redirectTo: "https://www.klickenya.com/auth/callback?next=/reset-password" },
+          });
+          if (linkData?.properties?.action_link) {
+            setPasswordUrl = linkData.properties.action_link;
+          }
+        } catch (linkErr) {
+          console.error("Recovery link generation error:", linkErr);
+        }
+      }
+
       // Send approval + host account email
       try {
         const resend = new Resend(process.env.RESEND_API_KEY);
@@ -233,7 +250,7 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
               Your account email: <strong style="color: #16130C;">${claim.claimant_email}</strong>
             </p>
             <p style="margin: 0 0 24px;">
-              <a href="https://www.klickenya.com/forgot-password?email=${encodeURIComponent(claim.claimant_email)}" style="display: inline-block; background: #E8A020; color: #16130C; font-weight: 700; text-decoration: none; padding: 12px 28px; border-radius: 999px; font-size: 14px;">Set your password →</a>
+              <a href="${setPasswordUrl}" style="display: inline-block; background: #E8A020; color: #16130C; font-weight: 700; text-decoration: none; padding: 12px 28px; border-radius: 999px; font-size: 14px;">Set your password →</a>
             </p>
           `
           : `
