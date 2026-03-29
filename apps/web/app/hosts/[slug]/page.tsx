@@ -129,13 +129,11 @@ export default async function HostProfilePage({ params }: PageProps) {
       {/* ── Dark hero ── */}
       <div className="relative bg-[#16130C] overflow-hidden">
         {/* Background SVG pattern */}
-        <div
-          className="absolute inset-0 pointer-events-none opacity-20"
-          style={{
-            backgroundImage: `url("https://cdn.sanity.io/images/b9zd8u9f/production/59715b77a1b75a3d1f7bfd75ee2fbec9d5273f62-1600x900.svg?w=1800")`,
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-          }}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="https://cdn.sanity.io/images/b9zd8u9f/production/59715b77a1b75a3d1f7bfd75ee2fbec9d5273f62-1600x900.svg?w=1800"
+          alt=""
+          className="absolute inset-0 w-full h-full object-cover opacity-20 pointer-events-none"
         />
         {/* Dark overlay for readability */}
         <div className="absolute inset-0 bg-gradient-to-b from-[#16130C]/70 via-[#16130C]/50 to-[#16130C]/90 pointer-events-none" />
