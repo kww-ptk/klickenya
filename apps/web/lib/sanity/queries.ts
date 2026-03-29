@@ -203,7 +203,8 @@ export const HOST_BY_SLUG_QUERY = groq`
     planTier,
     verified,
     createdAt,
-    "listings": listings[]->{ ${LISTING_CARD_FIELDS} }
+    "listings": listings[]->{ ${LISTING_CARD_FIELDS} },
+    "events": listings[]->[type == "event" && status == "published"]{ ${LISTING_CARD_FIELDS}, eventDate, eventEndDate, venue, isFree, priceFrom, "coverPhotoUrl": photos[0].asset->url }
   }
 `
 

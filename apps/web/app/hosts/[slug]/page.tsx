@@ -5,6 +5,8 @@ import { HOST_BY_SLUG_QUERY } from "@/lib/sanity/queries";
 import { urlForImage } from "@/lib/sanity/image";
 import { ListingGrid } from "@/components/listings/ListingGrid";
 import { ProfileHero } from "@/components/profiles/ProfileHero";
+import { EventCard } from "@/components/home/EventCard";
+import { mapSanityEventToCard } from "@/lib/mappers/eventMapper";
 import type { ListingCardProps } from "@/components/listings/ListingCard";
 
 /* ---------- Types ---------- */
@@ -79,12 +81,21 @@ export default async function HostProfilePage({ params }: PageProps) {
 
   if (!host) notFound();
 
-  const verifiedListings = (host.listings ?? []).filter((l: any) => l.isVerified);
+  // Split listings from events
+  const verifiedListings = (host.listings ?? []).filter(
+    (l: any) => l.isVerified && l.type !== "event"
+  );
   const cards = verifiedListings.map(mapListingToCard);
+
+  // Events from the dedicated events projection
+  const hostEvents = (host.events ?? []) as any[];
+  const eventCards = hostEvents.map(mapSanityEventToCard);
 
   const memberSince = host.createdAt
     ? new Date(host.createdAt).toLocaleDateString("en-GB", { month: "long", year: "numeric" })
     : undefined;
+
+  const totalCount = verifiedListings.length + hostEvents.length;
 
   return (
     <div className="min-h-screen bg-[#FAFAF8]">
@@ -100,32 +111,56 @@ export default async function HostProfilePage({ params }: PageProps) {
         verified={host.verified}
         memberSince={memberSince}
         stats={[
-          { label: "Listings", value: verifiedListings.length },
-          { label: "Verified", value: verifiedListings.filter((l: any) => l.isVerified).length },
+          { label: "Listings", value: totalCount },
+          { label: "Events", value: hostEvents.length },
         ]}
       />
 
       {/* ── Content ── */}
       <div className="max-w-5xl mx-auto px-5 py-8">
-        <h2 className="font-display text-[20px] font-bold text-[#16130C] tracking-[-0.02em] mb-5">
-          Listings by {host.name}
-        </h2>
 
-        {cards.length > 0 ? (
-          <ListingGrid listings={cards} />
-        ) : (
-          <div className="bg-white rounded-2xl border border-[#E2DDD5] p-10 text-center shadow-sm mb-8">
-            <p className="text-[15px] font-semibold text-[#16130C] mb-1">
-              No verified listings yet
-            </p>
-            <p className="text-[13px] text-[#9C9485]">
-              Listings will appear here once verified.
-            </p>
-          </div>
+        {/* ── Events section ── */}
+        {eventCards.length > 0 && (
+          <section className="mb-12">
+            <div className="mb-5">
+              <h2 className="font-display text-[20px] font-bold text-[#16130C] tracking-[-0.02em]">
+                Events by {host.name}
+              </h2>
+              <p className="text-[14px] text-[#9C9485] mt-1">
+                Upcoming events, parties and experiences organised by {host.name}
+              </p>
+            </div>
+
+            <div className="flex gap-5 overflow-x-auto scrollbar-none pb-4 -mx-5 px-5 md:mx-0 md:px-0 md:grid md:grid-cols-2 lg:grid-cols-3">
+              {eventCards.map((event, i) => (
+                <EventCard key={i} {...event} />
+              ))}
+            </div>
+          </section>
         )}
 
+        {/* ── Listings section ── */}
+        <section className="mb-12">
+          <h2 className="font-display text-[20px] font-bold text-[#16130C] tracking-[-0.02em] mb-5">
+            Listings by {host.name}
+          </h2>
+
+          {cards.length > 0 ? (
+            <ListingGrid listings={cards} />
+          ) : (
+            <div className="bg-white rounded-2xl border border-[#E2DDD5] p-10 text-center shadow-sm">
+              <p className="text-[15px] font-semibold text-[#16130C] mb-1">
+                No verified listings yet
+              </p>
+              <p className="text-[13px] text-[#9C9485]">
+                Listings will appear here once verified.
+              </p>
+            </div>
+          )}
+        </section>
+
         {/* Reviews placeholder */}
-        <div className="mt-10">
+        <section>
           <h2 className="font-display text-[20px] font-bold text-[#16130C] tracking-[-0.02em] mb-4">
             Reviews
           </h2>
@@ -134,7 +169,7 @@ export default async function HostProfilePage({ params }: PageProps) {
               Reviews coming soon
             </p>
           </div>
-        </div>
+        </section>
       </div>
     </div>
   );
