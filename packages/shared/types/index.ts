@@ -1,3 +1,7 @@
+// ─── Profiles ───────────────────────────────────────────────────
+
+export type { ProfileBase, HostProfile, AuthorProfile, GuestProfile, AmbassadorProfile } from './profiles'
+
 // ─── Enums ──────────────────────────────────────────────────────
 
 export type ListingType = 'stay' | 'experience' | 'event' | 'rental' | 'service' | 'restaurant'

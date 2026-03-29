@@ -42,6 +42,30 @@ export default defineType({
       type: 'string',
       description: 'e.g. Editor, Contributor',
     }),
+    // Social links (profileBase alignment)
+    defineField({
+      name: 'website',
+      title: 'Website',
+      type: 'url',
+    }),
+    defineField({
+      name: 'instagram',
+      title: 'Instagram',
+      type: 'string',
+      description: '@handle or full URL',
+    }),
+    defineField({
+      name: 'facebook',
+      title: 'Facebook',
+      type: 'string',
+      description: 'Page name or full URL',
+    }),
+    defineField({
+      name: 'twitter',
+      title: 'Twitter / X',
+      type: 'string',
+      description: '@handle or full URL',
+    }),
   ],
   preview: {
     select: {

@@ -1,48 +1,16 @@
 import { type Metadata } from "next";
 import { notFound } from "next/navigation";
-import Image from "next/image";
-import Link from "next/link";
-import { Check } from "lucide-react";
 import { sanityClient } from "@/lib/sanity/client";
 import { HOST_BY_SLUG_QUERY } from "@/lib/sanity/queries";
 import { urlForImage } from "@/lib/sanity/image";
 import { ListingGrid } from "@/components/listings/ListingGrid";
+import { ProfileHero } from "@/components/profiles/ProfileHero";
 import type { ListingCardProps } from "@/components/listings/ListingCard";
 
 /* ---------- Types ---------- */
 
-interface HostData {
-  _id: string;
-  name: string;
-  slug: { current: string };
-  photo?: { asset?: { url?: string; _id?: string }; alt?: string; hotspot?: unknown; crop?: unknown };
-  bio?: string;
-  website?: string;
-  instagram?: string;
-  facebook?: string;
-  planTier?: string;
-  verified?: boolean;
-  createdAt?: string;
-  listings?: Array<{
-    _id: string;
-    title: string;
-    slug: { current: string } | string;
-    type: string;
-    city?: string;
-    coverPhoto?: unknown;
-    isVerified?: boolean;
-    verificationStatus?: string;
-    hostName?: string;
-    hostRef?: { name?: string; slug?: string; photo?: { asset?: { url?: string } }; verified?: boolean };
-    price?: number;
-    priceUnit?: string;
-    priceRange?: string;
-    openingHours?: string;
-    subcategory?: string;
-    avgRating?: number;
-    reviewCount?: number;
-  }>;
-}
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type HostData = any;
 
 /* ---------- Helpers ---------- */
 
@@ -55,7 +23,8 @@ const TYPE_SLUG_MAP: Record<string, string> = {
   restaurant: "restaurants",
 };
 
-function mapListingToCard(listing: NonNullable<HostData["listings"]>[number]): ListingCardProps {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function mapListingToCard(listing: any): ListingCardProps {
   const slug = typeof listing.slug === "string" ? listing.slug : listing.slug?.current ?? "";
   const citySlug = (listing.city ?? "").toLowerCase().replace(/\s+/g, "-");
   const typeSlug = TYPE_SLUG_MAP[listing.type] ?? listing.type + "s";
@@ -110,136 +79,34 @@ export default async function HostProfilePage({ params }: PageProps) {
 
   if (!host) notFound();
 
-  const photoUrl = host.photo?.asset?.url;
-  const initials = host.name
-    .split(/\s+/)
-    .map((w) => w[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2);
-
-  const verifiedListings = (host.listings ?? []).filter((l) => l.isVerified);
+  const verifiedListings = (host.listings ?? []).filter((l: any) => l.isVerified);
   const cards = verifiedListings.map(mapListingToCard);
 
   const memberSince = host.createdAt
     ? new Date(host.createdAt).toLocaleDateString("en-GB", { month: "long", year: "numeric" })
-    : null;
-
-  const planLabel = host.planTier ?? "basic";
+    : undefined;
 
   return (
     <div className="min-h-screen bg-[#FAFAF8]">
-      {/* ── Dark hero ── */}
-      <div className="relative bg-[#16130C] overflow-hidden">
-        {/* Background SVG pattern */}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src="https://cdn.sanity.io/images/b9zd8u9f/production/59715b77a1b75a3d1f7bfd75ee2fbec9d5273f62-1600x900.svg?w=1800"
-          alt=""
-          className="absolute inset-0 w-full h-full object-cover pointer-events-none"
-        />
-        {/* Dark overlay for readability */}
-        <div className="absolute inset-0 bg-[#16130C]/40 pointer-events-none" />
-
-        <div className="relative max-w-3xl mx-auto px-5 pt-8 pb-10 text-center">
-          {/* Back link */}
-          <Link
-            href="/"
-            className="inline-flex items-center gap-1.5 text-[13px] text-white/40 hover:text-white/70 transition-colors mb-6"
-          >
-            ← Back to Klickenya
-          </Link>
-
-          {/* Photo */}
-          <div className="relative w-24 h-24 mx-auto mb-4">
-            {photoUrl ? (
-              <Image
-                src={`${photoUrl}?w=192&h=192&fit=crop&auto=format`}
-                alt={host.name}
-                width={96}
-                height={96}
-                className="w-24 h-24 rounded-full object-cover border-4 border-white/10"
-              />
-            ) : (
-              <div className="w-24 h-24 rounded-full bg-gradient-to-br from-[#E8A020] to-[#6B2D8B] flex items-center justify-center text-white text-[28px] font-bold border-4 border-white/10">
-                {initials}
-              </div>
-            )}
-            {host.verified && (
-              <span className="absolute -bottom-1 -right-1 size-7 rounded-full bg-[#16A34A] border-3 border-[#16130C] flex items-center justify-center">
-                <Check className="size-4 text-white" strokeWidth={3} />
-              </span>
-            )}
-          </div>
-
-          {/* Name + badges */}
-          <h1 className="font-display text-[26px] font-bold tracking-[-0.03em] text-white mb-1">
-            {host.name}
-          </h1>
-          <div className="flex items-center justify-center gap-2 mb-4">
-            {host.verified && (
-              <span className="text-[12px] font-bold text-[#16A34A]">Verified Host</span>
-            )}
-            <span className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-[#E8A020]/15 text-[#E8A020]">
-              {planLabel}
-            </span>
-          </div>
-
-          {/* Bio */}
-          {host.bio && (
-            <p className="text-[14px] text-white/50 max-w-md mx-auto mb-5 leading-relaxed">
-              {host.bio}
-            </p>
-          )}
-
-          {/* Links */}
-          {(host.website || host.instagram || host.facebook) && (
-            <div className="flex items-center justify-center gap-4 mb-4">
-              {host.website && (
-                <a
-                  href={host.website}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-[13px] text-[#E8A020] hover:text-[#F5C842] transition-colors"
-                >
-                  Website
-                </a>
-              )}
-              {host.instagram && (
-                <a
-                  href={host.instagram.startsWith("http") ? host.instagram : `https://instagram.com/${host.instagram.replace("@", "")}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-[13px] text-[#E8A020] hover:text-[#F5C842] transition-colors"
-                >
-                  Instagram
-                </a>
-              )}
-              {host.facebook && (
-                <a
-                  href={host.facebook.startsWith("http") ? host.facebook : `https://facebook.com/${host.facebook}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-[13px] text-[#E8A020] hover:text-[#F5C842] transition-colors"
-                >
-                  Facebook
-                </a>
-              )}
-            </div>
-          )}
-
-          {/* Member since */}
-          {memberSince && (
-            <p className="text-[12px] text-white/25">
-              Member since {memberSince}
-            </p>
-          )}
-        </div>
-      </div>
+      <ProfileHero
+        name={host.name}
+        photo={host.photo}
+        bio={host.bio}
+        website={host.website}
+        instagram={host.instagram}
+        facebook={host.facebook}
+        badgeLabel={host.planTier ?? "basic"}
+        badgeColor="amber"
+        verified={host.verified}
+        memberSince={memberSince}
+        stats={[
+          { label: "Listings", value: verifiedListings.length },
+          { label: "Verified", value: verifiedListings.filter((l: any) => l.isVerified).length },
+        ]}
+      />
 
       {/* ── Content ── */}
       <div className="max-w-5xl mx-auto px-5 py-8">
-        {/* Listings */}
         <h2 className="font-display text-[20px] font-bold text-[#16130C] tracking-[-0.02em] mb-5">
           Listings by {host.name}
         </h2>
