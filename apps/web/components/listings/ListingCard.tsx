@@ -143,10 +143,11 @@ function ListingCard({
     }
   }, [type, openingHours]);
 
+  const isFreeEvent = type === "event" && (price === null || price === 0);
   const ctaLabels: Record<ListingType, string> = {
     stay: "View stay",
     experience: "View experience",
-    event: "Get tickets",
+    event: isFreeEvent ? "Join event" : "Get tickets",
     rental: "View rental",
     service: "View service",
     restaurant: "See restaurant",
