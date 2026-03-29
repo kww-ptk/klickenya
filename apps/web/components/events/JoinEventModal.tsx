@@ -10,7 +10,7 @@ interface JoinEventModalProps {
   eventTitle: string;
   isOpen: boolean;
   onClose: () => void;
-  onSuccess: (count: number) => void;
+  onSuccess: (count: number, joinerName: string) => void;
 }
 
 const inputCls =
@@ -106,7 +106,7 @@ export function JoinEventModal({
       }
 
       setSuccess(true);
-      onSuccess(data.attendeeCount);
+      onSuccess(data.attendeeCount, name.trim());
     } catch {
       setError("Something went wrong. Please try again.");
     } finally {

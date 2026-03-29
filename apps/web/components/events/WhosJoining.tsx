@@ -22,6 +22,7 @@ export function WhosJoining({
 }: WhosJoiningProps) {
   const [modalOpen, setModalOpen] = useState(false);
   const [count, setCount] = useState(initialCount);
+  const [attendeeList, setAttendeeList] = useState<Attendee[]>(attendees);
 
   function getInitials(name: string) {
     return name
@@ -49,9 +50,9 @@ export function WhosJoining({
 
         {/* Attendee avatars */}
         <div className="flex -space-x-2 mb-3">
-          {attendees.length > 0 ? (
+          {attendeeList.length > 0 ? (
             <>
-              {attendees.slice(0, 5).map((a, i) => (
+              {attendeeList.slice(0, 5).map((a, i) => (
                 <div
                   key={i}
                   className={`size-9 rounded-full border-2 border-white bg-gradient-to-br ${GRADIENT_COLORS[i % GRADIENT_COLORS.length]} flex items-center justify-center`}
@@ -102,7 +103,12 @@ export function WhosJoining({
         eventTitle={eventTitle}
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
-        onSuccess={(newCount) => setCount(newCount)}
+        onSuccess={(newCount, joinerName) => {
+          setCount(newCount);
+          if (joinerName) {
+            setAttendeeList((prev) => [{ name: joinerName }, ...prev]);
+          }
+        }}
       />
     </>
   );

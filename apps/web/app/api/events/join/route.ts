@@ -57,11 +57,12 @@ export async function POST(req: NextRequest) {
       venue: string | null;
       eventDate: string | null;
       organizer: string | null;
+      hostId: string | null;
       hostRef: { name: string } | null;
       notificationEmail1: string | null;
     } | null>(
       `*[_type == "listing" && _id == $id][0]{
-        title, city, venue, eventDate, organizer,
+        title, city, venue, eventDate, organizer, hostId,
         "hostRef": host->{ name },
         notificationEmail1
       }`,
@@ -69,12 +70,22 @@ export async function POST(req: NextRequest) {
     );
 
     const eventTitle = event?.title ?? "Event";
-    const hostEmail = event?.notificationEmail1;
     const hostName = event?.organizer ?? event?.hostRef?.name ?? "Host";
     const eventDate = event?.eventDate
       ? new Date(event.eventDate).toLocaleDateString("en-GB", { dateStyle: "medium" })
       : null;
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://klickenya.com";
+
+    // Resolve host email: try notificationEmail1, then look up from Supabase via hostId
+    let hostEmail = event?.notificationEmail1 ?? null;
+    if (!hostEmail && event?.hostId) {
+      const { data: hostUser } = await adminClient
+        .from("users")
+        .select("email")
+        .eq("id", event.hostId)
+        .single();
+      hostEmail = hostUser?.email ?? null;
+    }
 
     // Email to attendee
     try {
