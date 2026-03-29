@@ -57,6 +57,28 @@ const emptyTicket = (): TicketRow => ({
   available: "",
 });
 
+interface ScheduleRow {
+  day: string;
+  startTime: string;
+  endTime: string;
+}
+
+const DAYS_OF_WEEK = [
+  { value: "monday", label: "Monday" },
+  { value: "tuesday", label: "Tuesday" },
+  { value: "wednesday", label: "Wednesday" },
+  { value: "thursday", label: "Thursday" },
+  { value: "friday", label: "Friday" },
+  { value: "saturday", label: "Saturday" },
+  { value: "sunday", label: "Sunday" },
+];
+
+const emptySchedule = (): ScheduleRow => ({
+  day: "",
+  startTime: "",
+  endTime: "",
+});
+
 /* ── Progress Dots ──────────────────────────────────── */
 
 function ProgressDots({ currentIndex }: { currentIndex: number }) {
@@ -135,6 +157,7 @@ export function AddEventForm({ hostDisplayName, sanityHostId }: AddEventFormProp
   const [venueAddress, setVenueAddress] = useState("");
   const [isRecurring, setIsRecurring] = useState(false);
   const [recurrenceRule, setRecurrenceRule] = useState("");
+  const [schedule, setSchedule] = useState<ScheduleRow[]>([emptySchedule()]);
 
   // Step 3 — Tickets
   const [isFree, setIsFree] = useState(false);
@@ -189,10 +212,26 @@ export function AddEventForm({ hostDisplayName, sanityHostId }: AddEventFormProp
     setTickets((prev) => prev.filter((_, i) => i !== idx));
   }
 
+  /* ── Schedule handlers ────────────────── */
+
+  function updateSchedule(idx: number, field: keyof ScheduleRow, value: string) {
+    setSchedule((prev) =>
+      prev.map((s, i) => (i === idx ? { ...s, [field]: value } : s))
+    );
+  }
+
+  function addScheduleRow() {
+    if (schedule.length < 7) setSchedule((prev) => [...prev, emptySchedule()]);
+  }
+
+  function removeScheduleRow(idx: number) {
+    setSchedule((prev) => prev.filter((_, i) => i !== idx));
+  }
+
   /* ── Validation ───────────────────────── */
 
   const step1Valid = title.trim() !== "" && subcategory !== "" && city !== "" && shortDescription.trim() !== "" && coverPhoto !== null;
-  const step2Valid = startDate !== "" && venueName.trim() !== "";
+  const step2Valid = (isRecurring ? schedule.some((s) => s.day && s.startTime) : startDate !== "") && venueName.trim() !== "";
   const step3Valid = true; // all optional beyond free toggle
 
   /* ── Submit ───────────────────────────── */
@@ -215,6 +254,9 @@ export function AddEventForm({ hostDisplayName, sanityHostId }: AddEventFormProp
       formData.set("venueAddress", venueAddress);
       formData.set("isRecurring", String(isRecurring));
       formData.set("recurrenceRule", recurrenceRule);
+      if (isRecurring) {
+        formData.set("schedule", JSON.stringify(schedule.filter((s) => s.day && s.startTime)));
+      }
       formData.set("isFree", String(isFree));
       formData.set("ticketLink", ticketLink);
       formData.set("ageRestriction", ageRestriction);
@@ -453,9 +495,39 @@ export function AddEventForm({ hostDisplayName, sanityHostId }: AddEventFormProp
           </div>
 
           {isRecurring && (
-            <div>
-              <label className={labelCls}>Recurrence rule</label>
-              <input className={inputCls} value={recurrenceRule} onChange={(e) => setRecurrenceRule(e.target.value)} placeholder="e.g. Every Friday" />
+            <div className="space-y-4">
+              <div>
+                <label className={labelCls}>Recurrence label</label>
+                <input className={inputCls} value={recurrenceRule} onChange={(e) => setRecurrenceRule(e.target.value)} placeholder="e.g. Every Friday, Every week" />
+                <p className="text-[11px] text-text3 mt-1">Short label shown on the event page</p>
+              </div>
+
+              <div>
+                <label className={labelCls}>Weekly schedule</label>
+                <p className="text-[11px] text-text3 mb-3">Add the days and times this event runs</p>
+                <div className="space-y-3">
+                  {schedule.map((row, i) => (
+                    <div key={i} className="flex items-center gap-2">
+                      <select className={cn(selectCls, "flex-1")} value={row.day} onChange={(e) => updateSchedule(i, "day", e.target.value)}>
+                        <option value="">Day…</option>
+                        {DAYS_OF_WEEK.map((d) => <option key={d.value} value={d.value}>{d.label}</option>)}
+                      </select>
+                      <input type="time" className={cn(inputCls, "w-28")} value={row.startTime} onChange={(e) => updateSchedule(i, "startTime", e.target.value)} placeholder="Start" />
+                      <input type="time" className={cn(inputCls, "w-28")} value={row.endTime} onChange={(e) => updateSchedule(i, "endTime", e.target.value)} placeholder="End" />
+                      {schedule.length > 1 && (
+                        <button onClick={() => removeScheduleRow(i)} className="text-red-500 hover:text-red-700 transition-colors shrink-0">
+                          <Trash2 className="size-4" />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                {schedule.length < 7 && (
+                  <button onClick={addScheduleRow} className="mt-2 flex items-center gap-1.5 text-[13px] font-semibold text-[#E8A020] hover:text-[#d4911c] transition-colors">
+                    <Plus className="size-4" /> Add another day
+                  </button>
+                )}
+              </div>
             </div>
           )}
 

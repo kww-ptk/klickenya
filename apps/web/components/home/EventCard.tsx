@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { Repeat } from "lucide-react";
 
 interface EventCardProps {
   title: string;
@@ -17,6 +18,8 @@ interface EventCardProps {
   href: string;
   imageUrl?: string;
   imageColor?: string;
+  isRecurring?: boolean;
+  recurrenceRule?: string | null;
 }
 
 function EventCard({
@@ -32,7 +35,11 @@ function EventCard({
   href,
   imageUrl,
   imageColor = "bg-surface2",
+  isRecurring,
+  recurrenceRule,
 }: EventCardProps) {
+  const isScheduleBadge = month === "WEEKLY";
+
   return (
     <Link
       href={href}
@@ -50,15 +57,40 @@ function EventCard({
           />
         )}
         <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/10" />
+
         {/* Date badge */}
-        <div className="absolute top-4 left-4 bg-white rounded-[14px] px-3 py-2 text-center shadow-sm min-w-[52px]">
-          <span className="block text-[11px] font-bold text-purple uppercase tracking-[0.04em]">
-            {month}
-          </span>
-          <span className="block text-[22px] font-bold text-text leading-none mt-0.5">
-            {day}
-          </span>
-        </div>
+        {isScheduleBadge ? (
+          <div className="absolute top-4 left-4 bg-white rounded-[14px] px-3 py-2 text-center shadow-sm">
+            <div className="flex items-center gap-1.5">
+              <Repeat className="size-3 text-purple" />
+              <span className="text-[10px] font-bold text-purple uppercase tracking-[0.04em]">
+                Weekly
+              </span>
+            </div>
+            <span className="block text-[11px] font-bold text-text leading-tight mt-1">
+              {day}
+            </span>
+          </div>
+        ) : (
+          <div className="absolute top-4 left-4 bg-white rounded-[14px] px-3 py-2 text-center shadow-sm min-w-[52px]">
+            <span className="block text-[11px] font-bold text-purple uppercase tracking-[0.04em]">
+              {month}
+            </span>
+            <span className="block text-[22px] font-bold text-text leading-none mt-0.5">
+              {day}
+            </span>
+          </div>
+        )}
+
+        {/* Recurring badge */}
+        {isRecurring && !isScheduleBadge && (
+          <div className="absolute top-4 right-4 flex items-center gap-1 bg-purple-600/90 backdrop-blur-sm rounded-full px-2.5 py-1 shadow-sm">
+            <Repeat className="size-3 text-white" />
+            <span className="text-[10px] font-bold text-white uppercase tracking-wide">
+              Recurring
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Body */}
@@ -86,25 +118,32 @@ function EventCard({
 
         {/* Footer */}
         <div className="flex items-center justify-between pt-3 border-t border-border">
-          {/* Avatars */}
-          <div className="flex items-center">
-            <div className="flex -space-x-1.5">
-              {Array.from({ length: Math.min(attending, 3) }).map((_, i) => (
-                <div
-                  key={i}
-                  className="size-6 rounded-full border-2 border-white bg-surface2"
-                />
-              ))}
-            </div>
-            {attending > 3 && (
-              <span className="ml-2 text-[11px] text-text3 font-medium">
-                +{attending - 3}
-              </span>
+          {/* Recurring rule or avatars */}
+          <div className="flex items-center min-w-0">
+            {isRecurring && recurrenceRule ? (
+              <div className="flex items-center gap-1 text-[11px] text-purple font-medium truncate">
+                <Repeat className="size-3 shrink-0" />
+                <span className="truncate">{recurrenceRule}</span>
+              </div>
+            ) : (
+              <div className="flex -space-x-1.5">
+                {Array.from({ length: Math.min(attending, 3) }).map((_, i) => (
+                  <div
+                    key={i}
+                    className="size-6 rounded-full border-2 border-white bg-surface2"
+                  />
+                ))}
+                {attending > 3 && (
+                  <span className="ml-2 text-[11px] text-text3 font-medium">
+                    +{attending - 3}
+                  </span>
+                )}
+              </div>
             )}
           </div>
 
           {/* Price */}
-          <span className="text-[13px] font-semibold text-amber bg-amber-dim px-2.5 py-1 rounded-full">
+          <span className="text-[13px] font-semibold text-amber bg-amber-dim px-2.5 py-1 rounded-full shrink-0">
             {price}
           </span>
         </div>

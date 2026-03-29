@@ -204,7 +204,7 @@ export const HOST_BY_SLUG_QUERY = groq`
     verified,
     createdAt,
     "listings": listings[]->{ ${LISTING_CARD_FIELDS} },
-    "events": listings[]->[type == "event" && status == "published"]{ ${LISTING_CARD_FIELDS}, eventDate, eventEndDate, venue, isFree, priceFrom, "coverPhotoUrl": photos[0].asset->url }
+    "events": listings[]->[type == "event" && status == "published"]{ ${LISTING_CARD_FIELDS}, eventDate, eventEndDate, venue, isFree, priceFrom, isRecurring, recurrenceRule, schedule[]{ _key, day, startTime, endTime }, "coverPhotoUrl": photos[0].asset->url }
   }
 `
 
@@ -582,6 +582,9 @@ export const EVENTS_QUERY = groq`
     venue,
     isFree,
     priceFrom,
+    isRecurring,
+    recurrenceRule,
+    schedule[]{ _key, day, startTime, endTime },
     "coverPhotoUrl": photos[0].asset->url
   }
 `
@@ -633,6 +636,7 @@ export const EVENT_BY_SLUG_QUERY = groq`
     dresscode,
     isRecurring,
     recurrenceRule,
+    schedule[]{ _key, day, startTime, endTime },
     isFeatured,
     hostId,
     createdByHost
@@ -640,13 +644,16 @@ export const EVENT_BY_SLUG_QUERY = groq`
 `
 
 export const UPCOMING_EVENTS_QUERY = groq`
-  *[_type == "listing" && type == "event" && status == "published" && (eventDate >= now() || !defined(eventDate))] | order(eventDate asc) [0...$limit] {
+  *[_type == "listing" && type == "event" && status == "published" && (eventDate >= now() || !defined(eventDate) || isRecurring == true)] | order(eventDate asc) [0...$limit] {
     ${LISTING_CARD_FIELDS},
     eventDate,
     eventEndDate,
     venue,
     isFree,
     priceFrom,
+    isRecurring,
+    recurrenceRule,
+    schedule[]{ _key, day, startTime, endTime },
     "coverPhotoUrl": photos[0].asset->url
   }
 `
@@ -665,11 +672,11 @@ export const THIS_WEEKEND_EVENTS_QUERY = groq`
 `
 
 export const EVENTS_BY_CITY_QUERY = groq`{
-  "watamu": count(*[_type == "listing" && type == "event" && status == "published" && lower(city) == "watamu" && (eventDate >= now() || !defined(eventDate))]),
-  "kilifi": count(*[_type == "listing" && type == "event" && status == "published" && lower(city) == "kilifi" && (eventDate >= now() || !defined(eventDate))]),
-  "diani": count(*[_type == "listing" && type == "event" && status == "published" && lower(city) == "diani" && (eventDate >= now() || !defined(eventDate))]),
-  "nairobi": count(*[_type == "listing" && type == "event" && status == "published" && lower(city) == "nairobi" && (eventDate >= now() || !defined(eventDate))]),
-  "lamu": count(*[_type == "listing" && type == "event" && status == "published" && lower(city) == "lamu" && (eventDate >= now() || !defined(eventDate))]),
+  "watamu": count(*[_type == "listing" && type == "event" && status == "published" && lower(city) == "watamu" && (eventDate >= now() || !defined(eventDate) || isRecurring == true)]),
+  "kilifi": count(*[_type == "listing" && type == "event" && status == "published" && lower(city) == "kilifi" && (eventDate >= now() || !defined(eventDate) || isRecurring == true)]),
+  "diani": count(*[_type == "listing" && type == "event" && status == "published" && lower(city) == "diani" && (eventDate >= now() || !defined(eventDate) || isRecurring == true)]),
+  "nairobi": count(*[_type == "listing" && type == "event" && status == "published" && lower(city) == "nairobi" && (eventDate >= now() || !defined(eventDate) || isRecurring == true)]),
+  "lamu": count(*[_type == "listing" && type == "event" && status == "published" && lower(city) == "lamu" && (eventDate >= now() || !defined(eventDate) || isRecurring == true)]),
   "watamuImage": *[_type == "listing" && type == "event" && status == "published" && lower(city) == "watamu" && isFeatured == true] | order(eventDate desc) [0] { "coverPhotoUrl": photos[0].asset->url }.coverPhotoUrl,
   "kilifiImage": *[_type == "listing" && type == "event" && status == "published" && lower(city) == "kilifi" && isFeatured == true] | order(eventDate desc) [0] { "coverPhotoUrl": photos[0].asset->url }.coverPhotoUrl,
   "dianiImage": *[_type == "listing" && type == "event" && status == "published" && lower(city) == "diani" && isFeatured == true] | order(eventDate desc) [0] { "coverPhotoUrl": photos[0].asset->url }.coverPhotoUrl,
@@ -678,26 +685,29 @@ export const EVENTS_BY_CITY_QUERY = groq`{
 }`
 
 export const FEATURED_EVENTS_QUERY = groq`
-  *[_type == "listing" && type == "event" && status == "published" && isFeatured == true && (eventDate >= now() || !defined(eventDate))] | order(eventDate asc) [0...6] {
+  *[_type == "listing" && type == "event" && status == "published" && isFeatured == true && (eventDate >= now() || !defined(eventDate) || isRecurring == true)] | order(eventDate asc) [0...6] {
     ${LISTING_CARD_FIELDS},
     eventDate,
     eventEndDate,
     venue,
     isFree,
     priceFrom,
+    isRecurring,
+    recurrenceRule,
+    schedule[]{ _key, day, startTime, endTime },
     "coverPhotoUrl": photos[0].asset->url
   }
 `
 
 export const EVENT_SUBCATEGORY_COUNTS_QUERY = groq`
-  *[_type == "listing" && type == "event" && status == "published" && (eventDate >= now() || !defined(eventDate))] {
+  *[_type == "listing" && type == "event" && status == "published" && (eventDate >= now() || !defined(eventDate) || isRecurring == true)] {
     subcategory
   }
 `
 
 export const EVENTS_FILTERED_QUERY = groq`
   *[_type == "listing" && type == "event" && status == "published"
-    && (eventDate >= now() || !defined(eventDate))
+    && (eventDate >= now() || !defined(eventDate) || isRecurring == true)
     && select(
       $subcategory != "" => subcategory == $subcategory,
       true

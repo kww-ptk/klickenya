@@ -896,6 +896,49 @@ export default defineType({
       group: 'event',
     }),
     defineField({
+      name: 'schedule',
+      title: 'Weekly Schedule',
+      type: 'array',
+      description: 'For recurring events — add multiple days and times',
+      of: [
+        {
+          type: 'object',
+          fields: [
+            {
+              name: 'day',
+              title: 'Day',
+              type: 'string',
+              options: {
+                list: [
+                  { title: 'Monday', value: 'monday' },
+                  { title: 'Tuesday', value: 'tuesday' },
+                  { title: 'Wednesday', value: 'wednesday' },
+                  { title: 'Thursday', value: 'thursday' },
+                  { title: 'Friday', value: 'friday' },
+                  { title: 'Saturday', value: 'saturday' },
+                  { title: 'Sunday', value: 'sunday' },
+                ],
+              },
+              validation: (rule: any) => rule.required(),
+            },
+            { name: 'startTime', title: 'Start Time', type: 'string', description: 'e.g. "10:00"', validation: (rule: any) => rule.required() },
+            { name: 'endTime', title: 'End Time', type: 'string', description: 'e.g. "12:00"' },
+          ],
+          preview: {
+            select: { day: 'day', startTime: 'startTime', endTime: 'endTime' },
+            prepare({ day, startTime, endTime }: { day?: string; startTime?: string; endTime?: string }) {
+              const d = day ? day.charAt(0).toUpperCase() + day.slice(1) : 'TBA';
+              return {
+                title: `${d} ${startTime ?? ''}${endTime ? ` — ${endTime}` : ''}`,
+              }
+            },
+          },
+        },
+      ],
+      hidden: ({ document }: HiddenCtx) => !isEvent({ document }) || !document?.isRecurring,
+      group: 'event',
+    }),
+    defineField({
       name: 'isFeatured',
       title: 'Featured Event',
       type: 'boolean',

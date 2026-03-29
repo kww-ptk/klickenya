@@ -104,6 +104,7 @@ export async function POST(req: NextRequest) {
     const venueAddress = (formData.get("venueAddress") as string)?.trim();
     const isRecurring = formData.get("isRecurring") === "true";
     const recurrenceRule = (formData.get("recurrenceRule") as string)?.trim();
+    const scheduleJson = formData.get("schedule") as string | null;
     const isFree = formData.get("isFree") === "true";
     const ticketsJson = formData.get("tickets") as string | null;
     const ticketLink = (formData.get("ticketLink") as string)?.trim();
@@ -201,6 +202,15 @@ export async function POST(req: NextRequest) {
       venueAddress: venueAddress || undefined,
       isRecurring,
       recurrenceRule: isRecurring ? recurrenceRule : undefined,
+      schedule: isRecurring && scheduleJson
+        ? JSON.parse(scheduleJson).map((s: { day: string; startTime: string; endTime: string }, i: number) => ({
+            _type: "object",
+            _key: `sched-${i}`,
+            day: s.day,
+            startTime: s.startTime,
+            endTime: s.endTime || undefined,
+          }))
+        : undefined,
       isFree,
       ticketTypes: ticketTypes.length > 0 ? ticketTypes : undefined,
       ticketLink: ticketLink || undefined,

@@ -70,12 +70,18 @@ function EventDetail({
   const venueAddress: string | null = listing.venueAddress ?? null;
   const doorsOpen: string | null = listing.doorsOpen ?? null;
   const ageRestriction: string | null = listing.ageRestriction ?? null;
+  const schedule: { day: string; startTime: string; endTime?: string }[] = listing.schedule ?? [];
   const organizer: string | null = listing.organizer ?? null;
   const organizerSlug: string | null = listing.organizerSlug ?? null;
   const ticketLink: string | null = listing.ticketLink ?? null;
   const priceFrom: number | null = listing.priceFrom ?? listing.price ?? null;
   const mobilePrice = isFree ? 0 : (priceFrom ?? 0);
   const showBookingSidebar = !isFree && (ticketTypes.length > 0 || listing.price != null);
+
+  const DAY_LABELS: Record<string, string> = {
+    monday: "Monday", tuesday: "Tuesday", wednesday: "Wednesday",
+    thursday: "Thursday", friday: "Friday", saturday: "Saturday", sunday: "Sunday",
+  };
 
   return (
     <>
@@ -175,14 +181,27 @@ function EventDetail({
               <CalendarDays className="size-5 text-purple-600" />
               <h3 className="text-[15px] font-semibold text-text">When</h3>
             </div>
-            {isRecurring && recurrenceRule ? (
+            {isRecurring ? (
               <div>
-                <p className="text-[16px] font-bold text-purple-700 mb-1">
-                  {recurrenceRule}
-                </p>
-                <p className="text-[13px] text-text2">
-                  Recurring event — check the description for exact times
-                </p>
+                {recurrenceRule && (
+                  <p className="text-[16px] font-bold text-purple-700 mb-2">
+                    {recurrenceRule}
+                  </p>
+                )}
+                {schedule.length > 0 ? (
+                  <div className="space-y-1.5">
+                    {schedule.map((s, i) => (
+                      <div key={i} className="flex items-center gap-2 text-[13px]">
+                        <span className="font-semibold text-text w-24">{DAY_LABELS[s.day] ?? s.day}</span>
+                        <span className="text-text2">{s.startTime}{s.endTime ? ` — ${s.endTime}` : ""}</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-[13px] text-text2">
+                    Recurring event — check the description for exact times
+                  </p>
+                )}
               </div>
             ) : (
               <EventCountdown />
@@ -376,74 +395,92 @@ function EventDetail({
           </div>
 
           {/* Right column */}
-          {showBookingSidebar ? (
-            <BookingSidebar
-              listingId={listing._id}
-              listingTitle={listing.title}
-              listingType={sanityType}
-              price={mobilePrice}
-              priceUnit={listing.priceUnit ?? "ticket"}
-            />
-          ) : (
-            <aside className="hidden lg:block w-[350px] shrink-0">
-              <div className="sticky top-[76px] space-y-6">
-                {/* Free event badge */}
-                {isFree && (
-                  <div className="rounded-[24px] border border-emerald-200 bg-emerald-50 p-6 text-center">
-                    <p className="text-[24px] font-bold text-emerald-700 mb-1">Free event</p>
-                    <p className="text-[13px] text-emerald-600">No ticket required — just show up!</p>
-                  </div>
-                )}
-
-                {/* Related events in city */}
-                {similarCards.length > 0 && (
-                  <div className="rounded-[24px] border border-border bg-white p-5">
-                    <h3 className="text-[15px] font-bold text-text mb-4">
-                      More events in {cityName}
-                    </h3>
-                    <div className="space-y-4">
-                      {similarCards.slice(0, 3).map((card) => (
-                        <Link
-                          key={card.id}
-                          href={card.href}
-                          className="flex gap-3 group"
-                        >
-                          {card.photos[0] ? (
-                            <div className="shrink-0 size-14 rounded-xl overflow-hidden relative">
-                              <Image
-                                src={card.photos[0]}
-                                alt={card.title}
-                                fill
-                                className="object-cover group-hover:scale-105 transition-transform duration-300"
-                              />
-                            </div>
-                          ) : (
-                            <div className="shrink-0 size-14 rounded-xl bg-surface flex items-center justify-center text-[20px]">
-                              🎟️
-                            </div>
-                          )}
-                          <div className="min-w-0">
-                            <p className="text-[13px] font-semibold text-text line-clamp-2 group-hover:text-purple-600 transition-colors">
-                              {card.title}
-                            </p>
-                            <p className="text-[11px] text-text2 mt-0.5">
-                              {card.city}
-                            </p>
-                          </div>
-                        </Link>
-                      ))}
-                    </div>
-                    <Link
-                      href={`/events?city=${citySlug}`}
-                      className="block mt-4 text-center text-[13px] font-semibold text-purple-600 hover:text-purple-700 transition-colors"
+          <aside className="hidden lg:block w-[350px] shrink-0">
+            <div className="sticky top-[76px] space-y-6">
+              {/* Booking sidebar for paid events */}
+              {showBookingSidebar && (
+                <div className="border border-border rounded-[24px] shadow-lg p-5 bg-white">
+                  <p className="text-[22px] font-bold text-dark mb-1">
+                    From KSh {mobilePrice.toLocaleString()}
+                  </p>
+                  <p className="text-[13px] text-text2 mb-4">per {listing.priceUnit ?? "ticket"}</p>
+                  {ticketLink ? (
+                    <a
+                      href={ticketLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block w-full py-3 rounded-xl bg-purple-600 text-white font-semibold text-[14px] text-center hover:bg-purple-700 transition-colors"
                     >
-                      See all events in {cityName}
+                      Get tickets
+                    </a>
+                  ) : (
+                    <Link
+                      href="#tickets"
+                      className="block w-full py-3 rounded-xl bg-purple-600 text-white font-semibold text-[14px] text-center hover:bg-purple-700 transition-colors"
+                    >
+                      View tickets
                     </Link>
+                  )}
+                </div>
+              )}
+
+              {/* Free event badge */}
+              {isFree && (
+                <div className="rounded-[24px] border border-emerald-200 bg-emerald-50 p-6 text-center">
+                  <p className="text-[22px] font-bold text-emerald-700 mb-1">Free event</p>
+                  <p className="text-[13px] text-emerald-600">No ticket required — just show up!</p>
+                </div>
+              )}
+
+              {/* Related events in city */}
+              {similarCards.length > 0 && (
+                <div className="rounded-[24px] border border-border bg-white p-5">
+                  <h3 className="text-[15px] font-bold text-text mb-4">
+                    More events in {cityName}
+                  </h3>
+                  <div className="space-y-4">
+                    {similarCards.slice(0, 3).map((card) => (
+                      <Link
+                        key={card.id}
+                        href={card.href}
+                        className="flex gap-3 group"
+                      >
+                        {card.photos[0] ? (
+                          <div className="shrink-0 w-16 h-12 rounded-xl overflow-hidden relative">
+                            <Image
+                              src={card.photos[0]}
+                              alt={card.title}
+                              fill
+                              className="object-cover group-hover:scale-105 transition-transform duration-300"
+                            />
+                          </div>
+                        ) : (
+                          <div className="shrink-0 w-16 h-12 rounded-xl bg-surface flex items-center justify-center text-[18px]">
+                            🎟️
+                          </div>
+                        )}
+                        <div className="min-w-0 flex-1">
+                          <p className="text-[13px] font-semibold text-text line-clamp-2 group-hover:text-purple-600 transition-colors leading-snug">
+                            {card.title}
+                          </p>
+                          <p className="text-[11px] text-text2 mt-0.5">
+                            {card.city}
+                            {card.price != null && card.price > 0 ? ` · KSh ${card.price.toLocaleString()}` : " · Free"}
+                          </p>
+                        </div>
+                      </Link>
+                    ))}
                   </div>
-                )}
-              </div>
-            </aside>
-          )}
+                  <Link
+                    href={`/events?city=${citySlug}`}
+                    className="block mt-4 pt-3 border-t border-border text-center text-[13px] font-semibold text-purple-600 hover:text-purple-700 transition-colors"
+                  >
+                    See all events in {cityName} →
+                  </Link>
+                </div>
+              )}
+            </div>
+          </aside>
         </div>
 
         <SimilarListings listings={similarCards} typeLabel={typeLabel} />
