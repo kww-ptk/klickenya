@@ -14,18 +14,27 @@ export default async function DashboardPage() {
   }
 
   // Fetch user profile
-  const { data: profile } = await supabase
+  const { data: profile, error: profileErr } = await supabase
     .from("users")
     .select("full_name, role, email")
     .eq("id", user.id)
     .single();
 
+  if (profileErr) {
+    console.error("Dashboard profile fetch error:", profileErr);
+  }
+
   // Fetch host profile
-  const { data: hostProfile } = await supabase
+  const { data: hostProfile, error: hostErr } = await supabase
     .from("host_profiles")
     .select("id, display_name, plan_tier, total_listings, password_changed, user_id")
     .eq("user_id", user.id)
     .single();
+
+  if (hostErr && hostErr.code !== "PGRST116") {
+    // PGRST116 = no rows found (normal for non-hosts)
+    console.error("Dashboard host profile fetch error:", hostErr);
+  }
 
   // Fetch listings from Sanity where hostId matches
   let listings: {
