@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { DashboardNavLink } from "./_components/DashboardNavLink";
 import { DashboardSignOut } from "./_components/DashboardSignOut";
+import { DashboardBottomNav } from "./_components/DashboardBottomNav";
 
 /* ---------- SVG Icons ---------- */
 
@@ -109,8 +110,8 @@ export default async function DashboardLayout({
 
   return (
     <div className="flex min-h-screen">
-      {/* Sidebar */}
-      <aside className="fixed inset-y-0 left-0 z-40 w-16 lg:w-[240px] bg-[#16130C] flex flex-col transition-[width] duration-200">
+      {/* Sidebar — hidden on mobile, visible on desktop */}
+      <aside className="hidden lg:flex fixed inset-y-0 left-0 z-40 w-[240px] bg-[#16130C] flex-col">
         {/* Back to website */}
         <Link
           href="/"
@@ -195,9 +196,12 @@ export default async function DashboardLayout({
       </aside>
 
       {/* Main content */}
-      <main className="flex-1 ml-16 lg:ml-[240px] min-h-screen bg-[#FAFAF8]">
-        <div className="p-5 lg:p-8">{children}</div>
+      <main className="flex-1 lg:ml-[240px] min-h-screen bg-[#FAFAF8]">
+        <div className="p-5 pb-24 lg:p-8 lg:pb-8">{children}</div>
       </main>
+
+      {/* Mobile bottom nav */}
+      <DashboardBottomNav />
     </div>
   );
 }
