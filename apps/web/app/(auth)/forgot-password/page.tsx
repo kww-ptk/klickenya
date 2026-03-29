@@ -1,10 +1,13 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { forgotPasswordAction } from "./actions";
 
 export default function ForgotPasswordPage() {
+  const searchParams = useSearchParams();
+  const prefillEmail = searchParams.get("email") ?? "";
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -86,6 +89,7 @@ export default function ForgotPasswordPage() {
               name="email"
               type="email"
               required
+              defaultValue={prefillEmail}
               autoComplete="email"
               className="w-full h-11 px-4 rounded-xl border border-[#E2DDD5] text-[14px] text-[#16130C] placeholder:text-[#9C9485] outline-none focus:border-[#6B2D8B] focus:ring-2 focus:ring-[#6B2D8B]/20 transition-all"
               placeholder="you@example.com"

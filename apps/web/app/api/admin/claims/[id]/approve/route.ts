@@ -215,23 +215,6 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
         console.error("Sanity hostId patch error:", sanityErr);
       }
 
-      // Generate "set your password" link
-      let setPasswordUrl = "https://klickenya.com/forgot-password";
-      if (isNewHost) {
-        try {
-          const { data: linkData } = await supabase.auth.admin.generateLink({
-            type: "recovery",
-            email: claim.claimant_email,
-            options: { redirectTo: "https://www.klickenya.com/auth/callback?next=/dashboard" },
-          });
-          if (linkData?.properties?.action_link) {
-            setPasswordUrl = linkData.properties.action_link;
-          }
-        } catch (linkErr) {
-          console.error("Password reset link generation error:", linkErr);
-        }
-      }
-
       // Send approval + host account email
       try {
         const resend = new Resend(process.env.RESEND_API_KEY);
@@ -243,11 +226,14 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
             <p style="font-size: 15px; color: #5E5848; margin: 0 0 8px;">
               <strong>Your Klickenya host account is ready.</strong>
             </p>
-            <p style="font-size: 14px; color: #5E5848; margin: 0 0 24px;">
+            <p style="font-size: 14px; color: #5E5848; margin: 0 0 8px;">
               Set your password to access your host dashboard and manage your listings.
             </p>
+            <p style="font-size: 13px; color: #9C9485; margin: 0 0 24px;">
+              Your account email: <strong style="color: #16130C;">${claim.claimant_email}</strong>
+            </p>
             <p style="margin: 0 0 24px;">
-              <a href="${setPasswordUrl}" style="display: inline-block; background: #E8A020; color: #16130C; font-weight: 700; text-decoration: none; padding: 12px 28px; border-radius: 999px; font-size: 14px;">Set your password →</a>
+              <a href="https://www.klickenya.com/forgot-password?email=${encodeURIComponent(claim.claimant_email)}" style="display: inline-block; background: #E8A020; color: #16130C; font-weight: 700; text-decoration: none; padding: 12px 28px; border-radius: 999px; font-size: 14px;">Set your password →</a>
             </p>
           `
           : `
