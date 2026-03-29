@@ -75,6 +75,7 @@ function EventDetail({
   const ticketLink: string | null = listing.ticketLink ?? null;
   const priceFrom: number | null = listing.priceFrom ?? listing.price ?? null;
   const mobilePrice = isFree ? 0 : (priceFrom ?? 0);
+  const showBookingSidebar = !isFree && (ticketTypes.length > 0 || listing.price != null);
 
   return (
     <>
@@ -89,120 +90,133 @@ function EventDetail({
 
         <PhotoGallery photos={photos} title={listing.title} />
 
+        {/* ── Header: badges + title + meta ──── */}
+        <div className="mb-8">
+          {/* Type badges */}
+          <div className="flex flex-wrap items-center gap-2 mb-4">
+            <span className="inline-block rounded-full bg-purple-600/15 text-purple-700 px-3 py-1 text-[12px] font-bold uppercase tracking-wide">
+              {singularLabel}
+            </span>
+            {listing.subcategory && (
+              <span className="inline-block rounded-full bg-surface px-3 py-1 text-[12px] font-semibold text-text2 capitalize">
+                {listing.subcategory.replace(/_/g, " ")}
+              </span>
+            )}
+            {isFree && (
+              <span className="inline-block rounded-full bg-emerald-500/15 text-emerald-700 px-3 py-1 text-[12px] font-bold uppercase tracking-wide">
+                Free
+              </span>
+            )}
+            {ageRestriction && ageRestriction !== "all-ages" && (
+              <span className="inline-block rounded-full bg-red-500/15 text-red-700 px-3 py-1 text-[12px] font-bold uppercase tracking-wide">
+                {ageRestriction}
+              </span>
+            )}
+            {isRecurring && recurrenceRule && (
+              <span className="inline-block rounded-full bg-amber-500/15 text-amber-700 px-3 py-1 text-[12px] font-bold tracking-wide">
+                {recurrenceRule}
+              </span>
+            )}
+          </div>
+
+          {/* Title */}
+          <h1 className="font-display text-[clamp(28px,3.5vw,42px)] font-extrabold tracking-[-0.03em] text-dark leading-[1.1] mb-4">
+            {listing.title}
+          </h1>
+
+          {/* Meta row */}
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[14.5px] text-text2">
+            {listing.avgRating != null && (
+              <span className="flex items-center gap-1">
+                <Star className="size-4 fill-amber text-amber" />
+                <span className="font-semibold text-text">{listing.avgRating}</span>
+                {listing.reviewCount != null && (
+                  <span className="text-text2">({listing.reviewCount})</span>
+                )}
+              </span>
+            )}
+            <span className="flex items-center gap-1">
+              <MapPin className="size-4 text-text3" />
+              {venue ? `${venue}, ${cityName}` : cityName}
+              {listing.county ? `, ${listing.county}` : ""}
+            </span>
+          </div>
+        </div>
+
+        {/* ── Venue + When: side by side ──────── */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+          {/* Venue card */}
+          <div className="rounded-[20px] border border-border bg-white p-5">
+            <div className="flex items-center gap-3 mb-3">
+              <MapPin className="size-5 text-purple-600" />
+              <h3 className="text-[15px] font-semibold text-text">Where</h3>
+            </div>
+            {venue ? (
+              <>
+                <p className="text-[16px] font-bold text-text mb-1">{venue}</p>
+                {venueAddress && (
+                  <p className="text-[13px] text-text2">{venueAddress}</p>
+                )}
+              </>
+            ) : (
+              <p className="text-[14px] text-text2">{cityName}{listing.county ? `, ${listing.county}` : ""}</p>
+            )}
+            {doorsOpen && (
+              <div className="flex items-center gap-2 text-[13px] text-text2 mt-3 pt-3 border-t border-border">
+                <Clock className="size-3.5 shrink-0" />
+                <span>Doors open at {doorsOpen}</span>
+              </div>
+            )}
+          </div>
+
+          {/* When card */}
+          <div className="rounded-[20px] border border-purple-200 bg-purple-50/50 p-5">
+            <div className="flex items-center gap-3 mb-3">
+              <CalendarDays className="size-5 text-purple-600" />
+              <h3 className="text-[15px] font-semibold text-text">When</h3>
+            </div>
+            {isRecurring && recurrenceRule ? (
+              <div>
+                <p className="text-[16px] font-bold text-purple-700 mb-1">
+                  {recurrenceRule}
+                </p>
+                <p className="text-[13px] text-text2">
+                  Recurring event — check the description for exact times
+                </p>
+              </div>
+            ) : (
+              <EventCountdown />
+            )}
+          </div>
+        </div>
+
+        {/* ── Organizer ─────────────────────── */}
+        {organizer && (
+          <div className="flex items-center gap-3 mb-4">
+            <Users className="size-4 text-text3 shrink-0" />
+            <p className="text-[14px] text-text2">
+              Organised by{" "}
+              {organizerSlug ? (
+                <Link
+                  href={`/hosts/${organizerSlug}`}
+                  className="font-semibold text-text hover:text-amber-600 transition-colors"
+                >
+                  {organizer}
+                </Link>
+              ) : (
+                <span className="font-semibold text-text">{organizer}</span>
+              )}
+            </p>
+          </div>
+        )}
+
+        <HostBadge hostName={hostName} hostRef={listing.hostRef} isVerified={listing.isVerified} listingSlug={listing.slug?.current} />
+        <hr className="border-border mb-8" />
+
         {/* ── Two-column layout ────────────── */}
         <div className="flex flex-col lg:flex-row gap-10 lg:gap-14">
           {/* Left column */}
           <div className="flex-1 min-w-0">
-            {/* Type badges */}
-            <div className="flex flex-wrap items-center gap-2 mb-4">
-              <span className="inline-block rounded-full bg-purple-600/15 text-purple-700 px-3 py-1 text-[12px] font-bold uppercase tracking-wide">
-                {singularLabel}
-              </span>
-              {listing.subcategory && (
-                <span className="inline-block rounded-full bg-surface px-3 py-1 text-[12px] font-semibold text-text2 capitalize">
-                  {listing.subcategory.replace(/_/g, " ")}
-                </span>
-              )}
-              {isFree && (
-                <span className="inline-block rounded-full bg-emerald-500/15 text-emerald-700 px-3 py-1 text-[12px] font-bold uppercase tracking-wide">
-                  Free
-                </span>
-              )}
-              {ageRestriction && ageRestriction !== "all-ages" && (
-                <span className="inline-block rounded-full bg-red-500/15 text-red-700 px-3 py-1 text-[12px] font-bold uppercase tracking-wide">
-                  {ageRestriction}
-                </span>
-              )}
-              {isRecurring && recurrenceRule && (
-                <span className="inline-block rounded-full bg-amber-500/15 text-amber-700 px-3 py-1 text-[12px] font-bold tracking-wide">
-                  {recurrenceRule}
-                </span>
-              )}
-            </div>
-
-            {/* Title */}
-            <h1 className="font-display text-[clamp(28px,3.5vw,42px)] font-extrabold tracking-[-0.03em] text-dark leading-[1.1] mb-4">
-              {listing.title}
-            </h1>
-
-            {/* Meta row */}
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[14.5px] text-text2 mb-6">
-              {listing.avgRating != null && (
-                <span className="flex items-center gap-1">
-                  <Star className="size-4 fill-amber text-amber" />
-                  <span className="font-semibold text-text">{listing.avgRating}</span>
-                  {listing.reviewCount != null && (
-                    <span className="text-text2">({listing.reviewCount})</span>
-                  )}
-                </span>
-              )}
-              <span className="flex items-center gap-1">
-                <MapPin className="size-4 text-text3" />
-                {venue ? `${venue}, ${cityName}` : cityName}
-                {listing.county ? `, ${listing.county}` : ""}
-              </span>
-            </div>
-
-            {/* ── Venue details ──────────────────── */}
-            {(venue || venueAddress || doorsOpen) && (
-              <div className="rounded-[20px] border border-border bg-surface/30 p-5 mb-7">
-                {venue && (
-                  <p className="text-[15px] font-semibold text-text mb-1">{venue}</p>
-                )}
-                {venueAddress && (
-                  <p className="text-[13px] text-text2 mb-2">{venueAddress}</p>
-                )}
-                {doorsOpen && (
-                  <div className="flex items-center gap-2 text-[13px] text-text2">
-                    <Clock className="size-3.5" />
-                    <span>Doors open at {doorsOpen}</span>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* ── Countdown / Recurrence card ──── */}
-            <div className="rounded-[20px] border border-purple-200 bg-purple-50/50 p-5 mb-7">
-              <div className="flex items-center gap-3 mb-2">
-                <CalendarDays className="size-5 text-purple-600" />
-                <h3 className="text-[15px] font-semibold text-text">When</h3>
-              </div>
-              {isRecurring && recurrenceRule ? (
-                <div>
-                  <p className="text-[18px] font-bold text-purple-700 mb-1">
-                    {recurrenceRule}
-                  </p>
-                  <p className="text-[13px] text-text2">
-                    Recurring event — check the description for exact times
-                  </p>
-                </div>
-              ) : (
-                <EventCountdown />
-              )}
-            </div>
-
-            {/* ── Organizer ─────────────────────── */}
-            {organizer && (
-              <div className="flex items-center gap-3 mb-4">
-                <Users className="size-4 text-text3 shrink-0" />
-                <p className="text-[14px] text-text2">
-                  Organised by{" "}
-                  {organizerSlug ? (
-                    <Link
-                      href={`/hosts/${organizerSlug}`}
-                      className="font-semibold text-text hover:text-amber-600 transition-colors"
-                    >
-                      {organizer}
-                    </Link>
-                  ) : (
-                    <span className="font-semibold text-text">{organizer}</span>
-                  )}
-                </p>
-              </div>
-            )}
-
-            <HostBadge hostName={hostName} hostRef={listing.hostRef} isVerified={listing.isVerified} listingSlug={listing.slug?.current} />
-            <hr className="border-border mb-7" />
 
             {/* ── Ticket types ─────────────────── */}
             {!isFree && ticketTypes.length > 0 && (
@@ -362,25 +376,89 @@ function EventDetail({
           </div>
 
           {/* Right column */}
-          <BookingSidebar
-            listingId={listing._id}
-            listingTitle={listing.title}
-            listingType={sanityType}
-            price={mobilePrice}
-            priceUnit={listing.priceUnit ?? "ticket"}
-          />
+          {showBookingSidebar ? (
+            <BookingSidebar
+              listingId={listing._id}
+              listingTitle={listing.title}
+              listingType={sanityType}
+              price={mobilePrice}
+              priceUnit={listing.priceUnit ?? "ticket"}
+            />
+          ) : (
+            <aside className="hidden lg:block w-[350px] shrink-0">
+              <div className="sticky top-[76px] space-y-6">
+                {/* Free event badge */}
+                {isFree && (
+                  <div className="rounded-[24px] border border-emerald-200 bg-emerald-50 p-6 text-center">
+                    <p className="text-[24px] font-bold text-emerald-700 mb-1">Free event</p>
+                    <p className="text-[13px] text-emerald-600">No ticket required — just show up!</p>
+                  </div>
+                )}
+
+                {/* Related events in city */}
+                {similarCards.length > 0 && (
+                  <div className="rounded-[24px] border border-border bg-white p-5">
+                    <h3 className="text-[15px] font-bold text-text mb-4">
+                      More events in {cityName}
+                    </h3>
+                    <div className="space-y-4">
+                      {similarCards.slice(0, 3).map((card) => (
+                        <Link
+                          key={card.id}
+                          href={card.href}
+                          className="flex gap-3 group"
+                        >
+                          {card.photos[0] ? (
+                            <div className="shrink-0 size-14 rounded-xl overflow-hidden relative">
+                              <Image
+                                src={card.photos[0]}
+                                alt={card.title}
+                                fill
+                                className="object-cover group-hover:scale-105 transition-transform duration-300"
+                              />
+                            </div>
+                          ) : (
+                            <div className="shrink-0 size-14 rounded-xl bg-surface flex items-center justify-center text-[20px]">
+                              🎟️
+                            </div>
+                          )}
+                          <div className="min-w-0">
+                            <p className="text-[13px] font-semibold text-text line-clamp-2 group-hover:text-purple-600 transition-colors">
+                              {card.title}
+                            </p>
+                            <p className="text-[11px] text-text2 mt-0.5">
+                              {card.city}
+                            </p>
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
+                    <Link
+                      href={`/events?city=${citySlug}`}
+                      className="block mt-4 text-center text-[13px] font-semibold text-purple-600 hover:text-purple-700 transition-colors"
+                    >
+                      See all events in {cityName}
+                    </Link>
+                  </div>
+                )}
+              </div>
+            </aside>
+          )}
         </div>
 
         <SimilarListings listings={similarCards} typeLabel={typeLabel} />
       </article>
 
-      <MobileBookingBar
-        type={sanityType}
-        price={mobilePrice}
-        priceUnit={listing.priceUnit ?? "ticket"}
-        listingId={listing._id}
-        listingTitle={listing.title}
-      />
+      {/* Mobile booking bar — only for paid events */}
+      {showBookingSidebar && (
+        <MobileBookingBar
+          type={sanityType}
+          price={mobilePrice}
+          priceUnit={listing.priceUnit ?? "ticket"}
+          listingId={listing._id}
+          listingTitle={listing.title}
+        />
+      )}
     </>
   );
 }
