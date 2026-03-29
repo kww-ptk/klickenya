@@ -36,10 +36,19 @@ export default function ResetPasswordPage() {
         return;
       }
 
-      // Redirect based on role
+      // Mark password as changed for hosts
       const {
         data: { user },
       } = await supabase.auth.getUser();
+
+      if (user) {
+        await supabase
+          .from("host_profiles")
+          .update({ password_changed: true })
+          .eq("user_id", user.id);
+      }
+
+      // Redirect based on role
 
       if (user) {
         const { data: profile } = await supabase

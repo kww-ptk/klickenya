@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
@@ -15,11 +15,35 @@ const ERROR_MESSAGES: Record<string, string> = {
 export default function LoginPage() {
   const searchParams = useSearchParams();
   const urlError = searchParams.get("error");
+  const prefillEmail = searchParams.get("email") ?? "";
+  const prefillTemp = searchParams.get("temp") ?? "";
   const [error, setError] = useState<string | null>(
     urlError ? ERROR_MESSAGES[urlError] ?? ERROR_MESSAGES.auth_error : null
   );
   const [isPending, startTransition] = useTransition();
+  const [autoLogging, setAutoLogging] = useState(!!prefillEmail && !!prefillTemp);
   const router = useRouter();
+  const autoLoginAttempted = useRef(false);
+
+  // Auto-login when email + temp params are present
+  useEffect(() => {
+    if (!prefillEmail || !prefillTemp || autoLoginAttempted.current) return;
+    autoLoginAttempted.current = true;
+
+    const formData = new FormData();
+    formData.set("email", prefillEmail);
+    formData.set("password", prefillTemp);
+
+    startTransition(async () => {
+      const result = await loginAction(formData);
+      if (result.error) {
+        setError(result.error);
+        setAutoLogging(false);
+      } else if (result.redirect) {
+        router.push(result.redirect);
+      }
+    });
+  }, [prefillEmail, prefillTemp, router]);
 
   async function handleSubmit(formData: FormData) {
     setError(null);
@@ -58,10 +82,10 @@ export default function LoginPage() {
 
         {/* Heading */}
         <h1 className="text-[26px] font-bold tracking-[-0.03em] text-center text-[#16130C] mb-1">
-          Welcome back
+          {autoLogging ? "Logging you in..." : "Welcome back"}
         </h1>
         <p className="text-[14px] text-[#5E5848] text-center mb-8">
-          Sign in to your Klickenya account
+          {autoLogging ? "Please wait" : "Sign in to your Klickenya account"}
         </p>
 
         {/* Form */}
@@ -78,6 +102,7 @@ export default function LoginPage() {
               name="email"
               type="email"
               required
+              defaultValue={prefillEmail}
               autoComplete="email"
               className="w-full h-11 px-4 rounded-xl border border-[#E2DDD5] text-[14px] text-[#16130C] placeholder:text-[#9C9485] outline-none focus:border-[#6B2D8B] focus:ring-2 focus:ring-[#6B2D8B]/20 transition-all"
               placeholder="you@example.com"
@@ -104,6 +129,7 @@ export default function LoginPage() {
               name="password"
               type="password"
               required
+              defaultValue={prefillTemp}
               autoComplete="current-password"
               className="w-full h-11 px-4 rounded-xl border border-[#E2DDD5] text-[14px] text-[#16130C] placeholder:text-[#9C9485] outline-none focus:border-[#6B2D8B] focus:ring-2 focus:ring-[#6B2D8B]/20 transition-all"
               placeholder="••••••••"

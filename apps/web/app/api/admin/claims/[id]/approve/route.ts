@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { createClient as createSanityClient } from "next-sanity";
 import { Resend } from "resend";
-import crypto from "crypto";
 import { updateOpportunityStage, GHL_STAGES } from "@/lib/integrations/ghl";
 
 const supabase = createClient(
@@ -67,6 +66,7 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
       // Step 2b — Check if auth user already exists (could be a guest)
       let userId: string;
       let isNewHost = false;
+      let tempPassword: string | null = null;
 
       const { data: existingUsers } = await supabase.auth.admin.listUsers();
       const existingUser = existingUsers?.users?.find(
@@ -138,13 +138,13 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
           console.error("Host profile insert error:", profileErr);
         }
       } else {
-        // Step 2c — Create new auth user with random password
+        // Step 2c — Create new auth user with temporary password
         isNewHost = true;
-        const randomPassword = crypto.randomBytes(32).toString("base64url");
+        tempPassword = "welcome" + Math.floor(100 + Math.random() * 900);
 
         const { data: authData, error: authErr } = await supabase.auth.admin.createUser({
           email: claim.claimant_email,
-          password: randomPassword,
+          password: tempPassword,
           email_confirm: true,
           user_metadata: { role: "host", name: claim.claimant_name },
         });
@@ -215,45 +215,53 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
         console.error("Sanity hostId patch error:", sanityErr);
       }
 
-      // Generate password reset link for new hosts
-      let setPasswordUrl = `https://www.klickenya.com/forgot-password?email=${encodeURIComponent(claim.claimant_email)}`;
-      if (isNewHost) {
-        try {
-          const { data: linkData } = await supabase.auth.admin.generateLink({
-            type: "recovery",
-            email: claim.claimant_email,
-            options: { redirectTo: "https://www.klickenya.com/auth/callback?next=/reset-password" },
-          });
-          if (linkData?.properties?.action_link) {
-            setPasswordUrl = linkData.properties.action_link;
-          }
-        } catch (linkErr) {
-          console.error("Recovery link generation error:", linkErr);
-        }
-      }
-
       // Send approval + host account email
       try {
         const resend = new Resend(process.env.RESEND_API_KEY);
         const listingUrl = `https://klickenya.com/${claim.listing_type === "experience" ? "experiences" : claim.listing_type + "s"}/${(claim.listing_city ?? "").toLowerCase().replace(/ /g, "-")}/${claim.listing_slug}`;
 
-        const hostAccountSection = isNewHost
-          ? `
+        let hostAccountSection: string;
+        if (tempPassword) {
+          // Brand new user — show credentials + auto-login link
+          const loginUrl = `https://www.klickenya.com/login?email=${encodeURIComponent(claim.claimant_email)}&temp=${encodeURIComponent(tempPassword)}`;
+          hostAccountSection = `
             <hr style="border: none; border-top: 1px solid #E2DDD5; margin: 24px 0;" />
             <p style="font-size: 15px; color: #5E5848; margin: 0 0 8px;">
               <strong>Your Klickenya host account is ready.</strong>
             </p>
             <p style="font-size: 14px; color: #5E5848; margin: 0 0 8px;">
-              Set your password to access your host dashboard and manage your listings.
+              Your login credentials:
             </p>
-            <p style="font-size: 13px; color: #9C9485; margin: 0 0 24px;">
-              Your account email: <strong style="color: #16130C;">${claim.claimant_email}</strong>
+            <div style="background: #FDF8F0; border: 1px solid #E2DDD5; border-radius: 12px; padding: 16px; margin: 0 0 24px;">
+              <table style="width: 100%; font-size: 14px;">
+                <tr><td style="color: #9C9485; padding: 4px 0; width: 80px;">Email</td><td style="color: #16130C; font-weight: 600;">${claim.claimant_email}</td></tr>
+                <tr><td style="color: #9C9485; padding: 4px 0;">Password</td><td style="color: #16130C; font-weight: 600; font-family: monospace;">${tempPassword}</td></tr>
+              </table>
+            </div>
+            <p style="margin: 0 0 16px;">
+              <a href="${loginUrl}" style="display: inline-block; background: #E8A020; color: #16130C; font-weight: 700; text-decoration: none; padding: 12px 28px; border-radius: 999px; font-size: 14px;">Log in to your dashboard →</a>
+            </p>
+            <p style="font-size: 12px; color: #9C9485; margin: 0 0 0;">
+              Please change your password after logging in.
+            </p>
+          `;
+        } else if (isNewHost) {
+          // Existing guest promoted to host — they already have a password
+          hostAccountSection = `
+            <hr style="border: none; border-top: 1px solid #E2DDD5; margin: 24px 0;" />
+            <p style="font-size: 15px; color: #5E5848; margin: 0 0 8px;">
+              <strong>Your account has been upgraded to Host.</strong>
+            </p>
+            <p style="font-size: 14px; color: #5E5848; margin: 0 0 24px;">
+              Log in with your existing password to access your host dashboard.
             </p>
             <p style="margin: 0 0 24px;">
-              <a href="${setPasswordUrl}" style="display: inline-block; background: #E8A020; color: #16130C; font-weight: 700; text-decoration: none; padding: 12px 28px; border-radius: 999px; font-size: 14px;">Set your password →</a>
+              <a href="https://www.klickenya.com/login" style="display: inline-block; background: #E8A020; color: #16130C; font-weight: 700; text-decoration: none; padding: 12px 28px; border-radius: 999px; font-size: 14px;">Log in to your dashboard →</a>
             </p>
-          `
-          : `
+          `;
+        } else {
+          // Existing host adding another listing
+          hostAccountSection = `
             <hr style="border: none; border-top: 1px solid #E2DDD5; margin: 24px 0;" />
             <p style="font-size: 14px; color: #5E5848; margin: 0 0 24px;">
               This listing has been added to your host dashboard.
@@ -262,6 +270,7 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
               <a href="https://klickenya.com/dashboard" style="display: inline-block; background: #E8A020; color: #16130C; font-weight: 700; text-decoration: none; padding: 12px 28px; border-radius: 999px; font-size: 14px;">Go to your dashboard →</a>
             </p>
           `;
+        }
 
         await resend.emails.send({
           from: "Klickenya <hello@klickenya.com>",

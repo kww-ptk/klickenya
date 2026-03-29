@@ -9,7 +9,7 @@ const supabase = createClient(
 
 /**
  * Test endpoint: GET /api/test/approval-email?email=test@test.com
- * Generates a recovery action_link and sends the approval email.
+ * Sends a test approval email with temp credentials + auto-login link.
  * Only works in development or when ALLOW_TEST_ENDPOINTS=true.
  */
 export async function GET(req: NextRequest) {
@@ -28,37 +28,8 @@ export async function GET(req: NextRequest) {
     );
   }
 
-  // Generate recovery link
-  let setPasswordUrl = `https://www.klickenya.com/forgot-password?email=${encodeURIComponent(email)}`;
-  let linkDebug: Record<string, unknown> = {};
-
-  try {
-    const { data: linkData, error: linkErr } =
-      await supabase.auth.admin.generateLink({
-        type: "recovery",
-        email,
-        options: {
-          redirectTo:
-            "https://www.klickenya.com/auth/callback?next=/reset-password",
-        },
-      });
-
-    linkDebug = {
-      error: linkErr?.message ?? null,
-      action_link: linkData?.properties?.action_link ?? null,
-      hashed_token: linkData?.properties?.hashed_token ?? null,
-      redirect_to: linkData?.properties?.redirect_to ?? null,
-      verification_type: linkData?.properties?.verification_type ?? null,
-    };
-
-    if (linkData?.properties?.action_link) {
-      setPasswordUrl = linkData.properties.action_link;
-    }
-  } catch (err) {
-    linkDebug = { exception: String(err) };
-  }
-
-  // Send test email
+  const tempPassword = "welcome" + Math.floor(100 + Math.random() * 900);
+  const loginUrl = `https://www.klickenya.com/login?email=${encodeURIComponent(email)}&temp=${encodeURIComponent(tempPassword)}`;
   const listingTitle = "Test Listing";
   const claimantName = "Test Host";
 
@@ -85,13 +56,19 @@ export async function GET(req: NextRequest) {
             <strong>Your Klickenya host account is ready.</strong>
           </p>
           <p style="font-size: 14px; color: #5E5848; margin: 0 0 8px;">
-            Set your password to access your host dashboard and manage your listings.
+            Your login credentials:
           </p>
-          <p style="font-size: 13px; color: #9C9485; margin: 0 0 24px;">
-            Your account email: <strong style="color: #16130C;">${email}</strong>
+          <div style="background: #FDF8F0; border: 1px solid #E2DDD5; border-radius: 12px; padding: 16px; margin: 0 0 24px;">
+            <table style="width: 100%; font-size: 14px;">
+              <tr><td style="color: #9C9485; padding: 4px 0; width: 80px;">Email</td><td style="color: #16130C; font-weight: 600;">${email}</td></tr>
+              <tr><td style="color: #9C9485; padding: 4px 0;">Password</td><td style="color: #16130C; font-weight: 600; font-family: monospace;">${tempPassword}</td></tr>
+            </table>
+          </div>
+          <p style="margin: 0 0 16px;">
+            <a href="${loginUrl}" style="display: inline-block; background: #E8A020; color: #16130C; font-weight: 700; text-decoration: none; padding: 12px 28px; border-radius: 999px; font-size: 14px;">Log in to your dashboard →</a>
           </p>
-          <p style="margin: 0 0 24px;">
-            <a href="${setPasswordUrl}" style="display: inline-block; background: #E8A020; color: #16130C; font-weight: 700; text-decoration: none; padding: 12px 28px; border-radius: 999px; font-size: 14px;">Set your password →</a>
+          <p style="font-size: 12px; color: #9C9485; margin: 0 0 24px;">
+            Please change your password after logging in.
           </p>
           <hr style="border: none; border-top: 1px solid #E2DDD5; margin: 16px 0;" />
           <p style="font-size: 12px; color: #9C9485; margin: 0;">
@@ -103,7 +80,7 @@ export async function GET(req: NextRequest) {
     });
   } catch (emailErr) {
     return NextResponse.json(
-      { error: "Email send failed", details: String(emailErr), linkDebug },
+      { error: "Email send failed", details: String(emailErr) },
       { status: 500 }
     );
   }
@@ -111,7 +88,7 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({
     success: true,
     email,
-    setPasswordUrl,
-    linkDebug,
+    tempPassword,
+    loginUrl,
   });
 }
