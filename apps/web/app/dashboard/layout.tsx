@@ -1,6 +1,8 @@
+import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { sanityClient } from "@/lib/sanity/client";
 import { DashboardNavLink } from "./_components/DashboardNavLink";
 import { DashboardSignOut } from "./_components/DashboardSignOut";
 import { DashboardBottomNav } from "./_components/DashboardBottomNav";
@@ -86,9 +88,18 @@ export default async function DashboardLayout({
 
   const { data: hostProfile } = await supabase
     .from("host_profiles")
-    .select("display_name, plan_tier, password_changed")
+    .select("display_name, plan_tier, password_changed, sanity_host_id")
     .eq("user_id", user.id)
     .single();
+
+  let photoUrl: string | null = null;
+  if (hostProfile?.sanity_host_id) {
+    const host = await sanityClient.fetch<{ photo?: { asset?: { url?: string } } } | null>(
+      `*[_type == "host" && _id == $id][0]{ photo{ asset->{ url } } }`,
+      { id: hostProfile.sanity_host_id }
+    );
+    photoUrl = host?.photo?.asset?.url ?? null;
+  }
 
   const displayName = hostProfile?.display_name ?? profile?.full_name ?? "Host";
   const planTier = hostProfile?.plan_tier ?? "basic";
@@ -127,8 +138,18 @@ export default async function DashboardLayout({
 
         {/* Host profile */}
         <div className="flex items-center gap-3 px-4 py-5 border-b border-white/10">
-          <div className="shrink-0 size-10 rounded-full bg-gradient-to-br from-[#E8A020] to-[#6B2D8B] flex items-center justify-center text-white text-[14px] font-bold">
-            {initials}
+          <div className="shrink-0 size-10 rounded-full bg-gradient-to-br from-[#E8A020] to-[#6B2D8B] flex items-center justify-center text-white text-[14px] font-bold overflow-hidden">
+            {photoUrl ? (
+              <Image
+                src={photoUrl}
+                alt={displayName}
+                width={40}
+                height={40}
+                className="size-full object-cover"
+              />
+            ) : (
+              initials
+            )}
           </div>
           <div className="hidden lg:block min-w-0">
             <p className="text-[14px] font-semibold text-white truncate">
