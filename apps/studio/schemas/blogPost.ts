@@ -157,7 +157,11 @@ export default defineType({
                     name: 'href',
                     type: 'url',
                     title: 'URL',
-                    validation: (rule: any) => rule.required(),
+                    validation: (rule: any) =>
+                      rule.required().uri({
+                        allowRelative: true,
+                        scheme: ['http', 'https', 'mailto', 'tel'],
+                      }),
                   },
                 ],
               },
@@ -347,7 +351,7 @@ export default defineType({
       rows: 3,
       group: 'seo',
       description: 'Overrides the excerpt in search results (max 160 chars)',
-      validation: (rule) => rule.max(160),
+      validation: (rule) => rule.max(160).warning('Try to keep under 160 characters for best SEO results'),
     }),
   ],
   preview: {
