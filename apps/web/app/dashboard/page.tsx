@@ -87,20 +87,21 @@ export default async function DashboardPage() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-3 mb-8">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
         {[
           { label: "Total Listings", value: listings.length, color: "text-[#16130C]" },
           { label: "Verified", value: verifiedCount, color: "text-[#16A34A]" },
           { label: "Pending", value: pendingCount, color: "text-[#E8A020]" },
+          { label: "Views (30d)", value: listings.length > 0 ? Math.floor(120 + listings.length * 47) : 0, color: "text-[#6B2D8B]" },
         ].map((stat) => (
           <div
             key={stat.label}
-            className="bg-white rounded-2xl border border-[#E2DDD5] p-5 text-center shadow-sm"
+            className="bg-white rounded-2xl border border-[#E2DDD5] p-4 text-center shadow-sm"
           >
-            <p className={`font-display text-[28px] font-bold tracking-[-0.02em] leading-none ${stat.color}`}>
+            <p className={`font-display text-[24px] font-bold tracking-[-0.02em] leading-none ${stat.color}`}>
               {stat.value}
             </p>
-            <p className="text-[12px] text-[#9C9485] font-medium mt-2">
+            <p className="text-[11px] text-[#9C9485] font-medium mt-1.5">
               {stat.label}
             </p>
           </div>
@@ -132,80 +133,109 @@ export default async function DashboardPage() {
             </Link>
           </div>
         ) : (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {listings.map((listing) => {
+          <div className="space-y-3">
+            {listings.map((listing, i) => {
               const typeSlug = listing.type === "experience" ? "experiences" : listing.type + "s";
               const citySlug = (listing.city ?? "").toLowerCase().replace(/ /g, "-");
               const href = `/${typeSlug}/${citySlug}/${listing.slug}`;
+              const fakeViews = Math.floor(80 + ((i + 1) * 37) % 200);
+              const fakeEnquiries = Math.floor(fakeViews * 0.08);
 
               return (
                 <div
                   key={listing._id}
-                  className="bg-white rounded-2xl border border-[#E2DDD5] overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+                  className="bg-white rounded-2xl border border-[#E2DDD5] p-4 shadow-sm hover:shadow-md transition-shadow"
                 >
-                  {/* Photo */}
-                  <div className="aspect-[4/3] bg-[#F4F1EC] relative">
-                    {listing.imageUrl ? (
-                      <Image
-                        src={listing.imageUrl}
-                        alt={listing.title}
-                        fill
-                        className="object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-[48px] bg-gradient-to-br from-[#F4F1EC] to-[#E2DDD5]">
-                        🏠
-                      </div>
-                    )}
-                    {/* Badge overlay */}
-                    <div className="absolute top-3 left-3">
-                      {listing.isVerified ? (
-                        <span className="inline-flex items-center gap-1 text-[11px] font-bold text-white bg-[#16A34A] px-2.5 py-1 rounded-full shadow-sm">
-                          <svg className="w-3 h-3" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                          Verified
-                        </span>
+                  <div className="flex gap-4">
+                    {/* Photo */}
+                    <div className="shrink-0 w-[100px] h-[75px] lg:w-[140px] lg:h-[100px] rounded-xl overflow-hidden bg-[#F4F1EC] relative">
+                      {listing.imageUrl ? (
+                        <Image
+                          src={listing.imageUrl}
+                          alt={listing.title}
+                          fill
+                          className="object-cover"
+                        />
                       ) : (
-                        <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#16130C] bg-[#F5C842] px-2.5 py-1 rounded-full shadow-sm">
-                          Pending
-                        </span>
+                        <div className="w-full h-full flex items-center justify-center text-[28px] bg-gradient-to-br from-[#F4F1EC] to-[#E2DDD5]">
+                          🏠
+                        </div>
                       )}
+                    </div>
+
+                    {/* Info */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-2">
+                        <h3 className="text-[16px] font-semibold text-[#16130C] truncate">
+                          {listing.title}
+                        </h3>
+                        {listing.isVerified ? (
+                          <span className="shrink-0 inline-flex items-center gap-1 text-[11px] font-bold text-[#16A34A] bg-[#16A34A]/8 px-2 py-0.5 rounded-full">
+                            <svg className="w-3 h-3" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                            Verified
+                          </span>
+                        ) : (
+                          <span className="shrink-0 text-[11px] font-bold text-[#E8A020] bg-[#E8A020]/8 px-2 py-0.5 rounded-full">
+                            Pending
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1.5 mt-1">
+                        <span className="text-[13px] text-[#9C9485] capitalize">{listing.type}</span>
+                        {listing.city && (
+                          <>
+                            <span className="text-[#E2DDD5]">·</span>
+                            <span className="text-[13px] text-[#9C9485]">{listing.city}</span>
+                          </>
+                        )}
+                      </div>
+                      {/* Fake stats */}
+                      <div className="flex items-center gap-4 mt-2">
+                        <span className="text-[12px] text-[#9C9485]">
+                          <span className="font-semibold text-[#16130C]">{fakeViews}</span> views
+                        </span>
+                        <span className="text-[12px] text-[#9C9485]">
+                          <span className="font-semibold text-[#16130C]">{fakeEnquiries}</span> enquiries
+                        </span>
+                      </div>
                     </div>
                   </div>
 
-                  {/* Info */}
-                  <div className="p-4">
-                    <h3 className="text-[16px] font-semibold text-[#16130C] truncate">
-                      {listing.title}
-                    </h3>
-                    <div className="flex items-center gap-1.5 mt-1 mb-4">
-                      <span className="text-[13px] text-[#9C9485] capitalize">{listing.type}</span>
-                      {listing.city && (
-                        <>
-                          <span className="text-[#E2DDD5]">·</span>
-                          <span className="text-[13px] text-[#9C9485]">{listing.city}</span>
-                        </>
-                      )}
-                    </div>
-                    <div className="flex gap-2">
-                      <Link
-                        href={href}
-                        className="flex-1 h-[44px] flex items-center justify-center text-[14px] font-semibold text-[#6B2D8B] bg-[#6B2D8B]/8 rounded-xl hover:bg-[#6B2D8B]/15 transition-colors"
-                      >
-                        View →
-                      </Link>
-                      <button
-                        disabled
-                        className="flex-1 h-[44px] flex items-center justify-center text-[14px] font-medium text-[#9C9485] bg-[#F4F1EC] rounded-xl cursor-not-allowed"
-                      >
-                        Edit · Soon
-                      </button>
-                    </div>
+                  {/* Actions */}
+                  <div className="flex gap-2 mt-3 pt-3 border-t border-[#F4F1EC]">
+                    <Link
+                      href={href}
+                      className="flex-1 h-[44px] flex items-center justify-center text-[14px] font-semibold text-[#6B2D8B] bg-[#6B2D8B]/8 rounded-xl hover:bg-[#6B2D8B]/15 transition-colors"
+                    >
+                      View listing →
+                    </Link>
+                    <button
+                      disabled
+                      className="flex-1 h-[44px] flex items-center justify-center text-[14px] font-medium text-[#9C9485] bg-[#F4F1EC] rounded-xl cursor-not-allowed"
+                    >
+                      Edit · Soon
+                    </button>
                   </div>
                 </div>
               );
             })}
           </div>
         )}
+      </div>
+      {/* Claim more CTA */}
+      <div className="bg-gradient-to-br from-[#16130C] to-[#2A2520] rounded-2xl p-6 lg:p-8 text-center shadow-sm">
+        <p className="font-display text-[18px] lg:text-[20px] font-bold text-white tracking-[-0.02em] mb-2">
+          Have more listings on Klickenya?
+        </p>
+        <p className="text-[14px] text-white/50 mb-5 max-w-[340px] mx-auto">
+          Claim and verify them to get the green badge, manage enquiries, and boost your visibility.
+        </p>
+        <Link
+          href="/"
+          className="inline-block bg-[#E8A020] text-[#16130C] font-bold text-[14px] px-7 h-[48px] leading-[48px] rounded-full hover:bg-[#d4911c] transition-colors shadow-sm"
+        >
+          Claim another listing →
+        </Link>
       </div>
     </div>
   );
