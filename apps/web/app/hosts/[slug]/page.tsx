@@ -133,10 +133,10 @@ export default async function HostProfilePage({ params }: PageProps) {
         <img
           src="https://cdn.sanity.io/images/b9zd8u9f/production/59715b77a1b75a3d1f7bfd75ee2fbec9d5273f62-1600x900.svg?w=1800"
           alt=""
-          className="absolute inset-0 w-full h-full object-cover opacity-20 pointer-events-none"
+          className="absolute inset-0 w-full h-full object-cover pointer-events-none"
         />
         {/* Dark overlay for readability */}
-        <div className="absolute inset-0 bg-gradient-to-b from-[#16130C]/70 via-[#16130C]/50 to-[#16130C]/90 pointer-events-none" />
+        <div className="absolute inset-0 bg-[#16130C]/40 pointer-events-none" />
 
         <div className="relative max-w-3xl mx-auto px-5 pt-8 pb-10 text-center">
           {/* Back link */}
