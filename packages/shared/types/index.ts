@@ -138,8 +138,13 @@ export interface SanityListing {
   county?: string
   price: number
   priceUnit: PriceUnit
+  priceRange?: string
   coverPhoto?: SanityImage
   tags: string[]
+  avgRating?: number
+  reviewCount?: number
+  openingHours?: string
+  hostName?: string
   isVerified?: boolean
   verificationStatus?: 'pending' | 'claimed' | 'verified'
   hostRef?: HostRef
