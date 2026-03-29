@@ -56,6 +56,7 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
             verificationStatus: "verified",
             claimedBy: claim.claimant_email,
             ownerName: claim.claimant_name,
+            hostName: claim.claimant_name,
             notificationEmail1: claim.claimant_email,
           })
           .commit();
