@@ -78,6 +78,26 @@ function ExploreHoverMenu({
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
     >
+      {/* Quick navigation links */}
+      <div className="flex flex-wrap items-center gap-2 mb-4 pb-4 border-b border-border">
+        {NAV_LINKS.map((link) => (
+          <Link
+            key={link.href}
+            href={link.href}
+            className="px-3.5 py-1.5 rounded-full text-[13px] font-semibold text-text hover:bg-amber/10 hover:text-amber border border-border transition-colors"
+          >
+            {link.label}
+          </Link>
+        ))}
+        <Link
+          href="/how-it-works"
+          className="px-3.5 py-1.5 rounded-full text-[13px] font-semibold text-text hover:bg-amber/10 hover:text-amber border border-border transition-colors"
+        >
+          List your space
+        </Link>
+      </div>
+
+      {/* Category grid */}
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 sm:gap-5">
         {EXPLORE_CATEGORIES.map((cat) => {
           const subs = SUBCATEGORIES_BY_TYPE[cat.type] ?? [];
