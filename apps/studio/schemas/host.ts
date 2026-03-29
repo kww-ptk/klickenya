@@ -80,8 +80,7 @@ export default defineType({
       name: 'supabaseUserId',
       title: 'Supabase User ID',
       type: 'string',
-      description: 'Links to auth.users.id — do not edit manually',
-      readOnly: true,
+      description: 'Links to auth.users.id',
     }),
     defineField({
       name: 'listings',
