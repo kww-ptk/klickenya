@@ -1,6 +1,7 @@
 import { redirect, notFound } from "next/navigation";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/server";
+import { adminClient } from "@/lib/supabase/admin";
 import { sanityClient } from "@/lib/sanity/client";
 import { EventReviewActions } from "./EventReviewActions";
 
@@ -35,7 +36,7 @@ export default async function AdminEventDetailPage({ params }: PageProps) {
     .single();
   if (profile?.role !== "admin") redirect("/dashboard");
 
-  const { data: event } = await supabase
+  const { data: event } = await adminClient
     .from("events_pending")
     .select("*")
     .eq("id", id)
@@ -45,20 +46,20 @@ export default async function AdminEventDetailPage({ params }: PageProps) {
   const ev = event as EventPending;
 
   // Host info
-  const { data: hostProfile } = await supabase
+  const { data: hostProfile } = await adminClient
     .from("host_profiles")
     .select("display_name, user_id")
     .eq("user_id", ev.host_id)
     .single();
 
-  const { data: hostUser } = await supabase
+  const { data: hostUser } = await adminClient
     .from("users")
     .select("email")
     .eq("id", ev.host_id)
     .single();
 
   // Prior approved count
-  const { count: approvedCount } = await supabase
+  const { count: approvedCount } = await adminClient
     .from("events_pending")
     .select("id", { count: "exact", head: true })
     .eq("host_id", ev.host_id)

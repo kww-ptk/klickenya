@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { adminClient } from "@/lib/supabase/admin";
 
 interface EventRow {
   id: string;
@@ -31,7 +32,7 @@ export default async function AdminEventsPage() {
 
   if (profile?.role !== "admin") redirect("/dashboard");
 
-  const { data: events } = await supabase
+  const { data: events } = await adminClient
     .from("events_pending")
     .select("*")
     .order("submitted_at", { ascending: false })
@@ -41,7 +42,7 @@ export default async function AdminEventsPage() {
 
   // Fetch host display names
   const hostIds = [...new Set(rows.map((r) => r.host_id))];
-  const { data: hosts } = await supabase
+  const { data: hosts } = await adminClient
     .from("host_profiles")
     .select("user_id, display_name")
     .in("user_id", hostIds);

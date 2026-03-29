@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { adminClient } from "@/lib/supabase/admin";
 import { createClient as createSanityClient } from "next-sanity";
 import { Resend } from "resend";
 
@@ -36,7 +37,7 @@ export async function POST(
     if (profile?.role !== "admin") return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
     // Fetch event
-    const { data: event } = await supabase
+    const { data: event } = await adminClient
       .from("events_pending")
       .select("*")
       .eq("id", id)
@@ -46,7 +47,7 @@ export async function POST(
     if (event.status !== "pending") return NextResponse.json({ error: "Event already reviewed" }, { status: 400 });
 
     // Get host email
-    const { data: hostUser } = await supabase
+    const { data: hostUser } = await adminClient
       .from("users")
       .select("email")
       .eq("id", event.host_id)
@@ -64,7 +65,7 @@ export async function POST(
       }
 
       // Update events_pending
-      await supabase
+      await adminClient
         .from("events_pending")
         .update({ status: "approved", reviewed_at: new Date().toISOString() })
         .eq("id", id);
@@ -98,7 +99,7 @@ export async function POST(
 
     if (action === "reject") {
       // Update events_pending
-      await supabase
+      await adminClient
         .from("events_pending")
         .update({
           status: "rejected",
