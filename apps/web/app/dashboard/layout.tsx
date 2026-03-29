@@ -160,10 +160,9 @@ export default async function DashboardLayout({
             disabled
           />
           <DashboardNavLink
-            href="/dashboard/account"
-            label="Account"
+            href="/dashboard/profile/edit"
+            label="Edit Profile"
             icon={<UserIcon />}
-            disabled
           />
           <DashboardNavLink
             href="/dashboard/settings"

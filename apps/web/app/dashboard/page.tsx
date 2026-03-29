@@ -78,13 +78,21 @@ export default async function DashboardPage() {
   return (
     <div>
       {/* Header */}
-      <div className="mb-5">
-        <h1 className="font-display text-[22px] lg:text-[28px] font-bold tracking-[-0.03em] text-[#16130C]">
-          {greeting}, {firstName}
-        </h1>
-        <p className="text-[13px] text-[#9C9485] mt-0.5">
-          Here&apos;s an overview of your listings
-        </p>
+      <div className="flex items-center justify-between mb-5">
+        <div>
+          <h1 className="font-display text-[22px] lg:text-[28px] font-bold tracking-[-0.03em] text-[#16130C]">
+            {greeting}, {firstName}
+          </h1>
+          <p className="text-[13px] text-[#9C9485] mt-0.5">
+            Here&apos;s an overview of your listings
+          </p>
+        </div>
+        <Link
+          href="/dashboard/profile/edit"
+          className="text-[13px] font-semibold text-[#6B2D8B] bg-[#6B2D8B]/8 px-4 h-[40px] flex items-center rounded-xl hover:bg-[#6B2D8B]/15 transition-colors shrink-0"
+        >
+          Edit Profile
+        </Link>
       </div>
 
       {/* Stats */}
