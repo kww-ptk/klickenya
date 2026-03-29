@@ -1,4 +1,5 @@
 import listing from '../schemas/listing'
+import host from '../schemas/host'
 import blogPost from '../schemas/blogPost'
 import property from '../schemas/property'
 import destination from '../schemas/destination'
@@ -32,6 +33,7 @@ import {
 
 export const schemaTypes = [
   listing,
+  host,
   blogPost,
   property,
   destination,

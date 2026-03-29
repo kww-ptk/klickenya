@@ -77,7 +77,7 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
       // Check if host profile already exists
       const { data: existingHost } = await supabase
         .from("host_profiles")
-        .select("id, user_id, total_listings")
+        .select("id, user_id, total_listings, sanity_host_id")
         .eq("email", claim.claimant_email)
         .single();
 
@@ -206,14 +206,61 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
         }
       }
 
-      // Step 2d — Link listing in Sanity
+      // Step 2d — Create or update Sanity host document + link listing
       try {
-        await sanityWrite
-          .patch(claim.listing_sanity_id)
-          .set({ hostId: userId })
-          .commit();
+        if (existingHost?.sanity_host_id) {
+          // Existing host — append listing to their host document
+          await sanityWrite
+            .patch(existingHost.sanity_host_id)
+            .setIfMissing({ listings: [] })
+            .append("listings", [
+              { _type: "reference", _ref: claim.listing_sanity_id, _key: Math.random().toString(36).slice(2, 10) },
+            ])
+            .commit();
+
+          // Set host reference on listing
+          await sanityWrite
+            .patch(claim.listing_sanity_id)
+            .set({ host: { _type: "reference", _ref: existingHost.sanity_host_id } })
+            .commit();
+        } else {
+          // New host — create Sanity host document
+          const slugBase = claim.claimant_name
+            .toLowerCase()
+            .trim()
+            .replace(/[^a-z0-9\s-]/g, "")
+            .replace(/\s+/g, "-");
+
+          const sanityHost = await sanityWrite.create({
+            _type: "host",
+            name: claim.claimant_name,
+            slug: { _type: "slug", current: slugBase },
+            email: claim.claimant_email,
+            phone: claim.claimant_phone,
+            website: claim.website_url ?? undefined,
+            planTier: "basic",
+            supabaseUserId: userId,
+            verified: true,
+            createdAt: new Date().toISOString(),
+            listings: [
+              { _type: "reference", _ref: claim.listing_sanity_id, _key: Math.random().toString(36).slice(2, 10) },
+            ],
+          });
+
+          // Set host reference on listing
+          await sanityWrite
+            .patch(claim.listing_sanity_id)
+            .set({ host: { _type: "reference", _ref: sanityHost._id } })
+            .commit();
+
+          // Store sanity_host_id in Supabase
+          await supabase
+            .from("host_profiles")
+            .update({ sanity_host_id: sanityHost._id })
+            .eq("user_id", userId);
+        }
       } catch (sanityErr) {
-        console.error("Sanity hostId patch error:", sanityErr);
+        console.error("Sanity host document error:", sanityErr);
       }
 
       // Send approval + host account email

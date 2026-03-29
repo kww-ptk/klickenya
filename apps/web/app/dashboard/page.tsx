@@ -20,7 +20,7 @@ export default async function DashboardPage() {
 
   const { data: hostProfile } = await supabase
     .from("host_profiles")
-    .select("user_id, display_name")
+    .select("user_id, display_name, sanity_host_id")
     .eq("user_id", user.id)
     .single();
 
@@ -40,7 +40,7 @@ export default async function DashboardPage() {
       const raw = await sanityClient.fetch<
         { _id: string; title: string; slug: string; type: string; city: string | null; coverPhoto: { asset?: { url?: string } } | null; isVerified: boolean }[]
       >(
-        `*[_type == "listing" && hostId == $hostId] | order(_createdAt desc) {
+        `*[_type == "listing" && (hostId == $hostId || host._ref == $sanityHostId)] | order(_createdAt desc) {
           _id,
           title,
           "slug": slug.current,
@@ -49,7 +49,7 @@ export default async function DashboardPage() {
           "coverPhoto": photos[0]{ asset->{ _id, url } },
           isVerified
         }`,
-        { hostId: hostProfile.user_id }
+        { hostId: hostProfile.user_id, sanityHostId: hostProfile.sanity_host_id ?? "" }
       );
       listings = raw.map((l) => ({
         _id: l._id,

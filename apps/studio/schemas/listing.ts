@@ -322,10 +322,19 @@ export default defineType({
       group: 'general',
     }),
     defineField({
+      name: 'host',
+      title: 'Host',
+      type: 'reference',
+      to: [{ type: 'host' }],
+      description: 'The host who owns this listing',
+      group: 'general',
+    }),
+    defineField({
       name: 'hostName',
-      title: 'Host name',
+      title: 'Host name (deprecated)',
       type: 'string',
-      description: 'Name of the person or business hosting this listing',
+      description: 'Legacy field — use Host reference instead',
+      hidden: true,
       group: 'general',
     }),
     defineField({
