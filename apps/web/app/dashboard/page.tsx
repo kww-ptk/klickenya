@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { sanityClient } from "@/lib/sanity/client";
+import { imageUrl } from "@/lib/sanity/image";
 import { DashboardShell } from "./DashboardShell";
 
 export default async function DashboardPage() {
@@ -43,14 +44,16 @@ export default async function DashboardPage() {
     slug: string;
     type: string;
     city: string | null;
-    coverPhoto: unknown;
+    imageUrl: string | null;
     isVerified: boolean;
     verificationStatus: string;
   }[] = [];
 
   if (hostProfile) {
     try {
-      listings = await sanityClient.fetch(
+      const raw = await sanityClient.fetch<
+        { _id: string; title: string; slug: string; type: string; city: string | null; coverPhoto: unknown; isVerified: boolean; verificationStatus: string }[]
+      >(
         `*[_type == "listing" && hostId == $hostId] | order(_createdAt desc) {
           _id,
           title,
@@ -63,6 +66,17 @@ export default async function DashboardPage() {
         }`,
         { hostId: hostProfile.user_id }
       );
+
+      listings = raw.map((l) => ({
+        _id: l._id,
+        title: l.title,
+        slug: l.slug,
+        type: l.type,
+        city: l.city,
+        imageUrl: l.coverPhoto ? imageUrl(l.coverPhoto, 160) : null,
+        isVerified: l.isVerified,
+        verificationStatus: l.verificationStatus,
+      }));
     } catch (err) {
       console.error("Sanity listing fetch error:", err);
     }

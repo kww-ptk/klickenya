@@ -4,7 +4,6 @@ import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { imageUrl } from "@/lib/sanity/image";
 import { cn } from "@/lib/utils";
 
 /* ---------- Types ---------- */
@@ -15,7 +14,7 @@ interface Listing {
   slug: string;
   type: string;
   city: string | null;
-  coverPhoto: unknown;
+  imageUrl: string | null;
   isVerified: boolean;
   verificationStatus: string;
 }
@@ -183,9 +182,9 @@ export function DashboardShell({
                 >
                   {/* Thumbnail */}
                   <div className="shrink-0 w-[72px] h-[72px] rounded-xl overflow-hidden bg-[#F4F1EC]">
-                    {listing.coverPhoto ? (
+                    {listing.imageUrl ? (
                       <Image
-                        src={imageUrl(listing.coverPhoto, 160)}
+                        src={listing.imageUrl}
                         alt={listing.title}
                         width={72}
                         height={72}
