@@ -72,7 +72,7 @@ function EventDetail({
   const ageRestriction: string | null = listing.ageRestriction ?? null;
   const schedule: { day: string; startTime: string; endTime?: string }[] = listing.schedule ?? [];
   const organizer: string | null = listing.organizer ?? null;
-  const organizerSlug: string | null = listing.organizerSlug ?? null;
+  const organizerSlug: string | null = listing.organizerSlug ?? listing.hostRef?.slug ?? null;
   const ticketLink: string | null = listing.ticketLink ?? null;
   const priceFrom: number | null = listing.priceFrom ?? listing.price ?? null;
   const mobilePrice = isFree ? 0 : (priceFrom ?? 0);

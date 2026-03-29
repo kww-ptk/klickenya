@@ -90,6 +90,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Host profile not found" }, { status: 404 });
     }
 
+    // Fetch the host's URL slug from Sanity
+    let hostSlug: string | null = null;
+    if (hostProfile.sanity_host_id) {
+      const hostDoc = await sanityWrite.fetch<{ slug: string } | null>(
+        `*[_type == "host" && _id == $id][0]{ "slug": slug.current }`,
+        { id: hostProfile.sanity_host_id }
+      );
+      hostSlug = hostDoc?.slug ?? null;
+    }
+
     // 2. Parse form data
     const formData = await req.formData();
     const title = (formData.get("title") as string)?.trim();
@@ -220,7 +230,7 @@ export async function POST(req: NextRequest) {
       price: priceFrom,
       priceUnit: "ticket",
       organizer: hostProfile.display_name,
-      organizerSlug: hostProfile.sanity_host_id,
+      organizerSlug: hostSlug,
       ...(hostProfile.sanity_host_id
         ? { host: { _type: "reference", _ref: hostProfile.sanity_host_id } }
         : {}),
