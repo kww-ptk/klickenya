@@ -131,7 +131,7 @@ export default async function HostProfilePage({ params }: PageProps) {
               </p>
             </div>
 
-            <div className="flex gap-5 overflow-x-auto scrollbar-none pb-4 -mx-5 px-5 md:mx-0 md:px-0 md:grid md:grid-cols-2 lg:grid-cols-3">
+            <div className="flex gap-5 overflow-x-auto scrollbar-none pb-4 -mx-5 px-5 md:mx-0 md:px-0 md:grid md:grid-cols-2 lg:grid-cols-3 [&>a]:w-auto">
               {eventCards.map((event, i) => (
                 <EventCard key={i} {...event} />
               ))}

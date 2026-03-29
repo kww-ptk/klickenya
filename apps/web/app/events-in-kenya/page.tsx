@@ -286,7 +286,7 @@ export default async function EventsInKenyaPage() {
           </div>
 
           {upcomingCards.length > 0 ? (
-            <div className="flex gap-5 overflow-x-auto scrollbar-none pb-4 -mx-5 px-5 md:mx-0 md:px-0 md:grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <div className="flex gap-5 overflow-x-auto scrollbar-none pb-4 -mx-5 px-5 md:mx-0 md:px-0 md:grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 [&>a]:w-auto">
               {upcomingCards.map((card, i) => (
                 <EventCard key={i} {...card} />
               ))}
