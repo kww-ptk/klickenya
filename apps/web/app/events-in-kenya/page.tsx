@@ -8,11 +8,10 @@ import {
   EVENTS_BY_CITY_QUERY,
   EVENT_SUBCATEGORY_COUNTS_QUERY,
 } from "@/lib/sanity/queries";
-import { urlForImage } from "@/lib/sanity/image";
 import { Nav } from "@/components/shared/Nav";
 import { Footer } from "@/components/shared/Footer";
-import { ListingCard } from "@/components/listings/ListingCard";
-import type { ListingCardProps } from "@/components/listings/ListingCard";
+import { EventCard } from "@/components/home/EventCard";
+import { mapSanityEventToCard } from "@/lib/mappers/eventMapper";
 import { WeekendEventCard } from "@/components/events/WeekendEventCard";
 import { CityEventCard, CITY_GRADIENTS } from "@/components/events/CityEventCard";
 import { SubcategoryCard } from "@/components/events/SubcategoryCard";
@@ -88,34 +87,6 @@ const EVENT_SUBCATEGORIES = [
   { value: "other", label: "Other", emoji: "\u2728" },
 ];
 
-/* ── Helpers ───────────────────────────────────────── */
-
-function toListingCard(e: SanityEventCard): ListingCardProps {
-  const slug = typeof e.slug === "string" ? e.slug : e.slug?.current ?? "";
-  const citySlug = (e.city ?? "").toLowerCase().replace(/\s+/g, "-");
-  const photoUrl = e.coverPhoto?.asset?.url
-    ? e.coverPhoto.asset.url + "?w=800&h=600&fit=crop&auto=format&q=80"
-    : e.coverPhotoUrl ?? "";
-
-  return {
-    id: e._id,
-    title: e.title ?? "Untitled",
-    city: e.city ?? "",
-    price: e.isFree ? null : (e.priceFrom ?? e.price ?? null),
-    priceUnit: e.priceUnit ?? "ticket",
-    type: "event",
-    subcategory: e.subcategory ?? undefined,
-    isVerified: e.isVerified ?? false,
-    hostName: e.hostRef?.name ?? e.hostName ?? undefined,
-    hostPhotoUrl: e.hostRef?.photo?.asset?.url ?? undefined,
-    hostSlug: e.hostRef?.slug ?? undefined,
-    rating: e.avgRating ?? undefined,
-    reviewCount: e.reviewCount ?? undefined,
-    photos: photoUrl ? [photoUrl] : [],
-    href: `/events/${citySlug}/${slug}`,
-  };
-}
-
 /* ── Page ──────────────────────────────────────────── */
 
 export default async function EventsInKenyaPage() {
@@ -161,7 +132,7 @@ export default async function EventsInKenyaPage() {
     { city: "Lamu", citySlug: "lamu", count: cityData.lamu ?? 0, imageUrl: cityData.lamuImage, gradient: CITY_GRADIENTS.lamu },
   ];
 
-  const upcomingCards = upcomingEvents.map(toListingCard);
+  const upcomingCards = upcomingEvents.map(mapSanityEventToCard);
 
   return (
     <>
@@ -315,9 +286,11 @@ export default async function EventsInKenyaPage() {
           </div>
 
           {upcomingCards.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-              {upcomingCards.map((card) => (
-                <ListingCard key={card.id} {...card} />
+            <div className="flex gap-5 overflow-x-auto scrollbar-none pb-4 -mx-5 px-5 md:mx-0 md:px-0 md:grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 [&>div]:shrink-0 [&>div]:w-[296px] md:[&>div]:w-auto md:[&>div]:shrink">
+              {upcomingCards.map((card, i) => (
+                <div key={i}>
+                  <EventCard {...card} />
+                </div>
               ))}
             </div>
           ) : (

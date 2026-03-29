@@ -42,7 +42,7 @@ export function mapSanityEventToCard(listing: any) {
     day: String(date.getDate()).padStart(2, "0"),
     location: listing.venue ?? listing.city ?? "",
     time: timeStr,
-    price: listing.price ? `KSh ${listing.price.toLocaleString()}` : "Free",
+    price: listing.isFree ? "Free" : (listing.priceFrom ?? listing.price) ? `KSh ${(listing.priceFrom ?? listing.price).toLocaleString()}` : "Free",
     attending: 0,
     hostInitials: (listing.title ?? "EV").slice(0, 2).toUpperCase(),
     hostName: listing.city ?? "Kenya",
