@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { sanityClient, sanityFetch } from "@/lib/sanity/client";
 import {
   LISTING_BY_SLUG_QUERY,
+  EVENT_BY_SLUG_QUERY,
   LISTING_SLUGS_QUERY,
   SIMILAR_LISTINGS_QUERY,
 } from "@/lib/sanity/queries";
@@ -151,7 +152,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   if (!isValidType(type)) return {};
 
-  const listing = await sanityClient.fetch(LISTING_BY_SLUG_QUERY, { slug });
+  const metaQuery = TYPE_TO_SANITY[type] === "event" ? EVENT_BY_SLUG_QUERY : LISTING_BY_SLUG_QUERY;
+  const listing = await sanityClient.fetch(metaQuery, { slug });
 
   if (!listing) return {};
 
@@ -194,8 +196,9 @@ export default async function ListingDetailPage({ params }: PageProps) {
   if (!isValidType(type)) notFound();
 
   const sanityType = TYPE_TO_SANITY[type];
+  const slugQuery = sanityType === "event" ? EVENT_BY_SLUG_QUERY : LISTING_BY_SLUG_QUERY;
   const { data: listing } = await sanityFetch({
-    query: LISTING_BY_SLUG_QUERY,
+    query: slugQuery,
     params: { slug },
   });
 

@@ -162,12 +162,12 @@ export const LISTING_BY_SLUG_QUERY = groq`
     meetingPoint,
     whatToBring,
 
-    // Event fields
+    // Event fields (basic — full projection in EVENT_BY_SLUG_QUERY)
     eventDate,
     eventEndDate,
     venue,
-    lineup[]{ name, role, time },
-    ticketTypes[]{ name, price, description },
+    performers[]{ name, role },
+    ticketTypes[]{ name, price, description, available, isSoldOut },
     ageRestriction,
     dresscode,
 
@@ -579,7 +579,118 @@ export const EVENTS_QUERY = groq`
     eventDate,
     eventEndDate,
     venue,
+    isFree,
+    priceFrom,
     "coverPhotoUrl": photos[0].asset->url
+  }
+`
+
+export const EVENT_BY_SLUG_QUERY = groq`
+  *[_type == "listing" && slug.current == $slug && type == "event"][0] {
+    _id,
+    title,
+    slug,
+    type,
+    subcategory,
+    status,
+    city,
+    county,
+    address,
+    price,
+    priceUnit,
+    bookingType,
+    maxGuests,
+    description,
+    photos[]{ ${IMAGE_FIELDS} },
+    amenities,
+    tags,
+    hostName,
+    highlights,
+    seoTitle,
+    seoDescription,
+    isVerified,
+    verificationStatus,
+    avgRating,
+    reviewCount,
+    "hostRef": host->{ _id, name, "slug": slug.current, photo{ ${IMAGE_FIELDS} }, bio, website, instagram, facebook, planTier, verified },
+
+    // Event-specific fields
+    eventDate,
+    eventEndDate,
+    venue,
+    venueAddress,
+    doorsOpen,
+    organizer,
+    organizerSlug,
+    isFree,
+    priceFrom,
+    totalCapacity,
+    ticketLink,
+    ticketTypes[]{ _key, name, price, description, available, isSoldOut },
+    performers[]{ _key, name, role, image{ ${IMAGE_FIELDS} }, bio },
+    ageRestriction,
+    dresscode,
+    isRecurring,
+    recurrenceRule,
+    isFeatured,
+    hostId,
+    createdByHost
+  }
+`
+
+export const UPCOMING_EVENTS_QUERY = groq`
+  *[_type == "listing" && type == "event" && status == "published" && eventDate >= now()] | order(eventDate asc) [0...$limit] {
+    ${LISTING_CARD_FIELDS},
+    eventDate,
+    eventEndDate,
+    venue,
+    isFree,
+    priceFrom,
+    "coverPhotoUrl": photos[0].asset->url
+  }
+`
+
+export const THIS_WEEKEND_EVENTS_QUERY = groq`
+  *[_type == "listing" && type == "event" && status == "published" && eventDate >= $weekStart && eventDate <= $weekEnd] | order(eventDate asc) [0...3] {
+    ${LISTING_CARD_FIELDS},
+    eventDate,
+    eventEndDate,
+    venue,
+    isFree,
+    priceFrom,
+    subcategory,
+    "coverPhotoUrl": photos[0].asset->url
+  }
+`
+
+export const EVENTS_BY_CITY_QUERY = groq`{
+  "watamu": count(*[_type == "listing" && type == "event" && status == "published" && lower(city) == "watamu" && eventDate >= now()]),
+  "kilifi": count(*[_type == "listing" && type == "event" && status == "published" && lower(city) == "kilifi" && eventDate >= now()]),
+  "diani": count(*[_type == "listing" && type == "event" && status == "published" && lower(city) == "diani" && eventDate >= now()]),
+  "nairobi": count(*[_type == "listing" && type == "event" && status == "published" && lower(city) == "nairobi" && eventDate >= now()]),
+  "lamu": count(*[_type == "listing" && type == "event" && status == "published" && lower(city) == "lamu" && eventDate >= now()]),
+  "watamuImage": *[_type == "listing" && type == "event" && status == "published" && lower(city) == "watamu" && isFeatured == true] | order(eventDate desc) [0] { "coverPhotoUrl": photos[0].asset->url }.coverPhotoUrl,
+  "kilifiImage": *[_type == "listing" && type == "event" && status == "published" && lower(city) == "kilifi" && isFeatured == true] | order(eventDate desc) [0] { "coverPhotoUrl": photos[0].asset->url }.coverPhotoUrl,
+  "dianiImage": *[_type == "listing" && type == "event" && status == "published" && lower(city) == "diani" && isFeatured == true] | order(eventDate desc) [0] { "coverPhotoUrl": photos[0].asset->url }.coverPhotoUrl,
+  "nairobiImage": *[_type == "listing" && type == "event" && status == "published" && lower(city) == "nairobi" && isFeatured == true] | order(eventDate desc) [0] { "coverPhotoUrl": photos[0].asset->url }.coverPhotoUrl,
+  "lamuImage": *[_type == "listing" && type == "event" && status == "published" && lower(city) == "lamu" && isFeatured == true] | order(eventDate desc) [0] { "coverPhotoUrl": photos[0].asset->url }.coverPhotoUrl
+}`
+
+export const FEATURED_EVENTS_QUERY = groq`
+  *[_type == "listing" && type == "event" && status == "published" && isFeatured == true && eventDate >= now()] | order(eventDate asc) [0...6] {
+    ${LISTING_CARD_FIELDS},
+    eventDate,
+    eventEndDate,
+    venue,
+    isFree,
+    priceFrom,
+    "coverPhotoUrl": photos[0].asset->url
+  }
+`
+
+export const EVENT_SUBCATEGORY_COUNTS_QUERY = groq`
+  *[_type == "listing" && type == "event" && status == "published" && eventDate >= now()] {
+    subcategory
   }
 `
 
