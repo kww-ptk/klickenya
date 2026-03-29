@@ -35,7 +35,22 @@ export default async function DashboardPage() {
     isVerified: boolean;
   }[] = [];
 
+  let hostSlug: string | null = null;
+
   if (hostProfile) {
+    // Fetch host slug
+    if (hostProfile.sanity_host_id) {
+      try {
+        const hostDoc = await sanityClient.fetch<{ slug: string } | null>(
+          `*[_type == "host" && _id == $id][0]{ "slug": slug.current }`,
+          { id: hostProfile.sanity_host_id }
+        );
+        hostSlug = hostDoc?.slug ?? null;
+      } catch {
+        // Non-blocking
+      }
+    }
+
     try {
       const raw = await sanityClient.fetch<
         { _id: string; title: string; slug: string; type: string; city: string | null; coverPhoto: { asset?: { url?: string } } | null; isVerified: boolean }[]
@@ -87,12 +102,22 @@ export default async function DashboardPage() {
             Here&apos;s an overview of your listings
           </p>
         </div>
-        <Link
-          href="/dashboard/profile/edit"
-          className="text-[13px] font-semibold text-[#6B2D8B] bg-[#6B2D8B]/8 px-4 h-[40px] flex items-center rounded-xl hover:bg-[#6B2D8B]/15 transition-colors shrink-0"
-        >
-          Edit Profile
-        </Link>
+        <div className="flex items-center gap-2 shrink-0">
+          {hostSlug && (
+            <Link
+              href={`/hosts/${hostSlug}`}
+              className="text-[13px] font-medium text-[#9C9485] hover:text-[#16130C] transition-colors hidden sm:flex items-center"
+            >
+              View profile →
+            </Link>
+          )}
+          <Link
+            href="/dashboard/profile/edit"
+            className="text-[13px] font-semibold text-[#6B2D8B] bg-[#6B2D8B]/8 px-4 h-[40px] flex items-center rounded-xl hover:bg-[#6B2D8B]/15 transition-colors"
+          >
+            Edit Profile
+          </Link>
+        </div>
       </div>
 
       {/* Stats */}

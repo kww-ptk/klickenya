@@ -10,6 +10,10 @@ const sanityWrite = createSanityClient({
   token: process.env.SANITY_WRITE_TOKEN,
 });
 
+const SANITY_PROJECT_ID = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID!;
+const SANITY_DATASET = process.env.NEXT_PUBLIC_SANITY_DATASET ?? "production";
+const SANITY_TOKEN = process.env.SANITY_WRITE_TOKEN!;
+
 export async function POST(req: NextRequest) {
   try {
     // Auth check
@@ -51,19 +55,39 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Name is required" }, { status: 400 });
     }
 
-    // Upload photo to Sanity if provided
+    // Upload photo to Sanity if provided (via HTTP API)
     let photoAssetId: string | null = null;
     if (photo && photo.size > 0) {
       if (photo.size > 5 * 1024 * 1024) {
         return NextResponse.json({ error: "Photo must be under 5MB" }, { status: 400 });
       }
 
-      const buffer = Buffer.from(await photo.arrayBuffer());
-      const asset = await sanityWrite.assets.upload("image", buffer, {
-        filename: photo.name,
-        contentType: photo.type,
-      });
-      photoAssetId = asset._id;
+      try {
+        const buffer = Buffer.from(await photo.arrayBuffer());
+        const uploadUrl = `https://${SANITY_PROJECT_ID}.api.sanity.io/v2024-01-01/assets/images/${SANITY_DATASET}?filename=${encodeURIComponent(photo.name)}`;
+
+        console.log("[Profile] Uploading photo to Sanity:", photo.name, photo.size, "bytes");
+
+        const uploadRes = await fetch(uploadUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": photo.type,
+            Authorization: `Bearer ${SANITY_TOKEN}`,
+          },
+          body: buffer,
+        });
+
+        if (!uploadRes.ok) {
+          const errText = await uploadRes.text();
+          console.error("[Profile] Sanity asset upload failed:", uploadRes.status, errText);
+        } else {
+          const uploadJson = await uploadRes.json();
+          photoAssetId = uploadJson.document?._id;
+          console.log("[Profile] Photo uploaded, asset ID:", photoAssetId);
+        }
+      } catch (uploadErr) {
+        console.error("[Profile] Photo upload error:", uploadErr);
+      }
     }
 
     // Patch Sanity host document
