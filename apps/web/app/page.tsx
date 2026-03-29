@@ -77,6 +77,7 @@ interface SanityListing {
   hostName?: string;
   isVerified?: boolean;
   coverPhoto?: { asset?: { url?: string } };
+  hostRef?: { name?: string; slug?: string; photo?: { asset?: { url?: string } }; verified?: boolean };
 }
 
 interface SanityDestination {
