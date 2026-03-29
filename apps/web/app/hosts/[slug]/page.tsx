@@ -33,6 +33,7 @@ interface HostData {
     isVerified?: boolean;
     verificationStatus?: string;
     hostName?: string;
+    hostRef?: { name?: string; slug?: string; photo?: { asset?: { url?: string } }; verified?: boolean };
     price?: number;
     priceUnit?: string;
     priceRange?: string;
