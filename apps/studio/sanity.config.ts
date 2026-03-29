@@ -19,6 +19,7 @@ function structure(S: StructureBuilder) {
             .title('Listings')
             .items([
               S.documentTypeListItem('listing').title('All listings'),
+              S.documentTypeListItem('host').title('Hosts'),
             ])
         ),
       S.divider(),
