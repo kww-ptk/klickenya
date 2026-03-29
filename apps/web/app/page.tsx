@@ -300,7 +300,9 @@ export default async function HomePage() {
               subcategory: listing.subcategory,
               openingHours: listing.openingHours,
               isVerified: listing.isVerified ?? false,
-              hostName: listing.hostName,
+              hostName: listing.hostRef?.name ?? listing.hostName,
+              hostPhotoUrl: listing.hostRef?.photo?.asset?.url,
+              hostSlug: listing.hostRef?.slug,
               photos: listing.coverPhoto?.asset?.url
                 ? [listing.coverPhoto.asset.url]
                 : [],

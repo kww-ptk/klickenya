@@ -24,6 +24,8 @@ interface ListingCardProps {
   badge?: string;
   isVerified?: boolean;
   hostName?: string;
+  hostPhotoUrl?: string;
+  hostSlug?: string;
   photos: string[];
   href: string;
 }
@@ -121,6 +123,8 @@ function ListingCard({
   badge,
   isVerified,
   hostName,
+  hostPhotoUrl,
+  hostSlug,
   photos,
   href,
 }: ListingCardProps) {
@@ -238,9 +242,19 @@ function ListingCard({
         <div className="flex-1 min-w-0 py-0.5 flex flex-col justify-between">
           <div>
             <div className="flex items-center gap-1.5">
-              {hostInitials && (
-                <div className="relative size-5 rounded-full bg-gradient-to-br from-amber to-purple flex items-center justify-center text-white text-[7px] font-bold shrink-0">
-                  {hostInitials}
+              {(hostPhotoUrl || hostInitials) && (
+                <div
+                  className="relative size-5 rounded-full shrink-0 cursor-pointer"
+                  onClick={(e) => { if (hostSlug) { e.preventDefault(); e.stopPropagation(); window.location.href = `/hosts/${hostSlug}`; } }}
+                  title={hostName ? `Hosted by ${hostName}` : undefined}
+                >
+                  {hostPhotoUrl ? (
+                    <Image src={`${hostPhotoUrl}?w=40&h=40&fit=crop&auto=format`} alt={hostName ?? ""} width={20} height={20} className="size-5 rounded-full object-cover" />
+                  ) : (
+                    <div className="size-5 rounded-full bg-gradient-to-br from-amber to-purple flex items-center justify-center text-white text-[7px] font-bold">
+                      {hostInitials}
+                    </div>
+                  )}
                   {isVerified && (
                     <span className="absolute -bottom-px -right-px size-2.5 rounded-full bg-[#16A34A] border border-white flex items-center justify-center">
                       <Check className="size-1.5 text-white" strokeWidth={4} />
@@ -356,9 +370,19 @@ function ListingCard({
         <div className="pt-3.5 px-0.5">
           <div className="flex justify-between items-start gap-2">
             <div className="flex items-center gap-2 flex-1 min-w-0">
-              {hostInitials && (
-                <div className="relative size-6 rounded-full bg-gradient-to-br from-amber to-purple flex items-center justify-center text-white text-[8px] font-bold shrink-0">
-                  {hostInitials}
+              {(hostPhotoUrl || hostInitials) && (
+                <div
+                  className="relative size-6 rounded-full shrink-0 cursor-pointer"
+                  onClick={(e) => { if (hostSlug) { e.preventDefault(); e.stopPropagation(); window.location.href = `/hosts/${hostSlug}`; } }}
+                  title={hostName ? `Hosted by ${hostName}` : undefined}
+                >
+                  {hostPhotoUrl ? (
+                    <Image src={`${hostPhotoUrl}?w=48&h=48&fit=crop&auto=format`} alt={hostName ?? ""} width={24} height={24} className="size-6 rounded-full object-cover" />
+                  ) : (
+                    <div className="size-6 rounded-full bg-gradient-to-br from-amber to-purple flex items-center justify-center text-white text-[8px] font-bold">
+                      {hostInitials}
+                    </div>
+                  )}
                   {isVerified && (
                     <span className="absolute -bottom-0.5 -right-0.5 size-3 rounded-full bg-[#16A34A] border-[1.5px] border-white flex items-center justify-center">
                       <Check className="size-2 text-white" strokeWidth={4} />
