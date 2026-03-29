@@ -204,7 +204,7 @@ export const HOST_BY_SLUG_QUERY = groq`
     verified,
     createdAt,
     "listings": listings[]->{ ${LISTING_CARD_FIELDS} },
-    "events": listings[]->[type == "event" && status == "published"]{ ${LISTING_CARD_FIELDS}, eventDate, eventEndDate, venue, isFree, priceFrom, isRecurring, recurrenceRule, schedule[]{ _key, day, startTime, endTime }, "coverPhotoUrl": photos[0].asset->url }
+    "events": *[_type == "listing" && type == "event" && status == "published" && host._ref == ^._id]{ ${LISTING_CARD_FIELDS}, eventDate, eventEndDate, venue, isFree, priceFrom, isRecurring, recurrenceRule, schedule[]{ _key, day, startTime, endTime }, "coverPhotoUrl": photos[0].asset->url }
   }
 `
 
