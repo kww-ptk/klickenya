@@ -340,9 +340,14 @@ export default async function AdminLayout({
 
       {/* Mobile bottom nav */}
       <AdminBottomNav
-        inboxCount={unreadContacts + unreadListingReqs + unreadGeneralContacts}
+        contactsCount={unreadContacts}
+        listingReqsCount={unreadListingReqs}
+        generalContactsCount={unreadGeneralContacts}
+        enquiriesCount={unreadEnquiries}
+        ambassadorsCount={unreadAmbassadors}
         claimsCount={pendingClaims}
         eventsCount={pendingEvents}
+        subscribersCount={totalSubscribers}
       />
     </div>
   );
