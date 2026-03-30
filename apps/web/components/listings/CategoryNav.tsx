@@ -80,36 +80,38 @@ function CategoryNav({
     >
       <div className="relative">
         <div className="flex items-center gap-0 px-5 md:px-10 overflow-x-auto scrollbar-none">
-          {CATEGORIES.map((cat) => {
-            const isActive = active === cat.id;
-            return (
-              <Link
-                key={cat.id}
-                href={cat.href}
-                className={cn(
-                  "shrink-0 flex flex-col items-center gap-[7px] px-5 py-3.5 border-b-2 transition-all duration-200 cursor-pointer min-w-[72px]",
-                  isActive
-                    ? "border-amber opacity-100"
-                    : "border-transparent opacity-50 hover:opacity-[0.85]"
-                )}
-              >
-                <span className="text-[22px] leading-none">{cat.icon}</span>
-                <span
+          <div className="flex items-center justify-center gap-0 mx-auto">
+            {CATEGORIES.map((cat) => {
+              const isActive = active === cat.id;
+              return (
+                <Link
+                  key={cat.id}
+                  href={cat.href}
                   className={cn(
-                    "text-[11.5px] font-semibold whitespace-nowrap transition-colors",
-                    isActive ? "text-amber" : "text-text"
+                    "shrink-0 flex flex-col items-center gap-[7px] px-5 py-3.5 border-b-2 transition-all duration-200 cursor-pointer min-w-[72px]",
+                    isActive
+                      ? "border-amber bg-amber/10 rounded-t-lg"
+                      : "border-transparent opacity-70 hover:opacity-100 hover:bg-gray-100/50 rounded-t-lg"
                   )}
                 >
-                  {cat.label}
-                </span>
-              </Link>
-            );
-          })}
+                  <span className="text-[22px] leading-none">{cat.icon}</span>
+                  <span
+                    className={cn(
+                      "text-[11.5px] font-semibold whitespace-nowrap transition-colors",
+                      isActive ? "text-amber" : "text-text"
+                    )}
+                  >
+                    {cat.label}
+                  </span>
+                </Link>
+              );
+            })}
+          </div>
 
           {/* Filters button */}
           <button
             onClick={onFiltersClick}
-            className="shrink-0 ml-auto flex items-center gap-[7px] px-4 py-2.5 rounded-[10px] border border-border text-[13px] font-semibold whitespace-nowrap transition-all duration-200 hover:shadow-sm hover:border-amber hover:text-amber"
+            className="shrink-0 flex items-center gap-[7px] px-4 py-2.5 rounded-[10px] border border-border text-[13px] font-semibold whitespace-nowrap transition-all duration-200 hover:shadow-sm hover:border-amber hover:text-amber"
           >
             <SlidersHorizontal className="size-[15px]" />
             Filters
