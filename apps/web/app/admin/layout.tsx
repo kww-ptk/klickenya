@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { adminClient } from "@/lib/supabase/admin";
 import { AdminNavLink } from "./_components/AdminNavLink";
 import { AdminSignOut } from "./_components/AdminSignOut";
+import { AdminBottomNav } from "./_components/AdminBottomNav";
 
 /* ---------- SVG icon components ---------- */
 
@@ -226,14 +227,14 @@ export default async function AdminLayout({
 
   return (
     <div className="flex min-h-screen">
-      {/* Sidebar */}
-      <aside className="fixed inset-y-0 left-0 z-40 w-16 lg:w-[240px] bg-[#16130C] flex flex-col transition-[width] duration-200">
+      {/* Sidebar — hidden on mobile, visible on desktop */}
+      <aside className="hidden lg:flex fixed inset-y-0 left-0 z-40 w-[240px] bg-[#16130C] flex-col">
         {/* Logo area */}
         <div className="flex items-center gap-2.5 px-4 py-5 border-b border-white/10">
           <div className="shrink-0 size-8 rounded-lg bg-[#6B2D8B] flex items-center justify-center">
             <span className="text-white font-bold text-[15px]">k</span>
           </div>
-          <div className="hidden lg:flex items-center gap-2">
+          <div className="flex items-center gap-2">
             <span className="font-display text-[18px] font-bold tracking-[-0.03em] text-white">
               klickenya
             </span>
@@ -333,9 +334,16 @@ export default async function AdminLayout({
       </aside>
 
       {/* Main content */}
-      <main className="flex-1 ml-16 lg:ml-[240px] min-h-screen bg-[#FAFAF8]">
-        <div className="p-6 lg:p-8">{children}</div>
+      <main className="flex-1 lg:ml-[240px] min-h-screen bg-[#FAFAF8]">
+        <div className="p-5 pb-24 lg:p-8 lg:pb-8">{children}</div>
       </main>
+
+      {/* Mobile bottom nav */}
+      <AdminBottomNav
+        inboxCount={unreadContacts + unreadListingReqs + unreadGeneralContacts}
+        claimsCount={pendingClaims}
+        eventsCount={pendingEvents}
+      />
     </div>
   );
 }
