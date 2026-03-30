@@ -46,6 +46,16 @@ export async function registerAction(formData: FormData) {
       },
       { onConflict: "id" }
     );
+
+    // Create guest profile
+    await serviceClient.from("guest_profiles").upsert(
+      {
+        user_id: data.user.id,
+        display_name: name,
+        email,
+      },
+      { onConflict: "user_id" }
+    );
   }
 
   return { success: true };

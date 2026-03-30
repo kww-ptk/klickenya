@@ -341,7 +341,7 @@ function Nav({ transparent = false }: NavProps) {
                     ? "/admin"
                     : authState.role === "host"
                       ? "/dashboard"
-                      : "/account"
+                      : "/profile"
                   : "/login"
               }
             >
@@ -373,7 +373,7 @@ function Nav({ transparent = false }: NavProps) {
                   ? "/admin"
                   : authState.role === "host"
                     ? "/dashboard"
-                    : "/account"
+                    : "/profile"
               }
               className={cn(
                 "md:hidden flex size-9 items-center justify-center rounded-full",
@@ -474,7 +474,7 @@ function Nav({ transparent = false }: NavProps) {
                       ? "/admin"
                       : authState.role === "host"
                         ? "/dashboard"
-                        : "/account"
+                        : "/profile"
                     : "/login"
                 }
               >

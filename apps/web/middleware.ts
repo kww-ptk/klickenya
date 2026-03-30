@@ -36,15 +36,17 @@ export async function middleware(request: NextRequest) {
   const isDashboard = pathname.startsWith("/dashboard");
   const isAdmin = pathname.startsWith("/admin");
   const isAccount = pathname.startsWith("/account");
+  const isProfile = pathname.startsWith("/profile");
 
-  if ((isDashboard || isAdmin || isAccount) && !user) {
+  if ((isDashboard || isAdmin || isAccount || isProfile) && !user) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
+    url.searchParams.set("returnTo", pathname);
     return NextResponse.redirect(url);
   }
 
-  // Role-based access: fetch role once for /admin and /dashboard
-  if ((isAdmin || isDashboard) && user) {
+  // Role-based access: fetch role once for protected routes
+  if ((isAdmin || isDashboard || isProfile) && user) {
     const { createClient } = await import("@supabase/supabase-js");
     const adminSupabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -63,14 +65,21 @@ export async function middleware(request: NextRequest) {
     // Admin routes: must be admin
     if (isAdmin && role !== "admin") {
       const url = request.nextUrl.clone();
-      url.pathname = role === "host" ? "/dashboard" : "/account";
+      url.pathname = role === "host" ? "/dashboard" : "/profile";
       return NextResponse.redirect(url);
     }
 
     // Dashboard routes: must be host or admin
     if (isDashboard && role !== "host" && role !== "admin") {
       const url = request.nextUrl.clone();
-      url.pathname = "/account";
+      url.pathname = "/profile";
+      return NextResponse.redirect(url);
+    }
+
+    // Profile routes: guests only (hosts go to dashboard)
+    if (isProfile && (role === "host" || role === "admin")) {
+      const url = request.nextUrl.clone();
+      url.pathname = role === "admin" ? "/admin" : "/dashboard";
       return NextResponse.redirect(url);
     }
   }

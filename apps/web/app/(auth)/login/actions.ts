@@ -35,9 +35,9 @@ export async function loginAction(formData: FormData) {
 
     const role = profile?.role;
     const redirect =
-      role === "admin" ? "/admin" : role === "host" ? "/dashboard" : "/account";
+      role === "admin" ? "/admin" : role === "host" ? "/dashboard" : "/profile";
     return { redirect };
   }
 
-  return { redirect: "/dashboard" };
+  return { redirect: "/profile" };
 }
