@@ -52,9 +52,10 @@ export function JoinEventModal({
         .single();
 
       if (profile) {
-        setName(profile.full_name ?? "");
+        setName(profile.full_name ?? user.user_metadata?.full_name ?? user.user_metadata?.name ?? "");
         setEmail(profile.email ?? user.email ?? "");
       } else {
+        setName(user.user_metadata?.full_name ?? user.user_metadata?.name ?? "");
         setEmail(user.email ?? "");
       }
     }
