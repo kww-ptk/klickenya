@@ -36,12 +36,12 @@ export default function BecomeAHostPage() {
               You built something{" "}
               <span className="text-[#E8A020]">amazing</span>.
               <br />
-              Let Kenya find it.
+              Let the world find it.
             </h1>
             <p className="text-white/50 text-[17px] leading-[1.7] max-w-[560px] mx-auto mb-10">
               Whether it&apos;s a beachfront villa in Watamu, a yoga class in Kilifi, or a
-              street food night in Nairobi — if people should know about it,
-              it belongs on Klickenya.
+              street food night in Nairobi — travellers are searching for exactly
+              what you offer. Help them find you.
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
