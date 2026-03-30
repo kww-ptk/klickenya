@@ -15,6 +15,7 @@ const ERROR_MESSAGES: Record<string, string> = {
 export default function LoginPage() {
   const searchParams = useSearchParams();
   const urlError = searchParams.get("error");
+  const returnTo = searchParams.get("returnTo");
   const prefillEmail = searchParams.get("email") ?? "";
   const prefillTemp = searchParams.get("temp") ?? "";
   const [error, setError] = useState<string | null>(
@@ -59,11 +60,12 @@ export default function LoginPage() {
 
   async function handleGoogleSignIn() {
     const supabase = createClient();
+    const callbackUrl = returnTo
+      ? `${window.location.origin}/auth/callback?returnTo=${encodeURIComponent(returnTo)}`
+      : `${window.location.origin}/auth/callback`;
     await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
-      },
+      options: { redirectTo: callbackUrl },
     });
   }
 
