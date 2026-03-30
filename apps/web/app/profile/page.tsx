@@ -48,12 +48,56 @@ export default async function ProfilePage() {
     .select("id", { count: "exact", head: true })
     .eq("user_id", user.id);
 
-  // Fetch event RSVPs
-  const { data: rsvps } = await supabase
-    .from("event_rsvps")
-    .select("*")
+  // Fetch events the user has joined (from event_attendees)
+  const { data: joinedEvents } = await adminClient
+    .from("event_attendees")
+    .select("id, event_sanity_id, name, email, status, joined_at")
+    .eq("email", userProfile?.email ?? user.email ?? "")
+    .eq("status", "confirmed")
+    .order("joined_at", { ascending: false });
+
+  // Also check by user_id
+  const { data: joinedByUserId } = await adminClient
+    .from("event_attendees")
+    .select("id, event_sanity_id, name, email, status, joined_at")
     .eq("user_id", user.id)
-    .order("created_at", { ascending: false });
+    .eq("status", "confirmed")
+    .order("joined_at", { ascending: false });
+
+  // Merge and deduplicate
+  const allJoined = [...(joinedEvents ?? []), ...(joinedByUserId ?? [])];
+  const seenIds = new Set<string>();
+  const uniqueJoined = allJoined.filter((j) => {
+    if (seenIds.has(j.id)) return false;
+    seenIds.add(j.id);
+    return true;
+  });
+
+  // Fetch event details from Sanity for display
+  const eventSanityIds = [...new Set(uniqueJoined.map((j) => j.event_sanity_id))];
+  let eventDetailsMap = new Map<string, { title: string; eventDate: string | null; city: string | null; slug: string | null }>();
+  if (eventSanityIds.length > 0) {
+    const { sanityClient } = await import("@/lib/sanity/client");
+    const details = await sanityClient.fetch<{ _id: string; title: string; eventDate: string | null; city: string | null; slug: string }[]>(
+      `*[_type == "listing" && _id in $ids]{ _id, title, eventDate, city, "slug": slug.current }`,
+      { ids: eventSanityIds }
+    );
+    eventDetailsMap = new Map(details.map((d) => [d._id, { title: d.title, eventDate: d.eventDate, city: d.city, slug: d.slug }]));
+  }
+
+  const rsvps = uniqueJoined.map((j) => {
+    const detail = eventDetailsMap.get(j.event_sanity_id);
+    return {
+      id: j.id,
+      event_title: detail?.title ?? "Event",
+      event_date: detail?.eventDate ?? null,
+      event_city: detail?.city ?? null,
+      event_slug: detail?.slug ?? null,
+      sanity_event_id: j.event_sanity_id,
+      status: "going" as const,
+      created_at: j.joined_at,
+    };
+  });
 
   // Fetch enquiries
   const { data: enquiries } = await adminClient
@@ -71,7 +115,7 @@ export default async function ProfilePage() {
       avatarUrl={guestProfile.avatar_url ?? userProfile?.avatar_url ?? null}
       location={guestProfile.location ?? null}
       savedCount={savedCount ?? 0}
-      rsvps={(rsvps ?? []) as { id: string; event_title: string; event_date: string | null; event_city: string | null; event_slug: string | null; sanity_event_id: string; status: string; created_at: string }[]}
+      rsvps={rsvps}
       enquiries={(enquiries ?? []) as { id: string; listing_title: string | null; listing_type: string | null; message: string | null; created_at: string }[]}
     />
   );
