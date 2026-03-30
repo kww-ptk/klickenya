@@ -90,7 +90,7 @@ function ExploreHoverMenu({
           </Link>
         ))}
         <Link
-          href="/how-it-works"
+          href="/become-a-host"
           className="px-3.5 py-1.5 rounded-full text-[13px] font-semibold text-text hover:bg-amber/10 hover:text-amber border border-border transition-colors"
         >
           List your space
@@ -320,7 +320,7 @@ function Nav({ transparent = false }: NavProps) {
 
           {/* Desktop actions */}
           <div className="hidden md:flex items-center gap-2 shrink-0">
-            <Link href="/how-it-works">
+            <Link href="/become-a-host">
               <Button
                 variant="ghost"
                 size="sm"
@@ -431,7 +431,7 @@ function Nav({ transparent = false }: NavProps) {
               </Link>
             ))}
             <Link
-              href="/how-it-works"
+              href="/become-a-host"
               className="px-4 py-3 rounded-xl text-[16px] font-semibold text-text hover:bg-surface transition-colors"
             >
               List your space

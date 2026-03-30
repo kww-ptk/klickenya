@@ -22,6 +22,7 @@ const EXPLORE = [
 const COMPANY = [
   { href: "/about", label: "About us" },
   { href: "/how-it-works", label: "How it works" },
+  { href: "/become-a-host", label: "Become a host" },
   { href: "/journal", label: "Journal" },
   { href: "/destinations", label: "Destinations" },
   { href: "/how-it-works#ambassador", label: "Ambassadors" },
@@ -153,7 +154,7 @@ function Footer() {
             </p>
           </div>
           <Link
-            href="/how-it-works"
+            href="/become-a-host"
             className="relative shrink-0 px-5 py-2.5 bg-[#E8A020] text-[#16130C] text-[13px] font-bold rounded-full hover:bg-[#d4910f] transition-all duration-200 hover:scale-105"
           >
             <span className="absolute inset-0 rounded-full bg-[#E8A020] animate-[glow-ping_2.5s_ease-in-out_infinite] opacity-0" />
