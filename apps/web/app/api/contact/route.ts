@@ -184,6 +184,7 @@ export async function POST(request: NextRequest) {
         email: data.email,
         phone: data.phone,
         message: data.message ?? null,
+        listing_sanity_id: data.listingId,
         notes: `Listing: ${data.listingTitle} (${data.listingId})\nType: ${data.listingType}${data.room ? `\nRoom: ${data.room}` : ""}\n${Object.entries(enquirySummary).map(([k, v]) => `${k}: ${v}`).join("\n")}`,
         status: "new",
       })
