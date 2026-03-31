@@ -115,16 +115,19 @@ export function ProfileClient({
   useEffect(() => {
     if (activeTab !== "saved" || savedRows.length === 0 || sanityLoaded) return;
     const ids = savedRows.map((r) => r.sanity_listing_id);
+    const query = `*[_type == "listing" && _id in $ids]{ _id, title, "slug": slug.current, "listingType": type, city, "photo": photos[0] }`;
+    console.log("[ProfileClient] GROQ query:", { query, ids });
     sanityClient
-      .fetch<SanityListing[]>(
-        `*[_type == "listing" && _id in $ids]{ _id, title, "slug": slug.current, "listingType": type, city, "photo": photos[0] }`,
-        { ids }
-      )
+      .fetch<SanityListing[]>(query, { ids })
       .then((results) => {
+        console.log("[ProfileClient] Sanity response:", results);
         setSanityListings(new Map(results.map((r) => [r._id, r])));
         setSanityLoaded(true);
       })
-      .catch(() => setSanityLoaded(true));
+      .catch((err) => {
+        console.error("[ProfileClient] Sanity fetch error:", err);
+        setSanityLoaded(true);
+      });
   }, [activeTab, savedRows, sanityLoaded]);
 
   async function handleUnsave(sanityListingId: string) {
