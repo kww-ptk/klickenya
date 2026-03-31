@@ -134,6 +134,7 @@ function ListingCard({
   initialSaved = false,
 }: ListingCardProps) {
   const [saved, setSaved] = useState(initialSaved);
+  const [toast, setToast] = useState<string | null>(null);
   const [openStatus, setOpenStatus] = useState<boolean | null>(null);
   const pathname = usePathname();
 
@@ -157,7 +158,12 @@ function ListingCard({
       body: JSON.stringify({ sanityListingId: id }),
     });
 
-    if (!res.ok) setSaved(wasSaved);
+    if (!res.ok) {
+      setSaved(wasSaved);
+    } else {
+      setToast(wasSaved ? "Removed from saved" : "Saved to your profile");
+      setTimeout(() => setToast(null), 2500);
+    }
   }, [saved, id, pathname]);
 
   const typeBadge = getTypeBadge(type, subcategory);
@@ -243,6 +249,19 @@ function ListingCard({
   const priceMdNode = renderPrice("md");
 
   return (
+    <div className="relative">
+    {/* Toast notification */}
+    {toast && (
+      <div className="fixed top-5 left-1/2 -translate-x-1/2 z-[100] animate-in fade-in slide-in-from-top-2 duration-200">
+        <div className="flex items-center gap-2 rounded-full bg-[#16130C] px-4 py-2.5 shadow-lg">
+          <Heart className="size-3.5 fill-amber text-amber" />
+          <span className="text-[13px] font-semibold text-white whitespace-nowrap">{toast}</span>
+          <Link href="/profile" className="text-[12px] font-semibold text-[#E8A020] hover:underline ml-1" onClick={(e) => e.stopPropagation()}>
+            View saved
+          </Link>
+        </div>
+      </div>
+    )}
     <Link href={href} className="group block cursor-pointer">
       {/* ── MOBILE: horizontal compact card ── */}
       <div className="flex gap-3.5 sm:hidden">
@@ -449,6 +468,7 @@ function ListingCard({
         </div>
       </div>
     </Link>
+    </div>
   );
 }
 

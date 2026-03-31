@@ -43,13 +43,11 @@ export default async function ProfilePage() {
   }
 
   // Fetch saved listings (id + sanity ref + timestamp)
-  const { data: savedRows, error: savedError } = await supabase
+  const { data: savedRows } = await adminClient
     .from("saved_listings")
     .select("id, sanity_listing_id, saved_at")
     .eq("user_id", user.id)
     .order("saved_at", { ascending: false });
-
-  console.log("[Profile] Saved listings fetch:", { userId: user.id, savedRows, savedError });
 
   // Fetch events the user has joined (from event_attendees)
   const { data: joinedEvents } = await adminClient

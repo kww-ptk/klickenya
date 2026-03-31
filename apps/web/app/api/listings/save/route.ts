@@ -12,15 +12,12 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "sanityListingId is required" }, { status: 400 });
   }
 
-  const { data, error } = await adminClient
+  const { error } = await adminClient
     .from("saved_listings")
     .upsert(
       { user_id: user.id, sanity_listing_id: sanityListingId },
       { onConflict: "user_id,sanity_listing_id" }
-    )
-    .select();
-
-  console.log("[Save API] Insert result:", { user_id: user.id, sanity_listing_id: sanityListingId, data, error });
+    );
 
   if (error) {
     console.error("Save listing error:", error);
