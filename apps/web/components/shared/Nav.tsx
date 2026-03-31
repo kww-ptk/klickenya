@@ -152,6 +152,7 @@ function Nav({ transparent = false }: NavProps) {
     loggedIn: boolean;
     role: string | null;
   }>({ loggedIn: false, role: null });
+  const [enquiryCount, setEnquiryCount] = useState(0);
 
   const checkAuth = useCallback(async () => {
     const supabase = createClient();
@@ -165,7 +166,16 @@ function Nav({ transparent = false }: NavProps) {
       .select("role")
       .eq("id", user.id)
       .single();
-    setAuthState({ loggedIn: true, role: profile?.role ?? "guest" });
+    const role = profile?.role ?? "guest";
+    setAuthState({ loggedIn: true, role });
+
+    // Fetch enquiry count for hosts
+    if (role === "host") {
+      fetch("/api/dashboard/enquiries/count")
+        .then((r) => r.json())
+        .then((d) => setEnquiryCount(d.count ?? 0))
+        .catch(() => {});
+    }
   }, []);
 
   useEffect(() => {
@@ -222,19 +232,37 @@ function Nav({ transparent = false }: NavProps) {
   }
 
   function AccountDropdownMenu() {
+    const isHost = authState.role === "host";
+    const enquiriesHref = isHost ? "/dashboard/enquiries" : "/profile?tab=enquiries";
     return (
       <div className="py-1.5">
-        <Link href="/profile" className="flex items-center gap-3 px-4 py-2.5 text-[13px] font-medium text-text hover:bg-surface transition-colors">
-          <User className="size-4 text-text2" /> My Profile
+        <Link href={isHost ? "/dashboard" : "/profile"} className="flex items-center gap-3 px-4 py-2.5 text-[13px] font-medium text-text hover:bg-surface transition-colors">
+          <User className="size-4 text-text2" /> {isHost ? "Dashboard" : "My Profile"}
         </Link>
-        <Link href="/profile?tab=saved" className="flex items-center gap-3 px-4 py-2.5 text-[13px] font-medium text-text hover:bg-surface transition-colors">
-          <Heart className="size-4 text-text2" /> Saved
-        </Link>
-        <Link href="/profile?tab=events" className="flex items-center gap-3 px-4 py-2.5 text-[13px] font-medium text-text hover:bg-surface transition-colors">
-          <Calendar className="size-4 text-text2" /> Events
-        </Link>
-        <Link href="/profile?tab=enquiries" className="flex items-center gap-3 px-4 py-2.5 text-[13px] font-medium text-text hover:bg-surface transition-colors">
-          <Mail className="size-4 text-text2" /> Enquiries
+        {isHost && (
+          <Link href="/dashboard/listings" className="flex items-center gap-3 px-4 py-2.5 text-[13px] font-medium text-text hover:bg-surface transition-colors">
+            <Heart className="size-4 text-text2" /> My Listings
+          </Link>
+        )}
+        {!isHost && (
+          <>
+            <Link href="/profile?tab=saved" className="flex items-center gap-3 px-4 py-2.5 text-[13px] font-medium text-text hover:bg-surface transition-colors">
+              <Heart className="size-4 text-text2" /> Saved
+            </Link>
+            <Link href="/profile?tab=events" className="flex items-center gap-3 px-4 py-2.5 text-[13px] font-medium text-text hover:bg-surface transition-colors">
+              <Calendar className="size-4 text-text2" /> Events
+            </Link>
+          </>
+        )}
+        <Link href={enquiriesHref} className="flex items-center justify-between px-4 py-2.5 text-[13px] font-medium text-text hover:bg-surface transition-colors">
+          <span className="flex items-center gap-3">
+            <Mail className="size-4 text-text2" /> Enquiries
+          </span>
+          {enquiryCount > 0 && (
+            <span className="min-w-[18px] h-[18px] px-1 rounded-full bg-[#E8A020] text-white text-[10px] font-bold flex items-center justify-center">
+              {enquiryCount}
+            </span>
+          )}
         </Link>
         <hr className="my-1.5 border-border" />
         <button onClick={handleSignOut} className="flex items-center gap-3 px-4 py-2.5 text-[13px] font-medium text-red-500 hover:bg-red-50 transition-colors w-full text-left">

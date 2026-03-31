@@ -180,7 +180,6 @@ export default async function DashboardLayout({
             href="/dashboard/listings"
             label="My Listings"
             icon={<BuildingIcon />}
-            disabled
           />
           <DashboardNavLink
             href="/dashboard/events"

@@ -89,7 +89,7 @@ function Counter({
         <span className={labelCls}>{label}</span>
         <span className="text-[14px] text-text">
           {value} {suffix ?? label.toLowerCase()}
-          {value !== 1 && !suffix ? "s" : ""}
+          {value !== 1 ? "s" : ""}
         </span>
       </div>
       <div className="flex items-center gap-3">
@@ -330,7 +330,7 @@ function ContactForm({
               />
             </div>
           </div>
-          <Counter label="Guest" value={form.guests} max={maxGuests} onChange={(v) => update("guests", v)} suffix="guest" />
+          <Counter label="Guest" value={form.guests} max={Math.max(2, maxGuests)} onChange={(v) => update("guests", v)} suffix="guest" />
         </>
       )}
 

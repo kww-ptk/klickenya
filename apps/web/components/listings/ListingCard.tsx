@@ -8,6 +8,7 @@ import { usePathname } from "next/navigation";
 import { Heart, Star, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
+import { useSavedListings } from "@/hooks/useSavedListings";
 import { SUBCATEGORY_LABELS } from "@/lib/constants/subcategories";
 
 type ListingType = "stay" | "experience" | "event" | "rental" | "service" | "restaurant" | "real_estate";
@@ -134,10 +135,16 @@ function ListingCard({
   href,
   initialSaved = false,
 }: ListingCardProps) {
-  const [saved, setSaved] = useState(initialSaved);
+  const { isSaved: isSavedInContext, addSaved, removeSaved } = useSavedListings();
+  const [saved, setSaved] = useState(initialSaved || isSavedInContext(id));
   const [toast, setToast] = useState<string | null>(null);
   const [openStatus, setOpenStatus] = useState<boolean | null>(null);
   const pathname = usePathname();
+
+  // Sync with context when it loads
+  useEffect(() => {
+    if (isSavedInContext(id) && !saved) setSaved(true);
+  }, [isSavedInContext, id, saved]);
 
   const handleSaveToggle = useCallback(async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -162,10 +169,11 @@ function ListingCard({
     if (!res.ok) {
       setSaved(wasSaved);
     } else {
+      if (wasSaved) removeSaved(id); else addSaved(id);
       setToast(wasSaved ? "Removed from saved" : "Saved to your profile");
       setTimeout(() => setToast(null), 2500);
     }
-  }, [saved, id, pathname]);
+  }, [saved, id, pathname, addSaved, removeSaved]);
 
   const typeBadge = getTypeBadge(type, subcategory);
   const hostInitials = hostName

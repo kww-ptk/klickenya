@@ -6,6 +6,7 @@ import { SanityLive } from "@/lib/sanity/client";
 import { draftMode } from "next/headers";
 import { MobileBottomNav } from "@/components/home/MobileBottomNav";
 import { CityCountsProvider } from "@/context/CityCountsContext";
+import { SavedListingsProvider } from "@/hooks/useSavedListings";
 import { getCityCounts } from "@/lib/sanity/getCityCounts";
 import "./globals.css";
 
@@ -139,10 +140,12 @@ export default async function RootLayout({
       <body
         className={`${geist.variable} ${geistMono.variable} ${bricolage.variable} antialiased`}
       >
+        <SavedListingsProvider>
         <CityCountsProvider cityCounts={cityCounts}>
           {children}
           <MobileBottomNav />
         </CityCountsProvider>
+        </SavedListingsProvider>
         <SanityLive />
         {isDraftMode && <VisualEditing />}
       </body>
