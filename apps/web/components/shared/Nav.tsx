@@ -5,7 +5,7 @@ import Image from "next/image";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { usePathname } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { Menu, X, ChevronDown } from "lucide-react";
+import { Menu, X, ChevronDown, Heart, Calendar, Mail, User, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useScrollPosition } from "@/hooks/useScrollPosition";
 import { Button } from "@/components/ui/Button";
@@ -139,6 +139,8 @@ function Nav({ transparent = false }: NavProps) {
   const [pastHero, setPastHero] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [exploreOpen, setExploreOpen] = useState(false);
+  const [accountOpen, setAccountOpen] = useState(false);
+  const accountRef = useRef<HTMLDivElement>(null);
   const exploreRef = useRef<HTMLDivElement>(null);
   const exploreDropRef = useRef<HTMLDivElement>(null);
   const exploreTimeout = useRef<ReturnType<typeof setTimeout>>(undefined);
@@ -190,7 +192,26 @@ function Nav({ transparent = false }: NavProps) {
   useEffect(() => {
     setMobileOpen(false);
     setExploreOpen(false);
+    setAccountOpen(false);
   }, [pathname]);
+
+  // Close account dropdown on outside click
+  useEffect(() => {
+    if (!accountOpen) return;
+    function handleClick(e: MouseEvent) {
+      if (!accountRef.current?.contains(e.target as Node)) setAccountOpen(false);
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [accountOpen]);
+
+  async function handleSignOut() {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    setAuthState({ loggedIn: false, role: null });
+    setAccountOpen(false);
+    window.location.href = "/";
+  }
 
   // Close explore menu when clicking outside
   useEffect(() => {
@@ -334,47 +355,108 @@ function Nav({ transparent = false }: NavProps) {
                 List your space
               </Button>
             </Link>
-            <Link
-              href={
-                authState.loggedIn
-                  ? authState.role === "admin"
-                    ? "/admin"
-                    : authState.role === "host"
-                      ? "/dashboard"
-                      : "/profile"
-                  : "/login"
-              }
-            >
-              <Button
-                variant="secondary"
-                size="sm"
-                className={cn(
-                  solid
-                    ? "bg-dark text-white"
-                    : "bg-white text-text"
+            {/* Guest account dropdown */}
+            {authState.loggedIn && authState.role === "guest" ? (
+              <div ref={accountRef} className="relative">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  className={cn(
+                    solid ? "bg-dark text-white" : "bg-white text-text"
+                  )}
+                  onClick={() => setAccountOpen(!accountOpen)}
+                >
+                  Account
+                  <ChevronDown className={cn("size-3 ml-1 transition-transform", accountOpen && "rotate-180")} />
+                </Button>
+                {accountOpen && (
+                  <div className="absolute right-0 top-full mt-2 w-52 rounded-xl border border-border bg-white shadow-xl py-1.5 z-[300]">
+                    <Link href="/profile" className="flex items-center gap-3 px-4 py-2.5 text-[13px] font-medium text-text hover:bg-surface transition-colors">
+                      <User className="size-4 text-text2" /> My Profile
+                    </Link>
+                    <Link href="/profile?tab=saved" className="flex items-center gap-3 px-4 py-2.5 text-[13px] font-medium text-text hover:bg-surface transition-colors">
+                      <Heart className="size-4 text-text2" /> Saved
+                    </Link>
+                    <Link href="/profile?tab=events" className="flex items-center gap-3 px-4 py-2.5 text-[13px] font-medium text-text hover:bg-surface transition-colors">
+                      <Calendar className="size-4 text-text2" /> Events
+                    </Link>
+                    <Link href="/profile?tab=enquiries" className="flex items-center gap-3 px-4 py-2.5 text-[13px] font-medium text-text hover:bg-surface transition-colors">
+                      <Mail className="size-4 text-text2" /> Enquiries
+                    </Link>
+                    <hr className="my-1.5 border-border" />
+                    <button onClick={handleSignOut} className="flex items-center gap-3 px-4 py-2.5 text-[13px] font-medium text-red-500 hover:bg-red-50 transition-colors w-full text-left">
+                      <LogOut className="size-4" /> Sign out
+                    </button>
+                  </div>
                 )}
+              </div>
+            ) : (
+              <Link
+                href={
+                  authState.loggedIn
+                    ? authState.role === "admin"
+                      ? "/admin"
+                      : "/dashboard"
+                    : "/login"
+                }
               >
-                {authState.loggedIn
-                  ? authState.role === "admin"
-                    ? "Admin"
-                    : authState.role === "host"
-                      ? "Dashboard"
-                      : "Account"
-                  : "Sign in"}
-              </Button>
-            </Link>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  className={cn(
+                    solid ? "bg-dark text-white" : "bg-white text-text"
+                  )}
+                >
+                  {authState.loggedIn
+                    ? authState.role === "admin"
+                      ? "Admin"
+                      : "Dashboard"
+                    : "Sign in"}
+                </Button>
+              </Link>
+            )}
           </div>
 
           {/* Mobile user icon (logged in) */}
-          {authState.loggedIn && (
+          {authState.loggedIn && authState.role === "guest" ? (
+            <div ref={!accountRef.current ? accountRef : undefined} className="md:hidden relative">
+              <button
+                onClick={() => setAccountOpen(!accountOpen)}
+                className={cn(
+                  "flex size-9 items-center justify-center rounded-full",
+                  solid || mobileOpen
+                    ? "bg-[#E8A020]/15 text-[#E8A020]"
+                    : "bg-white/15 text-white"
+                )}
+              >
+                <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+                </svg>
+              </button>
+              {accountOpen && (
+                <div className="absolute right-0 top-full mt-2 w-52 rounded-xl border border-border bg-white shadow-xl py-1.5 z-[300]">
+                  <Link href="/profile" className="flex items-center gap-3 px-4 py-2.5 text-[13px] font-medium text-text hover:bg-surface transition-colors">
+                    <User className="size-4 text-text2" /> My Profile
+                  </Link>
+                  <Link href="/profile?tab=saved" className="flex items-center gap-3 px-4 py-2.5 text-[13px] font-medium text-text hover:bg-surface transition-colors">
+                    <Heart className="size-4 text-text2" /> Saved
+                  </Link>
+                  <Link href="/profile?tab=events" className="flex items-center gap-3 px-4 py-2.5 text-[13px] font-medium text-text hover:bg-surface transition-colors">
+                    <Calendar className="size-4 text-text2" /> Events
+                  </Link>
+                  <Link href="/profile?tab=enquiries" className="flex items-center gap-3 px-4 py-2.5 text-[13px] font-medium text-text hover:bg-surface transition-colors">
+                    <Mail className="size-4 text-text2" /> Enquiries
+                  </Link>
+                  <hr className="my-1.5 border-border" />
+                  <button onClick={handleSignOut} className="flex items-center gap-3 px-4 py-2.5 text-[13px] font-medium text-red-500 hover:bg-red-50 transition-colors w-full text-left">
+                    <LogOut className="size-4" /> Sign out
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : authState.loggedIn ? (
             <Link
-              href={
-                authState.role === "admin"
-                  ? "/admin"
-                  : authState.role === "host"
-                    ? "/dashboard"
-                    : "/profile"
-              }
+              href={authState.role === "admin" ? "/admin" : "/dashboard"}
               className={cn(
                 "md:hidden flex size-9 items-center justify-center rounded-full",
                 solid || mobileOpen
@@ -386,7 +468,7 @@ function Nav({ transparent = false }: NavProps) {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
               </svg>
             </Link>
-          )}
+          ) : null}
 
           {/* Mobile hamburger */}
           <button

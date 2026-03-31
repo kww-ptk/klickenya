@@ -53,6 +53,7 @@ interface ProfileClientProps {
   savedListings: SavedRow[];
   rsvps: Rsvp[];
   enquiries: Enquiry[];
+  initialTab?: string;
 }
 
 /* ── Tabs ─────────────────────────────────────────── */
@@ -96,8 +97,11 @@ export function ProfileClient({
   savedListings: initialSavedListings,
   rsvps,
   enquiries,
+  initialTab,
 }: ProfileClientProps) {
-  const [activeTab, setActiveTab] = useState<Tab>("profile");
+  const validTabs: Tab[] = ["profile", "events", "enquiries", "saved"];
+  const startTab = validTabs.includes(initialTab as Tab) ? (initialTab as Tab) : "profile";
+  const [activeTab, setActiveTab] = useState<Tab>(startTab);
   const [editingName, setEditingName] = useState(false);
   const [name, setName] = useState(displayName);
   const parsed = parseLocation(location);

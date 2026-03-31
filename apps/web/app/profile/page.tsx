@@ -3,7 +3,9 @@ import { createClient } from "@/lib/supabase/server";
 import { adminClient } from "@/lib/supabase/admin";
 import { ProfileClient } from "./ProfileClient";
 
-export default async function ProfilePage() {
+export default async function ProfilePage({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
+  const sp = await searchParams;
+  const initialTab = sp.tab ?? "profile";
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
@@ -118,6 +120,7 @@ export default async function ProfilePage() {
       savedListings={(savedRows ?? []) as { id: string; sanity_listing_id: string; saved_at: string }[]}
       rsvps={rsvps}
       enquiries={(enquiries ?? []) as { id: string; listing_title: string | null; listing_type: string | null; message: string | null; created_at: string }[]}
+      initialTab={initialTab}
     />
   );
 }
