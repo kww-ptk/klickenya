@@ -117,7 +117,7 @@ export function ProfileClient({
     const ids = savedRows.map((r) => r.sanity_listing_id);
     sanityBrowserClient
       .fetch<SanityListing[]>(
-        `*[_type == "listing" && _id in $ids]{ _id, title, "slug": slug.current, "listingType": type, city, "photo": photos[0] }`,
+        `*[_type == "listing" && _id in $ids]{ _id, title, "slug": slug.current, "listingType": type, city, "photo": photos[0].asset->url }`,
         { ids }
       )
       .then((results) => {
@@ -559,12 +559,10 @@ export function ProfileClient({
                       {/* Thumbnail */}
                       <div className="relative size-14 rounded-xl overflow-hidden shrink-0 bg-[#F5F3F0]">
                         {listing?.photo ? (
-                          <Image
+                          <img
                             src={`${listing.photo}?w=112&h=112&fit=crop&auto=format`}
                             alt={listing.title ?? ""}
-                            fill
-                            className="object-cover"
-                            sizes="56px"
+                            className="absolute inset-0 w-full h-full object-cover"
                           />
                         ) : (
                           <div className="size-full flex items-center justify-center">
@@ -591,9 +589,9 @@ export function ProfileClient({
                       </div>
                       {/* Actions */}
                       <div className="flex items-center gap-2 shrink-0">
-                        {listing?.slug && listing?.listingType && (
+                        {listing?.slug && listing?.listingType && listing?.city && (
                           <Link
-                            href={`/listings/${listing.listingType}/${listing.slug}`}
+                            href={`/${listing.listingType}/${listing.city.toLowerCase().replace(/\s+/g, "-")}/${listing.slug}`}
                             className="px-3 py-1.5 rounded-lg bg-[#E8A020]/10 text-[#E8A020] text-[12px] font-semibold hover:bg-[#E8A020]/20 transition-colors"
                           >
                             View
