@@ -3,6 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useState, useEffect, useRef, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { usePathname } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Menu, X, ChevronDown, Heart, Calendar, Mail, User, LogOut } from "lucide-react";
@@ -195,14 +196,21 @@ function Nav({ transparent = false }: NavProps) {
     setAccountOpen(false);
   }, [pathname]);
 
-  // Close account dropdown on outside click
+  // Close account dropdown on outside click or Escape
   useEffect(() => {
     if (!accountOpen) return;
     function handleClick(e: MouseEvent) {
       if (!accountRef.current?.contains(e.target as Node)) setAccountOpen(false);
     }
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setAccountOpen(false);
+    }
     document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
+    document.addEventListener("keydown", handleKey);
+    return () => {
+      document.removeEventListener("mousedown", handleClick);
+      document.removeEventListener("keydown", handleKey);
+    };
   }, [accountOpen]);
 
   async function handleSignOut() {
@@ -211,6 +219,29 @@ function Nav({ transparent = false }: NavProps) {
     setAuthState({ loggedIn: false, role: null });
     setAccountOpen(false);
     window.location.href = "/";
+  }
+
+  function AccountDropdownMenu() {
+    return (
+      <div className="py-1.5">
+        <Link href="/profile" className="flex items-center gap-3 px-4 py-2.5 text-[13px] font-medium text-text hover:bg-surface transition-colors">
+          <User className="size-4 text-text2" /> My Profile
+        </Link>
+        <Link href="/profile?tab=saved" className="flex items-center gap-3 px-4 py-2.5 text-[13px] font-medium text-text hover:bg-surface transition-colors">
+          <Heart className="size-4 text-text2" /> Saved
+        </Link>
+        <Link href="/profile?tab=events" className="flex items-center gap-3 px-4 py-2.5 text-[13px] font-medium text-text hover:bg-surface transition-colors">
+          <Calendar className="size-4 text-text2" /> Events
+        </Link>
+        <Link href="/profile?tab=enquiries" className="flex items-center gap-3 px-4 py-2.5 text-[13px] font-medium text-text hover:bg-surface transition-colors">
+          <Mail className="size-4 text-text2" /> Enquiries
+        </Link>
+        <hr className="my-1.5 border-border" />
+        <button onClick={handleSignOut} className="flex items-center gap-3 px-4 py-2.5 text-[13px] font-medium text-red-500 hover:bg-red-50 transition-colors w-full text-left">
+          <LogOut className="size-4" /> Sign out
+        </button>
+      </div>
+    );
   }
 
   // Close explore menu when clicking outside
@@ -370,23 +401,8 @@ function Nav({ transparent = false }: NavProps) {
                   <ChevronDown className={cn("size-3 ml-1 transition-transform", accountOpen && "rotate-180")} />
                 </Button>
                 {accountOpen && (
-                  <div className="absolute right-0 top-full mt-2 w-52 rounded-xl border border-border bg-white shadow-xl py-1.5 z-[300]">
-                    <Link href="/profile" className="flex items-center gap-3 px-4 py-2.5 text-[13px] font-medium text-text hover:bg-surface transition-colors">
-                      <User className="size-4 text-text2" /> My Profile
-                    </Link>
-                    <Link href="/profile?tab=saved" className="flex items-center gap-3 px-4 py-2.5 text-[13px] font-medium text-text hover:bg-surface transition-colors">
-                      <Heart className="size-4 text-text2" /> Saved
-                    </Link>
-                    <Link href="/profile?tab=events" className="flex items-center gap-3 px-4 py-2.5 text-[13px] font-medium text-text hover:bg-surface transition-colors">
-                      <Calendar className="size-4 text-text2" /> Events
-                    </Link>
-                    <Link href="/profile?tab=enquiries" className="flex items-center gap-3 px-4 py-2.5 text-[13px] font-medium text-text hover:bg-surface transition-colors">
-                      <Mail className="size-4 text-text2" /> Enquiries
-                    </Link>
-                    <hr className="my-1.5 border-border" />
-                    <button onClick={handleSignOut} className="flex items-center gap-3 px-4 py-2.5 text-[13px] font-medium text-red-500 hover:bg-red-50 transition-colors w-full text-left">
-                      <LogOut className="size-4" /> Sign out
-                    </button>
+                  <div className="absolute right-0 top-full mt-2 w-52 rounded-xl border border-border bg-white shadow-xl z-[300]">
+                    <AccountDropdownMenu />
                   </div>
                 )}
               </div>
@@ -419,41 +435,20 @@ function Nav({ transparent = false }: NavProps) {
 
           {/* Mobile user icon (logged in) */}
           {authState.loggedIn && authState.role === "guest" ? (
-            <div ref={!accountRef.current ? accountRef : undefined} className="md:hidden relative">
-              <button
-                onClick={() => setAccountOpen(!accountOpen)}
-                className={cn(
-                  "flex size-9 items-center justify-center rounded-full",
-                  solid || mobileOpen
-                    ? "bg-[#E8A020]/15 text-[#E8A020]"
-                    : "bg-white/15 text-white"
-                )}
-              >
-                <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
-                </svg>
-              </button>
-              {accountOpen && (
-                <div className="absolute right-0 top-full mt-2 w-52 rounded-xl border border-border bg-white shadow-xl py-1.5 z-[300]">
-                  <Link href="/profile" className="flex items-center gap-3 px-4 py-2.5 text-[13px] font-medium text-text hover:bg-surface transition-colors">
-                    <User className="size-4 text-text2" /> My Profile
-                  </Link>
-                  <Link href="/profile?tab=saved" className="flex items-center gap-3 px-4 py-2.5 text-[13px] font-medium text-text hover:bg-surface transition-colors">
-                    <Heart className="size-4 text-text2" /> Saved
-                  </Link>
-                  <Link href="/profile?tab=events" className="flex items-center gap-3 px-4 py-2.5 text-[13px] font-medium text-text hover:bg-surface transition-colors">
-                    <Calendar className="size-4 text-text2" /> Events
-                  </Link>
-                  <Link href="/profile?tab=enquiries" className="flex items-center gap-3 px-4 py-2.5 text-[13px] font-medium text-text hover:bg-surface transition-colors">
-                    <Mail className="size-4 text-text2" /> Enquiries
-                  </Link>
-                  <hr className="my-1.5 border-border" />
-                  <button onClick={handleSignOut} className="flex items-center gap-3 px-4 py-2.5 text-[13px] font-medium text-red-500 hover:bg-red-50 transition-colors w-full text-left">
-                    <LogOut className="size-4" /> Sign out
-                  </button>
-                </div>
+            <button
+              ref={(el) => { if (el && !accountRef.current) accountRef.current = el.parentElement as HTMLDivElement; }}
+              onClick={() => setAccountOpen(!accountOpen)}
+              className={cn(
+                "md:hidden flex size-9 items-center justify-center rounded-full",
+                solid || mobileOpen
+                  ? "bg-[#E8A020]/15 text-[#E8A020]"
+                  : "bg-white/15 text-white"
               )}
-            </div>
+            >
+              <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+              </svg>
+            </button>
           ) : authState.loggedIn ? (
             <Link
               href={authState.role === "admin" ? "/admin" : "/dashboard"}
@@ -573,6 +568,22 @@ function Nav({ transparent = false }: NavProps) {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Account dropdown portal (mobile) — renders outside nav to avoid z-index/overflow issues */}
+      {accountOpen && typeof document !== "undefined" && createPortal(
+        <div
+          className="md:hidden fixed inset-0 z-[9998]"
+          onClick={() => setAccountOpen(false)}
+        >
+          <div
+            className="absolute right-4 top-[72px] w-52 rounded-xl border border-border bg-white shadow-xl z-[9999]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <AccountDropdownMenu />
+          </div>
+        </div>,
+        document.body
       )}
     </>
   );
