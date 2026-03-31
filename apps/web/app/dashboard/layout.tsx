@@ -6,6 +6,7 @@ import { sanityClient } from "@/lib/sanity/client";
 import { DashboardNavLink } from "./_components/DashboardNavLink";
 import { DashboardSignOut } from "./_components/DashboardSignOut";
 import { DashboardBottomNav } from "./_components/DashboardBottomNav";
+import { DashboardMobileHeader } from "./_components/DashboardMobileHeader";
 
 /* ---------- SVG Icons ---------- */
 
@@ -237,6 +238,7 @@ export default async function DashboardLayout({
 
       {/* Main content */}
       <main className="flex-1 lg:ml-[240px] min-h-screen bg-[#FAFAF8]">
+        <DashboardMobileHeader />
         <div className="p-5 pb-24 lg:p-8 lg:pb-8">{children}</div>
       </main>
 
