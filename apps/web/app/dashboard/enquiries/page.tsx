@@ -83,9 +83,10 @@ export default async function EnquiriesPage() {
             });
 
             return (
-              <div
+              <Link
                 key={e.id}
-                className="bg-white rounded-xl lg:rounded-2xl border border-[#E2DDD5] p-4 lg:p-5 shadow-sm"
+                href={`/dashboard/enquiries/${e.id}`}
+                className="block bg-white rounded-xl lg:rounded-2xl border border-[#E2DDD5] p-4 lg:p-5 shadow-sm hover:shadow-md hover:border-[#E8A020]/30 transition-all"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0 flex-1">
@@ -113,20 +114,25 @@ export default async function EnquiriesPage() {
                       <p className="text-[13px] text-[#5E5848] mt-2 line-clamp-2">{e.message}</p>
                     )}
                     <div className="flex items-center gap-3 mt-2">
-                      <a href={`mailto:${e.email}`} className="text-[12px] text-[#E8A020] font-medium hover:underline">
+                      <span className="text-[12px] text-[#E8A020] font-medium">
                         {e.email}
-                      </a>
-                      <a href={`tel:${e.phone}`} className="text-[12px] text-[#9C9485] hover:underline">
+                      </span>
+                      <span className="text-[12px] text-[#9C9485]">
                         {e.phone}
-                      </a>
+                      </span>
                     </div>
                   </div>
-                  <div className="text-right shrink-0">
-                    <p className="text-[11px] text-[#9C9485]">{date}</p>
-                    <p className="text-[11px] text-[#9C9485]">{time}</p>
+                  <div className="flex items-center gap-3 shrink-0">
+                    <div className="text-right">
+                      <p className="text-[11px] text-[#9C9485]">{date}</p>
+                      <p className="text-[11px] text-[#9C9485]">{time}</p>
+                    </div>
+                    <svg className="size-4 text-[#9C9485]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                    </svg>
                   </div>
                 </div>
-              </div>
+              </Link>
             );
           })}
         </div>
