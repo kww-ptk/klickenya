@@ -294,6 +294,11 @@ export default async function AdminLayout({
             badge={pendingEvents}
           />
           <AdminNavLink
+            href="/admin/hosts"
+            label="Hosts"
+            icon={<UsersIcon />}
+          />
+          <AdminNavLink
             href="/admin/newsletter"
             label="Subscribers"
             icon={<UsersIcon />}
