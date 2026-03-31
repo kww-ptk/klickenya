@@ -20,6 +20,26 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
   // Admins go to admin dashboard
   if (userProfile?.role === "admin") redirect("/admin");
 
+  // For hosts: fetch photo from Sanity + host display name as fallbacks
+  let hostPhotoUrl: string | null = null;
+  let hostDisplayName: string | null = null;
+  if (userProfile?.role === "host") {
+    const { data: hostProfile } = await adminClient
+      .from("host_profiles")
+      .select("display_name, sanity_host_id")
+      .eq("user_id", user.id)
+      .single();
+    hostDisplayName = hostProfile?.display_name ?? null;
+    if (hostProfile?.sanity_host_id) {
+      const { sanityClient } = await import("@/lib/sanity/client");
+      const host = await sanityClient.fetch<{ photo?: { asset?: { url?: string } } } | null>(
+        `*[_type == "host" && _id == $id][0]{ photo{ asset->{ url } } }`,
+        { id: hostProfile.sanity_host_id }
+      );
+      hostPhotoUrl = host?.photo?.asset?.url ?? null;
+    }
+  }
+
   // Fetch or create guest profile
   let guestProfile = await adminClient
     .from("guest_profiles")
@@ -31,13 +51,13 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
   if (!guestProfile) {
     await adminClient.from("guest_profiles").insert({
       user_id: user.id,
-      display_name: userProfile?.full_name ?? user.email?.split("@")[0] ?? "Guest",
-      avatar_url: userProfile?.avatar_url ?? null,
+      display_name: hostDisplayName ?? userProfile?.full_name ?? user.email?.split("@")[0] ?? "Guest",
+      avatar_url: hostPhotoUrl ?? userProfile?.avatar_url ?? null,
       email: userProfile?.email ?? user.email,
     });
     guestProfile = {
-      display_name: userProfile?.full_name ?? "Guest",
-      avatar_url: userProfile?.avatar_url ?? null,
+      display_name: hostDisplayName ?? userProfile?.full_name ?? "Guest",
+      avatar_url: hostPhotoUrl ?? userProfile?.avatar_url ?? null,
       email: userProfile?.email ?? user.email,
       location: null,
     };
@@ -112,9 +132,9 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
   return (
     <ProfileClient
       userId={user.id}
-      displayName={guestProfile.display_name ?? "Guest"}
+      displayName={guestProfile.display_name ?? hostDisplayName ?? "Guest"}
       email={guestProfile.email ?? user.email ?? ""}
-      avatarUrl={guestProfile.avatar_url ?? userProfile?.avatar_url ?? null}
+      avatarUrl={guestProfile.avatar_url ?? hostPhotoUrl ?? userProfile?.avatar_url ?? null}
       location={guestProfile.location ?? null}
       savedListings={(savedRows ?? []) as { id: string; sanity_listing_id: string; saved_at: string }[]}
       rsvps={rsvps}
