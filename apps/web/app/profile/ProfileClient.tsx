@@ -591,7 +591,7 @@ export function ProfileClient({
                       <div className="flex items-center gap-2 shrink-0">
                         {listing?.slug && listing?.listingType && listing?.city && (
                           <Link
-                            href={`/${listing.listingType}/${listing.city.toLowerCase().replace(/\s+/g, "-")}/${listing.slug}`}
+                            href={`/${listing.listingType}s/${listing.city.toLowerCase().replace(/\s+/g, "-")}/${listing.slug}`}
                             className="px-3 py-1.5 rounded-lg bg-[#E8A020]/10 text-[#E8A020] text-[12px] font-semibold hover:bg-[#E8A020]/20 transition-colors"
                           >
                             View
