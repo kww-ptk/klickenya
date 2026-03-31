@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/server";
+import { adminClient } from "@/lib/supabase/admin";
 import { sanityClient } from "@/lib/sanity/client";
 
 export default async function DashboardPage() {
@@ -86,6 +87,24 @@ export default async function DashboardPage() {
   const verifiedCount = listings.filter((l) => l.isVerified).length;
   const pendingCount = listings.length - verifiedCount;
 
+  // Fetch real enquiry counts per listing from contact_requests
+  const listingIds = listings.map((l) => l._id);
+  let enquiryCountMap = new Map<string, number>();
+  let totalEnquiries = 0;
+  if (listingIds.length > 0) {
+    const { data: countRows } = await adminClient
+      .from("contact_requests")
+      .select("listing_sanity_id")
+      .in("listing_sanity_id", listingIds);
+    if (countRows) {
+      for (const row of countRows) {
+        const id = row.listing_sanity_id;
+        if (id) enquiryCountMap.set(id, (enquiryCountMap.get(id) ?? 0) + 1);
+      }
+      totalEnquiries = countRows.length;
+    }
+  }
+
   // Time-based greeting
   const h = new Date().getHours();
   const greeting = h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening";
@@ -126,7 +145,7 @@ export default async function DashboardPage() {
           { label: "Listings", value: listings.length, color: "text-[#16130C]" },
           { label: "Verified", value: verifiedCount, color: "text-[#16A34A]" },
           { label: "Pending", value: pendingCount, color: "text-[#E8A020]" },
-          { label: "Views", value: listings.length > 0 ? Math.floor(120 + listings.length * 47) : 0, color: "text-[#6B2D8B]" },
+          { label: "Enquiries", value: totalEnquiries, color: "text-[#6B2D8B]" },
         ].map((stat) => (
           <div
             key={stat.label}
@@ -172,8 +191,7 @@ export default async function DashboardPage() {
               const typeSlug = listing.type === "experience" ? "experiences" : listing.type + "s";
               const citySlug = (listing.city ?? "").toLowerCase().replace(/ /g, "-");
               const href = `/${typeSlug}/${citySlug}/${listing.slug}`;
-              const fakeViews = Math.floor(80 + ((i + 1) * 37) % 200);
-              const fakeEnquiries = Math.floor(fakeViews * 0.08);
+              const listingEnquiries = enquiryCountMap.get(listing._id) ?? 0;
 
               return (
                 <div
@@ -224,13 +242,9 @@ export default async function DashboardPage() {
                           </span>
                         )}
                       </div>
-                      {/* Fake stats */}
                       <div className="flex items-center gap-3 mt-1.5">
                         <span className="text-[11px] text-[#9C9485]">
-                          <span className="font-semibold text-[#16130C]">{fakeViews}</span> views
-                        </span>
-                        <span className="text-[11px] text-[#9C9485]">
-                          <span className="font-semibold text-[#16130C]">{fakeEnquiries}</span> enquiries
+                          <span className="font-semibold text-[#16130C]">{listingEnquiries}</span> enquir{listingEnquiries === 1 ? "y" : "ies"}
                         </span>
                       </div>
                     </div>

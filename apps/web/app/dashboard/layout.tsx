@@ -201,7 +201,6 @@ export default async function DashboardLayout({
             href="/dashboard/settings"
             label="Settings"
             icon={<GearIcon />}
-            disabled
           />
         </nav>
 

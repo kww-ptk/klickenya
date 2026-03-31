@@ -84,6 +84,22 @@ export async function POST(
       }),
     });
 
+    // Send confirmation to host
+    if (replyTo !== "hello@klickenya.com") {
+      await resend.emails.send({
+        from: "Klickenya <hello@klickenya.com>",
+        to: replyTo,
+        subject: `Reply sent: ${contactRequest.listing_title || listingTitle || "Enquiry"}`,
+        html: `<div style="font-family:-apple-system,sans-serif;max-width:480px;margin:0 auto;padding:24px;">
+          <p style="color:#16130C;font-size:14px;line-height:1.6;">Your reply to <strong>${guestName}</strong> has been sent.</p>
+          <div style="margin:16px 0;padding:16px;background:#F5F3F0;border-radius:8px;">
+            <p style="margin:0;font-size:13px;color:#5E5848;white-space:pre-wrap;">${message}</p>
+          </div>
+          <p style="font-size:12px;color:#9C9485;">Status: ${replyStatus} · <a href="https://klickenya.com/dashboard/enquiries/${id}" style="color:#E8A020;">View in dashboard</a></p>
+        </div>`,
+      }).catch(() => {});
+    }
+
     // Append reply to notes
     const now = new Date().toISOString();
     const replyLog = `\n\n--- HOST REPLY [${now}] ---\nStatus: ${replyStatus}\nSubject: ${emailSubject}\n${message}`;
