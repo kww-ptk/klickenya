@@ -142,6 +142,7 @@ function Nav({ transparent = false }: NavProps) {
   const [exploreOpen, setExploreOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
   const accountRef = useRef<HTMLDivElement>(null);
+  const accountDropRef = useRef<HTMLDivElement>(null);
   const exploreRef = useRef<HTMLDivElement>(null);
   const exploreDropRef = useRef<HTMLDivElement>(null);
   const exploreTimeout = useRef<ReturnType<typeof setTimeout>>(undefined);
@@ -210,7 +211,10 @@ function Nav({ transparent = false }: NavProps) {
   useEffect(() => {
     if (!accountOpen) return;
     function handleClick(e: MouseEvent) {
-      if (!accountRef.current?.contains(e.target as Node)) setAccountOpen(false);
+      const target = e.target as Node;
+      if (!accountRef.current?.contains(target) && !accountDropRef.current?.contains(target)) {
+        setAccountOpen(false);
+      }
     }
     function handleKey(e: KeyboardEvent) {
       if (e.key === "Escape") setAccountOpen(false);
@@ -604,12 +608,11 @@ function Nav({ transparent = false }: NavProps) {
       {/* Account dropdown portal (mobile) — renders outside nav to avoid z-index/overflow issues */}
       {accountOpen && typeof document !== "undefined" && createPortal(
         <div
+          ref={accountDropRef}
           className="md:hidden fixed inset-0 z-[9998]"
-          onClick={() => setAccountOpen(false)}
         >
           <div
             className="absolute right-4 top-[72px] w-56 rounded-xl border border-border bg-white shadow-xl z-[9999]"
-            onClick={(e) => e.stopPropagation()}
           >
             <AccountDropdownMenu />
           </div>
