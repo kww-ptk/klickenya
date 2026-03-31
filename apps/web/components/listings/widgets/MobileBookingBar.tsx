@@ -186,6 +186,14 @@ function MobileBookingBar({
         </div>
         <a
           href="#mobile-contact"
+          onClick={() => {
+            fetch("/api/analytics/track", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ listingSlug: listingId, listingType: type, eventType: "contact_click" }),
+              keepalive: true,
+            }).catch(() => {});
+          }}
           className={cn(
             "px-6 py-3 rounded-[18px] text-[14px] font-bold",
             cta.bg,

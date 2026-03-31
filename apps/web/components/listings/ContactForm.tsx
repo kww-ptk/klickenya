@@ -246,6 +246,19 @@ function ContactForm({
       }
 
       setStatus("success");
+
+      // Track successful contact form submission
+      fetch("/api/analytics/track", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          listingSlug: listingId,
+          listingType: type,
+          eventType: "contact_sent",
+          referrer: document.referrer,
+        }),
+        keepalive: true,
+      }).catch(() => {});
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Something went wrong");
       setStatus("error");

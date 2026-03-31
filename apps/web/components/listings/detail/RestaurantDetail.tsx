@@ -5,6 +5,7 @@ import { Breadcrumb } from "@/components/listings/widgets/Breadcrumb";
 import { HighlightsGrid } from "@/components/listings/widgets/HighlightsGrid";
 import { AmenitiesList } from "@/components/listings/widgets/AmenitiesList";
 import { HostBadge } from "@/components/listings/widgets/HostBadge";
+import { TrackPageView } from "@/lib/analytics/TrackPageView";
 import { SimilarListings } from "@/components/listings/widgets/SimilarListings";
 import { BookingSidebar } from "@/components/listings/widgets/BookingSidebar";
 import { MobileBookingBar } from "@/components/listings/widgets/MobileBookingBar";
@@ -64,6 +65,7 @@ function RestaurantDetail({
           listingTitle={listing.title}
         />
 
+        <TrackPageView listingSlug={listing.slug?.current ?? ""} listingType={sanityType} city={cityName} hostUserId={listing.hostId ?? null} />
         <PhotoGallery photos={photos} title={listing.title} />
 
         {/* ── Two-column layout ────────────── */}
