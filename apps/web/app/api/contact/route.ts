@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod/v4";
 import { createClient } from "@supabase/supabase-js";
+import { createClient as createAuthClient } from "@/lib/supabase/server";
 import { Resend } from "resend";
 import { sanityClient } from "@/lib/sanity/client";
 import { createOrUpdateContact } from "@/lib/integrations/ghl";
@@ -176,6 +177,16 @@ export async function POST(request: NextRequest) {
     const data = parsed.data;
     const enquirySummary = buildEnquirySummary(data);
 
+    /* Extract logged-in user (if any) — non-blocking */
+    let guestUserId: string | null = null;
+    try {
+      const authSupabase = await createAuthClient();
+      const { data: { user: authUser } } = await authSupabase.auth.getUser();
+      guestUserId = authUser?.id ?? null;
+    } catch {
+      // Not logged in — continue anonymously
+    }
+
     /* Save to Supabase — column names must match the actual table schema */
     const { data: row, error: dbError } = await supabase
       .from("contact_requests")
@@ -185,6 +196,7 @@ export async function POST(request: NextRequest) {
         phone: data.phone,
         message: data.message ?? null,
         listing_sanity_id: data.listingId,
+        guest_user_id: guestUserId,
         notes: `Listing: ${data.listingTitle} (${data.listingId})\nType: ${data.listingType}${data.room ? `\nRoom: ${data.room}` : ""}\n${Object.entries(enquirySummary).map(([k, v]) => `${k}: ${v}`).join("\n")}`,
         status: "new",
       })

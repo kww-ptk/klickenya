@@ -42,11 +42,12 @@ export default async function ProfilePage() {
     };
   }
 
-  // Fetch saved listings count
-  const { count: savedCount } = await supabase
+  // Fetch saved listings (id + sanity ref + timestamp)
+  const { data: savedRows } = await supabase
     .from("saved_listings")
-    .select("id", { count: "exact", head: true })
-    .eq("user_id", user.id);
+    .select("id, sanity_listing_id, saved_at")
+    .eq("user_id", user.id)
+    .order("saved_at", { ascending: false });
 
   // Fetch events the user has joined (from event_attendees)
   const { data: joinedEvents } = await adminClient
@@ -114,7 +115,7 @@ export default async function ProfilePage() {
       email={guestProfile.email ?? user.email ?? ""}
       avatarUrl={guestProfile.avatar_url ?? userProfile?.avatar_url ?? null}
       location={guestProfile.location ?? null}
-      savedCount={savedCount ?? 0}
+      savedListings={(savedRows ?? []) as { id: string; sanity_listing_id: string; saved_at: string }[]}
       rsvps={rsvps}
       enquiries={(enquiries ?? []) as { id: string; listing_title: string | null; listing_type: string | null; message: string | null; created_at: string }[]}
     />

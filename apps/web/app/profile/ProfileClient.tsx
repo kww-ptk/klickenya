@@ -1,10 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { User, Heart, Calendar, Mail, MapPin, ArrowRight, Globe, LogOut, Settings, Compass } from "lucide-react";
+import { User, Heart, Calendar, Mail, MapPin, ArrowRight, Globe, LogOut, Settings, Compass, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { sanityClient } from "@/lib/sanity/client";
 
 /* ── Types ────────────────────────────────────────── */
 
@@ -27,13 +29,28 @@ interface Enquiry {
   created_at: string;
 }
 
+interface SavedRow {
+  id: string;
+  sanity_listing_id: string;
+  saved_at: string;
+}
+
+interface SanityListing {
+  _id: string;
+  title: string;
+  slug: string | null;
+  listingType: string | null;
+  city: string | null;
+  photo: string | null;
+}
+
 interface ProfileClientProps {
   userId: string;
   displayName: string;
   email: string;
   avatarUrl: string | null;
   location: string | null;
-  savedCount: number;
+  savedListings: SavedRow[];
   rsvps: Rsvp[];
   enquiries: Enquiry[];
 }
@@ -76,7 +93,7 @@ export function ProfileClient({
   email,
   avatarUrl,
   location,
-  savedCount,
+  savedListings: initialSavedListings,
   rsvps,
   enquiries,
 }: ProfileClientProps) {
@@ -87,7 +104,39 @@ export function ProfileClient({
   const [country, setCountry] = useState(parsed.country);
   const [city, setCity] = useState(parsed.city);
   const [saving, setSaving] = useState(false);
+  const [savedRows, setSavedRows] = useState(initialSavedListings);
+  const [sanityListings, setSanityListings] = useState<Map<string, SanityListing>>(new Map());
+  const [sanityLoaded, setSanityLoaded] = useState(false);
   const router = useRouter();
+
+  const savedCount = savedRows.length;
+
+  // Fetch live listing data from Sanity when saved tab opens
+  useEffect(() => {
+    if (activeTab !== "saved" || savedRows.length === 0 || sanityLoaded) return;
+    const ids = savedRows.map((r) => r.sanity_listing_id);
+    sanityClient
+      .fetch<SanityListing[]>(
+        `*[_type == "listing" && _id in $ids]{ _id, title, "slug": slug.current, "listingType": type, city, "photo": photos[0] }`,
+        { ids }
+      )
+      .then((results) => {
+        setSanityListings(new Map(results.map((r) => [r._id, r])));
+        setSanityLoaded(true);
+      })
+      .catch(() => setSanityLoaded(true));
+  }, [activeTab, savedRows, sanityLoaded]);
+
+  async function handleUnsave(sanityListingId: string) {
+    const prev = savedRows;
+    setSavedRows((rows) => rows.filter((r) => r.sanity_listing_id !== sanityListingId));
+    const res = await fetch("/api/listings/save", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ sanityListingId }),
+    });
+    if (!res.ok) setSavedRows(prev);
+  }
 
   const initials = name
     .split(/\s+/)
@@ -492,13 +541,78 @@ export function ProfileClient({
 
         {/* ═══ SAVED TAB ═══ */}
         {activeTab === "saved" && (
-          <EmptyState
-            icon={Heart}
-            title="No saved listings yet"
-            description="Heart any listing to save it here — stays, restaurants, experiences and more."
-            ctaLabel="Start exploring"
-            ctaHref="/"
-          />
+          <div>
+            {savedRows.length === 0 ? (
+              <EmptyState
+                icon={Heart}
+                title="No saved listings yet"
+                description="Heart any listing to save it here — stays, restaurants, experiences and more."
+                ctaLabel="Start exploring"
+                ctaHref="/"
+              />
+            ) : (
+              <div className="space-y-3">
+                {savedRows.map((row) => {
+                  const listing = sanityListings.get(row.sanity_listing_id);
+                  return (
+                    <div key={row.id} className="flex items-center gap-4 rounded-2xl border border-[#E2DDD5] bg-white p-4 hover:shadow-sm transition-shadow">
+                      {/* Thumbnail */}
+                      <div className="relative size-14 rounded-xl overflow-hidden shrink-0 bg-[#F5F3F0]">
+                        {listing?.photo ? (
+                          <Image
+                            src={`${listing.photo}?w=112&h=112&fit=crop&auto=format`}
+                            alt={listing.title ?? ""}
+                            fill
+                            className="object-cover"
+                            sizes="56px"
+                          />
+                        ) : (
+                          <div className="size-full flex items-center justify-center">
+                            <Heart className="size-5 text-[#9C9485]" />
+                          </div>
+                        )}
+                      </div>
+                      {/* Info */}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[14px] font-semibold text-[#16130C] truncate">
+                          {listing?.title ?? "Loading..."}
+                        </p>
+                        <div className="flex items-center gap-2 text-[12px] text-[#9C9485] mt-0.5">
+                          {listing?.listingType && (
+                            <span className="capitalize">{listing.listingType}</span>
+                          )}
+                          {listing?.city && (
+                            <>
+                              <span className="text-[#E2DDD5]">·</span>
+                              <span>{listing.city}</span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                      {/* Actions */}
+                      <div className="flex items-center gap-2 shrink-0">
+                        {listing?.slug && listing?.listingType && (
+                          <Link
+                            href={`/listings/${listing.listingType}/${listing.slug}`}
+                            className="px-3 py-1.5 rounded-lg bg-[#E8A020]/10 text-[#E8A020] text-[12px] font-semibold hover:bg-[#E8A020]/20 transition-colors"
+                          >
+                            View
+                          </Link>
+                        )}
+                        <button
+                          onClick={() => handleUnsave(row.sanity_listing_id)}
+                          className="size-8 rounded-lg flex items-center justify-center text-[#9C9485] hover:bg-red-50 hover:text-red-500 transition-colors"
+                          aria-label="Remove from saved"
+                        >
+                          <X className="size-4" />
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         )}
       </div>
     </div>

@@ -1,10 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Heart, Star, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { createClient } from "@/lib/supabase/client";
 import { SUBCATEGORY_LABELS } from "@/lib/constants/subcategories";
 
 type ListingType = "stay" | "experience" | "event" | "rental" | "service" | "restaurant" | "real_estate";
@@ -28,6 +30,7 @@ interface ListingCardProps {
   hostSlug?: string;
   photos: string[];
   href: string;
+  initialSaved?: boolean;
 }
 
 /* ── Type badge config ─────────────────────────── */
@@ -110,6 +113,7 @@ const PRICE_RANGE_MAP: Record<string, string> = {
 /* ── Component ─────────────────────────────────── */
 
 function ListingCard({
+  id,
   title,
   city,
   price,
@@ -127,9 +131,34 @@ function ListingCard({
   hostSlug,
   photos,
   href,
+  initialSaved = false,
 }: ListingCardProps) {
-  const [saved, setSaved] = useState(false);
+  const [saved, setSaved] = useState(initialSaved);
   const [openStatus, setOpenStatus] = useState<boolean | null>(null);
+  const pathname = usePathname();
+
+  const handleSaveToggle = useCallback(async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      window.location.href = `/login?returnTo=${encodeURIComponent(pathname)}`;
+      return;
+    }
+
+    const wasSaved = saved;
+    setSaved(!wasSaved);
+
+    const res = await fetch("/api/listings/save", {
+      method: wasSaved ? "DELETE" : "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ sanityListingId: id }),
+    });
+
+    if (!res.ok) setSaved(wasSaved);
+  }, [saved, id, pathname]);
 
   const typeBadge = getTypeBadge(type, subcategory);
   const hostInitials = hostName
@@ -293,11 +322,7 @@ function ListingCard({
                 </span>
               )}
               <button
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  setSaved(!saved);
-                }}
+                onClick={handleSaveToggle}
                 className="size-7 rounded-full flex items-center justify-center bg-surface transition-all hover:scale-110"
                 aria-label={saved ? "Remove from saved" : "Save listing"}
               >
@@ -335,11 +360,7 @@ function ListingCard({
             {typeBadge.emoji} {typeBadge.label}
           </span>
           <button
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              setSaved(!saved);
-            }}
+            onClick={handleSaveToggle}
             className={cn(
               "absolute top-3 right-3 size-8 rounded-full flex items-center justify-center backdrop-blur-[8px] transition-all duration-200",
               "hover:scale-110",
