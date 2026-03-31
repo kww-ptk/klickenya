@@ -569,24 +569,29 @@ function Nav({ transparent = false }: NavProps) {
               );
             })}
 
-            <div className="mt-4 pb-24">
+            <div className="mt-4 pb-24 space-y-2">
+              {authState.loggedIn && authState.role === "host" && (
+                <Link href="/dashboard">
+                  <Button variant="primary" size="lg" className="w-full">
+                    Host Dashboard
+                  </Button>
+                </Link>
+              )}
               <Link
                 href={
                   authState.loggedIn
                     ? authState.role === "admin"
                       ? "/admin"
-                      : authState.role === "host"
-                        ? "/dashboard"
-                        : "/profile"
+                      : "/profile"
                     : "/login"
                 }
               >
-                <Button variant="primary" size="lg" className="w-full">
+                <Button variant={authState.role === "host" ? "ghost" : "primary"} size="lg" className={cn("w-full", authState.role === "host" && "border border-border")}>
                   {authState.loggedIn
                     ? authState.role === "admin"
                       ? "Admin"
                       : authState.role === "host"
-                        ? "Dashboard"
+                        ? "Guest Profile"
                         : "Account"
                     : "Sign in"}
                 </Button>
@@ -603,7 +608,7 @@ function Nav({ transparent = false }: NavProps) {
           onClick={() => setAccountOpen(false)}
         >
           <div
-            className="absolute right-4 top-[72px] w-52 rounded-xl border border-border bg-white shadow-xl z-[9999]"
+            className="absolute right-4 top-[72px] w-56 rounded-xl border border-border bg-white shadow-xl z-[9999]"
             onClick={(e) => e.stopPropagation()}
           >
             <AccountDropdownMenu />
