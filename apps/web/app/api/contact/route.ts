@@ -214,20 +214,34 @@ export async function POST(request: NextRequest) {
     }
 
     /* Fetch listing notification emails from Sanity */
+    type SanityListing = { notificationEmail1?: string; notificationEmail2?: string; slug?: string; city?: string; hostId?: string };
     let notificationEmails: string[] = [];
+    let listing: SanityListing | null = null;
     try {
-      const listing = await sanityClient.fetch<{
-        notificationEmail1?: string;
-        notificationEmail2?: string;
-        slug?: { current?: string };
-      }>(
-        `*[_type == "listing" && _id == $id][0]{ notificationEmail1, notificationEmail2, slug }`,
+      listing = await sanityClient.fetch<SanityListing | null>(
+        `*[_type == "listing" && _id == $id][0]{ notificationEmail1, notificationEmail2, "slug": slug.current, city, hostId }`,
         { id: data.listingId }
       );
       if (listing?.notificationEmail1) notificationEmails.push(listing.notificationEmail1);
       if (listing?.notificationEmail2) notificationEmails.push(listing.notificationEmail2);
     } catch {
       // Non-blocking — continue without notification emails
+    }
+
+    /* Fall back to host_profiles email if Sanity notification fields are empty */
+    let hostDisplayName: string | null = null;
+    if (notificationEmails.length === 0 && listing?.hostId) {
+      try {
+        const { data: hostProfile } = await supabase
+          .from("host_profiles")
+          .select("email, display_name")
+          .eq("user_id", listing.hostId)
+          .single();
+        if (hostProfile?.email) notificationEmails.push(hostProfile.email);
+        hostDisplayName = hostProfile?.display_name ?? null;
+      } catch {
+        // Non-blocking
+      }
     }
 
     /* Send emails via Resend */
@@ -261,17 +275,19 @@ export async function POST(request: NextRequest) {
         ].filter((e, i, arr) => arr.indexOf(e) === i); // deduplicate
 
         if (allRecipients.length > 0) {
-          const listingUrl = `https://klickenya.com/listings/${data.listingType}/${data.listingId}`;
+          const citySlug = (listing?.city ?? "").toLowerCase().replace(/\s+/g, "-");
+          const listingUrl = `https://klickenya.com/${data.listingType}s/${citySlug}/${listing?.slug ?? data.listingId}`;
 
           const notificationDetails = data.room
             ? { "Requested room": data.room, ...enquirySummary }
             : enquirySummary;
+          const subjectPrefix = hostDisplayName ? `New enquiry for ${hostDisplayName}` : "New enquiry";
           await resend.emails.send({
             from: "Klickenya <hello@klickenya.com>",
             to: allRecipients,
             subject: data.room
-              ? `New enquiry: ${data.room} at ${data.listingTitle}`
-              : `New enquiry: ${data.listingTitle}`,
+              ? `${subjectPrefix}: ${data.room} at ${data.listingTitle}`
+              : `${subjectPrefix}: ${data.listingTitle}`,
             html: contactNotificationHtml({
               listingTitle: data.listingTitle,
               listingType: data.listingType,
