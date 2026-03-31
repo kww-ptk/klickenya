@@ -113,7 +113,7 @@ export function contactNotificationHtml(props: ContactNotificationProps): string
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:24px;">
                 <tr>
                   <td align="center">
-                    <a href="/admin/contact-requests" style="display:inline-block;padding:12px 24px;background-color:#E8A020;color:#ffffff;font-size:14px;font-weight:600;text-decoration:none;border-radius:6px;">View in Dashboard</a>
+                    <a href="https://klickenya.com/admin/contact-requests" style="display:inline-block;padding:12px 24px;background-color:#E8A020;color:#ffffff;font-size:14px;font-weight:600;text-decoration:none;border-radius:6px;">View in Dashboard</a>
                   </td>
                 </tr>
               </table>
