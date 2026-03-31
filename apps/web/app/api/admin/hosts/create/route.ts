@@ -90,7 +90,7 @@ export async function POST(request: NextRequest) {
     const adminEmail = process.env.ADMIN_EMAIL;
     if (adminEmail) {
       await resend.emails.send({
-        from: "Klickenya <hello@klickenya.com>",
+        from: "Klickenya <noreply@klickenya.com>",
         to: adminEmail,
         subject: `Admin: New host created — ${name}`,
         html: hostCreatedToAdminHtml({
