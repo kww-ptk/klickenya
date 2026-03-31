@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { User, Heart, Calendar, Mail, MapPin, ArrowRight, Globe, LogOut, Settings, Compass, X } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { sanityClient } from "@/lib/sanity/client";
+import { sanityBrowserClient } from "@/lib/sanity/browser";
 
 /* ── Types ────────────────────────────────────────── */
 
@@ -115,7 +115,7 @@ export function ProfileClient({
   useEffect(() => {
     if (activeTab !== "saved" || savedRows.length === 0 || sanityLoaded) return;
     const ids = savedRows.map((r) => r.sanity_listing_id);
-    sanityClient
+    sanityBrowserClient
       .fetch<SanityListing[]>(
         `*[_type == "listing" && _id in $ids]{ _id, title, "slug": slug.current, "listingType": type, city, "photo": photos[0] }`,
         { ids }
