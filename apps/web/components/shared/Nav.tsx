@@ -6,7 +6,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { usePathname } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { Menu, X, ChevronDown, Heart, Calendar, Mail, User, LogOut } from "lucide-react";
+import { Menu, X, ChevronDown, Heart, Calendar, Mail, User, LogOut, LayoutDashboard, Building2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useScrollPosition } from "@/hooks/useScrollPosition";
 import { Button } from "@/components/ui/Button";
@@ -233,37 +233,47 @@ function Nav({ transparent = false }: NavProps) {
 
   function AccountDropdownMenu() {
     const isHost = authState.role === "host";
-    const enquiriesHref = isHost ? "/dashboard/enquiries" : "/profile?tab=enquiries";
     return (
       <div className="py-1.5">
-        <Link href={isHost ? "/dashboard" : "/profile"} className="flex items-center gap-3 px-4 py-2.5 text-[13px] font-medium text-text hover:bg-surface transition-colors">
-          <User className="size-4 text-text2" /> {isHost ? "Dashboard" : "My Profile"}
-        </Link>
+        {/* Host section */}
         {isHost && (
-          <Link href="/dashboard/listings" className="flex items-center gap-3 px-4 py-2.5 text-[13px] font-medium text-text hover:bg-surface transition-colors">
-            <Heart className="size-4 text-text2" /> My Listings
-          </Link>
-        )}
-        {!isHost && (
           <>
-            <Link href="/profile?tab=saved" className="flex items-center gap-3 px-4 py-2.5 text-[13px] font-medium text-text hover:bg-surface transition-colors">
-              <Heart className="size-4 text-text2" /> Saved
+            <p className="px-4 pt-1.5 pb-1 text-[10px] font-bold text-text2 uppercase tracking-wider">Hosting</p>
+            <Link href="/dashboard" className="flex items-center gap-3 px-4 py-2.5 text-[13px] font-medium text-text hover:bg-surface transition-colors">
+              <LayoutDashboard className="size-4 text-text2" /> Dashboard
             </Link>
-            <Link href="/profile?tab=events" className="flex items-center gap-3 px-4 py-2.5 text-[13px] font-medium text-text hover:bg-surface transition-colors">
-              <Calendar className="size-4 text-text2" /> Events
+            <Link href="/dashboard/listings" className="flex items-center gap-3 px-4 py-2.5 text-[13px] font-medium text-text hover:bg-surface transition-colors">
+              <Building2 className="size-4 text-text2" /> My Listings
             </Link>
+            <Link href="/dashboard/enquiries" className="flex items-center justify-between px-4 py-2.5 text-[13px] font-medium text-text hover:bg-surface transition-colors">
+              <span className="flex items-center gap-3">
+                <Mail className="size-4 text-text2" /> Enquiries
+              </span>
+              {enquiryCount > 0 && (
+                <span className="min-w-[18px] h-[18px] px-1 rounded-full bg-[#E8A020] text-white text-[10px] font-bold flex items-center justify-center">
+                  {enquiryCount}
+                </span>
+              )}
+            </Link>
+            <hr className="my-1.5 border-border" />
           </>
         )}
-        <Link href={enquiriesHref} className="flex items-center justify-between px-4 py-2.5 text-[13px] font-medium text-text hover:bg-surface transition-colors">
-          <span className="flex items-center gap-3">
-            <Mail className="size-4 text-text2" /> Enquiries
-          </span>
-          {enquiryCount > 0 && (
-            <span className="min-w-[18px] h-[18px] px-1 rounded-full bg-[#E8A020] text-white text-[10px] font-bold flex items-center justify-center">
-              {enquiryCount}
-            </span>
-          )}
+        {/* Guest section (always visible) */}
+        {isHost && <p className="px-4 pt-1.5 pb-1 text-[10px] font-bold text-text2 uppercase tracking-wider">Travelling</p>}
+        <Link href="/profile" className="flex items-center gap-3 px-4 py-2.5 text-[13px] font-medium text-text hover:bg-surface transition-colors">
+          <User className="size-4 text-text2" /> My Profile
         </Link>
+        <Link href="/profile?tab=saved" className="flex items-center gap-3 px-4 py-2.5 text-[13px] font-medium text-text hover:bg-surface transition-colors">
+          <Heart className="size-4 text-text2" /> Saved
+        </Link>
+        <Link href="/profile?tab=events" className="flex items-center gap-3 px-4 py-2.5 text-[13px] font-medium text-text hover:bg-surface transition-colors">
+          <Calendar className="size-4 text-text2" /> Events
+        </Link>
+        {!isHost && (
+          <Link href="/profile?tab=enquiries" className="flex items-center gap-3 px-4 py-2.5 text-[13px] font-medium text-text hover:bg-surface transition-colors">
+            <Mail className="size-4 text-text2" /> Enquiries
+          </Link>
+        )}
         <hr className="my-1.5 border-border" />
         <button onClick={handleSignOut} className="flex items-center gap-3 px-4 py-2.5 text-[13px] font-medium text-red-500 hover:bg-red-50 transition-colors w-full text-left">
           <LogOut className="size-4" /> Sign out
@@ -414,8 +424,8 @@ function Nav({ transparent = false }: NavProps) {
                 List your space
               </Button>
             </Link>
-            {/* Guest account dropdown */}
-            {authState.loggedIn && authState.role === "guest" ? (
+            {/* Account dropdown (guest + host) */}
+            {authState.loggedIn && authState.role !== "admin" ? (
               <div ref={accountRef} className="relative">
                 <Button
                   variant="secondary"
@@ -429,21 +439,13 @@ function Nav({ transparent = false }: NavProps) {
                   <ChevronDown className={cn("size-3 ml-1 transition-transform", accountOpen && "rotate-180")} />
                 </Button>
                 {accountOpen && (
-                  <div className="absolute right-0 top-full mt-2 w-52 rounded-xl border border-border bg-white shadow-xl z-[300]">
+                  <div className="absolute right-0 top-full mt-2 w-56 rounded-xl border border-border bg-white shadow-xl z-[300]">
                     <AccountDropdownMenu />
                   </div>
                 )}
               </div>
             ) : (
-              <Link
-                href={
-                  authState.loggedIn
-                    ? authState.role === "admin"
-                      ? "/admin"
-                      : "/dashboard"
-                    : "/login"
-                }
-              >
+              <Link href={authState.loggedIn ? "/admin" : "/login"}>
                 <Button
                   variant="secondary"
                   size="sm"
@@ -451,18 +453,14 @@ function Nav({ transparent = false }: NavProps) {
                     solid ? "bg-dark text-white" : "bg-white text-text"
                   )}
                 >
-                  {authState.loggedIn
-                    ? authState.role === "admin"
-                      ? "Admin"
-                      : "Dashboard"
-                    : "Sign in"}
+                  {authState.loggedIn ? "Admin" : "Sign in"}
                 </Button>
               </Link>
             )}
           </div>
 
-          {/* Mobile user icon (logged in) */}
-          {authState.loggedIn && authState.role === "guest" ? (
+          {/* Mobile user icon (logged in — guest + host get dropdown, admin gets direct link) */}
+          {authState.loggedIn && authState.role !== "admin" ? (
             <button
               ref={(el) => { if (el && !accountRef.current) accountRef.current = el.parentElement as HTMLDivElement; }}
               onClick={() => setAccountOpen(!accountOpen)}
@@ -479,7 +477,7 @@ function Nav({ transparent = false }: NavProps) {
             </button>
           ) : authState.loggedIn ? (
             <Link
-              href={authState.role === "admin" ? "/admin" : "/dashboard"}
+              href="/admin"
               className={cn(
                 "md:hidden flex size-9 items-center justify-center rounded-full",
                 solid || mobileOpen

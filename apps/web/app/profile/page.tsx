@@ -17,8 +17,7 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
     .eq("id", user.id)
     .single();
 
-  // Hosts go to dashboard
-  if (userProfile?.role === "host") redirect("/dashboard");
+  // Admins go to admin dashboard
   if (userProfile?.role === "admin") redirect("/admin");
 
   // Fetch or create guest profile
@@ -121,6 +120,7 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
       rsvps={rsvps}
       enquiries={(enquiries ?? []) as { id: string; listing_title: string | null; listing_type: string | null; message: string | null; created_at: string }[]}
       initialTab={initialTab}
+      isHost={userProfile?.role === "host"}
     />
   );
 }

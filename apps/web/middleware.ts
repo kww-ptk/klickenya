@@ -76,10 +76,10 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(url);
     }
 
-    // Profile routes: guests only (hosts go to dashboard)
-    if (isProfile && (role === "host" || role === "admin")) {
+    // Profile routes: admins go to admin (hosts can access profile too)
+    if (isProfile && role === "admin") {
       const url = request.nextUrl.clone();
-      url.pathname = role === "admin" ? "/admin" : "/dashboard";
+      url.pathname = "/admin";
       return NextResponse.redirect(url);
     }
   }

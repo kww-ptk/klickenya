@@ -52,6 +52,8 @@ export default function LoginPage() {
       const result = await loginAction(formData);
       if (result.error) {
         setError(result.error);
+      } else if (returnTo) {
+        router.push(returnTo);
       } else if (result.redirect) {
         router.push(result.redirect);
       }

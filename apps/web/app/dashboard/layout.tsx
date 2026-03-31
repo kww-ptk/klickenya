@@ -204,8 +204,17 @@ export default async function DashboardLayout({
           />
         </nav>
 
-        {/* Bottom: password banner + sign out */}
+        {/* Bottom: guest profile + password banner + sign out */}
         <div className="border-t border-white/10 px-4 py-4 space-y-3">
+          <Link
+            href="/profile"
+            className="flex items-center gap-2 text-[12px] text-[#9C9485] hover:text-white transition-colors"
+          >
+            <span className="shrink-0 size-4">
+              <UserIcon />
+            </span>
+            <span className="hidden lg:inline">Guest Profile</span>
+          </Link>
           {showPasswordBanner && (
             <Link
               href="/reset-password"

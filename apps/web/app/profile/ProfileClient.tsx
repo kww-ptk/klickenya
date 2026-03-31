@@ -54,6 +54,7 @@ interface ProfileClientProps {
   rsvps: Rsvp[];
   enquiries: Enquiry[];
   initialTab?: string;
+  isHost?: boolean;
 }
 
 /* ── Tabs ─────────────────────────────────────────── */
@@ -98,6 +99,7 @@ export function ProfileClient({
   rsvps,
   enquiries,
   initialTab,
+  isHost = false,
 }: ProfileClientProps) {
   const validTabs: Tab[] = ["profile", "events", "enquiries", "saved"];
   const startTab = validTabs.includes(initialTab as Tab) ? (initialTab as Tab) : "profile";
@@ -209,13 +211,20 @@ export function ProfileClient({
           <Link href="/" className="text-white/50 text-[13px] font-medium hover:text-white transition-colors">
             ← Back to Klickenya
           </Link>
-          <button
-            onClick={handleSignOut}
-            className="flex items-center gap-1.5 text-white/40 text-[13px] font-medium hover:text-white/70 transition-colors"
-          >
-            <LogOut className="size-3.5" />
-            Sign out
-          </button>
+          <div className="flex items-center gap-4">
+            {isHost && (
+              <Link href="/dashboard" className="text-[#E8A020] text-[13px] font-medium hover:text-[#F5C842] transition-colors">
+                Host Dashboard →
+              </Link>
+            )}
+            <button
+              onClick={handleSignOut}
+              className="flex items-center gap-1.5 text-white/40 text-[13px] font-medium hover:text-white/70 transition-colors"
+            >
+              <LogOut className="size-3.5" />
+              Sign out
+            </button>
+          </div>
         </div>
 
         {/* Profile card */}
