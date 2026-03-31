@@ -191,7 +191,6 @@ export default async function DashboardLayout({
             href="/dashboard/enquiries"
             label="Enquiries"
             icon={<InboxIcon />}
-            disabled
           />
           <DashboardNavLink
             href="/dashboard/profile/edit"
