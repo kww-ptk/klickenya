@@ -252,11 +252,13 @@ function ListingCard({
     <div className="relative">
     {/* Toast notification */}
     {toast && (
-      <div className="fixed top-5 left-1/2 -translate-x-1/2 z-[100] animate-in fade-in slide-in-from-top-2 duration-200">
-        <div className="flex items-center gap-2 rounded-full bg-[#16130C] px-4 py-2.5 shadow-lg">
-          <Heart className="size-3.5 fill-amber text-amber" />
+      <div
+        className="fixed top-5 left-1/2 -translate-x-1/2 z-[100] pointer-events-auto"
+      >
+        <div className="flex items-center gap-2 rounded-full bg-[#16130C] px-4 py-2.5 shadow-lg border border-white/10">
+          <Heart className="size-3.5 fill-amber text-amber shrink-0" />
           <span className="text-[13px] font-semibold text-white whitespace-nowrap">{toast}</span>
-          <Link href="/profile" className="text-[12px] font-semibold text-[#E8A020] hover:underline ml-1" onClick={(e) => e.stopPropagation()}>
+          <Link href="/profile" className="text-[12px] font-semibold text-[#E8A020] hover:underline ml-1 whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
             View saved
           </Link>
         </div>
