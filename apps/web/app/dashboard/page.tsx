@@ -243,9 +243,15 @@ export default async function DashboardPage() {
                         )}
                       </div>
                       <div className="flex items-center gap-3 mt-1.5">
-                        <span className="text-[11px] text-[#9C9485]">
-                          <span className="font-semibold text-[#16130C]">{listingEnquiries}</span> enquir{listingEnquiries === 1 ? "y" : "ies"}
-                        </span>
+                        {listingEnquiries > 0 ? (
+                          <Link href={`/dashboard/enquiries?listing=${listing._id}`} className="text-[11px] text-[#E8A020] font-medium hover:underline">
+                            <span className="font-semibold">{listingEnquiries}</span> enquir{listingEnquiries === 1 ? "y" : "ies"} →
+                          </Link>
+                        ) : (
+                          <span className="text-[11px] text-[#9C9485]">
+                            <span className="font-semibold text-[#16130C]">0</span> enquiries
+                          </span>
+                        )}
                       </div>
                     </div>
                   </div>

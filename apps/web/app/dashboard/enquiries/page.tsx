@@ -4,7 +4,9 @@ import { createClient } from "@/lib/supabase/server";
 import { adminClient } from "@/lib/supabase/admin";
 import { sanityClient } from "@/lib/sanity/client";
 
-export default async function EnquiriesPage() {
+export default async function EnquiriesPage({ searchParams }: { searchParams: Promise<{ listing?: string }> }) {
+  const sp = await searchParams;
+  const filterListingId = sp.listing ?? null;
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
@@ -38,13 +40,26 @@ export default async function EnquiriesPage() {
   }[] = [];
 
   if (listingIds.length > 0) {
-    const { data } = await adminClient
+    let query = adminClient
       .from("contact_requests")
       .select("id, full_name, email, phone, message, listing_title, listing_type, listing_sanity_id, status, created_at")
-      .in("listing_sanity_id", listingIds)
       .order("created_at", { ascending: false })
       .limit(50);
+
+    if (filterListingId && listingIds.includes(filterListingId)) {
+      query = query.eq("listing_sanity_id", filterListingId);
+    } else {
+      query = query.in("listing_sanity_id", listingIds);
+    }
+
+    const { data } = await query;
     enquiries = data ?? [];
+  }
+
+  // Get the listing title for filter display
+  let filterTitle: string | null = null;
+  if (filterListingId && enquiries.length > 0) {
+    filterTitle = enquiries[0]?.listing_title ?? null;
   }
 
   return (
@@ -55,9 +70,20 @@ export default async function EnquiriesPage() {
             Enquiries
           </h1>
           <p className="text-[13px] text-[#9C9485] mt-0.5">
-            {enquiries.length} enquir{enquiries.length === 1 ? "y" : "ies"} across your listings
+            {filterTitle
+              ? <>{enquiries.length} enquir{enquiries.length === 1 ? "y" : "ies"} for {filterTitle}</>
+              : <>{enquiries.length} enquir{enquiries.length === 1 ? "y" : "ies"} across your listings</>
+            }
           </p>
         </div>
+        {filterListingId && (
+          <Link
+            href="/dashboard/enquiries"
+            className="text-[13px] font-medium text-[#E8A020] hover:underline"
+          >
+            View all →
+          </Link>
+        )}
       </div>
 
       {enquiries.length === 0 ? (
