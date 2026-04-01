@@ -451,8 +451,11 @@ async function main() {
     body,
   }
 
+  // Delete any existing draft so Studio shows the published version
+  await client.delete(`drafts.${doc._id}`).catch(() => {})
+  // Replace the published version
   await client.createOrReplace(doc)
-  console.log(`✅ Kitesurf guide seeded`)
+  console.log(`✅ Kitesurf guide seeded (draft cleared, published version updated)`)
 }
 
 main().catch((err) => {
