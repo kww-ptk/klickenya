@@ -613,7 +613,7 @@ async function seed() {
     publishedAt: '2026-03-12T08:00:00Z',
     seoTitle: 'How to Get to Watamu Kenya 2026 — Flights, Taxis & Prices',
     seoDescription:
-      'Complete transport guide for Watamu Kenya. Flights to Malindi, taxis from Mombasa, tuk-tuks, motorbikes and walking — with real 2026 KES prices for everything.',
+      'Complete transport guide for Watamu Kenya. Flights to Malindi, taxis from Mombasa, tuk-tuks, motorbikes and walking with real 2026 prices.',
     body: watamuTransportBody,
   })
   console.log('✓ Post 2: watamu-transport-guide')
@@ -631,7 +631,7 @@ async function seed() {
     publishedAt: '2026-03-13T08:00:00Z',
     seoTitle: 'Watamu Nightlife 2026 — Bars, Beach Parties & Late Nights',
     seoDescription:
-      'The real guide to Watamu nightlife — Sunset Lab Fridays, Paparemo Beach Parties, Lichthaus sunsets, Kaleidoscope Festival and more. What to expect, what to wear, how to get there.',
+      'The real guide to Watamu nightlife. Sunset Lab Fridays, Paparemo Beach Parties, Lichthaus sunsets, Kaleidoscope Festival and more.',
     body: watamuNightlifeBody,
   })
   console.log('✓ Post 3: watamu-nightlife-guide')

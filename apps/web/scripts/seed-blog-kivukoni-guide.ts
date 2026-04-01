@@ -338,11 +338,11 @@ async function main() {
     series: 'Living in Kenya',
     postType: 'guide',
     focusKeyword: 'kivukoni school kilifi kenya',
-    seoTitle: 'Kivukoni School Kilifi 2026: Curriculum, Campus & Parent Guide',
+    seoTitle: 'Kivukoni School Kilifi 2026: Curriculum, Campus & Guide',
     seoDescription:
       'Kivukoni International School in Kilifi: British curriculum, iGCSEs, off grid eco campus with weekly boarding. The honest parent\'s guide for 2026.',
     excerpt:
-      'Kivukoni International School sits on Kilifi Plantation beside Takaungu Creek, an off grid, solar powered campus where 280 children from 2 to 16 learn the British curriculum surrounded by nature. Here is what parents need to know.',
+      'Kivukoni International School sits on Kilifi Plantation beside Takaungu Creek, an off grid, solar powered campus where 280 children learn the British curriculum surrounded by nature.',
     readingTime: 12,
     publishedAt: '2026-03-22T08:00:00Z',
     author: {

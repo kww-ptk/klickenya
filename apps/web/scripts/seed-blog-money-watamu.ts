@@ -350,7 +350,7 @@ async function main() {
     focusKeyword: `money exchange ATM watamu kenya`,
     seoTitle: `Money & ATMs in Watamu 2026: M-Pesa, Exchange & Tips`,
     seoDescription: `Where to exchange money in Watamu, which ATMs work, how to set up M-Pesa, and the best way to pay. Updated for 2026.`,
-    excerpt: `Watamu is a small beach town, not a city. ATMs exist, M-Pesa is everywhere and is the best payment option. Here is everything you need to know about managing your money in Watamu, including a full guide to setting up and using M-Pesa.`,
+    excerpt: `Watamu is a small beach town, not a city. ATMs exist, M-Pesa is everywhere and is the best payment option. Here is everything you need to know about money in Watamu.`,
     readingTime: 9,
     publishedAt: '2026-03-27T08:00:00Z',
     author: { _type: 'reference', _ref: '0a5287ef-f74d-4893-a487-6b672cb63477' },
