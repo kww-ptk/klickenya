@@ -26,6 +26,15 @@ SANITY_API_TOKEN=skCbj0aGyKfa66eCmPPkvfR8v3PqEbDkgEVIiAC1t52iwcSjv6ZttWbSwQYXN6V
 - Write token (`skCbj0aG...`) must be used
 - This environment cannot reach `api.sanity.io` (network blocked), so user must run locally
 - After editing a seed script, commit + push to dev, user pulls locally, then runs the command above
+- GitHub Action (`seed-blog.yml`) auto-runs changed seed scripts on push to main — user no longer needs to run locally if the action secret is configured
+
+---
+
+# Dashboard Performance Notes
+- Dashboard uses React `cache()` in `apps/web/app/dashboard/_lib/auth.ts` to deduplicate auth/profile fetches across layout and child pages
+- Sanity fetches in /dashboard use `revalidate: 60` (global setting in `lib/sanity/client.ts`). If a host creates an event or listing and doesn't see it appear immediately, wait 60 seconds for the cache to refresh. This is NOT a bug.
+- All dashboard pages have `loading.tsx` skeletons for instant visual feedback
+- API calls are parallelized with `Promise.all()` / `Promise.allSettled()` — do not convert back to sequential
 
 ---
 
