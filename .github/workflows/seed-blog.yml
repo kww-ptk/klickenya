@@ -1,0 +1,44 @@
+name: Seed Blog Posts to Sanity
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/web/scripts/seed-blog-*.ts'
+
+jobs:
+  seed:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+
+      - run: pnpm install
+
+      - name: Run changed seed scripts
+        working-directory: apps/web
+        env:
+          SANITY_API_TOKEN: ${{ secrets.SANITY_API_TOKEN }}
+        run: |
+          # Find which seed-blog scripts changed in this push
+          CHANGED=$(git diff --name-only HEAD~1 HEAD -- 'apps/web/scripts/seed-blog-*.ts')
+          if [ -z "$CHANGED" ]; then
+            echo "No seed-blog scripts changed"
+            exit 0
+          fi
+          for file in $CHANGED; do
+            SCRIPT=$(basename "$file")
+            echo "🌱 Running $SCRIPT..."
+            npx tsx "scripts/$SCRIPT"
+          done
+          echo "✅ All changed seed scripts executed"
