@@ -2,9 +2,9 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { Calendar } from "lucide-react";
-import { createClient } from "@/lib/supabase/server";
 import { adminClient } from "@/lib/supabase/admin";
 import { sanityClient } from "@/lib/sanity/client";
+import { getAuthUser, getHostProfile } from "../_lib/auth";
 
 interface EventRow {
   id: string;
@@ -27,23 +27,35 @@ const STATUS_STYLES: Record<string, { label: string; bg: string; text: string }>
 };
 
 export default async function MyEventsPage() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const { user, supabase } = await getAuthUser();
   if (!user) redirect("/login");
 
-  // Get host profile for Sanity host ID
-  const { data: hostProfile } = await supabase
-    .from("host_profiles")
-    .select("sanity_host_id")
-    .eq("user_id", user.id)
-    .single();
+  // Cached — already fetched in layout
+  const hostProfile = await getHostProfile(user.id);
+  const sanityHostId = hostProfile?.sanity_host_id ?? "";
 
-  // 1. Fetch events from events_pending (submitted through dashboard)
-  const { data: pendingEvents } = await supabase
-    .from("events_pending")
-    .select("*")
-    .eq("host_id", user.id)
-    .order("submitted_at", { ascending: false });
+  // Parallel: fetch events_pending + Sanity events together
+  const [{ data: pendingEvents }, sanityEvents] = await Promise.all([
+    supabase
+      .from("events_pending")
+      .select("*")
+      .eq("host_id", user.id)
+      .order("submitted_at", { ascending: false }),
+    sanityClient.fetch<
+      { _id: string; title: string; slug: string; status: string; city: string | null; eventDate: string | null; coverPhotoUrl: string | null }[]
+    >(
+      `*[_type == "listing" && listingType == "event" && (hostId == $userId || host._ref == $sanityHostId)]{
+        _id,
+        title,
+        "slug": slug.current,
+        status,
+        city,
+        eventDate,
+        "coverPhotoUrl": photos[0].asset->url
+      }`,
+      { userId: user.id, sanityHostId }
+    ),
+  ]);
 
   const pendingRows = (pendingEvents ?? []) as {
     id: string;
@@ -54,26 +66,8 @@ export default async function MyEventsPage() {
     submitted_at: string;
   }[];
 
-  // Track which Sanity IDs we already have from events_pending
   const pendingSanityIds = new Set(
     pendingRows.map((e) => e.sanity_event_id).filter(Boolean)
-  );
-
-  // 2. Fetch events from Sanity that belong to this host (catches events created outside dashboard)
-  const sanityHostId = hostProfile?.sanity_host_id ?? "";
-  const sanityEvents = await sanityClient.fetch<
-    { _id: string; title: string; slug: string; status: string; city: string | null; eventDate: string | null; coverPhotoUrl: string | null }[]
-  >(
-    `*[_type == "listing" && listingType == "event" && (hostId == $userId || host._ref == $sanityHostId)]{
-      _id,
-      title,
-      "slug": slug.current,
-      status,
-      city,
-      eventDate,
-      "coverPhotoUrl": photos[0].asset->url
-    }`,
-    { userId: user.id, sanityHostId }
   );
 
   // Build sanity info map for all events

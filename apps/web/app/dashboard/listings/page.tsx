@@ -1,19 +1,14 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { createClient } from "@/lib/supabase/server";
 import { sanityClient } from "@/lib/sanity/client";
+import { getAuthUser, getHostProfile } from "../_lib/auth";
 
 export default async function DashboardListingsPage() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const { user } = await getAuthUser();
   if (!user) redirect("/login");
 
-  const { data: hostProfile } = await supabase
-    .from("host_profiles")
-    .select("user_id, sanity_host_id")
-    .eq("user_id", user.id)
-    .single();
+  const hostProfile = await getHostProfile(user.id);
 
   if (!hostProfile) redirect("/dashboard");
 

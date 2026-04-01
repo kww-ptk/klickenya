@@ -1,9 +1,9 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
 import { adminClient } from "@/lib/supabase/admin";
 import { sanityClient } from "@/lib/sanity/client";
 import { StatsClient } from "./StatsClient";
+import { getAuthUser, getHostProfile } from "../_lib/auth";
 
 export const revalidate = 0;
 
@@ -16,37 +16,31 @@ export default async function DashboardStatsPage({
   const range = parseInt(sp.range ?? "30", 10);
   const days = [7, 30, 90].includes(range) ? range : 30;
 
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const { user } = await getAuthUser();
   if (!user) redirect("/login");
 
-  const { data: hostProfile } = await supabase
-    .from("host_profiles")
-    .select("user_id, sanity_host_id")
-    .eq("user_id", user.id)
-    .single();
-
+  const hostProfile = await getHostProfile(user.id);
   if (!hostProfile) redirect("/dashboard");
 
-  // Fetch host's listing slugs from Sanity for display names
-  const listings = await sanityClient.fetch<{ slug: string; title: string }[]>(
-    `*[_type == "listing" && (hostId == $hostId || host._ref == $sanityHostId)] | order(title asc) {
-      "slug": slug.current, title
-    }`,
-    { hostId: hostProfile.user_id, sanityHostId: hostProfile.sanity_host_id ?? "" }
-  ).catch(() => []);
-
-  const slugToTitle = new Map(listings.map((l) => [l.slug, l.title]));
-
-  // Fetch events for this host in the date range
   const since = new Date(Date.now() - days * 86400_000).toISOString();
 
-  const { data: events } = await adminClient
-    .from("listing_events")
-    .select("listing_slug, event_type, referrer, device, created_at")
-    .eq("host_user_id", user.id)
-    .gte("created_at", since)
-    .order("created_at", { ascending: true });
+  // Parallel: fetch Sanity listings + Supabase events together
+  const [listings, { data: events }] = await Promise.all([
+    sanityClient.fetch<{ slug: string; title: string }[]>(
+      `*[_type == "listing" && (hostId == $hostId || host._ref == $sanityHostId)] | order(title asc) {
+        "slug": slug.current, title
+      }`,
+      { hostId: hostProfile.user_id, sanityHostId: hostProfile.sanity_host_id ?? "" }
+    ).catch(() => [] as { slug: string; title: string }[]),
+    adminClient
+      .from("listing_events")
+      .select("listing_slug, event_type, referrer, device, created_at")
+      .eq("host_user_id", user.id)
+      .gte("created_at", since)
+      .order("created_at", { ascending: true }),
+  ]);
+
+  const slugToTitle = new Map(listings.map((l) => [l.slug, l.title]));
 
   const allEvents = events ?? [];
 

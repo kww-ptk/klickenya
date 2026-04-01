@@ -8,6 +8,7 @@ import { DashboardSignOut } from "./_components/DashboardSignOut";
 import { DashboardBottomNav } from "./_components/DashboardBottomNav";
 import { DashboardMobileHeader } from "./_components/DashboardMobileHeader";
 import { adminClient } from "@/lib/supabase/admin";
+import { getAuthUser, getUserProfile, getHostProfile } from "./_lib/auth";
 
 /* ---------- SVG Icons ---------- */
 
@@ -91,58 +92,53 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const { user } = await getAuthUser();
 
   if (!user) {
     redirect("/login");
   }
 
-  const { data: profile } = await supabase
-    .from("users")
-    .select("full_name, email, role")
-    .eq("id", user.id)
-    .single();
+  // Parallel: fetch user profile + host profile together
+  const [profile, hostProfile] = await Promise.all([
+    getUserProfile(user.id),
+    getHostProfile(user.id),
+  ]);
 
-  const { data: hostProfile } = await supabase
-    .from("host_profiles")
-    .select("display_name, plan_tier, password_changed, sanity_host_id")
-    .eq("user_id", user.id)
-    .single();
-
+  // Parallel: fetch photo + enquiry count together (both depend on hostProfile)
   let photoUrl: string | null = null;
-  if (hostProfile?.sanity_host_id) {
-    const host = await sanityClient.fetch<{ photo?: { asset?: { url?: string } } } | null>(
-      `*[_type == "host" && _id == $id][0]{ photo{ asset->{ url } } }`,
-      { id: hostProfile.sanity_host_id }
-    );
-    photoUrl = host?.photo?.asset?.url ?? null;
-  }
-
-  const displayName = hostProfile?.display_name ?? profile?.full_name ?? "Host";
-  const planTier = hostProfile?.plan_tier ?? "basic";
-  const showPasswordBanner = profile?.role === "host" && hostProfile?.password_changed === false;
-
-  // Fetch enquiry count for notification badges
   let enquiryCount = 0;
+
   if (hostProfile?.sanity_host_id) {
-    try {
-      const listingIds = await sanityClient.fetch<string[]>(
-        `*[_type == "listing" && (hostId == $hostId || host._ref == $sanityHostId)]._id`,
-        { hostId: user.id, sanityHostId: hostProfile.sanity_host_id }
-      );
-      if (listingIds.length > 0) {
+    const [photoResult, enquiryResult] = await Promise.allSettled([
+      sanityClient.fetch<{ photo?: { asset?: { url?: string } } } | null>(
+        `*[_type == "host" && _id == $id][0]{ photo{ asset->{ url } } }`,
+        { id: hostProfile.sanity_host_id }
+      ),
+      (async () => {
+        const listingIds = await sanityClient.fetch<string[]>(
+          `*[_type == "listing" && (hostId == $hostId || host._ref == $sanityHostId)]._id`,
+          { hostId: user.id, sanityHostId: hostProfile.sanity_host_id }
+        );
+        if (listingIds.length === 0) return 0;
         const { count } = await adminClient
           .from("contact_requests")
           .select("id", { count: "exact", head: true })
           .in("listing_sanity_id", listingIds)
           .eq("status", "new");
-        enquiryCount = count ?? 0;
-      }
-    } catch {
-      // silently fail
+        return count ?? 0;
+      })(),
+    ]);
+    if (photoResult.status === "fulfilled") {
+      photoUrl = photoResult.value?.photo?.asset?.url ?? null;
+    }
+    if (enquiryResult.status === "fulfilled") {
+      enquiryCount = enquiryResult.value;
     }
   }
+
+  const displayName = hostProfile?.display_name ?? profile?.full_name ?? "Host";
+  const planTier = hostProfile?.plan_tier ?? "basic";
+  const showPasswordBanner = profile?.role === "host" && hostProfile?.password_changed === false;
 
   const initials = displayName
     .split(/\s+/)

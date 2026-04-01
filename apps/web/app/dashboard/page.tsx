@@ -1,29 +1,22 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { createClient } from "@/lib/supabase/server";
 import { adminClient } from "@/lib/supabase/admin";
 import { sanityClient } from "@/lib/sanity/client";
+import { getAuthUser, getUserProfile, getHostProfile } from "./_lib/auth";
 
 export default async function DashboardPage() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const { user, supabase } = await getAuthUser();
 
   if (!user) {
     redirect("/login");
   }
 
-  const { data: profile } = await supabase
-    .from("users")
-    .select("full_name, role")
-    .eq("id", user.id)
-    .single();
-
-  const { data: hostProfile } = await supabase
-    .from("host_profiles")
-    .select("user_id, display_name, sanity_host_id")
-    .eq("user_id", user.id)
-    .single();
+  // Cached — already fetched in layout, returns instantly
+  const [profile, hostProfile] = await Promise.all([
+    getUserProfile(user.id),
+    getHostProfile(user.id),
+  ]);
 
   // Fetch listings from Sanity
   let listings: {
@@ -37,6 +30,8 @@ export default async function DashboardPage() {
   }[] = [];
 
   let hostSlug: string | null = null;
+  let enquiryCountMap = new Map<string, number>();
+  let totalEnquiries = 0;
 
   // Fetch events from Sanity
   let events: {
@@ -51,22 +46,15 @@ export default async function DashboardPage() {
   }[] = [];
 
   if (hostProfile) {
-    // Fetch host slug
-    if (hostProfile.sanity_host_id) {
-      try {
-        const hostDoc = await sanityClient.fetch<{ slug: string } | null>(
-          `*[_type == "host" && _id == $id][0]{ "slug": slug.current }`,
-          { id: hostProfile.sanity_host_id }
-        );
-        hostSlug = hostDoc?.slug ?? null;
-      } catch {
-        // Non-blocking
-      }
-    }
-
-    // Fetch all listings + events from Sanity
-    try {
-      const raw = await sanityClient.fetch<
+    // Parallel: host slug + all listings/events + pending events
+    const [hostSlugResult, rawResult, pendingResult] = await Promise.allSettled([
+      hostProfile.sanity_host_id
+        ? sanityClient.fetch<{ slug: string } | null>(
+            `*[_type == "host" && _id == $id][0]{ "slug": slug.current }`,
+            { id: hostProfile.sanity_host_id }
+          )
+        : Promise.resolve(null),
+      sanityClient.fetch<
         { _id: string; title: string; slug: string; type: string; listingType: string | null; city: string | null; eventDate: string | null; coverPhoto: { asset?: { url?: string } } | null; isVerified: boolean; status: string }[]
       >(
         `*[_type == "listing" && (hostId == $hostId || host._ref == $sanityHostId)] | order(_createdAt desc) {
@@ -82,9 +70,16 @@ export default async function DashboardPage() {
           status
         }`,
         { hostId: hostProfile.user_id, sanityHostId: hostProfile.sanity_host_id ?? "" }
-      );
+      ),
+      supabase.from("events_pending").select("*").eq("host_id", user.id),
+    ]);
 
-      for (const l of raw) {
+    if (hostSlugResult.status === "fulfilled" && hostSlugResult.value) {
+      hostSlug = hostSlugResult.value.slug ?? null;
+    }
+
+    if (rawResult.status === "fulfilled") {
+      for (const l of rawResult.value) {
         const imageUrl = l.coverPhoto?.asset?.url
           ? `${l.coverPhoto.asset.url}?w=400&auto=format`
           : null;
@@ -112,15 +107,9 @@ export default async function DashboardPage() {
           });
         }
       }
-    } catch (err) {
-      console.error("Sanity listing fetch error:", err);
     }
 
-    // Also check events_pending for events not in Sanity results
-    const { data: pendingEvents } = await supabase
-      .from("events_pending")
-      .select("*")
-      .eq("host_id", user.id);
+    const pendingEvents = pendingResult.status === "fulfilled" ? pendingResult.value.data : null;
 
     const eventSanityIds = new Set(events.map((e) => e._id));
     for (const pe of pendingEvents ?? []) {
@@ -138,45 +127,41 @@ export default async function DashboardPage() {
       }
     }
 
-    // Fetch attendee counts for events
+    // Parallel: fetch attendee counts + enquiry counts together
     const eventIds = events.map((e) => e._id);
-    if (eventIds.length > 0) {
-      const { data: attendeeCounts } = await adminClient
-        .from("event_attendees")
-        .select("event_sanity_id")
-        .in("event_sanity_id", eventIds)
-        .eq("status", "confirmed");
+    const listingIds = listings.map((l) => l._id);
+
+    const [attendeeResult, enquiryResult] = await Promise.allSettled([
+      eventIds.length > 0
+        ? adminClient.from("event_attendees").select("event_sanity_id").in("event_sanity_id", eventIds).eq("status", "confirmed")
+        : Promise.resolve({ data: null }),
+      listingIds.length > 0
+        ? adminClient.from("contact_requests").select("listing_sanity_id").in("listing_sanity_id", listingIds)
+        : Promise.resolve({ data: null }),
+    ]);
+
+    if (attendeeResult.status === "fulfilled" && attendeeResult.value.data) {
       const countMap = new Map<string, number>();
-      for (const row of attendeeCounts ?? []) {
+      for (const row of attendeeResult.value.data) {
         countMap.set(row.event_sanity_id, (countMap.get(row.event_sanity_id) ?? 0) + 1);
       }
       for (const ev of events) {
         ev.attendees = countMap.get(ev._id) ?? 0;
       }
     }
+
+    if (enquiryResult.status === "fulfilled" && enquiryResult.value.data) {
+      for (const row of enquiryResult.value.data) {
+        const id = row.listing_sanity_id;
+        if (id) enquiryCountMap.set(id, (enquiryCountMap.get(id) ?? 0) + 1);
+      }
+      totalEnquiries = enquiryResult.value.data.length;
+    }
   }
 
   const firstName = (hostProfile?.display_name ?? profile?.full_name ?? "Host").split(/\s+/)[0];
   const verifiedCount = listings.filter((l) => l.isVerified).length;
   const totalAttendees = events.reduce((sum, e) => sum + e.attendees, 0);
-
-  // Fetch real enquiry counts per listing from contact_requests
-  const listingIds = listings.map((l) => l._id);
-  let enquiryCountMap = new Map<string, number>();
-  let totalEnquiries = 0;
-  if (listingIds.length > 0) {
-    const { data: countRows } = await adminClient
-      .from("contact_requests")
-      .select("listing_sanity_id")
-      .in("listing_sanity_id", listingIds);
-    if (countRows) {
-      for (const row of countRows) {
-        const id = row.listing_sanity_id;
-        if (id) enquiryCountMap.set(id, (enquiryCountMap.get(id) ?? 0) + 1);
-      }
-      totalEnquiries = countRows.length;
-    }
-  }
 
   // Time-based greeting
   const h = new Date().getHours();

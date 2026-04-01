@@ -1,11 +1,11 @@
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Users } from "lucide-react";
-import { createClient } from "@/lib/supabase/server";
 import { adminClient } from "@/lib/supabase/admin";
 import { sanityClient } from "@/lib/sanity/client";
 import { ExportCSVButton } from "./ExportCSVButton";
 import { AttendeeActions } from "./AttendeeActions";
+import { getAuthUser, getHostProfile } from "../../../_lib/auth";
 
 interface Attendee {
   id: string;
@@ -23,32 +23,28 @@ interface PageProps {
 export default async function AttendeesPage({ params }: PageProps) {
   const { id } = await params;
 
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const { user, supabase } = await getAuthUser();
   if (!user) redirect("/login");
 
-  // Try events_pending first (dashboard-created events)
+  // Parallel: fetch events_pending + host profile together
+  const [{ data: pendingEvent }, hostProfile] = await Promise.all([
+    supabase
+      .from("events_pending")
+      .select("id, title, sanity_event_id, host_id")
+      .eq("id", id)
+      .eq("host_id", user.id)
+      .single(),
+    getHostProfile(user.id),
+  ]);
+
   let eventTitle = "";
   let sanityEventId = "";
-
-  const { data: pendingEvent } = await supabase
-    .from("events_pending")
-    .select("id, title, sanity_event_id, host_id")
-    .eq("id", id)
-    .eq("host_id", user.id)
-    .single();
 
   if (pendingEvent) {
     eventTitle = pendingEvent.title;
     sanityEventId = pendingEvent.sanity_event_id ?? "";
   } else {
-    // Fallback: id might be a Sanity event ID (for events created outside dashboard)
-    const { data: hostProfile } = await supabase
-      .from("host_profiles")
-      .select("sanity_host_id")
-      .eq("user_id", user.id)
-      .single();
-
+    // Fallback: id might be a Sanity event ID (hostProfile already loaded in parallel)
     const sanityEvent = await sanityClient.fetch<{ _id: string; title: string } | null>(
       `*[_type == "listing" && _id == $id && (hostId == $userId || host._ref == $sanityHostId)][0]{ _id, title }`,
       { id, userId: user.id, sanityHostId: hostProfile?.sanity_host_id ?? "" }
