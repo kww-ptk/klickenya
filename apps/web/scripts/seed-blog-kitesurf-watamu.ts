@@ -23,7 +23,7 @@ function textBlock(text: string, style: string = 'normal'): any {
 }
 
 // ══════════════════════════════════════════════════════
-// Kitesurfing in Watamu 2026 — Complete Guide
+// Kitesurfing in Watamu 2026: Complete Guide
 // ══════════════════════════════════════════════════════
 
 const body = [
@@ -34,12 +34,12 @@ const body = [
     title: `✦ Kitesurfing Watamu at a glance`,
     accentColor: 'teal',
     items: [
-      { icon: `🌬️`, label: `Best wind`, value: `Jul–Aug peak (25–30 knots)` },
-      { icon: `📊`, label: `Wind range`, value: `9–27 knots across seasons` },
-      { icon: `🌊`, label: `Water temp`, value: `25–29°C year-round` },
+      { icon: `🌬️`, label: `Best wind`, value: `July to September peak (25 to 30 knots)` },
+      { icon: `📊`, label: `Wind range`, value: `9 to 27 knots across seasons` },
+      { icon: `🌊`, label: `Water temp`, value: `25 to 29°C year-round` },
       { icon: `📍`, label: `Spots`, value: `7+ distinct kite spots` },
       { icon: `🏫`, label: `Schools`, value: `5+ IKO-certified schools` },
-      { icon: `📅`, label: `Season`, value: `Year-round (except Nov)` },
+      { icon: `📅`, label: `Season`, value: `Two monsoon seasons (Jan to Mar and Jul to Sep)` },
     ],
   },
 
@@ -49,20 +49,28 @@ const body = [
     _key: key(),
     stats: [
       { _key: key(), number: `7+`, label: `distinct kite spots from lagoons to reef breaks` },
-      { _key: key(), number: `25°C+`, label: `water temperature — boardshorts all year` },
-      { _key: key(), number: `300+`, label: `wind days per year across two monsoon seasons` },
+      { _key: key(), number: `25°C+`, label: `water temperature so boardshorts all year` },
+      { _key: key(), number: `2`, label: `incredible monsoon seasons delivering months of world-class wind` },
     ],
   },
 
-  // ── 3. Why Watamu is Kenya's Kitesurfing Capital ────
-  textBlock(`Why Watamu is Kenya's Kitesurfing Capital`, 'h2'),
+  // ── 3. Kenya's Ultimate Kitesurfing Destination ─────
+  textBlock(`Kenya's Ultimate Kitesurfing Destination`, 'h2'),
 
   textBlock(
-    `Kitesurfing in Watamu, Kenya is unlike anywhere else on the East African coast. Two monsoon seasons — the kaskazi from the northeast and the kusi from the southeast — deliver reliable wind from December through September, with only November offering a true lull. That means roughly 300 wind days a year in a setting most kite destinations can only dream of: a UNESCO-listed marine park, turquoise water never dropping below 25°C, and seven distinct spots spread across just a few kilometres of coastline.`
+    `Watamu is Kenya's kitesurfing capital and honestly one of the most incredible kite destinations in the world. Everything you could ever want is right here: white sand beaches, crystal clear water, sunny days, amazing restaurants nearby, stunning accommodation options, and a warm, welcoming kite community. It is truly the perfect learning spot and just as incredible for experienced riders.`
   ),
 
   textBlock(
-    `What makes Watamu special is variety. At low tide, the reef exposes vast lagoons of butter-flat water perfect for beginners and freestyle. At high tide, the outer breaks light up for wave riding. The growing community of resident kiters, five-plus schools, and an Italian-Kenyan hospitality scene that feeds you fresh seafood after every session — it all adds up to Kenya's undisputed kitesurfing capital.`
+    `What makes Watamu special is variety. At low tide, the reef exposes vast lagoons of butter-flat water perfect for beginners and freestyle. At high tide, the outer breaks light up for wave riding, and even at high tide it is still very safe and enjoyable for beginner riders. The growing community of resident kiters, five-plus schools, and a vibrant Italian-Kenyan scene that feeds you fresh seafood after every session means there is nowhere quite like this on the whole East African coast.`
+  ),
+
+  textBlock(
+    `Unlike other world-class kite spots, Watamu is still a bit of a hidden gem and a well-kept secret. It does not have the fame of Zanzibar but the beauty is absolutely matched and in many ways surpassed. The water is never too busy, the beaches are stunning and varied, and the ocean is teeming with life. You can do incredible downwinder trips through tropical waters more beautiful than you ever thought possible, palms swaying, exploring the coast by kite in a way that feels completely unspoiled.`
+  ),
+
+  textBlock(
+    `The people here are truly the most friendly, the instructors and kite community are warm and welcoming, and the whole place has an energy that keeps kiters coming back year after year. From kiters to fellow kiters: trust us, you need to experience Watamu for yourself. It is a special place for everyone but it is especially special if you love to kite.`
   ),
 
   // ── 4. Wind Chart Widget ────────────────────────────
@@ -76,25 +84,37 @@ const body = [
   textBlock(`The Two Wind Seasons Explained`, 'h2'),
 
   textBlock(
-    `Watamu's wind is governed by the Indian Ocean monsoons. Understanding the two seasons is the single most important factor in planning your kite trip.`
+    `Watamu's wind is governed by the Indian Ocean monsoons. There are two fantastic kite seasons per year and two periods of little to no wind in between. Understanding the seasons is the most important factor in planning your kite trip.`
   ),
 
-  textBlock(`Kaskazi — The Northeast Monsoon (December–March)`, 'h3'),
+  textBlock(`Kusi Season: July, August and September`, 'h3'),
 
   textBlock(
-    `The kaskazi blows from the northeast at a steady 20–25 knots, peaking in January and February. It creates the flattest water conditions of the year as it pushes offshore across the lagoons. Water is warm (28–29°C), skies are clear, and crowds are manageable. This is the season for beginners learning on glass-flat lagoons and freestylers looking for perfect pop conditions. A 9m kite is your daily driver; pack a 12m for lighter days.`
+    `The Kusi is the southeast monsoon and brings the stronger, more powerful winds of the two seasons. July, August and September are the most reliable months, with consistent winds of 25 to 30 knots. In recent years the Kusi has occasionally started early, sometimes blowing powerfully from the end of May or beginning of June, but this early period comes with some rain and is not as reliable. Every year is different, so if you want to maximise your chances of great wind, stick to July, August and September. The sea is a bit more lively during the Kusi season with some chop and waves, making it particularly exciting for riders who enjoy surfboard style riding. It is still excellent for all levels, especially at low tide on the lagoons.`
   ),
 
-  textBlock(`Kusi — The Southeast Monsoon (June–September)`, 'h3'),
+  textBlock(`Kaskazi Season: January, February and March`, 'h3'),
 
   textBlock(
-    `The kusi arrives from the southeast with more power — 25–30 knots on peak days in July and August. It brings choppier conditions and proper waves at spots like Silversands. Water cools slightly to 25–26°C but you are still in boardshorts. This is the season for experienced riders, wave enthusiasts, and anyone who loves powered sessions. Your go-to kite drops to a 9m with a 7m for gusty afternoons.`
+    `The Kaskazi is the northeast monsoon and brings steady, warm winds of 20 to 25 knots. For many years this season would begin in December, but in the past four years it has not really kicked in until the beginning of January. The recommendation is to count on wind from January and not December to avoid disappointment. January, February and March are the most reliable months, with hot sunny days, pristine flat water lagoons, and perfect conditions for all levels of rider. The hottest months of the year run from October through March, and January to March is incredibly popular with kiters for good reason.`
   ),
 
-  textBlock(`Transition Months`, 'h3'),
+  textBlock(`The No-Wind Months: April, May, October and November`, 'h3'),
 
   textBlock(
-    `April–May and October are transition periods. Wind is lighter and less consistent (12–18 knots), but you can still score sessions — especially in the afternoons. November is the calmest month of the year and not recommended for a dedicated kite trip, though foil kiters can find enough breeze to ride.`
+    `The reason there is no wind in these months is that the monsoon is changing direction, transitioning between the two seasons. When the wind switches direction it passes through a calm phase with little to no wind. April is typically very still, with May also being a quiet month. October and November are similarly calm and windless. These no-wind periods also tend to coincide with rainy times: April, May and sometimes into June are the long rains, though storms pass quickly and you never get many rainy days in a row. November brings the short rains, though sometimes these do not arrive at all. If you are a foil kiter you may find enough breeze to ride, but for everyone else these months are better used for exploring everything else Watamu has to offer.`
+  ),
+
+  textBlock(`Shifting Weather Patterns`, 'h3'),
+
+  textBlock(
+    `It is important to note that overall weather patterns in Kenya have been shifting and becoming more unpredictable in recent years. In 2024 the Kusi season was extraordinary: it began blowing very powerfully in May and continued all the way until the middle of October, an exceptional season for kiters. As mentioned, the Kaskazi used to kick in during December but has been arriving later and later. There is some unpredictability to it all and you might get lucky with extra windy weeks on both sides of the season boundaries. The key takeaway is: for reliable, steady wind days focus on July, August and September for Kusi and January, February and March for Kaskazi. Everything else is a bonus.`
+  ),
+
+  textBlock(`A Personal Favourite: September`, 'h3'),
+
+  textBlock(
+    `A personal favourite month for the Klickenya team is September. The wind is great, the weather is beautiful, it is not the busiest time for tourists, the ocean is gorgeous and it is not as hot as other times of the year. January, February and March are also incredible with hot, sunny days and pristine flat water riding. You really cannot go wrong with either season.`
   ),
 
   // ── 6. Compare Table: Kaskazi vs Kusi ───────────────
@@ -106,12 +126,13 @@ const body = [
       { _key: key(), label: `Kusi (SE)`, color: 'slate' },
     ],
     rows: [
-      { _key: key(), criterion: `Wind speed`, values: [`20–25 knots`, `25–30 knots`], winners: [false, true] },
+      { _key: key(), criterion: `Months`, values: [`January, February, March`, `July, August, September`], winners: [false, false] },
+      { _key: key(), criterion: `Wind speed`, values: [`20 to 25 knots`, `25 to 30 knots`], winners: [false, true] },
       { _key: key(), criterion: `Direction`, values: [`Northeast`, `Southeast`], winners: [false, false] },
-      { _key: key(), criterion: `Water conditions`, values: [`Flat lagoons`, `Choppy + waves`], winners: [true, false] },
-      { _key: key(), criterion: `Best for`, values: [`Beginners & freestyle`, `Wave riding & advanced`], winners: [false, false] },
+      { _key: key(), criterion: `Water conditions`, values: [`Flat lagoons, glassy`, `More lively, some chop and waves`], winners: [true, false] },
+      { _key: key(), criterion: `Best for`, values: [`All levels, especially flat water freestyle`, `All levels, great for surfboard riding`], winners: [false, false] },
       { _key: key(), criterion: `Primary kite size`, values: [`9m (12m backup)`, `9m (7m backup)`], winners: [false, false] },
-      { _key: key(), criterion: `Crowd level`, values: [`Moderate`, `Low`], winners: [false, true] },
+      { _key: key(), criterion: `Crowd level`, values: [`Moderate`, `Low to moderate`], winners: [false, true] },
     ],
   },
 
@@ -122,56 +143,56 @@ const body = [
     variant: 'tip',
     icon: `⏰`,
     label: `Best time of day`,
-    text: `Wind typically picks up around 11am and peaks in the afternoon. Morning sessions are rare — use that time for snorkelling or breakfast on the beach.`,
+    text: `Wind typically picks up around 11am and peaks in the afternoon. Morning sessions are rare so use that time for snorkelling or breakfast on the beach.`,
   },
 
-  // ── 8. The 7 Best Kite Spots in Watamu ──────────────
-  textBlock(`The 7 Best Kite Spots in Watamu`, 'h2'),
+  // ── 8. The Best Kite Spots in Watamu ────────────────
+  textBlock(`The Best Kite Spots in Watamu`, 'h2'),
 
   textBlock(
-    `Watamu packs more spot variety into a short stretch of coast than almost any kite destination in Africa. Tide state matters enormously — most flat-water spots only appear at low tide when the reef drains the lagoons.`
+    `Watamu packs more spot variety into a short stretch of coast than almost any kite destination in Africa. Tide state matters enormously and most flat-water spots only appear at low tide when the reef drains the lagoons. In Kenya the tides change a lot and there is a big difference between high and low tide, so always keep this in mind and be careful when riding at low tide as you may fall on the coral. Reef shoes are essential for shore access.`
   ),
 
   textBlock(`Kite Beach`, 'h3'),
 
   textBlock(
-    `The main hub. Works at all tides with a wide sandy launch area. Every kite school is either based here or runs shuttles. Consistent wind, rescue boat coverage, and a bar right on the sand. The default spot when you do not know where to go.`
-  ),
-
-  textBlock(`Jacaranda`, 'h3'),
-
-  textBlock(
-    `World-class flat water during neap tides when the lagoon drains to knee depth over a vast area. This is the spot that put Watamu on the international kite map. Butter-flat, warm, and wide enough for boosting massive airs without worrying about obstacles. The walk out can be long — reef shoes are essential.`
+    `The main hub. Works at all tides with a wide sandy launch area. Every kite school is either based here or runs shuttles. Consistent wind, rescue boat coverage, and a bar right on the sand. The default spot when you are just arriving and figuring out where to go.`
   ),
 
   textBlock(`Garoda Beach`, 'h3'),
 
   textBlock(
-    `A low-tide lagoon paradise for beginners. Waist-deep water, sandy bottom in sections, and protected from swell by the outer reef. Several schools run beginner courses here. The beach itself is one of the most beautiful in Watamu.`
+    `One of the most beautiful beaches in Watamu and home to a stunning sandbank that is absolutely jaw-dropping. A low-tide lagoon paradise particularly good for beginners, with waist-deep water, sandy sections, and protection from swell by the outer reef. Several schools run beginner courses here. The sandbank at Garoda is truly something special and one of the highlights of kitesurfing in Watamu.`
+  ),
+
+  textBlock(`Jacaranda`, 'h3'),
+
+  textBlock(
+    `World-class flat water during neap tides when the lagoon drains to knee depth over a vast area. This is one of the spots that put Watamu on the international kite map. Butter-flat, warm, and wide enough for boosting airs without worrying about obstacles. Jacaranda has multiple sandbanks you can explore on day trips, each more beautiful than the last. The walk out can be long so reef shoes are essential.`
   ),
 
   textBlock(`Turtle Reef Sandbar`, 'h3'),
 
   textBlock(
-    `A seasonal sandbar that appears during the kaskazi season (December–March). Perfect for freestyle with flat water, consistent wind, and a firm sand bottom to stand on between tricks. Gets crowded on peak days.`
+    `A seasonal sandbar that appears during the Kaskazi season (January to March). Perfect for freestyle with flat water, consistent wind, and a firm sand bottom to stand on between tricks. Gets popular on peak days but still rarely crowded by international standards.`
   ),
 
   textBlock(`Plot 40 Sandbar`, 'h3'),
 
   textBlock(
-    `An all-levels spot that reveals itself at low tide. Enough space for beginners to practise and enough flat water for intermediate riders to progress. Less crowded than Kite Beach.`
-  ),
-
-  textBlock(`Silversands`, 'h3'),
-
-  textBlock(
-    `The wave spot. Only works during kusi season at high tide when the southeast swell wraps around the reef. Proper wave riding with clean faces and offshore wind. Not for beginners — you need solid upwind skills and wave board experience. When it is on, it is world-class.`
+    `An all-levels spot that reveals itself at low tide. Enough space for beginners to practise and enough flat water for intermediate riders to progress. Less crowded than Kite Beach and a great option when the main spots are busy.`
   ),
 
   textBlock(`Mida Creek`, 'h3'),
 
   textBlock(
-    `The hidden gem. A vast mangrove-lined creek south of Watamu that offers flat water and a stunning backdrop of birds and mangroves. The destination for downwinder routes during kusi season. You need a boat or a long walk to reach the launch — coordinate with a school.`
+    `The hidden gem of Watamu kitesurfing. A vast mangrove-lined creek that offers flat water and a breathtaking backdrop of birds and mangroves. The destination for downwinder routes during Kusi season. You need a boat or a long walk to reach the launch so coordinate with a school in advance.`
+  ),
+
+  textBlock(`Che Chale`, 'h3'),
+
+  textBlock(
+    `A little further up the coast, Che Chale is a stunning destination with sand dunes and landscapes that look like they belong in a dream. A great option for a day trip from Watamu and a reminder that the beauty here really does not end. The kite conditions are excellent and the scenery makes every session feel like an adventure.`
   ),
 
   // ── 9. Tip: Tides ──────────────────────────────────
@@ -181,14 +202,14 @@ const body = [
     variant: 'teal',
     icon: `🌊`,
     label: `Tides are everything`,
-    text: `Tides matter more than wind in Watamu. Most flat-water spots only work at low tide. Check tide tables before every session — your kite school will plan around them.`,
+    text: `Tides matter more than almost anything in Watamu. Most flat-water spots only work at low tide. In Kenya the difference between high and low tide is very significant, so always check tide tables before every session and be careful at low tide because falling on the coral can hurt. Your kite school will help you plan around the tides.`,
   },
 
   // ── 10. Kite Schools in Watamu ──────────────────────
   textBlock(`Kite Schools in Watamu`, 'h2'),
 
   textBlock(
-    `Watamu has a strong roster of kite schools, all offering IKO-certified instruction, gear rental, and local knowledge. Here are the ones with the best reputations.`
+    `Watamu has a strong roster of kite schools, all offering IKO-certified instruction, gear rental, and deep local knowledge. Here are the ones with the best reputations.`
   ),
 
   textBlock(`JC Kite School`, 'h3'),
@@ -200,7 +221,7 @@ const body = [
   textBlock(`Tribe Watersports`, 'h3'),
 
   textBlock(
-    `An award-winning operation with centres in both Watamu and Diani. Professional setup with a full quiver of rental gear, rescue boats, and structured lesson programmes. They run the best downwinder events on the coast.`
+    `An award-winning operation with centres in both Watamu and Diani. Professional setup with a full collection of rental gear, rescue boats, and structured lesson programmes. They run some of the best downwinder events on the coast.`
   ),
 
   textBlock(`Barefoot Kenya`, 'h3'),
@@ -225,19 +246,19 @@ const body = [
   textBlock(`What Kite Gear to Bring`, 'h2'),
 
   textBlock(
-    `If you are bringing your own gear, your quiver depends entirely on which season you visit.`
+    `If you are bringing your own gear, your setup depends entirely on which season you visit.`
   ),
 
   textBlock(
-    `For kaskazi season (December–March), a 9m kite is your primary workhorse with a 12m for lighter days and early/late sessions. For kusi season (June–September), the 9m is still your main kite but pack a 7m for the gusty afternoon peaks in July and August.`
+    `For Kaskazi season (January to March), a 9m kite is your primary workhorse with a 12m for lighter days and early or late sessions. For Kusi season (July to September), the 9m is still your main kite but pack a 7m for the gusty afternoon peaks in July and August.`
   ),
 
   textBlock(
-    `A twintip is all you need for 90% of conditions. If you are visiting during kusi and want to ride Silversands, bring a wave board — you will not regret it. A strapless surfboard works beautifully in the clean kusi swell.`
+    `A twintip covers 90% of conditions beautifully. If you are visiting during Kusi and want to experience some wave riding, a surfboard or wave board is a wonderful addition to your kit. A strapless surfboard works beautifully in the livelier Kusi swell.`
   ),
 
   textBlock(
-    `Beyond kites: a comfortable harness, reef shoes for walking to spots, high-SPF sunscreen (the equatorial sun is brutal), and a rash vest. Most schools have full rental quivers if you prefer to travel light — expect to pay around $40–60 per day for a complete setup.`
+    `Beyond kites: a comfortable harness, reef shoes for walking to spots, high SPF sunscreen (the equatorial sun is intense), and a rash vest. Most schools have full rental setups if you prefer to travel light so expect to pay around $40 to $60 per day for a complete setup.`
   ),
 
   // ── 12. Tip: Reef Warning ──────────────────────────
@@ -247,14 +268,14 @@ const body = [
     variant: 'warning',
     icon: `⚠️`,
     label: `Watch the reef`,
-    text: `The reef is shallow at low tide. Wear reef shoes for walking to spots. Booties are not necessary while riding but helpful for shore access.`,
+    text: `The reef is shallow at low tide. Wear reef shoes for walking to spots and be careful when falling as the coral can be sharp. Booties are not essential while riding but very helpful for shore access.`,
   },
 
   // ── 13. Watamu vs Diani ─────────────────────────────
-  textBlock(`Watamu vs Diani — Which Kite Destination?`, 'h2'),
+  textBlock(`Watamu vs Diani: Which Kite Destination?`, 'h2'),
 
   textBlock(
-    `Kenya has two main kite hubs on its coast: Watamu in the north and Diani Beach in the south. Both are excellent, but they suit different riders.`
+    `Kenya has two main kite hubs on its coast: Watamu in the north and Diani Beach in the south. Both are genuinely excellent and the kite conditions are very similar, but they have a different vibe and energy that will appeal to different people.`
   ),
 
   {
@@ -265,53 +286,86 @@ const body = [
       { _key: key(), label: `Diani`, color: 'slate' },
     ],
     rows: [
-      { _key: key(), criterion: `Wind season`, values: [`Dec–Mar + Jun–Sep`, `Dec–Mar + Jun–Sep`], winners: [false, false] },
-      { _key: key(), criterion: `Spot variety`, values: [`7+ spots, lagoons + waves`, `3–4 spots, mainly reef`], winners: [true, false] },
-      { _key: key(), criterion: `Crowd level`, values: [`Low–moderate`, `Moderate–busy`], winners: [true, false] },
-      { _key: key(), criterion: `Vibe`, values: [`Village, Italian-Kenyan`, `Resort town, international`], winners: [false, false] },
-      { _key: key(), criterion: `Wave riding`, values: [`Silversands (kusi)`, `Limited`], winners: [true, false] },
-      { _key: key(), criterion: `Accommodation`, values: [`Boutique & budget`, `Full range, more luxury`], winners: [false, true] },
-      { _key: key(), criterion: `Schools`, values: [`5+`, `3–4`], winners: [true, false] },
+      { _key: key(), criterion: `Wind season`, values: [`Jan to Mar and Jul to Sep`, `Jan to Mar and Jul to Sep`], winners: [false, false] },
+      { _key: key(), criterion: `Kite spots`, values: [`7+ spots, sandbanks, lagoons and creek`, `4+ spots, beaches and lagoons`], winners: [true, false] },
+      { _key: key(), criterion: `Crowd level`, values: [`Moderate to quiet`, `Moderate to quiet`], winners: [false, false] },
+      { _key: key(), criterion: `Vibe`, values: [`Laid back, community village with boutique hotels`, `Lively resort town, international crowd`], winners: [false, false] },
+      { _key: key(), criterion: `Wave riding`, values: [`Yes, possible`, `Yes, possible`], winners: [false, false] },
+      { _key: key(), criterion: `Accommodation`, values: [`Full range from budget to boutique`, `Full range from budget to luxury`], winners: [false, false] },
+      { _key: key(), criterion: `Sandbanks`, values: [`Incredible, world-class`, `Limited`], winners: [true, false] },
+      { _key: key(), criterion: `Marine park`, values: [`Yes, UNESCO listed`, `No`], winners: [true, false] },
+      { _key: key(), criterion: `Nearby wildlife`, values: [`Arabuko Sokoke Forest, elephants, turtles`, `Shimba Hills`], winners: [true, false] },
+      { _key: key(), criterion: `Schools`, values: [`5+`, `4+`], winners: [true, false] },
     ],
   },
+
+  textBlock(
+    `The kite conditions in both Watamu and Diani are excellent and very similar. Both have the same wind seasons, good schools, and beautiful beaches. The difference is in the details. Watamu has more going on: the stunning Mida Creek, more upmarket restaurants, cocktail bars, newer accommodation options, and a stronger kite community. Most importantly, Watamu has the sandbanks, and those sandbanks are truly difficult to compete with anywhere in the world. Crystal clear turquoise water, white sand, nobody else around, and the wind filling your kite. Watamu also sits within a UNESCO Marine Park which Diani does not have, and the Arabuko Sokoke Forest nearby means you can kite all day and watch elephants at sunset. There is simply nowhere else like it.`
+  ),
+
+  textBlock(
+    `That said, Diani is also a gorgeous spot and Kenya is so beautiful in general. If you have enough time, try to experience both locations. And do not forget Kilifi, which also has plenty of beauty and some wonderful kite options of its own. Kenya will spoil you.`
+  ),
 
   // ── 14. The Epic Downwinder Routes ──────────────────
   textBlock(`The Epic Downwinder Routes`, 'h2'),
 
   textBlock(
-    `Downwinders are the ultimate Watamu kite experience — long runs along the coast with the wind at your back, ending with a cold Tusker and a boat ride home.`
+    `Downwinders are the ultimate Watamu kite experience: long runs along the coast with the wind at your back, ending with a cold Tusker and a boat ride home.`
   ),
 
   textBlock(
-    `The signature route is the 25km Tribe Pro Center to Mida Creek run during kusi season. The southeast wind pushes you along the coast past reef breaks, sandbanks, and mangrove channels. Tribe runs this as an organised event with rescue boat support — highly recommended for your first time.`
+    `The signature route is the 25km Tribe Pro Center to Mida Creek run during Kusi season. The southeast wind pushes you along the coast past reef breaks, sandbanks, and mangrove channels. Tribe runs this as an organised event with rescue boat support and it is highly recommended for your first time.`
   ),
 
   textBlock(
-    `A shorter option is the 14km Kongo Mosque to Galu run, perfect for intermediate riders who want the downwinder experience without the full marathon distance. The 15km kite safari from Garoda to Jacaranda is another classic, passing through multiple lagoons and sandbar spots along the way.`
+    `The 15km kite safari from Garoda to Jacaranda is another classic route, passing through multiple lagoons and sandbar spots along the way. The tropical waters are more beautiful than you even imagined possible, with palms swaying and the Kenyan coast stretching out ahead of you.`
   ),
 
   textBlock(
-    `All downwinders should be done with rescue boat support. The reef creates shallow sections that can catch you out if the wind drops, and currents near creek mouths are strong. Never attempt a downwinder alone.`
+    `All downwinders should be done with rescue boat support. The reef creates shallow sections that can catch you out if the wind drops, and currents near creek mouths can be strong. Never attempt a downwinder alone.`
   ),
 
   // ── 15. Pull Quote ──────────────────────────────────
   {
     _type: 'pullQuoteBlock',
     _key: key(),
-    text: `The first time you kite the Watamu lagoon at low tide with nobody else in sight, warm water, and the reef breaking in the distance — you understand why people come back every year.`,
+    text: `The first time you kite the Watamu lagoon at low tide with nobody else in sight, warm water, and the reef breaking in the distance, you understand why people come back every year.`,
     attribution: `Resident kiter, Watamu`,
     accentColor: 'teal',
   },
 
-  // ── 16. Practical Info for Kite Travellers ──────────
-  textBlock(`Practical Info for Kite Travellers`, 'h2'),
+  // ── 16. Kitesurfing in a Marine Park ────────────────
+  textBlock(`Kitesurfing in a Marine Park`, 'h2'),
 
   textBlock(
-    `The nearest airport is Malindi (MAL), a 20-minute drive from Watamu. Kenya Airways and Safarilink fly daily from Nairobi Wilson and Jomo Kenyatta. Alternatively, fly into Mombasa (MBA) and drive north — about 2 hours on the new highway or arrange a transfer through your hotel.`
+    `Watamu sits within a UNESCO-listed marine park and this makes for some of the most unique kitesurfing in the world. While you ride, you will see sea turtles gliding beneath you and reef sharks cruising through the crystal clear water. Do not worry, they are not dangerous at all and seeing them while you kite is an experience you will never forget. The marine park protection means the ocean here is exceptionally healthy and beautiful, and the visibility in the water is breathtaking.`
+  ),
+
+  // ── 17. Beyond the Kite ─────────────────────────────
+  textBlock(`Beyond the Kite: Food, Sunsets and Elephants`, 'h2'),
+
+  textBlock(
+    `Most incredible kite destinations are very remote and that is part of the appeal. But Watamu is different: you can kite all day and then enjoy nice restaurants, great accommodation, meet wonderful people, go out and enjoy the nightlife, and connect with local Kenyans who are among the friendliest people you will ever meet.`
   ),
 
   textBlock(
-    `Kenya Airways allows kite bags as sports equipment — check their current policy before booking, as weight limits and fees change seasonally. Most riders pack kites in a golf bag to avoid the "kite surcharge" some airlines apply.`
+    `Watamu has a delicious food scene and a growing cocktail bar culture. After a session on the water, watching the sun set over the Indian Ocean with a fresh coconut or a well-made cocktail in hand is one of life's great pleasures. The restaurants here range from simple local spots serving fresh fish to more refined dining experiences. You will eat incredibly well.`
+  ),
+
+  textBlock(
+    `And then there is the Arabuko Sokoke Forest, right on the doorstep of Watamu. One of the largest remaining coastal forests in East Africa, it is home to elephants, rare birds, and incredible biodiversity. You can genuinely kite all morning, have lunch on the beach, and then head into the forest to watch elephants at sunset. There is nowhere else in the world where this is possible. This is what makes Watamu truly extraordinary.`
+  ),
+
+  // ── 18. Practical Info for Kite Travellers ──────────
+  textBlock(`Practical Info for Kite Travellers`, 'h2'),
+
+  textBlock(
+    `The nearest airport is Malindi (MAL), a 20-minute drive from Watamu. Kenya Airways and Safarilink fly daily from Nairobi Wilson and Jomo Kenyatta. Alternatively, fly into Mombasa (MBA) and drive north, about 2 hours on the new highway, or arrange a transfer through your hotel.`
+  ),
+
+  textBlock(
+    `Kenya Airways allows kite bags as sports equipment. Check their current policy before booking as weight limits and fees change seasonally. Most riders pack kites in a golf bag to avoid the surcharge some airlines apply.`
   ),
 
   textBlock(
@@ -323,10 +377,10 @@ const body = [
   ),
 
   textBlock(
-    `Travel insurance is essential — make sure your policy explicitly covers kitesurfing. World Nomads and SafetyWing both offer plans that include water sports. Keep your IKO certification handy as some insurers require proof of competency.`
+    `Travel insurance is essential. Make sure your policy explicitly covers kitesurfing. World Nomads and SafetyWing both offer plans that include water sports. Keep your IKO certification handy as some insurers require proof of competency.`
   ),
 
-  // ── 17. Verdict Card ────────────────────────────────
+  // ── 19. Verdict Card ────────────────────────────────
   {
     _type: 'verdictCardBlock',
     _key: key(),
@@ -334,33 +388,37 @@ const body = [
     label: `Our verdict`,
     title: `Should You Kite in Watamu?`,
     pros: [
-      `Two distinct monsoon seasons deliver 300+ wind days`,
-      `7+ spots from flat lagoons to proper wave riding`,
-      `Warm water year-round — no wetsuit needed`,
-      `Uncrowded compared to European and Caribbean spots`,
+      `Two distinct monsoon seasons with months of reliable, world-class wind`,
+      `7+ spots from flat lagoons and stunning sandbanks to reef breaks`,
+      `Warm water year-round, no wetsuit needed`,
+      `Still a hidden gem: uncrowded and unspoiled compared to Zanzibar and other famous spots`,
+      `Marine park with turtles and sharks right where you ride`,
+      `Arabuko Sokoke Forest with elephants, five minutes away`,
+      `Vibrant food scene, cocktail bars, and a genuine local community`,
       `Affordable lessons, food, and accommodation`,
-      `Growing international kite community`,
+      `The friendliest instructors and kite community you will find anywhere`,
     ],
     cons: [
-      `November is essentially windless`,
-      `Tides complicate session planning — flexibility required`,
+      `October and November are essentially windless`,
+      `April and May are also very still (monsoon transition months)`,
+      `Tides complicate session planning but your school handles this`,
       `Reef shoes are a must for shore access`,
-      `No nightlife kite scene like Tarifa or Cabarete`,
     ],
   },
 
-  // ── 18. Who Is It For ───────────────────────────────
+  // ── 20. Who Is It For ───────────────────────────────
   {
     _type: 'whoIsItForBlock',
     _key: key(),
     title: `Who Should Kite in Watamu?`,
     items: [
-      { _key: key(), icon: `🪁`, text: `Beginners — flat lagoons and quality IKO schools make learning easy` },
-      { _key: key(), icon: `🤸`, text: `Freestylers — Jacaranda's flat water is world-class for tricks and airs` },
-      { _key: key(), icon: `🏄`, text: `Wave riders — Silversands during kusi season offers clean wave faces` },
-      { _key: key(), icon: `💑`, text: `Couples — one kites while the other snorkels, dives, or relaxes on the beach` },
-      { _key: key(), icon: `💻`, text: `Digital nomads — kite in the afternoon, work in the morning with reliable WiFi` },
-      { _key: key(), icon: `👨‍👩‍👧`, text: `Families — calm lagoons and a safe, welcoming village atmosphere` },
+      { _key: key(), icon: `🪁`, text: `Beginners: flat lagoons, gentle conditions at low tide, and brilliant IKO schools make learning here a dream` },
+      { _key: key(), icon: `🤸`, text: `Freestylers: Jacaranda's world-class flat water is made for tricks and airs` },
+      { _key: key(), icon: `🏄`, text: `Wave riders: the livelier Kusi season swell is perfect for surfboard riding` },
+      { _key: key(), icon: `💑`, text: `Couples: one kites while the other snorkels, dives, or relaxes on the beach` },
+      { _key: key(), icon: `💻`, text: `Digital nomads: kite in the afternoon, work in the morning with reliable WiFi` },
+      { _key: key(), icon: `👨‍👩‍👧`, text: `Families: calm lagoons, a safe village atmosphere, and the forest and marine park to explore` },
+      { _key: key(), icon: `🌍`, text: `Adventurers: downwinder trips, turtles while you ride, elephants at sunset. This is kitesurfing like nowhere else on earth` },
     ],
   },
 ]
@@ -373,7 +431,7 @@ async function main() {
   const doc = {
     _id: `blog-kitesurf-watamu-guide`,
     _type: `blogPost`,
-    title: `Kitesurfing in Watamu 2026 — Wind, Spots, Schools & the Complete Guide`,
+    title: `Kitesurfing in Watamu 2026: Wind, Spots, Schools and the Complete Guide`,
     slug: { _type: 'slug', current: `kitesurfing-watamu-guide` },
     status: `published`,
     primaryCategory: `beaches_coast`,
@@ -382,10 +440,10 @@ async function main() {
     series: `Watamu Complete Guide`,
     postType: `guide`,
     focusKeyword: `kitesurfing watamu kenya`,
-    seoTitle: `Kitesurfing Watamu 2026 — Wind Seasons, Spots & Schools`,
+    seoTitle: `Kitesurfing Watamu 2026: Wind Seasons, Spots and Schools`,
     seoDescription: `Complete guide to kitesurfing in Watamu Kenya. Monthly wind data, best spots, kite schools, gear advice, and live forecast. Updated 2026.`,
-    excerpt: `Watamu is Kenya's kitesurfing capital — two monsoon seasons, seven distinct spots, warm water year-round, and a lagoon that turns into a flat-water paradise at low tide. Here is everything you need to plan your kite trip.`,
-    readingTime: 12,
+    excerpt: `Watamu is Kenya's kitesurfing capital and one of the world's most incredible kite destinations. Two monsoon seasons, stunning sandbanks, warm water year-round, a UNESCO marine park with turtles, and a community that will make you feel at home. Here is everything you need to plan your kite trip.`,
+    readingTime: 15,
     publishedAt: `2026-03-27T08:00:00Z`,
     author: { _type: 'reference', _ref: `0a5287ef-f74d-4893-a487-6b672cb63477` },
     tags: [`Kitesurfing`, `Watamu`, `Water Sports`],
