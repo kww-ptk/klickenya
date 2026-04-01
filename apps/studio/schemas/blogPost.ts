@@ -96,7 +96,7 @@ export default defineType({
       rows: 3,
       group: 'content',
       description: 'Shown in card previews and as meta description',
-      validation: (rule) => rule.required().max(200),
+      validation: (rule) => rule.required().max(300).warning('Try to keep under 200 characters for card previews'),
     }),
     defineField({
       name: 'coverImage',
@@ -158,10 +158,10 @@ export default defineType({
                     type: 'url',
                     title: 'URL',
                     validation: (rule: any) =>
-                      rule.required().uri({
+                      rule.uri({
                         allowRelative: true,
                         scheme: ['http', 'https', 'mailto', 'tel'],
-                      }),
+                      }).warning('URL format may be invalid'),
                   },
                 ],
               },
@@ -342,7 +342,7 @@ export default defineType({
       type: 'string',
       group: 'seo',
       description: 'Overrides the main title in search results (max 60 chars)',
-      validation: (rule) => rule.max(60),
+      validation: (rule) => rule.max(70).warning('Try to keep under 60 characters for best SEO results'),
     }),
     defineField({
       name: 'seoDescription',
@@ -351,7 +351,7 @@ export default defineType({
       rows: 3,
       group: 'seo',
       description: 'Overrides the excerpt in search results (max 160 chars)',
-      validation: (rule) => rule.max(160).warning('Try to keep under 160 characters for best SEO results'),
+      validation: (rule) => rule.max(200).warning('Try to keep under 160 characters for best SEO results'),
     }),
   ],
   preview: {

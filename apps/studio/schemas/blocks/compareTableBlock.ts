@@ -23,7 +23,7 @@ export default defineType({
             name: 'color',
             title: 'Color',
             type: 'string',
-            options: { list: ['teal', 'blue', 'purple'] },
+            options: { list: ['teal', 'blue', 'purple', 'slate', 'amber'] },
           }),
         ],
         preview: {
@@ -40,8 +40,8 @@ export default defineType({
         type: 'object',
         fields: [
           defineField({ name: 'criterion', title: 'Criterion', type: 'string' }),
-          defineField({ name: 'values', title: 'Values', type: 'array', of: [{ type: 'text', rows: 2 }] }),
-          defineField({ name: 'winners', title: 'Winner columns (0-indexed)', type: 'array', of: [{ type: 'number' }] }),
+          defineField({ name: 'values', title: 'Values', type: 'array', of: [{ type: 'string' }] }),
+          defineField({ name: 'winners', title: 'Winner columns', type: 'array', of: [{ type: 'boolean' }] }),
         ],
         preview: {
           select: { criterion: 'criterion' },
