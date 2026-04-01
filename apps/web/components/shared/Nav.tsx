@@ -435,12 +435,18 @@ function Nav({ transparent = false }: NavProps) {
                   variant="secondary"
                   size="sm"
                   className={cn(
+                    "relative",
                     solid ? "bg-dark text-white" : "bg-white text-text"
                   )}
                   onClick={() => setAccountOpen(!accountOpen)}
                 >
                   Account
                   <ChevronDown className={cn("size-3 ml-1 transition-transform", accountOpen && "rotate-180")} />
+                  {enquiryCount > 0 && (
+                    <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 rounded-full bg-[#E8A020] text-white text-[10px] font-bold flex items-center justify-center">
+                      {enquiryCount > 99 ? "99+" : enquiryCount}
+                    </span>
+                  )}
                 </Button>
                 {accountOpen && (
                   <div className="absolute right-0 top-full mt-2 w-56 rounded-xl border border-border bg-white shadow-xl z-[300]">
@@ -469,7 +475,7 @@ function Nav({ transparent = false }: NavProps) {
               ref={(el) => { if (el && !accountRef.current) accountRef.current = el.parentElement as HTMLDivElement; }}
               onClick={() => setAccountOpen(!accountOpen)}
               className={cn(
-                "md:hidden flex size-9 items-center justify-center rounded-full",
+                "md:hidden relative flex size-9 items-center justify-center rounded-full",
                 solid || mobileOpen
                   ? "bg-[#E8A020]/15 text-[#E8A020]"
                   : "bg-white/15 text-white"
@@ -478,6 +484,11 @@ function Nav({ transparent = false }: NavProps) {
               <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
               </svg>
+              {enquiryCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 rounded-full bg-[#E8A020] text-white text-[9px] font-bold flex items-center justify-center">
+                  {enquiryCount > 99 ? "99+" : enquiryCount}
+                </span>
+              )}
             </button>
           ) : authState.loggedIn ? (
             <Link
