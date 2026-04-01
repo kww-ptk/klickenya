@@ -6,7 +6,7 @@ const FOOTER = `<div style="padding:20px 32px;background:#fafafa;border-top:1px 
   <p style="margin:0;font-size:12px;color:#999;text-align:center;">&copy; 2026 Klickenya &middot; klickenya.com</p>
 </div>`;
 
-function wrap(body: string): string {
+export function wrap(body: string): string {
   return `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/></head>
 <body style="margin:0;padding:0;background:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f5;">
@@ -18,7 +18,7 @@ function wrap(body: string): string {
 </table></td></tr></table></body></html>`;
 }
 
-function cta(label: string, url: string): string {
+export function cta(label: string, url: string): string {
   return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:24px;">
 <tr><td align="center">
 <a href="${url}" style="display:inline-block;padding:12px 24px;background:#E8A020;color:#fff;font-size:14px;font-weight:600;text-decoration:none;border-radius:6px;">${label}</a>

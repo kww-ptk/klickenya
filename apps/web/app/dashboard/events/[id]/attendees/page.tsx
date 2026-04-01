@@ -1,10 +1,11 @@
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Download, Users } from "lucide-react";
+import { ArrowLeft, Users } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { adminClient } from "@/lib/supabase/admin";
 import { sanityClient } from "@/lib/sanity/client";
 import { ExportCSVButton } from "./ExportCSVButton";
+import { AttendeeActions } from "./AttendeeActions";
 
 interface Attendee {
   id: string;
@@ -69,7 +70,6 @@ export default async function AttendeesPage({ params }: PageProps) {
 
   const rows = (attendees ?? []) as Attendee[];
   const confirmed = rows.filter((r) => r.status === "confirmed");
-  const cancelled = rows.filter((r) => r.status === "cancelled");
 
   return (
     <div>
@@ -83,7 +83,7 @@ export default async function AttendeesPage({ params }: PageProps) {
       </Link>
 
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex items-center justify-between mb-2">
         <div>
           <h1 className="font-display text-[clamp(20px,3vw,28px)] font-bold text-text tracking-[-0.03em]">
             Attendees
@@ -92,14 +92,16 @@ export default async function AttendeesPage({ params }: PageProps) {
             {eventTitle} · {confirmed.length} confirmed
           </p>
         </div>
-        {confirmed.length > 0 && (
-          <ExportCSVButton attendees={confirmed} eventTitle={eventTitle} />
-        )}
+        <div className="flex items-center gap-2">
+          {confirmed.length > 0 && (
+            <ExportCSVButton attendees={confirmed} eventTitle={eventTitle} />
+          )}
+        </div>
       </div>
 
-      {/* Attendee list */}
+      {/* Attendee list with actions */}
       {rows.length === 0 ? (
-        <div className="rounded-[20px] border border-dashed border-[#E2DDD5] bg-white p-12 text-center">
+        <div className="rounded-[20px] border border-dashed border-[#E2DDD5] bg-white p-12 text-center mt-6">
           <Users className="size-10 text-[#9C9485] mx-auto mb-3" />
           <p className="text-[16px] font-semibold text-text mb-1">
             No attendees yet
@@ -109,47 +111,11 @@ export default async function AttendeesPage({ params }: PageProps) {
           </p>
         </div>
       ) : (
-        <div className="rounded-xl border border-[#E2DDD5] overflow-hidden">
-          <table className="w-full text-left">
-            <thead className="bg-surface text-[12px] font-semibold text-text2 uppercase tracking-wide">
-              <tr>
-                <th className="px-4 py-3">Name</th>
-                <th className="px-4 py-3 hidden md:table-cell">Email</th>
-                <th className="px-4 py-3 hidden md:table-cell">Phone</th>
-                <th className="px-4 py-3">Status</th>
-                <th className="px-4 py-3 hidden md:table-cell">Joined</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[#E2DDD5]">
-              {rows.map((a) => (
-                <tr key={a.id} className="hover:bg-surface/50 transition-colors">
-                  <td className="px-4 py-3">
-                    <p className="text-[14px] font-medium text-text">{a.name}</p>
-                    <p className="text-[12px] text-text2 md:hidden">{a.email}</p>
-                  </td>
-                  <td className="px-4 py-3 text-[13px] text-text2 hidden md:table-cell">
-                    {a.email}
-                  </td>
-                  <td className="px-4 py-3 text-[13px] text-text2 hidden md:table-cell">
-                    {a.phone ?? "—"}
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide ${
-                      a.status === "confirmed"
-                        ? "bg-emerald-100 text-emerald-700"
-                        : "bg-red-100 text-red-700"
-                    }`}>
-                      {a.status}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-[13px] text-text2 hidden md:table-cell">
-                    {new Date(a.joined_at).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <AttendeeActions
+          attendees={rows}
+          eventTitle={eventTitle}
+          eventSanityId={sanityEventId}
+        />
       )}
     </div>
   );
