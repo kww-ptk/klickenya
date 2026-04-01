@@ -25,12 +25,13 @@ export default defineType({
             options: { list: ['pin', 'clock'] },
             initialValue: 'pin',
           }),
-          defineField({ name: 'text', title: 'Text', type: 'string' }),
+          defineField({ name: 'label', title: 'Label', type: 'string' }),
+          defineField({ name: 'value', title: 'Value', type: 'string' }),
         ],
         preview: {
-          select: { icon: 'icon', text: 'text' },
-          prepare({ icon, text }) {
-            return { title: `${icon === 'clock' ? '🕐' : '📍'} ${text || ''}` }
+          select: { icon: 'icon', label: 'label', value: 'value' },
+          prepare({ icon, label, value }) {
+            return { title: `${icon === 'clock' ? '🕐' : '📍'} ${label || ''}: ${value || ''}` }
           },
         },
       }],

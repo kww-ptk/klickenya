@@ -41,7 +41,6 @@ export default defineType({
         fields: [
           defineField({ name: 'criterion', title: 'Criterion', type: 'string' }),
           defineField({ name: 'values', title: 'Values', type: 'array', of: [{ type: 'string' }] }),
-          defineField({ name: 'winners', title: 'Winner columns', type: 'array', of: [{ type: 'boolean' }] }),
         ],
         preview: {
           select: { criterion: 'criterion' },

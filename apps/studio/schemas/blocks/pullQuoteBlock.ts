@@ -17,7 +17,7 @@ export default defineType({
       name: 'accentColor',
       title: 'Accent Color',
       type: 'string',
-      options: { list: ['amber', 'purple'] },
+      options: { list: ['amber', 'purple', 'teal', 'blue'] },
       initialValue: 'amber',
     }),
   ],
