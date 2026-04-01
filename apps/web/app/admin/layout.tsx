@@ -352,7 +352,7 @@ export default async function AdminLayout({
       </aside>
 
       {/* Main content */}
-      <main className="flex-1 lg:ml-[240px] min-h-screen bg-[#FAFAF8]">
+      <main className="flex-1 lg:ml-[240px] min-h-screen bg-[#FAFAF8] min-w-0 overflow-x-hidden">
         <div className="p-5 pb-24 lg:p-8 lg:pb-8">{children}</div>
       </main>
 
