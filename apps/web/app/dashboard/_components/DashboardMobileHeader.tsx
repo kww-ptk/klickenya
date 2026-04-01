@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
-export function DashboardMobileHeader() {
+export function DashboardMobileHeader({ enquiryCount = 0 }: { enquiryCount?: number }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const router = useRouter();
 
@@ -40,11 +40,16 @@ export function DashboardMobileHeader() {
           <div className="relative">
             <button
               onClick={() => setMenuOpen(!menuOpen)}
-              className="flex size-8 items-center justify-center rounded-full bg-white/10 text-white/70 hover:bg-white/15 transition-colors"
+              className="relative flex size-8 items-center justify-center rounded-full bg-white/10 text-white/70 hover:bg-white/15 transition-colors"
             >
               <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 12.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 18.75a.75.75 0 110-1.5.75.75 0 010 1.5z" />
               </svg>
+              {enquiryCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 rounded-full bg-[#E8A020] text-[#16130C] text-[9px] font-bold flex items-center justify-center">
+                  {enquiryCount > 99 ? "99+" : enquiryCount}
+                </span>
+              )}
             </button>
             {menuOpen && (
               <>

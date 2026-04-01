@@ -58,7 +58,7 @@ const TABS: TabItem[] = [
   },
 ];
 
-export function DashboardBottomNav() {
+export function DashboardBottomNav({ enquiryCount = 0 }: { enquiryCount?: number }) {
   const pathname = usePathname();
 
   return (
@@ -76,7 +76,7 @@ export function DashboardBottomNav() {
               key={tab.href}
               href={tab.href}
               className={cn(
-                "flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl min-w-[56px] transition-colors",
+                "relative flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl min-w-[56px] transition-colors",
                 isActive && "bg-[#E8A020]/15"
               )}
             >
@@ -86,6 +86,11 @@ export function DashboardBottomNav() {
               <span className={cn("text-[10px] font-semibold", isActive ? "text-[#E8A020]" : "text-white/50")}>
                 {tab.label}
               </span>
+              {tab.href === "/dashboard/enquiries" && enquiryCount > 0 && (
+                <span className="absolute top-0.5 right-1 min-w-[16px] h-4 px-1 rounded-full bg-[#E8A020] text-[#16130C] text-[9px] font-bold flex items-center justify-center">
+                  {enquiryCount > 99 ? "99+" : enquiryCount}
+                </span>
+              )}
             </Link>
           );
         })}

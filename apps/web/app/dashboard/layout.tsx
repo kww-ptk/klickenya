@@ -7,6 +7,7 @@ import { DashboardNavLink } from "./_components/DashboardNavLink";
 import { DashboardSignOut } from "./_components/DashboardSignOut";
 import { DashboardBottomNav } from "./_components/DashboardBottomNav";
 import { DashboardMobileHeader } from "./_components/DashboardMobileHeader";
+import { adminClient } from "@/lib/supabase/admin";
 
 /* ---------- SVG Icons ---------- */
 
@@ -122,6 +123,27 @@ export default async function DashboardLayout({
   const planTier = hostProfile?.plan_tier ?? "basic";
   const showPasswordBanner = profile?.role === "host" && hostProfile?.password_changed === false;
 
+  // Fetch enquiry count for notification badges
+  let enquiryCount = 0;
+  if (hostProfile?.sanity_host_id) {
+    try {
+      const listingIds = await sanityClient.fetch<string[]>(
+        `*[_type == "listing" && (hostId == $hostId || host._ref == $sanityHostId)]._id`,
+        { hostId: user.id, sanityHostId: hostProfile.sanity_host_id }
+      );
+      if (listingIds.length > 0) {
+        const { count } = await adminClient
+          .from("contact_requests")
+          .select("id", { count: "exact", head: true })
+          .in("listing_sanity_id", listingIds)
+          .eq("status", "new");
+        enquiryCount = count ?? 0;
+      }
+    } catch {
+      // silently fail
+    }
+  }
+
   const initials = displayName
     .split(/\s+/)
     .map((w: string) => w[0])
@@ -204,6 +226,7 @@ export default async function DashboardLayout({
             href="/dashboard/enquiries"
             label="Enquiries"
             icon={<InboxIcon />}
+            badge={enquiryCount}
           />
           <DashboardNavLink
             href="/dashboard/profile/edit"
@@ -250,12 +273,12 @@ export default async function DashboardLayout({
 
       {/* Main content */}
       <main className="flex-1 lg:ml-[240px] min-h-screen bg-[#FAFAF8]">
-        <DashboardMobileHeader />
+        <DashboardMobileHeader enquiryCount={enquiryCount} />
         <div className="p-5 pb-24 lg:p-8 lg:pb-8">{children}</div>
       </main>
 
       {/* Mobile bottom nav */}
-      <DashboardBottomNav />
+      <DashboardBottomNav enquiryCount={enquiryCount} />
     </div>
   );
 }
