@@ -242,6 +242,12 @@ const body = [
     `A locally rooted school with competitive pricing and friendly instructors. Good option for budget-conscious travellers who still want quality instruction and access to the best spots.`
   ),
 
+  textBlock(`Tribal Kite School`, 'h3'),
+
+  textBlock(
+    `Located at Zuri, a property of the Tribal Sand Luxury beachfront collection. This is the more upscale option for riders who want a premium, comfortable experience with a personal touch. Brand new equipment, attentive service, and a beautiful beachfront setting make Tribal Kite School the perfect choice if you are looking for something a little more refined.`
+  ),
+
   // ── 11. What Kite Gear to Bring ─────────────────────
   textBlock(`What Kite Gear to Bring`, 'h2'),
 
