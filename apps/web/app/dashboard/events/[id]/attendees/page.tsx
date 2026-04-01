@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ArrowLeft, Download, Users } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { adminClient } from "@/lib/supabase/admin";
+import { sanityClient } from "@/lib/sanity/client";
 import { ExportCSVButton } from "./ExportCSVButton";
 
 interface Attendee {
@@ -25,21 +26,45 @@ export default async function AttendeesPage({ params }: PageProps) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  // Verify this event belongs to the host
-  const { data: event } = await supabase
+  // Try events_pending first (dashboard-created events)
+  let eventTitle = "";
+  let sanityEventId = "";
+
+  const { data: pendingEvent } = await supabase
     .from("events_pending")
     .select("id, title, sanity_event_id, host_id")
     .eq("id", id)
     .eq("host_id", user.id)
     .single();
 
-  if (!event) notFound();
+  if (pendingEvent) {
+    eventTitle = pendingEvent.title;
+    sanityEventId = pendingEvent.sanity_event_id ?? "";
+  } else {
+    // Fallback: id might be a Sanity event ID (for events created outside dashboard)
+    const { data: hostProfile } = await supabase
+      .from("host_profiles")
+      .select("sanity_host_id")
+      .eq("user_id", user.id)
+      .single();
+
+    const sanityEvent = await sanityClient.fetch<{ _id: string; title: string } | null>(
+      `*[_type == "listing" && _id == $id && (hostId == $userId || host._ref == $sanityHostId)][0]{ _id, title }`,
+      { id, userId: user.id, sanityHostId: hostProfile?.sanity_host_id ?? "" }
+    );
+
+    if (!sanityEvent) notFound();
+    eventTitle = sanityEvent.title;
+    sanityEventId = sanityEvent._id;
+  }
+
+  if (!sanityEventId) notFound();
 
   // Fetch attendees
   const { data: attendees } = await adminClient
     .from("event_attendees")
     .select("*")
-    .eq("event_sanity_id", event.sanity_event_id)
+    .eq("event_sanity_id", sanityEventId)
     .order("joined_at", { ascending: false });
 
   const rows = (attendees ?? []) as Attendee[];
@@ -64,11 +89,11 @@ export default async function AttendeesPage({ params }: PageProps) {
             Attendees
           </h1>
           <p className="text-text2 text-[14px] mt-1">
-            {event.title} · {confirmed.length} confirmed
+            {eventTitle} · {confirmed.length} confirmed
           </p>
         </div>
         {confirmed.length > 0 && (
-          <ExportCSVButton attendees={confirmed} eventTitle={event.title} />
+          <ExportCSVButton attendees={confirmed} eventTitle={eventTitle} />
         )}
       </div>
 
