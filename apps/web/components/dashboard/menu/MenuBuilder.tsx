@@ -432,6 +432,7 @@ export function MenuBuilder({ menu: initialMenu, scanCount }: MenuBuilderProps) 
                               <div className="px-4 pb-3">
                                 <ItemForm
                                   sectionId={section.id}
+                                  menuId={menu.id}
                                   item={item}
                                   onSave={(saved) => handleItemSave(section.id, saved)}
                                   onCancel={() => setEditingForm(null)}
@@ -448,6 +449,7 @@ export function MenuBuilder({ menu: initialMenu, scanCount }: MenuBuilderProps) 
                       <div className="px-4 py-3 border-t border-[#F4F1EC]">
                         <ItemForm
                           sectionId={section.id}
+                          menuId={menu.id}
                           onSave={(saved) => handleItemSave(section.id, saved)}
                           onCancel={() => setEditingForm(null)}
                         />

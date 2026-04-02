@@ -1,6 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
+import Image from "next/image";
+import imageCompression from "browser-image-compression";
 import type { MenuItem } from "@/components/listings/detail/restaurant/MenuDisplay";
 
 const DIETARY_OPTIONS = [
@@ -13,19 +15,23 @@ const DIETARY_OPTIONS = [
 
 interface ItemFormProps {
   sectionId: string;
+  menuId: string;
   item?: MenuItem;
   onSave: (item: MenuItem) => void;
   onCancel: () => void;
 }
 
-export function ItemForm({ sectionId, item, onSave, onCancel }: ItemFormProps) {
+export function ItemForm({ sectionId, menuId, item, onSave, onCancel }: ItemFormProps) {
   const [name, setName] = useState(item?.name ?? "");
   const [priceKes, setPriceKes] = useState(item?.price_kes?.toString() ?? "");
   const [description, setDescription] = useState(item?.description ?? "");
   const [isAvailable, setIsAvailable] = useState(item?.is_available ?? true);
   const [dietaryTags, setDietaryTags] = useState<string[]>(item?.dietary_tags ?? []);
   const [photoUrl, setPhotoUrl] = useState(item?.photo_url ?? "");
+  const [photoPreview, setPhotoPreview] = useState<string | null>(item?.photo_url ?? null);
+  const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const isEdit = !!item;
   const isValid = name.trim().length > 0 && priceKes.trim().length > 0 && Number(priceKes) >= 0;
@@ -36,9 +42,59 @@ export function ItemForm({ sectionId, item, onSave, onCancel }: ItemFormProps) {
     );
   }
 
+  async function handlePhotoSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Show preview immediately
+    const previewUrl = URL.createObjectURL(file);
+    setPhotoPreview(previewUrl);
+    setUploading(true);
+
+    try {
+      // Compress and resize client-side
+      const compressed = await imageCompression(file, {
+        maxSizeMB: 0.5,
+        maxWidthOrHeight: 800,
+        useWebWorker: true,
+        fileType: "image/webp",
+      });
+
+      // Upload
+      const formData = new FormData();
+      formData.append("file", compressed);
+      formData.append("menu_id", menuId);
+
+      const res = await fetch("/api/menu/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error ?? "Upload failed");
+      }
+
+      const { url } = await res.json();
+      setPhotoUrl(url);
+    } catch (err) {
+      console.error("Photo upload failed:", err);
+      setPhotoPreview(item?.photo_url ?? null);
+      setPhotoUrl(item?.photo_url ?? "");
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  function removePhoto() {
+    setPhotoUrl("");
+    setPhotoPreview(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!isValid || saving) return;
+    if (!isValid || saving || uploading) return;
 
     const optimisticItem: MenuItem = {
       id: item?.id ?? `temp-${Date.now()}`,
@@ -56,7 +112,6 @@ export function ItemForm({ sectionId, item, onSave, onCancel }: ItemFormProps) {
     setSaving(true);
 
     try {
-      const url = isEdit ? "/api/menu/items" : "/api/menu/items";
       const method = isEdit ? "PATCH" : "POST";
       const body = isEdit
         ? {
@@ -78,7 +133,7 @@ export function ItemForm({ sectionId, item, onSave, onCancel }: ItemFormProps) {
             photo_url: optimisticItem.photo_url,
           };
 
-      const res = await fetch(url, {
+      const res = await fetch("/api/menu/items", {
         method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
@@ -146,6 +201,73 @@ export function ItemForm({ sectionId, item, onSave, onCancel }: ItemFormProps) {
         />
       </div>
 
+      {/* Photo upload */}
+      <div>
+        <label className="block text-[12px] font-semibold text-[#16130C] mb-1.5">Photo</label>
+        {photoPreview ? (
+          <div className="flex items-start gap-3">
+            <div className="relative w-[80px] h-[80px] rounded-xl overflow-hidden shrink-0 border border-[#E2DDD5]">
+              <Image
+                src={photoPreview}
+                alt="Item photo"
+                width={80}
+                height={80}
+                className="object-cover w-full h-full"
+                unoptimized={photoPreview.startsWith("blob:")}
+              />
+              {uploading && (
+                <div className="absolute inset-0 bg-white/70 flex items-center justify-center">
+                  <svg className="size-5 animate-spin text-[#E8A020]" viewBox="0 0 24 24" fill="none">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                  </svg>
+                </div>
+              )}
+            </div>
+            <div className="flex flex-col gap-1.5 pt-1">
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploading}
+                className="text-[12px] font-semibold text-[#E8A020] hover:underline disabled:opacity-50 text-left"
+              >
+                {uploading ? "Uploading..." : "Change photo"}
+              </button>
+              <button
+                type="button"
+                onClick={removePhoto}
+                disabled={uploading}
+                className="text-[12px] font-semibold text-[#DC2626] hover:underline disabled:opacity-50 text-left"
+              >
+                Remove
+              </button>
+            </div>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploading}
+            className="w-full border border-dashed border-[#E2DDD5] rounded-xl py-4 text-center hover:border-[#E8A020]/40 transition-colors disabled:opacity-50"
+          >
+            <span className="text-[20px] block mb-1">📷</span>
+            <span className="text-[12px] font-semibold text-[#9C9485]">
+              Add a photo
+            </span>
+            <span className="text-[11px] text-[#9C9485] block mt-0.5">
+              Auto-resized and compressed
+            </span>
+          </button>
+        )}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          onChange={handlePhotoSelect}
+          className="hidden"
+        />
+      </div>
+
       <div className="flex items-center justify-between">
         <label className="text-[12px] font-semibold text-[#16130C]">Available</label>
         <button
@@ -184,22 +306,10 @@ export function ItemForm({ sectionId, item, onSave, onCancel }: ItemFormProps) {
         </div>
       </div>
 
-      <div>
-        <label className="block text-[12px] font-semibold text-[#16130C] mb-1">Photo URL</label>
-        <input
-          type="url"
-          value={photoUrl}
-          onChange={(e) => setPhotoUrl(e.target.value)}
-          placeholder="https://..."
-          className={inputCls}
-        />
-        <p className="text-[11px] text-[#9C9485] mt-1">Photo upload coming soon</p>
-      </div>
-
       <div className="flex gap-2 pt-1">
         <button
           type="submit"
-          disabled={!isValid || saving}
+          disabled={!isValid || saving || uploading}
           className="bg-[#E8A020] text-[#16130C] font-bold text-[13px] px-5 h-[36px] rounded-full hover:bg-[#d4911c] transition-colors disabled:opacity-50"
         >
           {saving ? "Saving..." : "Save"}
