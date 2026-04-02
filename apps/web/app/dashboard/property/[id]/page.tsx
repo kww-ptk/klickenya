@@ -2,7 +2,7 @@ import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
 import { getAuthUser } from "../../_lib/auth";
 import { adminClient } from "@/lib/supabase/admin";
-import { CalendarGrid } from "./_components/CalendarGrid";
+import { PropertyCalendarWrapper } from "./_components/PropertyCalendarWrapper";
 
 export default async function PropertyDashboardPage({
   params,
@@ -224,10 +224,7 @@ export default async function PropertyDashboardPage({
 
       {/* Availability Calendar */}
       <div className="mb-5">
-        <h2 className="font-display text-[17px] lg:text-[20px] font-bold text-[#16130C] tracking-[-0.02em] mb-3">
-          Availability Calendar
-        </h2>
-        <CalendarGrid
+        <PropertyCalendarWrapper
           propertyId={property.id}
           rooms={rooms}
           bookings={bookings}
