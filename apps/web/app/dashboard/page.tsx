@@ -24,6 +24,7 @@ export default async function DashboardPage() {
     title: string;
     slug: string;
     type: string;
+    subcategory: string | null;
     city: string | null;
     imageUrl: string | null;
     isVerified: boolean;
@@ -55,13 +56,14 @@ export default async function DashboardPage() {
           )
         : Promise.resolve(null),
       sanityClient.fetch<
-        { _id: string; title: string; slug: string; type: string; listingType: string | null; city: string | null; eventDate: string | null; coverPhoto: { asset?: { url?: string } } | null; isVerified: boolean; status: string }[]
+        { _id: string; title: string; slug: string; type: string; subcategory: string | null; listingType: string | null; city: string | null; eventDate: string | null; coverPhoto: { asset?: { url?: string } } | null; isVerified: boolean; status: string }[]
       >(
         `*[_type == "listing" && (hostId == $hostId || host._ref == $sanityHostId)] | order(_createdAt desc) {
           _id,
           title,
           "slug": slug.current,
           type,
+          subcategory,
           listingType,
           city,
           eventDate,
@@ -101,6 +103,7 @@ export default async function DashboardPage() {
             title: l.title,
             slug: l.slug,
             type: l.type,
+            subcategory: l.subcategory ?? null,
             city: l.city,
             imageUrl,
             isVerified: l.isVerified,
@@ -156,6 +159,34 @@ export default async function DashboardPage() {
         if (id) enquiryCountMap.set(id, (enquiryCountMap.get(id) ?? 0) + 1);
       }
       totalEnquiries = enquiryResult.value.data.length;
+    }
+  }
+
+  // Check for unpublished restaurant menus
+  const isRestaurant = (l: { type: string; subcategory: string | null }) =>
+    l.type === "restaurant" || (l.type === "experience" && l.subcategory === "restaurants");
+  const restaurantListings = listings.filter(isRestaurant);
+  const restaurantSlugs = restaurantListings.map((l) => l.slug);
+  let unpublishedMenuSlug: string | null = null;
+
+  if (restaurantSlugs.length > 0) {
+    const { data: unpubMenus } = await adminClient
+      .from("menus")
+      .select("slug")
+      .in("slug", restaurantSlugs)
+      .eq("is_published", false)
+      .limit(1);
+    if (unpubMenus && unpubMenus.length > 0) {
+      unpublishedMenuSlug = unpubMenus[0].slug;
+    } else {
+      // Check if any restaurant has no menu row at all
+      const { data: existingMenus } = await adminClient
+        .from("menus")
+        .select("slug")
+        .in("slug", restaurantSlugs);
+      const existingSlugs = new Set((existingMenus ?? []).map((m) => m.slug));
+      const missingSlug = restaurantSlugs.find((s) => !existingSlugs.has(s));
+      if (missingSlug) unpublishedMenuSlug = missingSlug;
     }
   }
 
@@ -218,6 +249,29 @@ export default async function DashboardPage() {
           </div>
         ))}
       </div>
+
+      {/* Menu banner for restaurant owners */}
+      {unpublishedMenuSlug && (
+        <div className="mb-5 rounded-xl lg:rounded-2xl border border-[#E8A020]/20 bg-[#E8A020]/[0.06] p-4 shadow-sm" style={{ borderLeft: "4px solid #E8A020" }}>
+          <div className="flex items-center gap-3">
+            <span className="text-[24px] shrink-0">🍽️</span>
+            <div className="flex-1 min-w-0">
+              <p className="text-[13px] font-bold text-[#16130C]">
+                Your digital menu isn&apos;t live yet
+              </p>
+              <p className="text-[12.5px] text-[#5E5848] mt-0.5">
+                Add your menu and print a QR code for your tables.
+              </p>
+            </div>
+            <Link
+              href={`/dashboard/menu/${unpublishedMenuSlug}`}
+              className="shrink-0 bg-[#E8A020] text-[#16130C] font-bold text-[12px] px-4 h-[36px] flex items-center rounded-full hover:bg-[#d4911c] transition-colors whitespace-nowrap"
+            >
+              Set up menu →
+            </Link>
+          </div>
+        </div>
+      )}
 
       {/* Events Section — shown first */}
       <div className="mb-5">
