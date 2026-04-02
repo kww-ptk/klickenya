@@ -39,14 +39,21 @@ export async function POST(
       return NextResponse.json({ error: "Host not found" }, { status: 404 });
     }
 
-    // Patch Sanity listing — clear host fields + reference
+    // Patch Sanity listing — clear host fields, then unset reference
     await sanityWrite
       .patch(sanityId)
       .set({
         hostId: "",
         hostName: "",
         notificationEmail1: process.env.ADMIN_EMAIL ?? "",
+        isVerified: false,
+        verificationStatus: "pending",
       })
+      .commit();
+
+    // Separate mutation to unset the host reference
+    await sanityWrite
+      .patch(sanityId)
       .unset(["host"])
       .commit();
 
