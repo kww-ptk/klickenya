@@ -1,30 +1,43 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { adminClient } from "@/lib/supabase/admin";
+import { getMenuAuth } from "../_lib/auth";
 
-async function getSessionUserId() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  return user?.id ?? null;
-}
-
-async function verifyItemOwnership(supabase: Awaited<ReturnType<typeof createClient>>, itemId: string, userId: string) {
-  const { data: item } = await supabase
+async function verifyItemOwnership(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  itemId: string,
+  userId: string,
+  isAdmin: boolean
+) {
+  const client = isAdmin ? adminClient : supabase;
+  const { data: item } = await client
     .from("menu_items")
     .select("id, section_id")
     .eq("id", itemId)
     .single();
   if (!item) return null;
 
-  return verifySectionOwnership(supabase, item.section_id, userId);
+  return verifySectionOwnership(supabase, item.section_id, userId, isAdmin);
 }
 
-async function verifySectionOwnership(supabase: Awaited<ReturnType<typeof createClient>>, sectionId: string, userId: string) {
-  const { data: section } = await supabase
+async function verifySectionOwnership(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  sectionId: string,
+  userId: string,
+  isAdmin: boolean
+) {
+  const client = isAdmin ? adminClient : supabase;
+  const { data: section } = await client
     .from("menu_sections")
     .select("id, menu_id")
     .eq("id", sectionId)
     .single();
   if (!section) return null;
+
+  if (isAdmin) {
+    const { data: menu } = await adminClient.from("menus").select("id").eq("id", section.menu_id).single();
+    return menu;
+  }
 
   const { data: menu } = await supabase
     .from("menus")
@@ -32,13 +45,12 @@ async function verifySectionOwnership(supabase: Awaited<ReturnType<typeof create
     .eq("id", section.menu_id)
     .eq("business_id", userId)
     .single();
-
   return menu;
 }
 
 export async function POST(req: NextRequest) {
   try {
-    const userId = await getSessionUserId();
+    const { userId, isAdmin, supabase } = await getMenuAuth();
     if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const body = await req.json();
@@ -48,12 +60,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "section_id, name, and price_kes required" }, { status: 400 });
     }
 
-    const supabase = await createClient();
-    const owned = await verifySectionOwnership(supabase, section_id, userId);
+    const owned = await verifySectionOwnership(supabase, section_id, userId, isAdmin);
     if (!owned) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-    // Get next display_order
-    const { data: maxRow } = await supabase
+    const client = isAdmin ? adminClient : supabase;
+
+    const { data: maxRow } = await client
       .from("menu_items")
       .select("display_order")
       .eq("section_id", section_id)
@@ -63,7 +75,7 @@ export async function POST(req: NextRequest) {
 
     const display_order = (maxRow?.display_order ?? -1) + 1;
 
-    const { data: item, error } = await supabase
+    const { data: item, error } = await client
       .from("menu_items")
       .insert({
         section_id,
@@ -88,18 +100,16 @@ export async function POST(req: NextRequest) {
 
 export async function PATCH(req: NextRequest) {
   try {
-    const userId = await getSessionUserId();
+    const { userId, isAdmin, supabase } = await getMenuAuth();
     if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const body = await req.json();
     const { item_id, ...fields } = body;
     if (!item_id) return NextResponse.json({ error: "item_id required" }, { status: 400 });
 
-    const supabase = await createClient();
-    const owned = await verifyItemOwnership(supabase, item_id, userId);
+    const owned = await verifyItemOwnership(supabase, item_id, userId, isAdmin);
     if (!owned) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-    // Build update object from allowed fields
     const update: Record<string, unknown> = {};
     if (fields.name !== undefined) update.name = fields.name.trim();
     if (fields.price_kes !== undefined) update.price_kes = Number(fields.price_kes);
@@ -108,7 +118,8 @@ export async function PATCH(req: NextRequest) {
     if (fields.dietary_tags !== undefined) update.dietary_tags = fields.dietary_tags;
     if (fields.is_available !== undefined) update.is_available = fields.is_available;
 
-    const { data: item, error } = await supabase
+    const client = isAdmin ? adminClient : supabase;
+    const { data: item, error } = await client
       .from("menu_items")
       .update(update)
       .eq("id", item_id)
@@ -125,17 +136,17 @@ export async function PATCH(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   try {
-    const userId = await getSessionUserId();
+    const { userId, isAdmin, supabase } = await getMenuAuth();
     if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const { item_id } = await req.json();
     if (!item_id) return NextResponse.json({ error: "item_id required" }, { status: 400 });
 
-    const supabase = await createClient();
-    const owned = await verifyItemOwnership(supabase, item_id, userId);
+    const owned = await verifyItemOwnership(supabase, item_id, userId, isAdmin);
     if (!owned) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-    await supabase.from("menu_items").delete().eq("id", item_id);
+    const client = isAdmin ? adminClient : supabase;
+    await client.from("menu_items").delete().eq("id", item_id);
 
     return NextResponse.json({ success: true });
   } catch {

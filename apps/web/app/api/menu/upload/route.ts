@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { adminClient } from "@/lib/supabase/admin";
+import { getMenuAuth } from "../_lib/auth";
 
 const BUCKET = "menu-photos";
 const MAX_SIZE = 2 * 1024 * 1024; // 2MB after compression
 
 export async function POST(req: NextRequest) {
   try {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const { userId, isAdmin } = await getMenuAuth();
+    if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const formData = await req.formData();
     const file = formData.get("file") as File | null;
@@ -22,21 +22,25 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "File too large (max 2MB)" }, { status: 400 });
     }
 
-    // Verify menu ownership
-    const { data: menu } = await supabase
-      .from("menus")
-      .select("id")
-      .eq("id", menuId)
-      .eq("business_id", user.id)
-      .single();
-    if (!menu) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    // Verify menu ownership (or admin)
+    if (!isAdmin) {
+      const { createClient } = await import("@/lib/supabase/server");
+      const supabase = await createClient();
+      const { data: menu } = await supabase
+        .from("menus")
+        .select("id")
+        .eq("id", menuId)
+        .eq("business_id", userId)
+        .single();
+      if (!menu) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
 
     // Generate unique filename
     const ext = file.type === "image/webp" ? "webp" : file.type === "image/png" ? "png" : "jpg";
     const filename = `${menuId}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
 
-    // Upload to Supabase Storage
-    const { error: uploadError } = await supabase.storage
+    // Upload to Supabase Storage using admin client
+    const { error: uploadError } = await adminClient.storage
       .from(BUCKET)
       .upload(filename, file, {
         contentType: file.type,
@@ -48,8 +52,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Upload failed" }, { status: 500 });
     }
 
-    // Get public URL
-    const { data: urlData } = supabase.storage
+    const { data: urlData } = adminClient.storage
       .from(BUCKET)
       .getPublicUrl(filename);
 

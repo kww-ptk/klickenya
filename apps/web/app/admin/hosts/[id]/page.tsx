@@ -38,13 +38,27 @@ export default async function AdminHostDetailPage({ params }: PageProps) {
 
   // Fetch assigned listings from Sanity
   const assignedListings = await sanityClient.fetch<
-    { _id: string; title: string; type: string; city: string | null; slug: string; isVerified: boolean }[]
+    { _id: string; title: string; type: string; subcategory: string | null; city: string | null; slug: string; isVerified: boolean }[]
   >(
     `*[_type == "listing" && (hostId == $hostId || host._ref == $sanityHostId)] | order(_createdAt desc) {
-      _id, title, type, city, "slug": slug.current, isVerified
+      _id, title, type, subcategory, city, "slug": slug.current, isVerified
     }`,
     { hostId: host.user_id, sanityHostId: host.sanity_host_id ?? "" }
   ).catch(() => []);
+
+  // Detect restaurant listings and fetch their menus
+  const isRestaurant = (l: { type: string; subcategory: string | null }) =>
+    l.type === "restaurant" || (l.type === "experience" && l.subcategory === "restaurants");
+  const restaurantSlugs = assignedListings.filter(isRestaurant).map((l) => l.slug);
+
+  let menus: { id: string; slug: string; display_name: string | null; is_published: boolean; listing_slug: string | null }[] = [];
+  if (restaurantSlugs.length > 0) {
+    const { data } = await adminClient
+      .from("menus")
+      .select("id, slug, display_name, is_published, listing_slug")
+      .in("slug", restaurantSlugs);
+    menus = data ?? [];
+  }
 
   const initials = (host.display_name ?? "?")
     .split(/\s+/)
@@ -151,6 +165,17 @@ export default async function AdminHostDetailPage({ params }: PageProps) {
                     >
                       View
                     </Link>
+                    {isRestaurant(listing) && (() => {
+                      const menu = menus.find((m) => m.slug === listing.slug || m.listing_slug === listing.slug);
+                      return menu ? (
+                        <Link
+                          href={`/admin/hosts/${id}/menu/${menu.id}`}
+                          className="text-[12px] font-medium text-[#0D7377] hover:underline"
+                        >
+                          Menu
+                        </Link>
+                      ) : null;
+                    })()}
                     <a
                       href={`${sanityStudioUrl}/structure/listing;${listing._id}`}
                       target="_blank"
@@ -174,7 +199,48 @@ export default async function AdminHostDetailPage({ params }: PageProps) {
         )}
       </div>
 
-      {/* Section C — Assign a Listing */}
+      {/* Section C — Menu Management (restaurants only) */}
+      {menus.length > 0 && (
+        <div className="rounded-2xl bg-white shadow-sm p-6">
+          <h2 className="font-display text-[16px] font-bold text-[#16130C] mb-4">
+            Menu Management <span className="text-[#9C9485] font-normal">({menus.length})</span>
+          </h2>
+          <div className="space-y-3">
+            {menus.map((menu) => (
+              <div key={menu.id} className="flex items-center justify-between gap-3 p-3 rounded-xl border border-[#F0EDE8] hover:bg-[#F7F5F2] transition-colors">
+                <div className="min-w-0">
+                  <p className="text-[13px] font-medium text-[#16130C] truncate">{menu.display_name ?? menu.slug}</p>
+                  <p className="text-[11px] text-[#9C9485] font-mono">/m/{menu.slug}</p>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  {menu.is_published ? (
+                    <span className="text-[10px] font-bold text-[#16A34A] bg-[#16A34A]/8 px-2 py-0.5 rounded-full">Live</span>
+                  ) : (
+                    <span className="text-[10px] font-bold text-[#9C9485] bg-[#F4F1EC] px-2 py-0.5 rounded-full">Draft</span>
+                  )}
+                  <Link
+                    href={`/admin/hosts/${id}/menu/${menu.id}`}
+                    className="text-[12px] font-semibold text-[#E8A020] hover:underline"
+                  >
+                    Edit menu
+                  </Link>
+                  {menu.is_published && (
+                    <Link
+                      href={`/m/${menu.slug}`}
+                      target="_blank"
+                      className="text-[12px] font-medium text-[#9C9485] hover:text-[#16130C] transition-colors"
+                    >
+                      View ↗
+                    </Link>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Section D — Assign a Listing */}
       <div className="rounded-2xl bg-white shadow-sm p-6">
         <h2 className="font-display text-[16px] font-bold text-[#16130C] mb-4">
           Assign a Listing

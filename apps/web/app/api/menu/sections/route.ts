@@ -1,15 +1,39 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { adminClient } from "@/lib/supabase/admin";
+import { getMenuAuth } from "../_lib/auth";
 
-async function getSessionUserId() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  return user?.id ?? null;
+async function verifySectionOwnership(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  sectionId: string,
+  userId: string,
+  isAdmin: boolean
+) {
+  const client = isAdmin ? adminClient : supabase;
+  const { data: section } = await client
+    .from("menu_sections")
+    .select("id, menu_id")
+    .eq("id", sectionId)
+    .single();
+  if (!section) return null;
+
+  if (isAdmin) {
+    const { data: menu } = await adminClient.from("menus").select("id").eq("id", section.menu_id).single();
+    return menu;
+  }
+
+  const { data: menu } = await supabase
+    .from("menus")
+    .select("id")
+    .eq("id", section.menu_id)
+    .eq("business_id", userId)
+    .single();
+  return menu;
 }
 
 export async function POST(req: NextRequest) {
   try {
-    const userId = await getSessionUserId();
+    const { userId, isAdmin, supabase } = await getMenuAuth();
     if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const { menu_id, title } = await req.json();
@@ -17,19 +41,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "menu_id and title required" }, { status: 400 });
     }
 
-    const supabase = await createClient();
-
-    // Verify menu ownership
-    const { data: menu } = await supabase
-      .from("menus")
-      .select("id")
-      .eq("id", menu_id)
-      .eq("business_id", userId)
-      .single();
+    // Verify menu ownership (or admin)
+    const client = isAdmin ? adminClient : supabase;
+    const menuQuery = client.from("menus").select("id").eq("id", menu_id);
+    if (!isAdmin) menuQuery.eq("business_id", userId);
+    const { data: menu } = await menuQuery.single();
     if (!menu) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
     // Get next display_order
-    const { data: maxRow } = await supabase
+    const { data: maxRow } = await client
       .from("menu_sections")
       .select("display_order")
       .eq("menu_id", menu_id)
@@ -39,7 +59,7 @@ export async function POST(req: NextRequest) {
 
     const display_order = (maxRow?.display_order ?? -1) + 1;
 
-    const { data: section, error } = await supabase
+    const { data: section, error } = await client
       .from("menu_sections")
       .insert({ menu_id, title: title.trim(), display_order })
       .select("id, title, display_order, is_visible")
@@ -55,7 +75,7 @@ export async function POST(req: NextRequest) {
 
 export async function PATCH(req: NextRequest) {
   try {
-    const userId = await getSessionUserId();
+    const { userId, isAdmin, supabase } = await getMenuAuth();
     if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const { section_id, title } = await req.json();
@@ -63,25 +83,11 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ error: "section_id and title required" }, { status: 400 });
     }
 
-    const supabase = await createClient();
+    const owned = await verifySectionOwnership(supabase, section_id, userId, isAdmin);
+    if (!owned) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-    // Verify ownership: section → menu → business_id
-    const { data: section } = await supabase
-      .from("menu_sections")
-      .select("id, menu_id")
-      .eq("id", section_id)
-      .single();
-    if (!section) return NextResponse.json({ error: "Not found" }, { status: 404 });
-
-    const { data: menu } = await supabase
-      .from("menus")
-      .select("id")
-      .eq("id", section.menu_id)
-      .eq("business_id", userId)
-      .single();
-    if (!menu) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-
-    const { data: updated, error } = await supabase
+    const client = isAdmin ? adminClient : supabase;
+    const { data: updated, error } = await client
       .from("menu_sections")
       .update({ title: title.trim() })
       .eq("id", section_id)
@@ -98,31 +104,17 @@ export async function PATCH(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   try {
-    const userId = await getSessionUserId();
+    const { userId, isAdmin, supabase } = await getMenuAuth();
     if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const { section_id } = await req.json();
     if (!section_id) return NextResponse.json({ error: "section_id required" }, { status: 400 });
 
-    const supabase = await createClient();
+    const owned = await verifySectionOwnership(supabase, section_id, userId, isAdmin);
+    if (!owned) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-    // Verify ownership
-    const { data: section } = await supabase
-      .from("menu_sections")
-      .select("id, menu_id")
-      .eq("id", section_id)
-      .single();
-    if (!section) return NextResponse.json({ error: "Not found" }, { status: 404 });
-
-    const { data: menu } = await supabase
-      .from("menus")
-      .select("id")
-      .eq("id", section.menu_id)
-      .eq("business_id", userId)
-      .single();
-    if (!menu) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-
-    await supabase.from("menu_sections").delete().eq("id", section_id);
+    const client = isAdmin ? adminClient : supabase;
+    await client.from("menu_sections").delete().eq("id", section_id);
 
     return NextResponse.json({ success: true });
   } catch {

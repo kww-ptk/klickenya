@@ -17,11 +17,13 @@ function formatPrice(amount: number): string {
 interface MenuBuilderProps {
   menu: MenuData;
   scanCount: number;
+  backHref?: string;
+  backLabel?: string;
 }
 
 /* ── Component ─────────────────────────────────────── */
 
-export function MenuBuilder({ menu: initialMenu, scanCount }: MenuBuilderProps) {
+export function MenuBuilder({ menu: initialMenu, scanCount, backHref, backLabel }: MenuBuilderProps) {
   const [menu, setMenu] = useState<MenuData>(initialMenu);
   const [editingForm, setEditingForm] = useState<{
     type: "add" | "edit";
@@ -301,10 +303,10 @@ export function MenuBuilder({ menu: initialMenu, scanCount }: MenuBuilderProps) 
       {/* Back link + title */}
       <div className="mb-5">
         <Link
-          href="/dashboard"
+          href={backHref ?? "/dashboard"}
           className="text-[13px] text-[#9C9485] hover:text-[#16130C] transition-colors"
         >
-          ← Back to dashboard
+          {backLabel ?? "← Back to dashboard"}
         </Link>
         <h1 className="font-display text-[22px] lg:text-[28px] font-bold tracking-[-0.03em] text-[#16130C] mt-2">
           {menu.name}
