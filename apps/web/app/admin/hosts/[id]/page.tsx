@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { adminClient } from "@/lib/supabase/admin";
 import { sanityPreviewClient as sanityClient } from "@/lib/sanity/client";
-import { HostListingActions } from "./HostListingActions";
+import { HostListingActions, SyncListingsButton } from "./HostListingActions";
 
 export const revalidate = 0;
 
@@ -138,9 +138,12 @@ export default async function AdminHostDetailPage({ params }: PageProps) {
 
       {/* Section B — Assigned Listings */}
       <div className="rounded-2xl bg-white shadow-sm p-6">
-        <h2 className="font-display text-[16px] font-bold text-[#16130C] mb-4">
-          Assigned Listings <span className="text-[#9C9485] font-normal">({assignedListings.length})</span>
-        </h2>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="font-display text-[16px] font-bold text-[#16130C]">
+            Assigned Listings <span className="text-[#9C9485] font-normal">({assignedListings.length})</span>
+          </h2>
+          {assignedListings.length > 0 && <SyncListingsButton hostId={id} />}
+        </div>
 
         {assignedListings.length === 0 ? (
           <p className="text-[13px] text-[#9C9485]">No listings assigned to this host.</p>

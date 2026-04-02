@@ -196,3 +196,40 @@ function AssignSearch({ hostId, hostName }: SearchProps) {
     </div>
   );
 }
+
+export function SyncListingsButton({ hostId }: { hostId: string }) {
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState<string | null>(null);
+  const router = useRouter();
+
+  async function handleSync() {
+    setLoading(true);
+    setResult(null);
+    try {
+      const res = await fetch(`/api/admin/hosts/${hostId}/sync-listings`, {
+        method: "POST",
+      });
+      if (!res.ok) throw new Error("Failed");
+      const data = await res.json();
+      setResult(`Synced ${data.synced} listing${data.synced !== 1 ? "s" : ""}`);
+      router.refresh();
+    } catch {
+      setResult("Failed to sync");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div className="flex items-center gap-2">
+      <button
+        onClick={handleSync}
+        disabled={loading}
+        className="text-[12px] font-medium text-[#0D7377] hover:underline disabled:opacity-50"
+      >
+        {loading ? "Syncing..." : "Sync to profile"}
+      </button>
+      {result && <span className="text-[11px] text-[#9C9485]">{result}</span>}
+    </div>
+  );
+}
