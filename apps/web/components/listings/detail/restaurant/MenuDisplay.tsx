@@ -27,6 +27,7 @@ export interface MenuSection {
 
 export interface MenuData {
   id: string;
+  slug: string;
   name: string;
   is_published: boolean;
   menu_sections: MenuSection[];
