@@ -1,5 +1,6 @@
 "use client";
 
+import { Star } from "lucide-react";
 import { ContactForm } from "@/components/listings/ContactForm";
 import { cn } from "@/lib/utils";
 
@@ -8,7 +9,6 @@ import { cn } from "@/lib/utils";
 interface CtaConfig {
   label: string;
   bg: string;
-  shadow: string;
   text: string;
 }
 
@@ -16,31 +16,26 @@ const CTA_MAP: Record<string, CtaConfig> = {
   stay: {
     label: "Reserve",
     bg: "bg-gradient-to-r from-amber to-amber2",
-    shadow: "shadow-[0_4px_14px_rgba(232,160,32,0.35)]",
     text: "text-dark",
   },
   restaurant: {
     label: "Reserve a table",
     bg: "bg-gradient-to-r from-amber to-amber2",
-    shadow: "shadow-[0_4px_14px_rgba(232,160,32,0.35)]",
     text: "text-dark",
   },
   experience: {
     label: "Book now",
     bg: "bg-teal-600",
-    shadow: "shadow-[0_4px_14px_rgba(13,148,136,0.35)]",
     text: "text-white",
   },
   event: {
     label: "Get tickets",
     bg: "bg-purple-600",
-    shadow: "shadow-[0_4px_14px_rgba(147,51,234,0.35)]",
     text: "text-white",
   },
   service: {
     label: "Request service",
     bg: "bg-emerald-600",
-    shadow: "shadow-[0_4px_14px_rgba(5,150,105,0.35)]",
     text: "text-white",
   },
 };
@@ -48,99 +43,8 @@ const CTA_MAP: Record<string, CtaConfig> = {
 const DEFAULT_CTA: CtaConfig = {
   label: "Reserve",
   bg: "bg-gradient-to-r from-amber to-amber2",
-  shadow: "shadow-[0_4px_14px_rgba(232,160,32,0.35)]",
   text: "text-dark",
 };
-
-/* ── Price range symbol helper ────────────────────── */
-
-function priceRangeSymbol(range?: string): string {
-  switch (range) {
-    case "budget":
-      return "$";
-    case "mid-range":
-      return "$$";
-    case "fine-dining":
-      return "$$$";
-    default:
-      return "$$";
-  }
-}
-
-/* ── Price display per type ───────────────────────── */
-
-function PriceDisplay({
-  type,
-  price,
-  priceUnit,
-  cuisine,
-  priceRange,
-}: {
-  type: string;
-  price: number;
-  priceUnit: string;
-  cuisine?: string[];
-  priceRange?: string;
-}) {
-  const formatted = `KSh ${price.toLocaleString()}`;
-
-  switch (type) {
-    case "stay":
-      return (
-        <>
-          <span className="font-display text-[20px] font-extrabold tracking-[-0.02em] text-dark">
-            {formatted}
-          </span>
-          <span className="text-[14px] text-text2"> / {priceUnit}</span>
-        </>
-      );
-
-    case "restaurant": {
-      const symbol = priceRangeSymbol(priceRange);
-      const cuisineLabel = cuisine?.slice(0, 2).join(", ") ?? "";
-      return (
-        <span className="text-[16px] font-semibold text-dark">
-          {symbol}
-          {cuisineLabel ? ` · ${cuisineLabel}` : ""}
-        </span>
-      );
-    }
-
-    case "experience":
-      return (
-        <>
-          <span className="font-display text-[20px] font-extrabold tracking-[-0.02em] text-dark">
-            {formatted}
-          </span>
-          <span className="text-[14px] text-text2"> / person</span>
-        </>
-      );
-
-    case "event":
-      return (
-        <span className="font-display text-[20px] font-extrabold tracking-[-0.02em] text-dark">
-          From {formatted}
-        </span>
-      );
-
-    case "service":
-      return (
-        <span className="font-display text-[20px] font-extrabold tracking-[-0.02em] text-dark">
-          From {formatted}
-        </span>
-      );
-
-    default:
-      return (
-        <>
-          <span className="font-display text-[20px] font-extrabold tracking-[-0.02em] text-dark">
-            {formatted}
-          </span>
-          <span className="text-[14px] text-text2"> / {priceUnit}</span>
-        </>
-      );
-  }
-}
 
 /* ── Component ────────────────────────────────────── */
 
@@ -150,13 +54,10 @@ interface MobileBookingBarProps {
   priceUnit: string;
   listingId: string;
   listingTitle: string;
-  /** For restaurant price display */
   cuisine?: string[];
-  /** For restaurant price display */
   priceRange?: string;
   maxGuests?: number;
   ticketTypes?: string[];
-  /** Menu slug for restaurant "View Menu" button */
   menuSlug?: string | null;
 }
 
@@ -175,72 +76,59 @@ function MobileBookingBar({
   const cta = CTA_MAP[type] ?? DEFAULT_CTA;
   const isRestaurant = type === "restaurant";
 
+  function trackClick() {
+    fetch("/api/analytics/track", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ listingSlug: listingId, listingType: type, eventType: "contact_click" }),
+      keepalive: true,
+    }).catch(() => {});
+  }
+
   return (
     <>
       {/* ── Fixed bottom bar ───────────────── */}
-      <div className="fixed bottom-0 left-0 right-0 z-[150] lg:hidden pb-[env(safe-area-inset-bottom)]">
-        <div className="bg-white/95 backdrop-blur-md border-t border-border/60 px-4 py-2.5">
+      <div className="fixed bottom-0 left-0 right-0 z-[150] lg:hidden">
+        <div className="bg-white shadow-[0_-2px_12px_rgba(0,0,0,0.08)] px-4 py-3 pb-[max(12px,env(safe-area-inset-bottom))]">
           {isRestaurant ? (
-            /* Restaurant: price left, two compact actions right */
-            <div className="flex items-center justify-between gap-3">
-              <div className="min-w-0">
-                <PriceDisplay
-                  type={type}
-                  price={price}
-                  priceUnit={priceUnit}
-                  cuisine={cuisine}
-                  priceRange={priceRange}
-                />
+            <div className="flex items-center gap-3">
+              {/* Left: rating */}
+              <div className="flex items-center gap-1 min-w-0 shrink-0">
+                <Star className="size-3.5 fill-amber text-amber" />
+                <span className="text-[13px] font-semibold text-dark">4.9</span>
               </div>
-              <div className="flex items-center gap-1.5 shrink-0">
+              {/* Right: actions */}
+              <div className="flex items-center gap-2 ml-auto shrink-0">
                 {menuSlug && (
                   <a
                     href="#menu-section"
-                    className="h-[38px] px-4 rounded-full text-[13px] font-semibold text-dark border border-border/80 flex items-center hover:bg-surface transition-colors"
+                    className="h-[36px] px-4 rounded-full text-[13px] font-semibold text-dark border border-border flex items-center hover:bg-surface transition-colors"
                   >
                     Menu
                   </a>
                 )}
                 <a
                   href="#mobile-contact"
-                  onClick={() => {
-                    fetch("/api/analytics/track", {
-                      method: "POST",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({ listingSlug: listingId, listingType: type, eventType: "contact_click" }),
-                      keepalive: true,
-                    }).catch(() => {});
-                  }}
-                  className="h-[38px] px-4 rounded-full text-[13px] font-bold bg-gradient-to-r from-amber to-amber2 text-dark flex items-center"
+                  onClick={trackClick}
+                  className="h-[36px] px-4 rounded-full text-[13px] font-bold bg-gradient-to-r from-amber to-amber2 text-dark flex items-center"
                 >
                   Book a table
                 </a>
               </div>
             </div>
           ) : (
-            /* All other types: price left, CTA right */
             <div className="flex items-center justify-between gap-3">
               <div className="min-w-0">
-                <PriceDisplay
-                  type={type}
-                  price={price}
-                  priceUnit={priceUnit}
-                  cuisine={cuisine}
-                  priceRange={priceRange}
-                />
+                <span className="font-display text-[18px] font-extrabold tracking-[-0.02em] text-dark">
+                  KSh {price.toLocaleString()}
+                </span>
+                <span className="text-[13px] text-text2"> / {priceUnit}</span>
               </div>
               <a
                 href="#mobile-contact"
-                onClick={() => {
-                  fetch("/api/analytics/track", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ listingSlug: listingId, listingType: type, eventType: "contact_click" }),
-                    keepalive: true,
-                  }).catch(() => {});
-                }}
+                onClick={trackClick}
                 className={cn(
-                  "h-[38px] px-5 rounded-full text-[13px] font-bold flex items-center shrink-0",
+                  "h-[36px] px-5 rounded-full text-[13px] font-bold flex items-center shrink-0",
                   cta.bg,
                   cta.text,
                 )}
