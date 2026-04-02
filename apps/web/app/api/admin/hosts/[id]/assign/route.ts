@@ -32,7 +32,7 @@ export async function POST(
     // Fetch host profile
     const { data: host } = await adminClient
       .from("host_profiles")
-      .select("id, user_id, display_name, email")
+      .select("id, user_id, display_name, email, sanity_host_id")
       .eq("id", id)
       .single();
 
@@ -40,17 +40,19 @@ export async function POST(
       return NextResponse.json({ error: "Host not found" }, { status: 404 });
     }
 
-    // Patch Sanity listing
-    await sanityWrite
-      .patch(sanityId)
-      .set({
-        hostId: host.user_id,
-        hostName: host.display_name,
-        notificationEmail1: host.email,
-        isVerified: true,
-        verificationStatus: "verified",
-      })
-      .commit();
+    // Patch Sanity listing — set host reference + legacy fields
+    const patchData: Record<string, unknown> = {
+      hostId: host.user_id,
+      hostName: host.display_name,
+      notificationEmail1: host.email,
+      isVerified: true,
+      verificationStatus: "verified",
+    };
+    // Set the host document reference so hostRef resolves on listing pages
+    if (host.sanity_host_id) {
+      patchData.host = { _type: "reference", _ref: host.sanity_host_id };
+    }
+    await sanityWrite.patch(sanityId).set(patchData).commit();
 
     // Email to host
     if (host.email) {
