@@ -40,6 +40,33 @@ export async function POST(
       return NextResponse.json({ error: "Host not found" }, { status: 404 });
     }
 
+    // Ensure host has a Sanity host document
+    let sanityHostId = host.sanity_host_id;
+    if (!sanityHostId) {
+      try {
+        const slug = (host.display_name ?? "host")
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, "-")
+          .replace(/^-|-$/g, "");
+
+        const sanityHost = await sanityWrite.create({
+          _type: "host",
+          name: host.display_name,
+          slug: { _type: "slug", current: slug },
+          verified: true,
+        });
+        sanityHostId = sanityHost._id;
+
+        // Save back to Supabase
+        await adminClient
+          .from("host_profiles")
+          .update({ sanity_host_id: sanityHostId })
+          .eq("id", id);
+      } catch (hostErr) {
+        console.error("Sanity host creation error (non-blocking):", hostErr);
+      }
+    }
+
     // Patch Sanity listing — set host reference + legacy fields
     const patchData: Record<string, unknown> = {
       hostId: host.user_id,
@@ -49,8 +76,8 @@ export async function POST(
       verificationStatus: "verified",
     };
     // Set the host document reference so hostRef resolves on listing pages
-    if (host.sanity_host_id) {
-      patchData.host = { _type: "reference", _ref: host.sanity_host_id };
+    if (sanityHostId) {
+      patchData.host = { _type: "reference", _ref: sanityHostId };
     }
     await sanityWrite.patch(sanityId).set(patchData).commit();
 
