@@ -6,16 +6,16 @@ import { MenuBuilder } from "@/components/dashboard/menu/MenuBuilder";
 import { ToastProvider } from "@/components/ui/Toast";
 
 interface PageProps {
-  params: Promise<{ slug: string }>;
+  params: Promise<{ id: string }>;
 }
 
 export default async function MenuBuilderPage({ params }: PageProps) {
-  const { slug } = await params;
+  const { id } = await params;
   const { user } = await getAuthUser();
 
   if (!user) redirect("/login");
 
-  // Fetch menu with ownership check at DB level
+  // Fetch menu by UUID with ownership check at DB level
   const { data: menu } = await adminClient
     .from("menus")
     .select(
@@ -30,7 +30,7 @@ export default async function MenuBuilderPage({ params }: PageProps) {
       )
     `
     )
-    .eq("slug", slug)
+    .eq("id", id)
     .eq("business_id", user.id)
     .single();
 

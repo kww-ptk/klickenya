@@ -264,10 +264,10 @@ export default async function DashboardPage() {
               </p>
             </div>
             <Link
-              href={`/dashboard/menu/${unpublishedMenuSlug}`}
+              href="/dashboard/menus"
               className="shrink-0 bg-[#E8A020] text-[#16130C] font-bold text-[12px] px-4 h-[36px] flex items-center rounded-full hover:bg-[#d4911c] transition-colors whitespace-nowrap"
             >
-              Set up menu →
+              Set up your digital menu →
             </Link>
           </div>
         </div>

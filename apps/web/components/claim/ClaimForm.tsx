@@ -643,7 +643,7 @@ export function ClaimForm({
         </div>
         {isRestaurant && (
           <Link
-            href={`/dashboard/menu/${listingSlug}`}
+            href="/dashboard/menus"
             className="block border border-[#E2DDD5] rounded-xl p-4 bg-white hover:border-[#E8A020]/40 transition-colors"
           >
             <p className="text-sm font-semibold text-[#16130C] mb-1">🍽️ Set up your free digital menu</p>

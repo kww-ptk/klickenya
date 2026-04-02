@@ -140,6 +140,8 @@ export async function POST(req: NextRequest) {
             slug: claim.listing_slug,
             business_id: authUser.id,
             name: `${claim.listing_title} Menu`,
+            display_name: `${claim.listing_title} Menu`,
+            listing_slug: claim.listing_slug,
             is_published: false,
             ordering_enabled: false,
           },
