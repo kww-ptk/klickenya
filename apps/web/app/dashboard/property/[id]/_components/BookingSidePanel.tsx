@@ -93,11 +93,13 @@ export function BookingSidePanel({
   rooms,
   propertyId,
   onClose,
+  onBookingUpdated,
 }: {
   booking: Booking;
   rooms: Room[];
   propertyId: string;
   onClose: () => void;
+  onBookingUpdated?: (booking: Booking) => void;
 }) {
   const { showToast } = useToast();
   const [booking, setBooking] = useState(initialBooking);
@@ -165,6 +167,7 @@ export function BookingSidePanel({
       const data = await res.json();
       if (res.ok && data.booking) {
         setBooking(data.booking);
+        onBookingUpdated?.(data.booking);
         showToast(
           newStatus === "checked_in"
             ? `${booking.guest_name} checked in`
@@ -196,7 +199,10 @@ export function BookingSidePanel({
       });
       if (res.ok) {
         const data = await res.json();
-        if (data.booking) setBooking(data.booking);
+        if (data.booking) {
+          setBooking(data.booking);
+          onBookingUpdated?.(data.booking);
+        }
       }
     } catch {
       // silent
@@ -365,6 +371,7 @@ export function BookingSidePanel({
                 balance={booking.balance_kes ?? 0}
                 onSuccess={(updatedBooking, newPayment, allPayments) => {
                   setBooking(updatedBooking);
+                  onBookingUpdated?.(updatedBooking);
                   setPayments(allPayments);
                   setShowPayForm(false);
                   showToast(`${fmt(newPayment.amount_kes)} payment recorded`, "success");

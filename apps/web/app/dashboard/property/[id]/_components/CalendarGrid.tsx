@@ -296,6 +296,8 @@ export function CalendarGrid({
             { label: "Airbnb", color: "#FF5A5F" },
             { label: "Booking.com", color: "#003580" },
             { label: "Manual", color: "#E8A020" },
+            { label: "Checked in", color: "#16A34A" },
+            { label: "Checked out", color: "#9C9485" },
           ].map((item) => (
             <div key={item.label} className="flex items-center gap-1.5">
               <div
@@ -321,6 +323,12 @@ export function CalendarGrid({
           rooms={rooms}
           propertyId={propertyId}
           onClose={() => setSelectedBooking(null)}
+          onBookingUpdated={(updated) => {
+            setBookings((prev) =>
+              prev.map((b) => (b.id === updated.id ? updated : b))
+            );
+            setSelectedBooking(updated);
+          }}
         />
       )}
       {newBookingTarget && (
@@ -416,7 +424,14 @@ function RoomRow({
         const isStart = isSameDay(booking.check_in_date, ds);
         const checkOutDate = new Date(booking.check_out_date + "T00:00:00");
         const isEnd = isSameDay(dateStr(addDays(checkOutDate, -1)), ds);
-        const colors = SOURCE_COLORS[booking.source] ?? SOURCE_COLORS.direct;
+
+        // Color: status overrides source for checked_in (green) and checked_out (grey)
+        const colors =
+          booking.status === "checked_in"
+            ? { bg: "#16A34A", text: "#FFFFFF" }
+            : booking.status === "checked_out"
+              ? { bg: "#9C9485", text: "#FFFFFF" }
+              : (SOURCE_COLORS[booking.source] ?? SOURCE_COLORS.direct);
 
         // For the first cell of a booking in the visible window, render the label
         const shouldShowLabel = isStart || (!renderedBookings.has(booking.id) && dayIndex === 0);

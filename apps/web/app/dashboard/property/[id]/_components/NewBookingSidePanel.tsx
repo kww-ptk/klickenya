@@ -22,27 +22,25 @@ interface NewBookingSidePanelProps {
   onCreated: (booking: any) => void;
 }
 
-/* ---------- Phone formatting ---------- */
+/* ---------- Country codes ---------- */
 
-function formatKenyanPhone(raw: string): string {
-  const digits = raw.replace(/\D/g, "");
-  // +254 7XX XXX XXX or 07XX XXX XXX
-  if (digits.startsWith("254") && digits.length >= 12) {
-    return `+${digits.slice(0, 3)} ${digits.slice(3, 6)} ${digits.slice(6, 9)} ${digits.slice(9, 12)}`;
-  }
-  if (digits.startsWith("0") && digits.length >= 10) {
-    return `${digits.slice(0, 4)} ${digits.slice(4, 7)} ${digits.slice(7, 10)}`;
-  }
-  return raw;
-}
-
-function isValidKenyanPhone(raw: string): boolean {
-  const digits = raw.replace(/\D/g, "");
-  // 07XXXXXXXX or 01XXXXXXXX (10 digits) or 2547XXXXXXXX / 2541XXXXXXXX (12 digits)
-  if (digits.length === 10 && (digits.startsWith("07") || digits.startsWith("01"))) return true;
-  if (digits.length === 12 && digits.startsWith("254") && (digits[3] === "7" || digits[3] === "1")) return true;
-  return false;
-}
+const COUNTRY_CODES = [
+  { code: "+254", label: "KE +254", flag: "\uD83C\uDDF0\uD83C\uDDEA" },
+  { code: "+255", label: "TZ +255", flag: "\uD83C\uDDF9\uD83C\uDDFF" },
+  { code: "+256", label: "UG +256", flag: "\uD83C\uDDFA\uD83C\uDDEC" },
+  { code: "+250", label: "RW +250", flag: "\uD83C\uDDF7\uD83C\uDDFC" },
+  { code: "+44", label: "UK +44", flag: "\uD83C\uDDEC\uD83C\uDDE7" },
+  { code: "+1", label: "US +1", flag: "\uD83C\uDDFA\uD83C\uDDF8" },
+  { code: "+49", label: "DE +49", flag: "\uD83C\uDDE9\uD83C\uDDEA" },
+  { code: "+33", label: "FR +33", flag: "\uD83C\uDDEB\uD83C\uDDF7" },
+  { code: "+39", label: "IT +39", flag: "\uD83C\uDDEE\uD83C\uDDF9" },
+  { code: "+31", label: "NL +31", flag: "\uD83C\uDDF3\uD83C\uDDF1" },
+  { code: "+27", label: "ZA +27", flag: "\uD83C\uDDFF\uD83C\uDDE6" },
+  { code: "+971", label: "AE +971", flag: "\uD83C\uDDE6\uD83C\uDDEA" },
+  { code: "+91", label: "IN +91", flag: "\uD83C\uDDEE\uD83C\uDDF3" },
+  { code: "+86", label: "CN +86", flag: "\uD83C\uDDE8\uD83C\uDDF3" },
+  { code: "+61", label: "AU +61", flag: "\uD83C\uDDE6\uD83C\uDDFA" },
+] as const;
 
 /* ---------- Availability conflict type ---------- */
 
@@ -73,6 +71,7 @@ export function NewBookingSidePanel({
   const [form, setForm] = useState({
     guest_name: "",
     guest_phone: "",
+    country_code: "+254",
     guest_email: "",
     room_id: roomId,
     check_in_date: date,
@@ -88,9 +87,13 @@ export function NewBookingSidePanel({
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [phoneDisplay, setPhoneDisplay] = useState("");
   const [availability, setAvailability] = useState<AvailabilityResult | null>(null);
   const [checkingAvail, setCheckingAvail] = useState(false);
+
+  // Build full phone number from country code + local number
+  const fullPhone = form.guest_phone.trim()
+    ? `${form.country_code}${form.guest_phone.replace(/^0+/, "").replace(/\D/g, "")}`
+    : "";
 
   const selectedRoom = rooms.find((r) => r.id === form.room_id);
 
@@ -145,12 +148,6 @@ export function NewBookingSidePanel({
     return () => clearTimeout(timer);
   }, [checkAvailability]);
 
-  // Phone handling
-  const handlePhoneChange = (raw: string) => {
-    setForm((prev) => ({ ...prev, guest_phone: raw }));
-    setPhoneDisplay(formatKenyanPhone(raw));
-  };
-
   // Suggest full amount when cash selected
   useEffect(() => {
     if (form.payment_method === "cash" && form.amount_paid === 0 && finalTotal > 0) {
@@ -170,8 +167,9 @@ export function NewBookingSidePanel({
       setError("Phone number is required");
       return;
     }
-    if (!isValidKenyanPhone(form.guest_phone)) {
-      setError("Enter a valid Kenyan phone number (07XX or +2547XX)");
+    const phoneDigits = form.guest_phone.replace(/\D/g, "");
+    if (phoneDigits.length < 4 || phoneDigits.length > 15) {
+      setError("Enter a valid phone number");
       return;
     }
     if (nights <= 0) {
@@ -193,7 +191,7 @@ export function NewBookingSidePanel({
           property_id: propertyId,
           room_id: form.room_id,
           guest_name: form.guest_name.trim(),
-          guest_phone: form.guest_phone.trim(),
+          guest_phone: fullPhone,
           guest_email: form.guest_email.trim() || null,
           guest_count: form.guest_count,
           check_in_date: form.check_in_date,
@@ -296,20 +294,33 @@ export function NewBookingSidePanel({
             />
           </div>
 
-          {/* Phone */}
+          {/* Phone with country code */}
           <div>
             <label className="block text-[12px] font-semibold text-[#16130C] mb-1">
               Phone *
             </label>
-            <input
-              type="tel"
-              value={form.guest_phone}
-              onChange={(e) => handlePhoneChange(e.target.value)}
-              className="w-full h-[40px] px-3 rounded-lg border border-[#E2DDD5] text-[14px] text-[#16130C] placeholder:text-[#9C9485] focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] outline-none transition-colors"
-              placeholder="0712 345 678"
-            />
-            {phoneDisplay && phoneDisplay !== form.guest_phone && (
-              <p className="text-[11px] text-[#9C9485] mt-0.5">{phoneDisplay}</p>
+            <div className="flex gap-1.5">
+              <select
+                value={form.country_code}
+                onChange={(e) => setForm({ ...form, country_code: e.target.value })}
+                className="w-[110px] shrink-0 h-[40px] px-2 rounded-lg border border-[#E2DDD5] text-[13px] text-[#16130C] focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] outline-none transition-colors bg-white"
+              >
+                {COUNTRY_CODES.map((c) => (
+                  <option key={c.code} value={c.code}>
+                    {c.flag} {c.label}
+                  </option>
+                ))}
+              </select>
+              <input
+                type="tel"
+                value={form.guest_phone}
+                onChange={(e) => setForm({ ...form, guest_phone: e.target.value })}
+                className="flex-1 h-[40px] px-3 rounded-lg border border-[#E2DDD5] text-[14px] text-[#16130C] placeholder:text-[#9C9485] focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] outline-none transition-colors"
+                placeholder="712 345 678"
+              />
+            </div>
+            {fullPhone && (
+              <p className="text-[11px] text-[#9C9485] mt-0.5">{fullPhone}</p>
             )}
           </div>
 
