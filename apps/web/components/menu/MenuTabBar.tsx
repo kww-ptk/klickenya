@@ -65,17 +65,17 @@ export function MenuTabBar({ tabs }: { tabs: Tab[] }) {
     <div className="sticky top-0 z-20 bg-white border-b border-border">
       <div
         ref={barRef}
-        className="flex overflow-x-auto scrollbar-hide px-5 max-w-[480px] mx-auto"
+        className="flex gap-1 overflow-x-auto scrollbar-hide px-5 max-w-[480px] mx-auto"
       >
         {tabs.map((tab) => (
           <button
             key={tab.id}
             data-tab={tab.id}
             onClick={() => handleClick(tab.id)}
-            className={`whitespace-nowrap px-4 py-3 text-[13px] transition-all duration-150 border-b-2 ${
+            className={`whitespace-nowrap px-4 py-3 text-[13px] font-semibold transition-colors border-b-2 ${
               tab.id === activeId
-                ? "border-amber text-dark font-bold"
-                : "border-transparent text-text3 font-medium hover:text-text2"
+                ? "border-amber text-dark"
+                : "border-transparent text-text3 hover:text-text2"
             }`}
           >
             {tab.title}
