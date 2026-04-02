@@ -54,6 +54,34 @@ export async function POST(
     }
     await sanityWrite.patch(sanityId).set(patchData).commit();
 
+    // Seed menu row for restaurant listings
+    try {
+      const listingDoc = await sanityWrite.fetch(
+        `*[_id == $id][0]{ type, subcategory, "slug": slug.current, title }`,
+        { id: sanityId }
+      );
+      const isRestaurant =
+        listingDoc?.type === "restaurant" ||
+        (listingDoc?.type === "experience" && listingDoc?.subcategory === "restaurants");
+
+      if (isRestaurant && listingDoc?.slug) {
+        await adminClient.from("menus").upsert(
+          {
+            slug: listingDoc.slug,
+            listing_slug: listingDoc.slug,
+            business_id: host.user_id,
+            name: `${listingDoc.title ?? listingTitle} Menu`,
+            display_name: `${listingDoc.title ?? listingTitle} Menu`,
+            is_published: false,
+            ordering_enabled: false,
+          },
+          { onConflict: "slug", ignoreDuplicates: true }
+        );
+      }
+    } catch (menuErr) {
+      console.error("Menu seed on assign (non-blocking):", menuErr);
+    }
+
     // Email to host
     if (host.email) {
       await resend.emails.send({
