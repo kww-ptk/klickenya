@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { assertAdmin, AdminAuthError } from "@/lib/admin/auth";
 import { createClient as createSanityClient } from "next-sanity";
 
@@ -29,6 +30,10 @@ export async function POST(
         verificationStatus: "verified",
       })
       .commit();
+
+    const { id } = await params;
+    revalidatePath(`/admin/hosts/${id}`);
+    revalidatePath("/dashboard");
 
     return NextResponse.json({ success: true });
   } catch (err) {

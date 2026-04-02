@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { assertAdmin, AdminAuthError } from "@/lib/admin/auth";
 import { adminClient } from "@/lib/supabase/admin";
 import { createClient as createSanityClient } from "next-sanity";
@@ -82,6 +83,9 @@ export async function POST(
         }),
       }).catch(() => {});
     }
+
+    revalidatePath(`/admin/hosts/${id}`);
+    revalidatePath("/dashboard");
 
     return NextResponse.json({ success: true });
   } catch (err) {
