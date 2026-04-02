@@ -156,6 +156,8 @@ interface MobileBookingBarProps {
   priceRange?: string;
   maxGuests?: number;
   ticketTypes?: string[];
+  /** Menu slug for restaurant "View Menu" button */
+  menuSlug?: string | null;
 }
 
 function MobileBookingBar({
@@ -168,41 +170,81 @@ function MobileBookingBar({
   priceRange,
   maxGuests,
   ticketTypes,
+  menuSlug,
 }: MobileBookingBarProps) {
   const cta = CTA_MAP[type] ?? DEFAULT_CTA;
+  const isRestaurant = type === "restaurant";
 
   return (
     <>
       {/* ── Fixed bottom bar ───────────────── */}
-      <div className="fixed bottom-0 left-0 right-0 z-[150] bg-white border-t border-border px-5 py-3.5 flex items-center justify-between lg:hidden">
-        <div>
-          <PriceDisplay
-            type={type}
-            price={price}
-            priceUnit={priceUnit}
-            cuisine={cuisine}
-            priceRange={priceRange}
-          />
-        </div>
-        <a
-          href="#mobile-contact"
-          onClick={() => {
-            fetch("/api/analytics/track", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ listingSlug: listingId, listingType: type, eventType: "contact_click" }),
-              keepalive: true,
-            }).catch(() => {});
-          }}
-          className={cn(
-            "px-6 py-3 rounded-[18px] text-[14px] font-bold",
-            cta.bg,
-            cta.text,
-            cta.shadow
-          )}
-        >
-          {cta.label}
-        </a>
+      <div className="fixed bottom-0 left-0 right-0 z-[150] bg-white border-t border-border px-5 py-3.5 lg:hidden">
+        {isRestaurant ? (
+          /* Restaurant: two buttons side by side */
+          <div className="flex items-center gap-2.5">
+            {menuSlug && (
+              <a
+                href={`/m/${menuSlug}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-1 py-3 rounded-[18px] text-[14px] font-bold text-center border-2 border-dark text-dark"
+              >
+                View menu
+              </a>
+            )}
+            <a
+              href="#mobile-contact"
+              onClick={() => {
+                fetch("/api/analytics/track", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ listingSlug: listingId, listingType: type, eventType: "contact_click" }),
+                  keepalive: true,
+                }).catch(() => {});
+              }}
+              className={cn(
+                "flex-1 py-3 rounded-[18px] text-[14px] font-bold text-center",
+                cta.bg,
+                cta.text,
+                cta.shadow
+              )}
+            >
+              Book a table
+            </a>
+          </div>
+        ) : (
+          /* All other types: price left, CTA right */
+          <div className="flex items-center justify-between">
+            <div>
+              <PriceDisplay
+                type={type}
+                price={price}
+                priceUnit={priceUnit}
+                cuisine={cuisine}
+                priceRange={priceRange}
+              />
+            </div>
+            <a
+              href="#mobile-contact"
+              onClick={() => {
+                fetch("/api/analytics/track", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ listingSlug: listingId, listingType: type, eventType: "contact_click" }),
+                  keepalive: true,
+                }).catch(() => {});
+              }}
+              className={cn(
+                "px-6 py-3 rounded-[18px] text-[14px] font-bold",
+                cta.bg,
+                cta.text,
+                cta.shadow
+              )}
+            >
+              {cta.label}
+            </a>
+          </div>
+        )}
       </div>
 
       {/* ── Mobile booking form ────────────── */}

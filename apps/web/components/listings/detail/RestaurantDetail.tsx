@@ -205,6 +205,7 @@ function RestaurantDetail({
         listingTitle={listing.title}
         cuisine={cuisine}
         priceRange={listing.priceRange}
+        menuSlug={menuData?.slug}
       />
     </>
   );
