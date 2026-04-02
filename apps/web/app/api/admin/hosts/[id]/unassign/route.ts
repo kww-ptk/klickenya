@@ -31,7 +31,7 @@ export async function POST(
 
     const { data: host } = await adminClient
       .from("host_profiles")
-      .select("id, user_id, display_name, email")
+      .select("id, user_id, display_name, email, sanity_host_id")
       .eq("id", id)
       .single();
 
@@ -56,6 +56,15 @@ export async function POST(
       .patch(sanityId)
       .unset(["host"])
       .commit();
+
+    // Remove listing from host document's listings array
+    if (host.sanity_host_id) {
+      await sanityWrite
+        .patch(host.sanity_host_id)
+        .unset([`listings[_ref=="${sanityId}"]`])
+        .commit()
+        .catch((err: unknown) => console.error("Remove listing from host error:", err));
+    }
 
     // Email to host
     if (host.email) {

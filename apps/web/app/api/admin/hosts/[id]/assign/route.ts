@@ -81,6 +81,16 @@ export async function POST(
     }
     await sanityWrite.patch(sanityId).set(patchData).commit();
 
+    // Append listing to host document's listings array
+    if (sanityHostId) {
+      await sanityWrite
+        .patch(sanityHostId)
+        .setIfMissing({ listings: [] })
+        .append("listings", [{ _type: "reference", _ref: sanityId, _key: sanityId.slice(-8) }])
+        .commit()
+        .catch((err: unknown) => console.error("Append listing to host error:", err));
+    }
+
     // Seed menu row for restaurant listings
     try {
       const listingDoc = await sanityWrite.fetch(
