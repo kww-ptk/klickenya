@@ -114,6 +114,42 @@ export async function POST(req: NextRequest) {
       // Don't fail — Supabase is already updated, admin can fix in Studio
     }
 
+    /* STEP 6b — Seed empty menu row for restaurants (fire and forget) */
+    void (async () => {
+      try {
+        const listingDoc = await sanityWrite.fetch(
+          `*[_id == $id][0]{ type, subcategory }`,
+          { id: claim.listing_sanity_id }
+        );
+        const isRestaurant =
+          listingDoc?.type === "restaurant" ||
+          (listingDoc?.type === "experience" &&
+            listingDoc?.subcategory === "restaurants");
+        if (!isRestaurant) return;
+
+        const { data: existingUsers } =
+          await supabase.auth.admin.listUsers();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const authUser = existingUsers?.users?.find(
+          (u: any) => u.email === claim.claimant_email
+        );
+        if (!authUser) return;
+
+        await supabase.from("menus").upsert(
+          {
+            slug: claim.listing_slug,
+            business_id: authUser.id,
+            name: `${claim.listing_title} Menu`,
+            is_published: false,
+            ordering_enabled: false,
+          },
+          { onConflict: "slug", ignoreDuplicates: true }
+        );
+      } catch (menuErr) {
+        console.error("Menu seed error (non-blocking):", menuErr);
+      }
+    })();
+
     /* STEP 7 — Send confirmation email to owner */
     const listingUrl = `https://klickenya.com/${claim.listing_type === "experience" ? "experiences" : claim.listing_type + "s"}/${(claim.listing_city ?? "").toLowerCase().replace(/ /g, "-")}/${claim.listing_slug}`;
 

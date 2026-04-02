@@ -11,6 +11,7 @@ import {
 import { urlForImage } from "@/lib/sanity/image";
 import { JsonLd } from "@/components/seo/JsonLd";
 import type { ListingCardProps } from "@/components/listings/ListingCard";
+import type { MenuData } from "@/components/listings/detail/restaurant/MenuDisplay";
 import { StayDetail } from "@/components/listings/detail/StayDetail";
 import { RestaurantDetail } from "@/components/listings/detail/RestaurantDetail";
 import { ExperienceDetail } from "@/components/listings/detail/ExperienceDetail";
@@ -221,6 +222,31 @@ export default async function ListingDetailPage({ params }: PageProps) {
     params: { type: sanityType, city: cityName, slug },
   });
 
+  // Fetch Supabase menu data for restaurants only
+  const isRestaurantListing =
+    listing.subcategory === "restaurants" || sanityType === "restaurant";
+  let menuData: MenuData | null = null;
+  if (isRestaurantListing) {
+    const { data } = await adminClient
+      .from("menus")
+      .select(
+        `
+        id, name, is_published,
+        menu_sections (
+          id, title, display_order, is_visible,
+          menu_items (
+            id, name, description, price_kes,
+            dietary_tags, is_available, display_order, photo_url
+          )
+        )
+      `
+      )
+      .eq("slug", slug)
+      .eq("is_published", true)
+      .single();
+    menuData = (data as MenuData) ?? null;
+  }
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const similarCards: ListingCardProps[] = (similar ?? []).map((l: any) => {
     const lSlug = l.slug?.current ?? l.slug ?? "";
@@ -286,6 +312,7 @@ export default async function ListingDetailPage({ params }: PageProps) {
     similarCards,
     attendeeCount,
     attendees,
+    menuData,
   };
 
   const Detail = (() => {

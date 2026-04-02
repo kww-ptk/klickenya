@@ -1,4 +1,4 @@
-import { Star, MapPin, Clock, UtensilsCrossed } from "lucide-react";
+import { Star, MapPin, Clock } from "lucide-react";
 import { PortableTextRenderer } from "@/components/blog/PortableTextRenderer";
 import { PhotoGallery } from "@/components/listings/widgets/PhotoGallery";
 import { Breadcrumb } from "@/components/listings/widgets/Breadcrumb";
@@ -10,6 +10,8 @@ import { SimilarListings } from "@/components/listings/widgets/SimilarListings";
 import { BookingSidebar } from "@/components/listings/widgets/BookingSidebar";
 import { MobileBookingBar } from "@/components/listings/widgets/MobileBookingBar";
 import { OpenNowBadge } from "./restaurant/OpenNowBadge";
+import { MenuDisplay } from "./restaurant/MenuDisplay";
+import type { MenuData } from "./restaurant/MenuDisplay";
 import type { ListingCardProps } from "@/components/listings/ListingCard";
 
 /* ── Types ─────────────────────────────────────────── */
@@ -25,6 +27,7 @@ interface RestaurantDetailProps {
   cityName: string;
   citySlug: string;
   similarCards: ListingCardProps[];
+  menuData?: MenuData | null;
 }
 
 /* ── Helpers ───────────────────────────────────────── */
@@ -47,6 +50,7 @@ function RestaurantDetail({
   cityName,
   citySlug,
   similarCards,
+  menuData,
 }: RestaurantDetailProps) {
   const highlights = listing.highlights ?? [];
   const amenities: string[] = listing.amenities ?? [];
@@ -166,21 +170,12 @@ function RestaurantDetail({
               </>
             )}
 
-            {/* ── Menu placeholder ────────────── */}
+            {/* ── Menu ────────────────────────── */}
             <div className="mb-7">
               <h2 className="font-display text-[22px] font-bold tracking-[-0.02em] text-dark mb-4">
                 Menu
               </h2>
-              <div className="rounded-[20px] border border-dashed border-border bg-surface/30 p-8 text-center">
-                <UtensilsCrossed className="size-10 text-text3 mx-auto mb-3" />
-                <p className="text-[15px] font-semibold text-text mb-1">
-                  Menu coming soon
-                </p>
-                <p className="text-[13px] text-text2 max-w-[320px] mx-auto">
-                  We&apos;re working with the restaurant to bring you the full
-                  menu. In the meantime, contact them directly for details.
-                </p>
-              </div>
+              <MenuDisplay menuData={menuData ?? null} />
             </div>
 
             <AmenitiesList

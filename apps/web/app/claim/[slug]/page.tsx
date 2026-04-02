@@ -12,6 +12,7 @@ const CLAIM_LISTING_QUERY = defineQuery(`
     _id,
     title,
     type,
+    subcategory,
     city,
     "slug": slug.current,
     "mainImage": mainImage.asset->url,
@@ -144,6 +145,7 @@ export default async function ClaimPage({ params }: PageProps) {
               listingSanityId={listing._id}
               listingTitle={listing.title}
               listingType={listing.type}
+              listingSubcategory={listing.subcategory ?? null}
               listingCity={listing.city}
             />
           </div>

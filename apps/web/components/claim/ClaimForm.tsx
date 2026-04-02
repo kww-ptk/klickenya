@@ -12,6 +12,7 @@ interface ClaimFormProps {
   listingSanityId: string;
   listingTitle: string;
   listingType: string;
+  listingSubcategory?: string | null;
   listingCity?: string;
 }
 
@@ -43,6 +44,7 @@ export function ClaimForm({
   listingSanityId,
   listingTitle,
   listingType,
+  listingSubcategory,
   listingCity,
 }: ClaimFormProps) {
   const [step, setStep] = useState<Step>("details");
@@ -598,6 +600,9 @@ export function ClaimForm({
   /* STEP 4 — Success                      */
   /* ══════════════════════════════════════ */
   const listingUrl = `/${listingType === "experience" ? "experiences" : listingType + "s"}/${(listingCity ?? "").toLowerCase().replace(/ /g, "-")}/${listingSlug}`;
+  const isRestaurant =
+    listingType === "restaurant" ||
+    (listingType === "experience" && listingSubcategory === "restaurants");
 
   return (
     <div>
@@ -636,6 +641,18 @@ export function ClaimForm({
             Reply to your confirmation email or contact hello@klickenya.com
           </p>
         </div>
+        {isRestaurant && (
+          <Link
+            href={`/dashboard/menu/${listingSlug}`}
+            className="block border border-[#E2DDD5] rounded-xl p-4 bg-white hover:border-[#E8A020]/40 transition-colors"
+          >
+            <p className="text-sm font-semibold text-[#16130C] mb-1">🍽️ Set up your free digital menu</p>
+            <p className="text-xs text-[#5E5848] mb-2">
+              Customers scan a QR code on your table to see your full menu. Takes 5 minutes to set up.
+            </p>
+            <span className="text-xs font-bold text-[#E8A020]">Build your menu →</span>
+          </Link>
+        )}
       </div>
 
       <p className="text-xs text-[#9C9485] text-center">
