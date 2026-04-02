@@ -46,6 +46,8 @@ export async function POST(
         hostId: host.user_id,
         hostName: host.display_name,
         notificationEmail1: host.email,
+        isVerified: true,
+        verificationStatus: "verified",
       })
       .commit();
 

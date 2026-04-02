@@ -163,6 +163,7 @@ export default async function AdminHostDetailPage({ params }: PageProps) {
                       hostId={id}
                       sanityId={listing._id}
                       listingTitle={listing.title}
+                      isVerified={listing.isVerified}
                       action="unassign"
                     />
                   </div>

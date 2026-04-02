@@ -8,6 +8,7 @@ interface UnassignProps {
   sanityId: string;
   listingTitle: string;
   action: "unassign";
+  isVerified?: boolean;
   hostName?: string;
 }
 
@@ -34,8 +35,9 @@ export function HostListingActions(props: Props) {
   return <AssignSearch {...props} />;
 }
 
-function UnassignButton({ hostId, sanityId, listingTitle }: UnassignProps) {
+function UnassignButton({ hostId, sanityId, listingTitle, isVerified }: UnassignProps) {
   const [loading, setLoading] = useState(false);
+  const [verifying, setVerifying] = useState(false);
   const router = useRouter();
 
   async function handleUnassign() {
@@ -56,14 +58,42 @@ function UnassignButton({ hostId, sanityId, listingTitle }: UnassignProps) {
     }
   }
 
+  async function handleVerify() {
+    setVerifying(true);
+    try {
+      const res = await fetch(`/api/admin/hosts/${hostId}/verify-listing`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sanityId }),
+      });
+      if (!res.ok) throw new Error("Failed");
+      router.refresh();
+    } catch {
+      alert("Failed to verify");
+    } finally {
+      setVerifying(false);
+    }
+  }
+
   return (
-    <button
-      onClick={handleUnassign}
-      disabled={loading}
-      className="text-[12px] font-medium text-red-500 hover:underline disabled:opacity-50"
-    >
-      {loading ? "..." : "Unassign"}
-    </button>
+    <>
+      {!isVerified && (
+        <button
+          onClick={handleVerify}
+          disabled={verifying}
+          className="text-[12px] font-medium text-[#16A34A] hover:underline disabled:opacity-50"
+        >
+          {verifying ? "..." : "Verify"}
+        </button>
+      )}
+      <button
+        onClick={handleUnassign}
+        disabled={loading}
+        className="text-[12px] font-medium text-red-500 hover:underline disabled:opacity-50"
+      >
+        {loading ? "..." : "Unassign"}
+      </button>
+    </>
   );
 }
 
