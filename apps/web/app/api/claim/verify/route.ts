@@ -152,6 +152,44 @@ export async function POST(req: NextRequest) {
       }
     })();
 
+    /* STEP 6c — Seed property row for stays (fire and forget) */
+    void (async () => {
+      try {
+        const listingDoc = await sanityWrite.fetch(
+          `*[_id == $id][0]{ type, title, "slug": slug.current, city }`,
+          { id: claim.listing_sanity_id }
+        );
+        if (listingDoc?.type !== "stay") return;
+
+        const { data: existingUsers } = await supabase.auth.admin.listUsers();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const authUser = existingUsers?.users?.find(
+          (u: any) => u.email === claim.claimant_email
+        );
+        if (!authUser) return;
+
+        // Check if property already exists for this slug
+        const { data: existing } = await supabase
+          .from("properties")
+          .select("id")
+          .eq("listing_slug", claim.listing_slug)
+          .limit(1);
+        if (existing && existing.length > 0) return;
+
+        await supabase.from("properties").insert({
+          owner_id: authUser.id,
+          listing_slug: claim.listing_slug,
+          name: claim.listing_title,
+          property_type: "villa",
+          is_entire_property: true,
+          city: claim.listing_city ?? null,
+          is_active: false,
+        });
+      } catch (propErr) {
+        console.error("Property seed error (non-blocking):", propErr);
+      }
+    })();
+
     /* STEP 7 — Send confirmation email to owner */
     const listingUrl = `https://klickenya.com/${claim.listing_type === "experience" ? "experiences" : claim.listing_type + "s"}/${(claim.listing_city ?? "").toLowerCase().replace(/ /g, "-")}/${claim.listing_slug}`;
 

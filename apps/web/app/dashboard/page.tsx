@@ -162,6 +162,29 @@ export default async function DashboardPage() {
     }
   }
 
+  // Check for properties needing setup (stay owners with no rooms)
+  let propertyNeedsSetup: { id: string; name: string } | null = null;
+  {
+    const { data: props } = await adminClient
+      .from("properties")
+      .select("id, name")
+      .eq("owner_id", user.id)
+      .limit(10);
+    if (props && props.length > 0) {
+      // Find one with zero rooms
+      for (const p of props) {
+        const { count } = await adminClient
+          .from("rooms")
+          .select("id", { count: "exact", head: true })
+          .eq("property_id", p.id);
+        if (count === 0) {
+          propertyNeedsSetup = { id: p.id, name: p.name };
+          break;
+        }
+      }
+    }
+  }
+
   // Check for unpublished restaurant menus
   const isRestaurant = (l: { type: string; subcategory: string | null }) =>
     l.type === "restaurant" || (l.type === "experience" && l.subcategory === "restaurants");
@@ -268,6 +291,29 @@ export default async function DashboardPage() {
               className="shrink-0 bg-[#E8A020] text-[#16130C] font-bold text-[12px] px-4 h-[36px] flex items-center rounded-full hover:bg-[#d4911c] transition-colors whitespace-nowrap"
             >
               Set up your digital menu →
+            </Link>
+          </div>
+        </div>
+      )}
+
+      {/* Property setup banner for stay owners */}
+      {propertyNeedsSetup && (
+        <div className="mb-5 rounded-xl lg:rounded-2xl border border-[#4F46E5]/20 bg-[#4F46E5]/[0.04] p-4 shadow-sm" style={{ borderLeft: "4px solid #4F46E5" }}>
+          <div className="flex items-center gap-3">
+            <span className="text-[24px] shrink-0">🏠</span>
+            <div className="flex-1 min-w-0">
+              <p className="text-[13px] font-bold text-[#16130C]">
+                Set up your property calendar
+              </p>
+              <p className="text-[12.5px] text-[#5E5848] mt-0.5">
+                Manage bookings, sync with Airbnb, and take direct payments.
+              </p>
+            </div>
+            <Link
+              href={`/dashboard/property/${propertyNeedsSetup.id}`}
+              className="shrink-0 bg-[#4F46E5] text-white font-bold text-[12px] px-4 h-[36px] flex items-center rounded-full hover:bg-[#4338CA] transition-colors whitespace-nowrap"
+            >
+              Set up property →
             </Link>
           </div>
         </div>
