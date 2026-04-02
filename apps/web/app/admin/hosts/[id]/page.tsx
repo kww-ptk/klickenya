@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { adminClient } from "@/lib/supabase/admin";
-import { sanityClient } from "@/lib/sanity/client";
+import { sanityPreviewClient as sanityClient } from "@/lib/sanity/client";
 import { HostListingActions } from "./HostListingActions";
 
 export const revalidate = 0;
