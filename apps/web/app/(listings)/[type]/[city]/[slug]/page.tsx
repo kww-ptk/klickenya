@@ -231,7 +231,7 @@ export default async function ListingDetailPage({ params }: PageProps) {
       .from("menus")
       .select(
         `
-        id, name, is_published,
+        id, slug, name, is_published,
         menu_sections (
           id, title, display_order, is_visible,
           menu_items (
