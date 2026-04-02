@@ -235,6 +235,12 @@ export function MenuBuilder({ menu: initialMenu, scanCount }: MenuBuilderProps) 
                 klickenya.com/m/{menu.slug}
               </Link>
               <div className="flex flex-col gap-2 mt-4">
+                <Link
+                  href={`/dashboard/menu/${menu.id}/qr`}
+                  className="w-full h-[36px] rounded-full bg-[#16130C] text-white text-[13px] font-bold flex items-center justify-center hover:bg-[#2A2520] transition-colors"
+                >
+                  Download QR code →
+                </Link>
                 <button
                   onClick={togglePublish}
                   disabled={publishing}
