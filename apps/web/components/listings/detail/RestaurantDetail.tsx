@@ -171,7 +171,7 @@ function RestaurantDetail({
             )}
 
             {/* ── Menu ────────────────────────── */}
-            <div className="mb-7">
+            <div id="menu-section" className="mb-7 scroll-mt-20">
               <h2 className="font-display text-[22px] font-bold tracking-[-0.02em] text-dark mb-4">
                 Menu
               </h2>

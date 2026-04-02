@@ -178,73 +178,78 @@ function MobileBookingBar({
   return (
     <>
       {/* ── Fixed bottom bar ───────────────── */}
-      <div className="fixed bottom-0 left-0 right-0 z-[150] bg-white border-t border-border px-5 py-3.5 lg:hidden">
-        {isRestaurant ? (
-          /* Restaurant: compact buttons right-aligned */
-          <div className="flex items-center justify-end gap-2">
-            {menuSlug && (
-              <a
-                href={`/m/${menuSlug}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-5 py-2.5 rounded-[14px] text-[13px] font-bold border border-border text-dark hover:bg-surface transition-colors"
-              >
-                View menu
-              </a>
-            )}
-            <a
-              href="#mobile-contact"
-              onClick={() => {
-                fetch("/api/analytics/track", {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ listingSlug: listingId, listingType: type, eventType: "contact_click" }),
-                  keepalive: true,
-                }).catch(() => {});
-              }}
-              className={cn(
-                "px-5 py-2.5 rounded-[14px] text-[13px] font-bold",
-                cta.bg,
-                cta.text,
-                cta.shadow
-              )}
-            >
-              Book a table
-            </a>
-          </div>
-        ) : (
-          /* All other types: price left, CTA right */
-          <div className="flex items-center justify-between">
-            <div>
-              <PriceDisplay
-                type={type}
-                price={price}
-                priceUnit={priceUnit}
-                cuisine={cuisine}
-                priceRange={priceRange}
-              />
+      <div className="fixed bottom-0 left-0 right-0 z-[150] lg:hidden pb-[env(safe-area-inset-bottom)]">
+        <div className="bg-white/95 backdrop-blur-md border-t border-border/60 px-4 py-2.5">
+          {isRestaurant ? (
+            /* Restaurant: price left, two compact actions right */
+            <div className="flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <PriceDisplay
+                  type={type}
+                  price={price}
+                  priceUnit={priceUnit}
+                  cuisine={cuisine}
+                  priceRange={priceRange}
+                />
+              </div>
+              <div className="flex items-center gap-1.5 shrink-0">
+                {menuSlug && (
+                  <a
+                    href="#menu-section"
+                    className="h-[38px] px-4 rounded-full text-[13px] font-semibold text-dark border border-border/80 flex items-center hover:bg-surface transition-colors"
+                  >
+                    Menu
+                  </a>
+                )}
+                <a
+                  href="#mobile-contact"
+                  onClick={() => {
+                    fetch("/api/analytics/track", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ listingSlug: listingId, listingType: type, eventType: "contact_click" }),
+                      keepalive: true,
+                    }).catch(() => {});
+                  }}
+                  className="h-[38px] px-4 rounded-full text-[13px] font-bold bg-gradient-to-r from-amber to-amber2 text-dark flex items-center"
+                >
+                  Book a table
+                </a>
+              </div>
             </div>
-            <a
-              href="#mobile-contact"
-              onClick={() => {
-                fetch("/api/analytics/track", {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ listingSlug: listingId, listingType: type, eventType: "contact_click" }),
-                  keepalive: true,
-                }).catch(() => {});
-              }}
-              className={cn(
-                "px-6 py-3 rounded-[18px] text-[14px] font-bold",
-                cta.bg,
-                cta.text,
-                cta.shadow
-              )}
-            >
-              {cta.label}
-            </a>
-          </div>
-        )}
+          ) : (
+            /* All other types: price left, CTA right */
+            <div className="flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <PriceDisplay
+                  type={type}
+                  price={price}
+                  priceUnit={priceUnit}
+                  cuisine={cuisine}
+                  priceRange={priceRange}
+                />
+              </div>
+              <a
+                href="#mobile-contact"
+                onClick={() => {
+                  fetch("/api/analytics/track", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ listingSlug: listingId, listingType: type, eventType: "contact_click" }),
+                    keepalive: true,
+                  }).catch(() => {});
+                }}
+                className={cn(
+                  "h-[38px] px-5 rounded-full text-[13px] font-bold flex items-center shrink-0",
+                  cta.bg,
+                  cta.text,
+                )}
+              >
+                {cta.label}
+              </a>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* ── Mobile booking form ────────────── */}
