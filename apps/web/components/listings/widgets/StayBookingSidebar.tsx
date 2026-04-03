@@ -30,9 +30,11 @@ interface RoomResult {
   available: boolean;
   price: number;
   photo?: string;
+  photos?: string[];
   capacity: number;
   bedType?: string;
   amenities?: string[];
+  description?: string;
 }
 
 interface AvailabilityData {
@@ -59,8 +61,6 @@ interface StayBookingSidebarProps {
   ) => void;
 }
 
-const today = () => new Date().toISOString().split("T")[0];
-
 function nightsBetween(a: string, b: string): number {
   if (!a || !b) return 0;
   return Math.max(1, Math.ceil((new Date(b).getTime() - new Date(a).getTime()) / 86400000));
@@ -68,7 +68,11 @@ function nightsBetween(a: string, b: string): number {
 
 const fmt = (n: number) => `KSh ${n.toLocaleString()}`;
 
-/* ── Component ─────────────────────────────────── */
+function fmtDate(d: string) {
+  return new Date(d + "T00:00:00").toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" });
+}
+
+/* ── Main Component ─────────────────────────── */
 
 export function StayBookingSidebar({
   listingSlug,
@@ -84,29 +88,40 @@ export function StayBookingSidebar({
   recentBookings,
   onAvailabilityChecked,
 }: StayBookingSidebarProps) {
+  // Dates
   const [checkIn, setCheckIn] = useState("");
   const [checkOut, setCheckOut] = useState("");
   const [guests, setGuests] = useState(1);
-  const [checking, setChecking] = useState(false);
-  const [error, setError] = useState("");
+  const [showDatePicker, setShowDatePicker] = useState(false);
 
-  // Results modal state
-  const [showResults, setShowResults] = useState(false);
+  // Availability
+  const [checking, setChecking] = useState(false);
   const [results, setResults] = useState<RoomResult[]>([]);
   const [entireAvail, setEntireAvail] = useState(false);
-  const [selectedRoom, setSelectedRoom] = useState<string | null>(null);
+  const [showModal, setShowModal] = useState(false);
 
-  // Enquiry state
-  const [showEnquiry, setShowEnquiry] = useState(false);
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
-  const [message, setMessage] = useState("");
+  // Room selection
+  const [selectedRoom, setSelectedRoom] = useState<string | null>(null);
+  const [previewRoom, setPreviewRoom] = useState<RoomResult | null>(null);
+
+  // Enquiry (step 3)
+  const [step, setStep] = useState<"rooms" | "enquiry">("rooms");
+  const [formName, setFormName] = useState("");
+  const [formEmail, setFormEmail] = useState("");
+  const [formPhone, setFormPhone] = useState("");
+  const [formMessage, setFormMessage] = useState("");
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
+  const [error, setError] = useState("");
 
   const nights = nightsBetween(checkIn, checkOut);
+  const availableRooms = results.filter((r) => r.available);
+  const totalEntirePrice = results.reduce((s, r) => s + r.price, 0);
+  const selectedPrice = selectedRoom === "__entire__"
+    ? totalEntirePrice
+    : (results.find((r) => r.key === selectedRoom)?.price ?? 0);
 
+  // Check availability
   const checkAvailability = useCallback(async () => {
     if (!checkIn || !checkOut || checkOut <= checkIn) return;
     setChecking(true);
@@ -124,16 +139,18 @@ export function StayBookingSidebar({
 
       if (data.rooms) {
         for (const [key, val] of Object.entries(data.rooms)) {
-          const sanityRoom = sanityRooms?.find((r) => r._key === key);
+          const sr = sanityRooms?.find((r) => r._key === key);
+          const allPhotos = (sr?.photos ?? []).map((p) => p.asset?.url).filter(Boolean) as string[];
           roomResults.push({
             key,
-            name: sanityRoom?.roomName ?? key,
+            name: sr?.roomName ?? key,
             available: val.available,
             price: val.price,
-            photo: sanityRoom?.photos?.[0]?.asset?.url,
-            capacity: sanityRoom?.capacity ?? 2,
-            bedType: sanityRoom?.bedType,
-            amenities: sanityRoom?.roomAmenities,
+            photo: allPhotos[0],
+            photos: allPhotos,
+            capacity: sr?.capacity ?? 2,
+            bedType: sr?.bedType,
+            amenities: sr?.roomAmenities,
           });
           availMap[key] = val.available;
           priceMap[key] = val.price;
@@ -141,14 +158,15 @@ export function StayBookingSidebar({
         setEntireAvail(data.entireProperty ?? false);
         onAvailabilityChecked?.(availMap, priceMap, data.entireProperty ?? false);
       } else {
-        // No PMS — show all from Sanity
         for (const r of sanityRooms ?? []) {
+          const allPhotos = (r.photos ?? []).map((p) => p.asset?.url).filter(Boolean) as string[];
           roomResults.push({
             key: r._key,
             name: r.roomName,
             available: true,
             price: r.pricePerNight,
-            photo: r.photos?.[0]?.asset?.url,
+            photo: allPhotos[0],
+            photos: allPhotos,
             capacity: r.capacity,
             bedType: r.bedType,
             amenities: r.roomAmenities,
@@ -158,15 +176,19 @@ export function StayBookingSidebar({
       }
 
       setResults(roomResults);
-      setShowResults(true);
+      setStep("rooms");
+      setSelectedRoom(null);
+      setPreviewRoom(null);
+      setShowModal(true);
     } catch {
       setError("Could not check availability. Please try again.");
     }
     setChecking(false);
   }, [checkIn, checkOut, listingSlug, sanityRooms, onAvailabilityChecked]);
 
+  // Send enquiry
   const handleEnquire = async () => {
-    if (!name.trim() || !email.trim() || !phone.trim()) {
+    if (!formName.trim() || !formEmail.trim() || !formPhone.trim()) {
       setError("Please fill in all fields");
       return;
     }
@@ -181,10 +203,10 @@ export function StayBookingSidebar({
         body: JSON.stringify({
           listing_sanity_id: listingId,
           listing_title: listingTitle,
-          name: name.trim(),
-          email: email.trim(),
-          phone: phone.trim(),
-          message: message.trim() || null,
+          name: formName.trim(),
+          email: formEmail.trim(),
+          phone: formPhone.trim(),
+          message: formMessage.trim() || null,
           check_in: checkIn,
           check_out: checkOut,
           guests,
@@ -193,59 +215,54 @@ export function StayBookingSidebar({
       });
       if (res.ok) {
         setSent(true);
-        setShowEnquiry(false);
-        setShowResults(false);
-      } else {
-        setError("Failed to send. Please try again.");
-      }
+        setShowModal(false);
+      } else setError("Failed to send. Please try again.");
     } catch {
       setError("Network error. Please try again.");
     }
     setSending(false);
   };
 
-  const availableRooms = results.filter((r) => r.available);
-  const totalEntirePrice = results.reduce((s, r) => s + r.price, 0);
-  const selectedPrice = selectedRoom === "__entire__"
-    ? totalEntirePrice
-    : (results.find((r) => r.key === selectedRoom)?.price ?? 0);
-
-  // Sent confirmation
+  // Sent state
   if (sent) {
     return (
       <div className="text-center py-6">
         <div className="w-14 h-14 rounded-full bg-[#16A34A]/10 flex items-center justify-center mx-auto mb-3">
-          <svg className="size-7 text-[#16A34A]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-          </svg>
+          <svg className="size-7 text-[#16A34A]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
         </div>
         <p className="font-display text-[18px] font-bold text-[#16130C] mb-1">Enquiry sent!</p>
         <p className="text-[13px] text-[#9C9485]">The host will reply within 24 hours.</p>
-        <button onClick={() => { setSent(false); setSelectedRoom(null); }} className="mt-4 text-[13px] font-semibold text-[#E8A020]">
-          Check different dates
-        </button>
+        <button onClick={() => { setSent(false); setSelectedRoom(null); setResults([]); }} className="mt-4 text-[13px] font-semibold text-[#E8A020]">Check different dates</button>
       </div>
     );
   }
 
   return (
     <>
-      {/* ── Sidebar: dates + guests ── */}
+      {/* ── Sidebar ── */}
       <div className="space-y-4">
         <div className="flex items-baseline gap-1.5 mb-1">
-          <span className="font-display text-[24px] font-extrabold tracking-[-0.02em] text-[#16130C]">
-            {fmt(price)}
-          </span>
+          <span className="font-display text-[24px] font-extrabold tracking-[-0.02em] text-[#16130C]">{fmt(price)}</span>
           <span className="text-[14px] text-[#9C9485]">/ {priceUnit}</span>
         </div>
 
-        <DateRangePicker
-          checkIn={checkIn}
-          checkOut={checkOut}
-          onCheckInChange={setCheckIn}
-          onCheckOutChange={setCheckOut}
-        />
+        {/* Clickable date fields — open date picker modal */}
+        <button type="button" onClick={() => setShowDatePicker(true)} className="w-full grid grid-cols-2 border border-[#E2DDD5] rounded-[14px] overflow-hidden text-left hover:border-[#9C9485] transition-colors">
+          <div className="p-3 border-r border-[#E2DDD5]">
+            <p className="text-[10px] font-bold text-[#9C9485] uppercase tracking-wide">Check-in</p>
+            <p className={cn("text-[14px] font-semibold", checkIn ? "text-[#16130C]" : "text-[#9C9485]")}>
+              {checkIn ? fmtDate(checkIn) : "Add date"}
+            </p>
+          </div>
+          <div className="p-3">
+            <p className="text-[10px] font-bold text-[#9C9485] uppercase tracking-wide">Check-out</p>
+            <p className={cn("text-[14px] font-semibold", checkOut ? "text-[#16130C]" : "text-[#9C9485]")}>
+              {checkOut ? fmtDate(checkOut) : "Add date"}
+            </p>
+          </div>
+        </button>
 
+        {/* Guests */}
         <div className="border border-[#E2DDD5] rounded-[14px] p-3 flex items-center justify-between">
           <label className="text-[10px] font-bold text-[#9C9485] uppercase tracking-wide">Guests</label>
           <div className="flex items-center gap-3">
@@ -255,401 +272,297 @@ export function StayBookingSidebar({
           </div>
         </div>
 
-        <button
-          type="button"
-          onClick={checkAvailability}
-          disabled={!checkIn || !checkOut || checkOut <= checkIn || checking}
-          className={cn(
-            "w-full py-3.5 rounded-[18px] text-[15px] font-bold transition-all duration-200",
-            "bg-gradient-to-r from-[#E8A020] to-[#d4911c] text-[#16130C]",
-            "shadow-[0_4px_14px_rgba(232,160,32,0.35)]",
-            "hover:shadow-[0_6px_20px_rgba(232,160,32,0.45)] hover:-translate-y-0.5",
-            "disabled:opacity-50 disabled:pointer-events-none"
-          )}
-        >
-          {checking ? (
-            <span className="inline-flex items-center gap-2">
-              <svg className="animate-spin size-4" viewBox="0 0 24 24" fill="none">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-              </svg>
-              Checking...
-            </span>
-          ) : "Check availability"}
+        <button type="button" onClick={checkAvailability} disabled={!checkIn || !checkOut || checkOut <= checkIn || checking} className={cn("w-full py-3.5 rounded-[18px] text-[15px] font-bold transition-all duration-200", "bg-gradient-to-r from-[#E8A020] to-[#d4911c] text-[#16130C]", "shadow-[0_4px_14px_rgba(232,160,32,0.35)]", "hover:shadow-[0_6px_20px_rgba(232,160,32,0.45)] hover:-translate-y-0.5", "disabled:opacity-50 disabled:pointer-events-none")}>
+          {checking ? "Checking..." : "Check availability"}
         </button>
 
-        {error && !showResults && <p className="text-[13px] text-red-600 text-center">{error}</p>}
+        {error && !showModal && <p className="text-[13px] text-red-600 text-center">{error}</p>}
         <p className="text-[12px] text-[#9C9485] text-center">You won&apos;t be charged yet</p>
       </div>
 
-      {/* ── Results modal — portaled to body to escape stacking context ── */}
-      {showResults && typeof document !== "undefined" && createPortal(
-        <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center" style={{ isolation: "isolate" }}>
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px]" onClick={() => { setShowResults(false); setSelectedRoom(null); }} />
-
-          <div className="relative w-full sm:max-w-[520px] max-h-[92vh] sm:max-h-[88vh] bg-white rounded-t-3xl sm:rounded-2xl shadow-2xl overflow-hidden flex flex-col">
-            {/* Drag handle — mobile */}
-            <div className="sm:hidden flex justify-center pt-2 pb-0">
-              <div className="w-10 h-1 rounded-full bg-[#E2DDD5]" />
-            </div>
-
-            {/* Header */}
-            <div className="sticky top-0 bg-white/95 backdrop-blur-sm border-b border-[#E2DDD5] px-5 pt-3 pb-3 sm:py-4 flex items-center justify-between z-10 shrink-0">
-              <div>
-                <h2 className="font-display text-[18px] sm:text-[20px] font-bold text-[#16130C] tracking-[-0.02em]">
-                  Choose your room
-                </h2>
-                <p className="text-[12px] text-[#9C9485] mt-0.5">
-                  {new Date(checkIn + "T00:00:00").toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" })}
-                  {" \u2192 "}
-                  {new Date(checkOut + "T00:00:00").toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" })}
-                  {" \u00B7 "}{nights} night{nights !== 1 ? "s" : ""}
-                  {" \u00B7 "}{guests} guest{guests !== 1 ? "s" : ""}
-                </p>
-              </div>
-              <button onClick={() => { setShowResults(false); setSelectedRoom(null); }} className="size-8 flex items-center justify-center rounded-full bg-[#F4F1EC] hover:bg-[#E2DDD5] transition-colors">
-                <svg className="size-4 text-[#5E5848]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                </svg>
+      {/* ── Date picker modal ── */}
+      {showDatePicker && typeof document !== "undefined" && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center">
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-[1px]" onClick={() => setShowDatePicker(false)} />
+          <div className="relative w-full sm:max-w-[400px] max-h-[90vh] bg-white rounded-t-3xl sm:rounded-2xl shadow-2xl overflow-hidden flex flex-col">
+            <div className="sm:hidden flex justify-center pt-2"><div className="w-10 h-1 rounded-full bg-[#E2DDD5]" /></div>
+            <div className="px-5 pt-3 pb-2 flex items-center justify-between">
+              <h2 className="font-display text-[17px] font-bold text-[#16130C]">Select dates</h2>
+              <button onClick={() => setShowDatePicker(false)} className="size-8 flex items-center justify-center rounded-full bg-[#F4F1EC] hover:bg-[#E2DDD5]">
+                <svg className="size-4 text-[#5E5848]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
               </button>
             </div>
-
-            {/* Social proof bar — dynamic */}
-            {(avgRating || recentBookings || isVerified) && (
-              <div className="bg-[#FAFAF8] border-b border-[#E2DDD5] px-5 py-2 flex items-center gap-3 text-[11px] text-[#9C9485] shrink-0 overflow-x-auto">
-                {avgRating != null && avgRating > 0 && (
-                  <>
-                    <span className="inline-flex items-center gap-1 whitespace-nowrap">
-                      <svg className="size-3 text-[#E8A020]" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
-                      {avgRating.toFixed(1)}{reviewCount ? ` (${reviewCount})` : ""}
-                    </span>
-                    <span className="text-[#E2DDD5]">\u00B7</span>
-                  </>
-                )}
-                {recentBookings != null && recentBookings > 0 && (
-                  <>
-                    <span className="whitespace-nowrap">Booked {recentBookings} time{recentBookings !== 1 ? "s" : ""} this month</span>
-                    <span className="text-[#E2DDD5]">\u00B7</span>
-                  </>
-                )}
-                {isVerified && (
-                  <span className="inline-flex items-center gap-1 whitespace-nowrap">
-                    <svg className="size-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"/></svg>
-                    Verified host
-                  </span>
-                )}
+            <div className="flex-1 overflow-y-auto px-5 pb-5">
+              <DateRangePicker checkIn={checkIn} checkOut={checkOut} onCheckInChange={setCheckIn} onCheckOutChange={(d) => { setCheckOut(d); if (d && checkIn) setTimeout(() => setShowDatePicker(false), 300); }} />
+            </div>
+            {checkIn && checkOut && (
+              <div className="sticky bottom-0 bg-white border-t border-[#E2DDD5] px-5 py-3">
+                <button type="button" onClick={() => setShowDatePicker(false)} className="w-full py-3 rounded-2xl text-[14px] font-bold bg-gradient-to-r from-[#E8A020] to-[#d4911c] text-[#16130C]">
+                  {nights} night{nights !== 1 ? "s" : ""} selected — Done
+                </button>
               </div>
             )}
+          </div>
+        </div>,
+        document.body,
+      )}
 
-            {/* Scrollable room list */}
-            <div className="flex-1 overflow-y-auto px-4 sm:px-5 py-4 space-y-2.5">
-              {availableRooms.length === 0 ? (
-                <div className="bg-red-50 border border-red-200 rounded-xl p-5 text-center">
-                  <p className="text-[15px] font-semibold text-red-700 mb-1">No rooms available</p>
-                  <p className="text-[13px] text-red-600">All rooms are booked for these dates.</p>
-                  <button onClick={() => { setShowResults(false); }} className="mt-3 text-[13px] font-semibold text-[#E8A020]">
-                    Try different dates
+      {/* ── Main booking modal — two-column on desktop ── */}
+      {showModal && typeof document !== "undefined" && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-end lg:items-center justify-center">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px]" onClick={() => { setShowModal(false); setStep("rooms"); }} />
+
+          <div className="relative w-full lg:max-w-[900px] max-h-[94vh] lg:max-h-[88vh] bg-white rounded-t-3xl lg:rounded-2xl shadow-2xl overflow-hidden flex flex-col lg:flex-row">
+
+            {/* ── LEFT: Room preview (desktop only) ── */}
+            <div className="hidden lg:flex lg:w-[400px] bg-[#F4F1EC] flex-col shrink-0 overflow-hidden">
+              {previewRoom ? (
+                <>
+                  {/* Room gallery */}
+                  <div className="relative h-[260px] bg-[#E2DDD5]">
+                    {previewRoom.photo ? (
+                      <Image src={previewRoom.photo} alt={previewRoom.name} fill className="object-cover" sizes="400px" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-[48px]">🛏</div>
+                    )}
+                  </div>
+                  <div className="flex-1 overflow-y-auto p-5">
+                    <h3 className="font-display text-[20px] font-bold text-[#16130C] mb-1">{previewRoom.name}</h3>
+                    <p className="text-[13px] text-[#9C9485] mb-3">
+                      Sleeps {previewRoom.capacity}{previewRoom.bedType ? ` · ${previewRoom.bedType} bed` : ""}
+                    </p>
+                    {previewRoom.amenities && previewRoom.amenities.length > 0 && (
+                      <div className="flex flex-wrap gap-2 mb-4">
+                        {previewRoom.amenities.map((a) => (
+                          <span key={a} className="inline-flex items-center gap-1 text-[12px] text-[#5E5848] bg-white rounded-full px-2.5 py-1">
+                            <svg className="size-3 text-[#E8A020]" fill="currentColor" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                            {a}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                    {/* Photo gallery */}
+                    {previewRoom.photos && previewRoom.photos.length > 1 && (
+                      <div className="grid grid-cols-2 gap-2">
+                        {previewRoom.photos.slice(1, 5).map((url, i) => (
+                          <div key={i} className="relative aspect-[4/3] rounded-lg overflow-hidden bg-[#E2DDD5]">
+                            <Image src={url} alt="" fill className="object-cover" sizes="180px" />
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    <div className="mt-4 flex items-baseline gap-1">
+                      <span className="text-[22px] font-bold text-[#E8A020]">{fmt(previewRoom.price)}</span>
+                      <span className="text-[13px] text-[#9C9485]">/ night</span>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
+                  <span className="text-[48px] mb-3">🏨</span>
+                  <p className="text-[15px] font-semibold text-[#16130C] mb-1">{listingTitle}</p>
+                  <p className="text-[13px] text-[#9C9485]">Select a room to see details</p>
+                </div>
+              )}
+            </div>
+
+            {/* ── RIGHT: Booking flow ── */}
+            <div className="flex-1 flex flex-col min-w-0 max-h-[94vh] lg:max-h-[88vh]">
+              {/* Mobile drag handle */}
+              <div className="lg:hidden flex justify-center pt-2"><div className="w-10 h-1 rounded-full bg-[#E2DDD5]" /></div>
+
+              {/* Header with steps */}
+              <div className="sticky top-0 bg-white/95 backdrop-blur-sm border-b border-[#E2DDD5] px-5 pt-3 pb-3 z-10 shrink-0">
+                <div className="flex items-center justify-between mb-2.5">
+                  <h2 className="font-display text-[17px] font-bold text-[#16130C]">
+                    {step === "rooms" ? "Choose your room" : "Confirm details"}
+                  </h2>
+                  <button onClick={() => { setShowModal(false); setStep("rooms"); }} className="size-8 flex items-center justify-center rounded-full bg-[#F4F1EC] hover:bg-[#E2DDD5]">
+                    <svg className="size-4 text-[#5E5848]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
                   </button>
                 </div>
-              ) : (
+
+                {/* Progress steps */}
+                <div className="flex items-center gap-1.5">
+                  <div className="flex items-center gap-1">
+                    <span className="size-5 rounded-full bg-[#16A34A] flex items-center justify-center">
+                      <svg className="size-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+                    </span>
+                    <span className="text-[10px] font-semibold text-[#16A34A]">Dates</span>
+                  </div>
+                  <div className={cn("flex-1 h-0.5 rounded-full", step === "enquiry" ? "bg-[#16A34A]" : "bg-[#E8A020]")} />
+                  <div className="flex items-center gap-1">
+                    <span className={cn("size-5 rounded-full flex items-center justify-center", step === "enquiry" ? "bg-[#16A34A]" : selectedRoom ? "bg-[#E8A020]" : "bg-[#E2DDD5]")}>
+                      {step === "enquiry" ? (
+                        <svg className="size-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+                      ) : (
+                        <span className="text-[10px] font-bold text-white">2</span>
+                      )}
+                    </span>
+                    <span className={cn("text-[10px] font-semibold", step === "enquiry" ? "text-[#16A34A]" : selectedRoom ? "text-[#E8A020]" : "text-[#9C9485]")}>Room</span>
+                  </div>
+                  <div className={cn("flex-1 h-0.5 rounded-full", step === "enquiry" ? "bg-[#E8A020] animate-pulse" : "bg-[#E2DDD5]")} />
+                  <div className="flex items-center gap-1">
+                    <span className={cn("size-5 rounded-full flex items-center justify-center", step === "enquiry" ? "bg-[#E8A020] animate-pulse" : "bg-[#E2DDD5]")}>
+                      <span className="text-[10px] font-bold text-white">3</span>
+                    </span>
+                    <span className={cn("text-[10px] font-semibold", step === "enquiry" ? "text-[#E8A020]" : "text-[#9C9485]")}>Confirm</span>
+                  </div>
+                </div>
+
+                {/* Date summary */}
+                <p className="text-[11px] text-[#9C9485] mt-2">
+                  {fmtDate(checkIn)} → {fmtDate(checkOut)} · {nights} night{nights !== 1 ? "s" : ""} · {guests} guest{guests !== 1 ? "s" : ""}
+                </p>
+              </div>
+
+              {/* Social proof */}
+              {(avgRating || recentBookings || isVerified) && (
+                <div className="bg-[#FAFAF8] border-b border-[#E2DDD5] px-5 py-1.5 flex items-center gap-3 text-[10px] text-[#9C9485] shrink-0">
+                  {avgRating != null && avgRating > 0 && (
+                    <span className="inline-flex items-center gap-1">
+                      <svg className="size-2.5 text-[#E8A020]" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                      {avgRating.toFixed(1)}{reviewCount ? ` (${reviewCount})` : ""}
+                    </span>
+                  )}
+                  {recentBookings != null && recentBookings > 0 && <span>Booked {recentBookings}x this month</span>}
+                  {isVerified && <span>Verified host</span>}
+                </div>
+              )}
+
+              {/* ── STEP: Room selection ── */}
+              {step === "rooms" && (
                 <>
-                  {/* Scarcity nudge */}
-                  {availableRooms.length <= 2 && results.length > 2 && (
-                    <div className="flex items-center gap-2 bg-[#FEF3CD] rounded-lg px-3 py-2 mb-1">
-                      <span className="text-[13px]">&#128293;</span>
-                      <p className="text-[12px] font-semibold text-[#92400E]">
-                        Only {availableRooms.length} room{availableRooms.length !== 1 ? "s" : ""} left for your dates
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Entire property option */}
-                  {entireAvail && results.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={() => setSelectedRoom(selectedRoom === "__entire__" ? null : "__entire__")}
-                      className={cn(
-                        "w-full text-left rounded-2xl overflow-hidden transition-all duration-200",
-                        selectedRoom === "__entire__"
-                          ? "ring-2 ring-[#E8A020] ring-offset-2"
-                          : "hover:shadow-md"
-                      )}
-                    >
-                      <div className="bg-gradient-to-br from-[#16130C] to-[#2A2520] p-4 sm:p-5">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="text-[14px]">&#127968;</span>
-                          <p className="text-[15px] font-bold text-white">Entire property</p>
-                        </div>
-                        <p className="text-[12px] text-white/50 mb-3">All {results.length} rooms \u00B7 Private exclusive use</p>
-                        <div className="flex items-baseline gap-1.5">
-                          <span className="text-[22px] font-bold text-[#E8A020]">{fmt(totalEntirePrice)}</span>
-                          <span className="text-[12px] text-white/40">/ night</span>
-                          {selectedRoom === "__entire__" && (
-                            <span className="ml-auto bg-[#E8A020] text-[#16130C] text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">Selected</span>
-                          )}
-                        </div>
+                  <div className="flex-1 overflow-y-auto px-4 sm:px-5 py-3 space-y-2">
+                    {availableRooms.length === 0 ? (
+                      <div className="bg-red-50 border border-red-200 rounded-xl p-5 text-center">
+                        <p className="text-[14px] font-semibold text-red-700 mb-1">No rooms available</p>
+                        <p className="text-[12px] text-red-600">All rooms are booked for these dates.</p>
                       </div>
-                    </button>
-                  )}
+                    ) : (
+                      <>
+                        {availableRooms.length <= 2 && results.length > 2 && (
+                          <div className="flex items-center gap-2 bg-[#FEF3CD] rounded-lg px-3 py-1.5">
+                            <span className="text-[12px]">🔥</span>
+                            <p className="text-[11px] font-semibold text-[#92400E]">Only {availableRooms.length} room{availableRooms.length !== 1 ? "s" : ""} left</p>
+                          </div>
+                        )}
 
-                  {/* Individual rooms */}
-                  {results.map((room) => (
-                    <button
-                      key={room.key}
-                      type="button"
-                      disabled={!room.available}
-                      onClick={() => setSelectedRoom(selectedRoom === room.key ? null : room.key)}
-                      className={cn(
-                        "w-full text-left rounded-2xl border overflow-hidden transition-all duration-200",
-                        !room.available
-                          ? "border-[#E2DDD5] opacity-40 cursor-not-allowed grayscale"
-                          : selectedRoom === room.key
-                            ? "border-transparent ring-2 ring-[#E8A020] ring-offset-2 shadow-md"
-                            : "border-[#E2DDD5] hover:shadow-md hover:border-[#E8A020]/30"
-                      )}
-                    >
-                      <div className="flex">
-                        {/* Room photo */}
-                        <div className="relative w-[110px] sm:w-[140px] shrink-0 bg-[#F4F1EC]">
-                          {room.photo ? (
-                            <Image src={room.photo} alt={room.name} fill className="object-cover" sizes="140px" />
-                          ) : (
-                            <div className="w-full h-full min-h-[100px] flex items-center justify-center text-[24px] bg-gradient-to-br from-[#F4F1EC] to-[#E2DDD5]">&#128716;</div>
-                          )}
-                          {!room.available && (
-                            <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-                              <span className="bg-white/90 text-[#16130C] text-[10px] font-bold px-2.5 py-1 rounded-full">Booked</span>
+                        {/* Entire property */}
+                        {entireAvail && results.length > 1 && (
+                          <button type="button" onClick={() => { setSelectedRoom(selectedRoom === "__entire__" ? null : "__entire__"); setPreviewRoom(null); }}
+                            className={cn("w-full text-left rounded-xl overflow-hidden transition-all", selectedRoom === "__entire__" ? "ring-2 ring-[#E8A020] ring-offset-2" : "border border-[#E2DDD5] hover:shadow-md")}>
+                            <div className="bg-gradient-to-br from-[#16130C] to-[#2A2520] p-3.5">
+                              <p className="text-[14px] font-bold text-white">🏠 Entire property</p>
+                              <p className="text-[11px] text-white/50">All {results.length} rooms · Private</p>
+                              <p className="text-[18px] font-bold text-[#E8A020] mt-1">{fmt(totalEntirePrice)} <span className="text-[11px] text-white/40 font-normal">/ night</span></p>
                             </div>
-                          )}
-                          {room.available && selectedRoom === room.key && (
-                            <div className="absolute top-2 right-2 size-5 bg-[#E8A020] rounded-full flex items-center justify-center">
-                              <svg className="size-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                              </svg>
-                            </div>
-                          )}
-                        </div>
+                          </button>
+                        )}
 
-                        {/* Room info */}
-                        <div className="flex-1 p-3 sm:p-3.5 min-w-0 flex flex-col justify-between">
-                          <div>
-                            <p className="text-[14px] font-bold text-[#16130C] truncate leading-tight">{room.name}</p>
-                            <p className="text-[11px] text-[#9C9485] mt-0.5">
-                              Sleeps {room.capacity}
-                              {room.bedType ? ` \u00B7 ${room.bedType}` : ""}
-                            </p>
-                            {room.amenities && room.amenities.length > 0 && (
-                              <div className="flex flex-wrap gap-x-2 gap-y-0.5 mt-1.5">
-                                {room.amenities.slice(0, 3).map((a) => (
-                                  <span key={a} className="inline-flex items-center gap-0.5 text-[10px] text-[#9C9485]">
-                                    <svg className="size-2 text-[#E8A020]" fill="currentColor" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
-                                    {a}
-                                  </span>
-                                ))}
+                        {/* Individual rooms */}
+                        {results.map((room) => (
+                          <button key={room.key} type="button" disabled={!room.available}
+                            onClick={() => { setSelectedRoom(selectedRoom === room.key ? null : room.key); setPreviewRoom(room.available ? room : null); }}
+                            onMouseEnter={() => room.available && setPreviewRoom(room)}
+                            className={cn("w-full text-left rounded-xl border overflow-hidden transition-all", !room.available ? "opacity-40 grayscale cursor-not-allowed border-[#E2DDD5]" : selectedRoom === room.key ? "ring-2 ring-[#E8A020] ring-offset-2 border-transparent shadow-md" : "border-[#E2DDD5] hover:shadow-md hover:border-[#E8A020]/30")}>
+                            <div className="flex">
+                              <div className="relative w-[90px] sm:w-[110px] shrink-0 bg-[#F4F1EC]">
+                                {room.photo ? <Image src={room.photo} alt={room.name} fill className="object-cover" sizes="110px" /> : <div className="w-full h-full min-h-[80px] flex items-center justify-center text-[20px]">🛏</div>}
+                                {!room.available && <div className="absolute inset-0 bg-black/50 flex items-center justify-center"><span className="bg-white/90 text-[10px] font-bold px-2 py-0.5 rounded-full">Booked</span></div>}
+                                {room.available && selectedRoom === room.key && <div className="absolute top-1.5 right-1.5 size-5 bg-[#E8A020] rounded-full flex items-center justify-center"><svg className="size-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg></div>}
                               </div>
-                            )}
-                          </div>
-                          <div className="flex items-baseline gap-1 mt-2">
-                            <span className={cn("text-[17px] font-bold", room.available ? "text-[#E8A020]" : "text-[#9C9485]")}>{fmt(room.price)}</span>
-                            <span className="text-[11px] text-[#9C9485]">/ night</span>
-                          </div>
+                              <div className="flex-1 p-3 min-w-0 flex flex-col justify-between">
+                                <div>
+                                  <p className="text-[13px] font-bold text-[#16130C] truncate">{room.name}</p>
+                                  <p className="text-[10px] text-[#9C9485]">Sleeps {room.capacity}{room.bedType ? ` · ${room.bedType}` : ""}</p>
+                                  {room.amenities && room.amenities.length > 0 && <p className="text-[9px] text-[#9C9485] mt-0.5 truncate">{room.amenities.slice(0, 3).join(" · ")}</p>}
+                                </div>
+                                <p className={cn("text-[15px] font-bold mt-1", room.available ? "text-[#E8A020]" : "text-[#9C9485]")}>{fmt(room.price)} <span className="text-[10px] text-[#9C9485] font-normal">/ night</span></p>
+                              </div>
+                            </div>
+                          </button>
+                        ))}
+                      </>
+                    )}
+                  </div>
+
+                  {/* Footer */}
+                  <div className="sticky bottom-0 bg-white border-t border-[#E2DDD5] shrink-0">
+                    {selectedRoom ? (
+                      <div className="px-5 pt-3 pb-4 space-y-2">
+                        <div className="flex justify-between items-center">
+                          <span className="text-[12px] text-[#9C9485]">{fmt(selectedPrice)} x {nights} night{nights !== 1 ? "s" : ""}</span>
+                          <span className="text-[17px] font-bold text-[#16130C]">{fmt(selectedPrice * nights)}</span>
+                        </div>
+                        <button type="button" onClick={() => setStep("enquiry")} className="w-full py-3.5 rounded-2xl text-[15px] font-bold bg-gradient-to-r from-[#E8A020] to-[#d4911c] text-[#16130C] shadow-[0_4px_14px_rgba(232,160,32,0.35)] hover:shadow-[0_6px_20px_rgba(232,160,32,0.45)] hover:-translate-y-0.5 transition-all">
+                          Continue to enquiry
+                        </button>
+                        <div className="flex items-center justify-center gap-2 text-[10px] text-[#9C9485]">
+                          <span>🔒 Secure</span><span className="text-[#E2DDD5]">·</span><span>No payment now</span><span className="text-[#E2DDD5]">·</span><span>Reply in 2hrs</span>
                         </div>
                       </div>
+                    ) : (
+                      <div className="px-5 py-3 text-center"><p className="text-[12px] text-[#9C9485]">Select a room to continue</p></div>
+                    )}
+                  </div>
+                </>
+              )}
+
+              {/* ── STEP: Enquiry form ── */}
+              {step === "enquiry" && (
+                <>
+                  <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
+                    <div className="text-center py-1">
+                      <p className="text-[15px] font-semibold text-[#16130C]">One step away from your dream stay</p>
+                      <p className="text-[12px] text-[#9C9485]">Fill in your details and the host will confirm</p>
+                    </div>
+
+                    {/* Selection summary */}
+                    <div className="bg-gradient-to-r from-[#E8A020]/5 to-[#E8A020]/10 border border-[#E8A020]/20 rounded-xl p-3 flex items-center gap-3">
+                      <div className="size-10 rounded-lg bg-[#E8A020]/15 flex items-center justify-center shrink-0">
+                        <span className="text-[18px]">{selectedRoom === "__entire__" ? "🏠" : "🛏"}</span>
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-[13px] font-bold text-[#16130C] truncate">
+                          {selectedRoom === "__entire__" ? "Entire property" : results.find((r) => r.key === selectedRoom)?.name}
+                        </p>
+                        <p className="text-[11px] text-[#9C9485]">
+                          {fmtDate(checkIn)} → {fmtDate(checkOut)} · {nights} night{nights !== 1 ? "s" : ""} · <span className="font-semibold text-[#16130C]">{fmt(selectedPrice * nights)}</span>
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      <input type="text" placeholder="Full name" value={formName} onChange={(e) => setFormName(e.target.value)} className="w-full border border-[#E2DDD5] rounded-[14px] px-4 py-3 text-[14px] text-[#16130C] placeholder:text-[#9C9485] outline-none focus:border-[#E8A020] transition-colors" />
+                      <input type="email" placeholder="Email address" value={formEmail} onChange={(e) => setFormEmail(e.target.value)} className="w-full border border-[#E2DDD5] rounded-[14px] px-4 py-3 text-[14px] text-[#16130C] placeholder:text-[#9C9485] outline-none focus:border-[#E8A020] transition-colors" />
+                      <PhoneInput value={formPhone} onChange={setFormPhone} required className="w-full border border-[#E2DDD5] rounded-[14px] px-4 py-3 text-[14px] text-[#16130C] placeholder:text-[#9C9485] outline-none focus:border-[#E8A020] transition-colors" />
+                      <textarea placeholder="Special requests (optional)" value={formMessage} onChange={(e) => setFormMessage(e.target.value)} rows={3} className="w-full border border-[#E2DDD5] rounded-[14px] px-4 py-3 text-[14px] text-[#16130C] placeholder:text-[#9C9485] outline-none focus:border-[#E8A020] transition-colors resize-none" />
+                    </div>
+
+                    {error && <p className="text-[13px] text-red-600 text-center">{error}</p>}
+
+                    <div className="grid grid-cols-3 gap-2 pt-1">
+                      <div className="text-center p-2 rounded-lg bg-[#FAFAF8]"><span className="text-[14px]">🔒</span><p className="text-[9px] font-semibold text-[#9C9485] mt-0.5">Secure</p></div>
+                      <div className="text-center p-2 rounded-lg bg-[#FAFAF8]"><span className="text-[14px]">⚡</span><p className="text-[9px] font-semibold text-[#9C9485] mt-0.5">Reply in 2hrs</p></div>
+                      <div className="text-center p-2 rounded-lg bg-[#FAFAF8]"><span className="text-[14px]">💰</span><p className="text-[9px] font-semibold text-[#9C9485] mt-0.5">No payment yet</p></div>
+                    </div>
+                  </div>
+
+                  <div className="sticky bottom-0 bg-white border-t border-[#E2DDD5] px-5 pt-3 pb-4 shrink-0 space-y-2">
+                    <button type="button" onClick={handleEnquire} disabled={sending} className="w-full py-3.5 rounded-2xl text-[15px] font-bold bg-gradient-to-r from-[#E8A020] to-[#d4911c] text-[#16130C] shadow-[0_4px_14px_rgba(232,160,32,0.35)] hover:shadow-[0_6px_20px_rgba(232,160,32,0.45)] hover:-translate-y-0.5 transition-all disabled:opacity-50">
+                      {sending ? "Sending..." : "Confirm & send enquiry"}
                     </button>
-                  ))}
+                    <button type="button" onClick={() => setStep("rooms")} className="w-full text-[12px] text-[#9C9485] hover:text-[#16130C] py-1">
+                      ← Back to rooms
+                    </button>
+                  </div>
                 </>
               )}
             </div>
-
-            {/* Footer — price breakdown + CTA + trust */}
-            <div className="sticky bottom-0 bg-white border-t border-[#E2DDD5] shrink-0">
-              {selectedRoom ? (
-                <div className="px-5 pt-3 pb-4 sm:pb-5 space-y-2.5">
-                  <div className="flex justify-between items-center">
-                    <span className="text-[13px] text-[#9C9485]">
-                      {fmt(selectedPrice)} x {nights} night{nights !== 1 ? "s" : ""}
-                    </span>
-                    <span className="text-[18px] font-bold text-[#16130C]">{fmt(selectedPrice * nights)}</span>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => { setShowResults(false); setShowEnquiry(true); }}
-                    className={cn(
-                      "w-full py-3.5 rounded-2xl text-[15px] font-bold transition-all duration-200",
-                      "bg-gradient-to-r from-[#E8A020] to-[#d4911c] text-[#16130C]",
-                      "shadow-[0_4px_14px_rgba(232,160,32,0.35)]",
-                      "hover:shadow-[0_6px_20px_rgba(232,160,32,0.45)] hover:-translate-y-0.5",
-                      "active:translate-y-0"
-                    )}
-                  >
-                    Enquire now
-                  </button>
-                  <div className="flex items-center justify-center gap-2.5 text-[11px] text-[#9C9485]">
-                    <span className="inline-flex items-center gap-1">
-                      <svg className="size-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/></svg>
-                      Secure
-                    </span>
-                    <span className="text-[#E2DDD5]">\u00B7</span>
-                    <span>No payment now</span>
-                    <span className="text-[#E2DDD5]">\u00B7</span>
-                    <span>Reply in 2hrs</span>
-                  </div>
-                </div>
-              ) : (
-                <div className="px-5 py-3 text-center">
-                  <p className="text-[13px] text-[#9C9485]">Select a room to continue</p>
-                </div>
-              )}
-            </div>
           </div>
         </div>,
-        document.body
-      )}
-
-      {/* ── Enquiry modal — portaled to body ── */}
-      {showEnquiry && typeof document !== "undefined" && createPortal(
-        <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px]" onClick={() => setShowEnquiry(false)} />
-
-          <div className="relative w-full sm:max-w-[440px] max-h-[92vh] bg-white rounded-t-3xl sm:rounded-2xl shadow-2xl overflow-hidden flex flex-col">
-            {/* Drag handle — mobile */}
-            <div className="sm:hidden flex justify-center pt-2 pb-0">
-              <div className="w-10 h-1 rounded-full bg-[#E2DDD5]" />
-            </div>
-
-            {/* Header with progress */}
-            <div className="sticky top-0 bg-white border-b border-[#E2DDD5] px-5 pt-3 pb-3 sm:py-4 z-10 shrink-0">
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2.5">
-                  {/* Pulsing indicator */}
-                  <span className="relative flex size-3">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#16A34A] opacity-75" />
-                    <span className="relative inline-flex rounded-full size-3 bg-[#16A34A]" />
-                  </span>
-                  <h2 className="font-display text-[18px] font-bold text-[#16130C]">Almost there!</h2>
-                </div>
-                <button onClick={() => setShowEnquiry(false)} className="size-8 flex items-center justify-center rounded-full bg-[#F4F1EC] hover:bg-[#E2DDD5] transition-colors">
-                  <svg className="size-4 text-[#5E5848]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-
-              {/* Progress steps */}
-              <div className="flex items-center gap-2">
-                <div className="flex items-center gap-1.5">
-                  <span className="size-5 rounded-full bg-[#16A34A] flex items-center justify-center">
-                    <svg className="size-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                    </svg>
-                  </span>
-                  <span className="text-[11px] font-semibold text-[#16A34A]">Dates</span>
-                </div>
-                <div className="flex-1 h-0.5 bg-[#16A34A] rounded-full" />
-                <div className="flex items-center gap-1.5">
-                  <span className="size-5 rounded-full bg-[#16A34A] flex items-center justify-center">
-                    <svg className="size-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                    </svg>
-                  </span>
-                  <span className="text-[11px] font-semibold text-[#16A34A]">Room</span>
-                </div>
-                <div className="flex-1 h-0.5 bg-[#E8A020] rounded-full animate-pulse" />
-                <div className="flex items-center gap-1.5">
-                  <span className="size-5 rounded-full bg-[#E8A020] flex items-center justify-center animate-pulse">
-                    <span className="text-[10px] font-bold text-white">3</span>
-                  </span>
-                  <span className="text-[11px] font-bold text-[#E8A020]">Confirm</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex-1 overflow-y-auto p-5 space-y-4">
-              {/* Motivational message */}
-              <div className="text-center py-1">
-                <p className="text-[14px] font-semibold text-[#16130C]">
-                  One step away from your dream stay
-                </p>
-                <p className="text-[12px] text-[#9C9485] mt-0.5">
-                  Fill in your details and the host will confirm your booking
-                </p>
-              </div>
-
-              {/* Selection summary */}
-              <div className="bg-gradient-to-r from-[#E8A020]/5 to-[#E8A020]/10 border border-[#E8A020]/20 rounded-xl p-3.5 flex items-center gap-3">
-                <div className="size-10 rounded-lg bg-[#E8A020]/15 flex items-center justify-center shrink-0">
-                  <span className="text-[18px]">{selectedRoom === "__entire__" ? "\uD83C\uDFE0" : "\uD83D\uDECF"}</span>
-                </div>
-                <div className="min-w-0">
-                  <p className="text-[13px] font-bold text-[#16130C] truncate">
-                    {selectedRoom === "__entire__" ? "Entire property" : results.find((r) => r.key === selectedRoom)?.name}
-                  </p>
-                  <p className="text-[11px] text-[#9C9485]">
-                    {new Date(checkIn + "T00:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
-                    {" \u2192 "}
-                    {new Date(checkOut + "T00:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
-                    {" \u00B7 "}{nights} night{nights !== 1 ? "s" : ""}
-                    {" \u00B7 "}<span className="font-semibold text-[#16130C]">{fmt(selectedPrice * nights)}</span>
-                  </p>
-                </div>
-              </div>
-
-              {/* Form fields */}
-              <div className="space-y-3">
-                <input type="text" placeholder="Full name" value={name} onChange={(e) => setName(e.target.value)} className="w-full border border-[#E2DDD5] rounded-[14px] px-4 py-3 text-[14px] text-[#16130C] placeholder:text-[#9C9485] outline-none focus:border-[#E8A020] transition-colors" required />
-                <input type="email" placeholder="Email address" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full border border-[#E2DDD5] rounded-[14px] px-4 py-3 text-[14px] text-[#16130C] placeholder:text-[#9C9485] outline-none focus:border-[#E8A020] transition-colors" required />
-                <PhoneInput value={phone} onChange={setPhone} required className="w-full border border-[#E2DDD5] rounded-[14px] px-4 py-3 text-[14px] text-[#16130C] placeholder:text-[#9C9485] outline-none focus:border-[#E8A020] transition-colors" />
-                <textarea placeholder="Special requests (optional)" value={message} onChange={(e) => setMessage(e.target.value)} rows={3} className="w-full border border-[#E2DDD5] rounded-[14px] px-4 py-3 text-[14px] text-[#16130C] placeholder:text-[#9C9485] outline-none focus:border-[#E8A020] transition-colors resize-none" />
-              </div>
-
-              {error && <p className="text-[13px] text-red-600 text-center">{error}</p>}
-
-              {/* Trust signals */}
-              <div className="grid grid-cols-3 gap-2 pt-1">
-                <div className="text-center p-2 rounded-lg bg-[#FAFAF8]">
-                  <span className="text-[16px]">&#128274;</span>
-                  <p className="text-[10px] font-semibold text-[#9C9485] mt-0.5">Secure &amp; private</p>
-                </div>
-                <div className="text-center p-2 rounded-lg bg-[#FAFAF8]">
-                  <span className="text-[16px]">&#9889;</span>
-                  <p className="text-[10px] font-semibold text-[#9C9485] mt-0.5">Reply in 2hrs</p>
-                </div>
-                <div className="text-center p-2 rounded-lg bg-[#FAFAF8]">
-                  <span className="text-[16px]">&#128176;</span>
-                  <p className="text-[10px] font-semibold text-[#9C9485] mt-0.5">No payment yet</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Sticky footer CTA */}
-            <div className="sticky bottom-0 bg-white border-t border-[#E2DDD5] px-5 py-4 shrink-0">
-              <button
-                type="button"
-                onClick={handleEnquire}
-                disabled={sending}
-                className={cn(
-                  "w-full py-3.5 rounded-2xl text-[15px] font-bold transition-all duration-200",
-                  "bg-gradient-to-r from-[#E8A020] to-[#d4911c] text-[#16130C]",
-                  "shadow-[0_4px_14px_rgba(232,160,32,0.35)]",
-                  "hover:shadow-[0_6px_20px_rgba(232,160,32,0.45)] hover:-translate-y-0.5",
-                  "active:translate-y-0",
-                  "disabled:opacity-50 disabled:pointer-events-none"
-                )}
-              >
-                {sending ? (
-                  <span className="inline-flex items-center gap-2">
-                    <svg className="animate-spin size-4" viewBox="0 0 24 24" fill="none">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                    </svg>
-                    Sending...
-                  </span>
-                ) : "Confirm &amp; send enquiry"}
-              </button>
-            </div>
-          </div>
-        </div>,
-        document.body
+        document.body,
       )}
     </>
   );
