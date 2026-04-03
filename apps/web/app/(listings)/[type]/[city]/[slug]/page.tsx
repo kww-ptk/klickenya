@@ -299,10 +299,11 @@ export default async function ListingDetailPage({ params }: PageProps) {
     attendees = (attendeesRes.data ?? []) as { name: string }[];
   }
 
-  // Fetch real room availability + prices from Supabase PMS for stays
+  // Fetch real room availability + prices + booking count from Supabase PMS for stays
   let roomAvailability: Record<string, boolean> | undefined;
   let roomPriceOverrides: Record<string, number> | undefined;
   let entirePropertyAvailable: boolean | undefined;
+  let recentBookings: number | undefined;
   if (sanityType === "stay") {
     try {
       const { data: linkedProps } = await adminClient
@@ -381,6 +382,16 @@ export default async function ListingDetailPage({ params }: PageProps) {
           if (Object.keys(prices).length > 0) {
             roomPriceOverrides = prices;
           }
+
+          // Count recent bookings (last 30 days) for social proof
+          const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000).toISOString().split("T")[0];
+          const { count: bookingCount } = await adminClient
+            .from("bookings")
+            .select("id", { count: "exact", head: true })
+            .in("property_id", propertyIds)
+            .gte("created_at", thirtyDaysAgo)
+            .neq("status", "cancelled");
+          recentBookings = bookingCount ?? 0;
         }
       }
     } catch {
@@ -405,6 +416,7 @@ export default async function ListingDetailPage({ params }: PageProps) {
     roomAvailability,
     roomPriceOverrides,
     entirePropertyAvailable,
+    recentBookings,
   };
 
   const Detail = (() => {

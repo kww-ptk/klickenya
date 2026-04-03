@@ -32,6 +32,7 @@ interface StayDetailProps {
   roomAvailability?: Record<string, boolean>;
   roomPriceOverrides?: Record<string, number>;
   entirePropertyAvailable?: boolean;
+  recentBookings?: number;
 }
 
 /* ── Component ─────────────────────────────────────── */
@@ -49,6 +50,7 @@ function StayDetail({
   roomAvailability,
   roomPriceOverrides,
   entirePropertyAvailable,
+  recentBookings,
 }: StayDetailProps) {
   const [rentMode, setRentMode] = useState<"entire" | "room">("entire");
   const [liveRoomAvail, setLiveRoomAvail] = useState<Record<string, boolean> | undefined>(undefined);
@@ -229,6 +231,10 @@ function StayDetail({
                 priceUnit={listing.priceUnit ?? "night"}
                 maxGuests={listing.maxGuests}
                 rooms={listing.rooms}
+                avgRating={listing.avgRating}
+                reviewCount={listing.reviewCount}
+                isVerified={listing.isVerified}
+                recentBookings={recentBookings}
                 onAvailabilityChecked={handleAvailabilityChecked}
               />
             </div>

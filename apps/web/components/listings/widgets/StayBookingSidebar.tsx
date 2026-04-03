@@ -46,6 +46,10 @@ interface StayBookingSidebarProps {
   priceUnit: string;
   maxGuests?: number;
   rooms?: SanityRoom[];
+  avgRating?: number;
+  reviewCount?: number;
+  isVerified?: boolean;
+  recentBookings?: number;
   onAvailabilityChecked?: (
     roomAvail: Record<string, boolean>,
     roomPrices: Record<string, number>,
@@ -72,6 +76,10 @@ export function StayBookingSidebar({
   priceUnit,
   maxGuests = 10,
   rooms: sanityRooms,
+  avgRating,
+  reviewCount,
+  isVerified,
+  recentBookings,
   onAvailabilityChecked,
 }: StayBookingSidebarProps) {
   const [checkIn, setCheckIn] = useState("");
@@ -308,20 +316,32 @@ export function StayBookingSidebar({
               </button>
             </div>
 
-            {/* Social proof bar */}
-            <div className="bg-[#FAFAF8] border-b border-[#E2DDD5] px-5 py-2 flex items-center gap-4 text-[11px] text-[#9C9485] shrink-0 overflow-x-auto">
-              <span className="inline-flex items-center gap-1 whitespace-nowrap">
-                <svg className="size-3 text-[#E8A020]" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
-                4.9 rating
-              </span>
-              <span className="text-[#E2DDD5]">\u00B7</span>
-              <span className="whitespace-nowrap">Booked 12 times this month</span>
-              <span className="text-[#E2DDD5]">\u00B7</span>
-              <span className="inline-flex items-center gap-1 whitespace-nowrap">
-                <svg className="size-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"/></svg>
-                Verified host
-              </span>
-            </div>
+            {/* Social proof bar — dynamic */}
+            {(avgRating || recentBookings || isVerified) && (
+              <div className="bg-[#FAFAF8] border-b border-[#E2DDD5] px-5 py-2 flex items-center gap-3 text-[11px] text-[#9C9485] shrink-0 overflow-x-auto">
+                {avgRating != null && avgRating > 0 && (
+                  <>
+                    <span className="inline-flex items-center gap-1 whitespace-nowrap">
+                      <svg className="size-3 text-[#E8A020]" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                      {avgRating.toFixed(1)}{reviewCount ? ` (${reviewCount})` : ""}
+                    </span>
+                    <span className="text-[#E2DDD5]">\u00B7</span>
+                  </>
+                )}
+                {recentBookings != null && recentBookings > 0 && (
+                  <>
+                    <span className="whitespace-nowrap">Booked {recentBookings} time{recentBookings !== 1 ? "s" : ""} this month</span>
+                    <span className="text-[#E2DDD5]">\u00B7</span>
+                  </>
+                )}
+                {isVerified && (
+                  <span className="inline-flex items-center gap-1 whitespace-nowrap">
+                    <svg className="size-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"/></svg>
+                    Verified host
+                  </span>
+                )}
+              </div>
+            )}
 
             {/* Scrollable room list */}
             <div className="flex-1 overflow-y-auto px-4 sm:px-5 py-4 space-y-2.5">
