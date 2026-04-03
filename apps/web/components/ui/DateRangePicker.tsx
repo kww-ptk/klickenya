@@ -145,7 +145,7 @@ export function DateRangePicker({
   return (
     <div className="select-none">
       {/* Selection labels */}
-      <div className={cn("grid grid-cols-2 gap-1.5", compact ? "mb-2" : "mb-3")}>
+      <div className={cn("grid grid-cols-2 gap-1.5", compact ? "mb-2 max-w-[280px] mx-auto" : "mb-3")}>
         <button
           type="button"
           onClick={() => setSelecting("check-in")}
@@ -188,7 +188,7 @@ export function DateRangePicker({
       </div>
 
       {/* Month navigation */}
-      <div className={cn("flex items-center justify-between", compact ? "mb-1" : "mb-1.5")}>
+      <div className={cn("flex items-center justify-between", compact ? "mb-1 max-w-[280px] mx-auto" : "mb-1.5")}>
         <button
           type="button"
           onClick={prevMonth}
@@ -214,19 +214,19 @@ export function DateRangePicker({
       </div>
 
       {/* Weekday headers */}
-      <div className="grid grid-cols-7 mb-0.5">
+      <div className={cn("grid grid-cols-7 mb-0.5", compact && "max-w-[280px] mx-auto")}>
         {WEEKDAYS.map((d) => (
-          <div key={d} className="text-center text-[10px] font-semibold text-[#9C9485] py-0.5">
+          <div key={d} className={cn("text-center font-semibold text-[#9C9485]", compact ? "text-[9px] py-0" : "text-[10px] py-0.5")}>
             {d}
           </div>
         ))}
       </div>
 
       {/* Day grid */}
-      <div className="grid grid-cols-7">
+      <div className={cn("grid grid-cols-7", compact && "max-w-[280px] mx-auto")}>
         {cells.map((day, i) => {
           if (!day) {
-            return <div key={`blank-${i}`} className="aspect-square" />;
+            return <div key={`blank-${i}`} className={compact ? "h-8" : "aspect-square"} />;
           }
 
           const isPast = day < minD && !isSameDay(day, minD);
@@ -240,7 +240,8 @@ export function DateRangePicker({
             <div
               key={day.getDate()}
               className={cn(
-                "relative aspect-square flex items-center justify-center",
+                "relative flex items-center justify-center",
+                compact ? "h-8" : "aspect-square",
                 (isInRange || isPreviewRange) && "bg-[color:var(--accent)]/10",
                 isStart && effectiveEnd && "bg-gradient-to-r from-transparent via-transparent to-[color:var(--accent)]/10",
                 isEnd && startD && "bg-gradient-to-l from-transparent via-transparent to-[color:var(--accent)]/10",
