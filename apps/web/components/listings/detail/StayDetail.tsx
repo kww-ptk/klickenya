@@ -29,6 +29,7 @@ interface StayDetailProps {
   citySlug: string;
   similarCards: ListingCardProps[];
   roomAvailability?: Record<string, boolean>;
+  roomPriceOverrides?: Record<string, number>;
   entirePropertyAvailable?: boolean;
 }
 
@@ -45,6 +46,7 @@ function StayDetail({
   citySlug,
   similarCards,
   roomAvailability,
+  roomPriceOverrides,
   entirePropertyAvailable,
 }: StayDetailProps) {
   const [rentMode, setRentMode] = useState<"entire" | "room">("entire");
@@ -116,6 +118,7 @@ function StayDetail({
               listingTitle={listing.title}
               onModeChange={(mode) => setRentMode(mode)}
               roomAvailability={roomAvailability}
+              roomPriceOverrides={roomPriceOverrides}
               entirePropertyAvailable={entirePropertyAvailable}
             />
 

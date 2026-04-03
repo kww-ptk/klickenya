@@ -299,8 +299,9 @@ export default async function ListingDetailPage({ params }: PageProps) {
     attendees = (attendeesRes.data ?? []) as { name: string }[];
   }
 
-  // Fetch real room availability from Supabase PMS for stays
+  // Fetch real room availability + prices from Supabase PMS for stays
   let roomAvailability: Record<string, boolean> | undefined;
+  let roomPriceOverrides: Record<string, number> | undefined;
   let entirePropertyAvailable: boolean | undefined;
   if (sanityType === "stay") {
     try {
@@ -315,7 +316,7 @@ export default async function ListingDetailPage({ params }: PageProps) {
       if (propertyIds.length > 0) {
         const { data: pmsRooms } = await adminClient
           .from("rooms")
-          .select("id, name, sanity_room_key, is_active")
+          .select("id, name, sanity_room_key, is_active, base_price_kes")
           .in("property_id", propertyIds)
           .eq("is_active", true);
 
@@ -323,6 +324,7 @@ export default async function ListingDetailPage({ params }: PageProps) {
           const todayStr = new Date().toISOString().split("T")[0];
           const tomorrowStr = new Date(Date.now() + 86400000).toISOString().split("T")[0];
           const avail: Record<string, boolean> = {};
+          const prices: Record<string, number> = {};
 
           // Check availability for all active PMS rooms
           const roomAvailResults = await Promise.all(
@@ -339,41 +341,50 @@ export default async function ListingDetailPage({ params }: PageProps) {
           // Entire property = available only when ALL rooms are free
           entirePropertyAvailable = roomAvailResults.every((r) => r.available);
 
-          // Map to Sanity room _keys using: sanity_room_key first, then name-match fallback
-          const sanityRooms = listing.rooms ?? [];
-          for (const sanityRoom of sanityRooms) {
+          // Helper: match PMS room to Sanity room
+          const matchPmsRoom = (sanityRoom: { _key: string; roomName: string }) => {
             // Try exact sanity_room_key match
             const keyMatch = roomAvailResults.find(
               (r) => r.sanity_room_key && r.sanity_room_key === sanityRoom._key
             );
-            if (keyMatch) {
-              avail[sanityRoom._key] = keyMatch.available;
-              continue;
-            }
+            if (keyMatch) return keyMatch;
 
-            // Try name-based match (Supabase room.name contains Sanity roomName)
+            // Try name-based match
             const nameMatch = roomAvailResults.find(
               (r) =>
                 !r.sanity_room_key &&
                 r.name.toLowerCase().includes(sanityRoom.roomName.toLowerCase())
             );
-            if (nameMatch) {
-              avail[sanityRoom._key] = nameMatch.available;
-              continue;
-            }
+            if (nameMatch) return nameMatch;
 
-            // Fallback: if PMS is linked, any room available = this room available
-            const anyAvailable = roomAvailResults.some((r) => r.available);
-            avail[sanityRoom._key] = anyAvailable;
+            return null;
+          };
+
+          // Map availability + prices to Sanity room _keys
+          const sanityRooms = listing.rooms ?? [];
+          for (const sanityRoom of sanityRooms) {
+            const match = matchPmsRoom(sanityRoom);
+            if (match) {
+              avail[sanityRoom._key] = match.available;
+              if (match.base_price_kes != null) {
+                prices[sanityRoom._key] = match.base_price_kes;
+              }
+            } else {
+              // Fallback: any room available = this room available
+              avail[sanityRoom._key] = roomAvailResults.some((r) => r.available);
+            }
           }
 
           if (Object.keys(avail).length > 0) {
             roomAvailability = avail;
           }
+          if (Object.keys(prices).length > 0) {
+            roomPriceOverrides = prices;
+          }
         }
       }
     } catch {
-      // Non-blocking — fall back to Sanity isAvailable
+      // Non-blocking — fall back to Sanity isAvailable + prices
     }
   }
 
@@ -392,6 +403,7 @@ export default async function ListingDetailPage({ params }: PageProps) {
     attendees,
     menuData,
     roomAvailability,
+    roomPriceOverrides,
     entirePropertyAvailable,
   };
 

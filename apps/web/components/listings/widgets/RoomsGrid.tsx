@@ -26,9 +26,10 @@ interface RoomsGridProps {
   rooms: RoomType[];
   listingTitle: string;
   roomAvailability?: Record<string, boolean>;
+  roomPriceOverrides?: Record<string, number>;
 }
 
-export function RoomsGrid({ rooms, listingTitle, roomAvailability }: RoomsGridProps) {
+export function RoomsGrid({ rooms, listingTitle, roomAvailability, roomPriceOverrides }: RoomsGridProps) {
   const router = useRouter();
   const pathname = usePathname();
 
@@ -59,6 +60,7 @@ export function RoomsGrid({ rooms, listingTitle, roomAvailability }: RoomsGridPr
             room={room}
             onEnquire={handleEnquire}
             realAvailability={roomAvailability?.[room._key]}
+            priceOverride={roomPriceOverrides?.[room._key]}
           />
         ))}
       </div>

@@ -29,6 +29,7 @@ interface RentingToggleProps {
   listingTitle: string;
   onModeChange?: (mode: "entire" | "room") => void;
   roomAvailability?: Record<string, boolean>;
+  roomPriceOverrides?: Record<string, number>;
   /** True only when ALL rooms are available. undefined = no PMS data (fallback). */
   entirePropertyAvailable?: boolean;
 }
@@ -49,6 +50,8 @@ export function RentingToggle({
   listingTitle,
   onModeChange,
   roomAvailability,
+  roomPriceOverrides,
+  entirePropertyAvailable,
 }: RentingToggleProps) {
   /* ── CASE 1: entire_place → nothing ── */
   if (rentingType === "entire_place") return null;
@@ -56,7 +59,7 @@ export function RentingToggle({
   /* ── CASE 2: by_room → rooms only, no toggle ── */
   if (rentingType === "by_room") {
     return (
-      <RoomsGrid rooms={rooms ?? []} listingTitle={listingTitle} roomAvailability={roomAvailability} />
+      <RoomsGrid rooms={rooms ?? []} listingTitle={listingTitle} roomAvailability={roomAvailability} roomPriceOverrides={roomPriceOverrides} />
     );
   }
 
@@ -67,6 +70,7 @@ export function RentingToggle({
     listingTitle={listingTitle}
     onModeChange={onModeChange}
     roomAvailability={roomAvailability}
+    roomPriceOverrides={roomPriceOverrides}
     entirePropertyAvailable={entirePropertyAvailable}
   />;
 }
@@ -174,7 +178,7 @@ function BothToggle({
         <>
           {rooms && rooms.length > 0 ? (
             <div className="mt-4">
-              <RoomsGrid rooms={rooms} listingTitle={listingTitle} roomAvailability={roomAvailability} />
+              <RoomsGrid rooms={rooms} listingTitle={listingTitle} roomAvailability={roomAvailability} roomPriceOverrides={roomPriceOverrides} />
             </div>
           ) : (
             <div className="border border-[#E2DDD5] rounded-xl p-5 mt-4 text-center">

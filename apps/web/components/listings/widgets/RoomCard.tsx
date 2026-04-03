@@ -27,11 +27,14 @@ interface RoomCardProps {
   onEnquire: (roomName: string) => void;
   /** Real availability from Supabase PMS. Overrides room.isAvailable when present. */
   realAvailability?: boolean;
+  /** Price from Supabase PMS. Overrides room.pricePerNight when present. */
+  priceOverride?: number;
 }
 
-export function RoomCard({ room, onEnquire, realAvailability }: RoomCardProps) {
+export function RoomCard({ room, onEnquire, realAvailability, priceOverride }: RoomCardProps) {
   const photo = room.photos?.[0];
   const available = realAvailability ?? (room.isAvailable !== false);
+  const displayPrice = priceOverride ?? room.pricePerNight;
   const amenities = room.roomAmenities ?? [];
 
   /* Build subtitle parts */
@@ -90,7 +93,7 @@ export function RoomCard({ room, onEnquire, realAvailability }: RoomCardProps) {
             </div>
             <div className="flex items-center justify-between gap-2">
               <p className="text-[13.5px] font-semibold text-[#E8A020]">
-                KSh {room.pricePerNight.toLocaleString()}
+                KSh {displayPrice.toLocaleString()}
                 <span className="text-[11px] font-normal text-[#9C9485]"> /night</span>
               </p>
               {available && (
@@ -162,7 +165,7 @@ export function RoomCard({ room, onEnquire, realAvailability }: RoomCardProps) {
           <div className="flex items-center justify-between pt-3 border-t border-[#E2DDD5]">
             <div>
               <span className="text-[18px] font-bold text-[#E8A020]">
-                KSh {room.pricePerNight.toLocaleString()}
+                KSh {displayPrice.toLocaleString()}
               </span>
               <span className="text-[12px] text-[#9C9485]"> / night</span>
             </div>
