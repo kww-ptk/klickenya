@@ -48,6 +48,8 @@ interface DateRangePickerProps {
   minDate?: string;
   /** Accent color for selected range. */
   accentColor?: string;
+  /** Compact mode — smaller day cells, tighter spacing. Used inside modals. */
+  compact?: boolean;
 }
 
 /* ── Component ───────────────────────────────── */
@@ -59,6 +61,7 @@ export function DateRangePicker({
   onCheckOutChange,
   minDate,
   accentColor = "#E8A020",
+  compact = false,
 }: DateRangePickerProps) {
   const today = useMemo(() => {
     const d = new Date();
@@ -142,20 +145,21 @@ export function DateRangePicker({
   return (
     <div className="select-none">
       {/* Selection labels */}
-      <div className="grid grid-cols-2 gap-1.5 mb-3">
+      <div className={cn("grid grid-cols-2 gap-1.5", compact ? "mb-2" : "mb-3")}>
         <button
           type="button"
           onClick={() => setSelecting("check-in")}
           className={cn(
-            "text-left px-2.5 py-2 rounded-lg border-2 transition-all",
+            "text-left rounded-lg border-2 transition-all",
+            compact ? "px-2 py-1.5" : "px-2.5 py-2",
             selecting === "check-in"
               ? "border-[color:var(--accent)] bg-[color:var(--accent)]/5"
               : "border-[#E2DDD5]"
           )}
           style={{ "--accent": accentColor } as React.CSSProperties}
         >
-          <p className="text-[9px] font-bold text-[#9C9485] uppercase tracking-wide">Check-in</p>
-          <p className={cn("text-[13px] font-semibold", startD ? "text-[#16130C]" : "text-[#9C9485]")}>
+          <p className={cn("font-bold text-[#9C9485] uppercase tracking-wide", compact ? "text-[8px]" : "text-[9px]")}>Check-in</p>
+          <p className={cn("font-semibold", compact ? "text-[12px]" : "text-[13px]", startD ? "text-[#16130C]" : "text-[#9C9485]")}>
             {startD
               ? startD.toLocaleDateString("en-GB", { day: "numeric", month: "short" })
               : "Add date"}
@@ -165,7 +169,8 @@ export function DateRangePicker({
           type="button"
           onClick={() => { if (startD) setSelecting("check-out"); }}
           className={cn(
-            "text-left px-2.5 py-2 rounded-lg border-2 transition-all",
+            "text-left rounded-lg border-2 transition-all",
+            compact ? "px-2 py-1.5" : "px-2.5 py-2",
             selecting === "check-out"
               ? "border-[color:var(--accent)] bg-[color:var(--accent)]/5"
               : "border-[#E2DDD5]",
@@ -173,8 +178,8 @@ export function DateRangePicker({
           )}
           style={{ "--accent": accentColor } as React.CSSProperties}
         >
-          <p className="text-[9px] font-bold text-[#9C9485] uppercase tracking-wide">Check-out</p>
-          <p className={cn("text-[13px] font-semibold", endD ? "text-[#16130C]" : "text-[#9C9485]")}>
+          <p className={cn("font-bold text-[#9C9485] uppercase tracking-wide", compact ? "text-[8px]" : "text-[9px]")}>Check-out</p>
+          <p className={cn("font-semibold", compact ? "text-[12px]" : "text-[13px]", endD ? "text-[#16130C]" : "text-[#9C9485]")}>
             {endD
               ? endD.toLocaleDateString("en-GB", { day: "numeric", month: "short" })
               : "Add date"}
@@ -183,7 +188,7 @@ export function DateRangePicker({
       </div>
 
       {/* Month navigation */}
-      <div className="flex items-center justify-between mb-1.5">
+      <div className={cn("flex items-center justify-between", compact ? "mb-1" : "mb-1.5")}>
         <button
           type="button"
           onClick={prevMonth}
@@ -194,7 +199,7 @@ export function DateRangePicker({
             <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
           </svg>
         </button>
-        <p className="text-[13px] font-bold text-[#16130C] tracking-[-0.01em]">
+        <p className={cn("font-bold text-[#16130C] tracking-[-0.01em]", compact ? "text-[12px]" : "text-[13px]")}>
           {MONTHS[month]} {year}
         </p>
         <button
@@ -249,7 +254,8 @@ export function DateRangePicker({
                 onMouseEnter={() => setHoveredDate(day)}
                 onMouseLeave={() => setHoveredDate(null)}
                 className={cn(
-                  "relative z-10 size-7 sm:size-8 flex items-center justify-center rounded-full text-[12px] transition-all duration-150",
+                  "relative z-10 flex items-center justify-center rounded-full transition-all duration-150",
+                  compact ? "size-6 text-[11px]" : "size-7 sm:size-8 text-[12px]",
                   !isPast && !isStart && !isEnd && "text-[#16130C] hover:bg-[#F4F1EC]",
                   isPast && "text-[#E2DDD5] cursor-not-allowed",
                   isToday && !isStart && !isEnd && "font-bold",
@@ -274,7 +280,7 @@ export function DateRangePicker({
 
       {/* Nights summary */}
       {startD && effectiveEnd && (
-        <p className="mt-2 text-center text-[11px] text-[#9C9485]">
+        <p className={cn("text-center text-[#9C9485]", compact ? "mt-1 text-[10px]" : "mt-2 text-[11px]")}>
           {Math.ceil((effectiveEnd.getTime() - startD.getTime()) / 86400000)} night{Math.ceil((effectiveEnd.getTime() - startD.getTime()) / 86400000) !== 1 ? "s" : ""}
         </p>
       )}

@@ -607,16 +607,17 @@ export function StayBookingSidebar({
               {/* ── STEP 1: Dates & Guests ── */}
               {step === "dates" && (
                 <>
-                  <div className="flex-1 overflow-y-auto px-5 py-4 space-y-5">
+                  <div className="flex-1 overflow-y-auto px-5 py-3 space-y-4">
                     {/* Date picker */}
                     <div>
-                      <p className="text-[13px] font-semibold text-[#16130C] mb-2">When are you staying?</p>
-                      <div className="border border-[#E2DDD5] rounded-[14px] p-3 bg-[#FAFAF8]">
+                      <p className="text-[13px] font-semibold text-[#16130C] mb-1.5">When are you staying?</p>
+                      <div className="border border-[#E2DDD5] rounded-[14px] p-2.5 bg-[#FAFAF8]">
                         <DateRangePicker
                           checkIn={modalCheckIn}
                           checkOut={modalCheckOut}
                           onCheckInChange={setModalCheckIn}
                           onCheckOutChange={setModalCheckOut}
+                          compact
                         />
                       </div>
                     </div>
@@ -735,12 +736,17 @@ export function StayBookingSidebar({
                         <button type="button" onClick={() => setStep("enquiry")} className="w-full py-3.5 rounded-2xl text-[15px] font-bold bg-gradient-to-r from-[#E8A020] to-[#d4911c] text-[#16130C] shadow-[0_4px_14px_rgba(232,160,32,0.35)] hover:shadow-[0_6px_20px_rgba(232,160,32,0.45)] hover:-translate-y-0.5 transition-all">
                           Continue to enquiry
                         </button>
-                        <div className="flex items-center justify-center gap-2 text-[10px] text-[#9C9485]">
-                          <span>🔒 Secure</span><span className="text-[#E2DDD5]">·</span><span>No payment now</span><span className="text-[#E2DDD5]">·</span><span>Reply in 2hrs</span>
-                        </div>
+                        <button type="button" onClick={() => setStep("dates")} className="w-full text-[12px] text-[#9C9485] hover:text-[#16130C] py-1">
+                          ← Change dates
+                        </button>
                       </div>
                     ) : (
-                      <div className="px-5 py-3 text-center"><p className="text-[12px] text-[#9C9485]">Select a room to continue</p></div>
+                      <div className="px-5 pt-3 pb-4 space-y-2">
+                        <p className="text-[12px] text-[#9C9485] text-center">Select a room to continue</p>
+                        <button type="button" onClick={() => setStep("dates")} className="w-full text-[12px] text-[#9C9485] hover:text-[#16130C] py-1">
+                          ← Change dates
+                        </button>
+                      </div>
                     )}
                   </div>
                 </>
