@@ -399,6 +399,14 @@ export default async function ListingDetailPage({ params }: PageProps) {
     }
   }
 
+  // TODO: Remove — test data for Maya Kobe demo
+  if (slug === "maya-kobe") {
+    listing.avgRating = listing.avgRating || 4.8;
+    listing.reviewCount = listing.reviewCount || 27;
+    listing.isVerified = true;
+    recentBookings = recentBookings || 9;
+  }
+
   // Common props shared by all detail components
   const detailProps = {
     listing,
