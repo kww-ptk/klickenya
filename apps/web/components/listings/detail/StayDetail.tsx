@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback, useRef } from "react";
 import { Star, MapPin } from "lucide-react";
 import { PortableTextRenderer } from "@/components/blog/PortableTextRenderer";
 import { PhotoGallery } from "@/components/listings/widgets/PhotoGallery";
@@ -50,6 +50,52 @@ function StayDetail({
   entirePropertyAvailable,
 }: StayDetailProps) {
   const [rentMode, setRentMode] = useState<"entire" | "room">("entire");
+  const [liveRoomAvail, setLiveRoomAvail] = useState<Record<string, boolean> | undefined>(undefined);
+  const [livePrices, setLivePrices] = useState<Record<string, number> | undefined>(undefined);
+  const [liveEntireAvail, setLiveEntireAvail] = useState<boolean | undefined>(undefined);
+  const [checkingDates, setCheckingDates] = useState(false);
+  const fetchRef = useRef(0);
+
+  const listingSlug = listing.slug?.current ?? "";
+
+  // Live availability check when guest picks dates
+  const handleDatesChange = useCallback(
+    async (checkIn: string, checkOut: string) => {
+      if (!listingSlug) return;
+      const fetchId = ++fetchRef.current;
+      setCheckingDates(true);
+
+      try {
+        const res = await fetch(
+          `/api/properties/availability-by-slug?slug=${listingSlug}&check_in=${checkIn}&check_out=${checkOut}`
+        );
+        const data = await res.json();
+        if (fetchRef.current !== fetchId) return; // stale
+
+        if (data.rooms) {
+          const avail: Record<string, boolean> = {};
+          const prices: Record<string, number> = {};
+          for (const [key, val] of Object.entries(data.rooms as Record<string, { available: boolean; price: number }>)) {
+            avail[key] = val.available;
+            prices[key] = val.price;
+          }
+          setLiveRoomAvail(avail);
+          setLivePrices(prices);
+          setLiveEntireAvail(data.entireProperty);
+        }
+      } catch {
+        // silent — keep server-side values
+      }
+      if (fetchRef.current === fetchId) setCheckingDates(false);
+    },
+    [listingSlug]
+  );
+
+  // Use live values if available, otherwise server-side
+  const activeRoomAvail = liveRoomAvail ?? roomAvailability;
+  const activePrices = livePrices ?? roomPriceOverrides;
+  const activeEntireAvail = liveEntireAvail ?? entirePropertyAvailable;
+
   const highlights = listing.highlights ?? [];
   const amenities: string[] = listing.amenities ?? [];
   const hostName = listing.hostRef?.name ?? listing.hostName ?? "Klickenya";
@@ -117,10 +163,13 @@ function StayDetail({
               rooms={listing.rooms}
               listingTitle={listing.title}
               onModeChange={(mode) => setRentMode(mode)}
-              roomAvailability={roomAvailability}
-              roomPriceOverrides={roomPriceOverrides}
-              entirePropertyAvailable={entirePropertyAvailable}
+              roomAvailability={activeRoomAvail}
+              roomPriceOverrides={activePrices}
+              entirePropertyAvailable={activeEntireAvail}
             />
+            {checkingDates && (
+              <p className="text-[12px] text-[#9C9485] mt-2 animate-pulse">Checking availability...</p>
+            )}
 
             {/* Description */}
             {listing.description && (
@@ -165,6 +214,7 @@ function StayDetail({
             price={listing.price ?? 0}
             priceUnit={listing.priceUnit ?? "night"}
             maxGuests={listing.maxGuests}
+            onDatesChange={handleDatesChange}
           />
         </div>
 
@@ -178,6 +228,7 @@ function StayDetail({
         listingId={listing._id}
         listingTitle={listing.title}
         maxGuests={listing.maxGuests}
+        onDatesChange={handleDatesChange}
       />
     </>
   );

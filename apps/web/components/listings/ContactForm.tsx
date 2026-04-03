@@ -17,6 +17,7 @@ interface ContactFormProps {
   priceUnit: string;
   maxGuests?: number;
   ticketTypes?: string[];
+  onDatesChange?: (checkIn: string, checkOut: string) => void;
 }
 
 interface FormFields {
@@ -125,6 +126,7 @@ function ContactForm({
   priceUnit,
   maxGuests = 20,
   ticketTypes,
+  onDatesChange,
 }: ContactFormProps) {
   const type = listingType as ListingType;
   const searchParams = useSearchParams();
@@ -161,7 +163,18 @@ function ContactForm({
   const [error, setError] = useState<string | null>(null);
 
   function update<K extends keyof FormFields>(key: K, value: FormFields[K]) {
-    setForm((prev) => ({ ...prev, [key]: value }));
+    setForm((prev) => {
+      const next = { ...prev, [key]: value };
+      // Notify parent when stay dates change
+      if ((key === "checkIn" || key === "checkOut") && onDatesChange) {
+        const ci = key === "checkIn" ? (value as string) : prev.checkIn;
+        const co = key === "checkOut" ? (value as string) : prev.checkOut;
+        if (ci && co && co > ci) {
+          onDatesChange(ci, co);
+        }
+      }
+      return next;
+    });
   }
 
   /* Price breakdown for stays */

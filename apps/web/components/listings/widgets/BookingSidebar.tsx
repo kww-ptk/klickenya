@@ -8,6 +8,7 @@ interface BookingSidebarProps {
   priceUnit: string;
   maxGuests?: number;
   ticketTypes?: string[];
+  onDatesChange?: (checkIn: string, checkOut: string) => void;
 }
 
 function BookingSidebar(props: BookingSidebarProps) {
