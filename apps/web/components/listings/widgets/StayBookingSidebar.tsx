@@ -246,8 +246,8 @@ export function StayBookingSidebar({
           <span className="text-[14px] text-[#9C9485]">/ {priceUnit}</span>
         </div>
 
-        {/* Clickable date fields — open date picker modal */}
-        <button type="button" onClick={() => setShowDatePicker(true)} className="w-full grid grid-cols-2 border border-[#E2DDD5] rounded-[14px] overflow-hidden text-left hover:border-[#9C9485] transition-colors">
+        {/* Date fields — click to expand calendar inline */}
+        <button type="button" onClick={() => setShowDatePicker(!showDatePicker)} className={cn("w-full grid grid-cols-2 border rounded-[14px] overflow-hidden text-left transition-colors", showDatePicker ? "border-[#E8A020]" : "border-[#E2DDD5] hover:border-[#9C9485]")}>
           <div className="p-3 border-r border-[#E2DDD5]">
             <p className="text-[10px] font-bold text-[#9C9485] uppercase tracking-wide">Check-in</p>
             <p className={cn("text-[14px] font-semibold", checkIn ? "text-[#16130C]" : "text-[#9C9485]")}>
@@ -261,6 +261,21 @@ export function StayBookingSidebar({
             </p>
           </div>
         </button>
+
+        {/* Inline calendar — expands below dates */}
+        {showDatePicker && (
+          <div className="border border-[#E2DDD5] rounded-[14px] p-3 bg-[#FAFAF8]">
+            <DateRangePicker
+              checkIn={checkIn}
+              checkOut={checkOut}
+              onCheckInChange={setCheckIn}
+              onCheckOutChange={(d) => {
+                setCheckOut(d);
+                if (d && checkIn) setTimeout(() => setShowDatePicker(false), 250);
+              }}
+            />
+          </div>
+        )}
 
         {/* Guests */}
         <div className="border border-[#E2DDD5] rounded-[14px] p-3 flex items-center justify-between">
@@ -279,33 +294,6 @@ export function StayBookingSidebar({
         {error && !showModal && <p className="text-[13px] text-red-600 text-center">{error}</p>}
         <p className="text-[12px] text-[#9C9485] text-center">You won&apos;t be charged yet</p>
       </div>
-
-      {/* ── Date picker modal ── */}
-      {showDatePicker && typeof document !== "undefined" && createPortal(
-        <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center">
-          <div className="absolute inset-0 bg-black/50 backdrop-blur-[1px]" onClick={() => setShowDatePicker(false)} />
-          <div className="relative w-full sm:max-w-[400px] max-h-[90vh] bg-white rounded-t-3xl sm:rounded-2xl shadow-2xl overflow-hidden flex flex-col">
-            <div className="sm:hidden flex justify-center pt-2"><div className="w-10 h-1 rounded-full bg-[#E2DDD5]" /></div>
-            <div className="px-5 pt-3 pb-2 flex items-center justify-between">
-              <h2 className="font-display text-[17px] font-bold text-[#16130C]">Select dates</h2>
-              <button onClick={() => setShowDatePicker(false)} className="size-8 flex items-center justify-center rounded-full bg-[#F4F1EC] hover:bg-[#E2DDD5]">
-                <svg className="size-4 text-[#5E5848]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-              </button>
-            </div>
-            <div className="flex-1 overflow-y-auto px-5 pb-5">
-              <DateRangePicker checkIn={checkIn} checkOut={checkOut} onCheckInChange={setCheckIn} onCheckOutChange={(d) => { setCheckOut(d); if (d && checkIn) setTimeout(() => setShowDatePicker(false), 300); }} />
-            </div>
-            {checkIn && checkOut && (
-              <div className="sticky bottom-0 bg-white border-t border-[#E2DDD5] px-5 py-3">
-                <button type="button" onClick={() => setShowDatePicker(false)} className="w-full py-3 rounded-2xl text-[14px] font-bold bg-gradient-to-r from-[#E8A020] to-[#d4911c] text-[#16130C]">
-                  {nights} night{nights !== 1 ? "s" : ""} selected — Done
-                </button>
-              </div>
-            )}
-          </div>
-        </div>,
-        document.body,
-      )}
 
       {/* ── Main booking modal — two-column on desktop ── */}
       {showModal && typeof document !== "undefined" && createPortal(
@@ -410,10 +398,15 @@ export function StayBookingSidebar({
                   </div>
                 </div>
 
-                {/* Date summary */}
-                <p className="text-[11px] text-[#9C9485] mt-2">
-                  {fmtDate(checkIn)} → {fmtDate(checkOut)} · {nights} night{nights !== 1 ? "s" : ""} · {guests} guest{guests !== 1 ? "s" : ""}
-                </p>
+                {/* Date summary with change link */}
+                <div className="flex items-center justify-between mt-2">
+                  <p className="text-[11px] text-[#9C9485]">
+                    {fmtDate(checkIn)} → {fmtDate(checkOut)} · {nights} night{nights !== 1 ? "s" : ""} · {guests} guest{guests !== 1 ? "s" : ""}
+                  </p>
+                  <button type="button" onClick={() => { setShowModal(false); setStep("rooms"); setShowDatePicker(true); }} className="text-[11px] font-semibold text-[#E8A020] hover:text-[#d4911c] shrink-0 ml-2">
+                    Change
+                  </button>
+                </div>
               </div>
 
               {/* Social proof */}
@@ -463,8 +456,17 @@ export function StayBookingSidebar({
                         {/* Individual rooms */}
                         {results.map((room) => (
                           <button key={room.key} type="button" disabled={!room.available}
-                            onClick={() => { setSelectedRoom(selectedRoom === room.key ? null : room.key); setPreviewRoom(room.available ? room : null); }}
-                            onMouseEnter={() => room.available && setPreviewRoom(room)}
+                            onClick={() => {
+                              if (selectedRoom === room.key) {
+                                setSelectedRoom(null);
+                                setPreviewRoom(null);
+                              } else {
+                                setSelectedRoom(room.key);
+                                setPreviewRoom(room);
+                              }
+                            }}
+                            onMouseEnter={() => room.available && !selectedRoom && setPreviewRoom(room)}
+                            onMouseLeave={() => !selectedRoom && setPreviewRoom(null)}
                             className={cn("w-full text-left rounded-xl border overflow-hidden transition-all", !room.available ? "opacity-40 grayscale cursor-not-allowed border-[#E2DDD5]" : selectedRoom === room.key ? "ring-2 ring-[#E8A020] ring-offset-2 border-transparent shadow-md" : "border-[#E2DDD5] hover:shadow-md hover:border-[#E8A020]/30")}>
                             <div className="flex">
                               <div className="relative w-[90px] sm:w-[110px] shrink-0 bg-[#F4F1EC]">
