@@ -142,30 +142,30 @@ export function DateRangePicker({
   return (
     <div className="select-none">
       {/* Selection labels */}
-      <div className="grid grid-cols-2 gap-2 mb-4">
+      <div className="grid grid-cols-2 gap-1.5 mb-3">
         <button
           type="button"
           onClick={() => setSelecting("check-in")}
           className={cn(
-            "text-left p-2.5 rounded-xl border-2 transition-all",
+            "text-left px-2.5 py-2 rounded-lg border-2 transition-all",
             selecting === "check-in"
               ? "border-[color:var(--accent)] bg-[color:var(--accent)]/5"
               : "border-[#E2DDD5]"
           )}
           style={{ "--accent": accentColor } as React.CSSProperties}
         >
-          <p className="text-[10px] font-bold text-[#9C9485] uppercase tracking-wide">Check-in</p>
-          <p className={cn("text-[14px] font-semibold", startD ? "text-[#16130C]" : "text-[#9C9485]")}>
+          <p className="text-[9px] font-bold text-[#9C9485] uppercase tracking-wide">Check-in</p>
+          <p className={cn("text-[13px] font-semibold", startD ? "text-[#16130C]" : "text-[#9C9485]")}>
             {startD
-              ? startD.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })
-              : "Select date"}
+              ? startD.toLocaleDateString("en-GB", { day: "numeric", month: "short" })
+              : "Add date"}
           </p>
         </button>
         <button
           type="button"
           onClick={() => { if (startD) setSelecting("check-out"); }}
           className={cn(
-            "text-left p-2.5 rounded-xl border-2 transition-all",
+            "text-left px-2.5 py-2 rounded-lg border-2 transition-all",
             selecting === "check-out"
               ? "border-[color:var(--accent)] bg-[color:var(--accent)]/5"
               : "border-[#E2DDD5]",
@@ -173,45 +173,45 @@ export function DateRangePicker({
           )}
           style={{ "--accent": accentColor } as React.CSSProperties}
         >
-          <p className="text-[10px] font-bold text-[#9C9485] uppercase tracking-wide">Check-out</p>
-          <p className={cn("text-[14px] font-semibold", endD ? "text-[#16130C]" : "text-[#9C9485]")}>
+          <p className="text-[9px] font-bold text-[#9C9485] uppercase tracking-wide">Check-out</p>
+          <p className={cn("text-[13px] font-semibold", endD ? "text-[#16130C]" : "text-[#9C9485]")}>
             {endD
-              ? endD.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })
-              : "Select date"}
+              ? endD.toLocaleDateString("en-GB", { day: "numeric", month: "short" })
+              : "Add date"}
           </p>
         </button>
       </div>
 
       {/* Month navigation */}
-      <div className="flex items-center justify-between mb-3">
+      <div className="flex items-center justify-between mb-1.5">
         <button
           type="button"
           onClick={prevMonth}
           disabled={!canGoPrev}
-          className="size-8 flex items-center justify-center rounded-full hover:bg-[#F4F1EC] transition-colors disabled:opacity-20 disabled:cursor-not-allowed"
+          className="size-7 flex items-center justify-center rounded-full hover:bg-[#F4F1EC] transition-colors disabled:opacity-20 disabled:cursor-not-allowed"
         >
-          <svg className="size-4 text-[#16130C]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+          <svg className="size-3.5 text-[#16130C]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
           </svg>
         </button>
-        <p className="text-[15px] font-bold text-[#16130C] tracking-[-0.01em]">
+        <p className="text-[13px] font-bold text-[#16130C] tracking-[-0.01em]">
           {MONTHS[month]} {year}
         </p>
         <button
           type="button"
           onClick={nextMonth}
-          className="size-8 flex items-center justify-center rounded-full hover:bg-[#F4F1EC] transition-colors"
+          className="size-7 flex items-center justify-center rounded-full hover:bg-[#F4F1EC] transition-colors"
         >
-          <svg className="size-4 text-[#16130C]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+          <svg className="size-3.5 text-[#16130C]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
           </svg>
         </button>
       </div>
 
       {/* Weekday headers */}
-      <div className="grid grid-cols-7 mb-1">
+      <div className="grid grid-cols-7 mb-0.5">
         {WEEKDAYS.map((d) => (
-          <div key={d} className="text-center text-[11px] font-semibold text-[#9C9485] py-1">
+          <div key={d} className="text-center text-[10px] font-semibold text-[#9C9485] py-0.5">
             {d}
           </div>
         ))}
@@ -236,11 +236,8 @@ export function DateRangePicker({
               key={day.getDate()}
               className={cn(
                 "relative aspect-square flex items-center justify-center",
-                // Range background — full width highlight
                 (isInRange || isPreviewRange) && "bg-[color:var(--accent)]/10",
-                // Start: right half highlighted
                 isStart && effectiveEnd && "bg-gradient-to-r from-transparent via-transparent to-[color:var(--accent)]/10",
-                // End: left half highlighted
                 isEnd && startD && "bg-gradient-to-l from-transparent via-transparent to-[color:var(--accent)]/10",
               )}
               style={{ "--accent": accentColor } as React.CSSProperties}
@@ -252,16 +249,11 @@ export function DateRangePicker({
                 onMouseEnter={() => setHoveredDate(day)}
                 onMouseLeave={() => setHoveredDate(null)}
                 className={cn(
-                  "relative z-10 size-9 sm:size-10 flex items-center justify-center rounded-full text-[13px] transition-all duration-150",
-                  // Default
+                  "relative z-10 size-7 sm:size-8 flex items-center justify-center rounded-full text-[12px] transition-all duration-150",
                   !isPast && !isStart && !isEnd && "text-[#16130C] hover:bg-[#F4F1EC]",
-                  // Past
                   isPast && "text-[#E2DDD5] cursor-not-allowed",
-                  // Today
                   isToday && !isStart && !isEnd && "font-bold",
-                  // Start or End — filled circle
                   (isStart || isEnd) && "text-white font-bold",
-                  // In range
                   isInRange && !isStart && !isEnd && "text-[#16130C] font-medium",
                 )}
                 style={
@@ -272,7 +264,7 @@ export function DateRangePicker({
               >
                 {day.getDate()}
                 {isToday && !isStart && !isEnd && (
-                  <span className="absolute bottom-1 left-1/2 -translate-x-1/2 size-1 rounded-full" style={{ backgroundColor: accentColor }} />
+                  <span className="absolute bottom-0.5 left-1/2 -translate-x-1/2 size-[3px] rounded-full" style={{ backgroundColor: accentColor }} />
                 )}
               </button>
             </div>
@@ -282,11 +274,9 @@ export function DateRangePicker({
 
       {/* Nights summary */}
       {startD && effectiveEnd && (
-        <div className="mt-3 text-center">
-          <p className="text-[12px] text-[#9C9485]">
-            {Math.ceil((effectiveEnd.getTime() - startD.getTime()) / 86400000)} night{Math.ceil((effectiveEnd.getTime() - startD.getTime()) / 86400000) !== 1 ? "s" : ""} selected
-          </p>
-        </div>
+        <p className="mt-2 text-center text-[11px] text-[#9C9485]">
+          {Math.ceil((effectiveEnd.getTime() - startD.getTime()) / 86400000)} night{Math.ceil((effectiveEnd.getTime() - startD.getTime()) / 86400000) !== 1 ? "s" : ""}
+        </p>
       )}
     </div>
   );

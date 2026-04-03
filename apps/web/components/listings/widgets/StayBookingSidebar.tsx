@@ -283,7 +283,7 @@ export function StayBookingSidebar({
 
       {/* ── Results modal — full-screen on mobile ── */}
       {showResults && (
-        <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center" style={{ isolation: "isolate" }}>
+        <div className="fixed inset-0 z-[300] flex items-end sm:items-center justify-center" style={{ isolation: "isolate" }}>
           <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px]" onClick={() => { setShowResults(false); setSelectedRoom(null); }} />
 
           <div className="relative w-full sm:max-w-[520px] max-h-[92vh] sm:max-h-[88vh] bg-white rounded-t-3xl sm:rounded-2xl shadow-2xl overflow-hidden flex flex-col">
@@ -506,7 +506,7 @@ export function StayBookingSidebar({
 
       {/* ── Enquiry modal ── */}
       {showEnquiry && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
+        <div className="fixed inset-0 z-[300] flex items-end sm:items-center justify-center">
           <div className="absolute inset-0 bg-black/40" onClick={() => setShowEnquiry(false)} />
 
           <div className="relative w-full sm:max-w-[440px] max-h-[90vh] bg-white rounded-t-2xl sm:rounded-2xl shadow-xl overflow-hidden flex flex-col">
