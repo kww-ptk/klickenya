@@ -301,6 +301,7 @@ export default async function ListingDetailPage({ params }: PageProps) {
 
   // Fetch real room availability from Supabase PMS for stays
   let roomAvailability: Record<string, boolean> | undefined;
+  let entirePropertyAvailable: boolean | undefined;
   if (sanityType === "stay") {
     try {
       const { data: linkedProps } = await adminClient
@@ -334,6 +335,9 @@ export default async function ListingDetailPage({ params }: PageProps) {
               return { ...r, available: available === true };
             })
           );
+
+          // Entire property = available only when ALL rooms are free
+          entirePropertyAvailable = roomAvailResults.every((r) => r.available);
 
           // Map to Sanity room _keys using: sanity_room_key first, then name-match fallback
           const sanityRooms = listing.rooms ?? [];
@@ -388,6 +392,7 @@ export default async function ListingDetailPage({ params }: PageProps) {
     attendees,
     menuData,
     roomAvailability,
+    entirePropertyAvailable,
   };
 
   const Detail = (() => {

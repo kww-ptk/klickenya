@@ -95,7 +95,10 @@ export function NewBookingSidePanel({
     ? `${form.country_code}${form.guest_phone.replace(/^0+/, "").replace(/\D/g, "")}`
     : "";
 
-  const selectedRoom = rooms.find((r) => r.id === form.room_id);
+  const activeRooms = rooms.filter((r) => r.is_active);
+  const isEntireBooking = form.room_id === "__entire__";
+  const selectedRoom = isEntireBooking ? null : rooms.find((r) => r.id === form.room_id);
+  const entireRate = activeRooms.reduce((sum, r) => sum + r.base_price_kes, 0);
 
   // Calculated values
   const nights = Math.max(
@@ -112,15 +115,25 @@ export function NewBookingSidePanel({
 
   // Update rate when room changes
   useEffect(() => {
-    const room = rooms.find((r) => r.id === form.room_id);
-    if (room) {
+    if (form.room_id === "__entire__") {
+      const total = activeRooms.reduce((sum, r) => sum + r.base_price_kes, 0);
+      const maxGuests = activeRooms.reduce((sum, r) => sum + r.max_guests, 0);
       setForm((prev) => ({
         ...prev,
-        rate_per_night: room.base_price_kes,
-        guest_count: Math.min(prev.guest_count, room.max_guests),
+        rate_per_night: total,
+        guest_count: Math.min(prev.guest_count, maxGuests),
       }));
+    } else {
+      const room = rooms.find((r) => r.id === form.room_id);
+      if (room) {
+        setForm((prev) => ({
+          ...prev,
+          rate_per_night: room.base_price_kes,
+          guest_count: Math.min(prev.guest_count, room.max_guests),
+        }));
+      }
     }
-  }, [form.room_id, rooms]);
+  }, [form.room_id, rooms, activeRooms]);
 
   // Availability check when room + dates change
   const checkAvailability = useCallback(async () => {
@@ -132,16 +145,36 @@ export function NewBookingSidePanel({
 
     setCheckingAvail(true);
     try {
-      const res = await fetch(
-        `/api/properties/availability?room_id=${form.room_id}&check_in=${form.check_in_date}&check_out=${form.check_out_date}`
-      );
-      const data = await res.json();
-      setAvailability(data);
+      if (form.room_id === "__entire__") {
+        // Check ALL rooms — entire property available only if all rooms free
+        const results = await Promise.all(
+          activeRooms.map((r) =>
+            fetch(`/api/properties/availability?room_id=${r.id}&check_in=${form.check_in_date}&check_out=${form.check_out_date}`)
+              .then((res) => res.json())
+          )
+        );
+        const unavailableRoom = results.find((r) => !r.available);
+        if (unavailableRoom) {
+          setAvailability({
+            available: false,
+            conflict: unavailableRoom.conflict,
+            blocked: unavailableRoom.blocked,
+          });
+        } else {
+          setAvailability({ available: true });
+        }
+      } else {
+        const res = await fetch(
+          `/api/properties/availability?room_id=${form.room_id}&check_in=${form.check_in_date}&check_out=${form.check_out_date}`
+        );
+        const data = await res.json();
+        setAvailability(data);
+      }
     } catch {
       setAvailability(null);
     }
     setCheckingAvail(false);
-  }, [form.room_id, form.check_in_date, form.check_out_date]);
+  }, [form.room_id, form.check_in_date, form.check_out_date, activeRooms]);
 
   useEffect(() => {
     const timer = setTimeout(checkAvailability, 300);
@@ -184,46 +217,67 @@ export function NewBookingSidePanel({
     setSaving(true);
 
     try {
-      const res = await fetch("/api/properties/bookings", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          property_id: propertyId,
-          room_id: form.room_id,
-          guest_name: form.guest_name.trim(),
-          guest_phone: fullPhone,
-          guest_email: form.guest_email.trim() || null,
-          guest_count: form.guest_count,
-          check_in_date: form.check_in_date,
-          check_out_date: form.check_out_date,
-          rate_per_night: form.rate_per_night,
-          discount_kes: form.discount_kes,
-          source: form.source,
-          guest_notes: form.guest_notes.trim() || null,
-          internal_notes: form.internal_notes.trim() || null,
-          payment_method: form.payment_method,
-          amount_paid: form.amount_paid,
-        }),
-      });
+      const bookingRooms = isEntireBooking ? activeRooms : [selectedRoom!];
+      const perRoomDiscount = isEntireBooking
+        ? Math.round(form.discount_kes / bookingRooms.length)
+        : form.discount_kes;
+      const perRoomPayment = isEntireBooking
+        ? Math.round(form.amount_paid / bookingRooms.length)
+        : form.amount_paid;
 
-      const data = await res.json();
+      let lastBooking = null;
+      for (const room of bookingRooms) {
+        const roomRate = isEntireBooking ? room.base_price_kes : form.rate_per_night;
+        const roomSubtotal = nights * roomRate;
+        const roomTotal = Math.max(0, roomSubtotal - perRoomDiscount);
 
-      if (!res.ok) {
-        if (res.status === 409) {
-          setError(
-            data.conflict
-              ? `Room is no longer available — booked by ${data.conflict.guest_name} (${data.conflict.check_in_date} → ${data.conflict.check_out_date})`
-              : "Room is no longer available — please select different dates"
-          );
-        } else {
-          setError(data.error ?? "Failed to create booking");
+        const res = await fetch("/api/properties/bookings", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            property_id: propertyId,
+            room_id: room.id,
+            guest_name: form.guest_name.trim(),
+            guest_phone: fullPhone,
+            guest_email: form.guest_email.trim() || null,
+            guest_count: form.guest_count,
+            check_in_date: form.check_in_date,
+            check_out_date: form.check_out_date,
+            rate_per_night: roomRate,
+            discount_kes: perRoomDiscount,
+            source: form.source,
+            guest_notes: form.guest_notes.trim() || null,
+            internal_notes: isEntireBooking
+              ? `Entire property booking${form.internal_notes.trim() ? ` · ${form.internal_notes.trim()}` : ""}`
+              : form.internal_notes.trim() || null,
+            payment_method: form.payment_method,
+            amount_paid: perRoomPayment,
+          }),
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          if (res.status === 409) {
+            setError(
+              data.conflict
+                ? `${room.name} is not available — booked by ${data.conflict.guest_name} (${data.conflict.check_in_date} → ${data.conflict.check_out_date})`
+                : `${room.name} is no longer available — please select different dates`
+            );
+          } else {
+            setError(data.error ?? "Failed to create booking");
+          }
+          setSaving(false);
+          return;
         }
-        setSaving(false);
-        return;
+        lastBooking = data.booking;
       }
 
-      showToast(`Booking confirmed for ${form.guest_name.trim()}`, "success");
-      onCreated(data.booking);
+      const label = isEntireBooking
+        ? `Entire property booked for ${form.guest_name.trim()} (${bookingRooms.length} rooms)`
+        : `Booking confirmed for ${form.guest_name.trim()}`;
+      showToast(label, "success");
+      onCreated(lastBooking);
     } catch {
       setError("Network error — please try again");
       setSaving(false);
@@ -348,13 +402,23 @@ export function NewBookingSidePanel({
               onChange={(e) => setForm({ ...form, room_id: e.target.value })}
               className="w-full h-[40px] px-3 rounded-lg border border-[#E2DDD5] text-[14px] text-[#16130C] focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] outline-none transition-colors bg-white"
             >
-              {rooms.filter((r) => r.is_active).map((r) => (
+              {activeRooms.length > 1 && (
+                <option value="__entire__">
+                  Entire Property (all {activeRooms.length} rooms) — {fmt(entireRate)}/night
+                </option>
+              )}
+              {activeRooms.map((r) => (
                 <option key={r.id} value={r.id}>
                   {r.name}
                   {r.room_number ? ` (#${r.room_number})` : ""} — {fmt(r.base_price_kes)}/night — max {r.max_guests}
                 </option>
               ))}
             </select>
+            {isEntireBooking && (
+              <p className="text-[11px] text-[#4F46E5] mt-1 font-medium">
+                This will create a booking for every room ({activeRooms.length} rooms)
+              </p>
+            )}
           </div>
 
           {/* Dates */}
@@ -403,7 +467,7 @@ export function NewBookingSidePanel({
               <input
                 type="number"
                 min={1}
-                max={selectedRoom?.max_guests ?? 20}
+                max={isEntireBooking ? activeRooms.reduce((s, r) => s + r.max_guests, 0) : (selectedRoom?.max_guests ?? 20)}
                 value={form.guest_count}
                 onChange={(e) =>
                   setForm({ ...form, guest_count: parseInt(e.target.value) || 1 })

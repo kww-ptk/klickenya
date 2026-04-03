@@ -29,6 +29,8 @@ interface RentingToggleProps {
   listingTitle: string;
   onModeChange?: (mode: "entire" | "room") => void;
   roomAvailability?: Record<string, boolean>;
+  /** True only when ALL rooms are available. undefined = no PMS data (fallback). */
+  entirePropertyAvailable?: boolean;
 }
 
 const LS_KEY = "kk_rent_mode";
@@ -65,6 +67,7 @@ export function RentingToggle({
     listingTitle={listingTitle}
     onModeChange={onModeChange}
     roomAvailability={roomAvailability}
+    entirePropertyAvailable={entirePropertyAvailable}
   />;
 }
 
@@ -117,7 +120,7 @@ function BothToggle({
 
       {/* Panels */}
       {mode === "entire" ? (
-        <div className="border border-[#E2DDD5] rounded-xl p-5 mt-4">
+        <div className={`border rounded-xl p-5 mt-4 ${entirePropertyAvailable === false ? "border-red-200 bg-red-50/30" : "border-[#E2DDD5]"}`}>
           <p className="text-sm text-[#5E5848] mb-1">
             Entire property · Private
           </p>
@@ -129,16 +132,43 @@ function BothToggle({
               ? <>KSh {pricePerNight.toLocaleString()} <span className="text-sm text-[#9C9485] font-normal">/ night</span></>
               : "Price on request"}
           </p>
-          <p className="text-sm text-[#9C9485] mb-4">
-            Book the entire place for your group
-          </p>
-          <button
-            type="button"
-            onClick={scrollToContactForm}
-            className="w-full bg-[#E8A020] text-[#16130C] font-bold rounded-full py-2.5 text-sm transition-colors hover:bg-[#d4911c]"
-          >
-            Enquire for the whole place →
-          </button>
+          {entirePropertyAvailable === false ? (
+            <>
+              <p className="text-sm text-red-600 font-medium mb-2">
+                Not available — one or more rooms are booked
+              </p>
+              <p className="text-sm text-[#9C9485] mb-4">
+                Try individual rooms below, or enquire for different dates
+              </p>
+              <button
+                type="button"
+                onClick={() => setMode("room")}
+                className="w-full bg-[#E2DDD5] text-[#5E5848] font-bold rounded-full py-2.5 text-sm transition-colors hover:bg-[#d4d0c8] mb-2"
+              >
+                View available rooms →
+              </button>
+              <button
+                type="button"
+                onClick={scrollToContactForm}
+                className="w-full border border-[#E2DDD5] text-[#5E5848] font-semibold rounded-full py-2.5 text-sm transition-colors hover:bg-[#F4F1EC]"
+              >
+                Enquire for different dates
+              </button>
+            </>
+          ) : (
+            <>
+              <p className="text-sm text-[#9C9485] mb-4">
+                Book the entire place for your group
+              </p>
+              <button
+                type="button"
+                onClick={scrollToContactForm}
+                className="w-full bg-[#E8A020] text-[#16130C] font-bold rounded-full py-2.5 text-sm transition-colors hover:bg-[#d4911c]"
+              >
+                Enquire for the whole place →
+              </button>
+            </>
+          )}
         </div>
       ) : (
         <>
