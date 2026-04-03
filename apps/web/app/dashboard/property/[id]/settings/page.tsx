@@ -63,6 +63,7 @@ export default function PropertySettingsPage() {
   const [rentingType, setRentingType] = useState("both");
   const [entirePlacePrice, setEntirePlacePrice] = useState<number | "">("");
   const [bookingSlug, setBookingSlug] = useState("");
+  const [isActive, setIsActive] = useState(false);
 
   // Rooms
   const [rooms, setRooms] = useState<Room[]>([]);
@@ -94,6 +95,7 @@ export default function PropertySettingsPage() {
         setRentingType(p.renting_type ?? "both");
         setEntirePlacePrice(p.entire_place_price ?? "");
         setBookingSlug(p.booking_slug ?? "");
+        setIsActive(p.is_active ?? false);
       }
       setRooms((roomsRes.data ?? []).map((r) => ({
         ...r,
@@ -123,6 +125,7 @@ export default function PropertySettingsPage() {
           renting_type: rentingType,
           entire_place_price: entirePlacePrice === "" ? null : Number(entirePlacePrice),
           booking_slug: bookingSlug.trim() || null,
+          is_active: isActive,
         }),
       });
       if (res.ok) setMessage({ type: "success", text: "Settings saved" });
@@ -182,6 +185,39 @@ export default function PropertySettingsPage() {
         <h1 className="font-display text-[22px] lg:text-[28px] font-bold tracking-[-0.03em] text-[#16130C] mt-2">
           Property Settings
         </h1>
+      </div>
+
+      {/* ── Booking system toggle ── */}
+      <div className={`rounded-xl lg:rounded-2xl border-2 p-4 lg:p-5 shadow-sm mb-5 transition-colors ${isActive ? "border-[#16A34A]/30 bg-[#16A34A]/[0.03]" : "border-[#E2DDD5] bg-white"}`}>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className={`size-10 rounded-xl flex items-center justify-center ${isActive ? "bg-[#16A34A]/10" : "bg-[#F4F1EC]"}`}>
+              <span className="text-[20px]">{isActive ? "📅" : "🔒"}</span>
+            </div>
+            <div>
+              <p className="text-[14px] font-semibold text-[#16130C]">
+                Booking system
+              </p>
+              <p className="text-[11px] text-[#9C9485]">
+                {isActive
+                  ? "Live — guests can check availability on your listing"
+                  : "Off — listing shows basic contact form only"}
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setIsActive(!isActive)}
+            className={`relative w-12 h-7 rounded-full transition-colors duration-200 ${isActive ? "bg-[#16A34A]" : "bg-[#E2DDD5]"}`}
+          >
+            <span className={`absolute top-0.5 size-6 rounded-full bg-white shadow-sm transition-transform duration-200 ${isActive ? "translate-x-[22px]" : "translate-x-0.5"}`} />
+          </button>
+        </div>
+        {!isActive && rooms.length > 0 && (
+          <p className="text-[11px] text-[#E8A020] font-medium mt-2 ml-[52px]">
+            You have {rooms.length} room{rooms.length !== 1 ? "s" : ""} set up. Turn on to show availability on your listing.
+          </p>
+        )}
       </div>
 
       {/* ── Property details ── */}
