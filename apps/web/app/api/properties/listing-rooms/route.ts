@@ -7,6 +7,8 @@ import { sanityClient } from "@/lib/sanity/client";
  * GET /api/properties/listing-rooms
  * Returns the user's unset-up property and its Sanity listing rooms.
  * Used by the setup wizard to detect importable rooms.
+ *
+ * Optional: ?property_id=X to check a specific property.
  */
 export async function GET(req: NextRequest) {
   const supabase = await createClient();
@@ -17,12 +19,21 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // Find a property with listing_slug set but no rooms
-  const { data: properties } = await adminClient
+  const { searchParams } = new URL(req.url);
+  const specificPropertyId = searchParams.get("property_id");
+
+  // Build query
+  let query = adminClient
     .from("properties")
     .select("id, name, listing_slug, city, property_type")
     .eq("owner_id", user.id)
     .not("listing_slug", "is", null);
+
+  if (specificPropertyId) {
+    query = query.eq("id", specificPropertyId);
+  }
+
+  const { data: properties } = await query;
 
   if (!properties || properties.length === 0) {
     return NextResponse.json({ property: null, listing: null });

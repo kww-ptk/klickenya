@@ -549,7 +549,7 @@ export default async function DashboardPage() {
                       )}
                       {isStay && propStatus && (!propStatus.is_active || propStatus.room_count === 0) && (
                         <Link
-                          href="/dashboard/property/new"
+                          href={`/dashboard/property/new?edit=${propStatus.id}`}
                           className="text-[11px] font-semibold text-[#E8A020] hover:text-[#d4911c] transition-colors"
                         >
                           Complete setup →

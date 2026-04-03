@@ -105,7 +105,11 @@ export default function PropertySetupWizard() {
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch("/api/properties/listing-rooms");
+        // If ?edit= is set, fetch that specific property
+        const url = editPropertyId
+          ? `/api/properties/listing-rooms?property_id=${editPropertyId}`
+          : "/api/properties/listing-rooms";
+        const res = await fetch(url);
         const data = await res.json();
         if (data.property && data.listing) {
           setImportProperty(data.property);
@@ -125,7 +129,7 @@ export default function PropertySetupWizard() {
       }
       setLoadingImport(false);
     })();
-  }, []);
+  }, [editPropertyId]);
 
   const handleImportRooms = async () => {
     if (!importProperty || !importListing) return;
