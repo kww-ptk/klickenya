@@ -509,61 +509,143 @@ export function StayBookingSidebar({
       {/* ── Enquiry modal — portaled to body ── */}
       {showEnquiry && typeof document !== "undefined" && createPortal(
         <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center">
-          <div className="absolute inset-0 bg-black/40" onClick={() => setShowEnquiry(false)} />
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px]" onClick={() => setShowEnquiry(false)} />
 
-          <div className="relative w-full sm:max-w-[440px] max-h-[90vh] bg-white rounded-t-2xl sm:rounded-2xl shadow-xl overflow-hidden flex flex-col">
-            <div className="sticky top-0 bg-white border-b border-[#E2DDD5] px-5 py-4 flex items-center justify-between z-10 shrink-0">
-              <h2 className="font-display text-[18px] font-bold text-[#16130C]">Send enquiry</h2>
-              <button onClick={() => setShowEnquiry(false)} className="size-8 flex items-center justify-center rounded-full hover:bg-[#F4F1EC]">
-                <svg className="size-5 text-[#5E5848]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
+          <div className="relative w-full sm:max-w-[440px] max-h-[92vh] bg-white rounded-t-3xl sm:rounded-2xl shadow-2xl overflow-hidden flex flex-col">
+            {/* Drag handle — mobile */}
+            <div className="sm:hidden flex justify-center pt-2 pb-0">
+              <div className="w-10 h-1 rounded-full bg-[#E2DDD5]" />
+            </div>
+
+            {/* Header with progress */}
+            <div className="sticky top-0 bg-white border-b border-[#E2DDD5] px-5 pt-3 pb-3 sm:py-4 z-10 shrink-0">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2.5">
+                  {/* Pulsing indicator */}
+                  <span className="relative flex size-3">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#16A34A] opacity-75" />
+                    <span className="relative inline-flex rounded-full size-3 bg-[#16A34A]" />
+                  </span>
+                  <h2 className="font-display text-[18px] font-bold text-[#16130C]">Almost there!</h2>
+                </div>
+                <button onClick={() => setShowEnquiry(false)} className="size-8 flex items-center justify-center rounded-full bg-[#F4F1EC] hover:bg-[#E2DDD5] transition-colors">
+                  <svg className="size-4 text-[#5E5848]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              {/* Progress steps */}
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5">
+                  <span className="size-5 rounded-full bg-[#16A34A] flex items-center justify-center">
+                    <svg className="size-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                    </svg>
+                  </span>
+                  <span className="text-[11px] font-semibold text-[#16A34A]">Dates</span>
+                </div>
+                <div className="flex-1 h-0.5 bg-[#16A34A] rounded-full" />
+                <div className="flex items-center gap-1.5">
+                  <span className="size-5 rounded-full bg-[#16A34A] flex items-center justify-center">
+                    <svg className="size-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                    </svg>
+                  </span>
+                  <span className="text-[11px] font-semibold text-[#16A34A]">Room</span>
+                </div>
+                <div className="flex-1 h-0.5 bg-[#E8A020] rounded-full animate-pulse" />
+                <div className="flex items-center gap-1.5">
+                  <span className="size-5 rounded-full bg-[#E8A020] flex items-center justify-center animate-pulse">
+                    <span className="text-[10px] font-bold text-white">3</span>
+                  </span>
+                  <span className="text-[11px] font-bold text-[#E8A020]">Confirm</span>
+                </div>
+              </div>
             </div>
 
             <div className="flex-1 overflow-y-auto p-5 space-y-4">
-              {/* Selection summary */}
-              <div className="bg-[#E8A020]/5 border border-[#E8A020]/20 rounded-xl p-3">
-                <p className="text-[13px] font-semibold text-[#E8A020]">
-                  {selectedRoom === "__entire__" ? "Entire property" : results.find((r) => r.key === selectedRoom)?.name}
+              {/* Motivational message */}
+              <div className="text-center py-1">
+                <p className="text-[14px] font-semibold text-[#16130C]">
+                  One step away from your dream stay
                 </p>
-                <p className="text-[11px] text-[#9C9485]">
-                  {new Date(checkIn + "T00:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
-                  {" \u2192 "}
-                  {new Date(checkOut + "T00:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
-                  {" \u00B7 "}{nights} night{nights !== 1 ? "s" : ""}
-                  {" \u00B7 "}{fmt(selectedPrice * nights)} total
+                <p className="text-[12px] text-[#9C9485] mt-0.5">
+                  Fill in your details and the host will confirm your booking
                 </p>
               </div>
 
-              <input type="text" placeholder="Full name" value={name} onChange={(e) => setName(e.target.value)} className="w-full border border-[#E2DDD5] rounded-[14px] px-4 py-3 text-[14px] text-[#16130C] placeholder:text-[#9C9485] outline-none focus:border-[#E8A020]" required />
-              <input type="email" placeholder="Email address" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full border border-[#E2DDD5] rounded-[14px] px-4 py-3 text-[14px] text-[#16130C] placeholder:text-[#9C9485] outline-none focus:border-[#E8A020]" required />
-              <PhoneInput value={phone} onChange={setPhone} required className="w-full border border-[#E2DDD5] rounded-[14px] px-4 py-3 text-[14px] text-[#16130C] placeholder:text-[#9C9485] outline-none focus:border-[#E8A020]" />
-              <textarea placeholder="Special requests (optional)" value={message} onChange={(e) => setMessage(e.target.value)} rows={3} className="w-full border border-[#E2DDD5] rounded-[14px] px-4 py-3 text-[14px] text-[#16130C] placeholder:text-[#9C9485] outline-none focus:border-[#E8A020] resize-none" />
+              {/* Selection summary */}
+              <div className="bg-gradient-to-r from-[#E8A020]/5 to-[#E8A020]/10 border border-[#E8A020]/20 rounded-xl p-3.5 flex items-center gap-3">
+                <div className="size-10 rounded-lg bg-[#E8A020]/15 flex items-center justify-center shrink-0">
+                  <span className="text-[18px]">{selectedRoom === "__entire__" ? "\uD83C\uDFE0" : "\uD83D\uDECF"}</span>
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[13px] font-bold text-[#16130C] truncate">
+                    {selectedRoom === "__entire__" ? "Entire property" : results.find((r) => r.key === selectedRoom)?.name}
+                  </p>
+                  <p className="text-[11px] text-[#9C9485]">
+                    {new Date(checkIn + "T00:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
+                    {" \u2192 "}
+                    {new Date(checkOut + "T00:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
+                    {" \u00B7 "}{nights} night{nights !== 1 ? "s" : ""}
+                    {" \u00B7 "}<span className="font-semibold text-[#16130C]">{fmt(selectedPrice * nights)}</span>
+                  </p>
+                </div>
+              </div>
+
+              {/* Form fields */}
+              <div className="space-y-3">
+                <input type="text" placeholder="Full name" value={name} onChange={(e) => setName(e.target.value)} className="w-full border border-[#E2DDD5] rounded-[14px] px-4 py-3 text-[14px] text-[#16130C] placeholder:text-[#9C9485] outline-none focus:border-[#E8A020] transition-colors" required />
+                <input type="email" placeholder="Email address" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full border border-[#E2DDD5] rounded-[14px] px-4 py-3 text-[14px] text-[#16130C] placeholder:text-[#9C9485] outline-none focus:border-[#E8A020] transition-colors" required />
+                <PhoneInput value={phone} onChange={setPhone} required className="w-full border border-[#E2DDD5] rounded-[14px] px-4 py-3 text-[14px] text-[#16130C] placeholder:text-[#9C9485] outline-none focus:border-[#E8A020] transition-colors" />
+                <textarea placeholder="Special requests (optional)" value={message} onChange={(e) => setMessage(e.target.value)} rows={3} className="w-full border border-[#E2DDD5] rounded-[14px] px-4 py-3 text-[14px] text-[#16130C] placeholder:text-[#9C9485] outline-none focus:border-[#E8A020] transition-colors resize-none" />
+              </div>
 
               {error && <p className="text-[13px] text-red-600 text-center">{error}</p>}
+
+              {/* Trust signals */}
+              <div className="grid grid-cols-3 gap-2 pt-1">
+                <div className="text-center p-2 rounded-lg bg-[#FAFAF8]">
+                  <span className="text-[16px]">&#128274;</span>
+                  <p className="text-[10px] font-semibold text-[#9C9485] mt-0.5">Secure &amp; private</p>
+                </div>
+                <div className="text-center p-2 rounded-lg bg-[#FAFAF8]">
+                  <span className="text-[16px]">&#9889;</span>
+                  <p className="text-[10px] font-semibold text-[#9C9485] mt-0.5">Reply in 2hrs</p>
+                </div>
+                <div className="text-center p-2 rounded-lg bg-[#FAFAF8]">
+                  <span className="text-[16px]">&#128176;</span>
+                  <p className="text-[10px] font-semibold text-[#9C9485] mt-0.5">No payment yet</p>
+                </div>
+              </div>
             </div>
 
-            <div className="sticky bottom-0 bg-white border-t border-[#E2DDD5] px-5 py-4 shrink-0 space-y-2">
+            {/* Sticky footer CTA */}
+            <div className="sticky bottom-0 bg-white border-t border-[#E2DDD5] px-5 py-4 shrink-0">
               <button
                 type="button"
                 onClick={handleEnquire}
                 disabled={sending}
                 className={cn(
-                  "w-full py-3.5 rounded-[18px] text-[15px] font-bold transition-all",
+                  "w-full py-3.5 rounded-2xl text-[15px] font-bold transition-all duration-200",
                   "bg-gradient-to-r from-[#E8A020] to-[#d4911c] text-[#16130C]",
-                  "disabled:opacity-50"
+                  "shadow-[0_4px_14px_rgba(232,160,32,0.35)]",
+                  "hover:shadow-[0_6px_20px_rgba(232,160,32,0.45)] hover:-translate-y-0.5",
+                  "active:translate-y-0",
+                  "disabled:opacity-50 disabled:pointer-events-none"
                 )}
               >
-                {sending ? "Sending..." : "Send enquiry"}
+                {sending ? (
+                  <span className="inline-flex items-center gap-2">
+                    <svg className="animate-spin size-4" viewBox="0 0 24 24" fill="none">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    </svg>
+                    Sending...
+                  </span>
+                ) : "Confirm &amp; send enquiry"}
               </button>
-              <div className="flex items-center justify-center gap-3 text-[12px] text-[#9C9485]">
-                <span>&#128274; Secure</span>
-                <span className="text-[#E2DDD5]">&#183;</span>
-                <span>Reply within 2hrs</span>
-                <span className="text-[#E2DDD5]">&#183;</span>
-                <span>&#10003; Free</span>
-              </div>
             </div>
           </div>
         </div>,
