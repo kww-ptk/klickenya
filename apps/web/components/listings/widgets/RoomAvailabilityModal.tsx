@@ -4,6 +4,7 @@ import { useState, useCallback } from "react";
 import Image from "next/image";
 import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { DateRangePicker } from "@/components/ui/DateRangePicker";
 
 interface RoomPhoto {
   asset?: { _id: string; url: string };
@@ -123,16 +124,12 @@ export function RoomAvailabilityModal({
           {/* Date picker */}
           <div>
             <p className="text-[13px] font-semibold text-[#16130C] mb-2">Select your dates</p>
-            <div className="grid grid-cols-2 border border-[#E2DDD5] rounded-xl overflow-hidden">
-              <div className="p-3 border-r border-[#E2DDD5]">
-                <label className="block text-[10px] font-bold text-[#9C9485] uppercase tracking-wide mb-0.5">Check-in</label>
-                <input type="date" value={checkIn} min={today()} onChange={(e) => { setCheckIn(e.target.value); setResult(null); }} className="w-full text-[14px] text-[#16130C] bg-transparent outline-none" />
-              </div>
-              <div className="p-3">
-                <label className="block text-[10px] font-bold text-[#9C9485] uppercase tracking-wide mb-0.5">Check-out</label>
-                <input type="date" value={checkOut} min={checkIn || today()} onChange={(e) => { setCheckOut(e.target.value); setResult(null); }} className="w-full text-[14px] text-[#16130C] bg-transparent outline-none" />
-              </div>
-            </div>
+            <DateRangePicker
+              checkIn={checkIn}
+              checkOut={checkOut}
+              onCheckInChange={(d) => { setCheckIn(d); setResult(null); }}
+              onCheckOutChange={(d) => { setCheckOut(d); setResult(null); }}
+            />
           </div>
 
           {/* Result */}

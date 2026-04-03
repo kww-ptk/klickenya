@@ -4,6 +4,7 @@ import { useState, useCallback } from "react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import PhoneInput from "@/components/ui/PhoneInput";
+import { DateRangePicker } from "@/components/ui/DateRangePicker";
 
 /* ── Types ─────────────────────────────────────── */
 
@@ -237,16 +238,12 @@ export function StayBookingSidebar({
           <span className="text-[14px] text-[#9C9485]">/ {priceUnit}</span>
         </div>
 
-        <div className="grid grid-cols-2 border border-[#E2DDD5] rounded-[14px] overflow-hidden">
-          <div className="p-3 border-r border-[#E2DDD5]">
-            <label className="block text-[10px] font-bold text-[#9C9485] uppercase tracking-wide mb-0.5">Check-in</label>
-            <input type="date" value={checkIn} min={today()} onChange={(e) => setCheckIn(e.target.value)} className="w-full text-[14px] text-[#16130C] bg-transparent outline-none" />
-          </div>
-          <div className="p-3">
-            <label className="block text-[10px] font-bold text-[#9C9485] uppercase tracking-wide mb-0.5">Check-out</label>
-            <input type="date" value={checkOut} min={checkIn || today()} onChange={(e) => setCheckOut(e.target.value)} className="w-full text-[14px] text-[#16130C] bg-transparent outline-none" />
-          </div>
-        </div>
+        <DateRangePicker
+          checkIn={checkIn}
+          checkOut={checkOut}
+          onCheckInChange={setCheckIn}
+          onCheckOutChange={setCheckOut}
+        />
 
         <div className="border border-[#E2DDD5] rounded-[14px] p-3 flex items-center justify-between">
           <label className="text-[10px] font-bold text-[#9C9485] uppercase tracking-wide">Guests</label>
