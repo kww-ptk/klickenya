@@ -304,6 +304,7 @@ export default async function ListingDetailPage({ params }: PageProps) {
   let roomPriceOverrides: Record<string, number> | undefined;
   let entirePropertyAvailable: boolean | undefined;
   let recentBookings: number | undefined;
+  let hasPms = false;
   if (sanityType === "stay") {
     try {
       const { data: linkedProps } = await adminClient
@@ -361,6 +362,7 @@ export default async function ListingDetailPage({ params }: PageProps) {
           }));
 
           // Override listing data with PMS data
+          hasPms = true;
           listing.rooms = supabaseRooms;
           if (property.renting_type) listing.rentingType = property.renting_type;
           if (property.entire_place_price) listing.price = property.entire_place_price;
@@ -417,6 +419,7 @@ export default async function ListingDetailPage({ params }: PageProps) {
     roomPriceOverrides,
     entirePropertyAvailable,
     recentBookings,
+    hasPms,
   };
 
   const Detail = (() => {

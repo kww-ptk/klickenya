@@ -33,6 +33,7 @@ interface StayDetailProps {
   roomPriceOverrides?: Record<string, number>;
   entirePropertyAvailable?: boolean;
   recentBookings?: number;
+  hasPms?: boolean;
 }
 
 /* ── Component ─────────────────────────────────────── */
@@ -51,6 +52,7 @@ function StayDetail({
   roomPriceOverrides,
   entirePropertyAvailable,
   recentBookings,
+  hasPms,
 }: StayDetailProps) {
   const [rentMode, setRentMode] = useState<"entire" | "room">("entire");
   const [liveRoomAvail, setLiveRoomAvail] = useState<Record<string, boolean> | undefined>(undefined);
@@ -58,6 +60,9 @@ function StayDetail({
   const [liveEntireAvail, setLiveEntireAvail] = useState<boolean | undefined>(undefined);
   const [checkingDates, setCheckingDates] = useState(false);
   const fetchRef = useRef(0);
+
+  // Room card → open booking modal with pre-selected room
+  const [bookingRoomKey, setBookingRoomKey] = useState<string | null>(null);
 
   const listingSlug = listing.slug?.current ?? "";
 
@@ -179,7 +184,8 @@ function StayDetail({
               roomAvailability={activeRoomAvail}
               roomPriceOverrides={activePrices}
               entirePropertyAvailable={activeEntireAvail}
-              listingSlug={listingSlug}
+              listingSlug={hasPms ? listingSlug : undefined}
+              onRoomBooking={hasPms ? (roomKey) => setBookingRoomKey(roomKey) : undefined}
             />
             {checkingDates && (
               <p className="text-[12px] text-[#9C9485] mt-2 animate-pulse">Checking availability...</p>
@@ -220,39 +226,54 @@ function StayDetail({
             )}
           </div>
 
-          {/* Right column — Stay booking sidebar */}
-          <aside className="hidden lg:block w-[350px] shrink-0">
-            <div className="sticky top-[76px] border border-[#E2DDD5] rounded-[24px] shadow-lg p-5 bg-white max-h-[calc(100vh-92px)] overflow-y-auto scrollbar-none">
-              <StayBookingSidebar
-                listingSlug={listingSlug}
-                listingTitle={listing.title}
-                listingId={listing._id}
-                price={listing.price ?? 0}
-                priceUnit={listing.priceUnit ?? "night"}
-                maxGuests={listing.maxGuests}
-                rooms={listing.rooms}
-                avgRating={listing.avgRating}
-                reviewCount={listing.reviewCount}
-                isVerified={listing.isVerified}
-                recentBookings={recentBookings}
-                onAvailabilityChecked={handleAvailabilityChecked}
-              />
-            </div>
-          </aside>
+          {/* Right column — Booking sidebar */}
+          {hasPms ? (
+            <aside className="hidden lg:block w-[350px] shrink-0">
+              <div className="sticky top-[76px] border border-[#E2DDD5] rounded-[24px] shadow-lg p-5 bg-white max-h-[calc(100vh-92px)] overflow-y-auto scrollbar-none">
+                <StayBookingSidebar
+                  listingSlug={listingSlug}
+                  listingTitle={listing.title}
+                  listingId={listing._id}
+                  price={listing.price ?? 0}
+                  priceUnit={listing.priceUnit ?? "night"}
+                  maxGuests={listing.maxGuests}
+                  rooms={listing.rooms}
+                  avgRating={listing.avgRating}
+                  reviewCount={listing.reviewCount}
+                  isVerified={listing.isVerified}
+                  recentBookings={recentBookings}
+                  onAvailabilityChecked={handleAvailabilityChecked}
+                  openForRoom={bookingRoomKey}
+                  onOpenForRoomHandled={() => setBookingRoomKey(null)}
+                />
+              </div>
+            </aside>
+          ) : (
+            <BookingSidebar
+              listingId={listing._id}
+              listingTitle={listing.title}
+              listingType={sanityType}
+              price={listing.price ?? 0}
+              priceUnit={listing.priceUnit ?? "night"}
+              maxGuests={listing.maxGuests}
+            />
+          )}
         </div>
 
         <SimilarListings listings={similarCards} typeLabel={typeLabel} />
       </article>
 
-      <MobileBookingBar
-        type={sanityType}
-        price={listing.price ?? 0}
-        priceUnit={listing.priceUnit ?? "night"}
-        listingId={listing._id}
-        listingTitle={listing.title}
-        maxGuests={listing.maxGuests}
-        onDatesChange={handleDatesChange}
-      />
+      {!hasPms && (
+        <MobileBookingBar
+          type={sanityType}
+          price={listing.price ?? 0}
+          priceUnit={listing.priceUnit ?? "night"}
+          listingId={listing._id}
+          listingTitle={listing.title}
+          maxGuests={listing.maxGuests}
+          onDatesChange={handleDatesChange}
+        />
+      )}
     </>
   );
 }

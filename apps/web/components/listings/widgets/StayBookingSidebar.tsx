@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { createPortal } from "react-dom";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
@@ -59,6 +59,9 @@ interface StayBookingSidebarProps {
     roomPrices: Record<string, number>,
     entireAvail: boolean
   ) => void;
+  /** When set, auto-opens the modal with this room pre-selected after checking availability */
+  openForRoom?: string | null;
+  onOpenForRoomHandled?: () => void;
 }
 
 function nightsBetween(a: string, b: string): number {
@@ -87,6 +90,8 @@ export function StayBookingSidebar({
   isVerified,
   recentBookings,
   onAvailabilityChecked,
+  openForRoom,
+  onOpenForRoomHandled,
 }: StayBookingSidebarProps) {
   // Dates
   const [checkIn, setCheckIn] = useState("");
@@ -120,6 +125,43 @@ export function StayBookingSidebar({
   const selectedPrice = selectedRoom === "__entire__"
     ? totalEntirePrice
     : (results.find((r) => r.key === selectedRoom)?.price ?? 0);
+
+  // Handle room card click → open modal with that room
+  useEffect(() => {
+    if (!openForRoom) return;
+    onOpenForRoomHandled?.();
+
+    if (checkIn && checkOut && checkOut > checkIn) {
+      // Dates already set — auto-check and open modal
+      // We'll trigger checkAvailability effect and pre-select room after
+      setShowDatePicker(false);
+      // Store desired room to select after results load
+      setSelectedRoom(openForRoom);
+      const room = sanityRooms?.find((r) => r._key === openForRoom);
+      if (room) {
+        const allPhotos = (room.photos ?? []).map((p) => p.asset?.url).filter(Boolean) as string[];
+        setPreviewRoom({
+          key: room._key,
+          name: room.roomName,
+          available: true,
+          price: room.pricePerNight,
+          photo: allPhotos[0],
+          photos: allPhotos,
+          capacity: room.capacity,
+          bedType: room.bedType,
+          amenities: room.roomAmenities,
+        });
+      }
+      // If modal already open with results, just select the room
+      if (showModal && results.length > 0) return;
+      // Otherwise trigger availability check
+      setShowModal(false); // will be opened after check
+    } else {
+      // No dates yet — open date picker, scroll sidebar into view
+      setShowDatePicker(true);
+      document.getElementById("stay-booking-sidebar")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [openForRoom]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Check availability
   const checkAvailability = useCallback(async () => {
@@ -177,8 +219,15 @@ export function StayBookingSidebar({
 
       setResults(roomResults);
       setStep("rooms");
-      setSelectedRoom(null);
-      setPreviewRoom(null);
+
+      // If a room was pre-selected (from room card click), keep it selected
+      if (selectedRoom && roomResults.find((r) => r.key === selectedRoom)) {
+        const match = roomResults.find((r) => r.key === selectedRoom);
+        if (match) setPreviewRoom(match);
+      } else {
+        setSelectedRoom(null);
+        setPreviewRoom(null);
+      }
       setShowModal(true);
     } catch {
       setError("Could not check availability. Please try again.");
@@ -240,7 +289,7 @@ export function StayBookingSidebar({
   return (
     <>
       {/* ── Sidebar ── */}
-      <div className="space-y-4">
+      <div id="stay-booking-sidebar" className="space-y-4">
         <div className="flex items-baseline gap-1.5 mb-1">
           <span className="font-display text-[24px] font-extrabold tracking-[-0.02em] text-[#16130C]">{fmt(price)}</span>
           <span className="text-[14px] text-[#9C9485]">/ {priceUnit}</span>

@@ -34,9 +34,11 @@ interface RoomCardProps {
   priceOverride?: number;
   /** Listing slug for availability check API */
   listingSlug?: string;
+  /** Opens the main booking modal with this room pre-selected (reuses sidebar modal) */
+  onRoomBooking?: (roomKey: string) => void;
 }
 
-export function RoomCard({ room, onEnquire, realAvailability, priceOverride, listingSlug }: RoomCardProps) {
+export function RoomCard({ room, onEnquire, realAvailability, priceOverride, listingSlug, onRoomBooking }: RoomCardProps) {
   const [showModal, setShowModal] = useState(false);
   const photo = room.photos?.[0];
   const available = realAvailability ?? (room.isAvailable !== false);
@@ -104,10 +106,10 @@ export function RoomCard({ room, onEnquire, realAvailability, priceOverride, lis
               </p>
               <button
                 type="button"
-                onClick={() => listingSlug ? setShowModal(true) : onEnquire(room.roomName)}
+                onClick={() => onRoomBooking ? onRoomBooking(room._key) : listingSlug ? setShowModal(true) : onEnquire(room.roomName)}
                 className="shrink-0 bg-[#E8A020] text-[#16130C] font-bold text-[10px] rounded-full px-3 py-1.5 transition-colors hover:bg-[#d4911c]"
               >
-                {listingSlug ? "Check availability" : "Enquire"}
+                {onRoomBooking || listingSlug ? "Check availability" : "Enquire"}
               </button>
             </div>
           </div>
@@ -175,10 +177,10 @@ export function RoomCard({ room, onEnquire, realAvailability, priceOverride, lis
             </div>
             <button
               type="button"
-              onClick={() => listingSlug ? setShowModal(true) : onEnquire(room.roomName)}
+              onClick={() => onRoomBooking ? onRoomBooking(room._key) : listingSlug ? setShowModal(true) : onEnquire(room.roomName)}
               className="bg-[#E8A020] text-[#16130C] font-bold text-[12px] rounded-full px-4 py-2 transition-colors hover:bg-[#d4911c]"
             >
-              {listingSlug ? "Check availability" : "Enquire"}
+              {onRoomBooking || listingSlug ? "Check availability" : "Enquire"}
             </button>
           </div>
         </div>

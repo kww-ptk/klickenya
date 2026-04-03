@@ -33,6 +33,7 @@ interface RentingToggleProps {
   /** True only when ALL rooms are available. undefined = no PMS data (fallback). */
   entirePropertyAvailable?: boolean;
   listingSlug?: string;
+  onRoomBooking?: (roomKey: string) => void;
 }
 
 const LS_KEY = "kk_rent_mode";
@@ -54,6 +55,7 @@ export function RentingToggle({
   roomPriceOverrides,
   entirePropertyAvailable,
   listingSlug,
+  onRoomBooking,
 }: RentingToggleProps) {
   /* ── CASE 1: entire_place → nothing ── */
   if (rentingType === "entire_place") return null;
@@ -61,7 +63,7 @@ export function RentingToggle({
   /* ── CASE 2: by_room → rooms only, no toggle ── */
   if (rentingType === "by_room") {
     return (
-      <RoomsGrid rooms={rooms ?? []} listingTitle={listingTitle} roomAvailability={roomAvailability} roomPriceOverrides={roomPriceOverrides} listingSlug={listingSlug} />
+      <RoomsGrid rooms={rooms ?? []} listingTitle={listingTitle} roomAvailability={roomAvailability} roomPriceOverrides={roomPriceOverrides} listingSlug={listingSlug} onRoomBooking={onRoomBooking} />
     );
   }
 
@@ -75,6 +77,7 @@ export function RentingToggle({
     roomPriceOverrides={roomPriceOverrides}
     entirePropertyAvailable={entirePropertyAvailable}
     listingSlug={listingSlug}
+    onRoomBooking={onRoomBooking}
   />;
 }
 
@@ -88,6 +91,7 @@ function BothToggle({
   roomPriceOverrides,
   entirePropertyAvailable,
   listingSlug,
+  onRoomBooking,
 }: Omit<RentingToggleProps, "rentingType">) {
   const [mode, setMode] = useState<"entire" | "room">(() => {
     if (typeof window !== "undefined") {
@@ -184,7 +188,7 @@ function BothToggle({
         <>
           {rooms && rooms.length > 0 ? (
             <div className="mt-4">
-              <RoomsGrid rooms={rooms} listingTitle={listingTitle} roomAvailability={roomAvailability} roomPriceOverrides={roomPriceOverrides} listingSlug={listingSlug} />
+              <RoomsGrid rooms={rooms} listingTitle={listingTitle} roomAvailability={roomAvailability} roomPriceOverrides={roomPriceOverrides} listingSlug={listingSlug} onRoomBooking={onRoomBooking} />
             </div>
           ) : (
             <div className="border border-[#E2DDD5] rounded-xl p-5 mt-4 text-center">
