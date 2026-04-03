@@ -120,8 +120,14 @@ export function StayBookingSidebar({
   const [selectedRoom, setSelectedRoom] = useState<string | null>(null);
   const [previewRoom, setPreviewRoom] = useState<RoomResult | null>(null);
 
-  // Enquiry (step 3)
-  const [step, setStep] = useState<"rooms" | "enquiry">("rooms");
+  // Modal step: dates → rooms → enquiry
+  const [step, setStep] = useState<"dates" | "rooms" | "enquiry">("dates");
+  // Room pre-selected from room card click (before dates are entered)
+  const [pendingRoomKey, setPendingRoomKey] = useState<string | null>(null);
+  // Modal-local date/guest state (synced from sidebar when opening, or edited in modal step 1)
+  const [modalCheckIn, setModalCheckIn] = useState("");
+  const [modalCheckOut, setModalCheckOut] = useState("");
+  const [modalGuests, setModalGuests] = useState(1);
   const [formName, setFormName] = useState("");
   const [formEmail, setFormEmail] = useState("");
   const [formPhone, setFormPhone] = useState("");
@@ -137,41 +143,40 @@ export function StayBookingSidebar({
     ? totalEntirePrice
     : (results.find((r) => r.key === selectedRoom)?.price ?? 0);
 
-  // Handle room card click → open modal with that room
+  // Handle room card click → open modal at step 1 (dates) with room pre-selected
   useEffect(() => {
     if (!openForRoom) return;
     onOpenForRoomHandled?.();
 
-    if (checkIn && checkOut && checkOut > checkIn) {
-      // Dates already set — auto-check and open modal
-      // We'll trigger checkAvailability effect and pre-select room after
-      setShowDatePicker(false);
-      // Store desired room to select after results load
-      setSelectedRoom(openForRoom);
-      const room = sanityRooms?.find((r) => r._key === openForRoom);
-      if (room) {
-        const allPhotos = (room.photos ?? []).map((p) => p.asset?.url).filter(Boolean) as string[];
-        setPreviewRoom({
-          key: room._key,
-          name: room.roomName,
-          available: true,
-          price: room.pricePerNight,
-          photo: allPhotos[0],
-          photos: allPhotos,
-          capacity: room.capacity,
-          bedType: room.bedType,
-          amenities: room.roomAmenities,
-        });
-      }
-      // If modal already open with results, just select the room
-      if (showModal && results.length > 0) return;
-      // Otherwise trigger availability check
-      setShowModal(false); // will be opened after check
-    } else {
-      // No dates yet — open date picker, scroll sidebar into view
-      setShowDatePicker(true);
-      document.getElementById("stay-booking-sidebar")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    // Pre-select the room for after availability check
+    setPendingRoomKey(openForRoom);
+    setSelectedRoom(openForRoom);
+
+    // Build preview from Sanity room data
+    const room = sanityRooms?.find((r) => r._key === openForRoom);
+    if (room) {
+      const allPhotos = (room.photos ?? []).map((p) => p.asset?.url).filter(Boolean) as string[];
+      setPreviewRoom({
+        key: room._key,
+        name: room.roomName,
+        available: true,
+        price: room.pricePerNight,
+        photo: allPhotos[0],
+        photos: allPhotos,
+        capacity: room.capacity,
+        bedType: room.bedType,
+        amenities: room.roomAmenities,
+      });
     }
+
+    // Sync any existing sidebar dates into modal
+    setModalCheckIn(checkIn);
+    setModalCheckOut(checkOut);
+    setModalGuests(guests);
+
+    // Open modal at dates step so user can pick dates
+    setStep("dates");
+    setShowModal(true);
   }, [openForRoom]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Check availability
@@ -229,22 +234,104 @@ export function StayBookingSidebar({
       }
 
       setResults(roomResults);
-      setStep("rooms");
 
       // If a room was pre-selected (from room card click), keep it selected
-      if (selectedRoom && roomResults.find((r) => r.key === selectedRoom)) {
-        const match = roomResults.find((r) => r.key === selectedRoom);
-        if (match) setPreviewRoom(match);
+      const preKey = pendingRoomKey ?? selectedRoom;
+      if (preKey && roomResults.find((r) => r.key === preKey)) {
+        const match = roomResults.find((r) => r.key === preKey)!;
+        setSelectedRoom(preKey);
+        setPreviewRoom(match);
       } else {
         setSelectedRoom(null);
         setPreviewRoom(null);
       }
+      setPendingRoomKey(null);
+      setStep("rooms");
       setShowModal(true);
     } catch {
       setError("Could not check availability. Please try again.");
     }
     setChecking(false);
   }, [checkIn, checkOut, listingSlug, sanityRooms, onAvailabilityChecked]);
+
+  // Check availability from modal step 1 (dates step)
+  const handleModalCheckAvailability = useCallback(async () => {
+    if (!modalCheckIn || !modalCheckOut || modalCheckOut <= modalCheckIn) return;
+    // Sync modal dates back to sidebar state
+    setCheckIn(modalCheckIn);
+    setCheckOut(modalCheckOut);
+    setGuests(modalGuests);
+
+    setChecking(true);
+    setError("");
+
+    try {
+      const res = await fetch(
+        `/api/properties/availability-by-slug?slug=${listingSlug}&check_in=${modalCheckIn}&check_out=${modalCheckOut}`
+      );
+      const data: AvailabilityData = await res.json();
+
+      const roomResults: RoomResult[] = [];
+      const availMap: Record<string, boolean> = {};
+      const priceMap: Record<string, number> = {};
+
+      if (data.rooms) {
+        for (const [key, val] of Object.entries(data.rooms)) {
+          const sr = sanityRooms?.find((r) => r._key === key);
+          const allPhotos = (sr?.photos ?? []).map((p) => p.asset?.url).filter(Boolean) as string[];
+          roomResults.push({
+            key,
+            name: sr?.roomName ?? key,
+            available: val.available,
+            price: val.price,
+            photo: allPhotos[0],
+            photos: allPhotos,
+            capacity: sr?.capacity ?? 2,
+            bedType: sr?.bedType,
+            amenities: sr?.roomAmenities,
+          });
+          availMap[key] = val.available;
+          priceMap[key] = val.price;
+        }
+        setEntireAvail(data.entireProperty ?? false);
+        onAvailabilityChecked?.(availMap, priceMap, data.entireProperty ?? false);
+      } else {
+        for (const r of sanityRooms ?? []) {
+          const allPhotos = (r.photos ?? []).map((p) => p.asset?.url).filter(Boolean) as string[];
+          roomResults.push({
+            key: r._key,
+            name: r.roomName,
+            available: true,
+            price: r.pricePerNight,
+            photo: allPhotos[0],
+            photos: allPhotos,
+            capacity: r.capacity,
+            bedType: r.bedType,
+            amenities: r.roomAmenities,
+          });
+        }
+        setEntireAvail(true);
+      }
+
+      setResults(roomResults);
+
+      // If a room was pre-selected (from room card click), keep it selected
+      const preKey = pendingRoomKey ?? selectedRoom;
+      if (preKey && roomResults.find((r) => r.key === preKey)) {
+        const match = roomResults.find((r) => r.key === preKey)!;
+        setSelectedRoom(preKey);
+        setPreviewRoom(match);
+      } else {
+        setSelectedRoom(null);
+        setPreviewRoom(null);
+      }
+      setPendingRoomKey(null);
+      setStep("rooms");
+    } catch {
+      setError("Could not check availability. Please try again.");
+    }
+    setChecking(false);
+  }, [modalCheckIn, modalCheckOut, listingSlug, sanityRooms, onAvailabilityChecked, pendingRoomKey, selectedRoom]);
 
   // Send enquiry
   const handleEnquire = async () => {
@@ -347,7 +434,7 @@ export function StayBookingSidebar({
           </div>
         </div>
 
-        <button type="button" onClick={checkAvailability} disabled={!checkIn || !checkOut || checkOut <= checkIn || checking} className={cn("w-full py-3.5 rounded-[18px] text-[15px] font-bold transition-all duration-200", "bg-gradient-to-r from-[#E8A020] to-[#d4911c] text-[#16130C]", "shadow-[0_4px_14px_rgba(232,160,32,0.35)]", "hover:shadow-[0_6px_20px_rgba(232,160,32,0.45)] hover:-translate-y-0.5", "disabled:opacity-50 disabled:pointer-events-none")}>
+        <button type="button" onClick={() => { setModalCheckIn(checkIn); setModalCheckOut(checkOut); setModalGuests(guests); checkAvailability(); }} disabled={!checkIn || !checkOut || checkOut <= checkIn || checking} className={cn("w-full py-3.5 rounded-[18px] text-[15px] font-bold transition-all duration-200", "bg-gradient-to-r from-[#E8A020] to-[#d4911c] text-[#16130C]", "shadow-[0_4px_14px_rgba(232,160,32,0.35)]", "hover:shadow-[0_6px_20px_rgba(232,160,32,0.45)] hover:-translate-y-0.5", "disabled:opacity-50 disabled:pointer-events-none")}>
           {checking ? "Checking..." : "Check availability"}
         </button>
 
@@ -358,12 +445,12 @@ export function StayBookingSidebar({
       {/* ── Main booking modal — two-column on desktop ── */}
       {showModal && typeof document !== "undefined" && createPortal(
         <div className="fixed inset-0 z-[9999] flex items-end lg:items-center justify-center">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px]" onClick={() => { setShowModal(false); setStep("rooms"); }} />
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px]" onClick={() => { setShowModal(false); setStep("dates"); }} />
 
           <div className="relative w-full lg:max-w-[900px] max-h-[94vh] lg:max-h-[88vh] bg-white rounded-t-3xl lg:rounded-2xl shadow-2xl overflow-hidden flex flex-col lg:flex-row">
 
-            {/* ── LEFT: Room preview (desktop only) ── */}
-            <div className="hidden lg:flex lg:w-[400px] bg-[#F4F1EC] flex-col shrink-0 overflow-hidden">
+            {/* ── LEFT: Room preview (desktop only) — hide on dates step ── */}
+            <div className={cn("hidden lg:flex lg:w-[400px] bg-[#F4F1EC] flex-col shrink-0 overflow-hidden", step === "dates" && "lg:hidden")}>
               {previewRoom ? (
                 <>
                   {/* Room gallery */}
@@ -423,33 +510,52 @@ export function StayBookingSidebar({
               <div className="sticky top-0 bg-white/95 backdrop-blur-sm border-b border-[#E2DDD5] px-5 pt-3 pb-3 z-10 shrink-0">
                 <div className="flex items-center justify-between mb-2.5">
                   <h2 className="font-display text-[17px] font-bold text-[#16130C]">
-                    {step === "rooms" ? "Choose your room" : "Confirm details"}
+                    {step === "dates" ? "Select dates" : step === "rooms" ? "Choose your room" : "Confirm details"}
                   </h2>
-                  <button onClick={() => { setShowModal(false); setStep("rooms"); }} className="size-8 flex items-center justify-center rounded-full bg-[#F4F1EC] hover:bg-[#E2DDD5]">
+                  <button onClick={() => { setShowModal(false); setStep("dates"); }} className="size-8 flex items-center justify-center rounded-full bg-[#F4F1EC] hover:bg-[#E2DDD5]">
                     <svg className="size-4 text-[#5E5848]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
                   </button>
                 </div>
 
-                {/* Progress steps */}
+                {/* Clickable progress steps */}
                 <div className="flex items-center gap-1.5">
-                  <div className="flex items-center gap-1">
-                    <span className="size-5 rounded-full bg-[#16A34A] flex items-center justify-center">
-                      <svg className="size-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+                  {/* Step 1: Dates */}
+                  <button type="button" onClick={() => setStep("dates")} className="flex items-center gap-1 group">
+                    <span className={cn("size-5 rounded-full flex items-center justify-center transition-colors", step === "dates" ? "bg-[#E8A020]" : "bg-[#16A34A] group-hover:bg-[#15803D]")}>
+                      {step === "dates" ? (
+                        <span className="text-[10px] font-bold text-white">1</span>
+                      ) : (
+                        <svg className="size-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+                      )}
                     </span>
-                    <span className="text-[10px] font-semibold text-[#16A34A]">Dates</span>
-                  </div>
-                  <div className={cn("flex-1 h-0.5 rounded-full", step === "enquiry" ? "bg-[#16A34A]" : "bg-[#E8A020]")} />
-                  <div className="flex items-center gap-1">
-                    <span className={cn("size-5 rounded-full flex items-center justify-center", step === "enquiry" ? "bg-[#16A34A]" : selectedRoom ? "bg-[#E8A020]" : "bg-[#E2DDD5]")}>
+                    <span className={cn("text-[10px] font-semibold transition-colors", step === "dates" ? "text-[#E8A020]" : "text-[#16A34A] group-hover:underline")}>Dates</span>
+                  </button>
+
+                  <div className={cn("flex-1 h-0.5 rounded-full", step !== "dates" ? "bg-[#16A34A]" : "bg-[#E2DDD5]")} />
+
+                  {/* Step 2: Room */}
+                  <button type="button" onClick={() => { if (step === "enquiry") setStep("rooms"); }} disabled={step === "dates"} className="flex items-center gap-1 group disabled:cursor-default">
+                    <span className={cn("size-5 rounded-full flex items-center justify-center transition-colors",
+                      step === "dates" ? "bg-[#E2DDD5]" :
+                      step === "rooms" ? (selectedRoom ? "bg-[#E8A020]" : "bg-[#E8A020]") :
+                      "bg-[#16A34A] group-hover:bg-[#15803D]"
+                    )}>
                       {step === "enquiry" ? (
                         <svg className="size-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
                       ) : (
                         <span className="text-[10px] font-bold text-white">2</span>
                       )}
                     </span>
-                    <span className={cn("text-[10px] font-semibold", step === "enquiry" ? "text-[#16A34A]" : selectedRoom ? "text-[#E8A020]" : "text-[#9C9485]")}>Room</span>
-                  </div>
+                    <span className={cn("text-[10px] font-semibold transition-colors",
+                      step === "dates" ? "text-[#9C9485]" :
+                      step === "rooms" ? "text-[#E8A020]" :
+                      "text-[#16A34A] group-hover:underline"
+                    )}>Room</span>
+                  </button>
+
                   <div className={cn("flex-1 h-0.5 rounded-full", step === "enquiry" ? "bg-[#E8A020] animate-pulse" : "bg-[#E2DDD5]")} />
+
+                  {/* Step 3: Confirm */}
                   <div className="flex items-center gap-1">
                     <span className={cn("size-5 rounded-full flex items-center justify-center", step === "enquiry" ? "bg-[#E8A020] animate-pulse" : "bg-[#E2DDD5]")}>
                       <span className="text-[10px] font-bold text-white">3</span>
@@ -458,15 +564,25 @@ export function StayBookingSidebar({
                   </div>
                 </div>
 
-                {/* Date summary with change link */}
-                <div className="flex items-center justify-between mt-2">
-                  <p className="text-[11px] text-[#9C9485]">
-                    {fmtDate(checkIn)} → {fmtDate(checkOut)} · {nights} night{nights !== 1 ? "s" : ""} · {guests} guest{guests !== 1 ? "s" : ""}
-                  </p>
-                  <button type="button" onClick={() => { setShowModal(false); setStep("rooms"); setShowDatePicker(true); }} className="text-[11px] font-semibold text-[#E8A020] hover:text-[#d4911c] shrink-0 ml-2">
-                    Change
-                  </button>
-                </div>
+                {/* Date summary — show when past dates step */}
+                {step !== "dates" && checkIn && checkOut && (
+                  <div className="flex items-center justify-between mt-2">
+                    <p className="text-[11px] text-[#9C9485]">
+                      {fmtDate(checkIn)} → {fmtDate(checkOut)} · {nights} night{nights !== 1 ? "s" : ""} · {guests} guest{guests !== 1 ? "s" : ""}
+                    </p>
+                    <button type="button" onClick={() => setStep("dates")} className="text-[11px] font-semibold text-[#E8A020] hover:text-[#d4911c] shrink-0 ml-2">
+                      Change
+                    </button>
+                  </div>
+                )}
+
+                {/* Room pre-selection hint on dates step */}
+                {step === "dates" && pendingRoomKey && previewRoom && (
+                  <div className="flex items-center gap-2 mt-2 bg-[#E8A020]/5 rounded-lg px-2.5 py-1.5">
+                    <span className="text-[11px]">🛏</span>
+                    <p className="text-[11px] text-[#5E5848]">Checking availability for <span className="font-semibold">{previewRoom.name}</span></p>
+                  </div>
+                )}
               </div>
 
               {/* Social proof */}
@@ -483,7 +599,61 @@ export function StayBookingSidebar({
                 </div>
               )}
 
-              {/* ── STEP: Room selection ── */}
+              {/* ── STEP 1: Dates & Guests ── */}
+              {step === "dates" && (
+                <>
+                  <div className="flex-1 overflow-y-auto px-5 py-4 space-y-5">
+                    {/* Date picker */}
+                    <div>
+                      <p className="text-[13px] font-semibold text-[#16130C] mb-2">When are you staying?</p>
+                      <div className="border border-[#E2DDD5] rounded-[14px] p-3 bg-[#FAFAF8]">
+                        <DateRangePicker
+                          checkIn={modalCheckIn}
+                          checkOut={modalCheckOut}
+                          onCheckInChange={setModalCheckIn}
+                          onCheckOutChange={setModalCheckOut}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Guests */}
+                    <div>
+                      <p className="text-[13px] font-semibold text-[#16130C] mb-2">Guests</p>
+                      <div className="border border-[#E2DDD5] rounded-[14px] p-3 flex items-center justify-between">
+                        <span className="text-[13px] text-[#5E5848]">Number of guests</span>
+                        <div className="flex items-center gap-3">
+                          <button type="button" onClick={() => setModalGuests(Math.max(1, modalGuests - 1))} className="size-8 rounded-full border border-[#E2DDD5] flex items-center justify-center text-[#5E5848] hover:bg-[#F4F1EC] disabled:opacity-30" disabled={modalGuests <= 1}>-</button>
+                          <span className="text-[14px] font-semibold text-[#16130C] w-4 text-center">{modalGuests}</span>
+                          <button type="button" onClick={() => setModalGuests(Math.min(maxGuests, modalGuests + 1))} className="size-8 rounded-full border border-[#E2DDD5] flex items-center justify-center text-[#5E5848] hover:bg-[#F4F1EC] disabled:opacity-30" disabled={modalGuests >= maxGuests}>+</button>
+                        </div>
+                      </div>
+                    </div>
+
+                    {error && <p className="text-[13px] text-red-600 text-center">{error}</p>}
+                  </div>
+
+                  {/* Footer */}
+                  <div className="sticky bottom-0 bg-white border-t border-[#E2DDD5] px-5 pt-3 pb-4 shrink-0">
+                    <button
+                      type="button"
+                      onClick={handleModalCheckAvailability}
+                      disabled={!modalCheckIn || !modalCheckOut || modalCheckOut <= modalCheckIn || checking}
+                      className={cn(
+                        "w-full py-3.5 rounded-2xl text-[15px] font-bold transition-all duration-200",
+                        "bg-gradient-to-r from-[#E8A020] to-[#d4911c] text-[#16130C]",
+                        "shadow-[0_4px_14px_rgba(232,160,32,0.35)]",
+                        "hover:shadow-[0_6px_20px_rgba(232,160,32,0.45)] hover:-translate-y-0.5",
+                        "disabled:opacity-50 disabled:pointer-events-none"
+                      )}
+                    >
+                      {checking ? "Checking..." : "Check availability"}
+                    </button>
+                    <p className="text-[12px] text-[#9C9485] text-center mt-2">You won&apos;t be charged yet</p>
+                  </div>
+                </>
+              )}
+
+              {/* ── STEP 2: Room selection ── */}
               {step === "rooms" && (
                 <>
                   <div className="flex-1 overflow-y-auto px-4 sm:px-5 py-3 space-y-2">

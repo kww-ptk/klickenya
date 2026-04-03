@@ -1,10 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { createPortal } from "react-dom";
 import Image from "next/image";
 import { Check } from "lucide-react";
-import { RoomAvailabilityModal } from "./RoomAvailabilityModal";
 
 interface RoomPhoto {
   asset?: { _id: string; url: string };
@@ -49,7 +46,6 @@ function isOptimizableUrl(url: string): boolean {
 }
 
 export function RoomCard({ room, onEnquire, realAvailability, priceOverride, listingSlug, onRoomBooking }: RoomCardProps) {
-  const [showModal, setShowModal] = useState(false);
   const photo = room.photos?.[0];
   const available = realAvailability ?? (room.isAvailable !== false);
   const displayPrice = priceOverride ?? room.pricePerNight;
@@ -119,10 +115,10 @@ export function RoomCard({ room, onEnquire, realAvailability, priceOverride, lis
               </p>
               <button
                 type="button"
-                onClick={() => onRoomBooking ? onRoomBooking(room._key) : listingSlug ? setShowModal(true) : onEnquire(room.roomName)}
+                onClick={() => onRoomBooking ? onRoomBooking(room._key) : onEnquire(room.roomName)}
                 className="shrink-0 bg-[#E8A020] text-[#16130C] font-bold text-[10px] rounded-full px-3 py-1.5 transition-colors hover:bg-[#d4911c]"
               >
-                {onRoomBooking || listingSlug ? "Check availability" : "Enquire"}
+                {onRoomBooking ? "Check availability" : "Enquire"}
               </button>
             </div>
           </div>
@@ -191,34 +187,15 @@ export function RoomCard({ room, onEnquire, realAvailability, priceOverride, lis
             </div>
             <button
               type="button"
-              onClick={() => onRoomBooking ? onRoomBooking(room._key) : listingSlug ? setShowModal(true) : onEnquire(room.roomName)}
+              onClick={() => onRoomBooking ? onRoomBooking(room._key) : onEnquire(room.roomName)}
               className="bg-[#E8A020] text-[#16130C] font-bold text-[12px] rounded-full px-4 py-2 transition-colors hover:bg-[#d4911c]"
             >
-              {onRoomBooking || listingSlug ? "Check availability" : "Enquire"}
+              {onRoomBooking ? "Check availability" : "Enquire"}
             </button>
           </div>
         </div>
       </div>
 
-      {/* Availability modal — portaled to body */}
-      {showModal && listingSlug && typeof document !== "undefined" && createPortal(
-        <RoomAvailabilityModal
-          roomName={room.roomName}
-          roomKey={room._key}
-          photo={photo}
-          capacity={room.capacity}
-          pricePerNight={displayPrice}
-          bedType={room.bedType}
-          amenities={room.roomAmenities}
-          listingSlug={listingSlug}
-          onClose={() => setShowModal(false)}
-          onEnquire={(name) => {
-            setShowModal(false);
-            onEnquire(name);
-          }}
-        />,
-        document.body,
-      )}
     </>
   );
 }
