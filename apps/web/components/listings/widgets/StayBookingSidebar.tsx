@@ -449,8 +449,8 @@ export function StayBookingSidebar({
 
           <div className="relative w-full lg:max-w-[900px] max-h-[94vh] lg:max-h-[88vh] bg-white rounded-t-3xl lg:rounded-2xl shadow-2xl overflow-hidden flex flex-col lg:flex-row">
 
-            {/* ── LEFT: Room preview (desktop only) — hide on dates step ── */}
-            <div className={cn("hidden lg:flex lg:w-[400px] bg-[#F4F1EC] flex-col shrink-0 overflow-hidden", step === "dates" && "lg:hidden")}>
+            {/* ── LEFT: Room preview (desktop only) ── */}
+            <div className="hidden lg:flex lg:w-[400px] bg-[#F4F1EC] flex-col shrink-0 overflow-hidden">
               {previewRoom ? (
                 <>
                   {/* Room gallery */}
@@ -496,7 +496,12 @@ export function StayBookingSidebar({
                 <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
                   <span className="text-[48px] mb-3">🏨</span>
                   <p className="text-[15px] font-semibold text-[#16130C] mb-1">{listingTitle}</p>
-                  <p className="text-[13px] text-[#9C9485]">Select a room to see details</p>
+                  <p className="text-[13px] text-[#9C9485]">
+                    {step === "dates" ? "Pick your dates to check availability" : "Select a room to see details"}
+                  </p>
+                  {step !== "dates" && price > 0 && (
+                    <p className="text-[13px] text-[#9C9485] mt-2">From <span className="font-semibold text-[#E8A020]">{fmt(price)}</span> / {priceUnit}</p>
+                  )}
                 </div>
               )}
             </div>
