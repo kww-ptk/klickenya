@@ -72,6 +72,7 @@ export default function PropertySetupWizard() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const editPropertyId = searchParams.get("edit");
+  const listingSlugParam = searchParams.get("listing_slug");
 
   // Step 0 — Import from Sanity (only if applicable)
   const [importProperty, setImportProperty] = useState<ImportableProperty | null>(null);
@@ -105,7 +106,72 @@ export default function PropertySetupWizard() {
   useEffect(() => {
     (async () => {
       try {
-        // If ?edit= is set, fetch that specific property
+        // State C: listing_slug param but no property row yet — create one first
+        if (listingSlugParam && !editPropertyId) {
+          const supabase = createClient();
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+            // Check if property already exists for this slug
+            const { data: existing } = await supabase
+              .from("properties")
+              .select("id")
+              .eq("listing_slug", listingSlugParam)
+              .eq("owner_id", user.id)
+              .limit(1);
+
+            if (!existing || existing.length === 0) {
+              // Create the property row
+              const { data: newProp } = await supabase
+                .from("properties")
+                .insert({
+                  owner_id: user.id,
+                  listing_slug: listingSlugParam,
+                  name: listingSlugParam.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()),
+                  property_type: "villa",
+                  is_entire_property: true,
+                  is_active: false,
+                })
+                .select("id")
+                .single();
+
+              if (newProp) {
+                // Now fetch listing rooms for this new property
+                const res = await fetch(`/api/properties/listing-rooms?property_id=${newProp.id}`);
+                const data = await res.json();
+                if (data.property && data.listing) {
+                  setImportProperty(data.property);
+                  setImportListing(data.listing);
+                  const checked: Record<string, boolean> = {};
+                  for (const room of data.listing.rooms ?? []) {
+                    checked[room._key] = true;
+                  }
+                  setImportChecked(checked);
+                  setStep(0);
+                  setLoadingImport(false);
+                  return;
+                }
+              }
+            } else {
+              // Property exists, fetch its rooms
+              const res = await fetch(`/api/properties/listing-rooms?property_id=${existing[0].id}`);
+              const data = await res.json();
+              if (data.property && data.listing) {
+                setImportProperty(data.property);
+                setImportListing(data.listing);
+                const checked: Record<string, boolean> = {};
+                for (const room of data.listing.rooms ?? []) {
+                  checked[room._key] = true;
+                }
+                setImportChecked(checked);
+                setStep(0);
+                setLoadingImport(false);
+                return;
+              }
+            }
+          }
+        }
+
+        // Standard flow: check by property_id or scan all
         const url = editPropertyId
           ? `/api/properties/listing-rooms?property_id=${editPropertyId}`
           : "/api/properties/listing-rooms";
@@ -114,22 +180,21 @@ export default function PropertySetupWizard() {
         if (data.property && data.listing) {
           setImportProperty(data.property);
           setImportListing(data.listing);
-          // Check all rooms by default
           const checked: Record<string, boolean> = {};
           for (const room of data.listing.rooms ?? []) {
             checked[room._key] = true;
           }
           setImportChecked(checked);
-          setStep(0); // Show import step
+          setStep(0);
         } else {
-          setStep(1); // No importable listing, go to step 1
+          setStep(1);
         }
       } catch {
         setStep(1);
       }
       setLoadingImport(false);
     })();
-  }, [editPropertyId]);
+  }, [editPropertyId, listingSlugParam]);
 
   const handleImportRooms = async () => {
     if (!importProperty || !importListing) return;

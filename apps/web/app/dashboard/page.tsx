@@ -557,7 +557,7 @@ export default async function DashboardPage() {
                       )}
                       {isStay && !propStatus && (
                         <Link
-                          href="/dashboard/property/new"
+                          href={`/dashboard/property/new?listing_slug=${listing.slug}`}
                           className="text-[11px] font-semibold text-[#9C9485] hover:text-[#16130C] transition-colors"
                         >
                           Set up calendar →
