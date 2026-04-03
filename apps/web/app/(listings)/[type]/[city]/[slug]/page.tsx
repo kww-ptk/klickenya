@@ -299,7 +299,7 @@ export default async function ListingDetailPage({ params }: PageProps) {
     attendees = (attendeesRes.data ?? []) as { name: string }[];
   }
 
-  // Fetch real room availability + prices + booking count from Supabase PMS for stays
+  // Fetch room data from Supabase PMS for stays — replaces Sanity rooms when PMS linked
   let roomAvailability: Record<string, boolean> | undefined;
   let roomPriceOverrides: Record<string, number> | undefined;
   let entirePropertyAvailable: boolean | undefined;
@@ -308,24 +308,25 @@ export default async function ListingDetailPage({ params }: PageProps) {
     try {
       const { data: linkedProps } = await adminClient
         .from("properties")
-        .select("id")
+        .select("id, renting_type, entire_place_price")
         .eq("listing_slug", slug)
         .eq("is_active", true);
 
+      const property = linkedProps?.[0];
       const propertyIds = linkedProps?.map((p: { id: string }) => p.id) ?? [];
 
-      if (propertyIds.length > 0) {
+      if (property && propertyIds.length > 0) {
+        // Fetch ALL room fields from Supabase
         const { data: pmsRooms } = await adminClient
           .from("rooms")
-          .select("id, name, sanity_room_key, is_active, base_price_kes")
+          .select("id, name, description, photos, amenities, bed_type, room_size_sqm, max_guests, base_price_kes, sanity_room_key, is_active")
           .in("property_id", propertyIds)
-          .eq("is_active", true);
+          .eq("is_active", true)
+          .order("display_order");
 
         if (pmsRooms && pmsRooms.length > 0) {
           const todayStr = new Date().toISOString().split("T")[0];
           const tomorrowStr = new Date(Date.now() + 86400000).toISOString().split("T")[0];
-          const avail: Record<string, boolean> = {};
-          const prices: Record<string, number> = {};
 
           // Check availability for all active PMS rooms
           const roomAvailResults = await Promise.all(
@@ -339,49 +340,40 @@ export default async function ListingDetailPage({ params }: PageProps) {
             })
           );
 
-          // Entire property = available only when ALL rooms are free
           entirePropertyAvailable = roomAvailResults.every((r) => r.available);
 
-          // Helper: match PMS room to Sanity room
-          const matchPmsRoom = (sanityRoom: { _key: string; roomName: string }) => {
-            // Try exact sanity_room_key match
-            const keyMatch = roomAvailResults.find(
-              (r) => r.sanity_room_key && r.sanity_room_key === sanityRoom._key
-            );
-            if (keyMatch) return keyMatch;
+          // Build RoomType objects from Supabase data — REPLACES Sanity rooms
+          const supabaseRooms = roomAvailResults.map((r) => ({
+            _key: r.sanity_room_key ?? r.id,
+            roomName: r.name,
+            roomDescription: r.description ?? undefined,
+            photos: (r.photos ?? []).map((url: string) => ({
+              asset: { _id: url, url, metadata: undefined },
+              alt: r.name,
+            })),
+            pricePerNight: r.base_price_kes,
+            capacity: r.max_guests,
+            bedType: r.bed_type ?? undefined,
+            roomSizeSqm: r.room_size_sqm ?? undefined,
+            roomAmenities: r.amenities ?? [],
+            isAvailable: r.available,
+            quantity: 1,
+          }));
 
-            // Try name-based match
-            const nameMatch = roomAvailResults.find(
-              (r) =>
-                !r.sanity_room_key &&
-                r.name.toLowerCase().includes(sanityRoom.roomName.toLowerCase())
-            );
-            if (nameMatch) return nameMatch;
+          // Override listing data with PMS data
+          listing.rooms = supabaseRooms;
+          if (property.renting_type) listing.rentingType = property.renting_type;
+          if (property.entire_place_price) listing.price = property.entire_place_price;
 
-            return null;
-          };
-
-          // Map availability + prices to Sanity room _keys
-          const sanityRooms = listing.rooms ?? [];
-          for (const sanityRoom of sanityRooms) {
-            const match = matchPmsRoom(sanityRoom);
-            if (match) {
-              avail[sanityRoom._key] = match.available;
-              if (match.base_price_kes != null) {
-                prices[sanityRoom._key] = match.base_price_kes;
-              }
-            } else {
-              // Fallback: any room available = this room available
-              avail[sanityRoom._key] = roomAvailResults.some((r) => r.available);
-            }
+          // Build avail/price maps for the availability-by-slug API (client-side checks)
+          const avail: Record<string, boolean> = {};
+          const prices: Record<string, number> = {};
+          for (const r of supabaseRooms) {
+            avail[r._key] = r.isAvailable;
+            prices[r._key] = r.pricePerNight;
           }
-
-          if (Object.keys(avail).length > 0) {
-            roomAvailability = avail;
-          }
-          if (Object.keys(prices).length > 0) {
-            roomPriceOverrides = prices;
-          }
+          roomAvailability = avail;
+          roomPriceOverrides = prices;
 
           // Count recent bookings (last 30 days) for social proof
           const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000).toISOString().split("T")[0];
@@ -395,7 +387,7 @@ export default async function ListingDetailPage({ params }: PageProps) {
         }
       }
     } catch {
-      // Non-blocking — fall back to Sanity isAvailable + prices
+      // Non-blocking — fall back to Sanity rooms
     }
   }
 

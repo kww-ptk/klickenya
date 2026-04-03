@@ -59,6 +59,8 @@ export async function GET(req: NextRequest) {
           rooms[] {
             _key,
             roomName,
+            roomDescription,
+            "roomPhotos": photos[]{ asset->{ url } },
             pricePerNight,
             capacity,
             bedType,

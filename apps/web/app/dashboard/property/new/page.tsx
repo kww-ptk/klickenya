@@ -212,14 +212,29 @@ export default function PropertySetupWizard() {
         // Has rooms — expand by quantity
         for (const room of checkedRooms) {
           const qty = room.quantity ?? 1;
+          // Extract photo URLs from Sanity room photos
+          const photoUrls: string[] = (room.roomPhotos ?? [])
+            .map((p: { asset?: { url?: string } }) => p?.asset?.url)
+            .filter(Boolean) as string[];
+          // Convert portable text description to plain text
+          const desc = typeof room.roomDescription === "string"
+            ? room.roomDescription
+            : Array.isArray(room.roomDescription)
+              ? room.roomDescription.map((b: any) => b.children?.map((c: any) => c.text).join("") ?? "").join("\n")
+              : null;
           for (let n = 1; n <= qty; n++) {
             const name = qty > 1 ? `${room.roomName} ${n}` : room.roomName;
             roomInserts.push({
               property_id: importProperty.id,
               name,
+              description: desc || null,
               room_type: mapBedTypeToRoomType(room.bedType),
+              bed_type: room.bedType || null,
+              room_size_sqm: room.roomSizeSqm || null,
               max_guests: room.capacity,
               base_price_kes: room.pricePerNight,
+              amenities: room.roomAmenities ?? [],
+              photos: photoUrls,
               sanity_room_key: room._key,
               display_order: displayOrder++,
             });

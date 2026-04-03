@@ -13,6 +13,9 @@ const ALLOWED_FIELDS = new Set([
   "city",
   "listing_slug",
   "is_entire_property",
+  "renting_type",
+  "entire_place_price",
+  "booking_slug",
 ]);
 
 export async function PATCH(
