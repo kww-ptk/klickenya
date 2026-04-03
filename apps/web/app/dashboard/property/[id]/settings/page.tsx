@@ -1,12 +1,59 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
 
 /* ---------- Helpers ---------- */
+
+/**
+ * Compress an image file on the client using Canvas.
+ * Returns a compressed File (JPEG, max 1200px on longest side, quality 0.8).
+ * Falls back to original if canvas isn't available.
+ */
+async function compressImage(file: File, maxDim = 1200, quality = 0.8): Promise<File> {
+  return new Promise((resolve) => {
+    // If already small enough or not an image type we handle, skip
+    if (file.size < 100_000 || !file.type.startsWith("image/")) {
+      resolve(file);
+      return;
+    }
+
+    const img = new window.Image();
+    img.onload = () => {
+      let { width, height } = img;
+
+      // Scale down if larger than maxDim
+      if (width > maxDim || height > maxDim) {
+        const ratio = Math.min(maxDim / width, maxDim / height);
+        width = Math.round(width * ratio);
+        height = Math.round(height * ratio);
+      }
+
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) { resolve(file); return; }
+
+      ctx.drawImage(img, 0, 0, width, height);
+
+      canvas.toBlob(
+        (blob) => {
+          if (!blob) { resolve(file); return; }
+          const compressed = new File([blob], file.name, { type: "image/jpeg" });
+          resolve(compressed);
+        },
+        "image/jpeg",
+        quality
+      );
+    };
+    img.onerror = () => resolve(file);
+    img.src = URL.createObjectURL(file);
+  });
+}
 
 function isOptimizableUrl(url: string): boolean {
   try {
@@ -335,7 +382,7 @@ export default function PropertySettingsPage() {
           {rooms.map((room) => (
             <div key={room.id} className={`bg-white rounded-xl border ${room.is_active ? "border-[#E2DDD5]" : "border-[#E2DDD5] opacity-50"} shadow-sm overflow-hidden`}>
               {editingRoom === room.id ? (
-                <RoomEditor room={room} onSave={(u) => saveRoom(room.id, u)} onCancel={() => setEditingRoom(null)} />
+                <RoomEditor room={room} propertyId={id} propertyName={name} onSave={(u) => saveRoom(room.id, u)} onCancel={() => setEditingRoom(null)} />
               ) : (
                 <div className="p-4">
                   <div className="flex gap-3">
@@ -375,6 +422,8 @@ export default function PropertySettingsPage() {
           <div className="mt-3">
             <RoomEditor
               room={null}
+              propertyId={id}
+              propertyName={name}
               onSave={(newRoom) => addRoom(newRoom as any)}
               onCancel={() => setShowAddRoom(false)}
             />
@@ -411,10 +460,14 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 
 function RoomEditor({
   room,
+  propertyId,
+  propertyName,
   onSave,
   onCancel,
 }: {
   room: Room | null;
+  propertyId: string;
+  propertyName: string;
   onSave: (updates: Partial<Room>) => void;
   onCancel: () => void;
 }) {
@@ -427,6 +480,8 @@ function RoomEditor({
   const [amenities, setAmenities] = useState<string[]>(room?.amenities ?? []);
   const [photos, setPhotos] = useState<string[]>(room?.photos ?? []);
   const [newPhotoUrl, setNewPhotoUrl] = useState("");
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const toggleAmenity = (a: string) => {
     setAmenities((prev) => prev.includes(a) ? prev.filter((x) => x !== a) : [...prev, a]);
@@ -442,6 +497,41 @@ function RoomEditor({
 
   const removePhoto = (url: string) => {
     setPhotos(photos.filter((p) => p !== url));
+  };
+
+  const handleFileUpload = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    const remaining = 8 - photos.length;
+    if (remaining <= 0) return;
+    setUploading(true);
+
+    const newUrls: string[] = [];
+    for (const rawFile of Array.from(files).slice(0, remaining)) {
+      if (!rawFile.type.startsWith("image/")) continue;
+      try {
+        const compressed = await compressImage(rawFile);
+        const formData = new FormData();
+        formData.append("file", compressed);
+        formData.append("property_id", propertyId);
+        formData.append("property_name", propertyName);
+        formData.append("room_name", name || "room");
+
+        const res = await fetch("/api/properties/upload", {
+          method: "POST",
+          body: formData,
+        });
+        const data = await res.json();
+        if (data.url) newUrls.push(data.url);
+      } catch {
+        // skip failed uploads silently
+      }
+    }
+
+    if (newUrls.length > 0) {
+      setPhotos((prev) => [...prev, ...newUrls]);
+    }
+    setUploading(false);
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const handleSave = () => {
@@ -522,7 +612,7 @@ function RoomEditor({
 
       {/* Photos */}
       <div>
-        <label className="block text-[11px] text-[#9C9485] mb-1.5">Photos</label>
+        <label className="block text-[11px] text-[#9C9485] mb-1.5">Photos {photos.length > 0 && <span className="text-[#9C9485]">({photos.length})</span>}</label>
         {photos.length > 0 && (
           <div className="flex gap-2 mb-2 overflow-x-auto pb-1">
             {photos.map((url) => (
@@ -540,18 +630,50 @@ function RoomEditor({
             ))}
           </div>
         )}
-        <div className="flex gap-2">
+
+        {/* Upload button */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          multiple
+          className="hidden"
+          onChange={(e) => handleFileUpload(e.target.files)}
+        />
+        <button
+          type="button"
+          onClick={() => fileInputRef.current?.click()}
+          disabled={uploading}
+          className="w-full h-[48px] border-2 border-dashed border-[#E2DDD5] rounded-lg text-[13px] font-medium text-[#5E5848] hover:border-[#4F46E5] hover:text-[#4F46E5] transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+        >
+          {uploading ? (
+            <>
+              <svg className="size-4 animate-spin" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" className="opacity-25" /><path d="M4 12a8 8 0 018-8" stroke="currentColor" strokeWidth="3" strokeLinecap="round" /></svg>
+              Uploading...
+            </>
+          ) : (
+            <>
+              <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 16V4m0 0l-4 4m4-4l4 4m-9 8h14" />
+              </svg>
+              Upload photos
+            </>
+          )}
+        </button>
+
+        {/* OR paste URL */}
+        <div className="flex gap-2 mt-2">
           <input
             type="url"
             value={newPhotoUrl}
             onChange={(e) => setNewPhotoUrl(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && addPhoto()}
             className={inputCls + " flex-1"}
-            placeholder="Paste image URL..."
+            placeholder="Or paste image URL..."
           />
           <button onClick={addPhoto} className="h-[40px] px-3 bg-[#4F46E5] text-white text-[12px] font-semibold rounded-lg hover:bg-[#4338CA] shrink-0">Add</button>
         </div>
-        <p className="text-[10px] text-[#9C9485] mt-1">Paste image URLs. Upload support coming in V1.</p>
+        <p className="text-[10px] text-[#9C9485] mt-1">Images are compressed automatically. Max 8 photos per room.</p>
       </div>
 
       {/* Save / Cancel */}
