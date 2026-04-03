@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import { createPortal } from "react-dom";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import PhoneInput from "@/components/ui/PhoneInput";
@@ -281,9 +282,9 @@ export function StayBookingSidebar({
         <p className="text-[12px] text-[#9C9485] text-center">You won&apos;t be charged yet</p>
       </div>
 
-      {/* ── Results modal — full-screen on mobile ── */}
-      {showResults && (
-        <div className="fixed inset-0 z-[300] flex items-end sm:items-center justify-center" style={{ isolation: "isolate" }}>
+      {/* ── Results modal — portaled to body to escape stacking context ── */}
+      {showResults && typeof document !== "undefined" && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center" style={{ isolation: "isolate" }}>
           <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px]" onClick={() => { setShowResults(false); setSelectedRoom(null); }} />
 
           <div className="relative w-full sm:max-w-[520px] max-h-[92vh] sm:max-h-[88vh] bg-white rounded-t-3xl sm:rounded-2xl shadow-2xl overflow-hidden flex flex-col">
@@ -501,12 +502,13 @@ export function StayBookingSidebar({
               )}
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
-      {/* ── Enquiry modal ── */}
-      {showEnquiry && (
-        <div className="fixed inset-0 z-[300] flex items-end sm:items-center justify-center">
+      {/* ── Enquiry modal — portaled to body ── */}
+      {showEnquiry && typeof document !== "undefined" && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center">
           <div className="absolute inset-0 bg-black/40" onClick={() => setShowEnquiry(false)} />
 
           <div className="relative w-full sm:max-w-[440px] max-h-[90vh] bg-white rounded-t-2xl sm:rounded-2xl shadow-xl overflow-hidden flex flex-col">
@@ -564,7 +566,8 @@ export function StayBookingSidebar({
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );

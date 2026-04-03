@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import Image from "next/image";
 import { Check } from "lucide-react";
 import { RoomAvailabilityModal } from "./RoomAvailabilityModal";
@@ -183,8 +184,8 @@ export function RoomCard({ room, onEnquire, realAvailability, priceOverride, lis
         </div>
       </div>
 
-      {/* Availability modal */}
-      {showModal && listingSlug && (
+      {/* Availability modal — portaled to body */}
+      {showModal && listingSlug && typeof document !== "undefined" && createPortal(
         <RoomAvailabilityModal
           roomName={room.roomName}
           roomKey={room._key}
@@ -199,7 +200,8 @@ export function RoomCard({ room, onEnquire, realAvailability, priceOverride, lis
             setShowModal(false);
             onEnquire(name);
           }}
-        />
+        />,
+        document.body,
       )}
     </>
   );
