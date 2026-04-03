@@ -301,42 +301,71 @@ export default async function ListingDetailPage({ params }: PageProps) {
 
   // Fetch real room availability from Supabase PMS for stays
   let roomAvailability: Record<string, boolean> | undefined;
-  if (sanityType === "stay" && listing.rooms?.length) {
+  if (sanityType === "stay") {
     try {
-      const { data: pmsRooms } = await adminClient
-        .from("rooms")
-        .select("id, sanity_room_key, is_active")
-        .in(
-          "property_id",
-          (
-            await adminClient
-              .from("properties")
-              .select("id")
-              .eq("listing_slug", slug)
-              .eq("is_active", true)
-          ).data?.map((p: { id: string }) => p.id) ?? []
-        );
+      const { data: linkedProps } = await adminClient
+        .from("properties")
+        .select("id")
+        .eq("listing_slug", slug)
+        .eq("is_active", true);
 
-      if (pmsRooms && pmsRooms.length > 0) {
-        const todayStr = new Date().toISOString().split("T")[0];
-        const tomorrowStr = new Date(Date.now() + 86400000).toISOString().split("T")[0];
-        const avail: Record<string, boolean> = {};
+      const propertyIds = linkedProps?.map((p: { id: string }) => p.id) ?? [];
 
-        await Promise.all(
-          pmsRooms
-            .filter((r) => r.sanity_room_key && r.is_active)
-            .map(async (r) => {
+      if (propertyIds.length > 0) {
+        const { data: pmsRooms } = await adminClient
+          .from("rooms")
+          .select("id, name, sanity_room_key, is_active")
+          .in("property_id", propertyIds)
+          .eq("is_active", true);
+
+        if (pmsRooms && pmsRooms.length > 0) {
+          const todayStr = new Date().toISOString().split("T")[0];
+          const tomorrowStr = new Date(Date.now() + 86400000).toISOString().split("T")[0];
+          const avail: Record<string, boolean> = {};
+
+          // Check availability for all active PMS rooms
+          const roomAvailResults = await Promise.all(
+            pmsRooms.map(async (r) => {
               const { data: available } = await adminClient.rpc("is_room_available", {
                 p_room_id: r.id,
                 p_check_in: todayStr,
                 p_check_out: tomorrowStr,
               });
-              avail[r.sanity_room_key!] = available === true;
+              return { ...r, available: available === true };
             })
-        );
+          );
 
-        if (Object.keys(avail).length > 0) {
-          roomAvailability = avail;
+          // Map to Sanity room _keys using: sanity_room_key first, then name-match fallback
+          const sanityRooms = listing.rooms ?? [];
+          for (const sanityRoom of sanityRooms) {
+            // Try exact sanity_room_key match
+            const keyMatch = roomAvailResults.find(
+              (r) => r.sanity_room_key && r.sanity_room_key === sanityRoom._key
+            );
+            if (keyMatch) {
+              avail[sanityRoom._key] = keyMatch.available;
+              continue;
+            }
+
+            // Try name-based match (Supabase room.name contains Sanity roomName)
+            const nameMatch = roomAvailResults.find(
+              (r) =>
+                !r.sanity_room_key &&
+                r.name.toLowerCase().includes(sanityRoom.roomName.toLowerCase())
+            );
+            if (nameMatch) {
+              avail[sanityRoom._key] = nameMatch.available;
+              continue;
+            }
+
+            // Fallback: if PMS is linked, any room available = this room available
+            const anyAvailable = roomAvailResults.some((r) => r.available);
+            avail[sanityRoom._key] = anyAvailable;
+          }
+
+          if (Object.keys(avail).length > 0) {
+            roomAvailability = avail;
+          }
         }
       }
     } catch {
