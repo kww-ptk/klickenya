@@ -191,6 +191,8 @@ export function RoomCard({ room, onEnquire, realAvailability, priceOverride, lis
           photo={photo}
           capacity={room.capacity}
           pricePerNight={displayPrice}
+          bedType={room.bedType}
+          amenities={room.roomAmenities}
           listingSlug={listingSlug}
           onClose={() => setShowModal(false)}
           onEnquire={(name) => {
