@@ -128,6 +128,7 @@ export function StayBookingSidebar({
   const [modalCheckIn, setModalCheckIn] = useState("");
   const [modalCheckOut, setModalCheckOut] = useState("");
   const [modalGuests, setModalGuests] = useState(1);
+  const [modalChildren, setModalChildren] = useState(0);
   const [formName, setFormName] = useState("");
   const [formEmail, setFormEmail] = useState("");
   const [formPhone, setFormPhone] = useState("");
@@ -357,6 +358,7 @@ export function StayBookingSidebar({
           check_in: checkIn,
           check_out: checkOut,
           guests,
+          children: modalChildren > 0 ? modalChildren : undefined,
           room_preference: selectedRoomObj?.name ?? (selectedRoom === "__entire__" ? "Entire property" : null),
         }),
       });
@@ -573,7 +575,7 @@ export function StayBookingSidebar({
                 {step !== "dates" && checkIn && checkOut && (
                   <div className="flex items-center justify-between mt-2">
                     <p className="text-[11px] text-[#9C9485]">
-                      {fmtDate(checkIn)} → {fmtDate(checkOut)} · {nights} night{nights !== 1 ? "s" : ""} · {guests} guest{guests !== 1 ? "s" : ""}
+                      {fmtDate(checkIn)} → {fmtDate(checkOut)} · {nights} night{nights !== 1 ? "s" : ""} · {guests} adult{guests !== 1 ? "s" : ""}{modalChildren > 0 ? `, ${modalChildren} child${modalChildren !== 1 ? "ren" : ""}` : ""}
                     </p>
                     <button type="button" onClick={() => setStep("dates")} className="text-[11px] font-semibold text-[#E8A020] hover:text-[#d4911c] shrink-0 ml-2">
                       Change
@@ -607,35 +609,66 @@ export function StayBookingSidebar({
               {/* ── STEP 1: Dates & Guests ── */}
               {step === "dates" && (
                 <>
-                  <div className="flex-1 overflow-y-auto px-5 py-3 space-y-4">
-                    {/* Date picker */}
-                    <div>
-                      <p className="text-[13px] font-semibold text-[#16130C] mb-1.5">When are you staying?</p>
-                      <div className="border border-[#E2DDD5] rounded-[14px] p-2.5 bg-[#FAFAF8]">
+                  <div className="flex-1 overflow-y-auto px-5 py-3">
+                    <div className="flex flex-col sm:flex-row gap-5">
+                      {/* Left: Calendar — same width as sidebar */}
+                      <div className="w-full sm:w-[300px] shrink-0">
+                        <p className="text-[13px] font-semibold text-[#16130C] mb-1.5">Select dates</p>
                         <DateRangePicker
                           checkIn={modalCheckIn}
                           checkOut={modalCheckOut}
                           onCheckInChange={setModalCheckIn}
                           onCheckOutChange={setModalCheckOut}
-                          compact
                         />
                       </div>
-                    </div>
 
-                    {/* Guests */}
-                    <div>
-                      <p className="text-[13px] font-semibold text-[#16130C] mb-2">Guests</p>
-                      <div className="border border-[#E2DDD5] rounded-[14px] p-3 flex items-center justify-between">
-                        <span className="text-[13px] text-[#5E5848]">Number of guests</span>
-                        <div className="flex items-center gap-3">
-                          <button type="button" onClick={() => setModalGuests(Math.max(1, modalGuests - 1))} className="size-8 rounded-full border border-[#E2DDD5] flex items-center justify-center text-[#5E5848] hover:bg-[#F4F1EC] disabled:opacity-30" disabled={modalGuests <= 1}>-</button>
-                          <span className="text-[14px] font-semibold text-[#16130C] w-4 text-center">{modalGuests}</span>
-                          <button type="button" onClick={() => setModalGuests(Math.min(maxGuests, modalGuests + 1))} className="size-8 rounded-full border border-[#E2DDD5] flex items-center justify-center text-[#5E5848] hover:bg-[#F4F1EC] disabled:opacity-30" disabled={modalGuests >= maxGuests}>+</button>
+                      {/* Right: Guests & Children */}
+                      <div className="flex-1 min-w-0 space-y-4 sm:pt-6">
+                        {/* Adults */}
+                        <div className="border border-[#E2DDD5] rounded-[14px] p-3.5">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="text-[13px] font-semibold text-[#16130C]">Adults</p>
+                              <p className="text-[11px] text-[#9C9485]">Age 13+</p>
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <button type="button" onClick={() => setModalGuests(Math.max(1, modalGuests - 1))} className="size-8 rounded-full border border-[#E2DDD5] flex items-center justify-center text-[#5E5848] hover:bg-[#F4F1EC] disabled:opacity-30" disabled={modalGuests <= 1}>-</button>
+                              <span className="text-[14px] font-semibold text-[#16130C] w-4 text-center">{modalGuests}</span>
+                              <button type="button" onClick={() => setModalGuests(Math.min(maxGuests, modalGuests + 1))} className="size-8 rounded-full border border-[#E2DDD5] flex items-center justify-center text-[#5E5848] hover:bg-[#F4F1EC] disabled:opacity-30" disabled={modalGuests >= maxGuests}>+</button>
+                            </div>
+                          </div>
                         </div>
+
+                        {/* Children */}
+                        <div className="border border-[#E2DDD5] rounded-[14px] p-3.5">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="text-[13px] font-semibold text-[#16130C]">Children</p>
+                              <p className="text-[11px] text-[#9C9485]">Age 0–12</p>
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <button type="button" onClick={() => setModalChildren(Math.max(0, modalChildren - 1))} className="size-8 rounded-full border border-[#E2DDD5] flex items-center justify-center text-[#5E5848] hover:bg-[#F4F1EC] disabled:opacity-30" disabled={modalChildren <= 0}>-</button>
+                              <span className="text-[14px] font-semibold text-[#16130C] w-4 text-center">{modalChildren}</span>
+                              <button type="button" onClick={() => setModalChildren(Math.min(10, modalChildren + 1))} className="size-8 rounded-full border border-[#E2DDD5] flex items-center justify-center text-[#5E5848] hover:bg-[#F4F1EC] disabled:opacity-30" disabled={modalChildren >= 10}>+</button>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Summary */}
+                        {modalCheckIn && modalCheckOut && modalCheckOut > modalCheckIn && (
+                          <div className="bg-[#FAFAF8] rounded-[14px] p-3.5 border border-[#E2DDD5]">
+                            <p className="text-[12px] text-[#9C9485]">
+                              {fmtDate(modalCheckIn)} → {fmtDate(modalCheckOut)} · {nightsBetween(modalCheckIn, modalCheckOut)} night{nightsBetween(modalCheckIn, modalCheckOut) !== 1 ? "s" : ""}
+                            </p>
+                            <p className="text-[12px] text-[#9C9485] mt-0.5">
+                              {modalGuests} adult{modalGuests !== 1 ? "s" : ""}{modalChildren > 0 ? `, ${modalChildren} child${modalChildren !== 1 ? "ren" : ""}` : ""}
+                            </p>
+                          </div>
+                        )}
                       </div>
                     </div>
 
-                    {error && <p className="text-[13px] text-red-600 text-center">{error}</p>}
+                    {error && <p className="text-[13px] text-red-600 text-center mt-3">{error}</p>}
                   </div>
 
                   {/* Footer */}
