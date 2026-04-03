@@ -17,6 +17,8 @@ interface RoomInput {
 interface SanityRoom {
   _key: string;
   roomName: string;
+  roomDescription?: unknown;
+  roomPhotos?: { asset?: { url?: string } }[];
   pricePerNight: number;
   capacity: number;
   bedType?: string;
