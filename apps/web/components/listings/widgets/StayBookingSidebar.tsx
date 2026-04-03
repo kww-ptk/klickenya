@@ -7,6 +7,17 @@ import { cn } from "@/lib/utils";
 import PhoneInput from "@/components/ui/PhoneInput";
 import { DateRangePicker } from "@/components/ui/DateRangePicker";
 
+/* ── Helpers ───────────────────────────────────── */
+
+function isOptimizableUrl(url: string): boolean {
+  try {
+    const host = new URL(url).hostname;
+    return host === "cdn.sanity.io" || host.endsWith(".supabase.co") || host === "images.unsplash.com";
+  } catch {
+    return false;
+  }
+}
+
 /* ── Types ─────────────────────────────────────── */
 
 interface RoomPhoto {
@@ -358,7 +369,7 @@ export function StayBookingSidebar({
                   {/* Room gallery */}
                   <div className="relative h-[260px] bg-[#E2DDD5]">
                     {previewRoom.photo ? (
-                      <Image src={previewRoom.photo} alt={previewRoom.name} fill className="object-cover" sizes="400px" />
+                      <Image src={previewRoom.photo} alt={previewRoom.name} fill className="object-cover" sizes="400px" unoptimized={!isOptimizableUrl(previewRoom.photo)} />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-[48px]">🛏</div>
                     )}
@@ -383,7 +394,7 @@ export function StayBookingSidebar({
                       <div className="grid grid-cols-2 gap-2">
                         {previewRoom.photos.slice(1, 5).map((url, i) => (
                           <div key={i} className="relative aspect-[4/3] rounded-lg overflow-hidden bg-[#E2DDD5]">
-                            <Image src={url} alt="" fill className="object-cover" sizes="180px" />
+                            <Image src={url} alt="" fill className="object-cover" sizes="180px" unoptimized={!isOptimizableUrl(url)} />
                           </div>
                         ))}
                       </div>
@@ -519,7 +530,7 @@ export function StayBookingSidebar({
                             className={cn("w-full text-left rounded-xl border overflow-hidden transition-all", !room.available ? "opacity-40 grayscale cursor-not-allowed border-[#E2DDD5]" : selectedRoom === room.key ? "ring-2 ring-[#E8A020] ring-offset-2 border-transparent shadow-md" : "border-[#E2DDD5] hover:shadow-md hover:border-[#E8A020]/30")}>
                             <div className="flex">
                               <div className="relative w-[90px] sm:w-[110px] shrink-0 bg-[#F4F1EC]">
-                                {room.photo ? <Image src={room.photo} alt={room.name} fill className="object-cover" sizes="110px" /> : <div className="w-full h-full min-h-[80px] flex items-center justify-center text-[20px]">🛏</div>}
+                                {room.photo ? <Image src={room.photo} alt={room.name} fill className="object-cover" sizes="110px" unoptimized={!isOptimizableUrl(room.photo)} /> : <div className="w-full h-full min-h-[80px] flex items-center justify-center text-[20px]">🛏</div>}
                                 {!room.available && <div className="absolute inset-0 bg-black/50 flex items-center justify-center"><span className="bg-white/90 text-[10px] font-bold px-2 py-0.5 rounded-full">Booked</span></div>}
                                 {room.available && selectedRoom === room.key && <div className="absolute top-1.5 right-1.5 size-5 bg-[#E8A020] rounded-full flex items-center justify-center"><svg className="size-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg></div>}
                               </div>

@@ -6,6 +6,17 @@ import Link from "next/link";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
 
+/* ---------- Helpers ---------- */
+
+function isOptimizableUrl(url: string): boolean {
+  try {
+    const host = new URL(url).hostname;
+    return host === "cdn.sanity.io" || host.endsWith(".supabase.co") || host === "images.unsplash.com";
+  } catch {
+    return false;
+  }
+}
+
 /* ---------- Types ---------- */
 
 interface Room {
@@ -331,7 +342,7 @@ export default function PropertySettingsPage() {
                     {/* Photo thumbnail */}
                     <div className="w-[80px] h-[60px] rounded-lg overflow-hidden bg-[#F4F1EC] shrink-0 relative">
                       {room.photos[0] ? (
-                        <Image src={room.photos[0]} alt={room.name} fill className="object-cover" sizes="80px" />
+                        <Image src={room.photos[0]} alt={room.name} fill className="object-cover" sizes="80px" unoptimized={!isOptimizableUrl(room.photos[0])} />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-[18px]">🛏</div>
                       )}
@@ -516,7 +527,7 @@ function RoomEditor({
           <div className="flex gap-2 mb-2 overflow-x-auto pb-1">
             {photos.map((url) => (
               <div key={url} className="relative w-[72px] h-[54px] rounded-lg overflow-hidden bg-[#F4F1EC] shrink-0 group">
-                <Image src={url} alt="" fill className="object-cover" sizes="72px" />
+                <Image src={url} alt="" fill className="object-cover" sizes="72px" unoptimized={!isOptimizableUrl(url)} />
                 <button
                   onClick={() => removePhoto(url)}
                   className="absolute top-1 right-1 size-5 bg-black/60 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"

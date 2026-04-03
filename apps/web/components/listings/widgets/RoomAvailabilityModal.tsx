@@ -27,6 +27,15 @@ interface RoomAvailabilityModalProps {
 const today = () => new Date().toISOString().split("T")[0];
 const fmt = (n: number) => `KSh ${n.toLocaleString()}`;
 
+function isOptimizableUrl(url: string): boolean {
+  try {
+    const host = new URL(url).hostname;
+    return host === "cdn.sanity.io" || host.endsWith(".supabase.co") || host === "images.unsplash.com";
+  } catch {
+    return false;
+  }
+}
+
 export function RoomAvailabilityModal({
   roomName,
   roomKey,
@@ -84,7 +93,7 @@ export function RoomAvailabilityModal({
         {/* Room photo header */}
         <div className="relative h-[180px] sm:h-[200px] bg-[#F4F1EC] shrink-0">
           {photo?.asset?.url ? (
-            <Image src={photo.asset.url} alt={roomName} fill className="object-cover" sizes="(max-width: 640px) 100vw, 440px" />
+            <Image src={photo.asset.url} alt={roomName} fill className="object-cover" sizes="(max-width: 640px) 100vw, 440px" unoptimized={!isOptimizableUrl(photo.asset.url)} />
           ) : (
             <div className="w-full h-full flex items-center justify-center text-[32px]">🛏</div>
           )}

@@ -38,12 +38,24 @@ interface RoomCardProps {
   onRoomBooking?: (roomKey: string) => void;
 }
 
+/** Check if a URL can be optimized by Next.js Image (known CDN domains) */
+function isOptimizableUrl(url: string): boolean {
+  try {
+    const host = new URL(url).hostname;
+    return host === "cdn.sanity.io" || host.endsWith(".supabase.co") || host === "images.unsplash.com";
+  } catch {
+    return false;
+  }
+}
+
 export function RoomCard({ room, onEnquire, realAvailability, priceOverride, listingSlug, onRoomBooking }: RoomCardProps) {
   const [showModal, setShowModal] = useState(false);
   const photo = room.photos?.[0];
   const available = realAvailability ?? (room.isAvailable !== false);
   const displayPrice = priceOverride ?? room.pricePerNight;
   const amenities = room.roomAmenities ?? [];
+  const photoUrl = photo?.asset?.url;
+  const skipOptimize = photoUrl ? !isOptimizableUrl(photoUrl) : false;
 
   /* Build subtitle parts */
   const meta: string[] = [];
@@ -58,13 +70,14 @@ export function RoomCard({ room, onEnquire, realAvailability, priceOverride, lis
         <div className="flex gap-3.5 bg-white rounded-[var(--radius-md)] overflow-hidden">
           {/* Thumbnail */}
           <div className="relative w-[110px] h-[110px] shrink-0 rounded-[var(--radius-md)] overflow-hidden">
-            {photo?.asset?.url ? (
+            {photoUrl ? (
               <Image
-                src={photo.asset.url}
-                alt={photo.alt ?? room.roomName}
+                src={photoUrl}
+                alt={photo?.alt ?? room.roomName}
                 fill
                 className="object-cover"
                 sizes="110px"
+                unoptimized={skipOptimize}
               />
             ) : (
               <div className="absolute inset-0 bg-[#1F1C12] flex items-center justify-center">
@@ -120,13 +133,14 @@ export function RoomCard({ room, onEnquire, realAvailability, priceOverride, lis
       <div className="hidden sm:block bg-white rounded-xl border border-[#E2DDD5] overflow-hidden transition-shadow duration-200 hover:shadow-md group">
         {/* Photo */}
         <div className="relative aspect-[4/3] overflow-hidden">
-          {photo?.asset?.url ? (
+          {photoUrl ? (
             <Image
-              src={photo.asset.url}
-              alt={photo.alt ?? room.roomName}
+              src={photoUrl}
+              alt={photo?.alt ?? room.roomName}
               fill
               className="object-cover transition-transform duration-500 ease-out group-hover:scale-[1.04]"
               sizes="(max-width: 1024px) 50vw, 33vw"
+              unoptimized={skipOptimize}
             />
           ) : (
             <div className="absolute inset-0 bg-[#1F1C12] flex items-center justify-center">

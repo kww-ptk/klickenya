@@ -7,6 +7,17 @@ import { cn } from "@/lib/utils";
 import { DateRangePicker } from "@/components/ui/DateRangePicker";
 import PhoneInput from "@/components/ui/PhoneInput";
 
+/* ── Helpers ───────────────────────────────── */
+
+function isOptimizableUrl(url: string): boolean {
+  try {
+    const host = new URL(url).hostname;
+    return host === "cdn.sanity.io" || host.endsWith(".supabase.co") || host === "images.unsplash.com";
+  } catch {
+    return false;
+  }
+}
+
 /* ── Types ─────────────────────────────────── */
 
 interface WidgetRoom {
@@ -241,7 +252,7 @@ export function BookingWidget({
                 <div className="flex">
                   <div className="relative w-[100px] h-[80px] shrink-0 bg-[#F4F1EC]">
                     {room.photos[0] ? (
-                      <Image src={room.photos[0]} alt={room.name} fill className="object-cover" sizes="100px" />
+                      <Image src={room.photos[0]} alt={room.name} fill className="object-cover" sizes="100px" unoptimized={!isOptimizableUrl(room.photos[0])} />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-[20px]">🛏</div>
                     )}
