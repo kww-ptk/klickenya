@@ -12,6 +12,7 @@ import { TrackPageView } from "@/lib/analytics/TrackPageView";
 import { SimilarListings } from "@/components/listings/widgets/SimilarListings";
 import { BookingSidebar } from "@/components/listings/widgets/BookingSidebar";
 import { MobileBookingBar } from "@/components/listings/widgets/MobileBookingBar";
+import { StayBookingSidebar } from "@/components/listings/widgets/StayBookingSidebar";
 import { RentingToggle } from "../widgets/RentingToggle";
 import type { ListingCardProps } from "@/components/listings/ListingCard";
 
@@ -58,7 +59,17 @@ function StayDetail({
 
   const listingSlug = listing.slug?.current ?? "";
 
-  // Live availability check when guest picks dates
+  // Callback when sidebar availability check completes
+  const handleAvailabilityChecked = useCallback(
+    (roomAvail: Record<string, boolean>, roomPrices: Record<string, number>, entireAvail: boolean) => {
+      setLiveRoomAvail(roomAvail);
+      setLivePrices(roomPrices);
+      setLiveEntireAvail(entireAvail);
+    },
+    []
+  );
+
+  // Live availability check when guest picks dates (from contact form)
   const handleDatesChange = useCallback(
     async (checkIn: string, checkOut: string) => {
       if (!listingSlug) return;
@@ -166,6 +177,7 @@ function StayDetail({
               roomAvailability={activeRoomAvail}
               roomPriceOverrides={activePrices}
               entirePropertyAvailable={activeEntireAvail}
+              listingSlug={listingSlug}
             />
             {checkingDates && (
               <p className="text-[12px] text-[#9C9485] mt-2 animate-pulse">Checking availability...</p>
@@ -206,16 +218,21 @@ function StayDetail({
             )}
           </div>
 
-          {/* Right column */}
-          <BookingSidebar
-            listingId={listing._id}
-            listingTitle={listing.title}
-            listingType={sanityType}
-            price={listing.price ?? 0}
-            priceUnit={listing.priceUnit ?? "night"}
-            maxGuests={listing.maxGuests}
-            onDatesChange={handleDatesChange}
-          />
+          {/* Right column — Stay booking sidebar */}
+          <aside className="hidden lg:block w-[350px] shrink-0">
+            <div className="sticky top-[76px] border border-[#E2DDD5] rounded-[24px] shadow-lg p-5 bg-white max-h-[calc(100vh-92px)] overflow-y-auto scrollbar-none">
+              <StayBookingSidebar
+                listingSlug={listingSlug}
+                listingTitle={listing.title}
+                listingId={listing._id}
+                price={listing.price ?? 0}
+                priceUnit={listing.priceUnit ?? "night"}
+                maxGuests={listing.maxGuests}
+                rooms={listing.rooms}
+                onAvailabilityChecked={handleAvailabilityChecked}
+              />
+            </div>
+          </aside>
         </div>
 
         <SimilarListings listings={similarCards} typeLabel={typeLabel} />

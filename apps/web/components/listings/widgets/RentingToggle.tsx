@@ -32,6 +32,7 @@ interface RentingToggleProps {
   roomPriceOverrides?: Record<string, number>;
   /** True only when ALL rooms are available. undefined = no PMS data (fallback). */
   entirePropertyAvailable?: boolean;
+  listingSlug?: string;
 }
 
 const LS_KEY = "kk_rent_mode";
@@ -52,6 +53,7 @@ export function RentingToggle({
   roomAvailability,
   roomPriceOverrides,
   entirePropertyAvailable,
+  listingSlug,
 }: RentingToggleProps) {
   /* ── CASE 1: entire_place → nothing ── */
   if (rentingType === "entire_place") return null;
@@ -59,7 +61,7 @@ export function RentingToggle({
   /* ── CASE 2: by_room → rooms only, no toggle ── */
   if (rentingType === "by_room") {
     return (
-      <RoomsGrid rooms={rooms ?? []} listingTitle={listingTitle} roomAvailability={roomAvailability} roomPriceOverrides={roomPriceOverrides} />
+      <RoomsGrid rooms={rooms ?? []} listingTitle={listingTitle} roomAvailability={roomAvailability} roomPriceOverrides={roomPriceOverrides} listingSlug={listingSlug} />
     );
   }
 
@@ -72,6 +74,7 @@ export function RentingToggle({
     roomAvailability={roomAvailability}
     roomPriceOverrides={roomPriceOverrides}
     entirePropertyAvailable={entirePropertyAvailable}
+    listingSlug={listingSlug}
   />;
 }
 
@@ -84,6 +87,7 @@ function BothToggle({
   roomAvailability,
   roomPriceOverrides,
   entirePropertyAvailable,
+  listingSlug,
 }: Omit<RentingToggleProps, "rentingType">) {
   const [mode, setMode] = useState<"entire" | "room">(() => {
     if (typeof window !== "undefined") {
@@ -180,7 +184,7 @@ function BothToggle({
         <>
           {rooms && rooms.length > 0 ? (
             <div className="mt-4">
-              <RoomsGrid rooms={rooms} listingTitle={listingTitle} roomAvailability={roomAvailability} roomPriceOverrides={roomPriceOverrides} />
+              <RoomsGrid rooms={rooms} listingTitle={listingTitle} roomAvailability={roomAvailability} roomPriceOverrides={roomPriceOverrides} listingSlug={listingSlug} />
             </div>
           ) : (
             <div className="border border-[#E2DDD5] rounded-xl p-5 mt-4 text-center">
