@@ -307,23 +307,53 @@ export default async function ListingDetailPage({ params }: PageProps) {
   let hasPms = false;
   if (sanityType === "stay") {
     try {
-      const { data: linkedProps } = await adminClient
-        .from("properties")
-        .select("id, renting_type, entire_place_price")
-        .eq("listing_slug", slug)
-        .eq("is_active", true);
+      // Fetch linked property — try with extended columns, fall back to basic
+      let linkedProps: any[] | null = null;
+      {
+        const res = await adminClient
+          .from("properties")
+          .select("id, renting_type, entire_place_price")
+          .eq("listing_slug", slug)
+          .eq("is_active", true);
+        if (!res.error) {
+          linkedProps = res.data;
+        } else {
+          // Columns not migrated yet — basic query
+          const basic = await adminClient
+            .from("properties")
+            .select("id")
+            .eq("listing_slug", slug)
+            .eq("is_active", true);
+          linkedProps = basic.data;
+        }
+      }
 
       const property = linkedProps?.[0];
       const propertyIds = linkedProps?.map((p: { id: string }) => p.id) ?? [];
 
       if (property && propertyIds.length > 0) {
-        // Fetch ALL room fields from Supabase
-        const { data: pmsRooms } = await adminClient
-          .from("rooms")
-          .select("id, name, description, photos, amenities, bed_type, room_size_sqm, max_guests, base_price_kes, sanity_room_key, is_active")
-          .in("property_id", propertyIds)
-          .eq("is_active", true)
-          .order("display_order");
+        // Fetch room fields from Supabase — try full, fall back to basic
+        let pmsRooms: any[] | null = null;
+        {
+          const res = await adminClient
+            .from("rooms")
+            .select("id, name, description, photos, amenities, bed_type, room_size_sqm, max_guests, base_price_kes, sanity_room_key, is_active")
+            .in("property_id", propertyIds)
+            .eq("is_active", true)
+            .order("display_order");
+          if (!res.error) {
+            pmsRooms = res.data;
+          } else {
+            // New columns not migrated — basic query
+            const basic = await adminClient
+              .from("rooms")
+              .select("id, name, description, photos, amenities, max_guests, base_price_kes, sanity_room_key, is_active")
+              .in("property_id", propertyIds)
+              .eq("is_active", true)
+              .order("display_order");
+            pmsRooms = basic.data;
+          }
+        }
 
         if (pmsRooms && pmsRooms.length > 0) {
           const todayStr = new Date().toISOString().split("T")[0];
