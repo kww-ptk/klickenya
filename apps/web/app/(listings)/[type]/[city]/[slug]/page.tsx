@@ -299,6 +299,51 @@ export default async function ListingDetailPage({ params }: PageProps) {
     attendees = (attendeesRes.data ?? []) as { name: string }[];
   }
 
+  // Fetch real room availability from Supabase PMS for stays
+  let roomAvailability: Record<string, boolean> | undefined;
+  if (sanityType === "stay" && listing.rooms?.length) {
+    try {
+      const { data: pmsRooms } = await adminClient
+        .from("rooms")
+        .select("id, sanity_room_key, is_active")
+        .in(
+          "property_id",
+          (
+            await adminClient
+              .from("properties")
+              .select("id")
+              .eq("listing_slug", slug)
+              .eq("is_active", true)
+          ).data?.map((p: { id: string }) => p.id) ?? []
+        );
+
+      if (pmsRooms && pmsRooms.length > 0) {
+        const todayStr = new Date().toISOString().split("T")[0];
+        const tomorrowStr = new Date(Date.now() + 86400000).toISOString().split("T")[0];
+        const avail: Record<string, boolean> = {};
+
+        await Promise.all(
+          pmsRooms
+            .filter((r) => r.sanity_room_key && r.is_active)
+            .map(async (r) => {
+              const { data: available } = await adminClient.rpc("is_room_available", {
+                p_room_id: r.id,
+                p_check_in: todayStr,
+                p_check_out: tomorrowStr,
+              });
+              avail[r.sanity_room_key!] = available === true;
+            })
+        );
+
+        if (Object.keys(avail).length > 0) {
+          roomAvailability = avail;
+        }
+      }
+    } catch {
+      // Non-blocking — fall back to Sanity isAvailable
+    }
+  }
+
   // Common props shared by all detail components
   const detailProps = {
     listing,
@@ -313,6 +358,7 @@ export default async function ListingDetailPage({ params }: PageProps) {
     attendeeCount,
     attendees,
     menuData,
+    roomAvailability,
   };
 
   const Detail = (() => {

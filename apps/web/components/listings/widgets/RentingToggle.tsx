@@ -28,6 +28,7 @@ interface RentingToggleProps {
   rooms?: RoomType[];
   listingTitle: string;
   onModeChange?: (mode: "entire" | "room") => void;
+  roomAvailability?: Record<string, boolean>;
 }
 
 const LS_KEY = "kk_rent_mode";
@@ -45,6 +46,7 @@ export function RentingToggle({
   rooms,
   listingTitle,
   onModeChange,
+  roomAvailability,
 }: RentingToggleProps) {
   /* ── CASE 1: entire_place → nothing ── */
   if (rentingType === "entire_place") return null;
@@ -52,7 +54,7 @@ export function RentingToggle({
   /* ── CASE 2: by_room → rooms only, no toggle ── */
   if (rentingType === "by_room") {
     return (
-      <RoomsGrid rooms={rooms ?? []} listingTitle={listingTitle} />
+      <RoomsGrid rooms={rooms ?? []} listingTitle={listingTitle} roomAvailability={roomAvailability} />
     );
   }
 
@@ -62,6 +64,7 @@ export function RentingToggle({
     rooms={rooms}
     listingTitle={listingTitle}
     onModeChange={onModeChange}
+    roomAvailability={roomAvailability}
   />;
 }
 
@@ -71,6 +74,7 @@ function BothToggle({
   rooms,
   listingTitle,
   onModeChange,
+  roomAvailability,
 }: Omit<RentingToggleProps, "rentingType">) {
   const [mode, setMode] = useState<"entire" | "room">(() => {
     if (typeof window !== "undefined") {
@@ -140,7 +144,7 @@ function BothToggle({
         <>
           {rooms && rooms.length > 0 ? (
             <div className="mt-4">
-              <RoomsGrid rooms={rooms} listingTitle={listingTitle} />
+              <RoomsGrid rooms={rooms} listingTitle={listingTitle} roomAvailability={roomAvailability} />
             </div>
           ) : (
             <div className="border border-[#E2DDD5] rounded-xl p-5 mt-4 text-center">

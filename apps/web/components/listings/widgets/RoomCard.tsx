@@ -25,11 +25,13 @@ interface RoomType {
 interface RoomCardProps {
   room: RoomType;
   onEnquire: (roomName: string) => void;
+  /** Real availability from Supabase PMS. Overrides room.isAvailable when present. */
+  realAvailability?: boolean;
 }
 
-export function RoomCard({ room, onEnquire }: RoomCardProps) {
+export function RoomCard({ room, onEnquire, realAvailability }: RoomCardProps) {
   const photo = room.photos?.[0];
-  const available = room.isAvailable !== false;
+  const available = realAvailability ?? (room.isAvailable !== false);
   const amenities = room.roomAmenities ?? [];
 
   /* Build subtitle parts */

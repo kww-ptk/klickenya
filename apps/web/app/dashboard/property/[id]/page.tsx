@@ -1,7 +1,9 @@
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { getAuthUser } from "../../_lib/auth";
 import { adminClient } from "@/lib/supabase/admin";
+import { sanityClient } from "@/lib/sanity/client";
 import { PropertyCalendarWrapper } from "./_components/PropertyCalendarWrapper";
 
 export default async function PropertyDashboardPage({
@@ -22,6 +24,34 @@ export default async function PropertyDashboardPage({
     .single();
 
   if (!property) notFound();
+
+  // Fetch linked Sanity listing if slug exists
+  let linkedListing: {
+    title: string;
+    city: string | null;
+    type: string;
+    coverPhoto: string | null;
+    slug: string;
+  } | null = null;
+  if (property.listing_slug) {
+    const listing = await sanityClient.fetch(
+      `*[_type == "listing" && slug.current == $slug][0]{
+        title, city, type,
+        "coverPhoto": photos[0]{ asset->{ url } },
+        "slug": slug.current
+      }`,
+      { slug: property.listing_slug }
+    );
+    if (listing) {
+      linkedListing = {
+        title: listing.title,
+        city: listing.city,
+        type: listing.type,
+        coverPhoto: listing.coverPhoto?.asset?.url ?? null,
+        slug: listing.slug,
+      };
+    }
+  }
 
   // Parallel: rooms, today's bookings, 60-day bookings, 60-day blocked dates
   const todayStr = new Date().toISOString().split("T")[0];
@@ -147,12 +177,66 @@ export default async function PropertyDashboardPage({
           </p>
         </div>
         <Link
-          href={`/dashboard/property/new?edit=${property.id}`}
+          href={`/dashboard/property/${property.id}/settings`}
           className="text-[13px] font-semibold text-[#9C9485] hover:text-[#16130C] transition-colors"
         >
           Settings
         </Link>
       </div>
+
+      {/* Linked listing card */}
+      {linkedListing ? (
+        <div className="mb-5 bg-white rounded-xl lg:rounded-2xl border border-[#E2DDD5] p-3 lg:p-4 shadow-sm">
+          <div className="flex gap-3 items-center">
+            <div className="shrink-0 w-[72px] h-[72px] rounded-lg overflow-hidden bg-[#F4F1EC] relative">
+              {linkedListing.coverPhoto ? (
+                <Image
+                  src={`${linkedListing.coverPhoto}?w=200&auto=format`}
+                  alt={linkedListing.title}
+                  fill
+                  sizes="72px"
+                  className="object-cover"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-[28px]">🏨</div>
+              )}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-[14px] font-semibold text-[#16130C] truncate">
+                {linkedListing.title}
+              </p>
+              {linkedListing.city && (
+                <p className="text-[13px] text-[#9C9485]">{linkedListing.city}</p>
+              )}
+              <div className="flex items-center gap-3 mt-1">
+                <a
+                  href={`https://klickenya.com/${linkedListing.type === "experience" ? "experiences" : linkedListing.type + "s"}/${(linkedListing.city ?? "").toLowerCase().replace(/ /g, "-")}/${linkedListing.slug}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[11px] font-semibold text-[#4F46E5] hover:text-[#4338CA] transition-colors"
+                >
+                  View on Klickenya ↗
+                </a>
+              </div>
+              <p className="text-[10px] text-[#9C9485] mt-0.5">
+                Guests who enquire through your listing appear here automatically
+              </p>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="mb-5 bg-[#F4F1EC] rounded-xl p-3">
+          <div className="flex items-center justify-between">
+            <p className="text-[12px] text-[#9C9485]">No listing linked</p>
+            <Link
+              href={`/dashboard/property/${property.id}/settings`}
+              className="text-[11px] font-semibold text-[#4F46E5] hover:text-[#4338CA]"
+            >
+              Link a Klickenya listing
+            </Link>
+          </div>
+        </div>
+      )}
 
       {/* Today's Snapshot */}
       <div className="grid grid-cols-3 gap-2 lg:gap-3 mb-5">

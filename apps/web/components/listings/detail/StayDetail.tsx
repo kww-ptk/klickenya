@@ -28,6 +28,7 @@ interface StayDetailProps {
   cityName: string;
   citySlug: string;
   similarCards: ListingCardProps[];
+  roomAvailability?: Record<string, boolean>;
 }
 
 /* ── Component ─────────────────────────────────────── */
@@ -42,6 +43,7 @@ function StayDetail({
   cityName,
   citySlug,
   similarCards,
+  roomAvailability,
 }: StayDetailProps) {
   const [rentMode, setRentMode] = useState<"entire" | "room">("entire");
   const highlights = listing.highlights ?? [];
@@ -111,6 +113,7 @@ function StayDetail({
               rooms={listing.rooms}
               listingTitle={listing.title}
               onModeChange={(mode) => setRentMode(mode)}
+              roomAvailability={roomAvailability}
             />
 
             {/* Description */}
