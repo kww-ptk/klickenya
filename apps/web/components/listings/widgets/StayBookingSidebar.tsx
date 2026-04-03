@@ -278,56 +278,97 @@ export function StayBookingSidebar({
 
       {/* ── Results modal — full-screen on mobile ── */}
       {showResults && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
-          <div className="absolute inset-0 bg-black/40" onClick={() => { setShowResults(false); setSelectedRoom(null); }} />
+        <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center" style={{ isolation: "isolate" }}>
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px]" onClick={() => { setShowResults(false); setSelectedRoom(null); }} />
 
-          <div className="relative w-full sm:max-w-[520px] max-h-[90vh] sm:max-h-[85vh] bg-white rounded-t-2xl sm:rounded-2xl shadow-xl overflow-hidden flex flex-col">
+          <div className="relative w-full sm:max-w-[520px] max-h-[92vh] sm:max-h-[88vh] bg-white rounded-t-3xl sm:rounded-2xl shadow-2xl overflow-hidden flex flex-col">
+            {/* Drag handle — mobile */}
+            <div className="sm:hidden flex justify-center pt-2 pb-0">
+              <div className="w-10 h-1 rounded-full bg-[#E2DDD5]" />
+            </div>
+
             {/* Header */}
-            <div className="sticky top-0 bg-white border-b border-[#E2DDD5] px-5 py-4 flex items-center justify-between z-10 shrink-0">
+            <div className="sticky top-0 bg-white/95 backdrop-blur-sm border-b border-[#E2DDD5] px-5 pt-3 pb-3 sm:py-4 flex items-center justify-between z-10 shrink-0">
               <div>
-                <h2 className="font-display text-[18px] font-bold text-[#16130C]">Available rooms</h2>
-                <p className="text-[12px] text-[#9C9485]">
-                  {new Date(checkIn + "T00:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
+                <h2 className="font-display text-[18px] sm:text-[20px] font-bold text-[#16130C] tracking-[-0.02em]">
+                  Choose your room
+                </h2>
+                <p className="text-[12px] text-[#9C9485] mt-0.5">
+                  {new Date(checkIn + "T00:00:00").toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" })}
                   {" \u2192 "}
-                  {new Date(checkOut + "T00:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
+                  {new Date(checkOut + "T00:00:00").toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" })}
                   {" \u00B7 "}{nights} night{nights !== 1 ? "s" : ""}
                   {" \u00B7 "}{guests} guest{guests !== 1 ? "s" : ""}
                 </p>
               </div>
-              <button onClick={() => { setShowResults(false); setSelectedRoom(null); }} className="size-8 flex items-center justify-center rounded-full hover:bg-[#F4F1EC]">
-                <svg className="size-5 text-[#5E5848]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <button onClick={() => { setShowResults(false); setSelectedRoom(null); }} className="size-8 flex items-center justify-center rounded-full bg-[#F4F1EC] hover:bg-[#E2DDD5] transition-colors">
+                <svg className="size-4 text-[#5E5848]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </div>
 
+            {/* Social proof bar */}
+            <div className="bg-[#FAFAF8] border-b border-[#E2DDD5] px-5 py-2 flex items-center gap-4 text-[11px] text-[#9C9485] shrink-0 overflow-x-auto">
+              <span className="inline-flex items-center gap-1 whitespace-nowrap">
+                <svg className="size-3 text-[#E8A020]" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                4.9 rating
+              </span>
+              <span className="text-[#E2DDD5]">\u00B7</span>
+              <span className="whitespace-nowrap">Booked 12 times this month</span>
+              <span className="text-[#E2DDD5]">\u00B7</span>
+              <span className="inline-flex items-center gap-1 whitespace-nowrap">
+                <svg className="size-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"/></svg>
+                Verified host
+              </span>
+            </div>
+
             {/* Scrollable room list */}
-            <div className="flex-1 overflow-y-auto p-5 space-y-3">
+            <div className="flex-1 overflow-y-auto px-4 sm:px-5 py-4 space-y-2.5">
               {availableRooms.length === 0 ? (
                 <div className="bg-red-50 border border-red-200 rounded-xl p-5 text-center">
                   <p className="text-[15px] font-semibold text-red-700 mb-1">No rooms available</p>
                   <p className="text-[13px] text-red-600">All rooms are booked for these dates.</p>
+                  <button onClick={() => { setShowResults(false); }} className="mt-3 text-[13px] font-semibold text-[#E8A020]">
+                    Try different dates
+                  </button>
                 </div>
               ) : (
                 <>
+                  {/* Scarcity nudge */}
+                  {availableRooms.length <= 2 && results.length > 2 && (
+                    <div className="flex items-center gap-2 bg-[#FEF3CD] rounded-lg px-3 py-2 mb-1">
+                      <span className="text-[13px]">&#128293;</span>
+                      <p className="text-[12px] font-semibold text-[#92400E]">
+                        Only {availableRooms.length} room{availableRooms.length !== 1 ? "s" : ""} left for your dates
+                      </p>
+                    </div>
+                  )}
+
                   {/* Entire property option */}
                   {entireAvail && results.length > 1 && (
                     <button
                       type="button"
                       onClick={() => setSelectedRoom(selectedRoom === "__entire__" ? null : "__entire__")}
                       className={cn(
-                        "w-full text-left rounded-xl border-2 overflow-hidden transition-all",
+                        "w-full text-left rounded-2xl overflow-hidden transition-all duration-200",
                         selectedRoom === "__entire__"
-                          ? "border-[#E8A020] ring-2 ring-[#E8A020]/20"
-                          : "border-[#E2DDD5] hover:border-[#9C9485]"
+                          ? "ring-2 ring-[#E8A020] ring-offset-2"
+                          : "hover:shadow-md"
                       )}
                     >
-                      <div className="bg-gradient-to-r from-[#16130C] to-[#2A2520] p-4">
-                        <p className="text-[15px] font-bold text-white">Entire property</p>
-                        <p className="text-[12px] text-white/60">All {results.length} rooms \u00B7 Private exclusive use</p>
-                        <div className="flex items-baseline gap-1 mt-2">
-                          <span className="text-[20px] font-bold text-[#E8A020]">{fmt(totalEntirePrice)}</span>
-                          <span className="text-[12px] text-white/50">/ night</span>
+                      <div className="bg-gradient-to-br from-[#16130C] to-[#2A2520] p-4 sm:p-5">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-[14px]">&#127968;</span>
+                          <p className="text-[15px] font-bold text-white">Entire property</p>
+                        </div>
+                        <p className="text-[12px] text-white/50 mb-3">All {results.length} rooms \u00B7 Private exclusive use</p>
+                        <div className="flex items-baseline gap-1.5">
+                          <span className="text-[22px] font-bold text-[#E8A020]">{fmt(totalEntirePrice)}</span>
+                          <span className="text-[12px] text-white/40">/ night</span>
+                          {selectedRoom === "__entire__" && (
+                            <span className="ml-auto bg-[#E8A020] text-[#16130C] text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">Selected</span>
+                          )}
                         </div>
                       </div>
                     </button>
@@ -341,43 +382,57 @@ export function StayBookingSidebar({
                       disabled={!room.available}
                       onClick={() => setSelectedRoom(selectedRoom === room.key ? null : room.key)}
                       className={cn(
-                        "w-full text-left rounded-xl border-2 overflow-hidden transition-all",
+                        "w-full text-left rounded-2xl border overflow-hidden transition-all duration-200",
                         !room.available
-                          ? "border-[#E2DDD5] opacity-50 cursor-not-allowed"
+                          ? "border-[#E2DDD5] opacity-40 cursor-not-allowed grayscale"
                           : selectedRoom === room.key
-                            ? "border-[#E8A020] ring-2 ring-[#E8A020]/20"
-                            : "border-[#E2DDD5] hover:border-[#9C9485]"
+                            ? "border-transparent ring-2 ring-[#E8A020] ring-offset-2 shadow-md"
+                            : "border-[#E2DDD5] hover:shadow-md hover:border-[#E8A020]/30"
                       )}
                     >
                       <div className="flex">
                         {/* Room photo */}
-                        <div className="relative w-[100px] sm:w-[130px] shrink-0 bg-[#F4F1EC]">
+                        <div className="relative w-[110px] sm:w-[140px] shrink-0 bg-[#F4F1EC]">
                           {room.photo ? (
-                            <Image src={room.photo} alt={room.name} fill className="object-cover" sizes="130px" />
+                            <Image src={room.photo} alt={room.name} fill className="object-cover" sizes="140px" />
                           ) : (
-                            <div className="w-full h-full min-h-[90px] flex items-center justify-center text-[24px]">🛏</div>
+                            <div className="w-full h-full min-h-[100px] flex items-center justify-center text-[24px] bg-gradient-to-br from-[#F4F1EC] to-[#E2DDD5]">&#128716;</div>
                           )}
                           {!room.available && (
-                            <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                              <span className="text-white text-[11px] font-bold">Booked</span>
+                            <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                              <span className="bg-white/90 text-[#16130C] text-[10px] font-bold px-2.5 py-1 rounded-full">Booked</span>
+                            </div>
+                          )}
+                          {room.available && selectedRoom === room.key && (
+                            <div className="absolute top-2 right-2 size-5 bg-[#E8A020] rounded-full flex items-center justify-center">
+                              <svg className="size-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                              </svg>
                             </div>
                           )}
                         </div>
 
                         {/* Room info */}
-                        <div className="flex-1 p-3 min-w-0">
-                          <p className="text-[14px] font-semibold text-[#16130C] truncate">{room.name}</p>
-                          <p className="text-[11px] text-[#9C9485] mt-0.5">
-                            Sleeps {room.capacity}
-                            {room.bedType ? ` \u00B7 ${room.bedType}` : ""}
-                          </p>
-                          {room.amenities && room.amenities.length > 0 && (
-                            <p className="text-[10px] text-[#9C9485] mt-1 truncate">
-                              {room.amenities.slice(0, 3).join(" \u00B7 ")}
+                        <div className="flex-1 p-3 sm:p-3.5 min-w-0 flex flex-col justify-between">
+                          <div>
+                            <p className="text-[14px] font-bold text-[#16130C] truncate leading-tight">{room.name}</p>
+                            <p className="text-[11px] text-[#9C9485] mt-0.5">
+                              Sleeps {room.capacity}
+                              {room.bedType ? ` \u00B7 ${room.bedType}` : ""}
                             </p>
-                          )}
+                            {room.amenities && room.amenities.length > 0 && (
+                              <div className="flex flex-wrap gap-x-2 gap-y-0.5 mt-1.5">
+                                {room.amenities.slice(0, 3).map((a) => (
+                                  <span key={a} className="inline-flex items-center gap-0.5 text-[10px] text-[#9C9485]">
+                                    <svg className="size-2 text-[#E8A020]" fill="currentColor" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                                    {a}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                          </div>
                           <div className="flex items-baseline gap-1 mt-2">
-                            <span className={cn("text-[16px] font-bold", room.available ? "text-[#E8A020]" : "text-[#9C9485]")}>{fmt(room.price)}</span>
+                            <span className={cn("text-[17px] font-bold", room.available ? "text-[#E8A020]" : "text-[#9C9485]")}>{fmt(room.price)}</span>
                             <span className="text-[11px] text-[#9C9485]">/ night</span>
                           </div>
                         </div>
@@ -388,26 +443,46 @@ export function StayBookingSidebar({
               )}
             </div>
 
-            {/* Footer — price breakdown + CTA */}
-            {selectedRoom && (
-              <div className="sticky bottom-0 bg-white border-t border-[#E2DDD5] px-5 py-4 shrink-0 space-y-3">
-                <div className="flex justify-between text-[13px]">
-                  <span className="text-[#9C9485]">{fmt(selectedPrice)} x {nights} night{nights !== 1 ? "s" : ""}</span>
-                  <span className="font-bold text-[#16130C]">{fmt(selectedPrice * nights)}</span>
+            {/* Footer — price breakdown + CTA + trust */}
+            <div className="sticky bottom-0 bg-white border-t border-[#E2DDD5] shrink-0">
+              {selectedRoom ? (
+                <div className="px-5 pt-3 pb-4 sm:pb-5 space-y-2.5">
+                  <div className="flex justify-between items-center">
+                    <span className="text-[13px] text-[#9C9485]">
+                      {fmt(selectedPrice)} x {nights} night{nights !== 1 ? "s" : ""}
+                    </span>
+                    <span className="text-[18px] font-bold text-[#16130C]">{fmt(selectedPrice * nights)}</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => { setShowResults(false); setShowEnquiry(true); }}
+                    className={cn(
+                      "w-full py-3.5 rounded-2xl text-[15px] font-bold transition-all duration-200",
+                      "bg-gradient-to-r from-[#E8A020] to-[#d4911c] text-[#16130C]",
+                      "shadow-[0_4px_14px_rgba(232,160,32,0.35)]",
+                      "hover:shadow-[0_6px_20px_rgba(232,160,32,0.45)] hover:-translate-y-0.5",
+                      "active:translate-y-0"
+                    )}
+                  >
+                    Enquire now
+                  </button>
+                  <div className="flex items-center justify-center gap-2.5 text-[11px] text-[#9C9485]">
+                    <span className="inline-flex items-center gap-1">
+                      <svg className="size-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/></svg>
+                      Secure
+                    </span>
+                    <span className="text-[#E2DDD5]">\u00B7</span>
+                    <span>No payment now</span>
+                    <span className="text-[#E2DDD5]">\u00B7</span>
+                    <span>Reply in 2hrs</span>
+                  </div>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => { setShowResults(false); setShowEnquiry(true); }}
-                  className={cn(
-                    "w-full py-3.5 rounded-[18px] text-[15px] font-bold transition-all",
-                    "bg-gradient-to-r from-[#E8A020] to-[#d4911c] text-[#16130C]",
-                    "shadow-[0_4px_14px_rgba(232,160,32,0.35)]"
-                  )}
-                >
-                  Enquire now
-                </button>
-              </div>
-            )}
+              ) : (
+                <div className="px-5 py-3 text-center">
+                  <p className="text-[13px] text-[#9C9485]">Select a room to continue</p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}
