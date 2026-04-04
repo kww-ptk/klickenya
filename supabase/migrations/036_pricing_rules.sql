@@ -1,5 +1,8 @@
 -- 036_pricing_rules.sql
 -- Season pricing rules for the PMS
+-- Note: drops the V2 placeholder table created in 031_property_manager.sql
+
+drop table if exists public.pricing_rules;
 
 create table public.pricing_rules (
   id            uuid primary key default gen_random_uuid(),
