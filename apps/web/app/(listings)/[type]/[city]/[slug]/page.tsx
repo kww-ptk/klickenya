@@ -387,7 +387,7 @@ export default async function ListingDetailPage({ params }: PageProps) {
             bedType: r.bed_type ?? undefined,
             roomSizeSqm: r.room_size_sqm ?? undefined,
             roomAmenities: r.amenities ?? [],
-            isAvailable: r.available,
+            isAvailable: true, // Default to available — actual availability checked when guest picks dates
             quantity: 1,
           }));
 
