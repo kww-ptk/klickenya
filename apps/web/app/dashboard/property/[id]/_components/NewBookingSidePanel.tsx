@@ -153,7 +153,7 @@ export function NewBookingSidePanel({
                 id: f.id,
                 name: f.name,
                 fee_type: f.fee_type,
-                amount_kes: f.fee_type === "fixed" ? f.amount : 0, // recalculated below
+                amount_kes: calcFeeAmount(f),
               }))
           );
         }
@@ -633,7 +633,11 @@ export function NewBookingSidePanel({
             </div>
             {selectedFees.map((f) => (
               <div key={f.id} className="flex justify-between text-[13px]">
-                <span className="text-[#5E5848]">{f.name}</span>
+                <span className="text-[#5E5848]">
+                  {f.name}
+                  {f.fee_type === "per_night" && nights > 0 && ` (${nights} night${nights !== 1 ? "s" : ""})`}
+                  {f.fee_type === "per_guest" && form.guest_count > 1 && ` (${form.guest_count} guests)`}
+                </span>
                 <span className="text-[#16130C]">{fmt(f.amount_kes)}</span>
               </div>
             ))}
