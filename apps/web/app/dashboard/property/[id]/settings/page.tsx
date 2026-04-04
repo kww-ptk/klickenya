@@ -199,9 +199,14 @@ export default function PropertySettingsPage() {
 
   const saveRoom = async (roomId: string, updates: Partial<Room>) => {
     const supabase = createClient();
-    await supabase.from("rooms").update(updates).eq("id", roomId);
+    const { error } = await supabase.from("rooms").update(updates).eq("id", roomId);
+    if (error) {
+      setMessage({ type: "error", text: `Failed to save room: ${error.message}` });
+      return;
+    }
     setRooms((prev) => prev.map((r) => (r.id === roomId ? { ...r, ...updates } : r)));
     setEditingRoom(null);
+    setMessage({ type: "success", text: "Room saved" });
   };
 
   const toggleRoomActive = async (roomId: string, active: boolean) => {
@@ -212,14 +217,19 @@ export default function PropertySettingsPage() {
 
   const addRoom = async (room: Omit<Room, "id" | "display_order" | "is_active">) => {
     const supabase = createClient();
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("rooms")
       .insert({ ...room, property_id: id, display_order: rooms.length, is_active: true })
       .select()
       .single();
+    if (error) {
+      setMessage({ type: "error", text: `Failed to add room: ${error.message}` });
+      return;
+    }
     if (data) {
       setRooms((prev) => [...prev, { ...data, amenities: data.amenities ?? [], photos: data.photos ?? [] }]);
       setShowAddRoom(false);
+      setMessage({ type: "success", text: "Room added" });
     }
   };
 
