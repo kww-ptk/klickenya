@@ -108,6 +108,7 @@ export function StayBookingSidebar({
   const [checkIn, setCheckIn] = useState("");
   const [checkOut, setCheckOut] = useState("");
   const [guests, setGuests] = useState(1);
+  const [children, setChildren] = useState(0);
   const [showDatePicker, setShowDatePicker] = useState(false);
 
   // Availability
@@ -178,6 +179,7 @@ export function StayBookingSidebar({
     setModalCheckIn(checkIn);
     setModalCheckOut(checkOut);
     setModalGuests(guests);
+    setModalChildren(children);
 
     // Open modal at dates step so user can pick dates
     setStep("dates");
@@ -458,16 +460,39 @@ export function StayBookingSidebar({
         )}
 
         {/* Guests */}
-        <div className="border border-[#E2DDD5] rounded-[14px] p-3 flex items-center justify-between">
-          <label className="text-[10px] font-bold text-[#9C9485] uppercase tracking-wide">Guests</label>
-          <div className="flex items-center gap-3">
-            <button type="button" onClick={() => setGuests(Math.max(1, guests - 1))} className="size-8 rounded-full border border-[#E2DDD5] flex items-center justify-center text-[#5E5848] hover:bg-[#F4F1EC] disabled:opacity-30" disabled={guests <= 1}>-</button>
-            <span className="text-[14px] font-semibold text-[#16130C] w-6 text-center">{guests}</span>
-            <button type="button" onClick={() => setGuests(Math.min(maxGuests > 0 ? maxGuests : 20, guests + 1))} className="size-8 rounded-full border border-[#E2DDD5] flex items-center justify-center text-[#5E5848] hover:bg-[#F4F1EC] disabled:opacity-30" disabled={guests >= (maxGuests > 0 ? maxGuests : 20)}>+</button>
-          </div>
-        </div>
+        {(() => {
+          const cap = maxGuests > 0 ? maxGuests : 20;
+          const total = guests + children;
+          return (
+            <div className="border border-[#E2DDD5] rounded-[14px] p-3 space-y-2.5">
+              {/* Adults */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-[12px] font-semibold text-[#16130C]">Adults</p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <button type="button" onClick={() => setGuests(guests - 1)} className="size-7 rounded-full border border-[#E2DDD5] flex items-center justify-center text-[#5E5848] hover:bg-[#F4F1EC] disabled:opacity-30 text-[13px]" disabled={guests <= 1}>-</button>
+                  <span className="text-[14px] font-semibold text-[#16130C] w-5 text-center">{guests}</span>
+                  <button type="button" onClick={() => setGuests(guests + 1)} className="size-7 rounded-full border border-[#E2DDD5] flex items-center justify-center text-[#5E5848] hover:bg-[#F4F1EC] disabled:opacity-30 text-[13px]" disabled={total >= cap}>+</button>
+                </div>
+              </div>
+              {/* Children */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-[12px] font-semibold text-[#16130C]">Children</p>
+                  <p className="text-[10px] text-[#9C9485]">Under 12 years old</p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <button type="button" onClick={() => setChildren(children - 1)} className="size-7 rounded-full border border-[#E2DDD5] flex items-center justify-center text-[#5E5848] hover:bg-[#F4F1EC] disabled:opacity-30 text-[13px]" disabled={children <= 0}>-</button>
+                  <span className="text-[14px] font-semibold text-[#16130C] w-5 text-center">{children}</span>
+                  <button type="button" onClick={() => setChildren(children + 1)} className="size-7 rounded-full border border-[#E2DDD5] flex items-center justify-center text-[#5E5848] hover:bg-[#F4F1EC] disabled:opacity-30 text-[13px]" disabled={total >= cap}>+</button>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
 
-        <button type="button" onClick={() => { setModalCheckIn(checkIn); setModalCheckOut(checkOut); setModalGuests(guests); checkAvailability(); }} disabled={!checkIn || !checkOut || checkOut <= checkIn || checking} className={cn("w-full py-3.5 rounded-[18px] text-[15px] font-bold transition-all duration-200", "bg-gradient-to-r from-[#E8A020] to-[#d4911c] text-[#16130C]", "shadow-[0_4px_14px_rgba(232,160,32,0.35)]", "hover:shadow-[0_6px_20px_rgba(232,160,32,0.45)] hover:-translate-y-0.5", "disabled:opacity-50 disabled:pointer-events-none")}>
+        <button type="button" onClick={() => { setModalCheckIn(checkIn); setModalCheckOut(checkOut); setModalGuests(guests); setModalChildren(children); checkAvailability(); }} disabled={!checkIn || !checkOut || checkOut <= checkIn || checking} className={cn("w-full py-3.5 rounded-[18px] text-[15px] font-bold transition-all duration-200", "bg-gradient-to-r from-[#E8A020] to-[#d4911c] text-[#16130C]", "shadow-[0_4px_14px_rgba(232,160,32,0.35)]", "hover:shadow-[0_6px_20px_rgba(232,160,32,0.45)] hover:-translate-y-0.5", "disabled:opacity-50 disabled:pointer-events-none")}>
           {checking ? "Checking..." : "Check availability"}
         </button>
 
