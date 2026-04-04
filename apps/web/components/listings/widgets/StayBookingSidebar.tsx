@@ -351,6 +351,17 @@ export function StayBookingSidebar({
 
     try {
       const selectedRoomObj = results.find((r) => r.key === selectedRoom);
+      const roomName = selectedRoomObj?.name ?? (selectedRoom === "__entire__" ? "Entire property" : undefined);
+      const perNight = selectedPrice;
+      const total = perNight * nights;
+
+      // Build message with pricing + guest details
+      const pricingLines = [
+        formMessage.trim() ? formMessage.trim() : null,
+        perNight > 0 ? `Rate: KSh ${perNight.toLocaleString()} x ${nights} night${nights !== 1 ? "s" : ""} = KSh ${total.toLocaleString()}` : null,
+        modalChildren > 0 ? `Children: ${modalChildren}` : null,
+      ].filter(Boolean).join("\n");
+
       const res = await fetch("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -361,11 +372,11 @@ export function StayBookingSidebar({
           name: formName.trim(),
           email: formEmail.trim(),
           phone: formPhone.trim(),
-          message: formMessage.trim() || undefined,
+          message: pricingLines || undefined,
           checkIn: checkIn,
           checkOut: checkOut,
           guests,
-          room: selectedRoomObj?.name ?? (selectedRoom === "__entire__" ? "Entire property" : undefined),
+          room: roomName,
         }),
       });
       if (res.ok) {
