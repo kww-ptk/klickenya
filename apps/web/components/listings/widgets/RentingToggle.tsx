@@ -96,6 +96,7 @@ function BothToggle({
   entirePropertyAvailable,
   listingSlug,
   onRoomBooking,
+  onEntireBooking,
 }: Omit<RentingToggleProps, "rentingType">) {
   const [mode, setMode] = useState<"entire" | "room">(() => {
     if (typeof window !== "undefined") {
