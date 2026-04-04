@@ -607,6 +607,44 @@ export default function PropertySetupWizard() {
           >
             Continue
           </button>
+
+          {/* Import from OTA — placeholder */}
+          <div className="border border-dashed border-[#E2DDD5] rounded-xl p-4 bg-[#FAFAF8] mt-2">
+            <div className="flex items-start gap-3">
+              <span className="text-[24px] shrink-0 mt-0.5">🔗</span>
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-1">
+                  <p className="text-[13px] font-semibold text-[#16130C]">Import from another platform</p>
+                  <span className="text-[9px] font-bold text-[#E8A020] bg-[#E8A020]/10 px-2 py-0.5 rounded-full">Coming soon</span>
+                </div>
+                <p className="text-[11px] text-[#9C9485] mb-3">
+                  Paste your Airbnb or Booking.com listing URL — we&apos;ll pre-fill your property details.
+                </p>
+                <div className="flex gap-2">
+                  <input
+                    type="url"
+                    disabled
+                    className="flex-1 h-[36px] px-3 rounded-lg border border-[#E2DDD5] bg-white text-[12px] text-[#9C9485] placeholder:text-[#9C9485]/60 cursor-not-allowed"
+                    placeholder="https://www.airbnb.com/rooms/... or booking.com/hotel/..."
+                  />
+                  <button
+                    disabled
+                    className="h-[36px] px-4 bg-[#E2DDD5] text-[#9C9485] text-[12px] font-semibold rounded-lg cursor-not-allowed"
+                    title="Coming soon — we're building this feature"
+                  >
+                    Import
+                  </button>
+                </div>
+                <div className="flex items-center gap-3 mt-2 text-[10px] text-[#9C9485]">
+                  <span>Airbnb</span>
+                  <span>·</span>
+                  <span>Booking.com</span>
+                  <span>·</span>
+                  <span>VRBO</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 

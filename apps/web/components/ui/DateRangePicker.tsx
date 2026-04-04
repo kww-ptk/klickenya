@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, memo } from "react";
 import { cn } from "@/lib/utils";
 
 /* ── Helpers ─────────────────────────────────── */
@@ -252,10 +252,10 @@ export function DateRangePicker({
                 type="button"
                 disabled={isPast}
                 onClick={() => handleDayClick(day)}
-                onMouseEnter={() => setHoveredDate(day)}
-                onMouseLeave={() => setHoveredDate(null)}
+                onMouseEnter={() => { if (selecting === "check-out" && !isPast) setHoveredDate(day); }}
+                onMouseLeave={() => { if (hoveredDate) setHoveredDate(null); }}
                 className={cn(
-                  "relative z-10 flex items-center justify-center rounded-full transition-all duration-150",
+                  "relative z-10 flex items-center justify-center rounded-full transition-colors duration-100",
                   compact ? "size-6 text-[11px]" : "size-7 sm:size-8 text-[12px]",
                   !isPast && !isStart && !isEnd && "text-[#16130C] hover:bg-[#F4F1EC]",
                   isPast && "text-[#E2DDD5] cursor-not-allowed",

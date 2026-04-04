@@ -337,15 +337,27 @@ export default function PropertySettingsPage() {
 
       {/* ── Listing connection ── */}
       <Section title="Listing connection">
-        <Field label="Klickenya listing slug">
-          <input type="text" value={listingSlug} onChange={(e) => setListingSlug(e.target.value)} className={inputCls + " font-mono"} placeholder="your-property-slug" />
-          <p className="text-[10px] text-[#9C9485] mt-1">Find in your listing URL: klickenya.com/stays/[city]/<b>your-slug-here</b></p>
+        <Field label="Listing slug">
+          {listingSlug ? (
+            <div className="flex items-center gap-2 bg-[#F4F1EC] rounded-xl px-3 py-2.5">
+              <p className="text-[13px] text-[#5E5848] font-mono flex-1 truncate">
+                klickenya.com/stays/{(city || "…").toLowerCase().replace(/ /g, "-")}/{listingSlug}
+              </p>
+              <button
+                type="button"
+                onClick={() => navigator.clipboard.writeText(`https://klickenya.com/stays/${(city || "").toLowerCase().replace(/ /g, "-")}/${listingSlug}`)}
+                className="text-[11px] font-semibold text-[#4F46E5] hover:text-[#4338CA] shrink-0"
+              >
+                Copy
+              </button>
+            </div>
+          ) : (
+            <input type="text" value={listingSlug} onChange={(e) => setListingSlug(e.target.value)} className={inputCls + " font-mono"} placeholder="your-property-slug" />
+          )}
+          <p className="text-[10px] text-[#9C9485] mt-1">
+            {listingSlug ? "This is your listing URL — it cannot be changed." : "Enter the slug from your listing URL to link this property."}
+          </p>
         </Field>
-        {listingSlug && (
-          <a href={`https://klickenya.com/stays/${(city || "").toLowerCase().replace(/ /g, "-")}/${listingSlug}`} target="_blank" rel="noopener noreferrer" className="text-[11px] font-semibold text-[#4F46E5] hover:text-[#4338CA]">
-            View listing ↗
-          </a>
-        )}
       </Section>
 
       {/* ── Booking widget ── */}
@@ -373,9 +385,21 @@ export default function PropertySettingsPage() {
           {message.text}
         </div>
       )}
-      <button onClick={saveProperty} disabled={saving} className="w-full h-[44px] bg-[#4F46E5] text-white font-bold text-[14px] rounded-xl hover:bg-[#4338CA] transition-colors disabled:opacity-50 mb-8">
-        {saving ? "Saving..." : "Save settings"}
-      </button>
+      <div className="flex gap-2 mb-8">
+        <button onClick={saveProperty} disabled={saving} className="flex-1 h-[44px] bg-[#4F46E5] text-white font-bold text-[14px] rounded-xl hover:bg-[#4338CA] transition-colors disabled:opacity-50">
+          {saving ? "Saving..." : "Save settings"}
+        </button>
+        {listingSlug && (
+          <a
+            href={`https://klickenya.com/stays/${(city || "").toLowerCase().replace(/ /g, "-")}/${listingSlug}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="h-[44px] px-5 border border-[#E2DDD5] text-[#5E5848] font-semibold text-[13px] rounded-xl hover:bg-[#F4F1EC] transition-colors flex items-center gap-1.5 shrink-0"
+          >
+            View live ↗
+          </a>
+        )}
+      </div>
 
       {/* ── Rooms ── */}
       <div className="mb-8">
@@ -622,17 +646,40 @@ function RoomEditor({
 
       {/* Photos */}
       <div>
-        <label className="block text-[11px] text-[#9C9485] mb-1.5">Photos {photos.length > 0 && <span className="text-[#9C9485]">({photos.length})</span>}</label>
+        <label className="block text-[11px] text-[#9C9485] mb-1.5">Photos {photos.length > 0 && <span className="text-[#9C9485]">({photos.length}/8)</span>}</label>
+
+        {/* Main preview */}
         {photos.length > 0 && (
-          <div className="flex gap-2 mb-2 overflow-x-auto pb-1">
-            {photos.map((url) => (
-              <div key={url} className="relative w-[72px] h-[54px] rounded-lg overflow-hidden bg-[#F4F1EC] shrink-0 group">
-                <Image src={url} alt="" fill className="object-cover" sizes="72px" unoptimized={!isOptimizableUrl(url)} />
+          <div className="relative aspect-[16/9] rounded-lg overflow-hidden bg-[#F4F1EC] mb-2">
+            <Image src={photos[0]} alt="Main photo" fill className="object-cover" sizes="400px" unoptimized={!isOptimizableUrl(photos[0])} />
+            <button
+              onClick={() => removePhoto(photos[0])}
+              className="absolute top-2 right-2 size-6 bg-black/60 rounded-full flex items-center justify-center hover:bg-black/80 transition-colors"
+            >
+              <svg className="size-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        )}
+
+        {/* Thumbnail strip */}
+        {photos.length > 1 && (
+          <div className="flex gap-1.5 mb-2 overflow-x-auto pb-1">
+            {photos.map((url, i) => (
+              <div key={url} className={`relative w-[56px] h-[42px] rounded-md overflow-hidden shrink-0 group cursor-pointer ${i === 0 ? "ring-2 ring-[#4F46E5]" : "opacity-70 hover:opacity-100"}`}
+                onClick={() => {
+                  // Move clicked photo to front
+                  const reordered = [url, ...photos.filter((p) => p !== url)];
+                  setPhotos(reordered);
+                }}
+              >
+                <Image src={url} alt="" fill className="object-cover" sizes="56px" unoptimized={!isOptimizableUrl(url)} />
                 <button
-                  onClick={() => removePhoto(url)}
-                  className="absolute top-1 right-1 size-5 bg-black/60 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                  onClick={(e) => { e.stopPropagation(); removePhoto(url); }}
+                  className="absolute top-0.5 right-0.5 size-4 bg-black/60 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
                 >
-                  <svg className="size-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <svg className="size-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>

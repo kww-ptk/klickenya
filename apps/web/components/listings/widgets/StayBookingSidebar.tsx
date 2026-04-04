@@ -399,6 +399,18 @@ export function StayBookingSidebar({
           <span className="text-[14px] text-[#9C9485]">/ {priceUnit}</span>
         </div>
 
+        {/* Direct booking indicator */}
+        <div className="flex items-center gap-2 px-3 py-2 bg-[#16A34A]/5 rounded-xl border border-[#16A34A]/15">
+          <span className="relative flex size-2">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#16A34A] opacity-75" />
+            <span className="relative inline-flex size-2 rounded-full bg-[#16A34A]" />
+          </span>
+          <div>
+            <p className="text-[12px] font-semibold text-[#16A34A]">Direct booking available</p>
+            <p className="text-[10px] text-[#9C9485]">No OTA fees · Instant confirmation</p>
+          </div>
+        </div>
+
         {/* Date fields — click to expand calendar inline */}
         <button type="button" onClick={() => setShowDatePicker(!showDatePicker)} className={cn("w-full grid grid-cols-2 border rounded-[14px] overflow-hidden text-left transition-colors", showDatePicker ? "border-[#E8A020]" : "border-[#E2DDD5] hover:border-[#9C9485]")}>
           <div className="p-3 border-r border-[#E2DDD5]">
@@ -446,6 +458,13 @@ export function StayBookingSidebar({
 
         {error && !showModal && <p className="text-[13px] text-red-600 text-center">{error}</p>}
         <p className="text-[12px] text-[#9C9485] text-center">You won&apos;t be charged yet</p>
+
+        {/* Trust badges */}
+        <div className="flex items-center justify-center gap-4 pt-2 border-t border-[#E2DDD5] text-[10px] text-[#9C9485]">
+          <span className="flex items-center gap-1">🔒 Secure</span>
+          <span className="flex items-center gap-1">✓ Instant confirm</span>
+          <span className="flex items-center gap-1">💬 Direct with host</span>
+        </div>
       </div>
 
       {/* ── Main booking modal — two-column on desktop ── */}

@@ -306,22 +306,24 @@ export default async function DashboardPage() {
 
       {/* Property setup banner for stay owners */}
       {propertyNeedsSetup && (
-        <div className="mb-5 rounded-xl lg:rounded-2xl border border-[#4F46E5]/20 bg-[#4F46E5]/[0.04] p-4 shadow-sm" style={{ borderLeft: "4px solid #4F46E5" }}>
-          <div className="flex items-center gap-3">
-            <span className="text-[24px] shrink-0">🏠</span>
+        <div className="mb-5 rounded-2xl bg-gradient-to-r from-[#4F46E5] to-[#6366F1] p-5 lg:p-6 shadow-lg">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+            <div className="size-12 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
+              <span className="text-[28px]">🏠</span>
+            </div>
             <div className="flex-1 min-w-0">
-              <p className="text-[13px] font-bold text-[#16130C]">
-                Set up your property calendar
+              <p className="text-[16px] font-bold text-white">
+                Your property calendar is ready to set up
               </p>
-              <p className="text-[12.5px] text-[#5E5848] mt-0.5">
-                Manage bookings, sync with Airbnb, and take direct payments.
+              <p className="text-[13px] text-white/70 mt-1">
+                Add your rooms and start accepting direct bookings from your Klickenya listing — no OTA fees.
               </p>
             </div>
             <Link
               href={`/dashboard/property/${propertyNeedsSetup.id}`}
-              className="shrink-0 bg-[#4F46E5] text-white font-bold text-[12px] px-4 h-[36px] flex items-center rounded-full hover:bg-[#4338CA] transition-colors whitespace-nowrap"
+              className="shrink-0 bg-white text-[#4F46E5] font-bold text-[13px] px-6 h-[44px] flex items-center rounded-full hover:bg-white/90 transition-colors whitespace-nowrap shadow-sm"
             >
-              Set up property →
+              Set up now →
             </Link>
           </div>
         </div>

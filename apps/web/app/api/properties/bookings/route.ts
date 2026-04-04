@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { adminClient } from "@/lib/supabase/admin";
+import { Resend } from "resend";
+import {
+  bookingConfirmationGuestHtml,
+  bookingNotificationOwnerHtml,
+} from "@/lib/email/bookingEmails";
 
 export async function POST(req: NextRequest) {
   /* --- Auth --- */
@@ -210,6 +215,24 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // Fire-and-forget: send emails
+    sendBookingEmails({
+      bookingId: booking.id,
+      propertyId: property_id,
+      roomId: room_id,
+      guestName: guest_name.trim(),
+      guestEmail: guest_email?.trim() || null,
+      guestPhone: guest_phone?.trim() || null,
+      guestCount: guest_count || 1,
+      checkIn: check_in_date,
+      checkOut: check_out_date,
+      nights,
+      totalKes: total,
+      amountPaid,
+      balance: total - amountPaid,
+      ownerId: user.id,
+    });
+
     return NextResponse.json({ booking }, { status: 201 });
   }
 
@@ -228,5 +251,113 @@ export async function POST(req: NextRequest) {
     .eq("id", bookingId)
     .single();
 
+  // Fire-and-forget: send emails
+  sendBookingEmails({
+    bookingId: bookingId ?? "unknown",
+    propertyId: property_id,
+    roomId: room_id,
+    guestName: guest_name.trim(),
+    guestEmail: guest_email?.trim() || null,
+    guestPhone: guest_phone?.trim() || null,
+    guestCount: guest_count || 1,
+    checkIn: check_in_date,
+    checkOut: check_out_date,
+    nights,
+    totalKes: total,
+    amountPaid,
+    balance: total - amountPaid,
+    ownerId: user.id,
+  });
+
   return NextResponse.json({ booking: newBooking ?? txResult }, { status: 201 });
+}
+
+/* ── Fire-and-forget booking emails ── */
+
+async function sendBookingEmails(p: {
+  bookingId: string;
+  propertyId: string;
+  roomId: string;
+  guestName: string;
+  guestEmail: string | null;
+  guestPhone: string | null;
+  guestCount: number;
+  checkIn: string;
+  checkOut: string;
+  nights: number;
+  totalKes: number;
+  amountPaid: number;
+  balance: number;
+  ownerId: string;
+}) {
+  try {
+    const resendKey = process.env.RESEND_API_KEY;
+    if (!resendKey) return;
+    const resend = new Resend(resendKey);
+
+    // Fetch property + room details
+    const [propRes, roomRes, ownerRes] = await Promise.all([
+      adminClient.from("properties").select("name, address, check_in_time").eq("id", p.propertyId).single(),
+      adminClient.from("rooms").select("name").eq("id", p.roomId).single(),
+      adminClient.auth.admin.getUserById(p.ownerId),
+    ]);
+
+    const propertyName = propRes.data?.name ?? "Your property";
+    const roomName = roomRes.data?.name ?? "Room";
+    const ownerEmail = ownerRes.data?.user?.email;
+    const ownerName = ownerRes.data?.user?.user_metadata?.full_name ?? ownerRes.data?.user?.user_metadata?.name ?? "Host";
+    const checkInTime = propRes.data?.check_in_time ?? undefined;
+    const address = propRes.data?.address ?? undefined;
+
+    // 1. Guest confirmation email
+    if (p.guestEmail) {
+      await resend.emails.send({
+        from: "Klickenya <bookings@klickenya.com>",
+        to: p.guestEmail,
+        subject: `Booking confirmed — ${propertyName}`,
+        html: bookingConfirmationGuestHtml({
+          guestName: p.guestName,
+          propertyName,
+          roomName,
+          checkIn: p.checkIn,
+          checkOut: p.checkOut,
+          nights: p.nights,
+          guests: p.guestCount,
+          totalKes: p.totalKes,
+          amountPaid: p.amountPaid,
+          balance: p.balance,
+          checkInTime,
+          address,
+        }),
+      });
+    }
+
+    // 2. Owner notification email
+    if (ownerEmail) {
+      await resend.emails.send({
+        from: "Klickenya <bookings@klickenya.com>",
+        to: ownerEmail,
+        subject: `New booking — ${p.guestName}, ${p.checkIn}`,
+        html: bookingNotificationOwnerHtml({
+          ownerName,
+          guestName: p.guestName,
+          guestPhone: p.guestPhone ?? "Not provided",
+          guestEmail: p.guestEmail ?? "Not provided",
+          propertyName,
+          roomName,
+          checkIn: p.checkIn,
+          checkOut: p.checkOut,
+          nights: p.nights,
+          guests: p.guestCount,
+          totalKes: p.totalKes,
+          amountPaid: p.amountPaid,
+          balance: p.balance,
+          propertyId: p.propertyId,
+          bookingId: p.bookingId,
+        }),
+      });
+    }
+  } catch (e) {
+    console.error("Booking email error (non-blocking):", e);
+  }
 }

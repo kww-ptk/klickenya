@@ -195,6 +195,7 @@ function StayDetail({
             {/* Description */}
             {listing.description && (
               <>
+                <hr className="border-border mb-7 mt-8" />
                 <div className="mb-7">
                   <h2 className="font-display text-[22px] font-bold tracking-[-0.02em] text-dark mb-4">
                     About this stay
