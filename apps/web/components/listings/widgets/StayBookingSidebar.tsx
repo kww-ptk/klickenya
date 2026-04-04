@@ -394,10 +394,25 @@ export function StayBookingSidebar({
     <>
       {/* ── Sidebar ── */}
       <div id="stay-booking-sidebar" className="space-y-4">
-        <div className="flex items-baseline gap-1.5 mb-1">
-          <span className="font-display text-[24px] font-extrabold tracking-[-0.02em] text-[#16130C]">{fmt(price)}</span>
-          <span className="text-[14px] text-[#9C9485]">/ {priceUnit}</span>
-        </div>
+        {(() => {
+          // Compute display price: use prop price, fall back to lowest room price
+          const lowestRoomPrice = sanityRooms && sanityRooms.length > 0
+            ? Math.min(...sanityRooms.map((r) => r.pricePerNight).filter((p) => p > 0))
+            : 0;
+          const displayPrice = price > 0 ? price : lowestRoomPrice;
+          return displayPrice > 0 ? (
+            <div className="flex items-baseline gap-1.5 mb-1">
+              <span className="text-[13px] text-[#9C9485]">From</span>
+              <span className="font-display text-[24px] font-extrabold tracking-[-0.02em] text-[#16130C]">{fmt(displayPrice)}</span>
+              <span className="text-[14px] text-[#9C9485]">/ {priceUnit}</span>
+            </div>
+          ) : (
+            <div className="mb-1">
+              <p className="font-display text-[20px] font-extrabold tracking-[-0.02em] text-[#16130C]">Pick your dates</p>
+              <p className="text-[13px] text-[#9C9485]">Check availability and pricing</p>
+            </div>
+          );
+        })()}
 
         {/* Direct booking indicator */}
         <div className="flex items-center gap-2 px-3 py-2 bg-[#16A34A]/5 rounded-xl border border-[#16A34A]/15">
@@ -677,9 +692,10 @@ export function StayBookingSidebar({
                           </div>
                         </div>
 
-                        {/* Summary */}
+                        {/* Trip summary */}
                         {modalCheckIn && modalCheckOut && modalCheckOut > modalCheckIn && (
                           <div className="bg-[#FAFAF8] rounded-[14px] p-3.5 border border-[#E2DDD5]">
+                            <p className="text-[11px] font-semibold text-[#16130C] mb-1.5">Trip summary</p>
                             <p className="text-[12px] text-[#9C9485]">
                               {fmtDate(modalCheckIn)} → {fmtDate(modalCheckOut)} · {nightsBetween(modalCheckIn, modalCheckOut)} night{nightsBetween(modalCheckIn, modalCheckOut) !== 1 ? "s" : ""}
                             </p>

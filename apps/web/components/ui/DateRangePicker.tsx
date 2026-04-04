@@ -278,13 +278,6 @@ export function DateRangePicker({
           );
         })}
       </div>
-
-      {/* Nights summary */}
-      {startD && effectiveEnd && (
-        <p className={cn("text-center text-[#9C9485]", compact ? "mt-1 text-[10px]" : "mt-2 text-[11px]")}>
-          {Math.ceil((effectiveEnd.getTime() - startD.getTime()) / 86400000)} night{Math.ceil((effectiveEnd.getTime() - startD.getTime()) / 86400000) !== 1 ? "s" : ""}
-        </p>
-      )}
     </div>
   );
 }
