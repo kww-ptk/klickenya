@@ -7,7 +7,7 @@ import { NewBookingSidePanel } from "./NewBookingSidePanel";
 
 /* ---------- Types ---------- */
 
-interface Room {
+export interface Room {
   id: string;
   name: string;
   room_number: string | null;
@@ -17,9 +17,10 @@ interface Room {
   is_active: boolean;
 }
 
-interface Booking {
+export interface Booking {
   id: string;
   room_id: string;
+  property_id?: string;
   guest_name: string;
   guest_email: string | null;
   guest_phone: string | null;
@@ -44,7 +45,7 @@ interface Booking {
   created_at: string;
 }
 
-interface BlockedDate {
+export interface BlockedDate {
   id: string;
   room_id: string;
   start_date: string;
@@ -61,7 +62,7 @@ interface CalendarGridProps {
 
 /* ---------- Helpers ---------- */
 
-const SOURCE_COLORS: Record<string, { bg: string; text: string }> = {
+export const SOURCE_COLORS: Record<string, { bg: string; text: string }> = {
   direct: { bg: "#4F46E5", text: "#FFFFFF" },
   airbnb: { bg: "#FF5A5F", text: "#FFFFFF" },
   booking_com: { bg: "#003580", text: "#FFFFFF" },
@@ -69,17 +70,17 @@ const SOURCE_COLORS: Record<string, { bg: string; text: string }> = {
   walkin: { bg: "#E8A020", text: "#16130C" },
 };
 
-function addDays(date: Date, n: number): Date {
+export function addDays(date: Date, n: number): Date {
   const d = new Date(date);
   d.setDate(d.getDate() + n);
   return d;
 }
 
-function dateStr(d: Date): string {
+export function dateStr(d: Date): string {
   return d.toISOString().split("T")[0];
 }
 
-function isSameDay(a: string, b: string): boolean {
+export function isSameDay(a: string, b: string): boolean {
   return a === b;
 }
 
@@ -350,7 +351,9 @@ export function CalendarGrid({
 
 /* ---------- RoomRow (extracted for perf) ---------- */
 
-function RoomRow({
+export type CellMap = Map<string, { type: "booking"; booking: Booking } | { type: "blocked"; block: BlockedDate }>;
+
+export function RoomRow({
   room,
   days,
   todayStr,
@@ -361,7 +364,7 @@ function RoomRow({
   room: Room;
   days: Date[];
   todayStr: string;
-  cellMap: Map<string, { type: "booking"; booking: Booking } | { type: "blocked"; block: BlockedDate }>;
+  cellMap: CellMap;
   onClickBooking: (b: Booking) => void;
   onClickEmpty: (roomId: string, date: string) => void;
 }) {

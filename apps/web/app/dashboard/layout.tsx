@@ -222,6 +222,11 @@ export default async function DashboardLayout({
             icon={<CalendarIcon />}
           />
           <DashboardNavLink
+            href="/dashboard/property/calendar"
+            label="All Properties"
+            icon={<CalendarIcon />}
+          />
+          <DashboardNavLink
             href="/dashboard/menus"
             label="Menu"
             icon={<MenuIcon />}
