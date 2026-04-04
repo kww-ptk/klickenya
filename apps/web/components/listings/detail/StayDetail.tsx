@@ -186,6 +186,7 @@ function StayDetail({
               entirePropertyAvailable={activeEntireAvail}
               listingSlug={hasPms ? listingSlug : undefined}
               onRoomBooking={hasPms ? (roomKey: string) => setBookingRoomKey(roomKey) : undefined}
+              onEntireBooking={hasPms ? () => setBookingRoomKey("__entire__") : undefined}
             />
             {checkingDates && (
               <p className="text-[12px] text-[#9C9485] mt-2 animate-pulse">Checking availability...</p>

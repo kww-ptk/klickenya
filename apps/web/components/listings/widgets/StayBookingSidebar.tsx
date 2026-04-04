@@ -144,30 +144,34 @@ export function StayBookingSidebar({
     ? totalEntirePrice
     : (results.find((r) => r.key === selectedRoom)?.price ?? 0);
 
-  // Handle room card click → open modal at step 1 (dates) with room pre-selected
+  // Handle room card / entire property click → open modal at step 1 (dates)
   useEffect(() => {
     if (!openForRoom) return;
     onOpenForRoomHandled?.();
 
-    // Pre-select the room for after availability check
+    // Pre-select the room (or entire property) for after availability check
     setPendingRoomKey(openForRoom);
     setSelectedRoom(openForRoom);
 
-    // Build preview from Sanity room data
-    const room = sanityRooms?.find((r) => r._key === openForRoom);
-    if (room) {
-      const allPhotos = (room.photos ?? []).map((p) => p.asset?.url).filter(Boolean) as string[];
-      setPreviewRoom({
-        key: room._key,
-        name: room.roomName,
-        available: true,
-        price: room.pricePerNight,
-        photo: allPhotos[0],
-        photos: allPhotos,
-        capacity: room.capacity,
-        bedType: room.bedType,
-        amenities: room.roomAmenities,
-      });
+    // Build preview from Sanity room data (skip for entire property)
+    if (openForRoom !== "__entire__") {
+      const room = sanityRooms?.find((r) => r._key === openForRoom);
+      if (room) {
+        const allPhotos = (room.photos ?? []).map((p) => p.asset?.url).filter(Boolean) as string[];
+        setPreviewRoom({
+          key: room._key,
+          name: room.roomName,
+          available: true,
+          price: room.pricePerNight,
+          photo: allPhotos[0],
+          photos: allPhotos,
+          capacity: room.capacity,
+          bedType: room.bedType,
+          amenities: room.roomAmenities,
+        });
+      }
+    } else {
+      setPreviewRoom(null);
     }
 
     // Sync any existing sidebar dates into modal
@@ -584,10 +588,10 @@ export function StayBookingSidebar({
                 )}
 
                 {/* Room pre-selection hint on dates step */}
-                {step === "dates" && pendingRoomKey && previewRoom && (
+                {step === "dates" && pendingRoomKey && (
                   <div className="flex items-center gap-2 mt-2 bg-[#E8A020]/5 rounded-lg px-2.5 py-1.5">
-                    <span className="text-[11px]">🛏</span>
-                    <p className="text-[11px] text-[#5E5848]">Checking availability for <span className="font-semibold">{previewRoom.name}</span></p>
+                    <span className="text-[11px]">{pendingRoomKey === "__entire__" ? "🏠" : "🛏"}</span>
+                    <p className="text-[11px] text-[#5E5848]">Checking availability for <span className="font-semibold">{pendingRoomKey === "__entire__" ? "entire property" : previewRoom?.name}</span></p>
                   </div>
                 )}
               </div>

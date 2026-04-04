@@ -34,6 +34,8 @@ interface RentingToggleProps {
   entirePropertyAvailable?: boolean;
   listingSlug?: string;
   onRoomBooking?: (roomKey: string) => void;
+  /** Opens booking modal for entire property */
+  onEntireBooking?: () => void;
 }
 
 const LS_KEY = "kk_rent_mode";
@@ -56,6 +58,7 @@ export function RentingToggle({
   entirePropertyAvailable,
   listingSlug,
   onRoomBooking,
+  onEntireBooking,
 }: RentingToggleProps) {
   /* ── CASE 1: entire_place → nothing ── */
   if (rentingType === "entire_place") return null;
@@ -78,6 +81,7 @@ export function RentingToggle({
     entirePropertyAvailable={entirePropertyAvailable}
     listingSlug={listingSlug}
     onRoomBooking={onRoomBooking}
+    onEntireBooking={onEntireBooking}
   />;
 }
 
@@ -98,7 +102,7 @@ function BothToggle({
       const saved = localStorage.getItem(LS_KEY);
       if (saved === "entire" || saved === "room") return saved;
     }
-    return "entire";
+    return "room";
   });
 
   useEffect(() => {
@@ -118,17 +122,17 @@ function BothToggle({
       <div className="inline-flex gap-2">
         <button
           type="button"
-          onClick={() => setMode("entire")}
-          className={mode === "entire" ? activeClass : inactiveClass}
-        >
-          🏠 Entire place
-        </button>
-        <button
-          type="button"
           onClick={() => setMode("room")}
           className={mode === "room" ? activeClass : inactiveClass}
         >
           🛏 By room
+        </button>
+        <button
+          type="button"
+          onClick={() => setMode("entire")}
+          className={mode === "entire" ? activeClass : inactiveClass}
+        >
+          🏠 Entire place
         </button>
       </div>
 
@@ -163,7 +167,7 @@ function BothToggle({
               </button>
               <button
                 type="button"
-                onClick={scrollToContactForm}
+                onClick={onEntireBooking ?? scrollToContactForm}
                 className="w-full border border-[#E2DDD5] text-[#5E5848] font-semibold rounded-full py-2.5 text-sm transition-colors hover:bg-[#F4F1EC]"
               >
                 Enquire for different dates
@@ -176,10 +180,10 @@ function BothToggle({
               </p>
               <button
                 type="button"
-                onClick={scrollToContactForm}
+                onClick={onEntireBooking ?? scrollToContactForm}
                 className="w-full bg-[#E8A020] text-[#16130C] font-bold rounded-full py-2.5 text-sm transition-colors hover:bg-[#d4911c]"
               >
-                Enquire for the whole place →
+                {onEntireBooking ? "Check availability" : "Enquire for the whole place →"}
               </button>
             </>
           )}
