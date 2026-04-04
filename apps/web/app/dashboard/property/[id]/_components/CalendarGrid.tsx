@@ -634,9 +634,3 @@ export function RoomRow({
     </>
   );
 }
-
-function nextDay(ds: string): string {
-  const d = new Date(ds + "T00:00:00");
-  d.setDate(d.getDate() + 1);
-  return d.toISOString().split("T")[0];
-}
