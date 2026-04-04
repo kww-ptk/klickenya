@@ -449,7 +449,7 @@ export function StayBookingSidebar({
         <div className="fixed inset-0 z-[9999] flex items-end lg:items-center justify-center">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px]" onClick={() => { setShowModal(false); setStep("dates"); }} />
 
-          <div className="relative w-full lg:max-w-[900px] max-h-[94vh] lg:max-h-[88vh] bg-white rounded-t-3xl lg:rounded-2xl shadow-2xl overflow-hidden flex flex-col lg:flex-row">
+          <div className={cn("relative w-full max-h-[94vh] lg:max-h-[88vh] bg-white rounded-t-3xl lg:rounded-2xl shadow-2xl overflow-hidden flex flex-col lg:flex-row", step === "dates" ? "lg:max-w-[1060px]" : "lg:max-w-[900px]")}>
 
             {/* ── LEFT: Room preview (desktop only) ── */}
             <div className="hidden lg:flex lg:w-[400px] bg-[#F4F1EC] flex-col shrink-0 overflow-hidden">
@@ -610,9 +610,9 @@ export function StayBookingSidebar({
               {step === "dates" && (
                 <>
                   <div className="flex-1 overflow-y-auto px-5 py-3">
-                    <div className="flex flex-col sm:flex-row gap-5">
+                    <div className="flex flex-col sm:flex-row gap-6">
                       {/* Left: Calendar — same width as sidebar */}
-                      <div className="w-full sm:w-[300px] shrink-0">
+                      <div className="w-full sm:w-[320px] shrink-0">
                         <p className="text-[13px] font-semibold text-[#16130C] mb-1.5">Select dates</p>
                         <DateRangePicker
                           checkIn={modalCheckIn}
@@ -623,7 +623,7 @@ export function StayBookingSidebar({
                       </div>
 
                       {/* Right: Guests & Children */}
-                      <div className="flex-1 min-w-0 space-y-4 sm:pt-6">
+                      <div className="flex-1 sm:min-w-[200px] space-y-3 sm:pt-6">
                         {/* Adults */}
                         <div className="border border-[#E2DDD5] rounded-[14px] p-3.5">
                           <div className="flex items-center justify-between">
