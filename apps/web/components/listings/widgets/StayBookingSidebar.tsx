@@ -395,11 +395,11 @@ export function StayBookingSidebar({
       {/* ── Sidebar ── */}
       <div id="stay-booking-sidebar" className="space-y-4">
         {(() => {
-          // Compute display price: use prop price, fall back to lowest room price
-          const lowestRoomPrice = sanityRooms && sanityRooms.length > 0
-            ? Math.min(...sanityRooms.map((r) => r.pricePerNight).filter((p) => p > 0))
-            : 0;
-          const displayPrice = price > 0 ? price : lowestRoomPrice;
+          // "From" price = lowest room price (most accurate for guests)
+          // Falls back to listing price, then 0
+          const roomPrices = (sanityRooms ?? []).map((r) => r.pricePerNight).filter((p) => p > 0);
+          const lowestRoomPrice = roomPrices.length > 0 ? Math.min(...roomPrices) : 0;
+          const displayPrice = lowestRoomPrice > 0 ? lowestRoomPrice : (price > 0 ? price : 0);
           return displayPrice > 0 ? (
             <div className="flex items-baseline gap-1.5 mb-1">
               <span className="text-[13px] text-[#9C9485]">From</span>
