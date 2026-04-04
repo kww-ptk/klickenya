@@ -220,6 +220,7 @@ export default async function DashboardLayout({
             href="/dashboard/property"
             label="Property"
             icon={<CalendarIcon />}
+            exact
           />
           <DashboardNavLink
             href="/dashboard/property/calendar"

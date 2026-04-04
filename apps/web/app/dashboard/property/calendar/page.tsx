@@ -8,12 +8,11 @@ export default async function UnifiedCalendarPage() {
   const { user } = await getAuthUser();
   if (!user) redirect("/login");
 
-  // Fetch all active properties for this owner
+  // Fetch all properties for this owner (same filter as property list page)
   const { data: properties } = await adminClient
     .from("properties")
     .select("id, name, property_type, city, is_active")
     .eq("owner_id", user.id)
-    .eq("is_active", true)
     .order("created_at", { ascending: true });
 
   if (!properties || properties.length === 0) {
