@@ -46,6 +46,11 @@ function CategoryNav({
   const pathname = usePathname();
   const active = getActiveCategory(pathname);
 
+  // Hide on single listing detail pages (e.g. /stays/watamu/maya-kobe)
+  const segments = pathname.split("/").filter(Boolean);
+  const isDetailPage = segments.length >= 3;
+  if (isDetailPage) return null;
+
   /* ── Hide on scroll down, show on scroll up ── */
   const [visible, setVisible] = useState(true);
   const lastScrollY = useRef(0);

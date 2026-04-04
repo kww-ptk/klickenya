@@ -341,11 +341,23 @@ export default function PropertySettingsPage() {
           {listingSlug ? (
             <div className="flex items-center gap-2 bg-[#F4F1EC] rounded-xl px-3 py-2.5">
               <p className="text-[13px] text-[#5E5848] font-mono flex-1 truncate">
-                klickenya.com/stays/{(city || "…").toLowerCase().replace(/ /g, "-")}/{listingSlug}
+                klickenya.com/stays/{(city || "city").toLowerCase().replace(/\s+/g, "-")}/{listingSlug}
               </p>
               <button
                 type="button"
-                onClick={() => navigator.clipboard.writeText(`https://klickenya.com/stays/${(city || "").toLowerCase().replace(/ /g, "-")}/${listingSlug}`)}
+                onClick={() => {
+                  const url = `https://klickenya.com/stays/${(city || "").toLowerCase().replace(/\s+/g, "-")}/${listingSlug}`;
+                  if (navigator.clipboard?.writeText) {
+                    navigator.clipboard.writeText(url);
+                  } else {
+                    const input = document.createElement("input");
+                    input.value = url;
+                    document.body.appendChild(input);
+                    input.select();
+                    document.execCommand("copy");
+                    document.body.removeChild(input);
+                  }
+                }}
                 className="text-[11px] font-semibold text-[#4F46E5] hover:text-[#4338CA] shrink-0"
               >
                 Copy
@@ -369,7 +381,19 @@ export default function PropertySettingsPage() {
           <div className="flex items-center gap-2 bg-[#F4F1EC] rounded-lg px-3 py-2">
             <p className="text-[12px] text-[#5E5848] font-mono flex-1 truncate">klickenya.com/b/{bookingSlug}</p>
             <button
-              onClick={() => navigator.clipboard.writeText(`https://klickenya.com/b/${bookingSlug}`)}
+              onClick={() => {
+                const url = `https://klickenya.com/b/${bookingSlug}`;
+                if (navigator.clipboard?.writeText) {
+                  navigator.clipboard.writeText(url);
+                } else {
+                  const input = document.createElement("input");
+                  input.value = url;
+                  document.body.appendChild(input);
+                  input.select();
+                  document.execCommand("copy");
+                  document.body.removeChild(input);
+                }
+              }}
               className="text-[11px] font-semibold text-[#4F46E5] hover:text-[#4338CA] shrink-0"
             >
               Copy
@@ -391,7 +415,7 @@ export default function PropertySettingsPage() {
         </button>
         {listingSlug && (
           <a
-            href={`https://klickenya.com/stays/${(city || "").toLowerCase().replace(/ /g, "-")}/${listingSlug}`}
+            href={`/stays/${(city || "").toLowerCase().replace(/\s+/g, "-")}/${listingSlug}`}
             target="_blank"
             rel="noopener noreferrer"
             className="h-[44px] px-5 border border-[#E2DDD5] text-[#5E5848] font-semibold text-[13px] rounded-xl hover:bg-[#F4F1EC] transition-colors flex items-center gap-1.5 shrink-0"

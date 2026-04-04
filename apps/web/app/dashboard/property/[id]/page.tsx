@@ -210,7 +210,13 @@ export default async function PropertyDashboardPage({
               )}
               <div className="flex items-center gap-3 mt-1">
                 <a
-                  href={`https://klickenya.com/${linkedListing.type === "experience" ? "experiences" : linkedListing.type + "s"}/${(linkedListing.city ?? "").toLowerCase().replace(/ /g, "-")}/${linkedListing.slug}`}
+                  href={(() => {
+                    const typeSlug = linkedListing.type === "experience" ? "experiences" : linkedListing.type + "s";
+                    const citySlug = (linkedListing.city ?? "").toLowerCase().replace(/\s+/g, "-");
+                    return citySlug
+                      ? `/${typeSlug}/${citySlug}/${linkedListing.slug}`
+                      : `/${typeSlug}/${linkedListing.slug}`;
+                  })()}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-[11px] font-semibold text-[#4F46E5] hover:text-[#4338CA] transition-colors"
