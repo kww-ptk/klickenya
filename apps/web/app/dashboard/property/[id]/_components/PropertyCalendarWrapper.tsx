@@ -61,8 +61,18 @@ export function PropertyCalendarWrapper({
   bookings: Booking[];
   blockedDates: BlockedDate[];
 }) {
-  const [showNewBooking, setShowNewBooking] = useState(false);
+  const [newBookingTarget, setNewBookingTarget] = useState<{
+    roomId: string;
+    checkIn: string;
+    checkOut: string;
+  } | null>(null);
+
   const todayStr = new Date().toISOString().split("T")[0];
+  const tomorrowStr = (() => {
+    const d = new Date(todayStr + "T00:00:00");
+    d.setDate(d.getDate() + 1);
+    return d.toISOString().split("T")[0];
+  })();
 
   return (
     <ToastProvider>
@@ -71,7 +81,15 @@ export function PropertyCalendarWrapper({
           Availability Calendar
         </h2>
         <button
-          onClick={() => setShowNewBooking(true)}
+          onClick={() => {
+            if (rooms.length > 0) {
+              setNewBookingTarget({
+                roomId: rooms[0].id,
+                checkIn: todayStr,
+                checkOut: tomorrowStr,
+              });
+            }
+          }}
           className="text-[13px] font-semibold text-white bg-[#4F46E5] px-4 h-[36px] rounded-lg hover:bg-[#4338CA] transition-colors flex items-center gap-1.5"
         >
           <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -88,14 +106,15 @@ export function PropertyCalendarWrapper({
         blockedDates={blockedDates}
       />
 
-      {showNewBooking && rooms.length > 0 && (
+      {newBookingTarget && rooms.length > 0 && (
         <NewBookingSidePanel
-          roomId={rooms[0].id}
-          date={todayStr}
+          roomId={newBookingTarget.roomId}
+          date={newBookingTarget.checkIn}
+          checkOutDate={newBookingTarget.checkOut}
           rooms={rooms}
           propertyId={propertyId}
-          onClose={() => setShowNewBooking(false)}
-          onCreated={() => setShowNewBooking(false)}
+          onClose={() => setNewBookingTarget(null)}
+          onCreated={() => setNewBookingTarget(null)}
         />
       )}
     </ToastProvider>

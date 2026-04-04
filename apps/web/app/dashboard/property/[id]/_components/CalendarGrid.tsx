@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect, useMemo } from "react";
+import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { BookingSidePanel } from "./BookingSidePanel";
 import { NewBookingSidePanel } from "./NewBookingSidePanel";
@@ -53,6 +53,17 @@ export interface BlockedDate {
   reason: string | null;
 }
 
+export interface DragState {
+  roomId: string;
+  startDate: string;
+  currentDate: string;
+}
+
+export type CellMap = Map<
+  string,
+  { type: "booking"; booking: Booking } | { type: "blocked"; block: BlockedDate }
+>;
+
 interface CalendarGridProps {
   propertyId: string;
   rooms: Room[];
@@ -84,6 +95,12 @@ export function isSameDay(a: string, b: string): boolean {
   return a === b;
 }
 
+function nextDay(ds: string): string {
+  const d = new Date(ds + "T00:00:00");
+  d.setDate(d.getDate() + 1);
+  return d.toISOString().split("T")[0];
+}
+
 /* ---------- Component ---------- */
 
 export function CalendarGrid({
@@ -102,8 +119,15 @@ export function CalendarGrid({
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [newBookingTarget, setNewBookingTarget] = useState<{
     roomId: string;
-    date: string;
+    checkIn: string;
+    checkOut: string;
   } | null>(null);
+
+  // Drag state
+  const [dragState, setDragState] = useState<DragState | null>(null);
+  const [shakeCell, setShakeCell] = useState<string | null>(null); // "roomId:date"
+  const dragStateRef = useRef<DragState | null>(null);
+  dragStateRef.current = dragState;
 
   // 30-day window
   const days = useMemo(() => {
@@ -111,17 +135,101 @@ export function CalendarGrid({
   }, [startDate]);
 
   // Navigate
-  const goBack = useCallback(() => {
-    setStartDate((d) => addDays(d, -30));
-  }, []);
-  const goForward = useCallback(() => {
-    setStartDate((d) => addDays(d, 30));
-  }, []);
+  const goBack = useCallback(() => setStartDate((d) => addDays(d, -30)), []);
+  const goForward = useCallback(() => setStartDate((d) => addDays(d, 30)), []);
   const goToday = useCallback(() => {
     const d = new Date();
     d.setHours(0, 0, 0, 0);
     setStartDate(d);
   }, []);
+
+  // Build cellMap
+  const cellMap = useMemo<CellMap>(() => {
+    const map: CellMap = new Map();
+    for (const b of bookings) {
+      if (b.status === "cancelled") continue;
+      const checkIn = new Date(b.check_in_date + "T00:00:00");
+      const checkOut = new Date(b.check_out_date + "T00:00:00");
+      let d = new Date(checkIn);
+      while (d < checkOut) {
+        map.set(`${b.room_id}:${dateStr(d)}`, { type: "booking", booking: b });
+        d = addDays(d, 1);
+      }
+    }
+    for (const bl of blockedDates) {
+      const start = new Date(bl.start_date + "T00:00:00");
+      const end = new Date(bl.end_date + "T00:00:00");
+      let d = new Date(start);
+      while (d < end) {
+        const key = `${bl.room_id}:${dateStr(d)}`;
+        if (!map.has(key)) map.set(key, { type: "blocked", block: bl });
+        d = addDays(d, 1);
+      }
+    }
+    return map;
+  }, [bookings, blockedDates]);
+
+  // Global drag-end handler (mouseup + touchend)
+  useEffect(() => {
+    const handleEnd = () => {
+      const ds = dragStateRef.current;
+      if (!ds) return;
+      const checkIn =
+        ds.startDate <= ds.currentDate ? ds.startDate : ds.currentDate;
+      const checkOut = nextDay(
+        ds.startDate <= ds.currentDate ? ds.currentDate : ds.startDate
+      );
+      setNewBookingTarget({ roomId: ds.roomId, checkIn, checkOut });
+      setDragState(null);
+    };
+    document.addEventListener("mouseup", handleEnd);
+    document.addEventListener("touchend", handleEnd);
+    return () => {
+      document.removeEventListener("mouseup", handleEnd);
+      document.removeEventListener("touchend", handleEnd);
+    };
+  }, []);
+
+  // Drag handlers
+  const handleDragStart = useCallback((roomId: string, date: string) => {
+    setDragState({ roomId, startDate: date, currentDate: date });
+  }, []);
+
+  const handleDragEnter = useCallback(
+    (roomId: string, date: string) => {
+      setDragState((prev) => {
+        if (!prev || prev.roomId !== roomId) return prev;
+        const cellKey = `${roomId}:${date}`;
+        if (cellMap.has(cellKey)) {
+          // Boundary — shake and hold
+          setShakeCell(cellKey);
+          setTimeout(() => setShakeCell(null), 400);
+          return prev;
+        }
+        return { ...prev, currentDate: date };
+      });
+    },
+    [cellMap]
+  );
+
+  // Month label
+  const monthLabel = useMemo(() => {
+    const first = days[0];
+    const last = days[days.length - 1];
+    const fMonth = first.toLocaleDateString("en-GB", {
+      month: "long",
+      year: "numeric",
+    });
+    const lMonth = last.toLocaleDateString("en-GB", {
+      month: "long",
+      year: "numeric",
+    });
+    return fMonth === lMonth
+      ? fMonth
+      : `${first.toLocaleDateString("en-GB", { month: "short" })} — ${last.toLocaleDateString("en-GB", { month: "short", year: "numeric" })}`;
+  }, [days]);
+
+  const todayStr = dateStr(new Date());
 
   // Realtime subscription
   useEffect(() => {
@@ -155,54 +263,8 @@ export function CalendarGrid({
         }
       )
       .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    return () => { supabase.removeChannel(channel); };
   }, [propertyId]);
-
-  // Build a lookup: roomId + dateStr → booking | blocked | null
-  const cellMap = useMemo(() => {
-    const map = new Map<string, { type: "booking"; booking: Booking } | { type: "blocked"; block: BlockedDate }>();
-
-    for (const b of bookings) {
-      if (b.status === "cancelled") continue;
-      const checkIn = new Date(b.check_in_date + "T00:00:00");
-      const checkOut = new Date(b.check_out_date + "T00:00:00");
-      let d = new Date(checkIn);
-      while (d < checkOut) {
-        const key = `${b.room_id}:${dateStr(d)}`;
-        map.set(key, { type: "booking", booking: b });
-        d = addDays(d, 1);
-      }
-    }
-
-    for (const bl of blockedDates) {
-      const start = new Date(bl.start_date + "T00:00:00");
-      const end = new Date(bl.end_date + "T00:00:00");
-      let d = new Date(start);
-      while (d < end) {
-        const key = `${bl.room_id}:${dateStr(d)}`;
-        if (!map.has(key)) {
-          map.set(key, { type: "blocked", block: bl });
-        }
-        d = addDays(d, 1);
-      }
-    }
-
-    return map;
-  }, [bookings, blockedDates]);
-
-  // Month label for header
-  const monthLabel = useMemo(() => {
-    const first = days[0];
-    const last = days[days.length - 1];
-    const fMonth = first.toLocaleDateString("en-GB", { month: "long", year: "numeric" });
-    const lMonth = last.toLocaleDateString("en-GB", { month: "long", year: "numeric" });
-    return fMonth === lMonth ? fMonth : `${first.toLocaleDateString("en-GB", { month: "short" })} — ${last.toLocaleDateString("en-GB", { month: "short", year: "numeric" })}`;
-  }, [days]);
-
-  const todayStr = dateStr(new Date());
 
   return (
     <>
@@ -237,15 +299,16 @@ export function CalendarGrid({
         </div>
 
         {/* Calendar grid */}
-        <div className="overflow-x-auto">
+        <div className={`overflow-x-auto${dragState ? " select-none" : ""}`}>
           <div
             className="min-w-[900px]"
             style={{
               display: "grid",
               gridTemplateColumns: `140px repeat(${days.length}, minmax(36px, 1fr))`,
+              cursor: dragState ? "crosshair" : undefined,
             }}
           >
-            {/* Header row — room label + date columns */}
+            {/* Header row */}
             <div className="sticky left-0 z-10 bg-[#FAFAF8] border-b border-r border-[#E2DDD5] px-3 py-2 text-[10px] font-bold text-[#9C9485] uppercase tracking-wider">
               Room
             </div>
@@ -262,11 +325,7 @@ export function CalendarGrid({
                   <p className="text-[9px] text-[#9C9485] leading-none">
                     {day.toLocaleDateString("en-GB", { weekday: "short" })}
                   </p>
-                  <p
-                    className={`text-[12px] font-semibold leading-tight mt-0.5 ${
-                      isToday ? "text-[#4F46E5]" : "text-[#16130C]"
-                    }`}
-                  >
+                  <p className={`text-[12px] font-semibold leading-tight mt-0.5 ${isToday ? "text-[#4F46E5]" : "text-[#16130C]"}`}>
                     {day.getDate()}
                   </p>
                 </div>
@@ -274,19 +333,38 @@ export function CalendarGrid({
             })}
 
             {/* Room rows */}
-            {rooms.map((room) => (
-              <RoomRow
-                key={room.id}
-                room={room}
-                days={days}
-                todayStr={todayStr}
-                cellMap={cellMap}
-                onClickBooking={setSelectedBooking}
-                onClickEmpty={(roomId, date) =>
-                  setNewBookingTarget({ roomId, date })
-                }
-              />
-            ))}
+            {rooms.map((room) => {
+              const dr = dragState?.roomId === room.id
+                ? {
+                    start: dragState.startDate <= dragState.currentDate
+                      ? dragState.startDate
+                      : dragState.currentDate,
+                    end: dragState.startDate <= dragState.currentDate
+                      ? dragState.currentDate
+                      : dragState.startDate,
+                  }
+                : null;
+              const shakeDate = shakeCell?.startsWith(room.id + ":")
+                ? shakeCell.slice(room.id.length + 1)
+                : null;
+              return (
+                <RoomRow
+                  key={room.id}
+                  room={room}
+                  days={days}
+                  todayStr={todayStr}
+                  cellMap={cellMap}
+                  dragRange={dr}
+                  shakeDate={shakeDate}
+                  onClickBooking={setSelectedBooking}
+                  onClickEmpty={(roomId, checkIn, checkOut) =>
+                    setNewBookingTarget({ roomId, checkIn, checkOut })
+                  }
+                  onDragStart={handleDragStart}
+                  onDragEnter={handleDragEnter}
+                />
+              );
+            })}
           </div>
         </div>
 
@@ -301,17 +379,17 @@ export function CalendarGrid({
             { label: "Checked out", color: "#9C9485" },
           ].map((item) => (
             <div key={item.label} className="flex items-center gap-1.5">
-              <div
-                className="size-2.5 rounded-sm"
-                style={{ backgroundColor: item.color }}
-              />
+              <div className="size-2.5 rounded-sm" style={{ backgroundColor: item.color }} />
               <span className="text-[10px] text-[#9C9485]">{item.label}</span>
             </div>
           ))}
           <div className="flex items-center gap-1.5">
-            <div className="size-2.5 rounded-sm bg-[#9C9485] opacity-40" style={{
-              backgroundImage: "repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(0,0,0,0.15) 2px, rgba(0,0,0,0.15) 4px)",
-            }} />
+            <div
+              className="size-2.5 rounded-sm bg-[#9C9485] opacity-40"
+              style={{
+                backgroundImage: "repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(0,0,0,0.15) 2px, rgba(0,0,0,0.15) 4px)",
+              }}
+            />
             <span className="text-[10px] text-[#9C9485]">Blocked</span>
           </div>
         </div>
@@ -335,7 +413,8 @@ export function CalendarGrid({
       {newBookingTarget && (
         <NewBookingSidePanel
           roomId={newBookingTarget.roomId}
-          date={newBookingTarget.date}
+          date={newBookingTarget.checkIn}
+          checkOutDate={newBookingTarget.checkOut}
           rooms={rooms}
           propertyId={propertyId}
           onClose={() => setNewBookingTarget(null)}
@@ -349,36 +428,41 @@ export function CalendarGrid({
   );
 }
 
-/* ---------- RoomRow (extracted for perf) ---------- */
-
-export type CellMap = Map<string, { type: "booking"; booking: Booking } | { type: "blocked"; block: BlockedDate }>;
+/* ---------- RoomRow ---------- */
 
 export function RoomRow({
   room,
   days,
   todayStr,
   cellMap,
+  dragRange,
+  shakeDate,
   onClickBooking,
   onClickEmpty,
+  onDragStart,
+  onDragEnter,
 }: {
   room: Room;
   days: Date[];
   todayStr: string;
   cellMap: CellMap;
+  dragRange: { start: string; end: string } | null;
+  shakeDate: string | null;
   onClickBooking: (b: Booking) => void;
-  onClickEmpty: (roomId: string, date: string) => void;
+  onClickEmpty: (roomId: string, checkIn: string, checkOut: string) => void;
+  onDragStart: (roomId: string, date: string) => void;
+  onDragEnter: (roomId: string, date: string) => void;
 }) {
-  // Track which bookings we've already started rendering (to draw spans)
   const renderedBookings = new Set<string>();
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const touchDragging = useRef(false);
 
   return (
     <>
       {/* Room name (sticky left) */}
       <div className="sticky left-0 z-10 bg-white border-b border-r border-[#E2DDD5] px-3 py-2 flex items-center min-h-[44px]">
         <div className="min-w-0">
-          <p className="text-[12px] font-semibold text-[#16130C] truncate">
-            {room.name}
-          </p>
+          <p className="text-[12px] font-semibold text-[#16130C] truncate">{room.name}</p>
           {room.room_number && (
             <p className="text-[10px] text-[#9C9485]">#{room.room_number}</p>
           )}
@@ -392,16 +476,79 @@ export function RoomRow({
         const cell = cellMap.get(key);
         const isToday = isSameDay(ds, todayStr);
         const isWeekend = day.getDay() === 0 || day.getDay() === 6;
+        const isInDragRange = dragRange
+          ? ds >= dragRange.start && ds <= dragRange.end
+          : false;
+        const isShaking = shakeDate === ds;
 
         if (!cell) {
-          // Empty cell — available
           return (
             <button
               key={ds}
-              onClick={() => onClickEmpty(room.id, ds)}
-              className={`border-b border-r border-[#E2DDD5] min-h-[44px] hover:bg-[#4F46E5]/5 transition-colors cursor-pointer ${
-                isToday ? "bg-[#4F46E5]/[0.03]" : isWeekend ? "bg-[#F4F1EC]/30" : ""
-              }`}
+              data-date={ds}
+              data-room-id={room.id}
+              onMouseDown={(e) => {
+                e.preventDefault();
+                onDragStart(room.id, ds);
+              }}
+              onMouseEnter={() => onDragEnter(room.id, ds)}
+              onMouseUp={() => {
+                // Single click: mousedown + immediate mouseup on same cell
+                // Global handler will fire and open the panel
+              }}
+              onTouchStart={() => {
+                touchDragging.current = false;
+                longPressTimer.current = setTimeout(() => {
+                  touchDragging.current = true;
+                  onDragStart(room.id, ds);
+                }, 400);
+              }}
+              onTouchMove={(e) => {
+                if (!touchDragging.current) {
+                  if (longPressTimer.current) {
+                    clearTimeout(longPressTimer.current);
+                    longPressTimer.current = null;
+                  }
+                  return;
+                }
+                const touch = e.changedTouches[0];
+                const el = document.elementFromPoint(
+                  touch.clientX,
+                  touch.clientY
+                );
+                if (el) {
+                  const cellEl = (el as HTMLElement).closest(
+                    "[data-date]"
+                  ) as HTMLElement | null;
+                  if (cellEl?.dataset.date && cellEl?.dataset.roomId) {
+                    onDragEnter(cellEl.dataset.roomId, cellEl.dataset.date);
+                  }
+                }
+              }}
+              onTouchEnd={() => {
+                if (longPressTimer.current) {
+                  clearTimeout(longPressTimer.current);
+                  longPressTimer.current = null;
+                }
+                if (!touchDragging.current) {
+                  // Short tap — single night
+                  onClickEmpty(room.id, ds, nextDay(ds));
+                }
+                touchDragging.current = false;
+              }}
+              className={[
+                "border-b border-r border-[#E2DDD5] min-h-[44px] transition-colors",
+                isInDragRange
+                  ? "bg-[#4F46E5]/30"
+                  : isToday
+                    ? "bg-[#4F46E5]/[0.03] hover:bg-[#4F46E5]/10"
+                    : isWeekend
+                      ? "bg-[#F4F1EC]/30 hover:bg-[#4F46E5]/5"
+                      : "hover:bg-[#4F46E5]/5",
+                isShaking ? "animate-cal-shake" : "",
+              ]
+                .filter(Boolean)
+                .join(" ")}
               title={`Available — ${ds}`}
             />
           );
@@ -411,7 +558,9 @@ export function RoomRow({
           return (
             <div
               key={ds}
-              className="border-b border-r border-[#E2DDD5] min-h-[44px]"
+              data-date={ds}
+              data-room-id={room.id}
+              className={`border-b border-r border-[#E2DDD5] min-h-[44px]${isShaking ? " animate-cal-shake" : ""}`}
               style={{
                 backgroundColor: "#F4F1EC",
                 backgroundImage:
@@ -427,8 +576,6 @@ export function RoomRow({
         const isStart = isSameDay(booking.check_in_date, ds);
         const checkOutDate = new Date(booking.check_out_date + "T00:00:00");
         const isEnd = isSameDay(dateStr(addDays(checkOutDate, -1)), ds);
-
-        // Color: status overrides source for checked_in (green) and checked_out (grey)
         const colors =
           booking.status === "checked_in"
             ? { bg: "#16A34A", text: "#FFFFFF" }
@@ -436,22 +583,18 @@ export function RoomRow({
               ? { bg: "#9C9485", text: "#FFFFFF" }
               : (SOURCE_COLORS[booking.source] ?? SOURCE_COLORS.direct);
 
-        // For the first cell of a booking in the visible window, render the label
-        const shouldShowLabel = isStart || (!renderedBookings.has(booking.id) && dayIndex === 0);
+        const shouldShowLabel =
+          isStart || (!renderedBookings.has(booking.id) && dayIndex === 0);
         if (shouldShowLabel) renderedBookings.add(booking.id);
 
-        // Calculate how many remaining days this booking spans from this cell
         let spanDays = 0;
         if (shouldShowLabel) {
           const visStart = isStart ? dayIndex : 0;
           for (let i = visStart; i < days.length; i++) {
-            const d = dateStr(days[i]);
-            const c = cellMap.get(`${room.id}:${d}`);
+            const c = cellMap.get(`${room.id}:${dateStr(days[i])}`);
             if (c?.type === "booking" && c.booking.id === booking.id) {
               spanDays++;
-            } else {
-              break;
-            }
+            } else break;
           }
         }
 
@@ -478,9 +621,7 @@ export function RoomRow({
               {shouldShowLabel && (
                 <span
                   className="text-[10px] font-semibold truncate px-1.5 whitespace-nowrap"
-                  style={{
-                    maxWidth: `calc(${spanDays} * 100%)`,
-                  }}
+                  style={{ maxWidth: `calc(${spanDays} * 100%)` }}
                 >
                   {booking.guest_name}
                   {booking.nights ? ` · ${booking.nights}n` : ""}
@@ -492,4 +633,10 @@ export function RoomRow({
       })}
     </>
   );
+}
+
+function nextDay(ds: string): string {
+  const d = new Date(ds + "T00:00:00");
+  d.setDate(d.getDate() + 1);
+  return d.toISOString().split("T")[0];
 }

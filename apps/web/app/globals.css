@@ -209,3 +209,17 @@ body {
 /* Scrollbar-less containers */
 .scrollbar-none::-webkit-scrollbar { display: none; }
 .scrollbar-none { scrollbar-width: none; }
+
+/* ─── Calendar drag-select shake ─────────────────────────────── */
+
+@keyframes calShake {
+  0%, 100% { transform: translateX(0); }
+  20%       { transform: translateX(-3px); }
+  40%       { transform: translateX(3px); }
+  60%       { transform: translateX(-2px); }
+  80%       { transform: translateX(2px); }
+}
+
+.animate-cal-shake {
+  animation: calShake 0.35s ease-in-out;
+}

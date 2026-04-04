@@ -16,6 +16,7 @@ interface Room {
 interface NewBookingSidePanelProps {
   roomId: string;
   date: string;
+  checkOutDate?: string;
   rooms: Room[];
   propertyId: string;
   onClose: () => void;
@@ -55,6 +56,7 @@ interface AvailabilityResult {
 export function NewBookingSidePanel({
   roomId,
   date,
+  checkOutDate,
   rooms,
   propertyId,
   onClose,
@@ -62,7 +64,7 @@ export function NewBookingSidePanel({
 }: NewBookingSidePanelProps) {
   const { showToast } = useToast();
   const initialRoom = rooms.find((r) => r.id === roomId);
-  const defaultCheckOut = (() => {
+  const defaultCheckOut = checkOutDate ?? (() => {
     const d = new Date(date + "T00:00:00");
     d.setDate(d.getDate() + 1);
     return d.toISOString().split("T")[0];

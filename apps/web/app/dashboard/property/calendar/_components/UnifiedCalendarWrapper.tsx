@@ -101,7 +101,8 @@ export function UnifiedCalendarWrapper({
   const [newBookingTarget, setNewBookingTarget] = useState<{
     propertyId: string;
     roomId: string;
-    date: string;
+    checkIn: string;
+    checkOut: string;
   } | null>(null);
 
   // Realtime subscriptions — one per property
@@ -166,14 +167,16 @@ export function UnifiedCalendarWrapper({
         </h2>
         <button
           onClick={() => {
-            // Default to first property's first room
             const firstProp = properties[0];
             const firstRoom = rooms.find((r) => r.property_id === firstProp?.id);
             if (firstProp && firstRoom) {
+              const tomorrow = new Date(todayStr + "T00:00:00");
+              tomorrow.setDate(tomorrow.getDate() + 1);
               setNewBookingTarget({
                 propertyId: firstProp.id,
                 roomId: firstRoom.id,
-                date: todayStr,
+                checkIn: todayStr,
+                checkOut: tomorrow.toISOString().split("T")[0],
               });
             }
           }}
@@ -193,8 +196,8 @@ export function UnifiedCalendarWrapper({
         bookings={bookings}
         blockedDates={blockedDates}
         onClickBooking={(booking) => setSelectedBooking(booking)}
-        onClickEmpty={(propertyId, roomId, date) =>
-          setNewBookingTarget({ propertyId, roomId, date })
+        onClickEmpty={(propertyId, roomId, checkIn, checkOut) =>
+          setNewBookingTarget({ propertyId, roomId, checkIn, checkOut })
         }
       />
 
@@ -222,7 +225,8 @@ export function UnifiedCalendarWrapper({
       {newBookingTarget && (
         <NewBookingSidePanel
           roomId={newBookingTarget.roomId}
-          date={newBookingTarget.date}
+          date={newBookingTarget.checkIn}
+          checkOutDate={newBookingTarget.checkOut}
           rooms={roomsForProperty(newBookingTarget.propertyId)}
           propertyId={newBookingTarget.propertyId}
           onClose={() => setNewBookingTarget(null)}

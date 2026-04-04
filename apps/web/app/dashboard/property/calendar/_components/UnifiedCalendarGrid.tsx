@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useMemo, useCallback, useEffect, Fragment } from "react";
+import { useState, useMemo, useCallback, useEffect, useRef, Fragment } from "react";
 import {
   Room,
   Booking,
   BlockedDate,
+  DragState,
   CellMap,
   RoomRow,
   addDays,
@@ -35,7 +36,20 @@ interface UnifiedCalendarGridProps {
   bookings: BookingWithProperty[];
   blockedDates: BlockedDate[];
   onClickBooking: (booking: BookingWithProperty) => void;
-  onClickEmpty: (propertyId: string, roomId: string, date: string) => void;
+  onClickEmpty: (
+    propertyId: string,
+    roomId: string,
+    checkIn: string,
+    checkOut: string
+  ) => void;
+}
+
+/* ---------- Helpers ---------- */
+
+function nextDay(ds: string): string {
+  const d = new Date(ds + "T00:00:00");
+  d.setDate(d.getDate() + 1);
+  return d.toISOString().split("T")[0];
 }
 
 /* ---------- Component ---------- */
@@ -56,6 +70,84 @@ export function UnifiedCalendarGrid({
 
   const [collapsedProperties, setCollapsedProperties] = useState<Set<string>>(
     () => new Set()
+  );
+
+  // Drag state
+  const [dragState, setDragState] = useState<DragState | null>(null);
+  const [shakeCell, setShakeCell] = useState<string | null>(null);
+  const dragStateRef = useRef<DragState | null>(null);
+  dragStateRef.current = dragState;
+
+  // Build cellMap
+  const cellMap = useMemo<CellMap>(() => {
+    const map: CellMap = new Map();
+    for (const b of bookings) {
+      if (b.status === "cancelled") continue;
+      const checkIn = new Date(b.check_in_date + "T00:00:00");
+      const checkOut = new Date(b.check_out_date + "T00:00:00");
+      let d = new Date(checkIn);
+      while (d < checkOut) {
+        map.set(`${b.room_id}:${dateStr(d)}`, { type: "booking", booking: b });
+        d = addDays(d, 1);
+      }
+    }
+    for (const bl of blockedDates) {
+      const start = new Date(bl.start_date + "T00:00:00");
+      const end = new Date(bl.end_date + "T00:00:00");
+      let d = new Date(start);
+      while (d < end) {
+        const key = `${bl.room_id}:${dateStr(d)}`;
+        if (!map.has(key)) map.set(key, { type: "blocked", block: bl });
+        d = addDays(d, 1);
+      }
+    }
+    return map;
+  }, [bookings, blockedDates]);
+
+  // Global drag-end handler
+  useEffect(() => {
+    const handleEnd = () => {
+      const ds = dragStateRef.current;
+      if (!ds) return;
+      const checkIn =
+        ds.startDate <= ds.currentDate ? ds.startDate : ds.currentDate;
+      const checkOut = nextDay(
+        ds.startDate <= ds.currentDate ? ds.currentDate : ds.startDate
+      );
+      // Look up propertyId from rooms
+      const room = rooms.find((r) => r.id === ds.roomId);
+      if (room) {
+        onClickEmpty(room.property_id, ds.roomId, checkIn, checkOut);
+      }
+      setDragState(null);
+    };
+    document.addEventListener("mouseup", handleEnd);
+    document.addEventListener("touchend", handleEnd);
+    return () => {
+      document.removeEventListener("mouseup", handleEnd);
+      document.removeEventListener("touchend", handleEnd);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rooms]);
+
+  const handleDragStart = useCallback((roomId: string, date: string) => {
+    setDragState({ roomId, startDate: date, currentDate: date });
+  }, []);
+
+  const handleDragEnter = useCallback(
+    (roomId: string, date: string) => {
+      setDragState((prev) => {
+        if (!prev || prev.roomId !== roomId) return prev;
+        const cellKey = `${roomId}:${date}`;
+        if (cellMap.has(cellKey)) {
+          setShakeCell(cellKey);
+          setTimeout(() => setShakeCell(null), 400);
+          return prev;
+        }
+        return { ...prev, currentDate: date };
+      });
+    },
+    [cellMap]
   );
 
   // Persist collapsed state to localStorage
@@ -117,33 +209,6 @@ export function UnifiedCalendarGrid({
 
   const todayStr = dateStr(new Date());
 
-  // Build cellMap across all properties
-  const cellMap = useMemo<CellMap>(() => {
-    const map: CellMap = new Map();
-    for (const b of bookings) {
-      if (b.status === "cancelled") continue;
-      const checkIn = new Date(b.check_in_date + "T00:00:00");
-      const checkOut = new Date(b.check_out_date + "T00:00:00");
-      let d = new Date(checkIn);
-      while (d < checkOut) {
-        const key = `${b.room_id}:${dateStr(d)}`;
-        map.set(key, { type: "booking", booking: b });
-        d = addDays(d, 1);
-      }
-    }
-    for (const bl of blockedDates) {
-      const start = new Date(bl.start_date + "T00:00:00");
-      const end = new Date(bl.end_date + "T00:00:00");
-      let d = new Date(start);
-      while (d < end) {
-        const key = `${bl.room_id}:${dateStr(d)}`;
-        if (!map.has(key)) map.set(key, { type: "blocked", block: bl });
-        d = addDays(d, 1);
-      }
-    }
-    return map;
-  }, [bookings, blockedDates]);
-
   // Group rooms by property
   const propertyGroups = useMemo(
     () =>
@@ -186,12 +251,13 @@ export function UnifiedCalendarGrid({
       </div>
 
       {/* Calendar grid */}
-      <div className="overflow-x-auto">
+      <div className={`overflow-x-auto${dragState ? " select-none" : ""}`}>
         <div
           className="min-w-[900px]"
           style={{
             display: "grid",
             gridTemplateColumns: `140px repeat(${days.length}, minmax(36px, 1fr))`,
+            cursor: dragState ? "crosshair" : undefined,
           }}
         >
           {/* Header: room label + date columns */}
@@ -232,7 +298,7 @@ export function UnifiedCalendarGrid({
             const isCollapsed = collapsedProperties.has(property.id);
             return (
               <Fragment key={property.id}>
-                {/* Property header row — spans all columns */}
+                {/* Property header row */}
                 <button
                   onClick={() => toggleCollapsed(property.id)}
                   className="flex items-center gap-2 px-4 py-2 bg-[#F4F1EC] hover:bg-[#EAE6DE] transition-colors border-b border-[#E2DDD5] text-left"
@@ -269,21 +335,43 @@ export function UnifiedCalendarGrid({
 
                 {/* Room rows */}
                 {!isCollapsed &&
-                  propRooms.map((room) => (
-                    <RoomRow
-                      key={room.id}
-                      room={room}
-                      days={days}
-                      todayStr={todayStr}
-                      cellMap={cellMap}
-                      onClickBooking={(b) =>
-                        onClickBooking(b as BookingWithProperty)
-                      }
-                      onClickEmpty={(roomId, date) =>
-                        onClickEmpty(property.id, roomId, date)
-                      }
-                    />
-                  ))}
+                  propRooms.map((room) => {
+                    const dr =
+                      dragState?.roomId === room.id
+                        ? {
+                            start:
+                              dragState.startDate <= dragState.currentDate
+                                ? dragState.startDate
+                                : dragState.currentDate,
+                            end:
+                              dragState.startDate <= dragState.currentDate
+                                ? dragState.currentDate
+                                : dragState.startDate,
+                          }
+                        : null;
+                    const shakeDate = shakeCell?.startsWith(room.id + ":")
+                      ? shakeCell.slice(room.id.length + 1)
+                      : null;
+                    return (
+                      <RoomRow
+                        key={room.id}
+                        room={room}
+                        days={days}
+                        todayStr={todayStr}
+                        cellMap={cellMap}
+                        dragRange={dr}
+                        shakeDate={shakeDate}
+                        onClickBooking={(b) =>
+                          onClickBooking(b as BookingWithProperty)
+                        }
+                        onClickEmpty={(roomId, checkIn, checkOut) =>
+                          onClickEmpty(property.id, roomId, checkIn, checkOut)
+                        }
+                        onDragStart={handleDragStart}
+                        onDragEnter={handleDragEnter}
+                      />
+                    );
+                  })}
               </Fragment>
             );
           })}
