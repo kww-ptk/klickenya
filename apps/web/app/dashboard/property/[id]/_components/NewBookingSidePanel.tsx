@@ -91,6 +91,12 @@ export function NewBookingSidePanel({
   const [error, setError] = useState<string | null>(null);
   const [availability, setAvailability] = useState<AvailabilityResult | null>(null);
   const [checkingAvail, setCheckingAvail] = useState(false);
+  const [suggestedRate, setSuggestedRate] = useState<{
+    rate: number;
+    source: string;
+    ruleName: string | null;
+  } | null>(null);
+  const [rateManuallyEdited, setRateManuallyEdited] = useState(false);
 
   // Build full phone number from country code + local number
   const fullPhone = form.guest_phone.trim()
@@ -115,8 +121,10 @@ export function NewBookingSidePanel({
   const finalTotal = Math.max(0, subtotal - form.discount_kes);
   const balance = Math.max(0, finalTotal - form.amount_paid);
 
-  // Update rate when room changes
+  // Update rate when room changes; reset manual-edit flag so pricing endpoint can re-fill
   useEffect(() => {
+    setRateManuallyEdited(false);
+    setSuggestedRate(null);
     if (form.room_id === "__entire__") {
       const total = activeRooms.reduce((sum, r) => sum + r.base_price_kes, 0);
       const maxGuests = activeRooms.reduce((sum, r) => sum + r.max_guests, 0);
@@ -182,6 +190,33 @@ export function NewBookingSidePanel({
     const timer = setTimeout(checkAvailability, 300);
     return () => clearTimeout(timer);
   }, [checkAvailability]);
+
+  // Fetch suggested rate from pricing rules
+  useEffect(() => {
+    if (isEntireBooking || !form.room_id || !form.check_in_date || !form.check_out_date) return;
+    if (form.check_out_date <= form.check_in_date) return;
+
+    const controller = new AbortController();
+    fetch(
+      `/api/properties/${propertyId}/pricing?room_id=${form.room_id}&check_in=${form.check_in_date}&check_out=${form.check_out_date}`,
+      { signal: controller.signal }
+    )
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.suggested_rate != null) {
+          setSuggestedRate({
+            rate: data.suggested_rate,
+            source: data.source,
+            ruleName: data.rule?.name ?? null,
+          });
+          if (!rateManuallyEdited) {
+            setForm((prev) => ({ ...prev, rate_per_night: data.suggested_rate }));
+          }
+        }
+      })
+      .catch(() => {});
+    return () => controller.abort();
+  }, [form.room_id, form.check_in_date, form.check_out_date, propertyId, isEntireBooking, rateManuallyEdited]);
 
   // Suggest full amount when cash selected
   useEffect(() => {
@@ -488,11 +523,43 @@ export function NewBookingSidePanel({
               type="number"
               min={0}
               value={form.rate_per_night}
-              onChange={(e) =>
-                setForm({ ...form, rate_per_night: parseFloat(e.target.value) || 0 })
-              }
+              onChange={(e) => {
+                setRateManuallyEdited(true);
+                setForm({ ...form, rate_per_night: parseFloat(e.target.value) || 0 });
+              }}
               className="w-full h-[40px] px-3 rounded-lg border border-[#E2DDD5] text-[14px] text-[#16130C] focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] outline-none transition-colors"
             />
+            {suggestedRate && !isEntireBooking && (
+              <div className="mt-1 flex items-center gap-1.5">
+                {suggestedRate.source === "pricing_rule" ? (
+                  <p className="text-[11px] text-[#4F46E5]">
+                    📅 Rule: <span className="font-semibold">{suggestedRate.ruleName}</span> — suggested {fmt(suggestedRate.rate)}/night
+                    {rateManuallyEdited && suggestedRate.rate !== form.rate_per_night && (
+                      <button
+                        type="button"
+                        onClick={() => { setForm((p) => ({ ...p, rate_per_night: suggestedRate.rate })); setRateManuallyEdited(false); }}
+                        className="ml-1.5 underline text-[#4F46E5] hover:text-[#4338CA]"
+                      >
+                        Apply
+                      </button>
+                    )}
+                  </p>
+                ) : suggestedRate.source === "weekend_multiplier" ? (
+                  <p className="text-[11px] text-[#E8A020]">
+                    Weekend rate — suggested {fmt(suggestedRate.rate)}/night
+                    {rateManuallyEdited && suggestedRate.rate !== form.rate_per_night && (
+                      <button
+                        type="button"
+                        onClick={() => { setForm((p) => ({ ...p, rate_per_night: suggestedRate.rate })); setRateManuallyEdited(false); }}
+                        className="ml-1.5 underline text-[#E8A020] hover:opacity-70"
+                      >
+                        Apply
+                      </button>
+                    )}
+                  </p>
+                ) : null}
+              </div>
+            )}
           </div>
 
           {/* Financial summary */}

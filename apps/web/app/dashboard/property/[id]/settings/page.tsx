@@ -81,6 +81,17 @@ interface Room {
   display_order: number;
 }
 
+interface PricingRule {
+  id: string;
+  name: string;
+  start_date: string;
+  end_date: string;
+  price_type: "multiplier" | "fixed";
+  value: number;
+  priority: number;
+  is_active: boolean;
+}
+
 const PROPERTY_TYPES = [
   { value: "villa", label: "Villa / Holiday Home" },
   { value: "hotel", label: "Hotel" },
@@ -126,6 +137,12 @@ export default function PropertySettingsPage() {
   // Sync button
   const [syncState, setSyncState] = useState<"idle" | "syncing" | "synced" | "error">("idle");
 
+  // Pricing
+  const [weekendMultiplier, setWeekendMultiplier] = useState(1.0);
+  const [pricingRules, setPricingRules] = useState<PricingRule[]>([]);
+  const [showAddRule, setShowAddRule] = useState(false);
+  const [editingRule, setEditingRule] = useState<string | null>(null);
+
   // Rooms
   const [rooms, setRooms] = useState<Room[]>([]);
   const [editingRoom, setEditingRoom] = useState<string | null>(null);
@@ -134,13 +151,18 @@ export default function PropertySettingsPage() {
   useEffect(() => {
     (async () => {
       const supabase = createClient();
-      const [propRes, roomsRes] = await Promise.all([
+      const [propRes, roomsRes, rulesRes] = await Promise.all([
         supabase.from("properties").select("*").eq("id", id).single(),
         supabase
           .from("rooms")
           .select("id, name, description, room_type, bed_type, room_size_sqm, max_guests, base_price_kes, amenities, photos, is_active, display_order")
           .eq("property_id", id)
           .order("display_order"),
+        supabase
+          .from("pricing_rules")
+          .select("id, name, start_date, end_date, price_type, value, priority, is_active")
+          .eq("property_id", id)
+          .order("priority", { ascending: false }),
       ]);
 
       if (propRes.data) {
@@ -157,7 +179,9 @@ export default function PropertySettingsPage() {
         setEntirePlacePrice(p.entire_place_price ?? "");
         setBookingSlug(p.booking_slug ?? "");
         setIsActive(p.is_active ?? false);
+        setWeekendMultiplier(p.weekend_multiplier ?? 1.0);
       }
+      setPricingRules((rulesRes.data ?? []) as PricingRule[]);
       setRooms((roomsRes.data ?? []).map((r) => ({
         ...r,
         amenities: r.amenities ?? [],
@@ -202,6 +226,7 @@ export default function PropertySettingsPage() {
           entire_place_price: entirePlacePrice === "" ? null : Number(entirePlacePrice),
           booking_slug: bookingSlug.trim() || null,
           is_active: isActive,
+          weekend_multiplier: weekendMultiplier,
         }),
       });
       if (res.ok) setMessage({ type: "success", text: "Settings saved" });
@@ -443,6 +468,123 @@ export default function PropertySettingsPage() {
           </div>
         )}
         <p className="text-[10px] text-[#9C9485]">Embed this link on your website or share it with guests for direct bookings.</p>
+      </Section>
+
+      {/* ── Pricing ── */}
+      <Section title="Pricing">
+        <Field label="Weekend multiplier">
+          <div className="flex items-center gap-3">
+            <input
+              type="number"
+              min={1}
+              max={5}
+              step={0.05}
+              value={weekendMultiplier}
+              onChange={(e) => setWeekendMultiplier(parseFloat(e.target.value) || 1)}
+              className={inputCls + " max-w-[120px]"}
+            />
+            <span className="text-[12px] text-[#9C9485]">
+              {weekendMultiplier > 1
+                ? `+${Math.round((weekendMultiplier - 1) * 100)}% on Fri/Sat/Sun check-ins`
+                : "No weekend markup (applies to Fri/Sat/Sun check-ins)"}
+            </span>
+          </div>
+        </Field>
+
+        <div className="mt-4">
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-[13px] font-semibold text-[#16130C]">Season pricing rules</p>
+            <button
+              type="button"
+              onClick={() => { setShowAddRule(true); setEditingRule(null); }}
+              className="text-[12px] font-semibold text-[#4F46E5] hover:text-[#4338CA]"
+            >
+              + Add rule
+            </button>
+          </div>
+
+          {pricingRules.length === 0 && !showAddRule && (
+            <p className="text-[12px] text-[#9C9485] py-3">No season rules yet. Add one to override pricing during specific periods.</p>
+          )}
+
+          <div className="space-y-2">
+            {pricingRules.map((rule) => (
+              <div key={rule.id} className={`bg-white rounded-xl border border-[#E2DDD5] p-3 ${!rule.is_active ? "opacity-50" : ""}`}>
+                {editingRule === rule.id ? (
+                  <PricingRuleForm
+                    initial={rule}
+                    propertyId={id}
+                    onSaved={(updated) => {
+                      setPricingRules((prev) => prev.map((r) => r.id === updated.id ? updated : r));
+                      setEditingRule(null);
+                    }}
+                    onCancel={() => setEditingRule(null)}
+                  />
+                ) : (
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-[13px] font-semibold text-[#16130C]">{rule.name}</p>
+                      <p className="text-[11px] text-[#9C9485] mt-0.5">
+                        {rule.start_date} → {rule.end_date}
+                        {" · "}
+                        {rule.price_type === "fixed"
+                          ? `Fixed ${fmt(rule.value)}/night`
+                          : `×${rule.value} (${rule.value > 1 ? "+" : ""}${Math.round((rule.value - 1) * 100)}%)`}
+                        {" · "}Priority {rule.priority}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          const supabase = createClient();
+                          await supabase.from("pricing_rules").update({ is_active: !rule.is_active }).eq("id", rule.id);
+                          setPricingRules((prev) => prev.map((r) => r.id === rule.id ? { ...r, is_active: !r.is_active } : r));
+                        }}
+                        className={`text-[11px] font-semibold ${rule.is_active ? "text-[#9C9485] hover:text-red-500" : "text-[#16A34A]"}`}
+                      >
+                        {rule.is_active ? "Disable" : "Enable"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setEditingRule(rule.id)}
+                        className="text-[11px] font-semibold text-[#4F46E5] hover:text-[#4338CA]"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          if (!confirm("Delete this pricing rule?")) return;
+                          const supabase = createClient();
+                          await supabase.from("pricing_rules").delete().eq("id", rule.id);
+                          setPricingRules((prev) => prev.filter((r) => r.id !== rule.id));
+                        }}
+                        className="text-[11px] font-semibold text-red-500 hover:text-red-700"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {showAddRule && (
+            <div className="mt-2">
+              <PricingRuleForm
+                initial={null}
+                propertyId={id}
+                onSaved={(newRule) => {
+                  setPricingRules((prev) => [newRule, ...prev]);
+                  setShowAddRule(false);
+                }}
+                onCancel={() => setShowAddRule(false)}
+              />
+            </div>
+          )}
+        </div>
       </Section>
 
       {/* ── Save button ── */}
@@ -805,6 +947,135 @@ function RoomEditor({
           {room ? "Save changes" : "Add room"}
         </button>
         <button onClick={onCancel} className="h-[36px] px-4 border border-[#E2DDD5] text-[12px] font-semibold text-[#5E5848] rounded-lg hover:bg-[#F4F1EC]">Cancel</button>
+      </div>
+    </div>
+  );
+}
+
+/* ---------- Pricing Rule Form ---------- */
+
+function PricingRuleForm({
+  initial,
+  propertyId,
+  onSaved,
+  onCancel,
+}: {
+  initial: PricingRule | null;
+  propertyId: string;
+  onSaved: (rule: PricingRule) => void;
+  onCancel: () => void;
+}) {
+  const [ruleName, setRuleName] = useState(initial?.name ?? "");
+  const [startDate, setStartDate] = useState(initial?.start_date ?? "");
+  const [endDate, setEndDate] = useState(initial?.end_date ?? "");
+  const [priceType, setPriceType] = useState<"multiplier" | "fixed">(initial?.price_type ?? "multiplier");
+  const [value, setValue] = useState<number | "">(initial?.value ?? "");
+  const [priority, setPriority] = useState(initial?.priority ?? 0);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSave = async () => {
+    if (!ruleName.trim()) { setError("Name is required"); return; }
+    if (!startDate || !endDate) { setError("Start and end dates required"); return; }
+    if (endDate < startDate) { setError("End date must be on or after start date"); return; }
+    if (!value) { setError("Value is required"); return; }
+    if (priceType === "multiplier" && Number(value) < 0.1) { setError("Multiplier must be at least 0.1"); return; }
+
+    setSaving(true);
+    setError(null);
+    const supabase = createClient();
+
+    if (initial) {
+      const { data, error: err } = await supabase
+        .from("pricing_rules")
+        .update({ name: ruleName.trim(), start_date: startDate, end_date: endDate, price_type: priceType, value: Number(value), priority })
+        .eq("id", initial.id)
+        .select()
+        .single();
+      if (err) { setError(err.message); setSaving(false); return; }
+      onSaved(data as PricingRule);
+    } else {
+      const { data, error: err } = await supabase
+        .from("pricing_rules")
+        .insert({ property_id: propertyId, name: ruleName.trim(), start_date: startDate, end_date: endDate, price_type: priceType, value: Number(value), priority, is_active: true })
+        .select()
+        .single();
+      if (err) { setError(err.message); setSaving(false); return; }
+      onSaved(data as PricingRule);
+    }
+  };
+
+  return (
+    <div className="bg-[#F4F1EC] rounded-xl p-4 space-y-3">
+      <div className="grid grid-cols-2 gap-3">
+        <div className="col-span-2">
+          <label className="block text-[11px] font-semibold text-[#9C9485] uppercase tracking-wider mb-1">Rule name</label>
+          <input type="text" value={ruleName} onChange={(e) => setRuleName(e.target.value)} placeholder="e.g. Christmas Peak" className={inputCls} />
+        </div>
+        <div>
+          <label className="block text-[11px] font-semibold text-[#9C9485] uppercase tracking-wider mb-1">Start date</label>
+          <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className={inputCls} />
+        </div>
+        <div>
+          <label className="block text-[11px] font-semibold text-[#9C9485] uppercase tracking-wider mb-1">End date</label>
+          <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className={inputCls} />
+        </div>
+      </div>
+
+      <div>
+        <label className="block text-[11px] font-semibold text-[#9C9485] uppercase tracking-wider mb-2">Pricing type</label>
+        <div className="grid grid-cols-2 gap-2">
+          {([
+            { v: "multiplier", label: "Multiplier", hint: "e.g. 1.5 = +50%" },
+            { v: "fixed", label: "Fixed price", hint: "KSh per night" },
+          ] as const).map((opt) => (
+            <label key={opt.v} className={`flex items-start gap-2 p-2.5 rounded-lg border-2 cursor-pointer transition-all ${priceType === opt.v ? "border-[#4F46E5] bg-[#4F46E5]/5" : "border-[#E2DDD5] bg-white hover:border-[#9C9485]"}`}>
+              <input type="radio" checked={priceType === opt.v} onChange={() => setPriceType(opt.v)} className="mt-0.5 accent-[#4F46E5]" />
+              <div>
+                <p className="text-[12px] font-semibold text-[#16130C]">{opt.label}</p>
+                <p className="text-[10px] text-[#9C9485]">{opt.hint}</p>
+              </div>
+            </label>
+          ))}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className="block text-[11px] font-semibold text-[#9C9485] uppercase tracking-wider mb-1">
+            {priceType === "multiplier" ? "Multiplier (e.g. 1.5)" : "Fixed price (KSh)"}
+          </label>
+          <input
+            type="number"
+            min={priceType === "multiplier" ? 0.1 : 0}
+            step={priceType === "multiplier" ? 0.05 : 100}
+            value={value}
+            onChange={(e) => setValue(e.target.value === "" ? "" : parseFloat(e.target.value))}
+            placeholder={priceType === "multiplier" ? "1.5" : "25000"}
+            className={inputCls}
+          />
+          {priceType === "multiplier" && value !== "" && Number(value) > 0 && (
+            <p className="text-[10px] text-[#9C9485] mt-0.5">
+              {Number(value) > 1 ? `+${Math.round((Number(value) - 1) * 100)}% above base price` : Number(value) < 1 ? `${Math.round((1 - Number(value)) * 100)}% below base price` : "Same as base price"}
+            </p>
+          )}
+        </div>
+        <div>
+          <label className="block text-[11px] font-semibold text-[#9C9485] uppercase tracking-wider mb-1">Priority</label>
+          <input type="number" min={0} max={100} value={priority} onChange={(e) => setPriority(parseInt(e.target.value) || 0)} className={inputCls} />
+          <p className="text-[10px] text-[#9C9485] mt-0.5">Higher = takes precedence when rules overlap</p>
+        </div>
+      </div>
+
+      {error && <p className="text-[12px] text-red-600">{error}</p>}
+
+      <div className="flex gap-2">
+        <button type="button" onClick={handleSave} disabled={saving} className="h-[36px] px-4 bg-[#4F46E5] text-white text-[12px] font-semibold rounded-lg hover:bg-[#4338CA] disabled:opacity-50">
+          {saving ? "Saving…" : initial ? "Save changes" : "Add rule"}
+        </button>
+        <button type="button" onClick={onCancel} className="h-[36px] px-4 border border-[#E2DDD5] text-[12px] font-semibold text-[#5E5848] rounded-lg hover:bg-[#F4F1EC] bg-white">
+          Cancel
+        </button>
       </div>
     </div>
   );

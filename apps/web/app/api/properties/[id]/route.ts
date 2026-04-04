@@ -17,6 +17,7 @@ const ALLOWED_FIELDS = new Set([
   "renting_type",
   "entire_place_price",
   "booking_slug",
+  "weekend_multiplier",
 ]);
 
 export async function PATCH(
