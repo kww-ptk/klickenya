@@ -81,6 +81,16 @@ interface Room {
   display_order: number;
 }
 
+interface PropertyFee {
+  id: string;
+  name: string;
+  fee_type: "fixed" | "per_night" | "per_guest" | "percentage";
+  amount: number;
+  apply_by_default: boolean;
+  is_active: boolean;
+  sort_order: number;
+}
+
 interface PricingRule {
   id: string;
   name: string;
@@ -143,6 +153,11 @@ export default function PropertySettingsPage() {
   const [showAddRule, setShowAddRule] = useState(false);
   const [editingRule, setEditingRule] = useState<string | null>(null);
 
+  // Fees
+  const [fees, setFees] = useState<PropertyFee[]>([]);
+  const [showAddFee, setShowAddFee] = useState(false);
+  const [editingFee, setEditingFee] = useState<string | null>(null);
+
   // Rooms
   const [rooms, setRooms] = useState<Room[]>([]);
   const [editingRoom, setEditingRoom] = useState<string | null>(null);
@@ -151,7 +166,7 @@ export default function PropertySettingsPage() {
   useEffect(() => {
     (async () => {
       const supabase = createClient();
-      const [propRes, roomsRes, rulesRes] = await Promise.all([
+      const [propRes, roomsRes, rulesRes, feesRes] = await Promise.all([
         supabase.from("properties").select("*").eq("id", id).single(),
         supabase
           .from("rooms")
@@ -163,6 +178,11 @@ export default function PropertySettingsPage() {
           .select("id, name, start_date, end_date, price_type, value, priority, is_active")
           .eq("property_id", id)
           .order("priority", { ascending: false }),
+        supabase
+          .from("property_fees")
+          .select("id, name, fee_type, amount, apply_by_default, is_active, sort_order")
+          .eq("property_id", id)
+          .order("sort_order"),
       ]);
 
       if (propRes.data) {
@@ -182,6 +202,7 @@ export default function PropertySettingsPage() {
         setWeekendMultiplier(p.weekend_multiplier ?? 1.0);
       }
       setPricingRules((rulesRes.data ?? []) as PricingRule[]);
+      setFees((feesRes.data ?? []) as PropertyFee[]);
       setRooms((roomsRes.data ?? []).map((r) => ({
         ...r,
         amenities: r.amenities ?? [],
@@ -581,6 +602,79 @@ export default function PropertySettingsPage() {
                   setShowAddRule(false);
                 }}
                 onCancel={() => setShowAddRule(false)}
+              />
+            </div>
+          )}
+        </div>
+      </Section>
+
+      {/* ── Fees & charges ── */}
+      <Section title="Fees & charges">
+        <p className="text-[12px] text-[#9C9485] -mt-1">Define reusable fees that appear automatically when creating bookings.</p>
+
+        <div className="mt-1">
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-[13px] font-semibold text-[#16130C]">Fee templates</p>
+            <button type="button" onClick={() => { setShowAddFee(true); setEditingFee(null); }} className="text-[12px] font-semibold text-[#4F46E5] hover:text-[#4338CA]">
+              + Add fee
+            </button>
+          </div>
+
+          {fees.length === 0 && !showAddFee && (
+            <p className="text-[12px] text-[#9C9485] py-3">No fees yet. Add cleaning fees, VAT, tourist levies, etc.</p>
+          )}
+
+          <div className="space-y-2">
+            {fees.map((fee) => (
+              <div key={fee.id} className={`bg-white rounded-xl border border-[#E2DDD5] p-3 ${!fee.is_active ? "opacity-50" : ""}`}>
+                {editingFee === fee.id ? (
+                  <FeeForm
+                    initial={fee}
+                    propertyId={id}
+                    onSaved={(updated) => { setFees((prev) => prev.map((f) => f.id === updated.id ? updated : f)); setEditingFee(null); }}
+                    onCancel={() => setEditingFee(null)}
+                  />
+                ) : (
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-[13px] font-semibold text-[#16130C]">{fee.name}</p>
+                      <p className="text-[11px] text-[#9C9485] mt-0.5">
+                        {fee.fee_type === "fixed" && fmt(fee.amount)}
+                        {fee.fee_type === "per_night" && `${fmt(fee.amount)} / night`}
+                        {fee.fee_type === "per_guest" && `${fmt(fee.amount)} / guest`}
+                        {fee.fee_type === "percentage" && `${fee.amount}% of subtotal`}
+                        {fee.apply_by_default && <span className="ml-1.5 text-[#4F46E5]">· Auto-applied</span>}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <button type="button" onClick={async () => {
+                        const supabase = createClient();
+                        await supabase.from("property_fees").update({ is_active: !fee.is_active }).eq("id", fee.id);
+                        setFees((prev) => prev.map((f) => f.id === fee.id ? { ...f, is_active: !f.is_active } : f));
+                      }} className={`text-[11px] font-semibold ${fee.is_active ? "text-[#9C9485] hover:text-red-500" : "text-[#16A34A]"}`}>
+                        {fee.is_active ? "Disable" : "Enable"}
+                      </button>
+                      <button type="button" onClick={() => setEditingFee(fee.id)} className="text-[11px] font-semibold text-[#4F46E5] hover:text-[#4338CA]">Edit</button>
+                      <button type="button" onClick={async () => {
+                        if (!confirm("Delete this fee?")) return;
+                        const supabase = createClient();
+                        await supabase.from("property_fees").delete().eq("id", fee.id);
+                        setFees((prev) => prev.filter((f) => f.id !== fee.id));
+                      }} className="text-[11px] font-semibold text-red-500 hover:text-red-700">Delete</button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {showAddFee && (
+            <div className="mt-2">
+              <FeeForm
+                initial={null}
+                propertyId={id}
+                onSaved={(newFee) => { setFees((prev) => [...prev, newFee]); setShowAddFee(false); }}
+                onCancel={() => setShowAddFee(false)}
               />
             </div>
           )}
@@ -1072,6 +1166,130 @@ function PricingRuleForm({
       <div className="flex gap-2">
         <button type="button" onClick={handleSave} disabled={saving} className="h-[36px] px-4 bg-[#4F46E5] text-white text-[12px] font-semibold rounded-lg hover:bg-[#4338CA] disabled:opacity-50">
           {saving ? "Saving…" : initial ? "Save changes" : "Add rule"}
+        </button>
+        <button type="button" onClick={onCancel} className="h-[36px] px-4 border border-[#E2DDD5] text-[12px] font-semibold text-[#5E5848] rounded-lg hover:bg-[#F4F1EC] bg-white">
+          Cancel
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ---------- Fee Form ---------- */
+
+function FeeForm({
+  initial,
+  propertyId,
+  onSaved,
+  onCancel,
+}: {
+  initial: PropertyFee | null;
+  propertyId: string;
+  onSaved: (fee: PropertyFee) => void;
+  onCancel: () => void;
+}) {
+  const [feeName, setFeeName] = useState(initial?.name ?? "");
+  const [feeType, setFeeType] = useState<PropertyFee["fee_type"]>(initial?.fee_type ?? "fixed");
+  const [amount, setAmount] = useState<number | "">(initial?.amount ?? "");
+  const [applyByDefault, setApplyByDefault] = useState(initial?.apply_by_default ?? true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const FEE_TYPES = [
+    { value: "fixed",      label: "Flat fee",     hint: "One-time, e.g. cleaning" },
+    { value: "per_night",  label: "Per night",    hint: "Amount × nights" },
+    { value: "per_guest",  label: "Per guest",    hint: "Amount × guests" },
+    { value: "percentage", label: "Percentage",   hint: "% of room subtotal" },
+  ] as const;
+
+  const handleSave = async () => {
+    if (!feeName.trim()) { setError("Name is required"); return; }
+    if (amount === "" || Number(amount) < 0) { setError("Amount must be 0 or greater"); return; }
+    setSaving(true);
+    setError(null);
+    const supabase = createClient();
+
+    if (initial) {
+      const { data, error: err } = await supabase
+        .from("property_fees")
+        .update({ name: feeName.trim(), fee_type: feeType, amount: Number(amount), apply_by_default: applyByDefault })
+        .eq("id", initial.id)
+        .select()
+        .single();
+      if (err) { setError(err.message); setSaving(false); return; }
+      onSaved(data as PropertyFee);
+    } else {
+      const { data: existingFees } = await supabase
+        .from("property_fees")
+        .select("sort_order")
+        .eq("property_id", propertyId)
+        .order("sort_order", { ascending: false })
+        .limit(1)
+        .single();
+      const sortOrder = existingFees ? (existingFees.sort_order ?? 0) + 1 : 0;
+      const { data, error: err } = await supabase
+        .from("property_fees")
+        .insert({ property_id: propertyId, name: feeName.trim(), fee_type: feeType, amount: Number(amount), apply_by_default: applyByDefault, is_active: true, sort_order: sortOrder })
+        .select()
+        .single();
+      if (err) { setError(err.message); setSaving(false); return; }
+      onSaved(data as PropertyFee);
+    }
+  };
+
+  return (
+    <div className="bg-[#F4F1EC] rounded-xl p-4 space-y-3">
+      <div>
+        <label className="block text-[11px] font-semibold text-[#9C9485] uppercase tracking-wider mb-1">Fee name</label>
+        <input type="text" value={feeName} onChange={(e) => setFeeName(e.target.value)} placeholder="e.g. Cleaning fee, Tourist levy, VAT" className={inputCls} />
+      </div>
+
+      <div>
+        <label className="block text-[11px] font-semibold text-[#9C9485] uppercase tracking-wider mb-2">Type</label>
+        <div className="grid grid-cols-2 gap-2">
+          {FEE_TYPES.map((t) => (
+            <label key={t.value} className={`flex items-start gap-2 p-2.5 rounded-lg border-2 cursor-pointer transition-all ${feeType === t.value ? "border-[#4F46E5] bg-[#4F46E5]/5" : "border-[#E2DDD5] bg-white hover:border-[#9C9485]"}`}>
+              <input type="radio" checked={feeType === t.value} onChange={() => setFeeType(t.value)} className="mt-0.5 accent-[#4F46E5]" />
+              <div>
+                <p className="text-[12px] font-semibold text-[#16130C]">{t.label}</p>
+                <p className="text-[10px] text-[#9C9485]">{t.hint}</p>
+              </div>
+            </label>
+          ))}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className="block text-[11px] font-semibold text-[#9C9485] uppercase tracking-wider mb-1">
+            {feeType === "percentage" ? "Percentage (%)" : "Amount (KSh)"}
+          </label>
+          <input
+            type="number"
+            min={0}
+            step={feeType === "percentage" ? 0.5 : 50}
+            value={amount}
+            onChange={(e) => setAmount(e.target.value === "" ? "" : parseFloat(e.target.value))}
+            placeholder={feeType === "percentage" ? "e.g. 16" : "e.g. 2000"}
+            className={inputCls}
+          />
+        </div>
+        <div className="flex flex-col justify-end">
+          <label className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border-2 cursor-pointer transition-all ${applyByDefault ? "border-[#4F46E5] bg-[#4F46E5]/5" : "border-[#E2DDD5] bg-white"}`}>
+            <input type="checkbox" checked={applyByDefault} onChange={(e) => setApplyByDefault(e.target.checked)} className="accent-[#4F46E5]" />
+            <div>
+              <p className="text-[12px] font-semibold text-[#16130C]">Auto-apply</p>
+              <p className="text-[10px] text-[#9C9485]">Pre-checked in new bookings</p>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      {error && <p className="text-[12px] text-red-600">{error}</p>}
+
+      <div className="flex gap-2">
+        <button type="button" onClick={handleSave} disabled={saving} className="h-[36px] px-4 bg-[#4F46E5] text-white text-[12px] font-semibold rounded-lg hover:bg-[#4338CA] disabled:opacity-50">
+          {saving ? "Saving…" : initial ? "Save changes" : "Add fee"}
         </button>
         <button type="button" onClick={onCancel} className="h-[36px] px-4 border border-[#E2DDD5] text-[12px] font-semibold text-[#5E5848] rounded-lg hover:bg-[#F4F1EC] bg-white">
           Cancel

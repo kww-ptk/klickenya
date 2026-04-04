@@ -35,6 +35,7 @@ export async function POST(req: NextRequest) {
     internal_notes,
     payment_method,
     amount_paid,
+    fees, // [{ name, fee_type, amount_kes }]
   } = body;
 
   /* --- Validate required fields --- */
@@ -120,7 +121,10 @@ export async function POST(req: NextRequest) {
   );
   const subtotal = nights * rate_per_night;
   const discountAmount = Number(discount_kes) || 0;
-  const total = subtotal - discountAmount;
+  const feesTotal = Array.isArray(fees)
+    ? fees.reduce((sum: number, f: { amount_kes: number }) => sum + (Number(f.amount_kes) || 0), 0)
+    : 0;
+  const total = subtotal + feesTotal - discountAmount;
   const amountPaid = Number(amount_paid) || 0;
 
   const paymentStatus =
@@ -215,6 +219,18 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // Insert fee line items
+    if (Array.isArray(fees) && fees.length > 0) {
+      await adminClient.from("booking_fees").insert(
+        fees.map((f: { name: string; fee_type: string; amount_kes: number }) => ({
+          booking_id: booking.id,
+          name: f.name,
+          fee_type: f.fee_type,
+          amount_kes: Number(f.amount_kes),
+        }))
+      );
+    }
+
     // Fire-and-forget: send emails
     sendBookingEmails({
       bookingId: booking.id,
@@ -250,6 +266,18 @@ export async function POST(req: NextRequest) {
     .select("*")
     .eq("id", bookingId)
     .single();
+
+  // Insert fee line items
+  if (bookingId && Array.isArray(fees) && fees.length > 0) {
+    await adminClient.from("booking_fees").insert(
+      fees.map((f: { name: string; fee_type: string; amount_kes: number }) => ({
+        booking_id: bookingId,
+        name: f.name,
+        fee_type: f.fee_type,
+        amount_kes: Number(f.amount_kes),
+      }))
+    );
+  }
 
   // Fire-and-forget: send emails
   sendBookingEmails({

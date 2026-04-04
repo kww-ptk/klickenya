@@ -98,6 +98,12 @@ export function NewBookingSidePanel({
   } | null>(null);
   const [rateManuallyEdited, setRateManuallyEdited] = useState(false);
 
+  // Fees
+  interface FeeTemplate { id: string; name: string; fee_type: string; amount: number; apply_by_default: boolean; }
+  interface FeeLineItem { id: string; name: string; fee_type: string; amount_kes: number; }
+  const [feeTemplates, setFeeTemplates] = useState<FeeTemplate[]>([]);
+  const [selectedFees, setSelectedFees] = useState<FeeLineItem[]>([]);
+
   // Build full phone number from country code + local number
   const fullPhone = form.guest_phone.trim()
     ? `${form.country_code}${form.guest_phone.replace(/^0+/, "").replace(/\D/g, "")}`
@@ -118,8 +124,55 @@ export function NewBookingSidePanel({
     )
   );
   const subtotal = nights * form.rate_per_night;
-  const finalTotal = Math.max(0, subtotal - form.discount_kes);
+  const feesTotal = selectedFees.reduce((s, f) => s + f.amount_kes, 0);
+  const finalTotal = Math.max(0, subtotal + feesTotal - form.discount_kes);
   const balance = Math.max(0, finalTotal - form.amount_paid);
+
+  // Fee calculator: compute amount_kes from a template given current booking context
+  const calcFeeAmount = (t: { fee_type: string; amount: number }): number => {
+    switch (t.fee_type) {
+      case "per_night":    return Math.round(t.amount * nights);
+      case "per_guest":   return Math.round(t.amount * form.guest_count);
+      case "percentage":  return Math.round(subtotal * t.amount / 100);
+      default:            return t.amount; // fixed
+    }
+  };
+
+  // Fetch fee templates once on mount
+  useEffect(() => {
+    fetch(`/api/properties/${propertyId}/fees`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (Array.isArray(data.fees)) {
+          setFeeTemplates(data.fees);
+          // Auto-select default fees (amounts calculated below via separate effect)
+          setSelectedFees(
+            data.fees
+              .filter((f: { apply_by_default: boolean; is_active: boolean }) => f.apply_by_default && f.is_active)
+              .map((f: { id: string; name: string; fee_type: string; amount: number }) => ({
+                id: f.id,
+                name: f.name,
+                fee_type: f.fee_type,
+                amount_kes: f.fee_type === "fixed" ? f.amount : 0, // recalculated below
+              }))
+          );
+        }
+      })
+      .catch(() => {});
+  }, [propertyId]);
+
+  // Recalculate variable fee amounts when nights/guests/subtotal change
+  useEffect(() => {
+    if (!feeTemplates.length) return;
+    setSelectedFees((prev) =>
+      prev.map((sf) => {
+        const tmpl = feeTemplates.find((t) => t.id === sf.id);
+        if (!tmpl) return sf;
+        return { ...sf, amount_kes: calcFeeAmount(tmpl) };
+      })
+    );
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [nights, form.guest_count, subtotal]);
 
   // Update rate when room changes; reset manual-edit flag so pricing endpoint can re-fill
   useEffect(() => {
@@ -225,6 +278,13 @@ export function NewBookingSidePanel({
     }
   }, [form.payment_method]); // Only trigger on method change
 
+  const toggleFee = (tmpl: { id: string; name: string; fee_type: string; amount: number }) => {
+    setSelectedFees((prev) => {
+      if (prev.find((f) => f.id === tmpl.id)) return prev.filter((f) => f.id !== tmpl.id);
+      return [...prev, { id: tmpl.id, name: tmpl.name, fee_type: tmpl.fee_type, amount_kes: calcFeeAmount(tmpl) }];
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -289,6 +349,7 @@ export function NewBookingSidePanel({
               : form.internal_notes.trim() || null,
             payment_method: form.payment_method,
             amount_paid: perRoomPayment,
+            fees: isEntireBooking ? [] : selectedFees.map(({ name, fee_type, amount_kes }) => ({ name, fee_type, amount_kes })),
           }),
         });
 
@@ -566,11 +627,50 @@ export function NewBookingSidePanel({
           <div className="bg-[#F4F1EC] rounded-lg p-3 space-y-1">
             <div className="flex justify-between text-[13px]">
               <span className="text-[#5E5848]">
-                {fmt(form.rate_per_night)} x {nights} night{nights !== 1 ? "s" : ""}
+                {fmt(form.rate_per_night)} × {nights} night{nights !== 1 ? "s" : ""}
               </span>
               <span className="text-[#16130C]">{fmt(subtotal)}</span>
             </div>
+            {selectedFees.map((f) => (
+              <div key={f.id} className="flex justify-between text-[13px]">
+                <span className="text-[#5E5848]">{f.name}</span>
+                <span className="text-[#16130C]">{fmt(f.amount_kes)}</span>
+              </div>
+            ))}
           </div>
+
+          {/* Fees */}
+          {!isEntireBooking && feeTemplates.filter((t) => t.is_active).length > 0 && (
+            <div>
+              <p className="text-[12px] font-semibold text-[#16130C] mb-1.5">Fees & charges</p>
+              <div className="space-y-1">
+                {feeTemplates.filter((t) => t.is_active).map((t) => {
+                  const selected = !!selectedFees.find((f) => f.id === t.id);
+                  const calcAmt = calcFeeAmount(t);
+                  return (
+                    <label key={t.id} className={`flex items-center justify-between px-3 py-2 rounded-lg border cursor-pointer transition-colors ${selected ? "border-[#4F46E5] bg-[#4F46E5]/5" : "border-[#E2DDD5] bg-white"}`}>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={selected}
+                          onChange={() => toggleFee(t)}
+                          className="accent-[#4F46E5]"
+                        />
+                        <span className="text-[13px] text-[#16130C]">{t.name}</span>
+                        <span className="text-[11px] text-[#9C9485]">
+                          {t.fee_type === "per_night" ? `${fmt(t.amount)}/night` :
+                           t.fee_type === "per_guest" ? `${fmt(t.amount)}/guest` :
+                           t.fee_type === "percentage" ? `${t.amount}%` :
+                           "flat"}
+                        </span>
+                      </div>
+                      <span className="text-[13px] font-semibold text-[#16130C] shrink-0">{fmt(calcAmt)}</span>
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           {/* Discount */}
           <div>

@@ -110,6 +110,7 @@ export function BookingSidePanel({
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [internalNotes, setInternalNotes] = useState(booking.internal_notes ?? "");
   const notesTimeout = useRef<NodeJS.Timeout | null>(null);
+  const [bookingFees, setBookingFees] = useState<{ id: string; name: string; amount_kes: number }[]>([]);
 
   const room = rooms.find((r) => r.id === booking.room_id);
   const statusInfo = STATUS_CONFIG[booking.status] ?? STATUS_CONFIG.confirmed;
@@ -141,16 +142,24 @@ export function BookingSidePanel({
       }
     })();
 
-    // Fetch payments client-side
+    // Fetch payments + fees client-side
     (async () => {
       const { createClient } = await import("@/lib/supabase/client");
       const supabase = createClient();
-      const { data } = await supabase
-        .from("booking_payments")
-        .select("id, amount_kes, method, reference, notes, paid_at")
-        .eq("booking_id", booking.id)
-        .order("paid_at", { ascending: true });
-      setPayments(data ?? []);
+      const [paymentsRes, feesRes] = await Promise.all([
+        supabase
+          .from("booking_payments")
+          .select("id, amount_kes, method, reference, notes, paid_at")
+          .eq("booking_id", booking.id)
+          .order("paid_at", { ascending: true }),
+        supabase
+          .from("booking_fees")
+          .select("id, name, amount_kes")
+          .eq("booking_id", booking.id)
+          .order("created_at", { ascending: true }),
+      ]);
+      setPayments(paymentsRes.data ?? []);
+      setBookingFees(feesRes.data ?? []);
       setLoadingPayments(false);
     })();
   }, [booking.id]);
@@ -282,6 +291,12 @@ export function BookingSidePanel({
                 <span className="text-[#9C9485]">Subtotal</span>
                 <span className="text-[#16130C]">{fmt(booking.subtotal_kes)}</span>
               </div>
+              {bookingFees.map((f) => (
+                <div key={f.id} className="flex justify-between text-[13px]">
+                  <span className="text-[#9C9485]">{f.name}</span>
+                  <span className="text-[#16130C]">{fmt(f.amount_kes)}</span>
+                </div>
+              ))}
               {(booking.discount_kes ?? 0) > 0 && (
                 <div className="flex justify-between text-[13px]">
                   <span className="text-[#9C9485]">Discount</span>
