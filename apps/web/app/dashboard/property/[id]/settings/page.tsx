@@ -123,6 +123,9 @@ export default function PropertySettingsPage() {
   const [bookingSlug, setBookingSlug] = useState("");
   const [isActive, setIsActive] = useState(false);
 
+  // Sync button
+  const [syncState, setSyncState] = useState<"idle" | "syncing" | "synced" | "error">("idle");
+
   // Rooms
   const [rooms, setRooms] = useState<Room[]>([]);
   const [editingRoom, setEditingRoom] = useState<string | null>(null);
@@ -163,6 +166,21 @@ export default function PropertySettingsPage() {
       setLoading(false);
     })();
   }, [id]);
+
+  const syncLiveListing = async () => {
+    setSyncState("syncing");
+    try {
+      const res = await fetch(`/api/properties/${id}/revalidate`, { method: "POST" });
+      if (res.ok) {
+        setSyncState("synced");
+        setTimeout(() => setSyncState("idle"), 10_000);
+      } else {
+        setSyncState("error");
+      }
+    } catch {
+      setSyncState("error");
+    }
+  };
 
   const saveProperty = async () => {
     setSaving(true);
@@ -250,9 +268,33 @@ export default function PropertySettingsPage() {
         <Link href={`/dashboard/property/${id}`} className="text-[13px] text-[#9C9485] hover:text-[#16130C] transition-colors">
           ← Back to calendar
         </Link>
-        <h1 className="font-display text-[22px] lg:text-[28px] font-bold tracking-[-0.03em] text-[#16130C] mt-2">
-          Property Settings
-        </h1>
+        <div className="flex items-center justify-between mt-2">
+          <h1 className="font-display text-[22px] lg:text-[28px] font-bold tracking-[-0.03em] text-[#16130C]">
+            Property Settings
+          </h1>
+          <button
+            type="button"
+            onClick={syncLiveListing}
+            disabled={syncState === "syncing"}
+            className={`flex items-center gap-1.5 px-3 h-8 rounded-full text-[12px] font-semibold transition-colors disabled:cursor-not-allowed ${
+              syncState === "synced"
+                ? "bg-[#16A34A]/10 text-[#16A34A]"
+                : syncState === "error"
+                ? "bg-red-50 text-red-600"
+                : "bg-[#F4F1EC] text-[#5E5848] hover:bg-[#E2DDD5]"
+            }`}
+          >
+            {syncState === "syncing" ? (
+              "Syncing…"
+            ) : syncState === "synced" ? (
+              "✓ Synced just now"
+            ) : syncState === "error" ? (
+              "Sync failed — try again"
+            ) : (
+              "🔄 Sync live listing"
+            )}
+          </button>
+        </div>
       </div>
 
       {/* ── Booking system toggle ── */}

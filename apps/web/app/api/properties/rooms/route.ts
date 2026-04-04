@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { adminClient } from "@/lib/supabase/admin";
 
@@ -24,7 +25,7 @@ export async function POST(req: NextRequest) {
   // Verify ownership
   const { data: property } = await adminClient
     .from("properties")
-    .select("id, owner_id")
+    .select("id, owner_id, listing_slug")
     .eq("id", property_id)
     .single();
 
@@ -65,6 +66,11 @@ export async function POST(req: NextRequest) {
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
+
+  if (property.listing_slug) {
+    revalidatePath(`/stays/${property.listing_slug}`);
+  }
+  revalidatePath(`/dashboard/property/${property_id}`);
 
   return NextResponse.json({ room: newRoom }, { status: 201 });
 }

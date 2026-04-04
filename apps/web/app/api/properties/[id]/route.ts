@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { adminClient } from "@/lib/supabase/admin";
 
@@ -69,6 +70,11 @@ export async function PATCH(
   if (updateErr) {
     return NextResponse.json({ error: updateErr.message }, { status: 500 });
   }
+
+  if (updated.listing_slug) {
+    revalidatePath(`/stays/${updated.listing_slug}`);
+  }
+  revalidatePath(`/dashboard/property/${id}`);
 
   return NextResponse.json({ property: updated });
 }

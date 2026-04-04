@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { adminClient } from "@/lib/supabase/admin";
 
@@ -44,7 +45,7 @@ export async function PATCH(
 
   const { data: property } = await adminClient
     .from("properties")
-    .select("id, owner_id")
+    .select("id, owner_id, listing_slug")
     .eq("id", room.property_id)
     .single();
 
@@ -78,6 +79,11 @@ export async function PATCH(
   if (updateErr) {
     return NextResponse.json({ error: updateErr.message }, { status: 500 });
   }
+
+  if (property.listing_slug) {
+    revalidatePath(`/stays/${property.listing_slug}`);
+  }
+  revalidatePath(`/dashboard/property/${property.id}`);
 
   return NextResponse.json({ room: updated });
 }
