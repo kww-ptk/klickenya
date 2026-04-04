@@ -99,7 +99,7 @@ export function NewBookingSidePanel({
   const [rateManuallyEdited, setRateManuallyEdited] = useState(false);
 
   // Fees
-  interface FeeTemplate { id: string; name: string; fee_type: string; amount: number; apply_by_default: boolean; }
+  interface FeeTemplate { id: string; name: string; fee_type: string; amount: number; apply_by_default: boolean; is_active: boolean; }
   interface FeeLineItem { id: string; name: string; fee_type: string; amount_kes: number; }
   const [feeTemplates, setFeeTemplates] = useState<FeeTemplate[]>([]);
   const [selectedFees, setSelectedFees] = useState<FeeLineItem[]>([]);
