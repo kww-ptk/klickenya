@@ -462,8 +462,8 @@ export function StayBookingSidebar({
           <label className="text-[10px] font-bold text-[#9C9485] uppercase tracking-wide">Guests</label>
           <div className="flex items-center gap-3">
             <button type="button" onClick={() => setGuests(Math.max(1, guests - 1))} className="size-8 rounded-full border border-[#E2DDD5] flex items-center justify-center text-[#5E5848] hover:bg-[#F4F1EC] disabled:opacity-30" disabled={guests <= 1}>-</button>
-            <span className="text-[14px] font-semibold text-[#16130C] w-4 text-center">{guests}</span>
-            <button type="button" onClick={() => setGuests(Math.min(maxGuests, guests + 1))} className="size-8 rounded-full border border-[#E2DDD5] flex items-center justify-center text-[#5E5848] hover:bg-[#F4F1EC] disabled:opacity-30" disabled={guests >= maxGuests}>+</button>
+            <span className="text-[14px] font-semibold text-[#16130C] w-6 text-center">{guests}</span>
+            <button type="button" onClick={() => setGuests(Math.min(maxGuests > 0 ? maxGuests : 20, guests + 1))} className="size-8 rounded-full border border-[#E2DDD5] flex items-center justify-center text-[#5E5848] hover:bg-[#F4F1EC] disabled:opacity-30" disabled={guests >= (maxGuests > 0 ? maxGuests : 20)}>+</button>
           </div>
         </div>
 
@@ -662,35 +662,48 @@ export function StayBookingSidebar({
 
                       {/* Right: Guests & Children */}
                       <div className="flex-1 sm:min-w-[200px] space-y-3 sm:pt-6">
-                        {/* Adults */}
-                        <div className="border border-[#E2DDD5] rounded-[14px] p-3.5">
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <p className="text-[13px] font-semibold text-[#16130C]">Adults</p>
-                              <p className="text-[11px] text-[#9C9485]">Age 13+</p>
-                            </div>
-                            <div className="flex items-center gap-3">
-                              <button type="button" onClick={() => setModalGuests(Math.max(1, modalGuests - 1))} className="size-8 rounded-full border border-[#E2DDD5] flex items-center justify-center text-[#5E5848] hover:bg-[#F4F1EC] disabled:opacity-30" disabled={modalGuests <= 1}>-</button>
-                              <span className="text-[14px] font-semibold text-[#16130C] w-4 text-center">{modalGuests}</span>
-                              <button type="button" onClick={() => setModalGuests(Math.min(maxGuests, modalGuests + 1))} className="size-8 rounded-full border border-[#E2DDD5] flex items-center justify-center text-[#5E5848] hover:bg-[#F4F1EC] disabled:opacity-30" disabled={modalGuests >= maxGuests}>+</button>
-                            </div>
-                          </div>
-                        </div>
+                        {(() => {
+                          const totalGuests = modalGuests + modalChildren;
+                          const cap = maxGuests > 0 ? maxGuests : 20;
+                          return (
+                            <>
+                              {/* Adults */}
+                              <div className="border border-[#E2DDD5] rounded-[14px] p-3.5">
+                                <div className="flex items-center justify-between">
+                                  <div>
+                                    <p className="text-[13px] font-semibold text-[#16130C]">Adults</p>
+                                    <p className="text-[11px] text-[#9C9485]">Age 13+</p>
+                                  </div>
+                                  <div className="flex items-center gap-3">
+                                    <button type="button" onClick={() => setModalGuests(modalGuests - 1)} className="size-8 rounded-full border border-[#E2DDD5] flex items-center justify-center text-[#5E5848] hover:bg-[#F4F1EC] disabled:opacity-30 disabled:cursor-not-allowed" disabled={modalGuests <= 1}>-</button>
+                                    <span className="text-[14px] font-semibold text-[#16130C] w-6 text-center">{modalGuests}</span>
+                                    <button type="button" onClick={() => setModalGuests(modalGuests + 1)} className="size-8 rounded-full border border-[#E2DDD5] flex items-center justify-center text-[#5E5848] hover:bg-[#F4F1EC] disabled:opacity-30 disabled:cursor-not-allowed" disabled={totalGuests >= cap}>+</button>
+                                  </div>
+                                </div>
+                              </div>
 
-                        {/* Children */}
-                        <div className="border border-[#E2DDD5] rounded-[14px] p-3.5">
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <p className="text-[13px] font-semibold text-[#16130C]">Children</p>
-                              <p className="text-[11px] text-[#9C9485]">Age 0–12</p>
-                            </div>
-                            <div className="flex items-center gap-3">
-                              <button type="button" onClick={() => setModalChildren(Math.max(0, modalChildren - 1))} className="size-8 rounded-full border border-[#E2DDD5] flex items-center justify-center text-[#5E5848] hover:bg-[#F4F1EC] disabled:opacity-30" disabled={modalChildren <= 0}>-</button>
-                              <span className="text-[14px] font-semibold text-[#16130C] w-4 text-center">{modalChildren}</span>
-                              <button type="button" onClick={() => setModalChildren(Math.min(10, modalChildren + 1))} className="size-8 rounded-full border border-[#E2DDD5] flex items-center justify-center text-[#5E5848] hover:bg-[#F4F1EC] disabled:opacity-30" disabled={modalChildren >= 10}>+</button>
-                            </div>
-                          </div>
-                        </div>
+                              {/* Children */}
+                              <div className="border border-[#E2DDD5] rounded-[14px] p-3.5">
+                                <div className="flex items-center justify-between">
+                                  <div>
+                                    <p className="text-[13px] font-semibold text-[#16130C]">Children</p>
+                                    <p className="text-[11px] text-[#9C9485]">Age 0–12</p>
+                                  </div>
+                                  <div className="flex items-center gap-3">
+                                    <button type="button" onClick={() => setModalChildren(modalChildren - 1)} className="size-8 rounded-full border border-[#E2DDD5] flex items-center justify-center text-[#5E5848] hover:bg-[#F4F1EC] disabled:opacity-30 disabled:cursor-not-allowed" disabled={modalChildren <= 0}>-</button>
+                                    <span className="text-[14px] font-semibold text-[#16130C] w-6 text-center">{modalChildren}</span>
+                                    <button type="button" onClick={() => setModalChildren(modalChildren + 1)} className="size-8 rounded-full border border-[#E2DDD5] flex items-center justify-center text-[#5E5848] hover:bg-[#F4F1EC] disabled:opacity-30 disabled:cursor-not-allowed" disabled={totalGuests >= cap}>+</button>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Capacity hint */}
+                              {totalGuests >= cap && (
+                                <p className="text-[10px] text-[#E8A020] font-medium">Maximum {cap} guests for this property</p>
+                              )}
+                            </>
+                          );
+                        })()}
 
                         {/* Trip summary */}
                         {modalCheckIn && modalCheckOut && modalCheckOut > modalCheckIn && (
