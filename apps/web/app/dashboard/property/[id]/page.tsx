@@ -5,6 +5,8 @@ import { getAuthUser } from "../../_lib/auth";
 import { adminClient } from "@/lib/supabase/admin";
 import { sanityClient } from "@/lib/sanity/client";
 import { PropertyCalendarWrapper } from "./_components/PropertyCalendarWrapper";
+import { RoomManagementSection } from "./_components/RoomManagementSection";
+import type { RoomData } from "./_components/RoomEditPanel";
 
 export default async function PropertyDashboardPage({
   params,
@@ -63,9 +65,8 @@ export default async function PropertyDashboardPage({
     await Promise.all([
       adminClient
         .from("rooms")
-        .select("id, name, room_number, room_type, max_guests, base_price_kes, is_active")
+        .select("id, name, room_number, room_type, bed_type, room_size_sqm, max_guests, base_price_kes, description, amenities, photos, is_active, display_order")
         .eq("property_id", id)
-        .eq("is_active", true)
         .order("display_order"),
       adminClient
         .from("bookings")
@@ -105,7 +106,12 @@ export default async function PropertyDashboardPage({
         .gt("end_date", todayStr),
     ]);
 
-  const rooms = roomsResult.data ?? [];
+  const allRooms = (roomsResult.data ?? []).map((r) => ({
+    ...r,
+    amenities: r.amenities ?? [],
+    photos: r.photos ?? [],
+  })) as RoomData[];
+  const rooms = allRooms.filter((r) => r.is_active);
   const checkIns = checkInsResult.data ?? [];
   const checkOuts = checkOutsResult.data ?? [];
   const bookings = bookingsResult.data ?? [];
@@ -122,8 +128,8 @@ export default async function PropertyDashboardPage({
     camp: "Safari Camp",
   };
 
-  // If no rooms, show setup prompt
-  if (rooms.length === 0) {
+  // If no rooms at all, show setup prompt
+  if (allRooms.length === 0) {
     return (
       <div>
         <div className="mb-5">
@@ -319,6 +325,15 @@ export default async function PropertyDashboardPage({
           rooms={rooms}
           bookings={bookings}
           blockedDates={blockedDates}
+        />
+      </div>
+
+      {/* Room management */}
+      <div className="mb-8">
+        <RoomManagementSection
+          initialRooms={allRooms}
+          propertyId={property.id}
+          propertyName={property.name}
         />
       </div>
     </div>
