@@ -249,7 +249,6 @@ function StayDetail({
                   onOpenForRoomHandled={() => setBookingRoomKey(null)}
                   bookingMode="enquiry"
                   listingPhoto={photos[0]}
-                  listingHighlights={highlights}
                 />
               </div>
             </aside>

@@ -88,8 +88,6 @@ interface StayBookingSidebarProps {
   bookingMode?: string;
   /** Hero photo URL for the left panel when no room is previewed */
   listingPhoto?: string;
-  /** Property highlights shown as trust signals in the left panel */
-  listingHighlights?: Array<{ emoji: string; title: string; description?: string }>;
 }
 
 function nightsBetween(a: string, b: string): number {
@@ -122,7 +120,6 @@ export function StayBookingSidebar({
   onOpenForRoomHandled,
   bookingMode = "enquiry",
   listingPhoto,
-  listingHighlights,
 }: StayBookingSidebarProps) {
   // Dates
   const [checkIn, setCheckIn] = useState("");
@@ -634,72 +631,41 @@ export function StayBookingSidebar({
               ) : (
                 <div className="flex-1 flex flex-col overflow-hidden">
                   {/* Hero photo */}
-                  {listingPhoto ? (
-                    <div className="relative h-[210px] bg-[#E2DDD5] shrink-0">
-                      <Image src={listingPhoto} alt={listingTitle} fill className="object-cover" sizes="400px" unoptimized={!isOptimizableUrl(listingPhoto)} />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent" />
-                      <div className="absolute bottom-3 left-4 right-4">
-                        <p className="font-display text-[18px] font-bold text-white leading-tight drop-shadow">{listingTitle}</p>
-                        {price > 0 && (
-                          <p className="text-[12px] text-white/80 mt-0.5">From <span className="font-semibold text-[#F8D06B]">{fmt(price)}</span> / {priceUnit}</p>
-                        )}
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="h-[140px] bg-[#E2DDD5] shrink-0 flex flex-col items-center justify-center gap-2">
-                      <span className="text-[44px]">🏨</span>
-                      <p className="text-[14px] font-semibold text-[#16130C]">{listingTitle}</p>
-                    </div>
-                  )}
-
-                  {/* Trust content */}
-                  <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                    {/* Rating + badges */}
-                    {(avgRating || isVerified || recentBookings) && (
-                      <div className="flex flex-wrap gap-2">
-                        {avgRating != null && avgRating > 0 && (
-                          <span className="inline-flex items-center gap-1.5 bg-white border border-[#E2DDD5] rounded-full px-2.5 py-1 text-[11px] font-semibold text-[#16130C]">
-                            <svg className="size-3 text-[#E8A020]" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
-                            {avgRating.toFixed(1)}{reviewCount ? ` · ${reviewCount} reviews` : ""}
-                          </span>
-                        )}
-                        {isVerified && (
-                          <span className="inline-flex items-center gap-1.5 bg-white border border-[#E2DDD5] rounded-full px-2.5 py-1 text-[11px] font-semibold text-[#16A34A]">
-                            <svg className="size-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/></svg>
-                            Verified host
-                          </span>
-                        )}
-                        {recentBookings != null && recentBookings > 0 && (
-                          <span className="inline-flex items-center gap-1.5 bg-white border border-[#E2DDD5] rounded-full px-2.5 py-1 text-[11px] font-semibold text-[#5E5848]">
-                            🔥 Booked {recentBookings}x this month
-                          </span>
-                        )}
-                      </div>
-                    )}
-
-                    {/* Property highlights */}
-                    {listingHighlights && listingHighlights.length > 0 && (
-                      <div>
-                        <p className="text-[10px] font-bold text-[#9C9485] uppercase tracking-wider mb-2">Why guests love it</p>
-                        <div className="space-y-2">
-                          {listingHighlights.slice(0, 4).map((h, i) => (
-                            <div key={i} className="flex items-start gap-2.5 bg-white rounded-xl p-2.5 border border-[#E2DDD5]">
-                              <span className="text-[16px] shrink-0 mt-0.5">{h.emoji}</span>
-                              <div className="min-w-0">
-                                <p className="text-[11px] font-semibold text-[#16130C]">{h.title}</p>
-                                {h.description && <p className="text-[10px] text-[#9C9485] mt-0.5 line-clamp-2">{h.description}</p>}
-                              </div>
-                            </div>
-                          ))}
+                  {(() => {
+                    const roomPrices = (sanityRooms ?? []).map((r) => r.pricePerNight).filter((p) => p > 0);
+                    const displayPrice = roomPrices.length > 0 ? Math.min(...roomPrices) : (price > 0 ? price : 0);
+                    return listingPhoto ? (
+                      <div className="relative flex-1 bg-[#E2DDD5]">
+                        <Image src={listingPhoto} alt={listingTitle} fill className="object-cover" sizes="400px" unoptimized={!isOptimizableUrl(listingPhoto)} />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
+                        <div className="absolute bottom-4 left-4 right-4">
+                          <p className="font-display text-[20px] font-bold text-white leading-tight drop-shadow">{listingTitle}</p>
+                          {displayPrice > 0 && (
+                            <p className="text-[13px] text-white/80 mt-1">From <span className="font-semibold text-[#F8D06B]">{fmt(displayPrice)}</span> / {priceUnit}</p>
+                          )}
+                          <div className="flex flex-wrap gap-2 mt-3">
+                            {isVerified && (
+                              <span className="inline-flex items-center gap-1.5 bg-white/15 backdrop-blur-sm border border-white/25 rounded-full px-2.5 py-1 text-[11px] font-semibold text-white">
+                                <svg className="size-3 text-[#4ADE80]" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/></svg>
+                                Verified host
+                              </span>
+                            )}
+                            {recentBookings != null && recentBookings > 0 && (
+                              <span className="inline-flex items-center gap-1.5 bg-white/15 backdrop-blur-sm border border-white/25 rounded-full px-2.5 py-1 text-[11px] font-semibold text-white">
+                                🔥 Booked {recentBookings}x this month
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </div>
-                    )}
-
-                    {/* Step hint */}
-                    <p className="text-[11px] text-[#9C9485] italic">
-                      {step === "dates" ? "Pick your dates to check room availability →" : "Select a room to see full details →"}
-                    </p>
-                  </div>
+                    ) : (
+                      <div className="flex-1 flex flex-col items-center justify-center p-8 text-center gap-3">
+                        <span className="text-[48px]">🏨</span>
+                        <p className="text-[15px] font-semibold text-[#16130C]">{listingTitle}</p>
+                        {displayPrice > 0 && <p className="text-[13px] text-[#9C9485]">From <span className="font-semibold text-[#E8A020]">{fmt(displayPrice)}</span> / {priceUnit}</p>}
+                      </div>
+                    );
+                  })()}
                 </div>
               )}
             </div>
