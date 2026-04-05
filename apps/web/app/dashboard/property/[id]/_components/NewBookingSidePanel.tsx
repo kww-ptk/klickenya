@@ -87,6 +87,7 @@ export function NewBookingSidePanel({
     guest_notes: "",
     internal_notes: "",
   });
+  const [sendConfirmation, setSendConfirmation] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [availability, setAvailability] = useState<AvailabilityResult | null>(null);
@@ -350,6 +351,7 @@ export function NewBookingSidePanel({
             payment_method: form.payment_method,
             amount_paid: perRoomPayment,
             fees: isEntireBooking ? [] : selectedFees.map(({ name, fee_type, amount_kes }) => ({ name, fee_type, amount_kes })),
+            send_confirmation: !!(form.guest_email.trim()) && sendConfirmation,
           }),
         });
 
@@ -488,6 +490,17 @@ export function NewBookingSidePanel({
               className="w-full h-[40px] px-3 rounded-lg border border-[#E2DDD5] text-[14px] text-[#16130C] placeholder:text-[#9C9485] focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] outline-none transition-colors"
               placeholder="guest@email.com"
             />
+            {form.guest_email.trim() && (
+              <label className="flex items-center gap-2 mt-2 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={sendConfirmation}
+                  onChange={(e) => setSendConfirmation(e.target.checked)}
+                  className="w-4 h-4 rounded border-[#E2DDD5] accent-[#E8A020]"
+                />
+                <span className="text-[12px] text-[#5E5848]">Send booking confirmation email to guest</span>
+              </label>
+            )}
           </div>
 
           {/* Room selector */}

@@ -36,6 +36,7 @@ export async function POST(req: NextRequest) {
     payment_method,
     amount_paid,
     fees, // [{ name, fee_type, amount_kes }]
+    send_confirmation, // boolean: owner opted to email the guest
   } = body;
 
   /* --- Validate required fields --- */
@@ -231,26 +232,28 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Fire-and-forget: send emails
-    sendBookingEmails({
-      bookingId: booking.id,
-      propertyId: property_id,
-      roomId: room_id,
-      guestName: guest_name.trim(),
-      guestEmail: guest_email?.trim() || null,
-      guestPhone: guest_phone?.trim() || null,
-      guestCount: guest_count || 1,
-      checkIn: check_in_date,
-      checkOut: check_out_date,
-      nights,
-      ratePerNight: rate_per_night,
-      subtotal,
-      discountKes: discountAmount,
-      totalKes: total,
-      amountPaid,
-      balance: total - amountPaid,
-      ownerId: user.id,
-    });
+    // Send confirmation email if owner opted in
+    if (send_confirmation && guest_email?.trim()) {
+      sendBookingEmails({
+        bookingId: booking.id,
+        propertyId: property_id,
+        roomId: room_id,
+        guestName: guest_name.trim(),
+        guestEmail: guest_email.trim(),
+        guestPhone: guest_phone?.trim() || null,
+        guestCount: guest_count || 1,
+        checkIn: check_in_date,
+        checkOut: check_out_date,
+        nights,
+        ratePerNight: rate_per_night,
+        subtotal,
+        discountKes: discountAmount,
+        totalKes: total,
+        amountPaid,
+        balance: total - amountPaid,
+        ownerId: user.id,
+      });
+    }
 
     return NextResponse.json({ booking }, { status: 201 });
   }
@@ -282,26 +285,28 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Fire-and-forget: send emails
-  sendBookingEmails({
-    bookingId: bookingId ?? "unknown",
-    propertyId: property_id,
-    roomId: room_id,
-    guestName: guest_name.trim(),
-    guestEmail: guest_email?.trim() || null,
-    guestPhone: guest_phone?.trim() || null,
-    guestCount: guest_count || 1,
-    checkIn: check_in_date,
-    checkOut: check_out_date,
-    nights,
-    ratePerNight: rate_per_night,
-    subtotal,
-    discountKes: discountAmount,
-    totalKes: total,
-    amountPaid,
-    balance: total - amountPaid,
-    ownerId: user.id,
-  });
+  // Send confirmation email if owner opted in
+  if (send_confirmation && guest_email?.trim()) {
+    sendBookingEmails({
+      bookingId: bookingId ?? "unknown",
+      propertyId: property_id,
+      roomId: room_id,
+      guestName: guest_name.trim(),
+      guestEmail: guest_email.trim(),
+      guestPhone: guest_phone?.trim() || null,
+      guestCount: guest_count || 1,
+      checkIn: check_in_date,
+      checkOut: check_out_date,
+      nights,
+      ratePerNight: rate_per_night,
+      subtotal,
+      discountKes: discountAmount,
+      totalKes: total,
+      amountPaid,
+      balance: total - amountPaid,
+      ownerId: user.id,
+    });
+  }
 
   return NextResponse.json({ booking: newBooking ?? txResult }, { status: 201 });
 }
@@ -313,7 +318,7 @@ async function sendBookingEmails(p: {
   propertyId: string;
   roomId: string;
   guestName: string;
-  guestEmail: string | null;
+  guestEmail: string;
   guestPhone: string | null;
   guestCount: number;
   checkIn: string;
@@ -349,11 +354,10 @@ async function sendBookingEmails(p: {
     const sends: Promise<unknown>[] = [];
 
     // 1. Guest confirmation email
-    if (p.guestEmail) {
-      sends.push(
-        resend.emails.send({
-          from: "Klickenya Bookings <bookings@klickenya.com>",
-          to: p.guestEmail,
+    sends.push(
+      resend.emails.send({
+        from: "Klickenya Bookings <bookings@klickenya.com>",
+        to: p.guestEmail,
           subject: `Booking confirmed — ${propertyName}`,
           html: bookingConfirmationGuestHtml({
             guestName: p.guestName,
@@ -373,9 +377,8 @@ async function sendBookingEmails(p: {
             address,
             bookingId: p.bookingId,
           }),
-        }).catch((e: unknown) => console.error("[bookings] guest email failed:", e))
-      );
-    }
+      }).catch((e: unknown) => console.error("[bookings] guest email failed:", e))
+    );
 
     // 2. Owner notification email
     if (ownerEmail) {
@@ -388,7 +391,7 @@ async function sendBookingEmails(p: {
             ownerName,
             guestName: p.guestName,
             guestPhone: p.guestPhone ?? "Not provided",
-            guestEmail: p.guestEmail ?? "Not provided",
+            guestEmail: p.guestEmail,
             propertyName,
             roomName,
             checkIn: p.checkIn,
