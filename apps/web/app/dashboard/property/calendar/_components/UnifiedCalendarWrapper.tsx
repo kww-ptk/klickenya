@@ -29,20 +29,22 @@ function StatsBar({
   stats,
   checkInBookings,
   checkOutBookings,
-  enquiriesCount,
+  enquiries,
   rooms,
   properties,
   onSelectBooking,
+  onSelectEnquiry,
 }: {
   stats: Stats;
   checkInBookings: BookingWithProperty[];
   checkOutBookings: BookingWithProperty[];
-  enquiriesCount: number;
+  enquiries: EnquiryWithProperty[];
   rooms: RoomWithProperty[];
   properties: PropertyMeta[];
   onSelectBooking: (b: BookingWithProperty) => void;
+  onSelectEnquiry: (e: EnquiryWithProperty) => void;
 }) {
-  const [expanded, setExpanded] = useState<"checkin" | "checkout" | null>(null);
+  const [expanded, setExpanded] = useState<"checkin" | "checkout" | "enquiries" | null>(null);
 
   const fmt = (n: number) =>
     new Intl.NumberFormat("en-KE", {
@@ -55,7 +57,7 @@ function StatsBar({
   const fmtDate = (d: string) =>
     new Date(d + "T00:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "short" });
 
-  const toggle = (key: "checkin" | "checkout") =>
+  const toggle = (key: "checkin" | "checkout" | "enquiries") =>
     setExpanded((prev) => (prev === key ? null : key));
 
   const expandedBookings = expanded === "checkin" ? checkInBookings : checkOutBookings;
@@ -121,13 +123,30 @@ function StatsBar({
           <p className="text-[10px] lg:text-[11px] text-[#9C9485] font-medium mt-1">Checking out</p>
         </button>
 
-        {/* Enquiries */}
-        <div className="bg-white rounded-xl border border-[#E2DDD5] py-3 px-3 shadow-sm">
-          <p className={`font-display text-[20px] lg:text-[22px] font-bold tracking-[-0.02em] leading-none ${enquiriesCount > 0 ? "text-[#E8A020]" : "text-[#16130C]"}`}>
-            {enquiriesCount}
-          </p>
+        {/* Enquiries — expandable */}
+        <button
+          onClick={() => enquiries.length > 0 && toggle("enquiries")}
+          className={`bg-white rounded-xl border py-3 px-3 shadow-sm text-left transition-colors ${
+            enquiries.length > 0
+              ? "cursor-pointer hover:border-[#4F46E5]/40 hover:bg-[#4F46E5]/5"
+              : "cursor-default"
+          } ${expanded === "enquiries" ? "border-[#4F46E5]/40 bg-[#4F46E5]/5" : "border-[#E2DDD5]"}`}
+        >
+          <div className="flex items-start justify-between gap-1">
+            <p className={`font-display text-[20px] lg:text-[22px] font-bold tracking-[-0.02em] leading-none ${enquiries.length > 0 ? "text-[#E8A020]" : "text-[#16130C]"}`}>
+              {enquiries.length}
+            </p>
+            {enquiries.length > 0 && (
+              <svg
+                className={`size-3.5 text-[#E8A020] shrink-0 mt-0.5 transition-transform ${expanded === "enquiries" ? "rotate-180" : ""}`}
+                fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+              </svg>
+            )}
+          </div>
           <p className="text-[10px] lg:text-[11px] text-[#9C9485] font-medium mt-1">Enquiries</p>
-        </div>
+        </button>
 
         {/* Revenue */}
         <div className="bg-white rounded-xl border border-[#E2DDD5] py-3 px-3 shadow-sm col-span-2 sm:col-span-1">
@@ -139,7 +158,7 @@ function StatsBar({
       </div>
 
       {/* Expanded booking list */}
-      {expanded && expandedBookings.length > 0 && (
+      {(expanded === "checkin" || expanded === "checkout") && expandedBookings.length > 0 && (
         <div className="mt-2 bg-white rounded-xl border border-[#E2DDD5] shadow-sm overflow-hidden">
           <p className="text-[10px] font-bold text-[#9C9485] uppercase tracking-wider px-3 pt-3 pb-1.5">
             {expanded === "checkin" ? "Arriving today" : "Departing today"}
@@ -164,6 +183,46 @@ function StatsBar({
                     {room?.name ?? "—"}
                     <span className="mx-1">·</span>
                     {fmtDate(b.check_in_date)} → {fmtDate(b.check_out_date)}
+                  </p>
+                </div>
+                <span className="text-[11px] font-semibold text-[#4F46E5] shrink-0">Open →</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Expanded enquiry list */}
+      {expanded === "enquiries" && enquiries.length > 0 && (
+        <div className="mt-2 bg-white rounded-xl border border-[#E2DDD5] shadow-sm overflow-hidden">
+          <p className="text-[10px] font-bold text-[#9C9485] uppercase tracking-wider px-3 pt-3 pb-1.5">
+            Pending enquiries
+          </p>
+          {enquiries.map((e) => {
+            const room = rooms.find((r) => r.id === e.room_id);
+            const property = properties.find((p) => p.id === room?.property_id);
+            return (
+              <button
+                key={e.id}
+                onClick={() => onSelectEnquiry(e)}
+                className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-[#F4F1EC] transition-colors text-left border-t border-[#F4F1EC] first:border-t-0"
+              >
+                <div className="size-8 rounded-lg bg-[#E8A020]/10 flex items-center justify-center shrink-0 text-[14px]">
+                  ✉️
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <p className="text-[13px] font-semibold text-[#16130C] truncate">{e.full_name}</p>
+                    {e.calendar_status === "held" && (
+                      <span className="text-[9px] font-bold bg-[#E8A020]/15 text-[#E8A020] px-1.5 py-0.5 rounded-full shrink-0">HELD</span>
+                    )}
+                  </div>
+                  <p className="text-[11px] text-[#9C9485] truncate">
+                    {property?.name && <span className="font-medium text-[#5E5848]">{property.name}</span>}
+                    {property?.name && room?.name && <span> · </span>}
+                    {room?.name ?? "—"}
+                    <span className="mx-1">·</span>
+                    {fmtDate(e.check_in)} → {fmtDate(e.check_out)}
                   </p>
                 </div>
                 <span className="text-[11px] font-semibold text-[#4F46E5] shrink-0">Open →</span>
@@ -303,10 +362,11 @@ export function UnifiedCalendarWrapper({
         stats={{ ...stats, checkInsToday: checkInBookings.length, checkOutsToday: checkOutBookings.length }}
         checkInBookings={checkInBookings}
         checkOutBookings={checkOutBookings}
-        enquiriesCount={enquiries.length}
+        enquiries={enquiries}
         rooms={rooms}
         properties={properties}
         onSelectBooking={(b) => setSelectedBooking(b)}
+        onSelectEnquiry={(e) => setSelectedEnquiry(e)}
       />
 
       {/* Header */}
