@@ -5,6 +5,7 @@ import { getAuthUser } from "../../_lib/auth";
 import { adminClient } from "@/lib/supabase/admin";
 import { sanityClient } from "@/lib/sanity/client";
 import { RoomManagementSection } from "./_components/RoomManagementSection";
+import { PropertyCalendarWrapper } from "./_components/PropertyCalendarWrapper";
 import type { RoomData } from "./_components/RoomEditPanel";
 
 export default async function PropertyDashboardPage({
@@ -54,39 +55,79 @@ export default async function PropertyDashboardPage({
     }
   }
 
-  // Parallel: rooms + today's check-ins/outs
   const todayStr = new Date().toISOString().split("T")[0];
+  const sixtyDaysOut = new Date();
+  sixtyDaysOut.setDate(sixtyDaysOut.getDate() + 60);
+  const sixtyStr = sixtyDaysOut.toISOString().split("T")[0];
 
-  const [roomsResult, checkInsResult, checkOutsResult] = await Promise.all([
-    adminClient
-      .from("rooms")
-      .select("id, name, room_number, room_type, bed_type, room_size_sqm, max_guests, base_price_kes, description, amenities, photos, is_active, display_order")
-      .eq("property_id", id)
-      .order("display_order"),
-    adminClient
-      .from("bookings")
-      .select("id, guest_name, room_id, check_in_date, check_out_date, status, source")
-      .eq("property_id", id)
-      .eq("check_in_date", todayStr)
-      .neq("status", "cancelled"),
-    adminClient
-      .from("bookings")
-      .select("id, guest_name, room_id, check_in_date, check_out_date, status, source")
-      .eq("property_id", id)
-      .eq("check_out_date", todayStr)
-      .neq("status", "cancelled"),
-  ]);
+  // Parallel: rooms + today's check-ins/outs + 60-day bookings + enquiries
+  const [roomsResult, checkInsResult, checkOutsResult, calBookingsResult, enquiriesResult] =
+    await Promise.all([
+      adminClient
+        .from("rooms")
+        .select(
+          "id, name, room_number, room_type, bed_type, room_size_sqm, max_guests, base_price_kes, description, amenities, photos, is_active, display_order"
+        )
+        .eq("property_id", id)
+        .order("display_order"),
+      adminClient
+        .from("bookings")
+        .select("id, guest_name, room_id, check_in_date, check_out_date, status, source")
+        .eq("property_id", id)
+        .eq("check_in_date", todayStr)
+        .neq("status", "cancelled"),
+      adminClient
+        .from("bookings")
+        .select("id, guest_name, room_id, check_in_date, check_out_date, status, source")
+        .eq("property_id", id)
+        .eq("check_out_date", todayStr)
+        .neq("status", "cancelled"),
+      adminClient
+        .from("bookings")
+        .select(
+          "id, property_id, room_id, guest_name, guest_email, guest_phone, guest_count, guest_notes, check_in_date, check_out_date, nights, source, external_id, rate_per_night, subtotal_kes, discount_kes, extras_kes, total_kes, amount_paid_kes, balance_kes, status, payment_status, mpesa_ref, internal_notes, created_at"
+        )
+        .eq("property_id", id)
+        .neq("status", "cancelled")
+        .lt("check_in_date", sixtyStr)
+        .gt("check_out_date", todayStr),
+      adminClient
+        .from("contact_requests")
+        .select(
+          "id, full_name, email, phone, room_id, check_in, check_out, guests, calendar_status, hold_type, expires_at, listing_title, notes, property_id"
+        )
+        .eq("property_id", id)
+        .in("calendar_status", ["pending", "held"])
+        .not("room_id", "is", null)
+        .not("check_in", "is", null)
+        .not("check_out", "is", null),
+    ]);
 
   const allRooms = (roomsResult.data ?? []).map((r) => ({
     ...r,
     amenities: r.amenities ?? [],
     photos: r.photos ?? [],
   })) as RoomData[];
-  const rooms = allRooms.filter((r) => r.is_active);
+  const activeRooms = allRooms.filter((r) => r.is_active);
   const checkIns = checkInsResult.data ?? [];
   const checkOuts = checkOutsResult.data ?? [];
+  const calBookings = calBookingsResult.data ?? [];
+  const enquiries = enquiriesResult.data ?? [];
 
-  const availableTonight = rooms.length - checkIns.length;
+  // Fetch blocked dates after we have room IDs
+  const roomIds = activeRooms.map((r) => r.id);
+  const blockedResult =
+    roomIds.length > 0
+      ? await adminClient
+          .from("blocked_dates")
+          .select("id, room_id, start_date, end_date, reason")
+          .in("room_id", roomIds)
+          .lt("start_date", sixtyStr)
+          .gt("end_date", todayStr)
+      : { data: [] };
+  const blockedDates = blockedResult.data ?? [];
+
+  const availableTonight = activeRooms.length - checkIns.length;
 
   const typeLabels: Record<string, string> = {
     villa: "Villa / Holiday Home",
@@ -102,8 +143,11 @@ export default async function PropertyDashboardPage({
     return (
       <div>
         <div className="mb-5">
-          <Link href="/dashboard/property/calendar" className="text-[13px] text-[#9C9485] hover:text-[#16130C] transition-colors">
-            ← Calendar
+          <Link
+            href="/dashboard/property"
+            className="text-[13px] text-[#9C9485] hover:text-[#16130C] transition-colors"
+          >
+            ← Property PMS
           </Link>
           <h1 className="font-display text-[22px] lg:text-[28px] font-bold tracking-[-0.03em] text-[#16130C] mt-2">
             {property.name}
@@ -137,10 +181,13 @@ export default async function PropertyDashboardPage({
 
   return (
     <div>
-      {/* SECTION 1 — Header */}
+      {/* Header */}
       <div className="mb-5">
-        <Link href="/dashboard/property/calendar" className="text-[13px] text-[#9C9485] hover:text-[#16130C] transition-colors">
-          ← Calendar
+        <Link
+          href="/dashboard/property"
+          className="text-[13px] text-[#9C9485] hover:text-[#16130C] transition-colors"
+        >
+          ← Property PMS
         </Link>
         <div className="flex items-start justify-between mt-2 gap-3">
           <div>
@@ -156,27 +203,16 @@ export default async function PropertyDashboardPage({
               )}
             </div>
           </div>
-          <div className="flex items-center gap-2 shrink-0 mt-1">
-            <Link
-              href="/dashboard/property/calendar"
-              className="text-[12px] font-semibold text-white bg-[#4F46E5] px-3 h-[34px] rounded-lg hover:bg-[#4338CA] transition-colors flex items-center gap-1.5"
-            >
-              <svg className="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
-              </svg>
-              Calendar
-            </Link>
-            <Link
-              href={`/dashboard/property/${property.id}/settings`}
-              className="text-[12px] font-semibold text-[#5E5848] bg-white border border-[#E2DDD5] px-3 h-[34px] rounded-lg hover:border-[#9C9485] transition-colors flex items-center"
-            >
-              Settings
-            </Link>
-          </div>
+          <Link
+            href={`/dashboard/property/${property.id}/settings`}
+            className="text-[12px] font-semibold text-[#5E5848] bg-white border border-[#E2DDD5] px-3 h-[34px] rounded-lg hover:border-[#9C9485] transition-colors flex items-center shrink-0 mt-1"
+          >
+            Settings
+          </Link>
         </div>
       </div>
 
-      {/* SECTION 2 — Today's Snapshot */}
+      {/* SECTION 1 — Today's Snapshot */}
       <div className="grid grid-cols-3 gap-2 lg:gap-3 mb-4">
         <div className="bg-white rounded-xl lg:rounded-2xl border border-[#E2DDD5] py-3 px-2 lg:p-4 text-center shadow-sm">
           <p className="font-display text-[20px] lg:text-[24px] font-bold tracking-[-0.02em] leading-none text-[#16A34A]">
@@ -204,7 +240,7 @@ export default async function PropertyDashboardPage({
         </div>
       </div>
 
-      {/* Arriving today list */}
+      {/* Arriving today */}
       {checkIns.length > 0 && (
         <div className="mb-3 bg-white rounded-xl border border-[#E2DDD5] p-3 shadow-sm">
           <p className="text-[11px] font-bold text-[#9C9485] uppercase tracking-wider mb-2">
@@ -224,7 +260,7 @@ export default async function PropertyDashboardPage({
         </div>
       )}
 
-      {/* Departing today list */}
+      {/* Departing today */}
       {checkOuts.length > 0 && (
         <div className="mb-5 bg-white rounded-xl border border-[#E2DDD5] p-3 shadow-sm">
           <p className="text-[11px] font-bold text-[#9C9485] uppercase tracking-wider mb-2">
@@ -244,7 +280,18 @@ export default async function PropertyDashboardPage({
         </div>
       )}
 
-      {/* SECTION 3 — Linked listing card */}
+      {/* SECTION 2 — Single-property calendar */}
+      <div className="mb-8">
+        <PropertyCalendarWrapper
+          propertyId={id}
+          rooms={activeRooms}
+          bookings={calBookings}
+          blockedDates={blockedDates}
+          enquiries={enquiries}
+        />
+      </div>
+
+      {/* SECTION 3 — Linked listing */}
       {linkedListing ? (
         <div className="mb-5 bg-white rounded-xl lg:rounded-2xl border border-[#E2DDD5] p-3 lg:p-4 shadow-sm">
           <div className="flex gap-3 items-center">
@@ -271,8 +318,13 @@ export default async function PropertyDashboardPage({
               <div className="flex items-center gap-3 mt-1">
                 <a
                   href={(() => {
-                    const typeSlug = linkedListing.type === "experience" ? "experiences" : linkedListing.type + "s";
-                    const citySlug = (linkedListing.city ?? "").toLowerCase().replace(/\s+/g, "-");
+                    const typeSlug =
+                      linkedListing.type === "experience"
+                        ? "experiences"
+                        : linkedListing.type + "s";
+                    const citySlug = (linkedListing.city ?? "")
+                      .toLowerCase()
+                      .replace(/\s+/g, "-");
                     return citySlug
                       ? `/${typeSlug}/${citySlug}/${linkedListing.slug}`
                       : `/${typeSlug}/${linkedListing.slug}`;
@@ -305,64 +357,12 @@ export default async function PropertyDashboardPage({
       )}
 
       {/* SECTION 4 — Room management */}
-      <div className="mb-6">
+      <div className="mb-8">
         <RoomManagementSection
           initialRooms={allRooms}
           propertyId={property.id}
           propertyName={property.name}
         />
-      </div>
-
-      {/* SECTION 5 — Quick links */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-8">
-        {[
-          {
-            label: "Open Calendar",
-            description: "Block dates, view bookings",
-            href: "/dashboard/property/calendar",
-            icon: (
-              <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
-              </svg>
-            ),
-          },
-          {
-            label: "Manage bookings",
-            description: "View all reservations",
-            href: `/dashboard/property/${property.id}/bookings`,
-            icon: (
-              <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-              </svg>
-            ),
-          },
-          {
-            label: "Settings",
-            description: "Edit property details",
-            href: `/dashboard/property/${property.id}/settings`,
-            icon: (
-              <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 010 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 010-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28z" />
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-            ),
-          },
-        ].map((item) => (
-          <Link
-            key={item.label}
-            href={item.href}
-            className="flex items-center gap-3 bg-white rounded-xl border border-[#E2DDD5] p-3.5 shadow-sm hover:shadow-md hover:border-[#4F46E5]/30 transition-all"
-          >
-            <span className="size-8 rounded-lg bg-[#F4F1EC] flex items-center justify-center text-[#5E5848] shrink-0">
-              {item.icon}
-            </span>
-            <div className="min-w-0">
-              <p className="text-[13px] font-semibold text-[#16130C]">{item.label}</p>
-              <p className="text-[11px] text-[#9C9485] truncate">{item.description}</p>
-            </div>
-            <span className="text-[11px] text-[#4F46E5] ml-auto shrink-0">→</span>
-          </Link>
-        ))}
       </div>
     </div>
   );
