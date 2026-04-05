@@ -486,19 +486,17 @@ export function StayBookingSidebar({
           );
         })()}
 
-        {/* Direct booking indicator — only shown when direct booking is live */}
-        {bookingMode === "direct" && (
-          <div className="flex items-center gap-2 px-3 py-2 bg-[#16A34A]/5 rounded-xl border border-[#16A34A]/15">
-            <span className="relative flex size-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#16A34A] opacity-75" />
-              <span className="relative inline-flex size-2 rounded-full bg-[#16A34A]" />
-            </span>
-            <div>
-              <p className="text-[12px] font-semibold text-[#16A34A]">Direct booking available</p>
-              <p className="text-[10px] text-[#9C9485]">No OTA fees · Instant confirmation</p>
-            </div>
+        {/* Direct booking indicator */}
+        <div className="flex items-center gap-2 px-3 py-2 bg-[#16A34A]/5 rounded-xl border border-[#16A34A]/15">
+          <span className="relative flex size-2">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#16A34A] opacity-75" />
+            <span className="relative inline-flex size-2 rounded-full bg-[#16A34A]" />
+          </span>
+          <div>
+            <p className="text-[12px] font-semibold text-[#16A34A]">Direct booking available</p>
+            <p className="text-[10px] text-[#9C9485]">No OTA fees · Instant confirmation</p>
           </div>
-        )}
+        </div>
 
         {/* Date fields — click to expand calendar inline */}
         <button type="button" onClick={() => setShowDatePicker(!showDatePicker)} className={cn("w-full grid grid-cols-2 border rounded-[14px] overflow-hidden text-left transition-colors", showDatePicker ? "border-[#E8A020]" : "border-[#E2DDD5] hover:border-[#9C9485]")}>
