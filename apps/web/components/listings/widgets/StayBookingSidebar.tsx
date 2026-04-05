@@ -150,6 +150,8 @@ export function StayBookingSidebar({
 
   // Fees from PMS (loaded when availability is checked)
   const [fees, setFees] = useState<AvailabilityFee[]>([]);
+  // Guest-selected upsell fee IDs
+  const [selectedUpsells, setSelectedUpsells] = useState<Set<string>>(new Set());
 
   const nights = nightsBetween(checkIn, checkOut);
   const availableRooms = results.filter((r) => r.available);
@@ -235,7 +237,7 @@ export function StayBookingSidebar({
         }
         setEntireAvail(data.entireProperty ?? false);
         onAvailabilityChecked?.(availMap, priceMap, data.entireProperty ?? false);
-        if (data.fees) setFees(data.fees);
+        if (data.fees) { setFees(data.fees); setSelectedUpsells(new Set()); }
       } else {
         for (const r of sanityRooms ?? []) {
           const allPhotos = (r.photos ?? []).map((p) => p.asset?.url).filter(Boolean) as string[];
@@ -316,7 +318,7 @@ export function StayBookingSidebar({
         }
         setEntireAvail(data.entireProperty ?? false);
         onAvailabilityChecked?.(availMap, priceMap, data.entireProperty ?? false);
-        if (data.fees) setFees(data.fees);
+        if (data.fees) { setFees(data.fees); setSelectedUpsells(new Set()); }
       } else {
         for (const r of sanityRooms ?? []) {
           const allPhotos = (r.photos ?? []).map((p) => p.asset?.url).filter(Boolean) as string[];
@@ -909,8 +911,9 @@ export function StayBookingSidebar({
                       };
                       const mandatoryFees = fees.filter((f) => f.apply_by_default);
                       const upsellFees = fees.filter((f) => !f.apply_by_default);
-                      const feesTotal = mandatoryFees.reduce((s, f) => s + calcFee(f), 0);
-                      const total = subtotal + feesTotal;
+                      const mandatoryTotal = mandatoryFees.reduce((s, f) => s + calcFee(f), 0);
+                      const upsellTotal = upsellFees.filter((f) => selectedUpsells.has(f.id)).reduce((s, f) => s + calcFee(f), 0);
+                      const total = subtotal + mandatoryTotal + upsellTotal;
                       const feeHint = (f: AvailabilityFee) => {
                         if (f.fee_type === "per_night") return ` · ${nights} night${nights !== 1 ? "s" : ""}`;
                         if (f.fee_type === "per_guest") return ` · ${modalGuests} guest${modalGuests !== 1 ? "s" : ""}`;
@@ -938,10 +941,15 @@ export function StayBookingSidebar({
                             {/* Mandatory fee rows */}
                             {mandatoryFees.map((f) => (
                               <div key={f.id} className="flex justify-between items-center px-3 py-2 bg-white">
-                                <span className="text-[12px] text-[#9C9485]">
-                                  {f.name}{feeHint(f)}
-                                </span>
+                                <span className="text-[12px] text-[#9C9485]">{f.name}{feeHint(f)}</span>
                                 <span className="text-[12px] font-semibold text-[#16130C]">{fmt(calcFee(f))}</span>
+                              </div>
+                            ))}
+                            {/* Selected upsell rows (shown inline when toggled on) */}
+                            {upsellFees.filter((f) => selectedUpsells.has(f.id)).map((f) => (
+                              <div key={f.id} className="flex justify-between items-center px-3 py-2 bg-violet-50/50">
+                                <span className="text-[12px] text-violet-700">{f.name}{feeHint(f)}</span>
+                                <span className="text-[12px] font-semibold text-violet-700">{fmt(calcFee(f))}</span>
                               </div>
                             ))}
                             {/* Total row */}
@@ -951,27 +959,45 @@ export function StayBookingSidebar({
                             </div>
                           </div>
 
-                          {/* Upsell fees — violet card */}
+                          {/* Upsell fees — guest toggles */}
                           {upsellFees.length > 0 && (
-                            <div className="rounded-xl border border-violet-200 bg-violet-50/60 overflow-hidden divide-y divide-violet-100">
-                              <div className="px-3 py-2 flex items-center gap-1.5">
-                                <span className="text-[10px] font-bold text-violet-600 uppercase tracking-wider">Optional extras</span>
-                                <span className="text-[9px] text-violet-400">· may be added at host discretion</span>
+                            <div className="rounded-xl border border-violet-200 overflow-hidden divide-y divide-violet-100">
+                              <div className="px-3 py-2 bg-violet-50">
+                                <span className="text-[11px] font-bold text-violet-600 uppercase tracking-wider">Optional extras</span>
+                                <span className="text-[10px] text-violet-400 ml-1.5">· add to your stay</span>
                               </div>
-                              {upsellFees.map((f) => (
-                                <div key={f.id} className="flex justify-between items-center px-3 py-2 bg-white/70">
-                                  <div className="flex items-center gap-2 min-w-0">
-                                    <span className="text-[12px] text-[#16130C]">{f.name}</span>
-                                    <span className="text-[10px] text-violet-500">
-                                      {f.fee_type === "per_night" ? `${fmt(f.amount)}/night` :
-                                       f.fee_type === "per_guest" ? `${fmt(f.amount)}/guest` :
-                                       f.fee_type === "percentage" ? `${f.amount}%` :
-                                       fmt(f.amount)}
-                                    </span>
+                              {upsellFees.map((f) => {
+                                const on = selectedUpsells.has(f.id);
+                                return (
+                                  <div key={f.id} className={`flex items-center justify-between px-3 py-2.5 transition-colors ${on ? "bg-violet-50/80" : "bg-white"}`}>
+                                    <div className="flex items-center gap-2.5 min-w-0">
+                                      {/* Toggle */}
+                                      <button
+                                        type="button"
+                                        onClick={() => setSelectedUpsells((prev) => {
+                                          const next = new Set(prev);
+                                          if (next.has(f.id)) next.delete(f.id); else next.add(f.id);
+                                          return next;
+                                        })}
+                                        className={`relative shrink-0 w-9 h-5 rounded-full transition-colors ${on ? "bg-violet-500" : "bg-[#E2DDD5]"}`}
+                                        aria-label={on ? "Remove" : "Add"}
+                                      >
+                                        <span className={`absolute top-0.5 left-0.5 size-4 rounded-full bg-white shadow transition-transform ${on ? "translate-x-4" : "translate-x-0"}`} />
+                                      </button>
+                                      <div className="min-w-0">
+                                        <p className="text-[12px] font-semibold text-[#16130C]">{f.name}</p>
+                                        <p className="text-[10px] text-[#9C9485]">
+                                          {f.fee_type === "per_night" ? `${fmt(f.amount)}/night` :
+                                           f.fee_type === "per_guest" ? `${fmt(f.amount)}/guest` :
+                                           f.fee_type === "percentage" ? `${f.amount}% of subtotal` :
+                                           fmt(f.amount)}
+                                        </p>
+                                      </div>
+                                    </div>
+                                    <span className={`text-[12px] font-semibold shrink-0 ml-2 ${on ? "text-violet-600" : "text-[#9C9485]"}`}>{fmt(calcFee(f))}</span>
                                   </div>
-                                  <span className="text-[11px] font-semibold text-violet-600 shrink-0">{fmt(calcFee(f))}</span>
-                                </div>
-                              ))}
+                                );
+                              })}
                             </div>
                           )}
                         </>
