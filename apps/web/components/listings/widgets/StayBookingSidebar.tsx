@@ -369,15 +369,37 @@ export function StayBookingSidebar({
     try {
       const selectedRoomObj = results.find((r) => r.key === selectedRoom);
       const roomName = selectedRoomObj?.name ?? (selectedRoom === "__entire__" ? "Entire property" : undefined);
-      const perNight = selectedPrice;
-      const total = perNight * nights;
+      const subtotal = selectedPrice * nights;
 
-      // Build message with pricing + guest details
-      const pricingLines = [
-        formMessage.trim() ? formMessage.trim() : null,
-        perNight > 0 ? `Rate: KSh ${perNight.toLocaleString()} x ${nights} night${nights !== 1 ? "s" : ""} = KSh ${total.toLocaleString()}` : null,
-        modalChildren > 0 ? `Children: ${modalChildren}` : null,
-      ].filter(Boolean).join("\n");
+      // Build fee breakdown for email
+      const calcFee = (f: AvailabilityFee) => {
+        if (f.fee_type === "fixed") return f.amount;
+        if (f.fee_type === "per_night") return f.amount * nights;
+        if (f.fee_type === "per_guest") return f.amount * modalGuests;
+        if (f.fee_type === "percentage") return Math.round(f.amount / 100 * subtotal);
+        return 0;
+      };
+      const feeHint = (f: AvailabilityFee) => {
+        if (f.fee_type === "per_night") return `× ${nights} night${nights !== 1 ? "s" : ""}`;
+        if (f.fee_type === "per_guest") return `× ${modalGuests} guest${modalGuests !== 1 ? "s" : ""}`;
+        if (f.fee_type === "percentage") return `${f.amount}% of subtotal`;
+        return "";
+      };
+      const mandatoryFees = fees.filter((f) => f.apply_by_default);
+      const chosenUpsells = fees.filter((f) => !f.apply_by_default && selectedUpsells.has(f.id));
+      const mandatoryTotal = mandatoryFees.reduce((s, f) => s + calcFee(f), 0);
+      const upsellTotal = chosenUpsells.reduce((s, f) => s + calcFee(f), 0);
+      const estimatedTotal = subtotal + mandatoryTotal + upsellTotal;
+
+      const pricingBreakdown = {
+        roomName: roomName ?? listingTitle,
+        perNight: selectedPrice,
+        nights,
+        subtotal,
+        mandatoryFees: mandatoryFees.map((f) => ({ name: f.name, hint: feeHint(f), amount: calcFee(f) })),
+        upsellFees: chosenUpsells.map((f) => ({ name: f.name, hint: feeHint(f), amount: calcFee(f) })),
+        estimatedTotal,
+      };
 
       const res = await fetch("/api/contact", {
         method: "POST",
@@ -389,11 +411,12 @@ export function StayBookingSidebar({
           name: formName.trim(),
           email: formEmail.trim(),
           phone: formPhone.trim(),
-          message: pricingLines || undefined,
+          message: formMessage.trim() || undefined,
           checkIn: checkIn,
           checkOut: checkOut,
           guests,
           room: roomName,
+          pricingBreakdown: selectedPrice > 0 ? pricingBreakdown : undefined,
         }),
       });
       if (res.ok) {

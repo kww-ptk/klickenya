@@ -31,12 +31,29 @@ const baseFields = {
   room: z.string().optional(),
 };
 
+const pricingFeeSchema = z.object({
+  name: z.string(),
+  hint: z.string(),
+  amount: z.number(),
+});
+
+const pricingBreakdownSchema = z.object({
+  roomName: z.string(),
+  perNight: z.number(),
+  nights: z.number(),
+  subtotal: z.number(),
+  mandatoryFees: z.array(pricingFeeSchema),
+  upsellFees: z.array(pricingFeeSchema),
+  estimatedTotal: z.number(),
+}).optional();
+
 const staySchema = z.object({
   ...baseFields,
   listingType: z.literal("stay"),
   checkIn: z.string().min(1),
   checkOut: z.string().min(1),
   guests: z.number().min(1).max(50),
+  pricingBreakdown: pricingBreakdownSchema,
 });
 
 const experienceSchema = z.object({
@@ -253,6 +270,8 @@ export async function POST(request: NextRequest) {
         const confirmationSummary = data.room
           ? { "Requested room": data.room, ...enquirySummary }
           : enquirySummary;
+        type PricingBreakdown = z.infer<typeof pricingBreakdownSchema>;
+        const pb: PricingBreakdown = data.listingType === "stay" ? (data as z.infer<typeof staySchema>).pricingBreakdown : undefined;
         await resend.emails.send({
           from: "Klickenya <hello@klickenya.com>",
           to: data.email,
@@ -264,6 +283,7 @@ export async function POST(request: NextRequest) {
             listingTitle: data.listingTitle,
             listingType: data.listingType,
             enquirySummary: confirmationSummary,
+            pricingBreakdown: pb,
           }),
         });
 
@@ -297,6 +317,7 @@ export async function POST(request: NextRequest) {
               guestPhone: data.phone,
               message: data.message,
               enquiryDetails: notificationDetails,
+              pricingBreakdown: pb,
             }),
           });
         }
