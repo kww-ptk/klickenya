@@ -183,75 +183,63 @@ export default async function PropertyPMSPage() {
             const coverPhoto = coverRoom ? (coverRoom.photos as string[])[0] : null;
 
             return (
-              <div
+              <Link
                 key={prop.id}
-                className="bg-white rounded-xl lg:rounded-2xl border border-[#E2DDD5] p-4 shadow-sm"
+                href={`/dashboard/property/${prop.id}`}
+                className="flex gap-3 items-center bg-white rounded-xl lg:rounded-2xl border border-[#E2DDD5] p-3 shadow-sm hover:shadow-md hover:border-[#4F46E5]/30 transition-all"
               >
-                <div className="flex gap-3 items-start">
-                  {/* Cover photo */}
-                  <div className="shrink-0 w-[64px] h-[64px] rounded-xl overflow-hidden bg-[#F4F1EC] relative">
-                    {coverPhoto ? (
-                      <Image
-                        src={`${coverPhoto}?w=128&auto=format`}
-                        alt={prop.name}
-                        fill
-                        sizes="64px"
-                        className="object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-[24px]">
-                        {prop.property_type === "camp" ? "⛺" : prop.property_type === "apartment" ? "🏢" : "🏡"}
-                      </div>
+                {/* Cover photo */}
+                <div className="shrink-0 w-[52px] h-[52px] rounded-lg overflow-hidden bg-[#F4F1EC] relative">
+                  {coverPhoto ? (
+                    <Image
+                      src={`${coverPhoto}?w=104&auto=format`}
+                      alt={prop.name}
+                      fill
+                      sizes="52px"
+                      className="object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-[20px]">
+                      {prop.property_type === "camp" ? "⛺" : prop.property_type === "apartment" ? "🏢" : "🏡"}
+                    </div>
+                  )}
+                </div>
+
+                {/* Info */}
+                <div className="flex-1 min-w-0">
+                  <p className="text-[14px] font-semibold text-[#16130C] truncate">{prop.name}</p>
+                  <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                    <span className="text-[10px] font-medium text-[#5E5848] bg-[#F4F1EC] px-1.5 py-0.5 rounded-full">
+                      {TYPE_LABELS[prop.property_type] ?? prop.property_type}
+                    </span>
+                    {prop.city && (
+                      <span className="text-[11px] text-[#9C9485]">{prop.city}</span>
                     )}
                   </div>
-
-                  {/* Info */}
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[15px] font-semibold text-[#16130C] truncate">{prop.name}</p>
-                    <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                      <span className="text-[11px] font-medium text-[#5E5848] bg-[#F4F1EC] px-2 py-0.5 rounded-full">
-                        {TYPE_LABELS[prop.property_type] ?? prop.property_type}
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <span className="text-[11px] text-[#9C9485]">
+                      {roomCount} {roomCount === 1 ? "room" : "rooms"} · {occupancyPct}% occupied
+                    </span>
+                    {pendingCount > 0 && (
+                      <span className="text-[10px] font-semibold text-[#E8A020] bg-[#E8A020]/10 px-1.5 py-0.5 rounded-full">
+                        {pendingCount} pending
                       </span>
-                      {prop.city && (
-                        <span className="text-[11px] text-[#9C9485]">{prop.city}</span>
-                      )}
-                    </div>
-
-                    {/* Stats row */}
-                    <div className="flex items-center gap-3 mt-1.5 flex-wrap">
-                      <span className="text-[11px] text-[#5E5848]">
-                        {roomCount} {roomCount === 1 ? "room" : "rooms"}
-                      </span>
-                      {roomCount > 0 && (
-                        <span className="text-[11px] text-[#5E5848]">
-                          {occupancyPct}% occupied
-                        </span>
-                      )}
-                      {pendingCount > 0 && (
-                        <span className="text-[11px] font-semibold text-[#E8A020] bg-[#E8A020]/10 px-2 py-0.5 rounded-full">
-                          {pendingCount} pending {pendingCount === 1 ? "enquiry" : "enquiries"}
-                        </span>
-                      )}
-                    </div>
+                    )}
                   </div>
                 </div>
 
-                {/* Buttons */}
-                <div className="flex items-center gap-2 mt-3">
-                  <Link
-                    href={`/dashboard/property/${prop.id}`}
-                    className="flex-1 text-center text-[13px] font-semibold text-white bg-[#4F46E5] h-[36px] leading-[36px] rounded-lg hover:bg-[#4338CA] transition-colors"
-                  >
-                    Open →
-                  </Link>
+                {/* Actions */}
+                <div className="flex items-center gap-1.5 shrink-0">
                   <Link
                     href={`/dashboard/property/${prop.id}/settings`}
-                    className="flex-1 text-center text-[13px] font-semibold text-[#5E5848] bg-[#F4F1EC] h-[36px] leading-[36px] rounded-lg hover:bg-[#E8E4DC] transition-colors"
+                    onClick={(e) => e.stopPropagation()}
+                    className="text-[11px] font-semibold text-[#5E5848] bg-[#F4F1EC] px-2.5 h-[28px] rounded-lg hover:bg-[#E8E4DC] transition-colors flex items-center"
                   >
                     Settings
                   </Link>
+                  <span className="text-[13px] font-semibold text-[#4F46E5]">→</span>
                 </div>
-              </div>
+              </Link>
             );
           })}
 
