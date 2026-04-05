@@ -125,13 +125,6 @@ export function NewBookingSidePanel({
     )
   );
   const subtotal = nights * form.rate_per_night;
-  const mandatoryFeesTotal = feeTemplates
-    .filter((t) => t.is_active && t.apply_by_default)
-    .reduce((s, t) => s + calcFeeAmount(t), 0);
-  const optionalFeesTotal = selectedFees.reduce((s, f) => s + f.amount_kes, 0);
-  const feesTotal = mandatoryFeesTotal + optionalFeesTotal;
-  const finalTotal = Math.max(0, subtotal + feesTotal - form.discount_kes);
-  const balance = Math.max(0, finalTotal - form.amount_paid);
 
   // Fee calculator: compute amount_kes from a template given current booking context
   const calcFeeAmount = (t: { fee_type: string; amount: number }): number => {
@@ -142,6 +135,14 @@ export function NewBookingSidePanel({
       default:            return t.amount; // fixed
     }
   };
+
+  const mandatoryFeesTotal = feeTemplates
+    .filter((t) => t.is_active && t.apply_by_default)
+    .reduce((s, t) => s + calcFeeAmount(t), 0);
+  const optionalFeesTotal = selectedFees.reduce((s, f) => s + f.amount_kes, 0);
+  const feesTotal = mandatoryFeesTotal + optionalFeesTotal;
+  const finalTotal = Math.max(0, subtotal + feesTotal - form.discount_kes);
+  const balance = Math.max(0, finalTotal - form.amount_paid);
 
   // Fetch fee templates once on mount
   useEffect(() => {
