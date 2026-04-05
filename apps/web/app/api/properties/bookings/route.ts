@@ -330,15 +330,17 @@ async function sendGuestConfirmationEmail(p: {
   }
   const resend = new Resend(resendKey);
 
-  const [propRes, roomRes] = await Promise.all([
+  const [propRes, roomRes, feesRes] = await Promise.all([
     adminClient.from("properties").select("name, address, check_in_time").eq("id", p.propertyId).single(),
     adminClient.from("rooms").select("name").eq("id", p.roomId).single(),
+    adminClient.from("booking_fees").select("name, amount_kes").eq("booking_id", p.bookingId),
   ]);
 
   const propertyName = propRes.data?.name ?? "Your property";
   const roomName = roomRes.data?.name ?? "Room";
   const checkInTime = propRes.data?.check_in_time ?? undefined;
   const address = propRes.data?.address ?? undefined;
+  const fees = (feesRes.data ?? []).filter((f: { amount_kes: number }) => f.amount_kes > 0);
 
   await resend.emails.send({
     from: "Klickenya Bookings <bookings@klickenya.com>",
@@ -354,6 +356,7 @@ async function sendGuestConfirmationEmail(p: {
       guests: p.guestCount,
       ratePerNight: p.ratePerNight,
       subtotal: p.subtotal,
+      fees: fees.length > 0 ? fees : undefined,
       totalKes: p.totalKes,
       amountPaid: p.amountPaid,
       balance: p.balance,

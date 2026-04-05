@@ -28,24 +28,30 @@ function financialTable(p: {
   ratePerNight: number;
   nights: number;
   subtotal: number;
+  fees?: Array<{ name: string; amount_kes: number }>;
   totalKes: number;
   amountPaid: number;
   balance: number;
   discountKes?: number;
 }): string {
+  const TD = `padding:8px 14px;border-bottom:1px solid #eee;`;
   const paid = p.amountPaid > 0
-    ? `<tr><td style="padding:8px 14px;border-bottom:1px solid #eee;color:#9C9485;">Amount paid</td><td style="padding:8px 14px;border-bottom:1px solid #eee;color:#16A34A;font-weight:600;text-align:right;">${fmtMoney(p.amountPaid)}</td></tr>`
+    ? `<tr><td style="${TD}color:#9C9485;">Amount paid</td><td style="${TD}color:#16A34A;font-weight:600;text-align:right;">${fmtMoney(p.amountPaid)}</td></tr>`
     : "";
   const balance = p.balance > 0
-    ? `<tr><td style="padding:8px 14px;border-bottom:1px solid #eee;color:#9C9485;">Balance due</td><td style="padding:8px 14px;border-bottom:1px solid #eee;color:#DC2626;font-weight:600;text-align:right;">${fmtMoney(p.balance)}</td></tr>`
-    : `<tr><td style="padding:8px 14px;border-bottom:1px solid #eee;color:#9C9485;">Balance due</td><td style="padding:8px 14px;border-bottom:1px solid #eee;color:#16A34A;font-weight:600;text-align:right;">Paid in full ✓</td></tr>`;
+    ? `<tr><td style="${TD}color:#9C9485;">Balance due</td><td style="${TD}color:#DC2626;font-weight:600;text-align:right;">${fmtMoney(p.balance)}</td></tr>`
+    : `<tr><td style="${TD}color:#9C9485;">Balance due</td><td style="${TD}color:#16A34A;font-weight:600;text-align:right;">Paid in full ✓</td></tr>`;
   const discount = p.discountKes && p.discountKes > 0
-    ? `<tr><td style="padding:8px 14px;border-bottom:1px solid #eee;color:#9C9485;">Discount</td><td style="padding:8px 14px;border-bottom:1px solid #eee;color:#16A34A;font-weight:600;text-align:right;">-${fmtMoney(p.discountKes)}</td></tr>`
+    ? `<tr><td style="${TD}color:#9C9485;">Discount</td><td style="${TD}color:#16A34A;font-weight:600;text-align:right;">-${fmtMoney(p.discountKes)}</td></tr>`
     : "";
+  const feeRows = (p.fees ?? []).filter(f => f.amount_kes > 0).map(f =>
+    `<tr><td style="${TD}color:#9C9485;">${f.name}</td><td style="${TD}color:#16130C;font-weight:600;text-align:right;">${fmtMoney(f.amount_kes)}</td></tr>`
+  ).join("");
   return `
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;border:1px solid #e5e7eb;border-radius:6px;overflow:hidden;font-size:14px;">
-  <tr><td style="padding:8px 14px;border-bottom:1px solid #eee;color:#9C9485;">${fmtMoney(p.ratePerNight)} × ${p.nights} night${p.nights !== 1 ? "s" : ""}</td><td style="padding:8px 14px;border-bottom:1px solid #eee;color:#16130C;font-weight:600;text-align:right;">${fmtMoney(p.subtotal)}</td></tr>
+  <tr><td style="${TD}color:#9C9485;">${fmtMoney(p.ratePerNight)} × ${p.nights} night${p.nights !== 1 ? "s" : ""}</td><td style="${TD}color:#16130C;font-weight:600;text-align:right;">${fmtMoney(p.subtotal)}</td></tr>
   ${discount}
+  ${feeRows}
   <tr><td style="padding:10px 14px;background:#FFFBEB;border-top:2px solid #FCD34D;color:#92400E;font-weight:700;">Total</td><td style="padding:10px 14px;background:#FFFBEB;border-top:2px solid #FCD34D;color:#E8A020;font-weight:800;font-size:16px;text-align:right;">${fmtMoney(p.totalKes)}</td></tr>
   ${paid}
   ${balance}
@@ -63,6 +69,7 @@ export function bookingConfirmationGuestHtml(p: {
   guests: number;
   ratePerNight: number;
   subtotal: number;
+  fees?: Array<{ name: string; amount_kes: number }>;
   totalKes: number;
   amountPaid: number;
   balance: number;
@@ -89,7 +96,7 @@ export function bookingConfirmationGuestHtml(p: {
     ])}
 
     <h2 style="margin:0 0 10px;font-size:15px;font-weight:600;color:#16130C;">Payment summary</h2>
-    ${financialTable({ ratePerNight: p.ratePerNight, nights: p.nights, subtotal: p.subtotal, totalKes: p.totalKes, amountPaid: p.amountPaid, balance: p.balance, discountKes: p.discountKes })}
+    ${financialTable({ ratePerNight: p.ratePerNight, nights: p.nights, subtotal: p.subtotal, fees: p.fees, totalKes: p.totalKes, amountPaid: p.amountPaid, balance: p.balance, discountKes: p.discountKes })}
 
     <h2 style="margin:0 0 12px;font-size:15px;font-weight:600;color:#16130C;">What&apos;s next</h2>
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
@@ -130,6 +137,7 @@ export function bookingNotificationOwnerHtml(p: {
   guests: number;
   ratePerNight: number;
   subtotal: number;
+  fees?: Array<{ name: string; amount_kes: number }>;
   totalKes: number;
   amountPaid: number;
   balance: number;
@@ -163,7 +171,7 @@ export function bookingNotificationOwnerHtml(p: {
     ])}
 
     <h2 style="margin:0 0 10px;font-size:15px;font-weight:600;color:#16130C;">Payment</h2>
-    ${financialTable({ ratePerNight: p.ratePerNight, nights: p.nights, subtotal: p.subtotal, totalKes: p.totalKes, amountPaid: p.amountPaid, balance: p.balance, discountKes: p.discountKes })}
+    ${financialTable({ ratePerNight: p.ratePerNight, nights: p.nights, subtotal: p.subtotal, fees: p.fees, totalKes: p.totalKes, amountPaid: p.amountPaid, balance: p.balance, discountKes: p.discountKes })}
 
     ${p.internalNotes ? `
     <div style="margin-bottom:20px;padding:14px;background:#F5F3F0;border-radius:8px;border-left:3px solid #E8A020;">

@@ -80,9 +80,29 @@ export async function POST(
     const basePriceKes = roomData?.base_price_kes ?? ratePerNight;
 
     // If accepted rate < base price, treat the difference as a discount
+    const roomSubtotal = ratePerNight * nights;
     const subtotal = basePriceKes * nights;
     const discountKes = ratePerNight < basePriceKes ? (basePriceKes - ratePerNight) * nights : 0;
-    const total = subtotal - discountKes; // = ratePerNight * nights
+
+    // Fetch mandatory property fees and calculate amounts
+    const { data: propertyFees } = await adminClient
+      .from("property_fees")
+      .select("name, fee_type, amount")
+      .eq("property_id", enquiry.property_id)
+      .eq("apply_by_default", true)
+      .eq("is_active", true);
+
+    const feeLineItems = (propertyFees ?? []).map((f: { name: string; fee_type: string; amount: number }) => {
+      let amount_kes = 0;
+      if (f.fee_type === "fixed") amount_kes = f.amount;
+      else if (f.fee_type === "per_night") amount_kes = f.amount * nights;
+      else if (f.fee_type === "per_guest") amount_kes = f.amount * (enquiry.guests ?? 1);
+      else if (f.fee_type === "percentage") amount_kes = Math.round(f.amount / 100 * roomSubtotal);
+      return { name: f.name, fee_type: f.fee_type, amount_kes };
+    }).filter((f: { amount_kes: number }) => f.amount_kes > 0);
+
+    const feesTotal = feeLineItems.reduce((sum: number, f: { amount_kes: number }) => sum + f.amount_kes, 0);
+    const total = subtotal - discountKes + feesTotal;
 
     // Create booking
     const { data: booking, error: bErr } = await adminClient
@@ -120,6 +140,13 @@ export async function POST(
       return NextResponse.json({ error: "Failed to create booking" }, { status: 500 });
     }
 
+    // Insert mandatory fee line items
+    if (feeLineItems.length > 0) {
+      await adminClient.from("booking_fees").insert(
+        feeLineItems.map((f: { name: string; fee_type: string; amount_kes: number }) => ({ booking_id: booking.id, name: f.name, fee_type: f.fee_type, amount_kes: f.amount_kes }))
+      );
+    }
+
     // Record payment if any
     if (amountPaid > 0) {
       await adminClient.from("booking_payments").insert({
@@ -153,6 +180,7 @@ export async function POST(
         ratePerNight,
         subtotal,
         discountKes,
+        fees: feeLineItems,
         totalKes: total,
         amountPaid,
         balance: total - amountPaid,
@@ -185,6 +213,7 @@ async function sendConversionEmails(p: {
   ratePerNight: number;
   subtotal: number;
   discountKes: number;
+  fees: Array<{ name: string; fee_type: string; amount_kes: number }>;
   totalKes: number;
   amountPaid: number;
   balance: number;
@@ -233,6 +262,7 @@ async function sendConversionEmails(p: {
           guests: p.guestCount,
           ratePerNight: p.ratePerNight,
           subtotal: p.subtotal,
+          fees: p.fees.length > 0 ? p.fees : undefined,
           totalKes: p.totalKes,
           amountPaid: p.amountPaid,
           balance: p.balance,
@@ -265,6 +295,7 @@ async function sendConversionEmails(p: {
           guests: p.guestCount,
           ratePerNight: p.ratePerNight,
           subtotal: p.subtotal,
+          fees: p.fees.length > 0 ? p.fees : undefined,
           totalKes: p.totalKes,
           amountPaid: p.amountPaid,
           balance: p.balance,
