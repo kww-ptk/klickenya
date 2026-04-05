@@ -643,7 +643,11 @@ export default function PropertySettingsPage() {
                         {fee.fee_type === "per_night" && `${fmt(fee.amount)} / night`}
                         {fee.fee_type === "per_guest" && `${fmt(fee.amount)} / guest`}
                         {fee.fee_type === "percentage" && `${fee.amount}% of subtotal`}
-                        {fee.apply_by_default && <span className="ml-1.5 text-[#4F46E5]">· Auto-applied</span>}
+                        {" "}
+                        {fee.apply_by_default
+                          ? <span className="ml-1.5 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-green-100 text-green-700">Mandatory</span>
+                          : <span className="ml-1.5 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-100 text-amber-700">Upsell</span>
+                        }
                       </p>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
@@ -1259,27 +1263,36 @@ function FeeForm({
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <label className="block text-[11px] font-semibold text-[#9C9485] uppercase tracking-wider mb-1">
-            {feeType === "percentage" ? "Percentage (%)" : "Amount (KSh)"}
-          </label>
-          <input
-            type="number"
-            min={0}
-            step={feeType === "percentage" ? 0.5 : 50}
-            value={amount}
-            onChange={(e) => setAmount(e.target.value === "" ? "" : parseFloat(e.target.value))}
-            placeholder={feeType === "percentage" ? "e.g. 16" : "e.g. 2000"}
-            className={inputCls}
-          />
-        </div>
-        <div className="flex flex-col justify-end">
-          <label className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border-2 cursor-pointer transition-all ${applyByDefault ? "border-[#4F46E5] bg-[#4F46E5]/5" : "border-[#E2DDD5] bg-white"}`}>
-            <input type="checkbox" checked={applyByDefault} onChange={(e) => setApplyByDefault(e.target.checked)} className="accent-[#4F46E5]" />
+      <div>
+        <label className="block text-[11px] font-semibold text-[#9C9485] uppercase tracking-wider mb-1">
+          {feeType === "percentage" ? "Percentage (%)" : "Amount (KSh)"}
+        </label>
+        <input
+          type="number"
+          min={0}
+          step={feeType === "percentage" ? 0.5 : 50}
+          value={amount}
+          onChange={(e) => setAmount(e.target.value === "" ? "" : parseFloat(e.target.value))}
+          placeholder={feeType === "percentage" ? "e.g. 16" : "e.g. 2000"}
+          className={inputCls}
+        />
+      </div>
+
+      <div>
+        <p className="text-[11px] font-semibold text-[#9C9485] uppercase tracking-wider mb-2">Behaviour</p>
+        <div className="grid grid-cols-2 gap-2">
+          <label className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border-2 cursor-pointer transition-all ${applyByDefault ? "border-green-500 bg-green-50" : "border-[#E2DDD5] bg-white"}`}>
+            <input type="radio" name="fee_behaviour" checked={applyByDefault} onChange={() => setApplyByDefault(true)} className="accent-green-600" />
             <div>
-              <p className="text-[12px] font-semibold text-[#16130C]">Auto-apply</p>
-              <p className="text-[10px] text-[#9C9485]">Pre-checked in new bookings</p>
+              <p className="text-[12px] font-semibold text-[#16130C]">Mandatory</p>
+              <p className="text-[10px] text-[#9C9485]">Always added</p>
+            </div>
+          </label>
+          <label className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border-2 cursor-pointer transition-all ${!applyByDefault ? "border-amber-400 bg-amber-50" : "border-[#E2DDD5] bg-white"}`}>
+            <input type="radio" name="fee_behaviour" checked={!applyByDefault} onChange={() => setApplyByDefault(false)} className="accent-amber-500" />
+            <div>
+              <p className="text-[12px] font-semibold text-[#16130C]">Optional upsell</p>
+              <p className="text-[10px] text-[#9C9485]">Offered at booking</p>
             </div>
           </label>
         </div>

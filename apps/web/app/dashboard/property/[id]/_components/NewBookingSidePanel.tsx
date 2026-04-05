@@ -623,58 +623,60 @@ export function NewBookingSidePanel({
             )}
           </div>
 
-          {/* Financial summary */}
-          <div className="bg-[#F4F1EC] rounded-lg p-3 space-y-1">
-            <div className="flex justify-between text-[13px]">
-              <span className="text-[#5E5848]">
+          {/* Financial card */}
+          <div className="rounded-xl border border-[#E2DDD5] overflow-hidden divide-y divide-[#E2DDD5]">
+            {/* Subtotal row */}
+            <div className="flex justify-between items-center px-3 py-2.5 bg-[#FAFAF8]">
+              <span className="text-[13px] text-[#5E5848]">
                 {fmt(form.rate_per_night)} × {nights} night{nights !== 1 ? "s" : ""}
               </span>
-              <span className="text-[#16130C]">{fmt(subtotal)}</span>
+              <span className="text-[13px] font-semibold text-[#16130C]">{fmt(subtotal)}</span>
             </div>
-            {selectedFees.map((f) => (
-              <div key={f.id} className="flex justify-between text-[13px]">
-                <span className="text-[#5E5848]">
-                  {f.name}
-                  {f.fee_type === "per_night" && nights > 0 && ` (${nights} night${nights !== 1 ? "s" : ""})`}
-                  {f.fee_type === "per_guest" && form.guest_count > 1 && ` (${form.guest_count} guests)`}
-                </span>
-                <span className="text-[#16130C]">{fmt(f.amount_kes)}</span>
-              </div>
-            ))}
-          </div>
 
-          {/* Fees */}
-          {!isEntireBooking && feeTemplates.filter((t) => t.is_active).length > 0 && (
-            <div>
-              <p className="text-[12px] font-semibold text-[#16130C] mb-1.5">Fees & charges</p>
-              <div className="space-y-1">
-                {feeTemplates.filter((t) => t.is_active).map((t) => {
-                  const selected = !!selectedFees.find((f) => f.id === t.id);
-                  const calcAmt = calcFeeAmount(t);
-                  return (
-                    <label key={t.id} className={`flex items-center justify-between px-3 py-2 rounded-lg border cursor-pointer transition-colors ${selected ? "border-[#4F46E5] bg-[#4F46E5]/5" : "border-[#E2DDD5] bg-white"}`}>
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="checkbox"
-                          checked={selected}
-                          onChange={() => toggleFee(t)}
-                          className="accent-[#4F46E5]"
-                        />
-                        <span className="text-[13px] text-[#16130C]">{t.name}</span>
-                        <span className="text-[11px] text-[#9C9485]">
-                          {t.fee_type === "per_night" ? `${fmt(t.amount)}/night` :
-                           t.fee_type === "per_guest" ? `${fmt(t.amount)}/guest` :
-                           t.fee_type === "percentage" ? `${t.amount}%` :
-                           "flat"}
-                        </span>
-                      </div>
-                      <span className="text-[13px] font-semibold text-[#16130C] shrink-0">{fmt(calcAmt)}</span>
-                    </label>
-                  );
-                })}
+            {/* Fee rows */}
+            {feeTemplates.filter((t) => t.is_active).map((t) => {
+              const selected = !!selectedFees.find((f) => f.id === t.id);
+              const calcAmt = calcFeeAmount(t);
+              const isMandatory = t.apply_by_default;
+              return (
+                <label key={t.id} className={`flex items-center justify-between px-3 py-2.5 cursor-pointer transition-colors ${selected ? "bg-white" : "bg-[#FAFAF8]"}`}>
+                  <div className="flex items-center gap-2 min-w-0">
+                    <input
+                      type="checkbox"
+                      checked={selected}
+                      onChange={() => toggleFee(t)}
+                      className="accent-[#4F46E5] shrink-0"
+                    />
+                    <span className={`text-[13px] ${selected ? "text-[#16130C]" : "text-[#9C9485]"}`}>{t.name}</span>
+                    {isMandatory
+                      ? <span className="shrink-0 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-green-100 text-green-700">Mandatory</span>
+                      : <span className="shrink-0 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-100 text-amber-700">Upsell</span>
+                    }
+                    <span className="text-[11px] text-[#9C9485] shrink-0">
+                      {t.fee_type === "per_night" && nights > 0 ? `× ${nights}n` :
+                       t.fee_type === "per_guest" && form.guest_count > 0 ? `× ${form.guest_count}g` :
+                       t.fee_type === "percentage" ? `${t.amount}%` : ""}
+                    </span>
+                  </div>
+                  <span className={`text-[13px] font-semibold shrink-0 ml-2 ${selected ? "text-[#16130C]" : "text-[#9C9485]"}`}>{fmt(calcAmt)}</span>
+                </label>
+              );
+            })}
+
+            {/* Discount row (only when non-zero) */}
+            {form.discount_kes > 0 && (
+              <div className="flex justify-between items-center px-3 py-2.5 bg-[#FAFAF8]">
+                <span className="text-[13px] text-[#16A34A]">Discount</span>
+                <span className="text-[13px] font-semibold text-[#16A34A]">−{fmt(form.discount_kes)}</span>
               </div>
+            )}
+
+            {/* Total row */}
+            <div className="flex justify-between items-center px-3 py-3 bg-[#16130C]">
+              <span className="text-[13px] font-semibold text-white/70">Total</span>
+              <span className="text-[16px] font-bold text-white">{fmt(finalTotal)}</span>
             </div>
-          )}
+          </div>
 
           {/* Discount */}
           <div>
@@ -691,12 +693,6 @@ export function NewBookingSidePanel({
               }
               className="w-full h-[40px] px-3 rounded-lg border border-[#E2DDD5] text-[14px] text-[#16130C] focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] outline-none transition-colors"
             />
-          </div>
-
-          {/* Final total */}
-          <div className="bg-[#16130C] rounded-lg p-3 flex justify-between items-center">
-            <span className="text-[13px] font-semibold text-white/70">Final total</span>
-            <span className="text-[16px] font-bold text-white">{fmt(finalTotal)}</span>
           </div>
 
           {/* Payment method + amount */}
