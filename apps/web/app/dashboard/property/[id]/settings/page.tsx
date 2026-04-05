@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
@@ -126,6 +126,7 @@ const fmt = (n: number) =>
 
 export default function PropertySettingsPage() {
   const { id } = useParams<{ id: string }>();
+  const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
@@ -143,6 +144,11 @@ export default function PropertySettingsPage() {
   const [entirePlacePrice, setEntirePlacePrice] = useState<number | "">("");
   const [bookingSlug, setBookingSlug] = useState("");
   const [isActive, setIsActive] = useState(false);
+
+  // Danger zone
+  const [deleteConfirm, setDeleteConfirm] = useState(false);
+  const [deletingProperty, setDeletingProperty] = useState(false);
+  const [togglingActive, setTogglingActive] = useState(false);
 
   // Sync button
   const [syncState, setSyncState] = useState<"idle" | "syncing" | "synced" | "error">("idle");
@@ -277,6 +283,27 @@ export default function PropertySettingsPage() {
     const supabase = createClient();
     await supabase.from("rooms").update({ is_active: active }).eq("id", roomId);
     setRooms((prev) => prev.map((r) => (r.id === roomId ? { ...r, is_active: active } : r)));
+  };
+
+  const handleToggleActive = async () => {
+    setTogglingActive(true);
+    const newActive = !isActive;
+    const supabase = createClient();
+    const { error } = await supabase.from("properties").update({ is_active: newActive }).eq("id", id);
+    if (!error) {
+      setIsActive(newActive);
+      setMessage({ type: "success", text: newActive ? "Property enabled — now accepting bookings." : "Property disabled — hidden from bookings." });
+    }
+    setTogglingActive(false);
+  };
+
+  const handleDeleteProperty = async () => {
+    setDeletingProperty(true);
+    const supabase = createClient();
+    // Delete rooms first (in case FK doesn't cascade)
+    await supabase.from("rooms").delete().eq("property_id", id);
+    await supabase.from("properties").delete().eq("id", id);
+    router.push("/dashboard/property");
   };
 
   const addRoom = async (room: Omit<Room, "id" | "display_order" | "is_active">) => {
@@ -771,6 +798,80 @@ export default function PropertySettingsPage() {
             />
           </div>
         )}
+      </div>
+
+      {/* ── Danger Zone ── */}
+      <div className="rounded-xl border border-red-100 bg-white p-4 lg:p-5 shadow-sm mb-8">
+        <h2 className="text-[13px] font-semibold text-red-600 uppercase tracking-wider mb-4">Danger Zone</h2>
+
+        {/* Disable / Enable */}
+        <div className="flex items-start justify-between gap-4 pb-4 border-b border-[#F4F1EC]">
+          <div>
+            <p className="text-[13px] font-semibold text-[#16130C]">
+              {isActive ? "Disable property" : "Property is disabled"}
+            </p>
+            <p className="text-[11px] text-[#9C9485] mt-0.5">
+              {isActive
+                ? "Stops accepting new bookings. Existing bookings are unaffected."
+                : "Property is currently hidden from bookings. Enable to reopen."}
+            </p>
+          </div>
+          <button
+            onClick={handleToggleActive}
+            disabled={togglingActive}
+            className={`shrink-0 text-[12px] font-semibold px-3 h-[32px] rounded-lg border transition-colors disabled:opacity-50 ${
+              isActive
+                ? "border-red-200 text-red-600 hover:bg-red-50"
+                : "border-[#16A34A]/30 text-[#16A34A] hover:bg-[#16A34A]/5"
+            }`}
+          >
+            {togglingActive ? "…" : isActive ? "Disable" : "Enable"}
+          </button>
+        </div>
+
+        {/* Delete */}
+        <div className="pt-4">
+          {!deleteConfirm ? (
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-[13px] font-semibold text-[#16130C]">Delete property</p>
+                <p className="text-[11px] text-[#9C9485] mt-0.5">
+                  Permanently removes this property and all its rooms. This cannot be undone.
+                </p>
+              </div>
+              <button
+                onClick={() => setDeleteConfirm(true)}
+                className="shrink-0 text-[12px] font-semibold text-red-600 px-3 h-[32px] rounded-lg border border-red-200 hover:bg-red-50 transition-colors"
+              >
+                Delete
+              </button>
+            </div>
+          ) : (
+            <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+              <p className="text-[13px] font-semibold text-red-700 mb-1">
+                Delete &ldquo;{name}&rdquo;?
+              </p>
+              <p className="text-[11px] text-red-600 mb-4">
+                All rooms, blocked dates, and settings will be permanently deleted. Existing bookings are <strong>not</strong> deleted but will lose their property link.
+              </p>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setDeleteConfirm(false)}
+                  className="flex-1 h-[36px] text-[12px] font-semibold rounded-lg border border-[#E2DDD5] text-[#5E5848] hover:bg-[#F4F1EC] bg-white transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDeleteProperty}
+                  disabled={deletingProperty}
+                  className="flex-1 h-[36px] text-[12px] font-semibold rounded-lg bg-red-600 text-white hover:bg-red-700 disabled:opacity-50 transition-colors"
+                >
+                  {deletingProperty ? "Deleting…" : "Yes, delete property"}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
