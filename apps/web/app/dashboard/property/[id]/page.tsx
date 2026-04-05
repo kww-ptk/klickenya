@@ -6,6 +6,7 @@ import { adminClient } from "@/lib/supabase/admin";
 import { sanityClient } from "@/lib/sanity/client";
 import { RoomManagementSection } from "./_components/RoomManagementSection";
 import { PropertyCalendarWrapper } from "./_components/PropertyCalendarWrapper";
+import { TodaySnapshot } from "./_components/TodaySnapshot";
 import type { RoomData } from "./_components/RoomEditPanel";
 
 export default async function PropertyDashboardPage({
@@ -60,48 +61,35 @@ export default async function PropertyDashboardPage({
   sixtyDaysOut.setDate(sixtyDaysOut.getDate() + 60);
   const sixtyStr = sixtyDaysOut.toISOString().split("T")[0];
 
-  // Parallel: rooms + today's check-ins/outs + 60-day bookings + enquiries
-  const [roomsResult, checkInsResult, checkOutsResult, calBookingsResult, enquiriesResult] =
-    await Promise.all([
-      adminClient
-        .from("rooms")
-        .select(
-          "id, name, room_number, room_type, bed_type, room_size_sqm, max_guests, base_price_kes, description, amenities, photos, is_active, display_order"
-        )
-        .eq("property_id", id)
-        .order("display_order"),
-      adminClient
-        .from("bookings")
-        .select("id, guest_name, room_id, check_in_date, check_out_date, status, source")
-        .eq("property_id", id)
-        .eq("check_in_date", todayStr)
-        .neq("status", "cancelled"),
-      adminClient
-        .from("bookings")
-        .select("id, guest_name, room_id, check_in_date, check_out_date, status, source")
-        .eq("property_id", id)
-        .eq("check_out_date", todayStr)
-        .neq("status", "cancelled"),
-      adminClient
-        .from("bookings")
-        .select(
-          "id, property_id, room_id, guest_name, guest_email, guest_phone, guest_count, guest_notes, check_in_date, check_out_date, nights, source, external_id, rate_per_night, subtotal_kes, discount_kes, extras_kes, total_kes, amount_paid_kes, balance_kes, status, payment_status, mpesa_ref, internal_notes, created_at"
-        )
-        .eq("property_id", id)
-        .neq("status", "cancelled")
-        .lt("check_in_date", sixtyStr)
-        .gt("check_out_date", todayStr),
-      adminClient
-        .from("contact_requests")
-        .select(
-          "id, full_name, email, phone, room_id, check_in, check_out, guests, calendar_status, hold_type, expires_at, listing_title, notes, property_id"
-        )
-        .eq("property_id", id)
-        .in("calendar_status", ["pending", "held"])
-        .not("room_id", "is", null)
-        .not("check_in", "is", null)
-        .not("check_out", "is", null),
-    ]);
+  // Parallel: rooms + 60-day bookings + enquiries
+  const [roomsResult, calBookingsResult, enquiriesResult] = await Promise.all([
+    adminClient
+      .from("rooms")
+      .select(
+        "id, name, room_number, room_type, bed_type, room_size_sqm, max_guests, base_price_kes, description, amenities, photos, is_active, display_order"
+      )
+      .eq("property_id", id)
+      .order("display_order"),
+    adminClient
+      .from("bookings")
+      .select(
+        "id, property_id, room_id, guest_name, guest_email, guest_phone, guest_count, guest_notes, check_in_date, check_out_date, nights, source, external_id, rate_per_night, subtotal_kes, discount_kes, extras_kes, total_kes, amount_paid_kes, balance_kes, status, payment_status, mpesa_ref, internal_notes, created_at"
+      )
+      .eq("property_id", id)
+      .neq("status", "cancelled")
+      .lt("check_in_date", sixtyStr)
+      .gt("check_out_date", todayStr),
+    adminClient
+      .from("contact_requests")
+      .select(
+        "id, full_name, email, phone, room_id, check_in, check_out, guests, calendar_status, hold_type, expires_at, listing_title, notes, property_id"
+      )
+      .eq("property_id", id)
+      .in("calendar_status", ["pending", "held"])
+      .not("room_id", "is", null)
+      .not("check_in", "is", null)
+      .not("check_out", "is", null),
+  ]);
 
   const allRooms = (roomsResult.data ?? []).map((r) => ({
     ...r,
@@ -109,8 +97,6 @@ export default async function PropertyDashboardPage({
     photos: r.photos ?? [],
   })) as RoomData[];
   const activeRooms = allRooms.filter((r) => r.is_active);
-  const checkIns = checkInsResult.data ?? [];
-  const checkOuts = checkOutsResult.data ?? [];
   const calBookings = calBookingsResult.data ?? [];
   const enquiries = enquiriesResult.data ?? [];
 
@@ -126,8 +112,6 @@ export default async function PropertyDashboardPage({
           .gt("end_date", todayStr)
       : { data: [] };
   const blockedDates = blockedResult.data ?? [];
-
-  const availableTonight = activeRooms.length - checkIns.length;
 
   const typeLabels: Record<string, string> = {
     villa: "Villa / Holiday Home",
@@ -213,72 +197,13 @@ export default async function PropertyDashboardPage({
       </div>
 
       {/* SECTION 1 — Today's Snapshot */}
-      <div className="grid grid-cols-3 gap-2 lg:gap-3 mb-4">
-        <div className="bg-white rounded-xl lg:rounded-2xl border border-[#E2DDD5] py-3 px-2 lg:p-4 text-center shadow-sm">
-          <p className="font-display text-[20px] lg:text-[24px] font-bold tracking-[-0.02em] leading-none text-[#16A34A]">
-            {checkIns.length}
-          </p>
-          <p className="text-[10px] lg:text-[11px] text-[#9C9485] font-medium mt-1">
-            Checking in
-          </p>
-        </div>
-        <div className="bg-white rounded-xl lg:rounded-2xl border border-[#E2DDD5] py-3 px-2 lg:p-4 text-center shadow-sm">
-          <p className="font-display text-[20px] lg:text-[24px] font-bold tracking-[-0.02em] leading-none text-[#E8A020]">
-            {checkOuts.length}
-          </p>
-          <p className="text-[10px] lg:text-[11px] text-[#9C9485] font-medium mt-1">
-            Checking out
-          </p>
-        </div>
-        <div className="bg-white rounded-xl lg:rounded-2xl border border-[#E2DDD5] py-3 px-2 lg:p-4 text-center shadow-sm">
-          <p className="font-display text-[20px] lg:text-[24px] font-bold tracking-[-0.02em] leading-none text-[#4F46E5]">
-            {availableTonight < 0 ? 0 : availableTonight}
-          </p>
-          <p className="text-[10px] lg:text-[11px] text-[#9C9485] font-medium mt-1">
-            Available tonight
-          </p>
-        </div>
+      <div className="mb-5">
+        <TodaySnapshot
+          bookings={calBookings}
+          rooms={allRooms}
+          propertyId={id}
+        />
       </div>
-
-      {/* Arriving today */}
-      {checkIns.length > 0 && (
-        <div className="mb-3 bg-white rounded-xl border border-[#E2DDD5] p-3 shadow-sm">
-          <p className="text-[11px] font-bold text-[#9C9485] uppercase tracking-wider mb-2">
-            Arriving today
-          </p>
-          <div className="space-y-1.5">
-            {checkIns.map((b) => {
-              const room = allRooms.find((r) => r.id === b.room_id);
-              return (
-                <div key={b.id} className="flex items-center justify-between text-[13px]">
-                  <span className="font-medium text-[#16130C]">{b.guest_name}</span>
-                  <span className="text-[#9C9485]">{room?.name ?? "—"}</span>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* Departing today */}
-      {checkOuts.length > 0 && (
-        <div className="mb-5 bg-white rounded-xl border border-[#E2DDD5] p-3 shadow-sm">
-          <p className="text-[11px] font-bold text-[#9C9485] uppercase tracking-wider mb-2">
-            Departing today
-          </p>
-          <div className="space-y-1.5">
-            {checkOuts.map((b) => {
-              const room = allRooms.find((r) => r.id === b.room_id);
-              return (
-                <div key={b.id} className="flex items-center justify-between text-[13px]">
-                  <span className="font-medium text-[#16130C]">{b.guest_name}</span>
-                  <span className="text-[#9C9485]">{room?.name ?? "—"}</span>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
 
       {/* SECTION 2 — Single-property calendar */}
       <div className="mb-8">
