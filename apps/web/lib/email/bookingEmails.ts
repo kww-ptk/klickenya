@@ -61,6 +61,8 @@ export function bookingConfirmationGuestHtml(p: {
   checkOut: string;
   nights: number;
   guests: number;
+  ratePerNight: number;
+  subtotal: number;
   totalKes: number;
   amountPaid: number;
   balance: number;
@@ -87,7 +89,7 @@ export function bookingConfirmationGuestHtml(p: {
     ])}
 
     <h2 style="margin:0 0 10px;font-size:15px;font-weight:600;color:#16130C;">Payment summary</h2>
-    ${financialTable({ ratePerNight: Math.round(p.totalKes / p.nights), nights: p.nights, subtotal: p.totalKes, totalKes: p.totalKes, amountPaid: p.amountPaid, balance: p.balance, discountKes: p.discountKes })}
+    ${financialTable({ ratePerNight: p.ratePerNight, nights: p.nights, subtotal: p.subtotal, totalKes: p.totalKes, amountPaid: p.amountPaid, balance: p.balance, discountKes: p.discountKes })}
 
     <h2 style="margin:0 0 12px;font-size:15px;font-weight:600;color:#16130C;">What&apos;s next</h2>
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
@@ -126,6 +128,8 @@ export function bookingNotificationOwnerHtml(p: {
   checkOut: string;
   nights: number;
   guests: number;
+  ratePerNight: number;
+  subtotal: number;
   totalKes: number;
   amountPaid: number;
   balance: number;
@@ -159,7 +163,7 @@ export function bookingNotificationOwnerHtml(p: {
     ])}
 
     <h2 style="margin:0 0 10px;font-size:15px;font-weight:600;color:#16130C;">Payment</h2>
-    ${financialTable({ ratePerNight: Math.round(p.totalKes / p.nights), nights: p.nights, subtotal: p.totalKes, totalKes: p.totalKes, amountPaid: p.amountPaid, balance: p.balance, discountKes: p.discountKes })}
+    ${financialTable({ ratePerNight: p.ratePerNight, nights: p.nights, subtotal: p.subtotal, totalKes: p.totalKes, amountPaid: p.amountPaid, balance: p.balance, discountKes: p.discountKes })}
 
     ${p.internalNotes ? `
     <div style="margin-bottom:20px;padding:14px;background:#F5F3F0;border-radius:8px;border-left:3px solid #E8A020;">

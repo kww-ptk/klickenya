@@ -70,8 +70,19 @@ export async function POST(
     const checkIn = new Date(enquiry.check_in + "T00:00:00");
     const checkOut = new Date(enquiry.check_out + "T00:00:00");
     const nights = Math.max(1, Math.ceil((checkOut.getTime() - checkIn.getTime()) / 86_400_000));
-    const subtotal = ratePerNight * nights;
-    const total = subtotal;
+
+    // Fetch base room price to detect discount
+    const { data: roomData } = await adminClient
+      .from("rooms")
+      .select("base_price_kes")
+      .eq("id", enquiry.room_id)
+      .single();
+    const basePriceKes = roomData?.base_price_kes ?? ratePerNight;
+
+    // If accepted rate < base price, treat the difference as a discount
+    const subtotal = basePriceKes * nights;
+    const discountKes = ratePerNight < basePriceKes ? (basePriceKes - ratePerNight) * nights : 0;
+    const total = subtotal - discountKes; // = ratePerNight * nights
 
     // Create booking
     const { data: booking, error: bErr } = await adminClient
@@ -87,7 +98,7 @@ export async function POST(
         check_out_date: enquiry.check_out,
         rate_per_night: ratePerNight,
         subtotal_kes: subtotal,
-        discount_kes: 0,
+        discount_kes: discountKes,
         total_kes: total,
         amount_paid_kes: amountPaid,
         status: "confirmed",
@@ -98,6 +109,7 @@ export async function POST(
           `Guest: ${enquiry.full_name}`,
           `Dates: ${new Date(enquiry.check_in + "T00:00:00").toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })} → ${new Date(enquiry.check_out + "T00:00:00").toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}`,
           `Converted to booking: ${new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })} ${new Date().toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}`,
+          ...(discountKes > 0 ? [`Discount applied: KSh ${discountKes.toLocaleString()} (rate KSh ${ratePerNight.toLocaleString()} vs base KSh ${basePriceKes.toLocaleString()})`] : []),
         ].join("\n"),
       })
       .select("*")
@@ -125,7 +137,7 @@ export async function POST(
       .update({ calendar_status: "converted" })
       .eq("id", id);
 
-    // Send emails (fire-and-forget)
+    // Send emails (non-blocking — logged on failure)
     if (process.env.RESEND_API_KEY) {
       sendConversionEmails({
         bookingId: booking.id,
@@ -139,12 +151,16 @@ export async function POST(
         checkOut: enquiry.check_out,
         nights,
         ratePerNight,
+        subtotal,
+        discountKes,
         totalKes: total,
         amountPaid,
         balance: total - amountPaid,
         ownerId: user.id,
         listingTitle: enquiry.listing_title ?? null,
-      }).catch((e) => console.error("Conversion email error:", e));
+      }).catch((e) => console.error("[convert] email send failed:", e));
+    } else {
+      console.warn("[convert] RESEND_API_KEY not set — skipping emails");
     }
 
     return NextResponse.json({ success: true, booking }, { status: 201 });
@@ -166,6 +182,8 @@ async function sendConversionEmails(p: {
   checkOut: string;
   nights: number;
   ratePerNight: number;
+  subtotal: number;
+  discountKes: number;
   totalKes: number;
   amountPaid: number;
   balance: number;
@@ -194,54 +212,69 @@ async function sendConversionEmails(p: {
 
   const convertedAt = new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
 
+  // Send both emails in parallel — failures are independent
+  const sends: Promise<unknown>[] = [];
+
   // 1. Guest confirmation
   if (p.guestEmail) {
-    await resend.emails.send({
-      from: "Klickenya Bookings <bookings@klickenya.com>",
-      to: p.guestEmail,
-      subject: `Booking confirmed — ${propertyName}`,
-      html: bookingConfirmationGuestHtml({
-        guestName: p.guestName,
-        propertyName,
-        roomName,
-        checkIn: p.checkIn,
-        checkOut: p.checkOut,
-        nights: p.nights,
-        guests: p.guestCount,
-        totalKes: p.totalKes,
-        amountPaid: p.amountPaid,
-        balance: p.balance,
-        checkInTime,
-        address,
-        bookingId: p.bookingId,
-      }),
-    });
+    sends.push(
+      resend.emails.send({
+        from: "Klickenya Bookings <bookings@klickenya.com>",
+        to: p.guestEmail,
+        subject: `Booking confirmed — ${propertyName}`,
+        html: bookingConfirmationGuestHtml({
+          guestName: p.guestName,
+          propertyName,
+          roomName,
+          checkIn: p.checkIn,
+          checkOut: p.checkOut,
+          nights: p.nights,
+          guests: p.guestCount,
+          ratePerNight: p.ratePerNight,
+          subtotal: p.subtotal,
+          totalKes: p.totalKes,
+          amountPaid: p.amountPaid,
+          balance: p.balance,
+          discountKes: p.discountKes > 0 ? p.discountKes : undefined,
+          checkInTime,
+          address,
+          bookingId: p.bookingId,
+        }),
+      }).catch((e: unknown) => console.error("[convert] guest email failed:", e))
+    );
   }
 
   // 2. Owner notification
   if (ownerEmail) {
-    await resend.emails.send({
-      from: "Klickenya Bookings <bookings@klickenya.com>",
-      to: ownerEmail,
-      subject: `New booking (from enquiry) — ${p.guestName}, ${p.checkIn}`,
-      html: bookingNotificationOwnerHtml({
-        ownerName,
-        guestName: p.guestName,
-        guestPhone: p.guestPhone ?? "Not provided",
-        guestEmail: p.guestEmail ?? "",
-        propertyName,
-        roomName,
-        checkIn: p.checkIn,
-        checkOut: p.checkOut,
-        nights: p.nights,
-        guests: p.guestCount,
-        totalKes: p.totalKes,
-        amountPaid: p.amountPaid,
-        balance: p.balance,
-        propertyId: p.propertyId,
-        bookingId: p.bookingId,
-        convertedFromEnquiry: convertedAt,
-      }),
-    });
+    sends.push(
+      resend.emails.send({
+        from: "Klickenya Bookings <bookings@klickenya.com>",
+        to: ownerEmail,
+        subject: `New booking (from enquiry) — ${p.guestName}, ${p.checkIn}`,
+        html: bookingNotificationOwnerHtml({
+          ownerName,
+          guestName: p.guestName,
+          guestPhone: p.guestPhone ?? "Not provided",
+          guestEmail: p.guestEmail ?? "",
+          propertyName,
+          roomName,
+          checkIn: p.checkIn,
+          checkOut: p.checkOut,
+          nights: p.nights,
+          guests: p.guestCount,
+          ratePerNight: p.ratePerNight,
+          subtotal: p.subtotal,
+          totalKes: p.totalKes,
+          amountPaid: p.amountPaid,
+          balance: p.balance,
+          discountKes: p.discountKes > 0 ? p.discountKes : undefined,
+          propertyId: p.propertyId,
+          bookingId: p.bookingId,
+          convertedFromEnquiry: convertedAt,
+        }),
+      }).catch((e: unknown) => console.error("[convert] owner email failed:", e))
+    );
   }
+
+  await Promise.all(sends);
 }
