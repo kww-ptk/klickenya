@@ -125,7 +125,11 @@ export function NewBookingSidePanel({
     )
   );
   const subtotal = nights * form.rate_per_night;
-  const feesTotal = selectedFees.reduce((s, f) => s + f.amount_kes, 0);
+  const mandatoryFeesTotal = feeTemplates
+    .filter((t) => t.is_active && t.apply_by_default)
+    .reduce((s, t) => s + calcFeeAmount(t), 0);
+  const optionalFeesTotal = selectedFees.reduce((s, f) => s + f.amount_kes, 0);
+  const feesTotal = mandatoryFeesTotal + optionalFeesTotal;
   const finalTotal = Math.max(0, subtotal + feesTotal - form.discount_kes);
   const balance = Math.max(0, finalTotal - form.amount_paid);
 
@@ -146,23 +150,14 @@ export function NewBookingSidePanel({
       .then((data) => {
         if (Array.isArray(data.fees)) {
           setFeeTemplates(data.fees);
-          // Auto-select default fees (amounts calculated below via separate effect)
-          setSelectedFees(
-            data.fees
-              .filter((f: { apply_by_default: boolean; is_active: boolean }) => f.apply_by_default && f.is_active)
-              .map((f: { id: string; name: string; fee_type: string; amount: number }) => ({
-                id: f.id,
-                name: f.name,
-                fee_type: f.fee_type,
-                amount_kes: calcFeeAmount(f),
-              }))
-          );
+          // selectedFees tracks optional add-ons only; mandatory fees are always included at submit
+          setSelectedFees([]);
         }
       })
       .catch(() => {});
   }, [propertyId]);
 
-  // Recalculate variable fee amounts when nights/guests/subtotal change
+  // Recalculate optional fee amounts when nights/guests/rate change
   useEffect(() => {
     if (!feeTemplates.length) return;
     setSelectedFees((prev) =>
@@ -350,7 +345,12 @@ export function NewBookingSidePanel({
               : form.internal_notes.trim() || null,
             payment_method: form.payment_method,
             amount_paid: perRoomPayment,
-            fees: isEntireBooking ? [] : selectedFees.map(({ name, fee_type, amount_kes }) => ({ name, fee_type, amount_kes })),
+            fees: isEntireBooking ? [] : [
+              ...feeTemplates
+                .filter((t) => t.is_active && t.apply_by_default)
+                .map((t) => ({ name: t.name, fee_type: t.fee_type, amount_kes: calcFeeAmount(t) })),
+              ...selectedFees.map(({ name, fee_type, amount_kes }) => ({ name, fee_type, amount_kes })),
+            ],
             send_confirmation: !!(form.guest_email.trim()) && sendConfirmation,
           }),
         });
@@ -646,32 +646,47 @@ export function NewBookingSidePanel({
               <span className="text-[13px] font-semibold text-[#16130C]">{fmt(subtotal)}</span>
             </div>
 
-            {/* Fee rows */}
-            {feeTemplates.filter((t) => t.is_active).map((t) => {
-              const selected = !!selectedFees.find((f) => f.id === t.id);
+            {/* Mandatory fee rows — locked */}
+            {feeTemplates.filter((t) => t.is_active && t.apply_by_default).map((t) => {
               const calcAmt = calcFeeAmount(t);
-              const isMandatory = t.apply_by_default;
               return (
-                <label key={t.id} className={`flex items-center justify-between px-3 py-2.5 cursor-pointer transition-colors ${selected ? "bg-white" : "bg-[#FAFAF8]"}`}>
+                <div key={t.id} className="flex items-center justify-between px-3 py-2.5 bg-white">
                   <div className="flex items-center gap-2 min-w-0">
-                    <input
-                      type="checkbox"
-                      checked={selected}
-                      onChange={() => toggleFee(t)}
-                      className="accent-[#4F46E5] shrink-0"
-                    />
-                    <span className={`text-[13px] ${selected ? "text-[#16130C]" : "text-[#9C9485]"}`}>{t.name}</span>
-                    {isMandatory
-                      ? <span className="shrink-0 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-green-100 text-green-700">Mandatory</span>
-                      : <span className="shrink-0 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-100 text-amber-700">Upsell</span>
-                    }
+                    <span className="text-[13px] text-[#16130C]">{t.name}</span>
+                    <span className="shrink-0 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-green-100 text-green-700">Mandatory</span>
                     <span className="text-[11px] text-[#9C9485] shrink-0">
                       {t.fee_type === "per_night" && nights > 0 ? `× ${nights}n` :
                        t.fee_type === "per_guest" && form.guest_count > 0 ? `× ${form.guest_count}g` :
                        t.fee_type === "percentage" ? `${t.amount}%` : ""}
                     </span>
                   </div>
-                  <span className={`text-[13px] font-semibold shrink-0 ml-2 ${selected ? "text-[#16130C]" : "text-[#9C9485]"}`}>{fmt(calcAmt)}</span>
+                  <span className="text-[13px] font-semibold shrink-0 ml-2 text-[#16130C]">{fmt(calcAmt)}</span>
+                </div>
+              );
+            })}
+
+            {/* Optional add-ons — toggleable */}
+            {feeTemplates.filter((t) => t.is_active && !t.apply_by_default).map((t) => {
+              const selected = !!selectedFees.find((f) => f.id === t.id);
+              const calcAmt = calcFeeAmount(t);
+              return (
+                <label key={t.id} className={`flex items-center justify-between px-3 py-2.5 cursor-pointer transition-colors ${selected ? "bg-amber-50" : "bg-[#FAFAF8]"}`}>
+                  <div className="flex items-center gap-2 min-w-0">
+                    <input
+                      type="checkbox"
+                      checked={selected}
+                      onChange={() => toggleFee(t)}
+                      className="accent-[#E8A020] shrink-0"
+                    />
+                    <span className={`text-[13px] ${selected ? "text-[#16130C] font-medium" : "text-[#5E5848]"}`}>{t.name}</span>
+                    <span className="shrink-0 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-100 text-amber-700">Add-on</span>
+                    <span className="text-[11px] text-[#9C9485] shrink-0">
+                      {t.fee_type === "per_night" && nights > 0 ? `× ${nights}n` :
+                       t.fee_type === "per_guest" && form.guest_count > 0 ? `× ${form.guest_count}g` :
+                       t.fee_type === "percentage" ? `${t.amount}%` : ""}
+                    </span>
+                  </div>
+                  <span className={`text-[13px] font-semibold shrink-0 ml-2 ${selected ? "text-[#E8A020]" : "text-[#9C9485]"}`}>{fmt(calcAmt)}</span>
                 </label>
               );
             })}
