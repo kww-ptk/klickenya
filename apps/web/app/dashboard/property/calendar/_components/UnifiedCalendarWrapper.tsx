@@ -30,12 +30,14 @@ function StatsBar({
   checkInBookings,
   checkOutBookings,
   rooms,
+  properties,
   onSelectBooking,
 }: {
   stats: Stats;
   checkInBookings: BookingWithProperty[];
   checkOutBookings: BookingWithProperty[];
   rooms: RoomWithProperty[];
+  properties: PropertyMeta[];
   onSelectBooking: (b: BookingWithProperty) => void;
 }) {
   const [expanded, setExpanded] = useState<"checkin" | "checkout" | null>(null);
@@ -142,6 +144,7 @@ function StatsBar({
           </p>
           {expandedBookings.map((b) => {
             const room = rooms.find((r) => r.id === b.room_id);
+            const property = properties.find((p) => p.id === room?.property_id);
             return (
               <button
                 key={b.id}
@@ -153,8 +156,12 @@ function StatsBar({
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-[13px] font-semibold text-[#16130C] truncate">{b.guest_name}</p>
-                  <p className="text-[11px] text-[#9C9485]">
-                    {room?.name ?? "—"} · {fmtDate(b.check_in_date)} → {fmtDate(b.check_out_date)}
+                  <p className="text-[11px] text-[#9C9485] truncate">
+                    {property?.name && <span className="font-medium text-[#5E5848]">{property.name}</span>}
+                    {property?.name && room?.name && <span> · </span>}
+                    {room?.name ?? "—"}
+                    <span className="mx-1">·</span>
+                    {fmtDate(b.check_in_date)} → {fmtDate(b.check_out_date)}
                   </p>
                 </div>
                 <span className="text-[11px] font-semibold text-[#4F46E5] shrink-0">Open →</span>
@@ -295,6 +302,7 @@ export function UnifiedCalendarWrapper({
         checkInBookings={checkInBookings}
         checkOutBookings={checkOutBookings}
         rooms={rooms}
+        properties={properties}
         onSelectBooking={(b) => setSelectedBooking(b)}
       />
 
