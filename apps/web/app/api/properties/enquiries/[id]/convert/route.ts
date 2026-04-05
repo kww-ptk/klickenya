@@ -137,9 +137,9 @@ export async function POST(
       .update({ calendar_status: "converted" })
       .eq("id", id);
 
-    // Send emails (non-blocking — logged on failure)
-    if (process.env.RESEND_API_KEY) {
-      sendConversionEmails({
+    // Send emails — awaited so they complete before response returns
+    try {
+      await sendConversionEmails({
         bookingId: booking.id,
         propertyId: enquiry.property_id,
         roomId: enquiry.room_id,
@@ -158,9 +158,10 @@ export async function POST(
         balance: total - amountPaid,
         ownerId: user.id,
         listingTitle: enquiry.listing_title ?? null,
-      }).catch((e) => console.error("[convert] email send failed:", e));
-    } else {
-      console.warn("[convert] RESEND_API_KEY not set — skipping emails");
+      });
+    } catch (emailErr) {
+      // Booking was created — don't fail the request over email
+      console.error("[convert] email send failed:", emailErr);
     }
 
     return NextResponse.json({ success: true, booking }, { status: 201 });
