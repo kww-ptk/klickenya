@@ -243,6 +243,9 @@ export async function POST(req: NextRequest) {
       checkIn: check_in_date,
       checkOut: check_out_date,
       nights,
+      ratePerNight: rate_per_night,
+      subtotal,
+      discountKes: discountAmount,
       totalKes: total,
       amountPaid,
       balance: total - amountPaid,
@@ -291,6 +294,9 @@ export async function POST(req: NextRequest) {
     checkIn: check_in_date,
     checkOut: check_out_date,
     nights,
+    ratePerNight: rate_per_night,
+    subtotal,
+    discountKes: discountAmount,
     totalKes: total,
     amountPaid,
     balance: total - amountPaid,
@@ -313,6 +319,9 @@ async function sendBookingEmails(p: {
   checkIn: string;
   checkOut: string;
   nights: number;
+  ratePerNight: number;
+  subtotal: number;
+  discountKes: number;
   totalKes: number;
   amountPaid: number;
   balance: number;
@@ -337,54 +346,69 @@ async function sendBookingEmails(p: {
     const checkInTime = propRes.data?.check_in_time ?? undefined;
     const address = propRes.data?.address ?? undefined;
 
+    const sends: Promise<unknown>[] = [];
+
     // 1. Guest confirmation email
     if (p.guestEmail) {
-      await resend.emails.send({
-        from: "Klickenya Bookings <bookings@klickenya.com>",
-        to: p.guestEmail,
-        subject: `Booking confirmed — ${propertyName}`,
-        html: bookingConfirmationGuestHtml({
-          guestName: p.guestName,
-          propertyName,
-          roomName,
-          checkIn: p.checkIn,
-          checkOut: p.checkOut,
-          nights: p.nights,
-          guests: p.guestCount,
-          totalKes: p.totalKes,
-          amountPaid: p.amountPaid,
-          balance: p.balance,
-          checkInTime,
-          address,
-        }),
-      });
+      sends.push(
+        resend.emails.send({
+          from: "Klickenya Bookings <bookings@klickenya.com>",
+          to: p.guestEmail,
+          subject: `Booking confirmed — ${propertyName}`,
+          html: bookingConfirmationGuestHtml({
+            guestName: p.guestName,
+            propertyName,
+            roomName,
+            checkIn: p.checkIn,
+            checkOut: p.checkOut,
+            nights: p.nights,
+            guests: p.guestCount,
+            ratePerNight: p.ratePerNight,
+            subtotal: p.subtotal,
+            totalKes: p.totalKes,
+            amountPaid: p.amountPaid,
+            balance: p.balance,
+            discountKes: p.discountKes > 0 ? p.discountKes : undefined,
+            checkInTime,
+            address,
+            bookingId: p.bookingId,
+          }),
+        }).catch((e: unknown) => console.error("[bookings] guest email failed:", e))
+      );
     }
 
     // 2. Owner notification email
     if (ownerEmail) {
-      await resend.emails.send({
-        from: "Klickenya Bookings <bookings@klickenya.com>",
-        to: ownerEmail,
-        subject: `New booking — ${p.guestName}, ${p.checkIn}`,
-        html: bookingNotificationOwnerHtml({
-          ownerName,
-          guestName: p.guestName,
-          guestPhone: p.guestPhone ?? "Not provided",
-          guestEmail: p.guestEmail ?? "Not provided",
-          propertyName,
-          roomName,
-          checkIn: p.checkIn,
-          checkOut: p.checkOut,
-          nights: p.nights,
-          guests: p.guestCount,
-          totalKes: p.totalKes,
-          amountPaid: p.amountPaid,
-          balance: p.balance,
-          propertyId: p.propertyId,
-          bookingId: p.bookingId,
-        }),
-      });
+      sends.push(
+        resend.emails.send({
+          from: "Klickenya Bookings <bookings@klickenya.com>",
+          to: ownerEmail,
+          subject: `New booking — ${p.guestName}, ${p.checkIn}`,
+          html: bookingNotificationOwnerHtml({
+            ownerName,
+            guestName: p.guestName,
+            guestPhone: p.guestPhone ?? "Not provided",
+            guestEmail: p.guestEmail ?? "Not provided",
+            propertyName,
+            roomName,
+            checkIn: p.checkIn,
+            checkOut: p.checkOut,
+            nights: p.nights,
+            guests: p.guestCount,
+            ratePerNight: p.ratePerNight,
+            subtotal: p.subtotal,
+            totalKes: p.totalKes,
+            amountPaid: p.amountPaid,
+            balance: p.balance,
+            discountKes: p.discountKes > 0 ? p.discountKes : undefined,
+            propertyId: p.propertyId,
+            bookingId: p.bookingId,
+          }),
+        }).catch((e: unknown) => console.error("[bookings] owner email failed:", e))
+      );
     }
+
+    await Promise.all(sends);
   } catch (e) {
     console.error("Booking email error (non-blocking):", e);
   }
