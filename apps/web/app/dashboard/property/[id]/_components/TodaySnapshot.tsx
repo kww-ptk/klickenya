@@ -9,6 +9,10 @@ interface Room {
   id: string;
   name: string;
   room_number: string | null;
+  room_type: string;
+  max_guests: number;
+  base_price_kes: number;
+  is_active: boolean;
 }
 
 interface Booking {
