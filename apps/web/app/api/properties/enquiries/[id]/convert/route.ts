@@ -31,7 +31,7 @@ export async function POST(
     // Fetch the contact_request + verify ownership via property
     const { data: enquiry, error: eErr } = await adminClient
       .from("contact_requests")
-      .select("id, full_name, email, phone, room_id, property_id, check_in, check_out, guests, calendar_status, listing_title, notes, created_at")
+      .select("id, full_name, email, phone, room_id, property_id, check_in, check_out, guests, calendar_status, listing_title, notes, created_at, guest_user_id")
       .eq("id", id)
       .single();
 
@@ -121,6 +121,7 @@ export async function POST(
         discount_kes: discountKes,
         total_kes: total,
         amount_paid_kes: amountPaid,
+        guest_user_id: enquiry.guest_user_id ?? null,
         status: "confirmed",
         payment_status: amountPaid >= total ? "paid" : amountPaid > 0 ? "partial" : "pending",
         source: "direct",

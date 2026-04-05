@@ -284,6 +284,16 @@ export default async function AdminLayout({
             badge={unreadEnquiries}
           />
           <AdminNavLink
+            href="/admin/bookings"
+            label="Bookings"
+            icon={<CalendarIcon />}
+          />
+          <AdminNavLink
+            href="/admin/guests"
+            label="Guests"
+            icon={<UsersIcon />}
+          />
+          <AdminNavLink
             href="/admin/ambassadors"
             label="Ambassadors"
             icon={<MegaphoneIcon />}
