@@ -635,7 +635,7 @@ export function StayBookingSidebar({
                     const roomPrices = (sanityRooms ?? []).map((r) => r.pricePerNight).filter((p) => p > 0);
                     const displayPrice = roomPrices.length > 0 ? Math.min(...roomPrices) : (price > 0 ? price : 0);
                     return listingPhoto ? (
-                      <div className="relative flex-1 bg-[#E2DDD5]">
+                      <div className="relative h-[220px] shrink-0 bg-[#E2DDD5]">
                         <Image src={listingPhoto} alt={listingTitle} fill className="object-cover" sizes="400px" unoptimized={!isOptimizableUrl(listingPhoto)} />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
                         <div className="absolute bottom-4 left-4 right-4">
