@@ -908,43 +908,73 @@ export function StayBookingSidebar({
                         return 0;
                       };
                       const mandatoryFees = fees.filter((f) => f.apply_by_default);
+                      const upsellFees = fees.filter((f) => !f.apply_by_default);
                       const feesTotal = mandatoryFees.reduce((s, f) => s + calcFee(f), 0);
                       const total = subtotal + feesTotal;
+                      const feeHint = (f: AvailabilityFee) => {
+                        if (f.fee_type === "per_night") return ` · ${nights} night${nights !== 1 ? "s" : ""}`;
+                        if (f.fee_type === "per_guest") return ` · ${modalGuests} guest${modalGuests !== 1 ? "s" : ""}`;
+                        if (f.fee_type === "percentage") return ` · ${f.amount}% of subtotal`;
+                        return "";
+                      };
                       return (
-                        <div className="rounded-xl border border-[#E8A020]/30 overflow-hidden divide-y divide-[#E8A020]/20">
-                          {/* Room header row */}
-                          <div className="bg-gradient-to-r from-[#E8A020]/5 to-[#E8A020]/10 px-3 py-2.5 flex items-center gap-2.5">
-                            <span className="text-[16px]">{selectedRoom === "__entire__" ? "🏠" : "🛏"}</span>
-                            <div className="min-w-0">
-                              <p className="text-[13px] font-bold text-[#16130C] truncate">
-                                {selectedRoom === "__entire__" ? "Entire property" : results.find((r) => r.key === selectedRoom)?.name}
-                              </p>
-                              <p className="text-[10px] text-[#9C9485]">{fmtDate(checkIn)} → {fmtDate(checkOut)} · {nights} night{nights !== 1 ? "s" : ""}</p>
+                        <>
+                          <div className="rounded-xl border border-[#E8A020]/30 overflow-hidden divide-y divide-[#E8A020]/20">
+                            {/* Room header row */}
+                            <div className="bg-gradient-to-r from-[#E8A020]/5 to-[#E8A020]/10 px-3 py-2.5 flex items-center gap-2.5">
+                              <span className="text-[16px]">{selectedRoom === "__entire__" ? "🏠" : "🛏"}</span>
+                              <div className="min-w-0">
+                                <p className="text-[13px] font-bold text-[#16130C] truncate">
+                                  {selectedRoom === "__entire__" ? "Entire property" : results.find((r) => r.key === selectedRoom)?.name}
+                                </p>
+                                <p className="text-[10px] text-[#9C9485]">{fmtDate(checkIn)} → {fmtDate(checkOut)} · {nights} night{nights !== 1 ? "s" : ""}</p>
+                              </div>
+                            </div>
+                            {/* Subtotal row */}
+                            <div className="flex justify-between items-center px-3 py-2 bg-white">
+                              <span className="text-[12px] text-[#9C9485]">{fmt(selectedPrice)} × {nights} night{nights !== 1 ? "s" : ""}</span>
+                              <span className="text-[12px] font-semibold text-[#16130C]">{fmt(subtotal)}</span>
+                            </div>
+                            {/* Mandatory fee rows */}
+                            {mandatoryFees.map((f) => (
+                              <div key={f.id} className="flex justify-between items-center px-3 py-2 bg-white">
+                                <span className="text-[12px] text-[#9C9485]">
+                                  {f.name}{feeHint(f)}
+                                </span>
+                                <span className="text-[12px] font-semibold text-[#16130C]">{fmt(calcFee(f))}</span>
+                              </div>
+                            ))}
+                            {/* Total row */}
+                            <div className="flex justify-between items-center px-3 py-2.5 bg-[#16130C]">
+                              <span className="text-[12px] font-semibold text-white/70">Estimated total</span>
+                              <span className="text-[14px] font-bold text-white">{fmt(total)}</span>
                             </div>
                           </div>
-                          {/* Subtotal row */}
-                          <div className="flex justify-between items-center px-3 py-2 bg-white">
-                            <span className="text-[12px] text-[#9C9485]">{fmt(selectedPrice)} × {nights} night{nights !== 1 ? "s" : ""}</span>
-                            <span className="text-[12px] font-semibold text-[#16130C]">{fmt(subtotal)}</span>
-                          </div>
-                          {/* Mandatory fee rows */}
-                          {mandatoryFees.map((f) => (
-                            <div key={f.id} className="flex justify-between items-center px-3 py-2 bg-white">
-                              <span className="text-[12px] text-[#9C9485]">
-                                {f.name}
-                                {f.fee_type === "per_night" && ` × ${nights}n`}
-                                {f.fee_type === "per_guest" && ` × ${modalGuests}g`}
-                                {f.fee_type === "percentage" && ` (${f.amount}%)`}
-                              </span>
-                              <span className="text-[12px] font-semibold text-[#16130C]">{fmt(calcFee(f))}</span>
+
+                          {/* Upsell fees — violet card */}
+                          {upsellFees.length > 0 && (
+                            <div className="rounded-xl border border-violet-200 bg-violet-50/60 overflow-hidden divide-y divide-violet-100">
+                              <div className="px-3 py-2 flex items-center gap-1.5">
+                                <span className="text-[10px] font-bold text-violet-600 uppercase tracking-wider">Optional extras</span>
+                                <span className="text-[9px] text-violet-400">· may be added at host discretion</span>
+                              </div>
+                              {upsellFees.map((f) => (
+                                <div key={f.id} className="flex justify-between items-center px-3 py-2 bg-white/70">
+                                  <div className="flex items-center gap-2 min-w-0">
+                                    <span className="text-[12px] text-[#16130C]">{f.name}</span>
+                                    <span className="text-[10px] text-violet-500">
+                                      {f.fee_type === "per_night" ? `${fmt(f.amount)}/night` :
+                                       f.fee_type === "per_guest" ? `${fmt(f.amount)}/guest` :
+                                       f.fee_type === "percentage" ? `${f.amount}%` :
+                                       fmt(f.amount)}
+                                    </span>
+                                  </div>
+                                  <span className="text-[11px] font-semibold text-violet-600 shrink-0">{fmt(calcFee(f))}</span>
+                                </div>
+                              ))}
                             </div>
-                          ))}
-                          {/* Total row */}
-                          <div className="flex justify-between items-center px-3 py-2.5 bg-[#16130C]">
-                            <span className="text-[12px] font-semibold text-white/70">Estimated total</span>
-                            <span className="text-[14px] font-bold text-white">{fmt(total)}</span>
-                          </div>
-                        </div>
+                          )}
+                        </>
                       );
                     })()}
 
