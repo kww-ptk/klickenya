@@ -220,6 +220,8 @@ export async function POST(request: NextRequest) {
         guest_user_id: guestUserId,
         notes: `Listing: ${data.listingTitle} (${data.listingId})\nType: ${data.listingType}${data.room ? `\nRoom: ${data.room}` : ""}\n${Object.entries(enquirySummary).map(([k, v]) => `${k}: ${v}`).join("\n")}`,
         status: "new",
+        check_in: data.listingType === "stay" ? data.checkIn : null,
+        check_out: data.listingType === "stay" ? data.checkOut : null,
         room_id: data.listingType === "stay" ? (data.room_id ?? null) : null,
         property_id: data.listingType === "stay" ? (data.property_id ?? null) : null,
       })
