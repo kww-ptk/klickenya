@@ -64,6 +64,7 @@ export interface Enquiry {
   check_out: string;
   guests?: number | null;
   calendar_status: string;
+  hold_type?: string | null;
   expires_at: string;
   listing_title?: string | null;
   notes?: string | null;
@@ -146,6 +147,16 @@ export function CalendarGrid({
     checkOut: string;
   } | null>(null);
 
+  // Drag action chooser
+  const [dragChooser, setDragChooser] = useState<{
+    roomId: string; checkIn: string; checkOut: string;
+  } | null>(null);
+  const [dragChooserMode, setDragChooserMode] = useState<"choose" | "block" | "rate">("choose");
+  const [blockReason, setBlockReason] = useState("");
+  const [blocking, setBlocking] = useState(false);
+  const [newRate, setNewRate] = useState("");
+  const [settingRate, setSettingRate] = useState(false);
+
   // Drag state
   const [dragState, setDragState] = useState<DragState | null>(null);
   const [shakeCell, setShakeCell] = useState<string | null>(null); // "roomId:date"
@@ -226,7 +237,10 @@ export function CalendarGrid({
       const checkOut = nextDay(
         ds.startDate <= ds.currentDate ? ds.currentDate : ds.startDate
       );
-      setNewBookingTarget({ roomId: ds.roomId, checkIn, checkOut });
+      setDragChooser({ roomId: ds.roomId, checkIn, checkOut });
+      setDragChooserMode("choose");
+      setBlockReason("");
+      setNewRate("");
       setDragState(null);
     };
     document.addEventListener("mouseup", handleEnd);
@@ -523,6 +537,152 @@ export function CalendarGrid({
           }}
         />
       )}
+
+      {/* Drag action chooser */}
+      {dragChooser && !newBookingTarget && (() => {
+        const chooserRoom = rooms.find((r) => r.id === dragChooser.roomId);
+        const fmtD = (d: string) => new Date(d + "T00:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+        const nights = Math.max(1, Math.ceil((new Date(dragChooser.checkOut + "T00:00:00").getTime() - new Date(dragChooser.checkIn + "T00:00:00").getTime()) / 86400000));
+        const closeDragChooser = () => { setDragChooser(null); setDragChooserMode("choose"); };
+
+        const handleBlock = async () => {
+          setBlocking(true);
+          try {
+            const res = await fetch("/api/properties/blocked-dates", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ room_id: dragChooser.roomId, start_date: dragChooser.checkIn, end_date: dragChooser.checkOut, reason: blockReason || null }),
+            });
+            if (!res.ok) throw new Error("Failed");
+            closeDragChooser();
+            // Refresh: simple reload to show blocked cells
+            window.location.reload();
+          } catch { /* silent */ }
+          setBlocking(false);
+        };
+
+        const handleSetRate = async () => {
+          if (!newRate || !chooserRoom) return;
+          setSettingRate(true);
+          try {
+            const res = await fetch(`/api/properties/${propertyId}/pricing`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                name: `Custom rate ${fmtD(dragChooser.checkIn)}–${fmtD(dragChooser.checkOut)}`,
+                start_date: dragChooser.checkIn,
+                end_date: dragChooser.checkOut,
+                price_type: "fixed",
+                value: Number(newRate),
+                priority: 10,
+              }),
+            });
+            if (res.ok) closeDragChooser();
+          } catch { /* silent */ }
+          setSettingRate(false);
+        };
+
+        return (
+          <>
+            <div className="fixed inset-0 z-40 bg-black/50 backdrop-blur-[2px]" onClick={closeDragChooser} />
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
+              <div className="bg-white rounded-2xl shadow-2xl w-full max-w-[360px] overflow-hidden pointer-events-auto" role="dialog">
+                {/* Header */}
+                <div className="px-5 py-4 border-b border-[#E2DDD5]">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <p className="text-[14px] font-bold text-[#16130C]">
+                        {chooserRoom?.name ?? "Room"}
+                      </p>
+                      <p className="text-[12px] text-[#9C9485] mt-0.5">
+                        {fmtD(dragChooser.checkIn)} → {fmtD(dragChooser.checkOut)} · {nights} night{nights !== 1 ? "s" : ""}
+                      </p>
+                    </div>
+                    <button onClick={closeDragChooser} className="size-7 flex items-center justify-center rounded-lg hover:bg-[#F4F1EC] text-[#9C9485]">
+                      <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
+                  </div>
+                </div>
+
+                <div className="p-4 space-y-2">
+                  {dragChooserMode === "choose" && (
+                    <>
+                      <button
+                        onClick={() => { setNewBookingTarget(dragChooser); setDragChooser(null); }}
+                        className="w-full flex items-start gap-3 p-3.5 rounded-xl border-2 border-[#E2DDD5] hover:border-[#4F46E5]/50 hover:bg-[#4F46E5]/5 transition-colors text-left"
+                      >
+                        <span className="text-[20px] shrink-0">📅</span>
+                        <div>
+                          <p className="text-[13px] font-semibold text-[#16130C]">Add booking</p>
+                          <p className="text-[11px] text-[#9C9485]">Create a manual booking for these dates</p>
+                        </div>
+                      </button>
+                      <button
+                        onClick={() => setDragChooserMode("block")}
+                        className="w-full flex items-start gap-3 p-3.5 rounded-xl border-2 border-[#E2DDD5] hover:border-[#9C9485]/50 hover:bg-[#F4F1EC] transition-colors text-left"
+                      >
+                        <span className="text-[20px] shrink-0">🚫</span>
+                        <div>
+                          <p className="text-[13px] font-semibold text-[#16130C]">Block dates</p>
+                          <p className="text-[11px] text-[#9C9485]">Block this room for maintenance or personal use</p>
+                        </div>
+                      </button>
+                      <button
+                        onClick={() => { setNewRate(String(chooserRoom?.base_price_kes ?? "")); setDragChooserMode("rate"); }}
+                        className="w-full flex items-start gap-3 p-3.5 rounded-xl border-2 border-[#E2DDD5] hover:border-[#E8A020]/50 hover:bg-[#FFFBEB] transition-colors text-left"
+                      >
+                        <span className="text-[20px] shrink-0">💰</span>
+                        <div>
+                          <p className="text-[13px] font-semibold text-[#16130C]">Change rate</p>
+                          <p className="text-[11px] text-[#9C9485]">Set a custom nightly rate for these specific dates</p>
+                        </div>
+                      </button>
+                    </>
+                  )}
+
+                  {dragChooserMode === "block" && (
+                    <div className="space-y-3">
+                      <input
+                        type="text"
+                        placeholder="Reason (optional) — e.g. Maintenance, Personal use"
+                        value={blockReason}
+                        onChange={(e) => setBlockReason(e.target.value)}
+                        className="w-full border border-[#E2DDD5] rounded-xl px-3 py-2.5 text-[13px] text-[#16130C] placeholder:text-[#9C9485] outline-none focus:border-[#9C9485]"
+                      />
+                      <div className="flex gap-2">
+                        <button onClick={() => setDragChooserMode("choose")} className="flex-1 py-2.5 rounded-xl border border-[#E2DDD5] text-[13px] text-[#9C9485] hover:text-[#16130C] transition-colors">← Back</button>
+                        <button onClick={handleBlock} disabled={blocking} className="flex-1 py-2.5 rounded-xl bg-[#16130C] text-white text-[13px] font-bold hover:bg-[#2A2416] disabled:opacity-50 transition-colors">
+                          {blocking ? "Blocking…" : "Block dates"}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {dragChooserMode === "rate" && (
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block text-[11px] text-[#9C9485] mb-1">Rate per night (KSh)</label>
+                        <input
+                          type="number"
+                          value={newRate}
+                          onChange={(e) => setNewRate(e.target.value)}
+                          className="w-full border border-[#E2DDD5] rounded-xl px-3 py-2.5 text-[13px] text-[#16130C] outline-none focus:border-[#E8A020]"
+                        />
+                      </div>
+                      <div className="flex gap-2">
+                        <button onClick={() => setDragChooserMode("choose")} className="flex-1 py-2.5 rounded-xl border border-[#E2DDD5] text-[13px] text-[#9C9485] hover:text-[#16130C] transition-colors">← Back</button>
+                        <button onClick={handleSetRate} disabled={settingRate || !newRate} className="flex-1 py-2.5 rounded-xl bg-[#E8A020] text-white text-[13px] font-bold hover:bg-[#d4911c] disabled:opacity-50 transition-colors">
+                          {settingRate ? "Saving…" : "Set rate"}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </>
+        );
+      })()}
     </>
   );
 }
@@ -775,6 +935,16 @@ export function RoomRow({
               );
             }
 
+            // Determine strip style from hold_type / calendar_status
+            const holdType = firstEnquiry?.hold_type;
+            const stripStyle = holdType === "soft"
+              ? { bg: "#F3F4F6", border: "1px dashed #9CA3AF", icon: "🔒", textColor: "#6B7280" }
+              : holdType === "deposit"
+                ? { bg: "#EFF6FF", border: "1px dashed #3B82F6", icon: "💳", textColor: "#3B82F6" }
+                : holdType === "internal"
+                  ? { bg: "#FEFCE8", border: "1px dashed #D97706", icon: "📌", textColor: "#D97706" }
+                  : { bg: "#FEFCE8", border: "1px dashed #D97706", icon: null, textColor: "#D97706" };
+
             return (
               <button
                 key={ds}
@@ -787,8 +957,8 @@ export function RoomRow({
                   className="absolute inset-y-[2px] left-0 right-0 flex items-center overflow-hidden"
                   style={{
                     opacity: 0.85,
-                    backgroundColor: "#FEFCE8",
-                    border: "1px dashed #D97706",
+                    backgroundColor: stripStyle.bg,
+                    border: stripStyle.border,
                     borderTopLeftRadius: isEnqStart ? 4 : 0,
                     borderBottomLeftRadius: isEnqStart ? 4 : 0,
                     borderTopRightRadius: isEnqEnd ? 4 : 0,
@@ -798,15 +968,15 @@ export function RoomRow({
                   }}
                 >
                   {shouldShowEnqLabel && (
-                    <span className="text-[9px] italic text-amber-600 font-medium px-1 truncate whitespace-nowrap flex-1">
-                      {firstEnquiry!.full_name.split(" ")[0]}?
+                    <span className="text-[9px] italic font-medium px-1 truncate whitespace-nowrap flex-1" style={{ color: stripStyle.textColor }}>
+                      {stripStyle.icon && <span className="mr-0.5">{stripStyle.icon}</span>}{firstEnquiry!.full_name.split(" ")[0]}?
                     </span>
                   )}
                   {hasConflict && (
                     <span className="absolute right-0.5 top-0.5 size-1.5 rounded-full bg-red-500 shrink-0" title="Conflicts with confirmed booking" />
                   )}
                   {extraCount > 0 && isEnqStart && (
-                    <span className="absolute right-1 text-[8px] font-bold text-amber-600">+{extraCount}</span>
+                    <span className="absolute right-1 text-[8px] font-bold" style={{ color: stripStyle.textColor }}>+{extraCount}</span>
                   )}
                 </div>
               </button>

@@ -340,7 +340,7 @@ async function sendBookingEmails(p: {
     // 1. Guest confirmation email
     if (p.guestEmail) {
       await resend.emails.send({
-        from: "Klickenya <bookings@klickenya.com>",
+        from: "Klickenya Bookings <bookings@klickenya.com>",
         to: p.guestEmail,
         subject: `Booking confirmed — ${propertyName}`,
         html: bookingConfirmationGuestHtml({
@@ -363,7 +363,7 @@ async function sendBookingEmails(p: {
     // 2. Owner notification email
     if (ownerEmail) {
       await resend.emails.send({
-        from: "Klickenya <bookings@klickenya.com>",
+        from: "Klickenya Bookings <bookings@klickenya.com>",
         to: ownerEmail,
         subject: `New booking — ${p.guestName}, ${p.checkIn}`,
         html: bookingNotificationOwnerHtml({

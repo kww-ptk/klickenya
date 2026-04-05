@@ -106,13 +106,12 @@ export default async function PropertyDashboardPage({
         .gt("end_date", todayStr),
       adminClient
         .from("contact_requests")
-        .select("id, full_name, email, phone, room_id, check_in, check_out, guests, calendar_status, expires_at, listing_title, notes")
+        .select("id, full_name, email, phone, room_id, check_in, check_out, guests, calendar_status, hold_type, expires_at, listing_title, notes")
         .eq("property_id", id)
-        .eq("calendar_status", "pending")
+        .in("calendar_status", ["pending", "held"])
         .not("room_id", "is", null)
         .not("check_in", "is", null)
-        .not("check_out", "is", null)
-        .gt("expires_at", new Date().toISOString()),
+        .not("check_out", "is", null),
     ]);
 
   const allRooms = (roomsResult.data ?? []).map((r) => ({

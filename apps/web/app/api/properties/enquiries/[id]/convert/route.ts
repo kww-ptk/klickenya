@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { adminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { Resend } from "resend";
+import {
+  bookingConfirmationGuestHtml,
+  bookingNotificationOwnerHtml,
+} from "@/lib/email/bookingEmails";
 
 export async function POST(
   request: NextRequest,
@@ -27,7 +31,7 @@ export async function POST(
     // Fetch the contact_request + verify ownership via property
     const { data: enquiry, error: eErr } = await adminClient
       .from("contact_requests")
-      .select("id, full_name, email, phone, room_id, property_id, check_in, check_out, guests, calendar_status, listing_title, notes")
+      .select("id, full_name, email, phone, room_id, property_id, check_in, check_out, guests, calendar_status, listing_title, notes, created_at")
       .eq("id", id)
       .single();
 
@@ -89,7 +93,12 @@ export async function POST(
         status: "confirmed",
         payment_status: amountPaid >= total ? "paid" : amountPaid > 0 ? "partial" : "pending",
         source: "direct",
-        internal_notes: `Converted from enquiry ${id}`,
+        internal_notes: [
+          `Enquiry received: ${new Date(enquiry.created_at).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })} ${new Date(enquiry.created_at).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}`,
+          `Guest: ${enquiry.full_name}`,
+          `Dates: ${new Date(enquiry.check_in + "T00:00:00").toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })} → ${new Date(enquiry.check_out + "T00:00:00").toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}`,
+          `Converted to booking: ${new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })} ${new Date().toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}`,
+        ].join("\n"),
       })
       .select("*")
       .single();
@@ -116,38 +125,123 @@ export async function POST(
       .update({ calendar_status: "converted" })
       .eq("id", id);
 
-    // Send confirmation email (fire-and-forget)
-    if (process.env.RESEND_API_KEY && enquiry.email) {
-      try {
-        const resend = new Resend(process.env.RESEND_API_KEY);
-        await resend.emails.send({
-          from: "Klickenya Bookings <bookings@klickenya.com>",
-          to: enquiry.email,
-          subject: `Booking confirmed: ${enquiry.listing_title ?? "Your stay"}`,
-          html: `
-            <p>Hi ${enquiry.full_name.split(" ")[0]},</p>
-            <p>Great news — your booking has been confirmed!</p>
-            <ul>
-              <li><strong>Property:</strong> ${enquiry.listing_title ?? "Your property"}</li>
-              <li><strong>Check-in:</strong> ${enquiry.check_in}</li>
-              <li><strong>Check-out:</strong> ${enquiry.check_out}</li>
-              <li><strong>Nights:</strong> ${nights}</li>
-              <li><strong>Total:</strong> KSh ${total.toLocaleString()}</li>
-              ${amountPaid > 0 ? `<li><strong>Amount paid:</strong> KSh ${amountPaid.toLocaleString()}</li>` : ""}
-              ${amountPaid < total ? `<li><strong>Balance due:</strong> KSh ${(total - amountPaid).toLocaleString()}</li>` : ""}
-            </ul>
-            <p>We look forward to hosting you!</p>
-            <p>— The Klickenya Team</p>
-          `,
-        });
-      } catch (emailErr) {
-        console.error("Confirmation email error:", emailErr);
-      }
+    // Send emails (fire-and-forget)
+    if (process.env.RESEND_API_KEY) {
+      sendConversionEmails({
+        bookingId: booking.id,
+        propertyId: enquiry.property_id,
+        roomId: enquiry.room_id,
+        guestName: enquiry.full_name,
+        guestEmail: enquiry.email ?? null,
+        guestPhone: enquiry.phone ?? null,
+        guestCount: enquiry.guests ?? 1,
+        checkIn: enquiry.check_in,
+        checkOut: enquiry.check_out,
+        nights,
+        ratePerNight,
+        totalKes: total,
+        amountPaid,
+        balance: total - amountPaid,
+        ownerId: user.id,
+        listingTitle: enquiry.listing_title ?? null,
+      }).catch((e) => console.error("Conversion email error:", e));
     }
 
     return NextResponse.json({ success: true, booking }, { status: 201 });
   } catch (err) {
     console.error("Convert enquiry error:", err);
     return NextResponse.json({ error: "Unexpected error" }, { status: 500 });
+  }
+}
+
+async function sendConversionEmails(p: {
+  bookingId: string;
+  propertyId: string;
+  roomId: string;
+  guestName: string;
+  guestEmail: string | null;
+  guestPhone: string | null;
+  guestCount: number;
+  checkIn: string;
+  checkOut: string;
+  nights: number;
+  ratePerNight: number;
+  totalKes: number;
+  amountPaid: number;
+  balance: number;
+  ownerId: string;
+  listingTitle: string | null;
+}) {
+  const resendKey = process.env.RESEND_API_KEY;
+  if (!resendKey) return;
+  const resend = new Resend(resendKey);
+
+  const [propRes, roomRes, ownerRes] = await Promise.all([
+    adminClient.from("properties").select("name, address, check_in_time").eq("id", p.propertyId).single(),
+    adminClient.from("rooms").select("name").eq("id", p.roomId).single(),
+    adminClient.auth.admin.getUserById(p.ownerId),
+  ]);
+
+  const propertyName = propRes.data?.name ?? p.listingTitle ?? "Your property";
+  const roomName = roomRes.data?.name ?? "Room";
+  const checkInTime = propRes.data?.check_in_time ?? undefined;
+  const address = propRes.data?.address ?? undefined;
+  const ownerEmail = ownerRes.data?.user?.email;
+  const ownerName =
+    ownerRes.data?.user?.user_metadata?.full_name ??
+    ownerRes.data?.user?.user_metadata?.name ??
+    "Host";
+
+  const convertedAt = new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+
+  // 1. Guest confirmation
+  if (p.guestEmail) {
+    await resend.emails.send({
+      from: "Klickenya Bookings <bookings@klickenya.com>",
+      to: p.guestEmail,
+      subject: `Booking confirmed — ${propertyName}`,
+      html: bookingConfirmationGuestHtml({
+        guestName: p.guestName,
+        propertyName,
+        roomName,
+        checkIn: p.checkIn,
+        checkOut: p.checkOut,
+        nights: p.nights,
+        guests: p.guestCount,
+        totalKes: p.totalKes,
+        amountPaid: p.amountPaid,
+        balance: p.balance,
+        checkInTime,
+        address,
+        bookingId: p.bookingId,
+      }),
+    });
+  }
+
+  // 2. Owner notification
+  if (ownerEmail) {
+    await resend.emails.send({
+      from: "Klickenya Bookings <bookings@klickenya.com>",
+      to: ownerEmail,
+      subject: `New booking (from enquiry) — ${p.guestName}, ${p.checkIn}`,
+      html: bookingNotificationOwnerHtml({
+        ownerName,
+        guestName: p.guestName,
+        guestPhone: p.guestPhone ?? "Not provided",
+        guestEmail: p.guestEmail ?? "",
+        propertyName,
+        roomName,
+        checkIn: p.checkIn,
+        checkOut: p.checkOut,
+        nights: p.nights,
+        guests: p.guestCount,
+        totalKes: p.totalKes,
+        amountPaid: p.amountPaid,
+        balance: p.balance,
+        propertyId: p.propertyId,
+        bookingId: p.bookingId,
+        convertedFromEnquiry: convertedAt,
+      }),
+    });
   }
 }

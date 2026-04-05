@@ -32,6 +32,17 @@ export default async function EnquiryDetailPage({
 
   if (!request) notFound();
 
+  // Fetch room name if room_id is present
+  let roomName: string | null = null;
+  if (request.room_id) {
+    const { data: room } = await adminClient
+      .from("rooms")
+      .select("name")
+      .eq("id", request.room_id)
+      .single();
+    roomName = room?.name ?? null;
+  }
+
   // Verify ownership via Sanity
   if (request.listing_sanity_id) {
     const ownerCheck = await sanityClient.fetch<string | null>(
@@ -187,6 +198,84 @@ export default async function EnquiryDetailPage({
 
         {/* Right column — quick contact */}
         <div className="space-y-5">
+          {/* Booking request card — only for stay enquiries with dates */}
+          {(request.check_in || request.check_out || request.calendar_status) && (() => {
+            const fmtD = (d: string) => new Date(d + "T00:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
+            const nights = request.check_in && request.check_out
+              ? Math.max(1, Math.ceil((new Date(request.check_out + "T00:00:00").getTime() - new Date(request.check_in + "T00:00:00").getTime()) / 86400000))
+              : null;
+
+            // Parse estimated total from notes
+            let estimatedTotal: number | null = null;
+            if (request.notes) {
+              const match = (request.notes as string).match(/"estimatedTotal"\s*:\s*(\d+)/);
+              if (match) estimatedTotal = parseInt(match[1], 10);
+            }
+
+            const calBadge = request.calendar_status
+              ? request.calendar_status === "pending"
+                ? { label: "Pending", cls: "bg-[#E8A020]/10 text-[#E8A020]" }
+                : request.calendar_status === "converted"
+                  ? { label: "Converted", cls: "bg-[#16A34A]/10 text-[#16A34A]" }
+                  : request.calendar_status === "declined"
+                    ? { label: "Declined", cls: "bg-[#F4F1EC] text-[#9C9485]" }
+                    : request.calendar_status === "held"
+                      ? { label: "On hold", cls: "bg-[#EFF6FF] text-[#3B82F6]" }
+                      : null
+              : null;
+
+            return (
+              <div className="bg-white rounded-xl border border-[#E2DDD5] p-5">
+                <div className="flex items-center justify-between mb-3">
+                  <h2 className="text-[15px] font-bold text-[#16130C]">Booking Request</h2>
+                  {calBadge && (
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${calBadge.cls}`}>
+                      {calBadge.label}
+                    </span>
+                  )}
+                </div>
+                <div className="space-y-2 text-[13px]">
+                  {roomName && (
+                    <div className="flex justify-between">
+                      <span className="text-[#9C9485]">Room</span>
+                      <span className="text-[#16130C] font-medium">{roomName}</span>
+                    </div>
+                  )}
+                  {request.check_in && (
+                    <div className="flex justify-between">
+                      <span className="text-[#9C9485]">Check-in</span>
+                      <span className="text-[#16130C] font-medium">{fmtD(request.check_in)}</span>
+                    </div>
+                  )}
+                  {request.check_out && (
+                    <div className="flex justify-between">
+                      <span className="text-[#9C9485]">Check-out</span>
+                      <span className="text-[#16130C] font-medium">{fmtD(request.check_out)}</span>
+                    </div>
+                  )}
+                  {nights && (
+                    <div className="flex justify-between">
+                      <span className="text-[#9C9485]">Nights</span>
+                      <span className="text-[#16130C] font-medium">{nights}</span>
+                    </div>
+                  )}
+                  {request.guests && (
+                    <div className="flex justify-between">
+                      <span className="text-[#9C9485]">Guests</span>
+                      <span className="text-[#16130C] font-medium">{request.guests}</span>
+                    </div>
+                  )}
+                  {estimatedTotal && (
+                    <div className="flex justify-between border-t border-[#F4F1EC] pt-2 mt-2">
+                      <span className="text-[#9C9485]">Estimated total</span>
+                      <span className="font-bold text-[#E8A020]">KSh {estimatedTotal.toLocaleString()}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })()}
+
           {/* Contact card */}
           <div className="bg-white rounded-xl border border-[#E2DDD5] p-5">
             <h2 className="text-[15px] font-bold text-[#16130C] mb-4">Quick Contact</h2>

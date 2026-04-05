@@ -62,13 +62,12 @@ export default async function UnifiedCalendarPage() {
       .lte("check_in_date", monthEndStr),
     adminClient
       .from("contact_requests")
-      .select("id, full_name, email, phone, room_id, check_in, check_out, guests, calendar_status, expires_at, listing_title, notes, property_id")
+      .select("id, full_name, email, phone, room_id, check_in, check_out, guests, calendar_status, hold_type, expires_at, listing_title, notes, property_id")
       .in("property_id", propertyIds)
-      .eq("calendar_status", "pending")
+      .in("calendar_status", ["pending", "held"])
       .not("room_id", "is", null)
       .not("check_in", "is", null)
-      .not("check_out", "is", null)
-      .gt("expires_at", new Date().toISOString()),
+      .not("check_out", "is", null),
   ]);
 
   const rooms = roomsResult.data ?? [];

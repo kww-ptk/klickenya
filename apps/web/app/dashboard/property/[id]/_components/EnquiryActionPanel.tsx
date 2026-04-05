@@ -49,6 +49,7 @@ interface EnquiryActionPanelProps {
   onConverted: (booking: Booking) => void;
   onDeclined: () => void;
   onRoomChanged: (updated: Enquiry) => void;
+  onHeld?: () => void;
 }
 
 /* ---------- Component ---------- */
@@ -62,6 +63,7 @@ export function EnquiryActionPanel({
   onConverted,
   onDeclined,
   onRoomChanged,
+  onHeld,
 }: EnquiryActionPanelProps) {
   const { showToast } = useToast();
 
@@ -72,7 +74,7 @@ export function EnquiryActionPanel({
   } | null>(null);
 
   // Panel action state
-  const [action, setAction] = useState<"idle" | "accept" | "decline" | "move">("idle");
+  const [action, setAction] = useState<"idle" | "accept" | "decline" | "move" | "hold">("idle");
 
   // Accept form
   const [ratePerNight, setRatePerNight] = useState<string>("");
@@ -87,6 +89,11 @@ export function EnquiryActionPanel({
   // Move room form
   const [targetRoomId, setTargetRoomId] = useState("");
   const [moving, setMoving] = useState(false);
+
+  // Hold form
+  const [holdType, setHoldType] = useState<"soft" | "internal" | "deposit">("soft");
+  const [depositAmount, setDepositAmount] = useState("");
+  const [holding, setHolding] = useState(false);
 
   const nights = nightsBetween(enquiry.check_in, enquiry.check_out);
   const parsedNotes = parseNotes(enquiry.notes);
@@ -172,6 +179,30 @@ export function EnquiryActionPanel({
       showToast(err instanceof Error ? err.message : "Error", "error");
     }
     setMoving(false);
+  }
+
+  /* ---- Hold ---- */
+  async function handleHold() {
+    if (holdType === "deposit" && !depositAmount) return;
+    setHolding(true);
+    try {
+      const res = await fetch(`/api/properties/enquiries/${enquiry.id}/hold`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          hold_type: holdType,
+          deposit_amount: holdType === "deposit" ? Number(depositAmount) : undefined,
+        }),
+      });
+      if (!res.ok) throw new Error("Failed to set hold");
+      const labels = { soft: "Soft hold set (24h)", internal: "Flagged for follow-up", deposit: "Deposit request sent" };
+      showToast(labels[holdType], "success");
+      onHeld?.();
+      onClose();
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : "Error", "error");
+    }
+    setHolding(false);
   }
 
   const estimatedTotal = ratePerNight ? Number(ratePerNight) * nights : null;
@@ -375,6 +406,81 @@ export function EnquiryActionPanel({
             </div>
           )}
 
+          {/* ── HOLD form ── */}
+          {action === "hold" && (
+            <div className="bg-white rounded-xl border border-[#E8A020]/40 p-4 space-y-3">
+              <p className="text-[12px] font-bold text-[#E8A020] uppercase tracking-wider">Hold enquiry</p>
+              <div className="space-y-2">
+                {/* Soft hold */}
+                <button
+                  onClick={() => setHoldType("soft")}
+                  className={`w-full text-left p-3 rounded-xl border-2 transition-colors ${holdType === "soft" ? "border-[#E8A020] bg-[#FFFBEB]" : "border-[#E2DDD5] hover:border-[#E8A020]/40"}`}
+                >
+                  <div className="flex items-start gap-2.5">
+                    <span className="text-[18px] shrink-0">🔒</span>
+                    <div>
+                      <p className="text-[13px] font-semibold text-[#16130C]">Soft hold (24h)</p>
+                      <p className="text-[11px] text-[#9C9485] mt-0.5">Block this room for 24 hours while you confirm with the guest. Auto-releases if not converted.</p>
+                    </div>
+                  </div>
+                </button>
+                {/* Internal note */}
+                <button
+                  onClick={() => setHoldType("internal")}
+                  className={`w-full text-left p-3 rounded-xl border-2 transition-colors ${holdType === "internal" ? "border-[#E8A020] bg-[#FFFBEB]" : "border-[#E2DDD5] hover:border-[#E8A020]/40"}`}
+                >
+                  <div className="flex items-start gap-2.5">
+                    <span className="text-[18px] shrink-0">📌</span>
+                    <div>
+                      <p className="text-[13px] font-semibold text-[#16130C]">Internal note</p>
+                      <p className="text-[11px] text-[#9C9485] mt-0.5">Flag this enquiry for follow-up. Room stays available for other bookings.</p>
+                    </div>
+                  </div>
+                </button>
+                {/* Awaiting deposit */}
+                <button
+                  onClick={() => setHoldType("deposit")}
+                  className={`w-full text-left p-3 rounded-xl border-2 transition-colors ${holdType === "deposit" ? "border-[#E8A020] bg-[#FFFBEB]" : "border-[#E2DDD5] hover:border-[#E8A020]/40"}`}
+                >
+                  <div className="flex items-start gap-2.5">
+                    <span className="text-[18px] shrink-0">💳</span>
+                    <div>
+                      <p className="text-[13px] font-semibold text-[#16130C]">Awaiting deposit</p>
+                      <p className="text-[11px] text-[#9C9485] mt-0.5">Request a deposit from the guest before confirming.</p>
+                    </div>
+                  </div>
+                </button>
+                {holdType === "deposit" && (
+                  <div className="pt-1">
+                    <label className="block text-[11px] text-[#9C9485] mb-1">Deposit amount (KSh)</label>
+                    <input
+                      type="number"
+                      placeholder="e.g. 5000"
+                      value={depositAmount}
+                      onChange={(e) => setDepositAmount(e.target.value)}
+                      className="w-full border border-[#E2DDD5] rounded-lg px-3 py-2 text-[13px] text-[#16130C] outline-none focus:border-[#E8A020]"
+                    />
+                  </div>
+                )}
+              </div>
+              <div className="flex gap-2 pt-1">
+                <button
+                  onClick={() => setAction("idle")}
+                  className="flex-1 py-2 rounded-lg border border-[#E2DDD5] text-[13px] text-[#9C9485] hover:text-[#16130C] transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleHold}
+                  disabled={holding || (holdType === "deposit" && !depositAmount)}
+                  className="flex-1 py-2 rounded-lg bg-[#E8A020] text-white text-[13px] font-bold hover:bg-[#d4911c] transition-colors disabled:opacity-50"
+                >
+                  {holding ? "Saving…" : holdType === "soft" ? "Set 24h hold" : holdType === "internal" ? "Flag for follow-up" : "Send deposit request"}
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* ── MOVE ROOM form ── */}
           {action === "move" && (
             <div className="bg-white rounded-xl border border-[#E2DDD5] p-4 space-y-3">
@@ -438,6 +544,12 @@ export function EnquiryActionPanel({
               className="w-full py-3 rounded-xl bg-[#4F46E5] text-white text-[14px] font-bold hover:bg-[#4338CA] transition-colors shadow-sm disabled:opacity-40 disabled:cursor-not-allowed"
             >
               Accept — convert to booking
+            </button>
+            <button
+              onClick={() => setAction("hold")}
+              className="w-full py-2.5 rounded-xl border-2 border-[#E8A020]/50 text-[13px] font-semibold text-[#E8A020] hover:bg-[#FFFBEB] transition-colors"
+            >
+              🔒 Hold
             </button>
             <div className="flex gap-2">
               <button

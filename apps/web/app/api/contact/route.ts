@@ -279,7 +279,7 @@ export async function POST(request: NextRequest) {
         type PricingBreakdown = z.infer<typeof pricingBreakdownSchema>;
         const pb: PricingBreakdown = data.listingType === "stay" ? (data as z.infer<typeof staySchema>).pricingBreakdown : undefined;
         await resend.emails.send({
-          from: "Klickenya <hello@klickenya.com>",
+          from: "Klickenya Bookings <bookings@klickenya.com>",
           to: data.email,
           subject: data.room
             ? `Your enquiry for ${data.room} at ${data.listingTitle}`
@@ -309,7 +309,7 @@ export async function POST(request: NextRequest) {
             : enquirySummary;
           const subjectPrefix = hostDisplayName ? `New enquiry for ${hostDisplayName}` : "New enquiry";
           await resend.emails.send({
-            from: "Klickenya <hello@klickenya.com>",
+            from: "Klickenya Bookings <bookings@klickenya.com>",
             to: allRecipients,
             subject: data.room
               ? `${subjectPrefix}: ${data.room} at ${data.listingTitle}`

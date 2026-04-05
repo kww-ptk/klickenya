@@ -112,3 +112,46 @@ export async function GET(
     source: "base_price",
   });
 }
+
+/**
+ * POST /api/properties/[id]/pricing
+ * Creates a fixed-rate pricing rule for a date range.
+ * Body: { name, start_date, end_date, price_type, value, priority }
+ */
+export async function POST(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id: propertyId } = await params;
+
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const { data: property } = await adminClient
+    .from("properties")
+    .select("id, owner_id")
+    .eq("id", propertyId)
+    .single();
+
+  if (!property || property.owner_id !== user.id) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
+  const body = await req.json();
+  const { name, start_date, end_date, price_type, value, priority } = body;
+
+  if (!name || !start_date || !end_date || !price_type || !value) {
+    return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+  }
+
+  const { data: rule, error } = await adminClient
+    .from("pricing_rules")
+    .insert({ property_id: propertyId, name, start_date, end_date, price_type, value: Number(value), priority: priority ?? 0, is_active: true })
+    .select("*")
+    .single();
+
+  if (error) return NextResponse.json({ error: "Failed to create rule" }, { status: 500 });
+
+  return NextResponse.json({ success: true, rule }, { status: 201 });
+}
