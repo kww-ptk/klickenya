@@ -562,12 +562,39 @@ export function RoomRow({
   const renderedEnquiries = new Set<string>();
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const touchDragging = useRef(false);
-  const cellH = hasEnquiries ? "60px" : "44px";
+
+  // Collapse state — default expanded; persisted per room
+  const [collapsed, setCollapsed] = useState(() => {
+    if (typeof window === "undefined") return false;
+    try { return localStorage.getItem(`enq-collapsed-${room.id}`) === "1"; } catch { return false; }
+  });
+
+  const toggleCollapsed = useCallback(() => {
+    setCollapsed((prev) => {
+      const next = !prev;
+      try { localStorage.setItem(`enq-collapsed-${room.id}`, next ? "1" : "0"); } catch {}
+      return next;
+    });
+  }, [room.id]);
 
   return (
     <>
-      {/* Room name (sticky left) */}
-      <div className="sticky left-0 z-10 bg-white border-b border-r border-[#E2DDD5] px-3 py-2 flex items-center" style={{ minHeight: cellH }}>
+      {/* ── Main row label (sticky left) ── */}
+      <div className="sticky left-0 z-10 bg-white border-b border-r border-[#E2DDD5] flex items-center min-h-[48px] px-3 py-2 gap-1">
+        {hasEnquiries && (
+          <button
+            onClick={toggleCollapsed}
+            className="shrink-0 size-5 flex items-center justify-center rounded hover:bg-[#F4F1EC] transition-colors"
+            title={collapsed ? "Show enquiries" : "Hide enquiries"}
+          >
+            <svg
+              className={`size-3 text-[#9C9485] transition-transform duration-150 ${collapsed ? "-rotate-90" : ""}`}
+              fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+            </svg>
+          </button>
+        )}
         <div className="min-w-0">
           <p className="text-[12px] font-semibold text-[#16130C] truncate">{room.name}</p>
           {room.room_number && (
@@ -576,64 +603,15 @@ export function RoomRow({
         </div>
       </div>
 
-      {/* Date cells */}
+      {/* ── Main row cells — clean, no enquiry data ── */}
       {days.map((day, dayIndex) => {
         const ds = dateStr(day);
         const key = `${room.id}:${ds}`;
         const cell = cellMap.get(key);
         const isToday = isSameDay(ds, todayStr);
         const isWeekend = day.getDay() === 0 || day.getDay() === 6;
-        const isInDragRange = dragRange
-          ? ds >= dragRange.start && ds <= dragRange.end
-          : false;
+        const isInDragRange = dragRange ? ds >= dragRange.start && ds <= dragRange.end : false;
         const isShaking = shakeDate === ds;
-
-        // Enquiry data for this cell
-        const cellEnquiries = enquiryMap?.get(key) ?? [];
-        const hasEnquiryHere = cellEnquiries.length > 0;
-        const firstEnquiry = cellEnquiries[0] as Enquiry | undefined;
-        const extraCount = cellEnquiries.length - 1;
-        let isEnqStart = false;
-        let isEnqEnd = false;
-        let shouldShowEnqLabel = false;
-        if (firstEnquiry) {
-          isEnqStart = firstEnquiry.check_in === ds;
-          isEnqEnd = isSameDay(dateStr(addDays(new Date(firstEnquiry.check_out + "T00:00:00"), -1)), ds);
-          shouldShowEnqLabel = isEnqStart || (!renderedEnquiries.has(firstEnquiry.id) && dayIndex === 0);
-          if (shouldShowEnqLabel) renderedEnquiries.add(firstEnquiry.id);
-        }
-        const hasConflict = !!cell && cell.type === "booking" && hasEnquiryHere;
-
-        // Reusable enquiry strip rendered at bottom of cell
-        const enquiryStrip = hasEnquiryHere && firstEnquiry ? (
-          <button
-            onClick={(e) => { e.stopPropagation(); onClickEnquiry?.(firstEnquiry); }}
-            className="absolute bottom-[2px] left-0 right-0 h-[18px] overflow-hidden flex items-center"
-            title={`Enquiry: ${firstEnquiry.full_name}`}
-            style={{
-              backgroundColor: "#FEF9C3",
-              border: "1.5px dashed #EAB308",
-              borderTopLeftRadius: isEnqStart ? 4 : 0,
-              borderBottomLeftRadius: isEnqStart ? 4 : 0,
-              borderTopRightRadius: isEnqEnd ? 4 : 0,
-              borderBottomRightRadius: isEnqEnd ? 4 : 0,
-              marginLeft: isEnqStart ? 1 : 0,
-              marginRight: isEnqEnd ? 1 : 0,
-            }}
-          >
-            {shouldShowEnqLabel && (
-              <span className="text-[9px] italic text-amber-700 font-semibold px-1 truncate whitespace-nowrap flex-1">
-                {firstEnquiry.full_name.split(" ")[0]}?
-              </span>
-            )}
-            {hasConflict && (
-              <span className="absolute right-1 top-1 size-2 rounded-full bg-red-500 shrink-0" title="Conflicts with confirmed booking" />
-            )}
-            {extraCount > 0 && isEnqStart && (
-              <span className="absolute right-1 text-[8px] font-bold text-amber-700">+{extraCount}</span>
-            )}
-          </button>
-        ) : null;
 
         if (!cell) {
           return (
@@ -641,10 +619,7 @@ export function RoomRow({
               key={ds}
               data-date={ds}
               data-room-id={room.id}
-              onMouseDown={(e) => {
-                e.preventDefault();
-                onDragStart(room.id, ds);
-              }}
+              onMouseDown={(e) => { e.preventDefault(); onDragStart(room.id, ds); }}
               onMouseEnter={() => onDragEnter(room.id, ds)}
               onMouseUp={() => {}}
               onTouchStart={() => {
@@ -656,47 +631,31 @@ export function RoomRow({
               }}
               onTouchMove={(e) => {
                 if (!touchDragging.current) {
-                  if (longPressTimer.current) {
-                    clearTimeout(longPressTimer.current);
-                    longPressTimer.current = null;
-                  }
+                  if (longPressTimer.current) { clearTimeout(longPressTimer.current); longPressTimer.current = null; }
                   return;
                 }
                 const touch = e.changedTouches[0];
                 const el = document.elementFromPoint(touch.clientX, touch.clientY);
                 if (el) {
                   const cellEl = (el as HTMLElement).closest("[data-date]") as HTMLElement | null;
-                  if (cellEl?.dataset.date && cellEl?.dataset.roomId) {
-                    onDragEnter(cellEl.dataset.roomId, cellEl.dataset.date);
-                  }
+                  if (cellEl?.dataset.date && cellEl?.dataset.roomId) onDragEnter(cellEl.dataset.roomId, cellEl.dataset.date);
                 }
               }}
               onTouchEnd={() => {
-                if (longPressTimer.current) {
-                  clearTimeout(longPressTimer.current);
-                  longPressTimer.current = null;
-                }
-                if (!touchDragging.current) {
-                  onClickEmpty(room.id, ds, nextDay(ds));
-                }
+                if (longPressTimer.current) { clearTimeout(longPressTimer.current); longPressTimer.current = null; }
+                if (!touchDragging.current) onClickEmpty(room.id, ds, nextDay(ds));
                 touchDragging.current = false;
               }}
               className={[
-                "border-b border-r border-[#E2DDD5] transition-colors relative",
-                isInDragRange
-                  ? "bg-[#4F46E5]/30"
-                  : isToday
-                    ? "bg-[#4F46E5]/[0.03] hover:bg-[#4F46E5]/10"
-                    : isWeekend
-                      ? "bg-[#F4F1EC]/30 hover:bg-[#4F46E5]/5"
-                      : "hover:bg-[#4F46E5]/5",
+                "border-b border-r border-[#E2DDD5] min-h-[48px] transition-colors",
+                isInDragRange ? "bg-[#4F46E5]/30"
+                  : isToday ? "bg-[#4F46E5]/[0.03] hover:bg-[#4F46E5]/10"
+                  : isWeekend ? "bg-[#F4F1EC]/30 hover:bg-[#4F46E5]/5"
+                  : "hover:bg-[#4F46E5]/5",
                 isShaking ? "animate-cal-shake" : "",
               ].filter(Boolean).join(" ")}
-              style={{ minHeight: cellH }}
-              title={hasEnquiryHere ? `Enquiry: ${firstEnquiry?.full_name}` : `Available — ${ds}`}
-            >
-              {enquiryStrip}
-            </button>
+              title={`Available — ${ds}`}
+            />
           );
         }
 
@@ -706,33 +665,27 @@ export function RoomRow({
               key={ds}
               data-date={ds}
               data-room-id={room.id}
-              className={`border-b border-r border-[#E2DDD5] relative${isShaking ? " animate-cal-shake" : ""}`}
+              className={`border-b border-r border-[#E2DDD5] min-h-[48px]${isShaking ? " animate-cal-shake" : ""}`}
               style={{
-                minHeight: cellH,
                 backgroundColor: "#F4F1EC",
                 backgroundImage: "repeating-linear-gradient(45deg, transparent, transparent 3px, rgba(156,148,133,0.2) 3px, rgba(156,148,133,0.2) 5px)",
               }}
               title={cell.block.reason ? `Blocked: ${cell.block.reason}` : "Blocked"}
-            >
-              {enquiryStrip}
-            </div>
+            />
           );
         }
 
-        // Booking cell
+        // Booking cell — fully restored, no enquiry interference
         const booking = cell.booking;
         const isStart = isSameDay(booking.check_in_date, ds);
         const checkOutDate = new Date(booking.check_out_date + "T00:00:00");
         const isEnd = isSameDay(dateStr(addDays(checkOutDate, -1)), ds);
         const colors =
-          booking.status === "checked_in"
-            ? { bg: "#16A34A", text: "#FFFFFF" }
-            : booking.status === "checked_out"
-              ? { bg: "#9C9485", text: "#FFFFFF" }
-              : (SOURCE_COLORS[booking.source] ?? SOURCE_COLORS.direct);
+          booking.status === "checked_in" ? { bg: "#16A34A", text: "#FFFFFF" }
+          : booking.status === "checked_out" ? { bg: "#9C9485", text: "#FFFFFF" }
+          : (SOURCE_COLORS[booking.source] ?? SOURCE_COLORS.direct);
 
-        const shouldShowLabel =
-          isStart || (!renderedBookings.has(booking.id) && dayIndex === 0);
+        const shouldShowLabel = isStart || (!renderedBookings.has(booking.id) && dayIndex === 0);
         if (shouldShowLabel) renderedBookings.add(booking.id);
 
         let spanDays = 0;
@@ -740,28 +693,21 @@ export function RoomRow({
           const visStart = isStart ? dayIndex : 0;
           for (let i = visStart; i < days.length; i++) {
             const c = cellMap.get(`${room.id}:${dateStr(days[i])}`);
-            if (c?.type === "booking" && c.booking.id === booking.id) {
-              spanDays++;
-            } else break;
+            if (c?.type === "booking" && c.booking.id === booking.id) spanDays++;
+            else break;
           }
         }
-
-        // When an enquiry strip is present, shrink booking block to leave space
-        const bookingBottom = hasEnquiryHere ? "24px" : "4px";
 
         return (
           <button
             key={ds}
             onClick={() => onClickBooking(booking)}
-            className="border-b border-r border-[#E2DDD5] relative cursor-pointer group"
-            style={{ minHeight: cellH }}
+            className="border-b border-r border-[#E2DDD5] min-h-[48px] relative cursor-pointer group"
             title={`${booking.guest_name} (${booking.source})`}
           >
             <div
-              className="absolute left-0 right-0 flex items-center overflow-hidden"
+              className="absolute inset-y-[4px] inset-x-0 flex items-center overflow-hidden"
               style={{
-                top: 4,
-                bottom: bookingBottom,
                 backgroundColor: colors.bg,
                 color: colors.text,
                 borderTopLeftRadius: isStart ? 6 : 0,
@@ -782,10 +728,93 @@ export function RoomRow({
                 </span>
               )}
             </div>
-            {enquiryStrip}
           </button>
         );
       })}
+
+      {/* ── Enquiry sub-row (only when enquiries exist and not collapsed) ── */}
+      {hasEnquiries && !collapsed && (
+        <>
+          {/* Sub-row label */}
+          <div
+            className="sticky left-0 z-10 border-b border-r border-[#E2DDD5] px-3 flex items-center h-[24px]"
+            style={{ backgroundColor: "#F0EDE8" }}
+          >
+            <span className="text-[11px] text-[#9C9485]">↳ enquiries</span>
+          </div>
+
+          {/* Sub-row cells */}
+          {days.map((day, dayIndex) => {
+            const ds = dateStr(day);
+            const key = `${room.id}:${ds}`;
+            const cellEnquiries = enquiryMap?.get(key) ?? [];
+            const hasEnquiryHere = cellEnquiries.length > 0;
+            const firstEnquiry = cellEnquiries[0] as Enquiry | undefined;
+            const extraCount = cellEnquiries.length - 1;
+
+            let isEnqStart = false;
+            let isEnqEnd = false;
+            let shouldShowEnqLabel = false;
+            if (firstEnquiry) {
+              isEnqStart = firstEnquiry.check_in === ds;
+              isEnqEnd = isSameDay(dateStr(addDays(new Date(firstEnquiry.check_out + "T00:00:00"), -1)), ds);
+              shouldShowEnqLabel = isEnqStart || (!renderedEnquiries.has(firstEnquiry.id) && dayIndex === 0);
+              if (shouldShowEnqLabel) renderedEnquiries.add(firstEnquiry.id);
+            }
+
+            // Red dot if a confirmed booking also exists on this room+date
+            const hasConflict = cellMap.get(key)?.type === "booking";
+
+            if (!hasEnquiryHere) {
+              return (
+                <div
+                  key={ds}
+                  className="border-b border-r border-[#E2DDD5] h-[24px]"
+                  style={{ backgroundColor: "#F0EDE8" }}
+                />
+              );
+            }
+
+            return (
+              <button
+                key={ds}
+                onClick={() => onClickEnquiry?.(firstEnquiry!)}
+                className="border-b border-r border-[#E2DDD5] h-[24px] relative overflow-hidden"
+                style={{ backgroundColor: "#F0EDE8" }}
+                title={`Enquiry: ${firstEnquiry?.full_name}`}
+              >
+                <div
+                  className="absolute inset-y-[2px] left-0 right-0 flex items-center overflow-hidden"
+                  style={{
+                    opacity: 0.85,
+                    backgroundColor: "#FEFCE8",
+                    border: "1px dashed #D97706",
+                    borderTopLeftRadius: isEnqStart ? 4 : 0,
+                    borderBottomLeftRadius: isEnqStart ? 4 : 0,
+                    borderTopRightRadius: isEnqEnd ? 4 : 0,
+                    borderBottomRightRadius: isEnqEnd ? 4 : 0,
+                    marginLeft: isEnqStart ? 1 : 0,
+                    marginRight: isEnqEnd ? 1 : 0,
+                  }}
+                >
+                  {shouldShowEnqLabel && (
+                    <span className="text-[9px] italic text-amber-600 font-medium px-1 truncate whitespace-nowrap flex-1">
+                      {firstEnquiry!.full_name.split(" ")[0]}?
+                    </span>
+                  )}
+                  {hasConflict && (
+                    <span className="absolute right-0.5 top-0.5 size-1.5 rounded-full bg-red-500 shrink-0" title="Conflicts with confirmed booking" />
+                  )}
+                  {extraCount > 0 && isEnqStart && (
+                    <span className="absolute right-1 text-[8px] font-bold text-amber-600">+{extraCount}</span>
+                  )}
+                </div>
+              </button>
+            );
+          })}
+        </>
+      )}
     </>
   );
 }
+
