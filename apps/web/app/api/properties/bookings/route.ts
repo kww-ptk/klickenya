@@ -34,6 +34,7 @@ export async function POST(req: NextRequest) {
     amount_paid,
     fees, // [{ name, fee_type, amount_kes }]
     send_confirmation, // boolean: owner opted to email the guest
+    guest_user_id,     // uuid | null — set when guest email matches a platform account
   } = body;
 
   /* --- Validate required fields --- */
@@ -158,6 +159,7 @@ export async function POST(req: NextRequest) {
       p_internal_notes: internal_notes?.trim() || null,
       p_payment_method: amountPaid > 0 ? (payment_method || "cash") : null,
       p_recorded_by: user.id,
+      p_guest_user_id: guest_user_id ?? null,
     }
   );
 
@@ -184,6 +186,7 @@ export async function POST(req: NextRequest) {
         source: source || "direct",
         guest_notes: guest_notes?.trim() || null,
         internal_notes: internal_notes?.trim() || null,
+        guest_user_id: guest_user_id ?? null,
         status: "confirmed",
       })
       .select()

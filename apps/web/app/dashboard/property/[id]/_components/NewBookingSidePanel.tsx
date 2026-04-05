@@ -90,6 +90,7 @@ export function NewBookingSidePanel({
   const [sendConfirmation, setSendConfirmation] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [guestUserId, setGuestUserId] = useState<string | null>(null);
   const [availability, setAvailability] = useState<AvailabilityResult | null>(null);
   const [checkingAvail, setCheckingAvail] = useState(false);
   const [suggestedRate, setSuggestedRate] = useState<{
@@ -282,6 +283,21 @@ export function NewBookingSidePanel({
     });
   };
 
+  // Silent guest account lookup on email blur
+  const handleEmailBlur = async () => {
+    const email = form.guest_email.trim().toLowerCase();
+    if (!email || !email.includes("@")) { setGuestUserId(null); return; }
+    try {
+      const res = await fetch(`/api/properties/bookings/guest-lookup?email=${encodeURIComponent(email)}`);
+      if (res.ok) {
+        const data = await res.json();
+        setGuestUserId(data.guest_user_id ?? null);
+      }
+    } catch {
+      setGuestUserId(null);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -353,6 +369,7 @@ export function NewBookingSidePanel({
               ...selectedFees.map(({ name, fee_type, amount_kes }) => ({ name, fee_type, amount_kes })),
             ],
             send_confirmation: !!(form.guest_email.trim()) && sendConfirmation,
+            guest_user_id: guestUserId ?? null,
           }),
         });
 
@@ -487,7 +504,8 @@ export function NewBookingSidePanel({
             <input
               type="email"
               value={form.guest_email}
-              onChange={(e) => setForm({ ...form, guest_email: e.target.value })}
+              onChange={(e) => { setForm({ ...form, guest_email: e.target.value }); setGuestUserId(null); }}
+              onBlur={handleEmailBlur}
               className="w-full h-[40px] px-3 rounded-lg border border-[#E2DDD5] text-[14px] text-[#16130C] placeholder:text-[#9C9485] focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] outline-none transition-colors"
               placeholder="guest@email.com"
             />
