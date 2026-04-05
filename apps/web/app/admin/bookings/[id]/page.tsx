@@ -189,7 +189,7 @@ export default async function AdminBookingDetailPage({
                       <p className="text-[12px] text-[#9C9485]">
                         {String(p.method ?? "cash")} · {formatDatetime(p.created_at as string)}
                       </p>
-                      {p.notes && <p className="text-[12px] text-[#9C9485] mt-0.5">{String(p.notes)}</p>}
+                      {p.notes ? <p className="text-[12px] text-[#9C9485] mt-0.5">{String(p.notes)}</p> : null}
                     </div>
                   </div>
                 ))}
