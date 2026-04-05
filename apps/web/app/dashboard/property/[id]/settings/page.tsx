@@ -318,28 +318,30 @@ export default function PropertySettingsPage() {
           <h1 className="font-display text-[22px] lg:text-[28px] font-bold tracking-[-0.03em] text-[#16130C]">
             Property Settings
           </h1>
-          <button
-            type="button"
-            onClick={syncLiveListing}
-            disabled={syncState === "syncing"}
-            className={`flex items-center gap-1.5 px-3 h-8 rounded-full text-[12px] font-semibold transition-colors disabled:cursor-not-allowed ${
-              syncState === "synced"
-                ? "bg-[#16A34A]/10 text-[#16A34A]"
-                : syncState === "error"
-                ? "bg-red-50 text-red-600"
-                : "bg-[#F4F1EC] text-[#5E5848] hover:bg-[#E2DDD5]"
-            }`}
-          >
-            {syncState === "syncing" ? (
-              "Syncing…"
-            ) : syncState === "synced" ? (
-              "✓ Synced just now"
-            ) : syncState === "error" ? (
-              "Sync failed — try again"
-            ) : (
-              "🔄 Sync live listing"
-            )}
-          </button>
+          {listingSlug && (
+            <button
+              type="button"
+              onClick={syncLiveListing}
+              disabled={syncState === "syncing"}
+              className={`flex items-center gap-1.5 px-3 h-8 rounded-full text-[12px] font-semibold transition-colors disabled:cursor-not-allowed ${
+                syncState === "synced"
+                  ? "bg-[#16A34A]/10 text-[#16A34A]"
+                  : syncState === "error"
+                  ? "bg-red-50 text-red-600"
+                  : "bg-[#F4F1EC] text-[#5E5848] hover:bg-[#E2DDD5]"
+              }`}
+            >
+              {syncState === "syncing" ? (
+                "Syncing…"
+              ) : syncState === "synced" ? (
+                "✓ Synced just now"
+              ) : syncState === "error" ? (
+                "Sync failed — try again"
+              ) : (
+                "🔄 Sync live listing"
+              )}
+            </button>
+          )}
         </div>
       </div>
 

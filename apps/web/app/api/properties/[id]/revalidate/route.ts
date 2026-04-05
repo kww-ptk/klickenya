@@ -32,8 +32,5 @@ export async function POST(
   }
   revalidatePath(`/dashboard/property/${id}`);
 
-  return NextResponse.json({
-    success: true,
-    revalidated_at: new Date().toISOString(),
-  });
+  return NextResponse.json({ success: true, revalidated_at: new Date().toISOString() });
 }
