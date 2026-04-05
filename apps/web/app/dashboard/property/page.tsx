@@ -183,13 +183,12 @@ export default async function PropertyPMSPage() {
             const coverPhoto = coverRoom ? (coverRoom.photos as string[])[0] : null;
 
             return (
-              <Link
+              <div
                 key={prop.id}
-                href={`/dashboard/property/${prop.id}`}
-                className="flex gap-3 items-center bg-white rounded-xl lg:rounded-2xl border border-[#E2DDD5] p-3 shadow-sm hover:shadow-md hover:border-[#4F46E5]/30 transition-all"
+                className="flex items-center gap-3 bg-white rounded-xl lg:rounded-2xl border border-[#E2DDD5] p-3 shadow-sm hover:shadow-md hover:border-[#4F46E5]/30 transition-all"
               >
-                {/* Cover photo */}
-                <div className="shrink-0 w-[52px] h-[52px] rounded-lg overflow-hidden bg-[#F4F1EC] relative">
+                {/* Cover photo — links to property */}
+                <Link href={`/dashboard/property/${prop.id}`} className="shrink-0 w-[52px] h-[52px] rounded-lg overflow-hidden bg-[#F4F1EC] relative">
                   {coverPhoto ? (
                     <Image
                       src={`${coverPhoto}?w=104&auto=format`}
@@ -203,10 +202,10 @@ export default async function PropertyPMSPage() {
                       {prop.property_type === "camp" ? "⛺" : prop.property_type === "apartment" ? "🏢" : "🏡"}
                     </div>
                   )}
-                </div>
+                </Link>
 
-                {/* Info */}
-                <div className="flex-1 min-w-0">
+                {/* Info — links to property */}
+                <Link href={`/dashboard/property/${prop.id}`} className="flex-1 min-w-0 block">
                   <p className="text-[14px] font-semibold text-[#16130C] truncate">{prop.name}</p>
                   <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
                     <span className="text-[10px] font-medium text-[#5E5848] bg-[#F4F1EC] px-1.5 py-0.5 rounded-full">
@@ -226,20 +225,24 @@ export default async function PropertyPMSPage() {
                       </span>
                     )}
                   </div>
-                </div>
+                </Link>
 
                 {/* Actions */}
                 <div className="flex items-center gap-1.5 shrink-0">
                   <Link
                     href={`/dashboard/property/${prop.id}/settings`}
-                    onClick={(e) => e.stopPropagation()}
                     className="text-[11px] font-semibold text-[#5E5848] bg-[#F4F1EC] px-2.5 h-[28px] rounded-lg hover:bg-[#E8E4DC] transition-colors flex items-center"
                   >
                     Settings
                   </Link>
-                  <span className="text-[13px] font-semibold text-[#4F46E5]">→</span>
+                  <Link
+                    href={`/dashboard/property/${prop.id}`}
+                    className="text-[13px] font-semibold text-[#4F46E5]"
+                  >
+                    →
+                  </Link>
                 </div>
-              </Link>
+              </div>
             );
           })}
 
