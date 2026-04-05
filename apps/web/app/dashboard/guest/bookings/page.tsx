@@ -72,7 +72,7 @@ export default async function GuestBookingsPage() {
     .eq("guest_user_id", user.id)
     .order("check_in_date", { ascending: false });
 
-  const items = (bookings ?? []) as Booking[];
+  const items = (bookings ?? []) as unknown as Booking[];
 
   return (
     <div className="space-y-6 max-w-3xl">
