@@ -38,6 +38,17 @@ function parseNotes(notes: string | null | undefined): Record<string, string> {
   return result;
 }
 
+/* ---------- Types ---------- */
+
+interface PropertyFee {
+  id: string;
+  name: string;
+  fee_type: "fixed" | "per_night" | "per_guest" | "percentage";
+  amount: number;
+  apply_by_default: boolean;
+  is_active: boolean;
+}
+
 /* ---------- Props ---------- */
 
 interface EnquiryActionPanelProps {
@@ -95,6 +106,9 @@ export function EnquiryActionPanel({
   const [depositAmount, setDepositAmount] = useState("");
   const [holding, setHolding] = useState(false);
 
+  // Fees
+  const [fees, setFees] = useState<PropertyFee[]>([]);
+
   const nights = nightsBetween(enquiry.check_in, enquiry.check_out);
   const parsedNotes = parseNotes(enquiry.notes);
   const firstName = enquiry.full_name.split(" ")[0];
@@ -107,6 +121,14 @@ export function EnquiryActionPanel({
       setRatePerNight(String(currentRoom.base_price_kes));
     }
   }, [currentRoom]);
+
+  // Fetch property fees
+  useEffect(() => {
+    fetch(`/api/properties/${propertyId}/fees`)
+      .then((r) => r.json())
+      .then((d) => setFees((d.fees ?? []).filter((f: PropertyFee) => f.is_active)))
+      .catch(() => {});
+  }, [propertyId]);
 
   // Check availability on mount
   useEffect(() => {
@@ -207,6 +229,35 @@ export function EnquiryActionPanel({
 
   const estimatedTotal = ratePerNight ? Number(ratePerNight) * nights : null;
 
+  // Quotation breakdown
+  const quoteRate = Number(ratePerNight) || currentRoom?.base_price_kes || 0;
+  const roomSubtotal = quoteRate * nights;
+  const guests = enquiry.guests ?? 1;
+
+  function feeAmount(fee: PropertyFee): number {
+    switch (fee.fee_type) {
+      case "fixed":     return fee.amount;
+      case "per_night": return fee.amount * nights;
+      case "per_guest": return fee.amount * guests;
+      case "percentage": return Math.round(roomSubtotal * fee.amount / 100);
+      default:          return 0;
+    }
+  }
+
+  function feeLabel(fee: PropertyFee): string {
+    switch (fee.fee_type) {
+      case "per_night":   return `KSh ${fee.amount.toLocaleString()} × ${nights}n`;
+      case "per_guest":   return `KSh ${fee.amount.toLocaleString()} × ${guests} guest${guests !== 1 ? "s" : ""}`;
+      case "percentage":  return `${fee.amount}% of room`;
+      default:            return "";
+    }
+  }
+
+  const mandatoryFees = fees.filter((f) => f.apply_by_default);
+  const optionalFees  = fees.filter((f) => !f.apply_by_default);
+  const mandatoryTotal = mandatoryFees.reduce((s, f) => s + feeAmount(f), 0);
+  const grandTotal = roomSubtotal + mandatoryTotal;
+
   return (
     <>
       {/* Backdrop */}
@@ -300,6 +351,60 @@ export function EnquiryActionPanel({
               )}
             </div>
           </div>
+
+          {/* Quotation summary */}
+          {quoteRate > 0 && (
+            <div className="bg-[#FAFAF8] rounded-xl border border-[#E2DDD5] p-4">
+              <p className="text-[10px] font-bold text-[#9C9485] uppercase tracking-wider mb-3">Quotation</p>
+              <div className="space-y-1.5">
+
+                {/* Room subtotal */}
+                <div className="flex justify-between text-[13px]">
+                  <span className="text-[#9C9485]">
+                    {fmt(quoteRate)} × {nights} night{nights !== 1 ? "s" : ""}
+                  </span>
+                  <span className="font-medium text-[#16130C]">{fmt(roomSubtotal)}</span>
+                </div>
+
+                {/* Mandatory fees */}
+                {mandatoryFees.map((fee) => (
+                  <div key={fee.id} className="flex justify-between text-[13px]">
+                    <span className="text-[#9C9485]">
+                      {fee.name}
+                      {feeLabel(fee) && (
+                        <span className="text-[10px] ml-1 text-[#C5BFB5]">({feeLabel(fee)})</span>
+                      )}
+                    </span>
+                    <span className="font-medium text-[#16130C]">{fmt(feeAmount(fee))}</span>
+                  </div>
+                ))}
+
+                {/* Total */}
+                <div className="flex justify-between text-[13px] pt-2 mt-1 border-t border-[#E2DDD5]">
+                  <span className="font-bold text-[#16130C]">Total</span>
+                  <span className="font-bold text-[#16130C]">{fmt(grandTotal)}</span>
+                </div>
+
+                {/* Optional fees */}
+                {optionalFees.length > 0 && (
+                  <div className="pt-2 mt-1 border-t border-[#E2DDD5] space-y-1.5">
+                    <p className="text-[10px] text-[#9C9485] font-medium">Optional add-ons</p>
+                    {optionalFees.map((fee) => (
+                      <div key={fee.id} className="flex justify-between text-[12px]">
+                        <span className="text-[#9C9485]">
+                          {fee.name}
+                          {feeLabel(fee) && (
+                            <span className="text-[10px] ml-1 text-[#C5BFB5]">({feeLabel(fee)})</span>
+                          )}
+                        </span>
+                        <span className="text-[#9C9485]">{fmt(feeAmount(fee))}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Availability status */}
           {availability && (
