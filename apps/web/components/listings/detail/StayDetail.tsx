@@ -247,6 +247,7 @@ function StayDetail({
                   onAvailabilityChecked={handleAvailabilityChecked}
                   openForRoom={bookingRoomKey}
                   onOpenForRoomHandled={() => setBookingRoomKey(null)}
+                  bookingMode="enquiry"
                 />
               </div>
             </aside>

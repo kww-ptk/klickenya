@@ -84,6 +84,8 @@ interface StayBookingSidebarProps {
   /** When set, auto-opens the modal with this room pre-selected after checking availability */
   openForRoom?: string | null;
   onOpenForRoomHandled?: () => void;
+  /** "direct" shows the green pulse badge; "enquiry" hides it (default: "enquiry") */
+  bookingMode?: string;
 }
 
 function nightsBetween(a: string, b: string): number {
@@ -114,6 +116,7 @@ export function StayBookingSidebar({
   onAvailabilityChecked,
   openForRoom,
   onOpenForRoomHandled,
+  bookingMode = "enquiry",
 }: StayBookingSidebarProps) {
   // Dates
   const [checkIn, setCheckIn] = useState("");
@@ -148,6 +151,7 @@ export function StayBookingSidebar({
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState("");
+  const [enquiryDespiteUnavailable, setEnquiryDespiteUnavailable] = useState(false);
 
   // Fees from PMS (loaded when availability is checked)
   const [fees, setFees] = useState<AvailabilityFee[]>([]);
@@ -409,6 +413,11 @@ export function StayBookingSidebar({
         estimatedTotal,
       };
 
+      const messageWithNote = [
+        formMessage.trim() || undefined,
+        enquiryDespiteUnavailable ? "Guest submitted despite unavailable dates" : undefined,
+      ].filter(Boolean).join("\n\n") || undefined;
+
       const res = await fetch("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -419,7 +428,7 @@ export function StayBookingSidebar({
           name: formName.trim(),
           email: formEmail.trim(),
           phone: formPhone.trim(),
-          message: formMessage.trim() || undefined,
+          message: messageWithNote,
           checkIn: checkIn,
           checkOut: checkOut,
           guests,
@@ -477,17 +486,19 @@ export function StayBookingSidebar({
           );
         })()}
 
-        {/* Direct booking indicator */}
-        <div className="flex items-center gap-2 px-3 py-2 bg-[#16A34A]/5 rounded-xl border border-[#16A34A]/15">
-          <span className="relative flex size-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#16A34A] opacity-75" />
-            <span className="relative inline-flex size-2 rounded-full bg-[#16A34A]" />
-          </span>
-          <div>
-            <p className="text-[12px] font-semibold text-[#16A34A]">Direct booking available</p>
-            <p className="text-[10px] text-[#9C9485]">No OTA fees · Instant confirmation</p>
+        {/* Direct booking indicator — only shown when direct booking is live */}
+        {bookingMode === "direct" && (
+          <div className="flex items-center gap-2 px-3 py-2 bg-[#16A34A]/5 rounded-xl border border-[#16A34A]/15">
+            <span className="relative flex size-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#16A34A] opacity-75" />
+              <span className="relative inline-flex size-2 rounded-full bg-[#16A34A]" />
+            </span>
+            <div>
+              <p className="text-[12px] font-semibold text-[#16A34A]">Direct booking available</p>
+              <p className="text-[10px] text-[#9C9485]">No OTA fees · Instant confirmation</p>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Date fields — click to expand calendar inline */}
         <button type="button" onClick={() => setShowDatePicker(!showDatePicker)} className={cn("w-full grid grid-cols-2 border rounded-[14px] overflow-hidden text-left transition-colors", showDatePicker ? "border-[#E8A020]" : "border-[#E2DDD5] hover:border-[#9C9485]")}>
@@ -835,9 +846,50 @@ export function StayBookingSidebar({
                 <>
                   <div className="flex-1 overflow-y-auto px-4 sm:px-5 py-3 space-y-2">
                     {availableRooms.length === 0 ? (
-                      <div className="bg-red-50 border border-red-200 rounded-xl p-5 text-center">
-                        <p className="text-[14px] font-semibold text-red-700 mb-1">No rooms available</p>
-                        <p className="text-[12px] text-red-600">All rooms are booked for these dates.</p>
+                      <div className="space-y-3">
+                        <div className="bg-[#FFFBEB] border border-[#FCD34D] rounded-xl p-4">
+                          <div className="flex items-start gap-3">
+                            <span className="text-[18px] shrink-0 mt-0.5">⚠️</span>
+                            <div>
+                              <p className="text-[13px] font-semibold text-[#92400E] mb-1">These dates appear to be taken</p>
+                              <p className="text-[12px] text-[#78350F] leading-relaxed">
+                                This property may already have a booking for{" "}
+                                <span className="font-semibold">{fmtDate(checkIn)} – {fmtDate(checkOut)}</span>.
+                                You can still send an enquiry — the host will check if they can accommodate you or suggest alternative dates.
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setEnquiryDespiteUnavailable(true);
+                            // Auto-select first result so enquiry has a room reference
+                            if (!selectedRoom && results[0]) {
+                              setSelectedRoom(results[0].key);
+                              setPreviewRoom(results[0]);
+                            }
+                            setStep("enquiry");
+                          }}
+                          className="w-full py-3 rounded-xl text-[14px] font-bold bg-gradient-to-r from-[#F59E0B] to-[#D97706] text-white shadow-[0_3px_10px_rgba(245,158,11,0.35)] hover:shadow-[0_5px_16px_rgba(245,158,11,0.45)] hover:-translate-y-0.5 transition-all"
+                        >
+                          Send enquiry anyway
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setModalCheckIn("");
+                            setModalCheckOut("");
+                            setCheckIn("");
+                            setCheckOut("");
+                            setResults([]);
+                            setEnquiryDespiteUnavailable(false);
+                            setStep("dates");
+                          }}
+                          className="w-full py-2.5 rounded-xl text-[13px] font-semibold text-[#5E5848] border border-[#E2DDD5] hover:bg-[#F4F1EC] transition-colors"
+                        >
+                          Pick different dates
+                        </button>
                       </div>
                     ) : (
                       <>
