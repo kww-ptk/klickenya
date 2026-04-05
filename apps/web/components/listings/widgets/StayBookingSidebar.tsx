@@ -922,56 +922,18 @@ export function StayBookingSidebar({
                       };
                       return (
                         <>
-                          <div className="rounded-xl border border-[#E8A020]/30 overflow-hidden divide-y divide-[#E8A020]/20">
-                            {/* Room header row */}
-                            <div className="bg-gradient-to-r from-[#E8A020]/5 to-[#E8A020]/10 px-3 py-2.5 flex items-center gap-2.5">
-                              <span className="text-[16px]">{selectedRoom === "__entire__" ? "🏠" : "🛏"}</span>
-                              <div className="min-w-0">
-                                <p className="text-[13px] font-bold text-[#16130C] truncate">
-                                  {selectedRoom === "__entire__" ? "Entire property" : results.find((r) => r.key === selectedRoom)?.name}
-                                </p>
-                                <p className="text-[10px] text-[#9C9485]">{fmtDate(checkIn)} → {fmtDate(checkOut)} · {nights} night{nights !== 1 ? "s" : ""}</p>
-                              </div>
-                            </div>
-                            {/* Subtotal row */}
-                            <div className="flex justify-between items-center px-3 py-2 bg-white">
-                              <span className="text-[12px] text-[#9C9485]">{fmt(selectedPrice)} × {nights} night{nights !== 1 ? "s" : ""}</span>
-                              <span className="text-[12px] font-semibold text-[#16130C]">{fmt(subtotal)}</span>
-                            </div>
-                            {/* Mandatory fee rows */}
-                            {mandatoryFees.map((f) => (
-                              <div key={f.id} className="flex justify-between items-center px-3 py-2 bg-white">
-                                <span className="text-[12px] text-[#9C9485]">{f.name}{feeHint(f)}</span>
-                                <span className="text-[12px] font-semibold text-[#16130C]">{fmt(calcFee(f))}</span>
-                              </div>
-                            ))}
-                            {/* Selected upsell rows (shown inline when toggled on) */}
-                            {upsellFees.filter((f) => selectedUpsells.has(f.id)).map((f) => (
-                              <div key={f.id} className="flex justify-between items-center px-3 py-2 bg-violet-50/50">
-                                <span className="text-[12px] text-violet-700">{f.name}{feeHint(f)}</span>
-                                <span className="text-[12px] font-semibold text-violet-700">{fmt(calcFee(f))}</span>
-                              </div>
-                            ))}
-                            {/* Total row */}
-                            <div className="flex justify-between items-center px-3 py-2.5 bg-[#16130C]">
-                              <span className="text-[12px] font-semibold text-white/70">Estimated total</span>
-                              <span className="text-[14px] font-bold text-white">{fmt(total)}</span>
-                            </div>
-                          </div>
-
-                          {/* Upsell fees — guest toggles */}
+                          {/* Upsell fees — guest toggles (above price breakdown) */}
                           {upsellFees.length > 0 && (
-                            <div className="rounded-xl border border-violet-200 overflow-hidden divide-y divide-violet-100">
-                              <div className="px-3 py-2 bg-violet-50">
+                            <div className="rounded-lg border border-violet-200 overflow-hidden divide-y divide-violet-100">
+                              <div className="px-3 py-2 bg-violet-50 flex items-center gap-1.5">
                                 <span className="text-[11px] font-bold text-violet-600 uppercase tracking-wider">Optional extras</span>
-                                <span className="text-[10px] text-violet-400 ml-1.5">· add to your stay</span>
+                                <span className="text-[10px] text-violet-400">· add to your stay</span>
                               </div>
                               {upsellFees.map((f) => {
                                 const on = selectedUpsells.has(f.id);
                                 return (
-                                  <div key={f.id} className={`flex items-center justify-between px-3 py-2.5 transition-colors ${on ? "bg-violet-50/80" : "bg-white"}`}>
+                                  <div key={f.id} className={`flex items-center justify-between px-3 py-2.5 transition-colors ${on ? "bg-violet-50/60" : "bg-white"}`}>
                                     <div className="flex items-center gap-2.5 min-w-0">
-                                      {/* Toggle */}
                                       <button
                                         type="button"
                                         onClick={() => setSelectedUpsells((prev) => {
@@ -1000,6 +962,44 @@ export function StayBookingSidebar({
                               })}
                             </div>
                           )}
+
+                          {/* Price breakdown */}
+                          <div className="rounded-lg border border-[#E2DDD5] overflow-hidden divide-y divide-[#E2DDD5]">
+                            {/* Room header */}
+                            <div className="bg-[#F9F8F6] px-3 py-2.5 flex items-center gap-2.5">
+                              <span className="text-[15px]">{selectedRoom === "__entire__" ? "🏠" : "🛏"}</span>
+                              <div className="min-w-0">
+                                <p className="text-[13px] font-bold text-[#16130C] truncate">
+                                  {selectedRoom === "__entire__" ? "Entire property" : results.find((r) => r.key === selectedRoom)?.name}
+                                </p>
+                                <p className="text-[10px] text-[#9C9485]">{fmtDate(checkIn)} → {fmtDate(checkOut)} · {nights} night{nights !== 1 ? "s" : ""}</p>
+                              </div>
+                            </div>
+                            {/* Subtotal row */}
+                            <div className="flex justify-between items-center px-3 py-2 bg-white">
+                              <span className="text-[12px] text-[#9C9485]">{fmt(selectedPrice)} × {nights} night{nights !== 1 ? "s" : ""}</span>
+                              <span className="text-[12px] font-semibold text-[#16130C]">{fmt(subtotal)}</span>
+                            </div>
+                            {/* Mandatory fee rows */}
+                            {mandatoryFees.map((f) => (
+                              <div key={f.id} className="flex justify-between items-center px-3 py-2 bg-white">
+                                <span className="text-[12px] text-[#9C9485]">{f.name}{feeHint(f)}</span>
+                                <span className="text-[12px] font-semibold text-[#16130C]">{fmt(calcFee(f))}</span>
+                              </div>
+                            ))}
+                            {/* Selected upsell rows */}
+                            {upsellFees.filter((f) => selectedUpsells.has(f.id)).map((f) => (
+                              <div key={f.id} className="flex justify-between items-center px-3 py-2 bg-violet-50/40">
+                                <span className="text-[12px] text-violet-600">{f.name}{feeHint(f)}</span>
+                                <span className="text-[12px] font-semibold text-violet-600">{fmt(calcFee(f))}</span>
+                              </div>
+                            ))}
+                            {/* Total row — amber accent, no dark bg */}
+                            <div className="flex justify-between items-center px-3 py-2.5 bg-[#F9F8F6] border-t-2 border-[#E8A020]/40">
+                              <span className="text-[12px] font-semibold text-[#5E5848]">Estimated total</span>
+                              <span className="text-[15px] font-bold text-[#E8A020]">{fmt(total)}</span>
+                            </div>
+                          </div>
                         </>
                       );
                     })()}
