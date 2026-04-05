@@ -22,8 +22,9 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ guest_user_id: row.id });
   }
 
-  // Fallback: query auth.users directly via admin API
+  // Fallback: scan auth.users for email match
   // Handles users who registered via OAuth and may lag in the public users table
-  const { data: authData } = await adminClient.auth.admin.getUserByEmail(email);
-  return NextResponse.json({ guest_user_id: authData?.user?.id ?? null });
+  const { data: authList } = await adminClient.auth.admin.listUsers({ perPage: 1000 });
+  const match = authList?.users?.find((u) => u.email?.toLowerCase() === email);
+  return NextResponse.json({ guest_user_id: match?.id ?? null });
 }
