@@ -55,6 +55,33 @@ export async function POST(
       return NextResponse.json({ error: "Enquiry is no longer pending" }, { status: 409 });
     }
 
+    // Resolve guest_user_id: use enquiry value, or look up by email as fallback
+    // (handles enquiries submitted anonymously, or before migration 042 was applied)
+    let resolvedGuestUserId: string | null = enquiry.guest_user_id ?? null;
+    if (!resolvedGuestUserId && enquiry.email) {
+      const email = enquiry.email.trim().toLowerCase();
+      const { data: userRow } = await adminClient
+        .from("users")
+        .select("id")
+        .eq("email", email)
+        .maybeSingle();
+      if (userRow?.id) {
+        resolvedGuestUserId = userRow.id;
+      } else {
+        // Fallback: scan auth.users (covers OAuth users not yet in public.users)
+        const { data: authList } = await adminClient.auth.admin.listUsers({ perPage: 1000 });
+        const match = authList?.users?.find((u) => u.email?.toLowerCase() === email);
+        if (match?.id) resolvedGuestUserId = match.id;
+      }
+      // Backfill the enquiry so future lookups are instant
+      if (resolvedGuestUserId) {
+        await adminClient
+          .from("contact_requests")
+          .update({ guest_user_id: resolvedGuestUserId })
+          .eq("id", id);
+      }
+    }
+
     // Server-side availability check
     const { data: available } = await adminClient.rpc("is_room_available", {
       p_room_id: enquiry.room_id,
@@ -121,7 +148,7 @@ export async function POST(
         discount_kes: discountKes,
         total_kes: total,
         amount_paid_kes: amountPaid,
-        guest_user_id: enquiry.guest_user_id ?? null,
+        guest_user_id: resolvedGuestUserId,
         status: "confirmed",
         payment_status: amountPaid >= total ? "paid" : amountPaid > 0 ? "partial" : "pending",
         source: "direct",
