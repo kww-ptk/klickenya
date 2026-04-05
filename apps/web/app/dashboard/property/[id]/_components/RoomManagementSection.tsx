@@ -51,6 +51,10 @@ export function RoomManagementSection({
     setEditingRoom(null);
   };
 
+  const handleRoomDeleted = (roomId: string) => {
+    setRooms((prev) => prev.filter((r) => r.id !== roomId));
+  };
+
   const toggleActive = async (room: RoomData) => {
     setTogglingId(room.id);
     try {
@@ -255,6 +259,7 @@ export function RoomManagementSection({
           propertyName={propertyName}
           onClose={() => setEditingRoom(null)}
           onSaved={handleRoomSaved}
+          onDeleted={handleRoomDeleted}
         />
       )}
     </>

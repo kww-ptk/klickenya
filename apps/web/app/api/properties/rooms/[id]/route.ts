@@ -87,3 +87,39 @@ export async function PATCH(
 
   return NextResponse.json({ room: updated });
 }
+
+export async function DELETE(
+  _req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
+
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const { data: room } = await adminClient
+    .from("rooms")
+    .select("id, property_id")
+    .eq("id", id)
+    .single();
+
+  if (!room) return NextResponse.json({ error: "Room not found" }, { status: 404 });
+
+  const { data: property } = await adminClient
+    .from("properties")
+    .select("id, owner_id, listing_slug")
+    .eq("id", room.property_id)
+    .single();
+
+  if (!property || property.owner_id !== user.id)
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
+  const { error } = await adminClient.from("rooms").delete().eq("id", id);
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  if (property.listing_slug) revalidatePath(`/stays/${property.listing_slug}`);
+  revalidatePath(`/dashboard/property/${property.id}`);
+
+  return NextResponse.json({ ok: true });
+}

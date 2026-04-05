@@ -25,6 +25,7 @@ interface RoomEditPanelProps {
   propertyName: string;
   onClose: () => void;
   onSaved: (room: RoomData) => void;
+  onDeleted?: (roomId: string) => void;
 }
 
 const ROOM_TYPES = [
@@ -90,6 +91,7 @@ export function RoomEditPanel({
   propertyName,
   onClose,
   onSaved,
+  onDeleted,
 }: RoomEditPanelProps) {
   const isNew = !room;
 
@@ -103,11 +105,41 @@ export function RoomEditPanel({
   const [description, setDescription] = useState(room?.description ?? "");
   const [amenities, setAmenities] = useState<string[]>(room?.amenities ?? []);
   const [photos, setPhotos] = useState<string[]>(room?.photos ?? []);
+  const [isActive, setIsActive] = useState(room?.is_active ?? true);
 
   const [saving, setSaving] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [togglingActive, setTogglingActive] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleToggleActive = async () => {
+    if (!room) return;
+    setTogglingActive(true);
+    const res = await fetch(`/api/properties/rooms/${room.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ is_active: !isActive }),
+    });
+    if (res.ok) setIsActive((v) => !v);
+    setTogglingActive(false);
+  };
+
+  const handleDelete = async () => {
+    if (!room) return;
+    setDeleting(true);
+    const res = await fetch(`/api/properties/rooms/${room.id}`, { method: "DELETE" });
+    if (res.ok) {
+      onDeleted?.(room.id);
+      onClose();
+    } else {
+      setError("Failed to delete room.");
+      setDeleting(false);
+      setDeleteConfirm(false);
+    }
+  };
 
   const toggleAmenity = (a: string) => {
     setAmenities((prev) =>
@@ -422,6 +454,78 @@ export function RoomEditPanel({
             <p className="text-[13px] text-red-600 bg-red-50 rounded-xl px-3 py-2">
               {error}
             </p>
+          )}
+
+          {/* Danger Zone — only for existing rooms */}
+          {!isNew && (
+            <div className="rounded-xl border border-red-100 p-4">
+              <p className="text-[11px] font-semibold text-red-500 uppercase tracking-wider mb-3">Danger Zone</p>
+
+              {/* Disable / Enable */}
+              <div className="flex items-start justify-between gap-3 pb-3 border-b border-red-50">
+                <div>
+                  <p className="text-[12px] font-semibold text-[#16130C]">
+                    {isActive ? "Disable room" : "Room is disabled"}
+                  </p>
+                  <p className="text-[11px] text-[#9C9485] mt-0.5">
+                    {isActive ? "Hides this room from bookings." : "Room is hidden — click to re-enable."}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleToggleActive}
+                  disabled={togglingActive}
+                  className={`shrink-0 text-[11px] font-semibold px-2.5 h-[28px] rounded-lg border transition-colors disabled:opacity-50 ${
+                    isActive
+                      ? "border-red-200 text-red-600 hover:bg-red-50"
+                      : "border-[#16A34A]/30 text-[#16A34A] hover:bg-[#16A34A]/5"
+                  }`}
+                >
+                  {togglingActive ? "…" : isActive ? "Disable" : "Enable"}
+                </button>
+              </div>
+
+              {/* Delete */}
+              <div className="pt-3">
+                {!deleteConfirm ? (
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-[12px] font-semibold text-[#16130C]">Delete room</p>
+                      <p className="text-[11px] text-[#9C9485] mt-0.5">Permanently removes this room. Cannot be undone.</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setDeleteConfirm(true)}
+                      className="shrink-0 text-[11px] font-semibold text-red-600 px-2.5 h-[28px] rounded-lg border border-red-200 hover:bg-red-50 transition-colors"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                ) : (
+                  <div className="bg-red-50 border border-red-200 rounded-xl p-3">
+                    <p className="text-[12px] font-semibold text-red-700 mb-1">Delete &ldquo;{name}&rdquo;?</p>
+                    <p className="text-[11px] text-red-600 mb-3">This cannot be undone.</p>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setDeleteConfirm(false)}
+                        className="flex-1 h-[32px] text-[11px] font-semibold rounded-lg border border-[#E2DDD5] text-[#5E5848] hover:bg-[#F4F1EC] bg-white"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleDelete}
+                        disabled={deleting}
+                        className="flex-1 h-[32px] text-[11px] font-semibold rounded-lg bg-red-600 text-white hover:bg-red-700 disabled:opacity-50"
+                      >
+                        {deleting ? "Deleting…" : "Yes, delete"}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
           )}
         </div>
 
