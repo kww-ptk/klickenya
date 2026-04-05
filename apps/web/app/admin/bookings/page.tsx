@@ -205,9 +205,9 @@ export default async function AdminBookingsPage({
                     <tr key={b.id as string} className="border-b border-[#F0EDE8] hover:bg-[#F7F5F2] transition-colors">
                       <td className="px-5 py-3.5">
                         <p className="font-medium text-[#16130C]">{(b.guest_name as string) || "—"}</p>
-                        {b.guest_email && (
+                        {b.guest_email ? (
                           <p className="text-[12px] text-[#9C9485] truncate max-w-[160px]">{b.guest_email as string}</p>
-                        )}
+                        ) : null}
                       </td>
                       <td className="px-5 py-3.5">
                         <p className="text-[#16130C]">{prop?.name || "—"}</p>

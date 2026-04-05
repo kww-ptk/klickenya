@@ -169,12 +169,12 @@ export default async function AdminGuestDetailPage({
                 <p className="text-[11px] text-[#9C9485] uppercase tracking-wider font-medium mb-1">Email</p>
                 <a href={`mailto:${user.email}`} className="text-[#E8A020] hover:underline">{user.email}</a>
               </div>
-              {meta.phone && (
+              {meta.phone ? (
                 <div>
                   <p className="text-[11px] text-[#9C9485] uppercase tracking-wider font-medium mb-1">Phone</p>
-                  <a href={`tel:${meta.phone}`} className="text-[#E8A020] hover:underline">{meta.phone}</a>
+                  <a href={`tel:${String(meta.phone)}`} className="text-[#E8A020] hover:underline">{String(meta.phone)}</a>
                 </div>
-              )}
+              ) : null}
               <div>
                 <p className="text-[11px] text-[#9C9485] uppercase tracking-wider font-medium mb-1">Joined</p>
                 <p className="text-[#16130C]">
