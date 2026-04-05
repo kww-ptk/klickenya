@@ -152,33 +152,6 @@ export default async function DashboardLayout({
     }
   }
 
-  // Check if the user has any guest activity (bookings or enquiries as a guest)
-  let hasGuestActivity = false;
-  const [guestBookingRes, guestEnquiryRes] = await Promise.allSettled([
-    (async () => {
-      const supabase = await createClient();
-      const { count } = await supabase
-        .from("bookings")
-        .select("id", { count: "exact", head: true })
-        .eq("guest_user_id", user.id);
-      return count ?? 0;
-    })(),
-    (async () => {
-      const supabase = await createClient();
-      const { count } = await supabase
-        .from("contact_requests")
-        .select("id", { count: "exact", head: true })
-        .eq("guest_user_id", user.id);
-      return count ?? 0;
-    })(),
-  ]);
-  if (
-    (guestBookingRes.status === "fulfilled" && guestBookingRes.value > 0) ||
-    (guestEnquiryRes.status === "fulfilled" && guestEnquiryRes.value > 0)
-  ) {
-    hasGuestActivity = true;
-  }
-
   const displayName = hostProfile?.display_name ?? profile?.full_name ?? "Host";
   const planTier = hostProfile?.plan_tier ?? "basic";
   const showPasswordBanner = profile?.role === "host" && hostProfile?.password_changed === false;
@@ -287,23 +260,6 @@ export default async function DashboardLayout({
             label="Settings"
             icon={<GearIcon />}
           />
-          {hasGuestActivity && (
-            <>
-              <div className="px-4 pt-4 pb-1">
-                <p className="text-[10px] uppercase tracking-widest font-semibold text-white/30">My Stays</p>
-              </div>
-              <DashboardNavLink
-                href="/dashboard/guest/enquiries"
-                label="My Enquiries"
-                icon={<InboxIcon />}
-              />
-              <DashboardNavLink
-                href="/dashboard/guest/bookings"
-                label="My Bookings"
-                icon={<HomeIcon />}
-              />
-            </>
-          )}
         </nav>
 
         {/* Bottom: guest profile + password banner + sign out */}
