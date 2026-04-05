@@ -41,10 +41,12 @@ export function TodaySnapshot({
   bookings,
   rooms,
   propertyId,
+  enquiriesCount = 0,
 }: {
   bookings: Booking[];
   rooms: Room[];
   propertyId: string;
+  enquiriesCount?: number;
 }) {
   const todayStr = new Date().toISOString().split("T")[0];
   const checkIns = bookings.filter(
@@ -53,10 +55,6 @@ export function TodaySnapshot({
   const checkOuts = bookings.filter(
     (b) => b.check_out_date === todayStr && b.status !== "cancelled"
   );
-  const occupiedTonight = bookings.filter(
-    (b) => b.check_in_date <= todayStr && b.check_out_date > todayStr && b.status !== "cancelled"
-  ).length;
-  const availableTonight = Math.max(0, rooms.length - occupiedTonight);
 
   const [expanded, setExpanded] = useState<"checkin" | "checkout" | null>(null);
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
@@ -126,12 +124,12 @@ export function TodaySnapshot({
           <p className="text-[10px] lg:text-[11px] text-[#9C9485] font-medium mt-1">Checking out</p>
         </button>
 
-        {/* Available tonight */}
+        {/* Enquiries */}
         <div className="bg-white rounded-xl lg:rounded-2xl border border-[#E2DDD5] py-3 px-2 lg:p-4 text-center shadow-sm">
-          <p className="font-display text-[20px] lg:text-[24px] font-bold tracking-[-0.02em] leading-none text-[#4F46E5]">
-            {availableTonight}
+          <p className={`font-display text-[20px] lg:text-[24px] font-bold tracking-[-0.02em] leading-none ${enquiriesCount > 0 ? "text-[#E8A020]" : "text-[#16130C]"}`}>
+            {enquiriesCount}
           </p>
-          <p className="text-[10px] lg:text-[11px] text-[#9C9485] font-medium mt-1">Available tonight</p>
+          <p className="text-[10px] lg:text-[11px] text-[#9C9485] font-medium mt-1">Enquiries</p>
         </div>
       </div>
 

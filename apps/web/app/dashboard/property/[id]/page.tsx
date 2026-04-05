@@ -202,6 +202,7 @@ export default async function PropertyDashboardPage({
           bookings={calBookings}
           rooms={allRooms}
           propertyId={id}
+          enquiriesCount={enquiries.length}
         />
       </div>
 

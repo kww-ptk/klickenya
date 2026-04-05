@@ -29,6 +29,7 @@ function StatsBar({
   stats,
   checkInBookings,
   checkOutBookings,
+  enquiriesCount,
   rooms,
   properties,
   onSelectBooking,
@@ -36,6 +37,7 @@ function StatsBar({
   stats: Stats;
   checkInBookings: BookingWithProperty[];
   checkOutBookings: BookingWithProperty[];
+  enquiriesCount: number;
   rooms: RoomWithProperty[];
   properties: PropertyMeta[];
   onSelectBooking: (b: BookingWithProperty) => void;
@@ -119,12 +121,12 @@ function StatsBar({
           <p className="text-[10px] lg:text-[11px] text-[#9C9485] font-medium mt-1">Checking out</p>
         </button>
 
-        {/* Available tonight */}
+        {/* Enquiries */}
         <div className="bg-white rounded-xl border border-[#E2DDD5] py-3 px-3 shadow-sm">
-          <p className="font-display text-[20px] lg:text-[22px] font-bold tracking-[-0.02em] leading-none text-[#16130C]">
-            {stats.availableTonight}
+          <p className={`font-display text-[20px] lg:text-[22px] font-bold tracking-[-0.02em] leading-none ${enquiriesCount > 0 ? "text-[#E8A020]" : "text-[#16130C]"}`}>
+            {enquiriesCount}
           </p>
-          <p className="text-[10px] lg:text-[11px] text-[#9C9485] font-medium mt-1">Available tonight</p>
+          <p className="text-[10px] lg:text-[11px] text-[#9C9485] font-medium mt-1">Enquiries</p>
         </div>
 
         {/* Revenue */}
@@ -301,6 +303,7 @@ export function UnifiedCalendarWrapper({
         stats={{ ...stats, checkInsToday: checkInBookings.length, checkOutsToday: checkOutBookings.length }}
         checkInBookings={checkInBookings}
         checkOutBookings={checkOutBookings}
+        enquiriesCount={enquiries.length}
         rooms={rooms}
         properties={properties}
         onSelectBooking={(b) => setSelectedBooking(b)}
