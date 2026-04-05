@@ -10,7 +10,9 @@ import {
   BookingWithProperty,
   RoomWithProperty,
   PropertyMeta,
+  EnquiryWithProperty,
 } from "./UnifiedCalendarGrid";
+import { EnquiryActionPanel } from "../../[id]/_components/EnquiryActionPanel";
 import { BlockedDate } from "../../[id]/_components/CalendarGrid";
 
 /* ---------- Stats bar ---------- */
@@ -86,6 +88,7 @@ interface UnifiedCalendarWrapperProps {
   rooms: RoomWithProperty[];
   bookings: BookingWithProperty[];
   blockedDates: BlockedDate[];
+  enquiries?: EnquiryWithProperty[];
   stats: Stats;
 }
 
@@ -94,10 +97,13 @@ export function UnifiedCalendarWrapper({
   rooms,
   bookings: initialBookings,
   blockedDates,
+  enquiries: initialEnquiries = [],
   stats,
 }: UnifiedCalendarWrapperProps) {
   const [bookings, setBookings] = useState<BookingWithProperty[]>(initialBookings);
+  const [enquiries, setEnquiries] = useState<EnquiryWithProperty[]>(initialEnquiries);
   const [selectedBooking, setSelectedBooking] = useState<BookingWithProperty | null>(null);
+  const [selectedEnquiry, setSelectedEnquiry] = useState<EnquiryWithProperty | null>(null);
   const [newBookingTarget, setNewBookingTarget] = useState<{
     propertyId: string;
     roomId: string;
@@ -105,45 +111,55 @@ export function UnifiedCalendarWrapper({
     checkOut: string;
   } | null>(null);
 
-  // Realtime subscriptions — one per property
+  // Realtime subscriptions — bookings + enquiries, one channel per property
   useEffect(() => {
     const supabase = createClient();
-    const channels = properties.map((p) =>
+    const now = () => new Date().toISOString();
+
+    const channels = properties.flatMap((p) => [
       supabase
         .channel(`unified-bookings-${p.id}`)
         .on(
           "postgres_changes",
-          {
-            event: "*",
-            schema: "public",
-            table: "bookings",
-            filter: `property_id=eq.${p.id}`,
-          },
+          { event: "*", schema: "public", table: "bookings", filter: `property_id=eq.${p.id}` },
           (payload) => {
             if (payload.eventType === "INSERT") {
-              setBookings((prev) => [
-                ...prev,
-                { ...(payload.new as BookingWithProperty) },
-              ]);
+              setBookings((prev) => [...prev, { ...(payload.new as BookingWithProperty) }]);
             } else if (payload.eventType === "UPDATE") {
               setBookings((prev) =>
-                prev.map((b) =>
-                  b.id === (payload.new as BookingWithProperty).id
-                    ? (payload.new as BookingWithProperty)
-                    : b
-                )
+                prev.map((b) => b.id === (payload.new as BookingWithProperty).id ? (payload.new as BookingWithProperty) : b)
               );
             } else if (payload.eventType === "DELETE") {
-              setBookings((prev) =>
-                prev.filter(
-                  (b) => b.id !== (payload.old as { id: string }).id
-                )
-              );
+              setBookings((prev) => prev.filter((b) => b.id !== (payload.old as { id: string }).id));
             }
           }
         )
-        .subscribe()
-    );
+        .subscribe(),
+      supabase
+        .channel(`unified-enquiries-${p.id}`)
+        .on(
+          "postgres_changes",
+          { event: "*", schema: "public", table: "contact_requests", filter: `property_id=eq.${p.id}` },
+          (payload) => {
+            if (payload.eventType === "INSERT") {
+              const e = payload.new as EnquiryWithProperty;
+              if (e.calendar_status === "pending" && e.room_id && e.check_in && e.check_out && e.expires_at > now()) {
+                setEnquiries((prev) => [...prev, e]);
+              }
+            } else if (payload.eventType === "UPDATE") {
+              const e = payload.new as EnquiryWithProperty;
+              if (e.calendar_status !== "pending" || !e.room_id || e.expires_at <= now()) {
+                setEnquiries((prev) => prev.filter((x) => x.id !== e.id));
+              } else {
+                setEnquiries((prev) => prev.map((x) => x.id === e.id ? e : x));
+              }
+            } else if (payload.eventType === "DELETE") {
+              setEnquiries((prev) => prev.filter((x) => x.id !== (payload.old as { id: string }).id));
+            }
+          }
+        )
+        .subscribe(),
+    ]);
 
     return () => {
       channels.forEach((ch) => supabase.removeChannel(ch));
@@ -195,7 +211,9 @@ export function UnifiedCalendarWrapper({
         rooms={rooms}
         bookings={bookings}
         blockedDates={blockedDates}
+        enquiries={enquiries}
         onClickBooking={(booking) => setSelectedBooking(booking)}
+        onClickEnquiry={(enquiry) => setSelectedEnquiry(enquiry)}
         onClickEmpty={(propertyId, roomId, checkIn, checkOut) =>
           setNewBookingTarget({ propertyId, roomId, checkIn, checkOut })
         }
@@ -217,6 +235,30 @@ export function UnifiedCalendarWrapper({
               )
             );
             setSelectedBooking({ ...updated, property_id: selectedBooking.property_id });
+          }}
+        />
+      )}
+
+      {/* Enquiry detail panel */}
+      {selectedEnquiry && (
+        <EnquiryActionPanel
+          enquiry={selectedEnquiry}
+          rooms={roomsForProperty(selectedEnquiry.property_id ?? "")}
+          propertyId={selectedEnquiry.property_id ?? ""}
+          bookings={bookings.filter((b) => b.property_id === selectedEnquiry.property_id)}
+          onClose={() => setSelectedEnquiry(null)}
+          onConverted={(booking) => {
+            setBookings((prev) => [...prev, { ...booking, property_id: selectedEnquiry.property_id }]);
+            setEnquiries((prev) => prev.filter((e) => e.id !== selectedEnquiry.id));
+            setSelectedEnquiry(null);
+          }}
+          onDeclined={() => {
+            setEnquiries((prev) => prev.filter((e) => e.id !== selectedEnquiry.id));
+            setSelectedEnquiry(null);
+          }}
+          onRoomChanged={(updated) => {
+            setEnquiries((prev) => prev.map((e) => e.id === updated.id ? { ...updated, property_id: selectedEnquiry.property_id } as EnquiryWithProperty : e));
+            setSelectedEnquiry({ ...updated, property_id: selectedEnquiry.property_id } as EnquiryWithProperty);
           }}
         />
       )}

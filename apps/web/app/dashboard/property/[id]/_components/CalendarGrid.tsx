@@ -4,6 +4,7 @@ import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { BookingSidePanel } from "./BookingSidePanel";
 import { NewBookingSidePanel } from "./NewBookingSidePanel";
+import { EnquiryActionPanel } from "./EnquiryActionPanel";
 
 /* ---------- Types ---------- */
 
@@ -53,6 +54,24 @@ export interface BlockedDate {
   reason: string | null;
 }
 
+export interface Enquiry {
+  id: string;
+  full_name: string;
+  email?: string | null;
+  phone?: string | null;
+  room_id: string;
+  check_in: string;
+  check_out: string;
+  guests?: number | null;
+  calendar_status: string;
+  expires_at: string;
+  listing_title?: string | null;
+  notes?: string | null;
+  property_id?: string;
+}
+
+export type EnquiryMap = Map<string, Enquiry[]>;
+
 export interface DragState {
   roomId: string;
   startDate: string;
@@ -69,6 +88,7 @@ interface CalendarGridProps {
   rooms: Room[];
   bookings: Booking[];
   blockedDates: BlockedDate[];
+  enquiries?: Enquiry[];
 }
 
 /* ---------- Helpers ---------- */
@@ -108,15 +128,18 @@ export function CalendarGrid({
   rooms,
   bookings: initialBookings,
   blockedDates: initialBlocked,
+  enquiries: initialEnquiries = [],
 }: CalendarGridProps) {
   const [bookings, setBookings] = useState<Booking[]>(initialBookings);
   const [blockedDates] = useState<BlockedDate[]>(initialBlocked);
+  const [enquiries, setEnquiries] = useState<Enquiry[]>(initialEnquiries);
   const [startDate, setStartDate] = useState(() => {
     const d = new Date();
     d.setHours(0, 0, 0, 0);
     return d;
   });
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
+  const [selectedEnquiry, setSelectedEnquiry] = useState<Enquiry | null>(null);
   const [newBookingTarget, setNewBookingTarget] = useState<{
     roomId: string;
     checkIn: string;
@@ -168,6 +191,30 @@ export function CalendarGrid({
     }
     return map;
   }, [bookings, blockedDates]);
+
+  // Build enquiryMap: "roomId:date" → Enquiry[]
+  const enquiryMap = useMemo<EnquiryMap>(() => {
+    const map: EnquiryMap = new Map();
+    for (const e of enquiries) {
+      if (!e.room_id || !e.check_in || !e.check_out) continue;
+      const start = new Date(e.check_in + "T00:00:00");
+      const end = new Date(e.check_out + "T00:00:00");
+      let d = new Date(start);
+      while (d < end) {
+        const key = `${e.room_id}:${dateStr(d)}`;
+        const existing = map.get(key) ?? [];
+        map.set(key, [...existing, e]);
+        d = addDays(d, 1);
+      }
+    }
+    return map;
+  }, [enquiries]);
+
+  // Rooms that have at least one active enquiry (used to expand row height)
+  const roomsWithEnquiries = useMemo(
+    () => new Set(enquiries.map((e) => e.room_id)),
+    [enquiries]
+  );
 
   // Global drag-end handler (mouseup + touchend)
   useEffect(() => {
@@ -231,39 +278,59 @@ export function CalendarGrid({
 
   const todayStr = dateStr(new Date());
 
-  // Realtime subscription
+  // Realtime subscriptions — bookings + enquiries
   useEffect(() => {
     const supabase = createClient();
-    const channel = supabase
+
+    const bookingChannel = supabase
       .channel(`bookings-${propertyId}`)
       .on(
         "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "bookings",
-          filter: `property_id=eq.${propertyId}`,
-        },
+        { event: "*", schema: "public", table: "bookings", filter: `property_id=eq.${propertyId}` },
         (payload) => {
           if (payload.eventType === "INSERT") {
             setBookings((prev) => [...prev, payload.new as Booking]);
           } else if (payload.eventType === "UPDATE") {
             setBookings((prev) =>
-              prev.map((b) =>
-                b.id === (payload.new as Booking).id
-                  ? (payload.new as Booking)
-                  : b
-              )
+              prev.map((b) => b.id === (payload.new as Booking).id ? (payload.new as Booking) : b)
             );
           } else if (payload.eventType === "DELETE") {
-            setBookings((prev) =>
-              prev.filter((b) => b.id !== (payload.old as { id: string }).id)
-            );
+            setBookings((prev) => prev.filter((b) => b.id !== (payload.old as { id: string }).id));
           }
         }
       )
       .subscribe();
-    return () => { supabase.removeChannel(channel); };
+
+    const enquiryChannel = supabase
+      .channel(`enquiries-${propertyId}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "contact_requests", filter: `property_id=eq.${propertyId}` },
+        (payload) => {
+          const now = new Date().toISOString();
+          if (payload.eventType === "INSERT") {
+            const e = payload.new as Enquiry;
+            if (e.calendar_status === "pending" && e.room_id && e.check_in && e.check_out && e.expires_at > now) {
+              setEnquiries((prev) => [...prev, e]);
+            }
+          } else if (payload.eventType === "UPDATE") {
+            const e = payload.new as Enquiry;
+            if (e.calendar_status !== "pending" || !e.room_id || !e.check_in || !e.check_out || e.expires_at <= now) {
+              setEnquiries((prev) => prev.filter((x) => x.id !== e.id));
+            } else {
+              setEnquiries((prev) => prev.map((x) => x.id === e.id ? e : x));
+            }
+          } else if (payload.eventType === "DELETE") {
+            setEnquiries((prev) => prev.filter((x) => x.id !== (payload.old as { id: string }).id));
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(bookingChannel);
+      supabase.removeChannel(enquiryChannel);
+    };
   }, [propertyId]);
 
   return (
@@ -354,9 +421,12 @@ export function CalendarGrid({
                   days={days}
                   todayStr={todayStr}
                   cellMap={cellMap}
+                  enquiryMap={enquiryMap}
+                  hasEnquiries={roomsWithEnquiries.has(room.id)}
                   dragRange={dr}
                   shakeDate={shakeDate}
                   onClickBooking={setSelectedBooking}
+                  onClickEnquiry={setSelectedEnquiry}
                   onClickEmpty={(roomId, checkIn, checkOut) =>
                     setNewBookingTarget({ roomId, checkIn, checkOut })
                   }
@@ -392,6 +462,13 @@ export function CalendarGrid({
             />
             <span className="text-[10px] text-[#9C9485]">Blocked</span>
           </div>
+          <div className="flex items-center gap-1.5">
+            <div
+              className="size-2.5 rounded-sm border border-dashed border-[#EAB308]"
+              style={{ backgroundColor: "#FEF9C3" }}
+            />
+            <span className="text-[10px] text-[#9C9485]">Enquiry</span>
+          </div>
         </div>
       </div>
 
@@ -407,6 +484,28 @@ export function CalendarGrid({
               prev.map((b) => (b.id === updated.id ? updated : b))
             );
             setSelectedBooking(updated);
+          }}
+        />
+      )}
+      {selectedEnquiry && (
+        <EnquiryActionPanel
+          enquiry={selectedEnquiry}
+          rooms={rooms}
+          propertyId={propertyId}
+          bookings={bookings}
+          onClose={() => setSelectedEnquiry(null)}
+          onConverted={(booking) => {
+            setBookings((prev) => [...prev, booking]);
+            setEnquiries((prev) => prev.filter((e) => e.id !== selectedEnquiry.id));
+            setSelectedEnquiry(null);
+          }}
+          onDeclined={() => {
+            setEnquiries((prev) => prev.filter((e) => e.id !== selectedEnquiry.id));
+            setSelectedEnquiry(null);
+          }}
+          onRoomChanged={(updatedEnquiry) => {
+            setEnquiries((prev) => prev.map((e) => e.id === updatedEnquiry.id ? updatedEnquiry : e));
+            setSelectedEnquiry(updatedEnquiry);
           }}
         />
       )}
@@ -435,9 +534,12 @@ export function RoomRow({
   days,
   todayStr,
   cellMap,
+  enquiryMap,
+  hasEnquiries,
   dragRange,
   shakeDate,
   onClickBooking,
+  onClickEnquiry,
   onClickEmpty,
   onDragStart,
   onDragEnter,
@@ -446,21 +548,26 @@ export function RoomRow({
   days: Date[];
   todayStr: string;
   cellMap: CellMap;
+  enquiryMap?: EnquiryMap;
+  hasEnquiries?: boolean;
   dragRange: { start: string; end: string } | null;
   shakeDate: string | null;
   onClickBooking: (b: Booking) => void;
+  onClickEnquiry?: (e: Enquiry) => void;
   onClickEmpty: (roomId: string, checkIn: string, checkOut: string) => void;
   onDragStart: (roomId: string, date: string) => void;
   onDragEnter: (roomId: string, date: string) => void;
 }) {
   const renderedBookings = new Set<string>();
+  const renderedEnquiries = new Set<string>();
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const touchDragging = useRef(false);
+  const cellH = hasEnquiries ? "60px" : "44px";
 
   return (
     <>
       {/* Room name (sticky left) */}
-      <div className="sticky left-0 z-10 bg-white border-b border-r border-[#E2DDD5] px-3 py-2 flex items-center min-h-[44px]">
+      <div className="sticky left-0 z-10 bg-white border-b border-r border-[#E2DDD5] px-3 py-2 flex items-center" style={{ minHeight: cellH }}>
         <div className="min-w-0">
           <p className="text-[12px] font-semibold text-[#16130C] truncate">{room.name}</p>
           {room.room_number && (
@@ -481,6 +588,53 @@ export function RoomRow({
           : false;
         const isShaking = shakeDate === ds;
 
+        // Enquiry data for this cell
+        const cellEnquiries = enquiryMap?.get(key) ?? [];
+        const hasEnquiryHere = cellEnquiries.length > 0;
+        const firstEnquiry = cellEnquiries[0] as Enquiry | undefined;
+        const extraCount = cellEnquiries.length - 1;
+        let isEnqStart = false;
+        let isEnqEnd = false;
+        let shouldShowEnqLabel = false;
+        if (firstEnquiry) {
+          isEnqStart = firstEnquiry.check_in === ds;
+          isEnqEnd = isSameDay(dateStr(addDays(new Date(firstEnquiry.check_out + "T00:00:00"), -1)), ds);
+          shouldShowEnqLabel = isEnqStart || (!renderedEnquiries.has(firstEnquiry.id) && dayIndex === 0);
+          if (shouldShowEnqLabel) renderedEnquiries.add(firstEnquiry.id);
+        }
+        const hasConflict = !!cell && cell.type === "booking" && hasEnquiryHere;
+
+        // Reusable enquiry strip rendered at bottom of cell
+        const enquiryStrip = hasEnquiryHere && firstEnquiry ? (
+          <button
+            onClick={(e) => { e.stopPropagation(); onClickEnquiry?.(firstEnquiry); }}
+            className="absolute bottom-[2px] left-0 right-0 h-[18px] overflow-hidden flex items-center"
+            title={`Enquiry: ${firstEnquiry.full_name}`}
+            style={{
+              backgroundColor: "#FEF9C3",
+              border: "1.5px dashed #EAB308",
+              borderTopLeftRadius: isEnqStart ? 4 : 0,
+              borderBottomLeftRadius: isEnqStart ? 4 : 0,
+              borderTopRightRadius: isEnqEnd ? 4 : 0,
+              borderBottomRightRadius: isEnqEnd ? 4 : 0,
+              marginLeft: isEnqStart ? 1 : 0,
+              marginRight: isEnqEnd ? 1 : 0,
+            }}
+          >
+            {shouldShowEnqLabel && (
+              <span className="text-[9px] italic text-amber-700 font-semibold px-1 truncate whitespace-nowrap flex-1">
+                {firstEnquiry.full_name.split(" ")[0]}?
+              </span>
+            )}
+            {hasConflict && (
+              <span className="absolute right-1 top-1 size-2 rounded-full bg-red-500 shrink-0" title="Conflicts with confirmed booking" />
+            )}
+            {extraCount > 0 && isEnqStart && (
+              <span className="absolute right-1 text-[8px] font-bold text-amber-700">+{extraCount}</span>
+            )}
+          </button>
+        ) : null;
+
         if (!cell) {
           return (
             <button
@@ -492,10 +646,7 @@ export function RoomRow({
                 onDragStart(room.id, ds);
               }}
               onMouseEnter={() => onDragEnter(room.id, ds)}
-              onMouseUp={() => {
-                // Single click: mousedown + immediate mouseup on same cell
-                // Global handler will fire and open the panel
-              }}
+              onMouseUp={() => {}}
               onTouchStart={() => {
                 touchDragging.current = false;
                 longPressTimer.current = setTimeout(() => {
@@ -512,14 +663,9 @@ export function RoomRow({
                   return;
                 }
                 const touch = e.changedTouches[0];
-                const el = document.elementFromPoint(
-                  touch.clientX,
-                  touch.clientY
-                );
+                const el = document.elementFromPoint(touch.clientX, touch.clientY);
                 if (el) {
-                  const cellEl = (el as HTMLElement).closest(
-                    "[data-date]"
-                  ) as HTMLElement | null;
+                  const cellEl = (el as HTMLElement).closest("[data-date]") as HTMLElement | null;
                   if (cellEl?.dataset.date && cellEl?.dataset.roomId) {
                     onDragEnter(cellEl.dataset.roomId, cellEl.dataset.date);
                   }
@@ -531,13 +677,12 @@ export function RoomRow({
                   longPressTimer.current = null;
                 }
                 if (!touchDragging.current) {
-                  // Short tap — single night
                   onClickEmpty(room.id, ds, nextDay(ds));
                 }
                 touchDragging.current = false;
               }}
               className={[
-                "border-b border-r border-[#E2DDD5] min-h-[44px] transition-colors",
+                "border-b border-r border-[#E2DDD5] transition-colors relative",
                 isInDragRange
                   ? "bg-[#4F46E5]/30"
                   : isToday
@@ -546,11 +691,12 @@ export function RoomRow({
                       ? "bg-[#F4F1EC]/30 hover:bg-[#4F46E5]/5"
                       : "hover:bg-[#4F46E5]/5",
                 isShaking ? "animate-cal-shake" : "",
-              ]
-                .filter(Boolean)
-                .join(" ")}
-              title={`Available — ${ds}`}
-            />
+              ].filter(Boolean).join(" ")}
+              style={{ minHeight: cellH }}
+              title={hasEnquiryHere ? `Enquiry: ${firstEnquiry?.full_name}` : `Available — ${ds}`}
+            >
+              {enquiryStrip}
+            </button>
           );
         }
 
@@ -560,14 +706,16 @@ export function RoomRow({
               key={ds}
               data-date={ds}
               data-room-id={room.id}
-              className={`border-b border-r border-[#E2DDD5] min-h-[44px]${isShaking ? " animate-cal-shake" : ""}`}
+              className={`border-b border-r border-[#E2DDD5] relative${isShaking ? " animate-cal-shake" : ""}`}
               style={{
+                minHeight: cellH,
                 backgroundColor: "#F4F1EC",
-                backgroundImage:
-                  "repeating-linear-gradient(45deg, transparent, transparent 3px, rgba(156,148,133,0.2) 3px, rgba(156,148,133,0.2) 5px)",
+                backgroundImage: "repeating-linear-gradient(45deg, transparent, transparent 3px, rgba(156,148,133,0.2) 3px, rgba(156,148,133,0.2) 5px)",
               }}
               title={cell.block.reason ? `Blocked: ${cell.block.reason}` : "Blocked"}
-            />
+            >
+              {enquiryStrip}
+            </div>
           );
         }
 
@@ -598,16 +746,22 @@ export function RoomRow({
           }
         }
 
+        // When an enquiry strip is present, shrink booking block to leave space
+        const bookingBottom = hasEnquiryHere ? "24px" : "4px";
+
         return (
           <button
             key={ds}
             onClick={() => onClickBooking(booking)}
-            className="border-b border-r border-[#E2DDD5] min-h-[44px] relative cursor-pointer group"
+            className="border-b border-r border-[#E2DDD5] relative cursor-pointer group"
+            style={{ minHeight: cellH }}
             title={`${booking.guest_name} (${booking.source})`}
           >
             <div
-              className="absolute inset-y-[4px] inset-x-0 flex items-center overflow-hidden"
+              className="absolute left-0 right-0 flex items-center overflow-hidden"
               style={{
+                top: 4,
+                bottom: bookingBottom,
                 backgroundColor: colors.bg,
                 color: colors.text,
                 borderTopLeftRadius: isStart ? 6 : 0,
@@ -628,6 +782,7 @@ export function RoomRow({
                 </span>
               )}
             </div>
+            {enquiryStrip}
           </button>
         );
       })}

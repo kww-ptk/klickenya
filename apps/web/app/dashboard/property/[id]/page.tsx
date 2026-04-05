@@ -61,7 +61,7 @@ export default async function PropertyDashboardPage({
   sixtyDaysOut.setDate(sixtyDaysOut.getDate() + 60);
   const sixtyStr = sixtyDaysOut.toISOString().split("T")[0];
 
-  const [roomsResult, checkInsResult, checkOutsResult, bookingsResult, blockedResult] =
+  const [roomsResult, checkInsResult, checkOutsResult, bookingsResult, blockedResult, enquiriesResult] =
     await Promise.all([
       adminClient
         .from("rooms")
@@ -104,6 +104,15 @@ export default async function PropertyDashboardPage({
         )
         .lt("start_date", sixtyStr)
         .gt("end_date", todayStr),
+      adminClient
+        .from("contact_requests")
+        .select("id, full_name, email, phone, room_id, check_in, check_out, guests, calendar_status, expires_at, listing_title, notes")
+        .eq("property_id", id)
+        .eq("calendar_status", "pending")
+        .not("room_id", "is", null)
+        .not("check_in", "is", null)
+        .not("check_out", "is", null)
+        .gt("expires_at", new Date().toISOString()),
     ]);
 
   const allRooms = (roomsResult.data ?? []).map((r) => ({
@@ -116,6 +125,7 @@ export default async function PropertyDashboardPage({
   const checkOuts = checkOutsResult.data ?? [];
   const bookings = bookingsResult.data ?? [];
   const blockedDates = blockedResult.data ?? [];
+  const enquiries = enquiriesResult.data ?? [];
 
   const availableTonight = rooms.length - checkIns.length;
 
@@ -325,6 +335,7 @@ export default async function PropertyDashboardPage({
           rooms={rooms}
           bookings={bookings}
           blockedDates={blockedDates}
+          enquiries={enquiries}
         />
       </div>
 

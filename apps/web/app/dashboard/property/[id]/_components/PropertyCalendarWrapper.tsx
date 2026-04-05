@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { ToastProvider } from "@/components/ui/Toast";
-import { CalendarGrid } from "./CalendarGrid";
+import { CalendarGrid, type Enquiry } from "./CalendarGrid";
 import { NewBookingSidePanel } from "./NewBookingSidePanel";
 
 interface Room {
@@ -55,11 +55,13 @@ export function PropertyCalendarWrapper({
   rooms,
   bookings,
   blockedDates,
+  enquiries,
 }: {
   propertyId: string;
   rooms: Room[];
   bookings: Booking[];
   blockedDates: BlockedDate[];
+  enquiries?: Enquiry[];
 }) {
   const [newBookingTarget, setNewBookingTarget] = useState<{
     roomId: string;
@@ -104,6 +106,7 @@ export function PropertyCalendarWrapper({
         rooms={rooms}
         bookings={bookings}
         blockedDates={blockedDates}
+        enquiries={enquiries}
       />
 
       {newBookingTarget && rooms.length > 0 && (

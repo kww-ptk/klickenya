@@ -34,8 +34,8 @@ export default async function UnifiedCalendarPage() {
     .toISOString()
     .split("T")[0];
 
-  // Fetch rooms + active bookings + stats bookings in parallel
-  const [roomsResult, bookingsResult, statsBookingsResult] = await Promise.all([
+  // Fetch rooms + active bookings + stats bookings + enquiries in parallel
+  const [roomsResult, bookingsResult, statsBookingsResult, enquiriesResult] = await Promise.all([
     adminClient
       .from("rooms")
       .select(
@@ -60,11 +60,21 @@ export default async function UnifiedCalendarPage() {
       .neq("status", "cancelled")
       .gte("check_in_date", monthStartStr)
       .lte("check_in_date", monthEndStr),
+    adminClient
+      .from("contact_requests")
+      .select("id, full_name, email, phone, room_id, check_in, check_out, guests, calendar_status, expires_at, listing_title, notes, property_id")
+      .in("property_id", propertyIds)
+      .eq("calendar_status", "pending")
+      .not("room_id", "is", null)
+      .not("check_in", "is", null)
+      .not("check_out", "is", null)
+      .gt("expires_at", new Date().toISOString()),
   ]);
 
   const rooms = roomsResult.data ?? [];
   const bookings = bookingsResult.data ?? [];
   const statsBookings = statsBookingsResult.data ?? [];
+  const enquiries = enquiriesResult.data ?? [];
 
   // Fetch blocked dates after we have room IDs
   const roomIds = rooms.map((r) => r.id);
@@ -121,6 +131,7 @@ export default async function UnifiedCalendarPage() {
         rooms={rooms}
         bookings={bookings}
         blockedDates={blockedDates}
+        enquiries={enquiries}
         stats={{
           occupiedTonight,
           checkInsToday,

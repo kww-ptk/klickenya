@@ -8,6 +8,8 @@ import {
   DragState,
   CellMap,
   RoomRow,
+  Enquiry,
+  EnquiryMap,
   addDays,
   dateStr,
   isSameDay,
@@ -30,12 +32,18 @@ export interface PropertyMeta {
   property_type: string;
 }
 
+export interface EnquiryWithProperty extends Enquiry {
+  property_id: string;
+}
+
 interface UnifiedCalendarGridProps {
   properties: PropertyMeta[];
   rooms: RoomWithProperty[];
   bookings: BookingWithProperty[];
   blockedDates: BlockedDate[];
+  enquiries?: EnquiryWithProperty[];
   onClickBooking: (booking: BookingWithProperty) => void;
+  onClickEnquiry?: (enquiry: EnquiryWithProperty) => void;
   onClickEmpty: (
     propertyId: string,
     roomId: string,
@@ -59,7 +67,9 @@ export function UnifiedCalendarGrid({
   rooms,
   bookings,
   blockedDates,
+  enquiries = [],
   onClickBooking,
+  onClickEnquiry,
   onClickEmpty,
 }: UnifiedCalendarGridProps) {
   const [startDate, setStartDate] = useState(() => {
@@ -103,6 +113,28 @@ export function UnifiedCalendarGrid({
     }
     return map;
   }, [bookings, blockedDates]);
+
+  const enquiryMap = useMemo<EnquiryMap>(() => {
+    const map: EnquiryMap = new Map();
+    for (const e of enquiries) {
+      if (!e.room_id || !e.check_in || !e.check_out) continue;
+      const start = new Date(e.check_in + "T00:00:00");
+      const end = new Date(e.check_out + "T00:00:00");
+      let d = new Date(start);
+      while (d < end) {
+        const key = `${e.room_id}:${dateStr(d)}`;
+        const existing = map.get(key) ?? [];
+        map.set(key, [...existing, e]);
+        d = addDays(d, 1);
+      }
+    }
+    return map;
+  }, [enquiries]);
+
+  const roomsWithEnquiries = useMemo(
+    () => new Set(enquiries.map((e) => e.room_id)),
+    [enquiries]
+  );
 
   // Global drag-end handler
   useEffect(() => {
@@ -359,10 +391,15 @@ export function UnifiedCalendarGrid({
                         days={days}
                         todayStr={todayStr}
                         cellMap={cellMap}
+                        enquiryMap={enquiryMap}
+                        hasEnquiries={roomsWithEnquiries.has(room.id)}
                         dragRange={dr}
                         shakeDate={shakeDate}
                         onClickBooking={(b) =>
                           onClickBooking(b as BookingWithProperty)
+                        }
+                        onClickEnquiry={(e) =>
+                          onClickEnquiry?.(e as EnquiryWithProperty)
                         }
                         onClickEmpty={(roomId, checkIn, checkOut) =>
                           onClickEmpty(property.id, roomId, checkIn, checkOut)
@@ -405,6 +442,13 @@ export function UnifiedCalendarGrid({
             }}
           />
           <span className="text-[10px] text-[#9C9485]">Blocked</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <div
+            className="size-2.5 rounded-sm border border-dashed border-[#EAB308]"
+            style={{ backgroundColor: "#FEF9C3" }}
+          />
+          <span className="text-[10px] text-[#9C9485]">Enquiry</span>
         </div>
       </div>
     </div>
