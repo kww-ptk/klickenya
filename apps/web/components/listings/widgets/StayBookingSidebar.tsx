@@ -267,11 +267,10 @@ export function StayBookingSidebar({
 
       setResults(roomResults);
 
-      // If a room was pre-selected (from room card click), keep it selected
-      const preKey = pendingRoomKey ?? selectedRoom;
-      if (preKey && roomResults.find((r) => r.key === preKey)) {
-        const match = roomResults.find((r) => r.key === preKey)!;
-        setSelectedRoom(preKey);
+      // Only carry over a room pre-selected via room card click — never the previous session's selection
+      if (pendingRoomKey && roomResults.find((r) => r.key === pendingRoomKey)) {
+        const match = roomResults.find((r) => r.key === pendingRoomKey)!;
+        setSelectedRoom(pendingRoomKey);
         setPreviewRoom(match);
       } else {
         setSelectedRoom(null);
@@ -350,11 +349,10 @@ export function StayBookingSidebar({
 
       setResults(roomResults);
 
-      // If a room was pre-selected (from room card click), keep it selected
-      const preKey = pendingRoomKey ?? selectedRoom;
-      if (preKey && roomResults.find((r) => r.key === preKey)) {
-        const match = roomResults.find((r) => r.key === preKey)!;
-        setSelectedRoom(preKey);
+      // Only carry over a room pre-selected via room card click — never the previous session's selection
+      if (pendingRoomKey && roomResults.find((r) => r.key === pendingRoomKey)) {
+        const match = roomResults.find((r) => r.key === pendingRoomKey)!;
+        setSelectedRoom(pendingRoomKey);
         setPreviewRoom(match);
       } else {
         setSelectedRoom(null);
@@ -900,12 +898,30 @@ export function StayBookingSidebar({
 
                         {/* Entire property */}
                         {entireAvail && results.length > 1 && (
-                          <button type="button" onClick={() => { setSelectedRoom(selectedRoom === "__entire__" ? null : "__entire__"); setPreviewRoom(null); }}
-                            className={cn("w-full text-left rounded-xl overflow-hidden transition-all", selectedRoom === "__entire__" ? "ring-2 ring-[#E8A020] ring-offset-2" : "border border-[#E2DDD5] hover:shadow-md")}>
-                            <div className="bg-gradient-to-br from-[#16130C] to-[#2A2520] p-3.5">
-                              <p className="text-[14px] font-bold text-white">🏠 Entire property</p>
-                              <p className="text-[11px] text-white/50">All {results.length} rooms · Private</p>
-                              <p className="text-[18px] font-bold text-[#E8A020] mt-1">{fmt(totalEntirePrice)} <span className="text-[11px] text-white/40 font-normal">/ night</span></p>
+                          <button
+                            type="button"
+                            onClick={() => { setSelectedRoom(selectedRoom === "__entire__" ? null : "__entire__"); setPreviewRoom(null); }}
+                            className={cn(
+                              "w-full text-left rounded-xl overflow-hidden transition-all border-2",
+                              selectedRoom === "__entire__"
+                                ? "border-[#E8A020] ring-2 ring-[#E8A020]/30 ring-offset-1"
+                                : "border-[#E8A020]/40 hover:border-[#E8A020] hover:shadow-md"
+                            )}
+                          >
+                            <div className="bg-gradient-to-br from-[#FFFBEB] to-[#FEF3CD] p-4">
+                              <div className="flex items-start gap-3">
+                                <span className="text-[28px] leading-none animate-bounce">🎉</span>
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-2 mb-0.5">
+                                    <p className="text-[14px] font-bold text-[#16130C]">Entire property available!</p>
+                                    {selectedRoom === "__entire__" && (
+                                      <svg className="size-4 text-[#E8A020] shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
+                                    )}
+                                  </div>
+                                  <p className="text-[11px] text-[#78350F]">All {results.length} rooms · Exclusively yours · Private stay</p>
+                                  <p className="text-[19px] font-bold text-[#E8A020] mt-1.5">{fmt(totalEntirePrice)} <span className="text-[11px] text-[#9C9485] font-normal">/ night</span></p>
+                                </div>
+                              </div>
                             </div>
                           </button>
                         )}
