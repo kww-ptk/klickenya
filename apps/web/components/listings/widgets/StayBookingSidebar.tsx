@@ -48,9 +48,19 @@ interface RoomResult {
   description?: string;
 }
 
+interface AvailabilityFee {
+  id: string;
+  name: string;
+  fee_type: "fixed" | "per_night" | "per_guest" | "percentage";
+  amount: number;
+  apply_by_default: boolean;
+}
+
 interface AvailabilityData {
   rooms: Record<string, { available: boolean; price: number }> | null;
   entireProperty: boolean | null;
+  fees?: AvailabilityFee[];
+  property_id?: string;
 }
 
 interface StayBookingSidebarProps {
@@ -138,6 +148,9 @@ export function StayBookingSidebar({
   const [sent, setSent] = useState(false);
   const [error, setError] = useState("");
 
+  // Fees from PMS (loaded when availability is checked)
+  const [fees, setFees] = useState<AvailabilityFee[]>([]);
+
   const nights = nightsBetween(checkIn, checkOut);
   const availableRooms = results.filter((r) => r.available);
   const totalEntirePrice = results.reduce((s, r) => s + r.price, 0);
@@ -222,6 +235,7 @@ export function StayBookingSidebar({
         }
         setEntireAvail(data.entireProperty ?? false);
         onAvailabilityChecked?.(availMap, priceMap, data.entireProperty ?? false);
+        if (data.fees) setFees(data.fees);
       } else {
         for (const r of sanityRooms ?? []) {
           const allPhotos = (r.photos ?? []).map((p) => p.asset?.url).filter(Boolean) as string[];
@@ -302,6 +316,7 @@ export function StayBookingSidebar({
         }
         setEntireAvail(data.entireProperty ?? false);
         onAvailabilityChecked?.(availMap, priceMap, data.entireProperty ?? false);
+        if (data.fees) setFees(data.fees);
       } else {
         for (const r of sanityRooms ?? []) {
           const allPhotos = (r.photos ?? []).map((p) => p.asset?.url).filter(Boolean) as string[];
@@ -882,20 +897,56 @@ export function StayBookingSidebar({
                       <p className="text-[12px] text-[#9C9485]">Fill in your details and the host will confirm</p>
                     </div>
 
-                    {/* Selection summary */}
-                    <div className="bg-gradient-to-r from-[#E8A020]/5 to-[#E8A020]/10 border border-[#E8A020]/20 rounded-xl p-3 flex items-center gap-3">
-                      <div className="size-10 rounded-lg bg-[#E8A020]/15 flex items-center justify-center shrink-0">
-                        <span className="text-[18px]">{selectedRoom === "__entire__" ? "🏠" : "🛏"}</span>
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-[13px] font-bold text-[#16130C] truncate">
-                          {selectedRoom === "__entire__" ? "Entire property" : results.find((r) => r.key === selectedRoom)?.name}
-                        </p>
-                        <p className="text-[11px] text-[#9C9485]">
-                          {fmtDate(checkIn)} → {fmtDate(checkOut)} · {nights} night{nights !== 1 ? "s" : ""} · <span className="font-semibold text-[#16130C]">{fmt(selectedPrice * nights)}</span>
-                        </p>
-                      </div>
-                    </div>
+                    {/* Selection summary + fee breakdown */}
+                    {(() => {
+                      const subtotal = selectedPrice * nights;
+                      const calcFee = (f: AvailabilityFee) => {
+                        if (f.fee_type === "fixed") return f.amount;
+                        if (f.fee_type === "per_night") return f.amount * nights;
+                        if (f.fee_type === "per_guest") return f.amount * modalGuests;
+                        if (f.fee_type === "percentage") return Math.round(f.amount / 100 * subtotal);
+                        return 0;
+                      };
+                      const mandatoryFees = fees.filter((f) => f.apply_by_default);
+                      const feesTotal = mandatoryFees.reduce((s, f) => s + calcFee(f), 0);
+                      const total = subtotal + feesTotal;
+                      return (
+                        <div className="rounded-xl border border-[#E8A020]/30 overflow-hidden divide-y divide-[#E8A020]/20">
+                          {/* Room header row */}
+                          <div className="bg-gradient-to-r from-[#E8A020]/5 to-[#E8A020]/10 px-3 py-2.5 flex items-center gap-2.5">
+                            <span className="text-[16px]">{selectedRoom === "__entire__" ? "🏠" : "🛏"}</span>
+                            <div className="min-w-0">
+                              <p className="text-[13px] font-bold text-[#16130C] truncate">
+                                {selectedRoom === "__entire__" ? "Entire property" : results.find((r) => r.key === selectedRoom)?.name}
+                              </p>
+                              <p className="text-[10px] text-[#9C9485]">{fmtDate(checkIn)} → {fmtDate(checkOut)} · {nights} night{nights !== 1 ? "s" : ""}</p>
+                            </div>
+                          </div>
+                          {/* Subtotal row */}
+                          <div className="flex justify-between items-center px-3 py-2 bg-white">
+                            <span className="text-[12px] text-[#9C9485]">{fmt(selectedPrice)} × {nights} night{nights !== 1 ? "s" : ""}</span>
+                            <span className="text-[12px] font-semibold text-[#16130C]">{fmt(subtotal)}</span>
+                          </div>
+                          {/* Mandatory fee rows */}
+                          {mandatoryFees.map((f) => (
+                            <div key={f.id} className="flex justify-between items-center px-3 py-2 bg-white">
+                              <span className="text-[12px] text-[#9C9485]">
+                                {f.name}
+                                {f.fee_type === "per_night" && ` × ${nights}n`}
+                                {f.fee_type === "per_guest" && ` × ${modalGuests}g`}
+                                {f.fee_type === "percentage" && ` (${f.amount}%)`}
+                              </span>
+                              <span className="text-[12px] font-semibold text-[#16130C]">{fmt(calcFee(f))}</span>
+                            </div>
+                          ))}
+                          {/* Total row */}
+                          <div className="flex justify-between items-center px-3 py-2.5 bg-[#16130C]">
+                            <span className="text-[12px] font-semibold text-white/70">Estimated total</span>
+                            <span className="text-[14px] font-bold text-white">{fmt(total)}</span>
+                          </div>
+                        </div>
+                      );
+                    })()}
 
                     <div className="space-y-3">
                       <input type="text" placeholder="Full name" value={formName} onChange={(e) => setFormName(e.target.value)} className="w-full border border-[#E2DDD5] rounded-[14px] px-4 py-3 text-[14px] text-[#16130C] placeholder:text-[#9C9485] outline-none focus:border-[#E8A020] transition-colors" />

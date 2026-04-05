@@ -79,5 +79,13 @@ export async function GET(req: NextRequest) {
 
   const entireProperty = results.every((r) => r.available);
 
-  return NextResponse.json({ rooms, entireProperty });
+  // Fetch active fees for this property (public — only expose display fields)
+  const { data: feesData } = await adminClient
+    .from("property_fees")
+    .select("id, name, fee_type, amount, apply_by_default")
+    .eq("property_id", props[0].id)
+    .eq("is_active", true)
+    .order("sort_order");
+
+  return NextResponse.json({ rooms, entireProperty, property_id: props[0].id, fees: feesData ?? [] });
 }
