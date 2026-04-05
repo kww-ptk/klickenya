@@ -48,9 +48,11 @@ export interface GuestBooking {
   rate_per_night: number;
   subtotal_kes: number;
   discount_kes: number;
+  extras_kes: number | null;
   property: { name: string; address: string | null; check_in_time: string | null } | { name: string; address: string | null; check_in_time: string | null }[] | null;
   room: { name: string } | { name: string }[] | null;
   booking_fees: Array<{ name: string; amount_kes: number }>;
+  booking_payments: Array<{ amount_kes: number; method: string | null; created_at: string }>;
 }
 
 interface SavedRow {
@@ -558,6 +560,7 @@ export function ProfileClient({
                   const prop = Array.isArray(b.property) ? b.property[0] : b.property;
                   const room = Array.isArray(b.room) ? b.room[0] : b.room;
                   const fees = b.booking_fees ?? [];
+                  const payments = b.booking_payments ?? [];
                   const balance = b.balance_kes ?? (b.total_kes - b.amount_paid_kes);
                   const bBadge = BOOKING_STATUS[b.status] ?? BOOKING_STATUS.confirmed;
                   const pBadge = PAYMENT_STATUS[b.payment_status] ?? PAYMENT_STATUS.pending;
@@ -603,9 +606,23 @@ export function ProfileClient({
                             <div className="flex justify-between"><span className="text-[#9C9485]">{fmtKes(b.rate_per_night)} × {b.nights}n</span><span>{fmtKes(b.subtotal_kes)}</span></div>
                             {b.discount_kes > 0 && <div className="flex justify-between"><span className="text-[#22C55E]">Discount</span><span className="text-[#22C55E]">−{fmtKes(b.discount_kes)}</span></div>}
                             {fees.map((f, i) => <div key={i} className="flex justify-between"><span className="text-[#9C9485]">{f.name}</span><span>{fmtKes(f.amount_kes)}</span></div>)}
+                            {(b.extras_kes ?? 0) > 0 && <div className="flex justify-between"><span className="text-[#9C9485]">Extras</span><span>{fmtKes(b.extras_kes!)}</span></div>}
                             <div className="flex justify-between font-semibold border-t border-[#E2DDD5] pt-1.5"><span>Total</span><span>{fmtKes(b.total_kes)}</span></div>
                             <div className="flex justify-between"><span className="text-[#9C9485]">Paid</span><span className="text-[#22C55E] font-medium">{fmtKes(b.amount_paid_kes)}</span></div>
                             {balance > 0 && <div className="flex justify-between font-semibold"><span className="text-red-600">Balance due</span><span className="text-red-600">{fmtKes(balance)}</span></div>}
+                            {payments.length > 0 && (
+                              <div className="border-t border-[#E2DDD5] pt-2 space-y-1">
+                                <p className="text-[11px] text-[#9C9485] uppercase tracking-wider font-medium">Payments</p>
+                                {payments.map((p, i) => (
+                                  <div key={i} className="flex justify-between text-[12px]">
+                                    <span className="text-[#9C9485]">
+                                      {p.method ?? "cash"} · {new Date(p.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
+                                    </span>
+                                    <span className="text-[#22C55E] font-medium">{fmtKes(p.amount_kes)}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
                           </div>
                           {prop && (prop.address || prop.check_in_time) && (
                             <div className="pt-1 space-y-1 text-[#9C9485]">

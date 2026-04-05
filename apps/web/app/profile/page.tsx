@@ -135,11 +135,12 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
     .select(`
       id, check_in_date, check_out_date, nights, guest_count,
       status, payment_status, total_kes, amount_paid_kes, balance_kes,
-      rate_per_night, subtotal_kes, discount_kes,
+      rate_per_night, subtotal_kes, discount_kes, extras_kes,
       property_id, room_id,
       property:properties(name, address, check_in_time),
       room:rooms(name),
-      booking_fees(name, amount_kes)
+      booking_fees(name, amount_kes),
+      booking_payments(amount_kes, method, created_at)
     `)
     .eq("guest_user_id", user.id)
     .order("check_in_date", { ascending: false });
