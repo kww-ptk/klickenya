@@ -54,8 +54,8 @@ const staySchema = z.object({
   checkOut: z.string().min(1),
   guests: z.number().min(1).max(50),
   pricingBreakdown: pricingBreakdownSchema,
-  room_id: z.string().uuid().optional().nullable(),
-  property_id: z.string().uuid().optional().nullable(),
+  room_id: z.string().optional().nullable(),
+  property_id: z.string().optional().nullable(),
 });
 
 const experienceSchema = z.object({
