@@ -278,14 +278,14 @@ const watamuTransportBody = [
   {
     _type: 'quickFactsBlock',
     _key: key(),
-    title: '✦ Quick Facts — Getting to Watamu',
+    title: '✦ Quick Facts: Getting to Watamu',
     accentColor: 'teal',
     items: [
       { icon: '✈️', label: 'Nearest airport', value: 'Malindi (30 min)' },
       { icon: '🚕', label: 'From Mombasa', value: '2.5 hrs · KSh 7–9k' },
       { icon: '🚌', label: 'From Nairobi', value: 'Train + taxi' },
       { icon: '🛺', label: 'Around town', value: 'KSh 300–600' },
-      { icon: '🚶', label: 'Walkable', value: 'Yes — main areas' },
+      { icon: '🚶', label: 'Walkable', value: 'Yes, main areas' },
       { icon: '💳', label: 'Cash', value: 'Always carry KES' },
     ],
   },
@@ -305,7 +305,7 @@ const watamuTransportBody = [
   richTextBlock([
     { text: 'Watamu has no airport of its own. Your two options are ' },
     { text: 'Malindi Airport', bold: true },
-    { text: ' — the closest at just 30 minutes away — or ' },
+    { text: ', the closest at just 30 minutes away, or ' },
     { text: "Mombasa's Moi International Airport", bold: true },
     { text: ', which is 2.5 hours down the coast. For most travellers coming from Nairobi, Malindi is the obvious choice.' },
   ]),
@@ -333,13 +333,13 @@ const watamuTransportBody = [
     _key: key(),
     variant: 'teal',
     icon: '✈️',
-    label: 'Malindi vs Mombasa — which airport to use',
+    label: 'Malindi vs Mombasa: which airport to use',
     text: "If you're coming from Nairobi, always fly into Malindi. The 45-minute flight and short taxi to Watamu is far better than landing at Mombasa and adding 2.5 hours of road travel. Only use Mombasa if you want time in the city first.",
   },
 
   textBlock('Getting to Watamu by Road', 'h2'),
 
-  textBlock('The coast road between Mombasa and Malindi is one of Kenya\'s most scenic drives — palm-lined, ocean-glimpsed, and unhurried. From Mombasa it\'s 2.5 hours. From Nairobi, take the SGR Madaraka Express train to Mombasa (4.5 hours, comfortable, affordable) then a taxi or matatu north to Watamu.'),
+  textBlock('The coast road between Mombasa and Malindi is one of Kenya\'s most scenic drives, palm-lined, ocean-glimpsed, and unhurried. From Mombasa it\'s 2.5 hours. From Nairobi, take the SGR Madaraka Express train to Mombasa (4.5 hours, comfortable, affordable) then a taxi or matatu north to Watamu.'),
 
   {
     _type: 'compareTableBlock',
@@ -375,7 +375,7 @@ const watamuTransportBody = [
   textBlock('Three-wheeled and the most fun way to get around. Fits 2–3 people, good for luggage and night journeys. Drivers know all the venues by name. Best at night.'),
 
   textBlock('Motorbike / boda boda (KSh 100–300)', 'h3'),
-  textBlock('Fastest and cheapest for short solo hops. Available at every junction and beach entrance. Great for daytime errands.'),
+  textBlock('Fastest and cheapest for short solo hops. Available at every junction and beach entrance. Great for daytime errands. Generally tuk-tuks are a little more expensive than motorcycles.'),
 
   textBlock('Walking (Free)', 'h3'),
   textBlock('The beach road and main town are very walkable. Best way to discover restaurants and shops you\'d miss from a tuk-tuk. Stick to lit areas at night.'),
@@ -388,7 +388,7 @@ const watamuTransportBody = [
     _key: key(),
     variant: 'teal',
     icon: '🛺',
-    label: 'Tuk-tuk fare guide — Watamu 2026',
+    label: 'Tuk-tuk fare guide: Watamu 2026',
     text: 'Town centre → Sunset Lab: KSh 300–400. Town centre → Garoda Beach: KSh 500–600. Town centre → Jacaranda Beach: KSh 400–500. Night fares (after 10pm): add KSh 100–200. Always agree the fare before you get in.',
   },
 
@@ -400,8 +400,12 @@ const watamuTransportBody = [
     variant: 'warning',
     icon: '🌙',
     label: 'Night safety on motorbikes',
-    text: 'Avoid motorbikes on unlit roads after dark. The roads between beaches can be poorly lit and difficult to navigate. Stick to tuk-tuks after sunset — slightly more expensive but far safer for night journeys back to your accommodation.',
+    text: 'Avoid motorbikes on unlit roads after dark. The roads between beaches can be poorly lit and difficult to navigate. Stick to tuk-tuks after sunset, slightly more expensive but far safer for night journeys back to your accommodation.',
   },
+
+  textBlock('At night be a little more cautious. Once you have a boda boda or tuk-tuk driver that you like and trust, take their number and call them to pick you up from places. This makes getting around much easier and safer.'),
+
+  textBlock('Everyone speaks English and many speak Italian too. Do not be afraid to ask or communicate clearly with drivers. Kenyans are incredible and friendly people, and tourism brings a lot of opportunity. As tourists, many visitors are unaware of local prices and can be at risk of being overcharged. Some general rules: a tuk-tuk or motorbike ride anywhere within Watamu should never cost more than 600 KSh. The maximum distance of around 9 or 10 km should never exceed 600 KSh, and that is on the high end. Shorter distances are usually more in the range of 150 to 350 KSh.'),
 
   {
     _type: 'tipCardBlock',
@@ -409,7 +413,7 @@ const watamuTransportBody = [
     variant: 'tip',
     icon: '💵',
     label: 'Always carry cash',
-    text: "Card readers are unreliable in Watamu — many don't work at all in smaller establishments. Always carry Kenyan shillings for tuk-tuks, motorbikes, market purchases, and smaller restaurants. There is an ATM in Watamu town centre but keep a buffer.",
+    text: "Card readers are unreliable in Watamu. Many don't work at all in smaller establishments. Always carry Kenyan shillings for tuk-tuks, motorbikes, market purchases, and smaller restaurants. There is an ATM in Watamu town centre but keep a buffer.",
   },
 
   {
