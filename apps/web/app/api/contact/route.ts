@@ -54,6 +54,8 @@ const staySchema = z.object({
   checkOut: z.string().min(1),
   guests: z.number().min(1).max(50),
   pricingBreakdown: pricingBreakdownSchema,
+  room_id: z.string().uuid().optional().nullable(),
+  property_id: z.string().uuid().optional().nullable(),
 });
 
 const experienceSchema = z.object({
@@ -218,6 +220,8 @@ export async function POST(request: NextRequest) {
         guest_user_id: guestUserId,
         notes: `Listing: ${data.listingTitle} (${data.listingId})\nType: ${data.listingType}${data.room ? `\nRoom: ${data.room}` : ""}\n${Object.entries(enquirySummary).map(([k, v]) => `${k}: ${v}`).join("\n")}`,
         status: "new",
+        room_id: data.listingType === "stay" ? (data.room_id ?? null) : null,
+        property_id: data.listingType === "stay" ? (data.property_id ?? null) : null,
       })
       .select("id")
       .single();

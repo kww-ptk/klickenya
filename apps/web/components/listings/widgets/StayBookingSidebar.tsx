@@ -40,6 +40,7 @@ interface RoomResult {
   key: string;
   available: boolean;
   price: number;
+  room_id?: string;
   photo?: string;
   photos?: string[];
   capacity: number;
@@ -57,7 +58,7 @@ interface AvailabilityFee {
 }
 
 interface AvailabilityData {
-  rooms: Record<string, { available: boolean; price: number }> | null;
+  rooms: Record<string, { available: boolean; price: number; room_id?: string }> | null;
   entireProperty: boolean | null;
   fees?: AvailabilityFee[];
   property_id?: string;
@@ -152,6 +153,8 @@ export function StayBookingSidebar({
   const [fees, setFees] = useState<AvailabilityFee[]>([]);
   // Guest-selected upsell fee IDs
   const [selectedUpsells, setSelectedUpsells] = useState<Set<string>>(new Set());
+  // PMS IDs from the availability response (used when submitting enquiry)
+  const [availablePropertyId, setAvailablePropertyId] = useState<string | null>(null);
 
   const nights = nightsBetween(checkIn, checkOut);
   const availableRooms = results.filter((r) => r.available);
@@ -226,6 +229,7 @@ export function StayBookingSidebar({
             name: sr?.roomName ?? key,
             available: val.available,
             price: val.price,
+            room_id: val.room_id,
             photo: allPhotos[0],
             photos: allPhotos,
             capacity: sr?.capacity ?? 2,
@@ -238,6 +242,7 @@ export function StayBookingSidebar({
         setEntireAvail(data.entireProperty ?? false);
         onAvailabilityChecked?.(availMap, priceMap, data.entireProperty ?? false);
         if (data.fees) { setFees(data.fees); setSelectedUpsells(new Set()); }
+        if (data.property_id) setAvailablePropertyId(data.property_id);
       } else {
         for (const r of sanityRooms ?? []) {
           const allPhotos = (r.photos ?? []).map((p) => p.asset?.url).filter(Boolean) as string[];
@@ -307,6 +312,7 @@ export function StayBookingSidebar({
             name: sr?.roomName ?? key,
             available: val.available,
             price: val.price,
+            room_id: val.room_id,
             photo: allPhotos[0],
             photos: allPhotos,
             capacity: sr?.capacity ?? 2,
@@ -319,6 +325,7 @@ export function StayBookingSidebar({
         setEntireAvail(data.entireProperty ?? false);
         onAvailabilityChecked?.(availMap, priceMap, data.entireProperty ?? false);
         if (data.fees) { setFees(data.fees); setSelectedUpsells(new Set()); }
+        if (data.property_id) setAvailablePropertyId(data.property_id);
       } else {
         for (const r of sanityRooms ?? []) {
           const allPhotos = (r.photos ?? []).map((p) => p.asset?.url).filter(Boolean) as string[];
@@ -369,6 +376,7 @@ export function StayBookingSidebar({
     try {
       const selectedRoomObj = results.find((r) => r.key === selectedRoom);
       const roomName = selectedRoomObj?.name ?? (selectedRoom === "__entire__" ? "Entire property" : undefined);
+      const selectedRoomId = selectedRoomObj?.room_id ?? null;
       const subtotal = selectedPrice * nights;
 
       // Build fee breakdown for email
@@ -416,6 +424,8 @@ export function StayBookingSidebar({
           checkOut: checkOut,
           guests,
           room: roomName,
+          room_id: selectedRoomId,
+          property_id: availablePropertyId,
           pricingBreakdown: selectedPrice > 0 ? pricingBreakdown : undefined,
         }),
       });

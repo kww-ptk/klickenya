@@ -62,6 +62,7 @@ export async function GET(req: NextRequest) {
         p_check_out: checkOut,
       });
       return {
+        id: r.id,
         name: r.name,
         sanity_room_key: r.sanity_room_key,
         available: available === true,
@@ -71,10 +72,10 @@ export async function GET(req: NextRequest) {
   );
 
   // Build availability map keyed by sanity_room_key (preferred) or name (fallback)
-  const rooms: Record<string, { available: boolean; price: number }> = {};
+  const rooms: Record<string, { available: boolean; price: number; room_id: string }> = {};
   for (const r of results) {
     const key = r.sanity_room_key ?? r.name;
-    rooms[key] = { available: r.available, price: r.price };
+    rooms[key] = { available: r.available, price: r.price, room_id: r.id };
   }
 
   const entireProperty = results.every((r) => r.available);
