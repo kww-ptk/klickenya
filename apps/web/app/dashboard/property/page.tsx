@@ -7,6 +7,9 @@ export default async function PropertyListPage() {
   const { user } = await getAuthUser();
   if (!user) redirect("/login");
 
+  // Always redirect to unified calendar — it adapts to 1 or many properties
+  redirect("/dashboard/property/calendar");
+
   // Fetch all properties for this owner
   const { data: properties } = await adminClient
     .from("properties")

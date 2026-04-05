@@ -42,6 +42,7 @@ interface UnifiedCalendarGridProps {
   bookings: BookingWithProperty[];
   blockedDates: BlockedDate[];
   enquiries?: EnquiryWithProperty[];
+  singleProperty?: boolean;
   onClickBooking: (booking: BookingWithProperty) => void;
   onClickEnquiry?: (enquiry: EnquiryWithProperty) => void;
   onClickEmpty: (
@@ -68,6 +69,7 @@ export function UnifiedCalendarGrid({
   bookings,
   blockedDates,
   enquiries = [],
+  singleProperty = false,
   onClickBooking,
   onClickEnquiry,
   onClickEmpty,
@@ -327,43 +329,45 @@ export function UnifiedCalendarGrid({
 
           {/* Property groups */}
           {propertyGroups.map(({ property, rooms: propRooms }) => {
-            const isCollapsed = collapsedProperties.has(property.id);
+            const isCollapsed = !singleProperty && collapsedProperties.has(property.id);
             return (
               <Fragment key={property.id}>
-                {/* Property header row */}
-                <button
-                  onClick={() => toggleCollapsed(property.id)}
-                  className="flex items-center gap-2 px-4 py-2 bg-[#F4F1EC] hover:bg-[#EAE6DE] transition-colors border-b border-[#E2DDD5] text-left"
-                  style={{ gridColumn: "1 / -1" }}
-                >
-                  <svg
-                    className={`size-3.5 text-[#5E5848] shrink-0 transition-transform duration-150 ${
-                      isCollapsed ? "-rotate-90" : ""
-                    }`}
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth={2}
+                {/* Property header row — hidden for single-property owners */}
+                {!singleProperty && (
+                  <button
+                    onClick={() => toggleCollapsed(property.id)}
+                    className="flex items-center gap-2 px-4 py-2 bg-[#F4F1EC] hover:bg-[#EAE6DE] transition-colors border-b border-[#E2DDD5] text-left"
+                    style={{ gridColumn: "1 / -1" }}
                   >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M19.5 8.25l-7.5 7.5-7.5-7.5"
-                    />
-                  </svg>
-                  <span className="text-[12px] font-bold text-[#16130C]">
-                    {property.name}
-                  </span>
-                  {property.city && (
-                    <span className="text-[11px] text-[#9C9485]">
-                      {property.city}
+                    <svg
+                      className={`size-3.5 text-[#5E5848] shrink-0 transition-transform duration-150 ${
+                        isCollapsed ? "-rotate-90" : ""
+                      }`}
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth={2}
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M19.5 8.25l-7.5 7.5-7.5-7.5"
+                      />
+                    </svg>
+                    <span className="text-[12px] font-bold text-[#16130C]">
+                      {property.name}
                     </span>
-                  )}
-                  <span className="text-[10px] text-[#9C9485] ml-0.5">
-                    · {propRooms.length}{" "}
-                    {propRooms.length === 1 ? "room" : "rooms"}
-                  </span>
-                </button>
+                    {property.city && (
+                      <span className="text-[11px] text-[#9C9485]">
+                        {property.city}
+                      </span>
+                    )}
+                    <span className="text-[10px] text-[#9C9485] ml-0.5">
+                      · {propRooms.length}{" "}
+                      {propRooms.length === 1 ? "room" : "rooms"}
+                    </span>
+                  </button>
+                )}
 
                 {/* Room rows */}
                 {!isCollapsed &&

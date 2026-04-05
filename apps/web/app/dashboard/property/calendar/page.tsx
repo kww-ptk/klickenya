@@ -105,22 +105,36 @@ export default async function UnifiedCalendarPage() {
     0
   );
 
+  const isSingle = properties.length === 1;
+  const singleProp = isSingle ? properties[0] : null;
+
   return (
     <div>
       {/* Header */}
       <div className="flex items-center justify-between mb-5">
         <div>
-          <Link
-            href="/dashboard/property"
-            className="text-[13px] text-[#9C9485] hover:text-[#16130C] transition-colors"
-          >
-            ← All properties
-          </Link>
+          {isSingle ? (
+            <Link
+              href={`/dashboard/property/${singleProp!.id}`}
+              className="text-[13px] text-[#9C9485] hover:text-[#16130C] transition-colors"
+            >
+              ← Manage property
+            </Link>
+          ) : (
+            <Link
+              href="/dashboard"
+              className="text-[13px] text-[#9C9485] hover:text-[#16130C] transition-colors"
+            >
+              ← Dashboard
+            </Link>
+          )}
           <h1 className="font-display text-[22px] lg:text-[28px] font-bold tracking-[-0.03em] text-[#16130C] mt-2">
-            Overview Calendar
+            {isSingle ? singleProp!.name : "Overview Calendar"}
           </h1>
           <p className="text-[13px] text-[#9C9485] mt-0.5">
-            {properties.length} properties · {rooms.length} rooms
+            {isSingle
+              ? `${rooms.length} ${rooms.length === 1 ? "room" : "rooms"}`
+              : `${properties.length} properties · ${rooms.length} rooms`}
           </p>
         </div>
       </div>
@@ -131,6 +145,7 @@ export default async function UnifiedCalendarPage() {
         bookings={bookings}
         blockedDates={blockedDates}
         enquiries={enquiries}
+        singleProperty={isSingle}
         stats={{
           occupiedTonight,
           checkInsToday,

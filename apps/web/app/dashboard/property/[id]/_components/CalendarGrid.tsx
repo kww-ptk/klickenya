@@ -132,7 +132,7 @@ export function CalendarGrid({
   enquiries: initialEnquiries = [],
 }: CalendarGridProps) {
   const [bookings, setBookings] = useState<Booking[]>(initialBookings);
-  const [blockedDates] = useState<BlockedDate[]>(initialBlocked);
+  const [blockedDates, setBlockedDates] = useState<BlockedDate[]>(initialBlocked);
   const [enquiries, setEnquiries] = useState<Enquiry[]>(initialEnquiries);
   const [startDate, setStartDate] = useState(() => {
     const d = new Date();
@@ -156,6 +156,7 @@ export function CalendarGrid({
   const [blocking, setBlocking] = useState(false);
   const [newRate, setNewRate] = useState("");
   const [settingRate, setSettingRate] = useState(false);
+  const [rateToast, setRateToast] = useState("");
 
   // Drag state
   const [dragState, setDragState] = useState<DragState | null>(null);
@@ -538,6 +539,14 @@ export function CalendarGrid({
         />
       )}
 
+      {/* Rate toast */}
+      {rateToast && (
+        <div className="fixed top-4 right-4 z-[60] bg-[#16130C] text-white text-[13px] font-semibold px-4 py-3 rounded-xl shadow-xl flex items-center gap-2 pointer-events-none">
+          <svg className="size-4 text-[#16A34A] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+          {rateToast}
+        </div>
+      )}
+
       {/* Drag action chooser */}
       {dragChooser && !newBookingTarget && (() => {
         const chooserRoom = rooms.find((r) => r.id === dragChooser.roomId);
@@ -554,9 +563,9 @@ export function CalendarGrid({
               body: JSON.stringify({ room_id: dragChooser.roomId, start_date: dragChooser.checkIn, end_date: dragChooser.checkOut, reason: blockReason || null }),
             });
             if (!res.ok) throw new Error("Failed");
+            const data = await res.json();
+            setBlockedDates((prev) => [...prev, data.blocked]);
             closeDragChooser();
-            // Refresh: simple reload to show blocked cells
-            window.location.reload();
           } catch { /* silent */ }
           setBlocking(false);
         };
@@ -577,7 +586,11 @@ export function CalendarGrid({
                 priority: 10,
               }),
             });
-            if (res.ok) closeDragChooser();
+            if (res.ok) {
+              setRateToast(`Rate set: KSh ${Number(newRate).toLocaleString()} · ${fmtD(dragChooser.checkIn)}–${fmtD(dragChooser.checkOut)}`);
+              setTimeout(() => setRateToast(""), 3000);
+              closeDragChooser();
+            }
           } catch { /* silent */ }
           setSettingRate(false);
         };

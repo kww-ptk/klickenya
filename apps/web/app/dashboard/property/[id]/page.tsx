@@ -4,7 +4,6 @@ import Image from "next/image";
 import { getAuthUser } from "../../_lib/auth";
 import { adminClient } from "@/lib/supabase/admin";
 import { sanityClient } from "@/lib/sanity/client";
-import { PropertyCalendarWrapper } from "./_components/PropertyCalendarWrapper";
 import { RoomManagementSection } from "./_components/RoomManagementSection";
 import type { RoomData } from "./_components/RoomEditPanel";
 
@@ -55,64 +54,28 @@ export default async function PropertyDashboardPage({
     }
   }
 
-  // Parallel: rooms, today's bookings, 60-day bookings, 60-day blocked dates
+  // Parallel: rooms + today's check-ins/outs
   const todayStr = new Date().toISOString().split("T")[0];
-  const sixtyDaysOut = new Date();
-  sixtyDaysOut.setDate(sixtyDaysOut.getDate() + 60);
-  const sixtyStr = sixtyDaysOut.toISOString().split("T")[0];
 
-  const [roomsResult, checkInsResult, checkOutsResult, bookingsResult, blockedResult, enquiriesResult] =
-    await Promise.all([
-      adminClient
-        .from("rooms")
-        .select("id, name, room_number, room_type, bed_type, room_size_sqm, max_guests, base_price_kes, description, amenities, photos, is_active, display_order")
-        .eq("property_id", id)
-        .order("display_order"),
-      adminClient
-        .from("bookings")
-        .select("id, guest_name, room_id, check_in_date, check_out_date, status, source")
-        .eq("property_id", id)
-        .eq("check_in_date", todayStr)
-        .neq("status", "cancelled"),
-      adminClient
-        .from("bookings")
-        .select("id, guest_name, room_id, check_in_date, check_out_date, status, source")
-        .eq("property_id", id)
-        .eq("check_out_date", todayStr)
-        .neq("status", "cancelled"),
-      adminClient
-        .from("bookings")
-        .select(
-          "id, room_id, guest_name, guest_email, guest_phone, guest_count, guest_notes, check_in_date, check_out_date, nights, source, external_id, rate_per_night, subtotal_kes, discount_kes, extras_kes, total_kes, amount_paid_kes, balance_kes, status, payment_status, mpesa_ref, internal_notes, created_at"
-        )
-        .eq("property_id", id)
-        .neq("status", "cancelled")
-        .lt("check_in_date", sixtyStr)
-        .gt("check_out_date", todayStr),
-      adminClient
-        .from("blocked_dates")
-        .select("id, room_id, start_date, end_date, reason")
-        .in(
-          "room_id",
-          // We'll filter by property rooms — fetch room IDs first inline
-          (
-            await adminClient
-              .from("rooms")
-              .select("id")
-              .eq("property_id", id)
-          ).data?.map((r) => r.id) ?? []
-        )
-        .lt("start_date", sixtyStr)
-        .gt("end_date", todayStr),
-      adminClient
-        .from("contact_requests")
-        .select("id, full_name, email, phone, room_id, check_in, check_out, guests, calendar_status, hold_type, expires_at, listing_title, notes")
-        .eq("property_id", id)
-        .in("calendar_status", ["pending", "held"])
-        .not("room_id", "is", null)
-        .not("check_in", "is", null)
-        .not("check_out", "is", null),
-    ]);
+  const [roomsResult, checkInsResult, checkOutsResult] = await Promise.all([
+    adminClient
+      .from("rooms")
+      .select("id, name, room_number, room_type, bed_type, room_size_sqm, max_guests, base_price_kes, description, amenities, photos, is_active, display_order")
+      .eq("property_id", id)
+      .order("display_order"),
+    adminClient
+      .from("bookings")
+      .select("id, guest_name, room_id, check_in_date, check_out_date, status, source")
+      .eq("property_id", id)
+      .eq("check_in_date", todayStr)
+      .neq("status", "cancelled"),
+    adminClient
+      .from("bookings")
+      .select("id, guest_name, room_id, check_in_date, check_out_date, status, source")
+      .eq("property_id", id)
+      .eq("check_out_date", todayStr)
+      .neq("status", "cancelled"),
+  ]);
 
   const allRooms = (roomsResult.data ?? []).map((r) => ({
     ...r,
@@ -122,9 +85,6 @@ export default async function PropertyDashboardPage({
   const rooms = allRooms.filter((r) => r.is_active);
   const checkIns = checkInsResult.data ?? [];
   const checkOuts = checkOutsResult.data ?? [];
-  const bookings = bookingsResult.data ?? [];
-  const blockedDates = blockedResult.data ?? [];
-  const enquiries = enquiriesResult.data ?? [];
 
   const availableTonight = rooms.length - checkIns.length;
 
@@ -327,15 +287,25 @@ export default async function PropertyDashboardPage({
         </div>
       )}
 
-      {/* Availability Calendar */}
+      {/* Calendar shortcut */}
       <div className="mb-5">
-        <PropertyCalendarWrapper
-          propertyId={property.id}
-          rooms={rooms}
-          bookings={bookings}
-          blockedDates={blockedDates}
-          enquiries={enquiries}
-        />
+        <Link
+          href="/dashboard/property/calendar"
+          className="flex items-center justify-between bg-white rounded-xl border border-[#E2DDD5] p-4 shadow-sm hover:shadow-md hover:border-[#4F46E5]/30 transition-all"
+        >
+          <div className="flex items-center gap-3">
+            <div className="size-10 rounded-xl bg-[#4F46E5]/8 flex items-center justify-center shrink-0">
+              <svg className="size-5 text-[#4F46E5]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
+              </svg>
+            </div>
+            <div>
+              <p className="text-[14px] font-semibold text-[#16130C]">Availability Calendar</p>
+              <p className="text-[12px] text-[#9C9485]">View and manage bookings, block dates, set rates</p>
+            </div>
+          </div>
+          <span className="text-[12px] font-semibold text-[#4F46E5] shrink-0">Open →</span>
+        </Link>
       </div>
 
       {/* Room management */}
