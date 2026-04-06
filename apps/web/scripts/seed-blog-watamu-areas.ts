@@ -60,12 +60,12 @@ const body = [
     title: '✦ Watamu Areas at a Glance',
     accentColor: 'teal',
     items: [
-      { icon: '🗺️', label: 'Total areas', value: '7 distinct neighbourhoods' },
+      { icon: '🗺️', label: 'Total road length', value: 'About 9 km end to end' },
+      { icon: '🚗', label: 'End to end', value: '20 minute drive' },
       { icon: '🛺', label: 'Between areas', value: 'KSh 200 to 500 by tuk-tuk' },
-      { icon: '🚶', label: 'Walkable', value: 'Town centre and Turtle Bay' },
-      { icon: '🏖️', label: 'Best beach', value: 'Garoda or Blue Lagoon' },
-      { icon: '🍕', label: 'Best for food', value: 'Watamu Town Centre' },
-      { icon: '🤿', label: 'Best for marine', value: 'Seven Islands area' },
+      { icon: '🏖️', label: 'Best beach', value: 'Garoda Beach' },
+      { icon: '🤿', label: 'Best snorkelling', value: 'Turtle Bay' },
+      { icon: '🛒', label: 'Main supermarket', value: 'Carrefour in Watamu Centre' },
     ],
   },
 
@@ -75,16 +75,27 @@ const body = [
   // ── Intro ──
   textBlock('Watamu Areas Explained', 'h2'),
 
-  textBlock('Watamu is small enough to explore in a day but varied enough that where you stay genuinely changes your experience. A family in Turtle Bay and a kitesurfer at Garoda are technically in the same village, but living in completely different Watamus. This guide breaks down every area so you can choose the right base before you book.'),
+  textBlock('Watamu is one straight road of about 9 kilometres. From the end of Garoda to the end of the Seven Islands area is a 20 minute drive. Every part of it is beautiful in its own way and each area has great food, good vibes, and things to discover. If you are staying in Watamu you should explore all of them — otherwise you are genuinely missing out.'),
 
   richText([
-    { text: 'The good news: no area is more than 15 minutes from any other by tuk-tuk. You can stay in one neighbourhood and explore all of them easily. But ' },
-    { text: 'choosing the right base saves money, stress, and tuk-tuk fares', bold: true },
-    { text: '.' },
+    { text: 'There are ' },
+    { text: '4 main areas', bold: true },
+    { text: ' along the road, plus Jacaranda further north and Timboni just before you arrive. Most of the big hotels and resorts are in Watamu Centre and the Seven Islands area. Garoda and Turtle Bay are more boutique hotels, villas, and private rentals. Supermarkets are in three of the areas, petrol stations in the centre.' },
   ]),
 
-  // ── Comparison Table (TOP) ──
-  textBlock('All Watamu Areas Compared', 'h2'),
+  {
+    _type: 'tipCardBlock',
+    _key: key(),
+    variant: 'teal',
+    icon: '📍',
+    label: 'Tip from a local',
+    text: "Each area of Watamu is beautiful and great in its own way. Find your favourite accommodation and decide how much moving around you're comfortable with. The more central you are the easier it is to get everywhere, but every area has its own magic. Make sure you explore all of them at least once because otherwise you're missing out. They all have beauty, yummy food, and good vibes to offer.",
+  },
+
+  placeholder('Watamu coastline from above'),
+
+  // ── Comparison Table ──
+  textBlock('All 4 Areas at a Glance', 'h2'),
 
   {
     _type: 'compareTableBlock',
@@ -93,40 +104,36 @@ const body = [
       { _key: key(), label: 'Area', color: 'amber' },
       { _key: key(), label: 'Vibe', color: 'teal' },
       { _key: key(), label: 'Best for', color: 'blue' },
-      { _key: key(), label: 'Beach', color: 'purple' },
-      { _key: key(), label: 'Restaurants', color: 'teal' },
+      { _key: key(), label: 'Shopping', color: 'purple' },
     ],
     rows: [
-      { _key: key(), criterion: 'Watamu Town Centre', values: ['Lively, local, social', 'Budget travellers, foodies', 'Decent town beach', 'Excellent — most choice'] },
-      { _key: key(), criterion: 'Turtle Bay', values: ['Resort, calm, family', 'Families, snorkellers', 'Outstanding — calm lagoon', 'Several resort options'] },
-      { _key: key(), criterion: 'Timboni', values: ['Quiet, residential, local', 'Long stays, expat crowd', 'Good access to Turtle Bay', 'Limited — need transport'] },
-      { _key: key(), criterion: 'Blue Lagoon / Jacaranda', values: ['Secluded, romantic, beautiful', 'Couples, honeymooners', 'Stunning turquoise lagoon', 'Very few'] },
-      { _key: key(), criterion: 'Garoda Beach', values: ['Wild, natural, sporty', 'Kite surfers, adventurers', 'Wide, empty, dramatic', 'Almost none'] },
-      { _key: key(), criterion: 'Seven Islands', values: ['Remote, reef, conservation', 'Marine life lovers, divers', 'Coral reef and sandbanks', 'None — bring everything'] },
-      { _key: key(), criterion: 'Mida Creek', values: ['Bohemian, nature, sunset', 'Nature lovers, slow travellers', 'Creek, no swimming beach', 'A handful of excellent spots'] },
+      { _key: key(), criterion: 'Watamu Centre', values: ['Busy, lively, convenient', 'First-timers, families, foodies', 'Carrefour, banks, ATM, 3 petrol stations'] },
+      { _key: key(), criterion: 'Turtle Bay', values: ['Calm, beautiful, local', 'Snorkellers, beach lovers', 'Blue Moon Mall'] },
+      { _key: key(), criterion: 'Garoda', values: ['Wild, lush, sporty, stunning', 'Kite surfers, couples, villa stays', 'Small local shops'] },
+      { _key: key(), criterion: 'Seven Islands', values: ['Resort, growing fast, reef', 'Resort stays, divers, families', 'Watamu Mall, Non Solo Padel'] },
     ],
   },
-
-  placeholder('Watamu coastline aerial view'),
 
   // ── Who Is It For ──
   {
     _type: 'whoIsItForBlock',
     _key: key(),
-    title: '🎯 Which area is right for you?',
+    title: '🎯 Which area suits you?',
     items: [
-      { icon: '👨‍👩‍👧', text: 'Families with children: Turtle Bay — calm water, resort facilities, safe beaches' },
-      { icon: '🪁', text: 'Kite surfers: Garoda Beach — the flat water lagoon and IKO schools are all here' },
-      { icon: '🤿', text: 'Divers and snorkellers: Seven Islands area — the marine park is your backyard' },
-      { icon: '💑', text: 'Couples on honeymoon: Blue Lagoon or Jacaranda — seclusion and beauty' },
-      { icon: '🍝', text: 'Foodies and social travellers: Watamu Town Centre — walkable to everything' },
-      { icon: '🌿', text: 'Nature and bird lovers: Mida Creek — mangroves, birds, and peace' },
-      { icon: '🏡', text: 'Long-stay expats: Timboni — quiet, residential, good value villas' },
+      { icon: '🏨', text: 'Big hotels and resorts: Watamu Centre or Seven Islands' },
+      { icon: '🏡', text: 'Boutique hotels and private villas: Garoda or Turtle Bay' },
+      { icon: '🛒', text: 'Need a supermarket and ATM nearby: Watamu Centre' },
+      { icon: '🪁', text: 'Kite surfing: Garoda Beach, all the schools are here' },
+      { icon: '🤿', text: 'Best snorkelling from the beach: Turtle Bay' },
+      { icon: '🌿', text: 'Lush, green, access to Mida Creek: Garoda side' },
+      { icon: '🌊', text: 'Walking the exposed reef at low tide: Seven Islands' },
     ],
   },
 
+  placeholder('Watamu beach road'),
+
   // ══════════════════════════════════════════════════════
-  // AREA 1: WATAMU TOWN CENTRE
+  // AREA 1: WATAMU CENTRE
   // ══════════════════════════════════════════════════════
 
   {
@@ -135,38 +142,49 @@ const body = [
     number: '01',
     pill: 'The Hub',
     pillColor: 'amber',
-    title: 'Watamu Town Centre',
+    title: 'Watamu Centre (The Village)',
   },
 
-  textBlock('Watamu Town Centre is where everything happens. The main strip runs along the beach road and is lined with restaurants, souvenir shops, tour operators, M-Pesa agents, pharmacies, and beach bars. It is the most walkable part of Watamu and the best base if you want to be close to food, nightlife, and services without needing a tuk-tuk for every errand.'),
+  textBlock('This is where it all happens. Watamu Centre is the busiest, liveliest, and most convenient part of the village. The main strip is lined with fruit stalls, souvenir and trinket shops, local restaurants, tour operators, and beach bars. The ATM, banks, Carrefour supermarket, and three petrol stations are all here. It is the most walkable area and the easiest base for exploring everything else.'),
 
   richText([
-    { text: 'The beach here is decent but not the most beautiful in Watamu. It gets busy during peak season and is actively worked by beach vendors. ' },
-    { text: 'If you want to swim and snorkel, you are better off taking a boat out', bold: true },
-    { text: ' or hopping on a tuk-tuk to Turtle Bay. But for the overall village experience, the food scene, and the social energy, town centre is the place to be.' },
+    { text: 'On the beach side, this is the central bay of Watamu, with two other bays on either side. It is the most active beach: ' },
+    { text: 'sunbeds, beach bars, resorts, and restaurants right on the sand', bold: true },
+    { text: '. It gets busy during peak season. There are some excellent accommodation options here and the convenience of having everything within walking distance is hard to beat.' },
   ]),
+
+  textBlock('Standing on the beach and looking out to sea, Turtle Bay is to your right and Seven Islands is to your left.'),
+
+  {
+    _type: 'tipCardBlock',
+    _key: key(),
+    variant: 'warning',
+    icon: '🙋',
+    label: 'A heads up about vendors',
+    text: "This is the area where you may be approached most to buy things. A direct, polite but firm no is all you need. If someone won't take no for an answer, calmly ask them to stop. Most people are just trying to make a living and will respect a clear boundary.",
+  },
 
   {
     _type: 'verdictCardBlock',
     _key: key(),
     variant: 'amber',
-    label: 'Town Centre verdict',
-    title: 'The social heart of Watamu. Best food, best access, most energy.',
+    label: 'Watamu Centre verdict',
+    title: 'The most convenient base. Everything you need within walking distance.',
     pros: [
-      'Walking distance to 30+ restaurants and bars',
-      'ATMs, pharmacy, market, and shops all nearby',
-      'Best base for nightlife at Sunset Lab and Paparemo',
-      'Budget guesthouses and affordable options available',
-      'Easy tuk-tuk access to all other areas',
+      'Carrefour supermarket, ATM, banks, and petrol all here',
+      'Most restaurants and beach bars within walking distance',
+      'Central location makes it easy to reach all other areas',
+      'Widest range of accommodation types and budgets',
+      'Most lively beach atmosphere',
     ],
     cons: [
-      'Beach gets busy and vendors can be persistent',
-      'Noisier than other areas, especially on weekends',
-      'Not the most scenic or peaceful setting',
+      'Busiest and noisiest area, especially on weekends',
+      'Most persistent beach vendors',
+      'Beach gets crowded during peak season',
     ],
   },
 
-  placeholder('Watamu Town Centre beach strip'),
+  placeholder('Watamu Centre beach and village strip'),
 
   // ══════════════════════════════════════════════════════
   // AREA 2: TURTLE BAY
@@ -176,267 +194,220 @@ const body = [
     _type: 'destinationSectionBlock',
     _key: key(),
     number: '02',
-    pill: 'Best Beach',
+    pill: 'Best Snorkelling',
     pillColor: 'teal',
     title: 'Turtle Bay',
   },
 
-  textBlock('Turtle Bay is the beach that makes people fall in love with Watamu. The bay is sheltered by a reef that creates a natural lagoon: calm, clear, turquoise water that is safe for children and ideal for snorkelling. At low tide the lagoon becomes shallow enough to walk across to the sandbanks. At high tide it fills with fish.'),
+  textBlock('Head right from the centre and the first bay you reach is Turtle Bay. It is a little quieter than the centre, a little more laid back, and home to the best snorkelling in Watamu directly from the beach. The reef here is close to shore and the bay is naturally sheltered, making it ideal for both beginners and experienced snorkellers.'),
 
   richText([
-    { text: 'Most of the established resort hotels are located along Turtle Bay. This is the area you will see in most Watamu brochures and photos. It is also the best spot to arrange ' },
-    { text: 'glass-bottom boat trips and snorkelling excursions', bold: true },
-    { text: ' into the marine park, as boat operators are based here.' },
+    { text: 'Look out for the ' },
+    { text: 'famous turtle-shaped rock', bold: true },
+    { text: ' that gives the bay its name. There are a handful of good restaurants and hotels here, and the Blue Moon Mall is close by for any shopping needs. The energy is noticeably calmer than the centre but there is still plenty going on.' },
   ]),
 
-  textBlock('The beach is wider and more open than the town beach, with proper facilities at the resorts. Even if you are not staying here, Turtle Bay is worth a visit for a morning swim and lunch at one of the hotels.'),
+  textBlock('This is the spot recommended most for families with children who want to snorkel. The water is clear, the reef is alive, and the conditions are generally gentle. Glass-bottom boat trips into the marine park also depart from here.'),
 
   {
     _type: 'verdictCardBlock',
     _key: key(),
     variant: 'teal',
     label: 'Turtle Bay verdict',
-    title: 'The most beautiful bay in Watamu. Ideal for families and first-time visitors.',
+    title: 'The best snorkelling in Watamu, with a calmer and more relaxed feel than the centre.',
     pros: [
-      'Calm, sheltered lagoon — safe for children and non-swimmers',
-      'Outstanding snorkelling directly from the beach',
-      'Best-established resort hotels in Watamu',
-      'Glass-bottom boats and marine park tours depart from here',
-      'Stunning white sand and turquoise water',
+      'Best snorkelling directly from the beach in all of Watamu',
+      'Calmer and quieter than the centre without being remote',
+      'Famous turtle-shaped rock landmark',
+      'Good selection of restaurants and hotels',
+      'Blue Moon Mall nearby for shopping',
     ],
     cons: [
-      'More expensive than town centre accommodation',
-      'Fewer restaurant options outside the resort hotels',
-      'Can feel removed from the local village energy',
+      'Fewer amenities than the centre',
+      'Smaller bay, less beach space than Garoda',
     ],
   },
 
-  placeholder('Turtle Bay lagoon at low tide'),
+  placeholder('Turtle Bay snorkelling and beach'),
 
   // ══════════════════════════════════════════════════════
-  // AREA 3: TIMBONI
+  // AREA 3: GARODA
   // ══════════════════════════════════════════════════════
 
   {
     _type: 'destinationSectionBlock',
     _key: key(),
     number: '03',
-    pill: 'Quiet Village',
-    pillColor: 'blue',
-    title: 'Timboni',
+    pill: 'Best Beach',
+    pillColor: 'purple',
+    title: 'Garoda Beach',
   },
 
-  textBlock('Timboni sits between Watamu Town and Turtle Bay, slightly inland from the main beach road. It is the quietest and most residential part of Watamu: a neighbourhood of villas, gardens, and local homes rather than hotels and beach bars. Many long-term expats and seasonal residents base themselves here.'),
+  textBlock('Continue past Turtle Bay and the road opens up into Garoda, widely considered the most beautiful part of Watamu. A long, wide, white sandy beach stretches all the way down to Mida Creek. The area is lush and green, lined with big trees, and the water colour here is stunning. This is the wilder, more natural side of Watamu.'),
 
   richText([
-    { text: 'There is no direct beach access from Timboni, but you are a short tuk-tuk ride from both the town beach and Turtle Bay. The trade-off is ' },
-    { text: 'significantly lower prices for accommodation', bold: true },
-    { text: ' and a much more peaceful, authentic feel. If you are staying for a week or more and want to cook your own meals, rent a scooter, and live a bit more like a local, Timboni is worth considering.' },
+    { text: 'Garoda has ' },
+    { text: 'the most spectacular sandbank in the area', bold: true },
+    { text: ', exposed at low tide, where you can walk out into the ocean surrounded by shallow turquoise water. The kitesurfing schools are all based here — the flat lagoon is the best kite spot in Kenya from June to October.' },
   ]),
+
+  richText([
+    { text: 'At the far end of Garoda you find ' },
+    { text: 'Short Beach and the famous Lichthaus', bold: true },
+    { text: ' bar, one of the most beloved spots in Watamu for sundowners. From here you also access all Mida Creek activities: dhow trips, kayaking, paddleboarding, and the mangrove boardwalk.' },
+  ]),
+
+  textBlock("Accommodation here is mostly boutique hotels and private luxury villas, some of them beachfront. Vacancies can be harder to find than in the centre, but the setting makes it worth planning ahead. There are fewer restaurants than in the centre, but some of the absolute best in Watamu are in this area."),
+
+  {
+    _type: 'tipCardBlock',
+    _key: key(),
+    variant: 'teal',
+    icon: '🦐',
+    label: 'Hidden gem: Prawn Lake',
+    text: "Garoda has a small tidal salt flat locals call Prawn Lake. You can have a meal or a sunset cocktail overlooking it at Prawns Lake restaurant, a community-owned spot built on stilts right over the water, or at Pilipan nearby. Both are memorable. Timing a visit around sunset is highly recommended.",
+  },
+
+  {
+    _type: 'tipCardBlock',
+    _key: key(),
+    variant: 'tip',
+    icon: '🛺',
+    label: 'Getting around in Garoda',
+    text: "Garoda is spread out along a long stretch of road and you will need a tuk-tuk or motorbike to get between places. Get the number of a trusted driver so you can call them to pick you up when you need to move. Don't rely on flagging one down at night.",
+  },
 
   {
     _type: 'verdictCardBlock',
     _key: key(),
-    variant: 'blue',
-    label: 'Timboni verdict',
-    title: 'The quiet residential base. Best value for longer stays.',
+    variant: 'purple',
+    label: 'Garoda verdict',
+    title: 'The most beautiful beach in Watamu. Lush, wild, and stunning.',
     pros: [
-      'Most affordable villa rentals in the Watamu area',
-      'Peaceful and residential, away from tourist noise',
-      'Popular with long-stay visitors and expats',
-      'Easy access to both town and Turtle Bay by tuk-tuk',
+      'The best and most beautiful beach in all of Watamu',
+      'Spectacular sandbank exposed at low tide',
+      'All the kite surfing schools, best conditions June to October',
+      'Access to Mida Creek, Short Beach, and Lichthaus',
+      'Lush, green, and peaceful compared to the centre',
+      'Some of the best restaurants in Watamu are here',
     ],
     cons: [
-      'No direct beach access',
-      'Limited walking-distance restaurants or services',
-      'Requires tuk-tuk or scooter for most outings',
+      'Accommodation harder to find and book in advance',
+      'Spread out and requires transport for most things',
+      'Further from the centre, ATMs, and the supermarket',
     ],
   },
 
-  placeholder('Timboni residential area, Watamu'),
+  placeholder('Garoda Beach sandbank at low tide'),
 
   // ══════════════════════════════════════════════════════
-  // AREA 4: BLUE LAGOON / JACARANDA BEACH
+  // AREA 4: SEVEN ISLANDS
   // ══════════════════════════════════════════════════════
 
   {
     _type: 'destinationSectionBlock',
     _key: key(),
     number: '04',
-    pill: 'Most Beautiful',
-    pillColor: 'purple',
-    title: 'Blue Lagoon and Jacaranda Beach',
-  },
-
-  richText([
-    { text: 'Blue Lagoon is arguably the most photogenic stretch of coastline in all of Watamu. The water here shifts from pale turquoise to deep blue depending on the tide, and the sand is powder-white. ' },
-    { text: 'This is where the best drone photos of Watamu come from.', bold: true },
-  ]),
-
-  textBlock('Jacaranda Beach is the stretch of coast just north of Blue Lagoon, backed by the Jacaranda Hotel and a handful of smaller villas. Together they form the quietest, most secluded part of Watamu that still has some accommodation options. There are almost no restaurants or shops within walking distance, which is exactly the point.'),
-
-  textBlock('Couples and honeymooners consistently rank this area as their favourite. If you want beauty and privacy over convenience, Blue Lagoon and Jacaranda are the answer.'),
-
-  {
-    _type: 'verdictCardBlock',
-    _key: key(),
-    variant: 'purple',
-    label: 'Blue Lagoon verdict',
-    title: 'The most beautiful beach in Watamu. Pure seclusion and stunning scenery.',
-    pros: [
-      'Arguably the most beautiful water colour in Watamu',
-      'Very few tourists and minimal beach vendors',
-      'Ideal for couples, honeymooners, and photographers',
-      'Peaceful and private compared to Turtle Bay and town',
-    ],
-    cons: [
-      'Virtually no restaurants or shops within walking distance',
-      'Requires transport for everything including food and groceries',
-      'Limited accommodation options compared to other areas',
-    ],
-  },
-
-  placeholder('Blue Lagoon Watamu — turquoise water'),
-
-  // ══════════════════════════════════════════════════════
-  // AREA 5: GARODA BEACH
-  // ══════════════════════════════════════════════════════
-
-  {
-    _type: 'destinationSectionBlock',
-    _key: key(),
-    number: '05',
-    pill: 'Kite Capital',
-    pillColor: 'teal',
-    title: 'Garoda Beach',
-  },
-
-  richText([
-    { text: 'Garoda Beach is at the southern end of Watamu, where the coast widens into a dramatic, windswept stretch of open sand. This is ' },
-    { text: "Kenya's kite surfing capital", bold: true },
-    { text: '. The shallow, flat lagoon created by the reef is perfectly designed for learning: consistent depth, no boat traffic, and Kusi trade winds blowing at 15 to 25 knots from June to October.' },
-  ]),
-
-  textBlock('Several IKO-certified kite schools are based here, offering lessons from beginner to advanced. The beach itself is far less developed than Turtle Bay: wider, emptier, and more dramatic. You will not find resort hotels here but there are a few guesthouses and villa rentals within walking distance of the beach.'),
-
-  richText([
-    { text: 'Even if you are not a kite surfer, Garoda is worth a visit for the beach itself. ' },
-    { text: 'Some regulars argue it is the most beautiful in Watamu', bold: true },
-    { text: ' once you account for the drama and the emptiness.' },
-  ]),
-
-  {
-    _type: 'verdictCardBlock',
-    _key: key(),
-    variant: 'teal',
-    label: 'Garoda Beach verdict',
-    title: "Kenya's best kitesurfing beach. Wild, empty, and spectacular.",
-    pros: [
-      'The best kitesurfing conditions in Kenya, June to October',
-      'Multiple IKO-certified schools for all levels',
-      'Wide, uncrowded beach with minimal vendors',
-      'Dramatic and photogenic — a different side of Watamu',
-      'Lichthaus Creek nearby for sundowners',
-    ],
-    cons: [
-      'Very little infrastructure — no shops or restaurants on the beach',
-      'Strong winds and currents can be dangerous for casual swimmers',
-      'Transport needed for everything including meals',
-    ],
-  },
-
-  placeholder('Garoda Beach kite surfers, Watamu'),
-
-  // ══════════════════════════════════════════════════════
-  // AREA 6: SEVEN ISLANDS
-  // ══════════════════════════════════════════════════════
-
-  {
-    _type: 'destinationSectionBlock',
-    _key: key(),
-    number: '06',
-    pill: 'Marine Park',
+    pill: 'Growing Fast',
     pillColor: 'blue',
-    title: 'Seven Islands and the Marine Park',
+    title: 'Seven Islands',
   },
 
-  textBlock('The Seven Islands are a group of small coral outcrops sitting within the Watamu Marine National Park, a few kilometres offshore. They are not permanently inhabited and you reach them by boat from Turtle Bay or the town beach. This is the heart of Watamu\'s marine park ecosystem.'),
+  textBlock('Go left from Watamu Centre and you reach the Seven Islands area, named after the seven stunning coral islands that sit just offshore. At low tide the reef between the islands becomes exposed and you can walk out and explore it. The bays here are gorgeous, with different shades of blue as the light changes through the day.'),
 
   richText([
-    { text: 'The snorkelling around the islands is the best in the Watamu area. ' },
-    { text: 'Sea turtles, moray eels, parrotfish, lionfish, and reef sharks', bold: true },
-    { text: ' are regularly spotted. The coral itself is among the healthiest on the Kenya coast, largely because the marine park regulations are actively enforced.' },
+    { text: 'This is ' },
+    { text: 'the fastest growing area of Watamu', bold: true },
+    { text: '. A lot of development is happening here right now, with new resorts and villas going up. It is less green and lush than the Garoda side but has its own dramatic reef-and-island beauty. The Watamu Mall is here, along with the Non Solo Padel courts and the famous Snake Farm.' },
   ]),
 
-  textBlock('Nobody stays on the islands themselves, but some visitors rent boats for the full day and spend several hours moving between different snorkelling spots. The sandbanks between the islands appear at low tide and are spectacular at sunrise. Dhow trips from town often anchor here for lunch.'),
+  textBlock('Behind the beach there are many private villa options. The resorts here tend to be larger and more established than the boutique spots at Garoda. Easy access back to the centre makes it a good base if you want resort-style facilities without being in the thick of the village.'),
+
+  {
+    _type: 'verdictCardBlock',
+    _key: key(),
+    variant: 'blue',
+    label: 'Seven Islands verdict',
+    title: 'Beautiful reef beaches, big resorts, and the fastest growing part of Watamu.',
+    pros: [
+      'Stunning coral islands and reef you can walk at low tide',
+      'Watamu Mall, Non Solo Padel, and Snake Farm all here',
+      'Most resort and hotel options outside the centre',
+      'Easy access back to Watamu Centre',
+      'Growing fast with new options opening regularly',
+    ],
+    cons: [
+      'Less green and lush than the Garoda side',
+      'More development underway, still evolving',
+      'Fewer restaurants in the immediate area',
+    ],
+  },
+
+  placeholder('Seven Islands reef and bays, Watamu'),
+
+  // ══════════════════════════════════════════════════════
+  // JACARANDA
+  // ══════════════════════════════════════════════════════
+
+  textBlock('Jacaranda: The Maldives of Kenya', 'h2'),
+
+  richText([
+    { text: 'Technically not part of Watamu, Jacaranda sits about 15 km north of Watamu Centre. It is worth knowing about because it is extraordinary. ' },
+    { text: "Multiple sandbanks are exposed at different stages of the tide", bold: true },
+    { text: ', creating conditions that have earned it the nickname the Maldives of Kenya. Mid-tide is when the water is at its most beautiful: clear, shallow, and an impossible shade of turquoise.' },
+  ]),
+
+  textBlock('The area is drier and more open than the Garoda side, with coral rocks and less tree cover. There are beach bars, restaurants, kite schools, and accommodation options including hotels. It is not part of the marine park.'),
 
   {
     _type: 'tipCardBlock',
     _key: key(),
     variant: 'teal',
-    icon: '🤿',
-    label: 'How to visit the Seven Islands',
-    text: 'Book a snorkelling trip from Turtle Bay or the town beach. Half-day trips cost KSh 1,500 to 3,000 per person including park entry fees. Full-day dhow trips with lunch on the beach cost KSh 3,000 to 6,000. Go in the morning for the best visibility and calmer conditions.',
+    icon: '🌊',
+    label: 'How to visit Jacaranda',
+    text: "The best way to experience Jacaranda is as a day trip from Watamu: go for lunch, time the tides right, and spend the afternoon on the sandbanks. Check the tide times before you go as the experience changes dramatically depending on the water level. If you base yourself here you will need a car for the 20 to 30 minute drive into Watamu Centre.",
   },
 
-  placeholder('Seven Islands coral reef, Watamu Marine Park'),
+  placeholder('Jacaranda sandbanks at mid-tide'),
 
   // ══════════════════════════════════════════════════════
-  // AREA 7: MIDA CREEK
+  // TIMBONI
   // ══════════════════════════════════════════════════════
 
-  {
-    _type: 'destinationSectionBlock',
-    _key: key(),
-    number: '07',
-    pill: 'Nature and Sunsets',
-    pillColor: 'amber',
-    title: 'Mida Creek',
-  },
+  textBlock('Timboni: The Real Kenya', 'h2'),
 
-  textBlock('Mida Creek is a tidal inlet stretching inland from the coast, surrounded by mangrove forest and designated as a bird sanctuary. It is not a beach destination but one of the most atmospheric places in the entire Watamu area. The creek changes completely depending on the tide: at high tide it becomes a wide, glassy channel; at low tide a patchwork of mudflats and exposed coral.'),
+  textBlock("Timboni is not a beach area. It is the bustling local town you pass through on the road between the Gedi junction and Watamu Centre, and it is one of the most interesting places in the whole area if you take the time to stop and explore."),
 
   richText([
-    { text: 'The community-run boardwalk lets you walk through the mangroves at low tide, and canoe trips are available at high tide for around KSh 1,000 to 2,000 per person. Over ' },
-    { text: '350 bird species have been recorded here', bold: true },
-    { text: ', including kingfishers, herons, and migratory waders.' },
+    { text: 'This is where the real day-to-day life of Watamu happens. Hardware shops, vegetable markets, carpentry workshops, clothes sellers, mechanics fixing bikes on the roadside, children playing, local restaurants, pool tables outside under a shade tree. ' },
+    { text: 'It is chaotic, lively, funny, and completely authentic', bold: true },
+    { text: '. Go in with an open mind and embrace it.' },
   ]),
 
   richText([
-    { text: 'Lichthaus, one of the most beloved venues in Watamu, is located right on the creek. ' },
-    { text: 'Sundowners here with a swim in the creek are a Watamu rite of passage.', bold: true },
-    { text: ' The light on the water at 5:30pm in this spot is genuinely one of the most beautiful things on the Kenya coast.' },
+    { text: 'In Timboni you can find almost anything. But the real reason to visit is the ' },
+    { text: 'mitumba markets', bold: true },
+    { text: ': second-hand clothes that arrive in big batches from overseas, often in excellent condition and very cheap. This is thrifting Kenya style. It takes time and patience to find the good pieces but it is an experience in itself. Swahili Cafe is the go-to local spot for a proper Swahili meal while you are here.' },
   ]),
 
   {
     _type: 'pullQuoteBlock',
     _key: key(),
-    text: 'The light on Mida Creek at sunset is the kind of thing you photograph and then realise no photograph does it justice.',
-    attribution: 'Regular Watamu visitor',
+    text: "Go inside the local shops. Ask around. Have fun. Embrace the chaos. Watch locals playing pool, cows going around, a mechanic fixing bikes, kids playing — all together. This is Watamu as it actually lives.",
+    attribution: 'Local Watamu guide',
     accentColor: 'amber',
   },
 
   {
-    _type: 'verdictCardBlock',
+    _type: 'tipCardBlock',
     _key: key(),
-    variant: 'amber',
-    label: 'Mida Creek verdict',
-    title: 'The most atmospheric spot in Watamu. Essential for nature lovers and sunset seekers.',
-    pros: [
-      'Stunning natural landscape unlike anywhere else on the coast',
-      'Outstanding bird watching with 350 plus species recorded',
-      'Lichthaus venue for sundowners right on the creek',
-      'Mangrove canoe trips and low-tide boardwalk walks',
-      'Calm and peaceful, very few tourists',
-    ],
-    cons: [
-      'Not a swimming beach, the creek has mud and mangrove roots at low tide',
-      'Requires a tuk-tuk from Watamu town',
-      'Mosquitoes at dusk, bring repellent',
-    ],
+    variant: 'tip',
+    icon: '👕',
+    label: 'Mitumba shopping in Timboni',
+    text: "Mitumba is Kenya's second-hand clothes culture — big batches of clothes shipped in from overseas, sold at market stalls for very affordable prices. Quality varies but the good pieces are genuinely good. Budget at least an hour, go with no fixed idea of what you want, and enjoy the process. Swahili Cafe nearby is perfect for lunch after.",
   },
 
-  placeholder('Mida Creek at sunset, Watamu'),
+  placeholder('Timboni local market and street life'),
 
   // ══════════════════════════════════════════════════════
   // GETTING BETWEEN AREAS
@@ -444,17 +415,17 @@ const body = [
 
   textBlock('Getting Between Areas', 'h2'),
 
-  textBlock('Every area in Watamu is within 15 minutes of every other area. Tuk-tuks are the standard way to move around and are available throughout the day and late into the night.'),
+  textBlock('Everything in Watamu is along one road. The drive from one end to the other takes about 20 minutes. Tuk-tuks run all day and late into the night.'),
 
   {
     _type: 'distanceChipsBlock',
     _key: key(),
     chips: [
-      { icon: 'clock', text: 'Town Centre to Turtle Bay: 5 to 10 min, KSh 200 to 300' },
-      { icon: 'clock', text: 'Town Centre to Garoda Beach: 10 to 15 min, KSh 300 to 500' },
-      { icon: 'clock', text: 'Town Centre to Blue Lagoon: 10 min, KSh 300 to 400' },
-      { icon: 'clock', text: 'Town Centre to Mida Creek: 10 to 15 min, KSh 300 to 500' },
-      { icon: 'clock', text: 'Turtle Bay to Garoda: 10 min, KSh 300 to 400' },
+      { icon: 'clock', text: 'Garoda to Seven Islands end: 20 min, about 9 km' },
+      { icon: 'clock', text: 'Centre to Turtle Bay: 5 to 10 min, KSh 200 to 300' },
+      { icon: 'clock', text: 'Centre to Garoda: 10 to 15 min, KSh 300 to 500' },
+      { icon: 'clock', text: 'Centre to Seven Islands: 10 min, KSh 200 to 400' },
+      { icon: 'clock', text: 'Centre to Jacaranda: 20 to 30 min, needs car or tuk-tuk' },
       { icon: 'clock', text: 'Night surcharge after 10pm: add KSh 100 to 200' },
     ],
   },
@@ -464,17 +435,12 @@ const body = [
     _key: key(),
     variant: 'tip',
     icon: '🛺',
-    label: 'Always agree the fare first',
-    text: 'Tuk-tuk fares in Watamu are not metered. Always agree the price before getting in. Most drivers know all the areas and venues by name. Motorbikes (boda boda) are faster and cheaper for solo trips, at KSh 100 to 300. Always carry cash.',
+    label: 'Save a driver\'s number',
+    text: "In Garoda and Seven Islands especially, do not rely on flagging down a tuk-tuk when you need one. Get the number of a driver you trust on your first day and call them when you need a ride. Most drivers will be happy to be your go-to person for the trip.",
   },
 
-  placeholder('Tuk-tuk on the Watamu beach road'),
-
-  // ══════════════════════════════════════════════════════
-  // DECIDER GRID
-  // ══════════════════════════════════════════════════════
-
-  textBlock('The Quick Decider', 'h2'),
+  // ── Decider Grid ──
+  textBlock('Quick Decider', 'h2'),
 
   {
     _type: 'deciderGridBlock',
@@ -482,48 +448,50 @@ const body = [
     cards: [
       {
         _key: key(),
-        label: 'Best overall base',
+        label: 'Most convenient base',
         color: 'amber',
-        title: 'Watamu Town Centre',
-        items: ['Walking distance to everything', 'Best restaurant choice', 'Most social energy', 'Budget to mid-range options'],
+        title: 'Watamu Centre',
+        items: ['Carrefour and ATM on your doorstep', 'Most restaurants in walking distance', 'Central for exploring all areas', 'All accommodation budgets'],
       },
       {
         _key: key(),
-        label: 'Best beach and swimming',
+        label: 'Best snorkelling',
         color: 'teal',
         title: 'Turtle Bay',
-        items: ['Calm sheltered lagoon', 'Safe for families', 'Snorkelling from the beach', 'Resort-quality facilities'],
+        items: ['Best reef directly from the beach', 'Calmer than the centre', 'Turtle-shaped rock landmark', 'Good local restaurants'],
       },
       {
         _key: key(),
-        label: 'Most beautiful and secluded',
+        label: 'Most beautiful beach',
         color: 'purple',
-        title: 'Blue Lagoon',
-        items: ['Stunning turquoise water', 'Very few tourists', 'Ideal for couples', 'No vendors or noise'],
-      },
-      {
-        _key: key(),
-        label: 'Best for kite surfing',
-        color: 'teal',
         title: 'Garoda Beach',
-        items: ['Flat water lagoon', 'IKO certified schools', 'Best June to October', 'Wide empty beach'],
+        items: ['Stunning long white sandy beach', 'Sandbank exposed at low tide', 'All kite schools here', 'Lichthaus and Mida Creek access'],
       },
       {
         _key: key(),
-        label: 'Best for nature',
-        color: 'amber',
-        title: 'Mida Creek',
-        items: ['350 plus bird species', 'Mangrove canoe trips', 'Lichthaus sundowners', 'Boardwalk at low tide'],
-      },
-      {
-        _key: key(),
-        label: 'Best for marine life',
+        label: 'Fastest growing',
         color: 'blue',
         title: 'Seven Islands',
-        items: ['Best snorkelling in Watamu', 'Sea turtles and reef fish', 'Coral park protected', 'Day trip from any area'],
+        items: ['Walk the reef at low tide', 'Big resorts and private villas', 'Watamu Mall and Non Solo Padel', 'Snake Farm'],
+      },
+      {
+        _key: key(),
+        label: 'Day trip worth making',
+        color: 'teal',
+        title: 'Jacaranda',
+        items: ['Maldives of Kenya', 'Time the tides for best colours', 'Kite schools and sandbanks', 'Not in the marine park'],
+      },
+      {
+        _key: key(),
+        label: 'Real Kenyan experience',
+        color: 'amber',
+        title: 'Timboni',
+        items: ['Mitumba second-hand clothes market', 'Local food at Swahili Cafe', 'Hardware, veg market, street life', 'Embrace the beautiful chaos'],
       },
     ],
   },
+
+  placeholder('Watamu road at golden hour'),
 
   // ── Internal Links ──
   richText([
@@ -531,7 +499,7 @@ const body = [
     { text: 'verified stays in Watamu', bold: true, link: '/stays/watamu' },
     { text: ', explore ' },
     { text: 'things to do', bold: true, link: '/experiences/watamu' },
-    { text: ', or read the ' },
+    { text: ', or read our ' },
     { text: 'complete Watamu travel guide', bold: true, link: '/journal/complete-guide-watamu-kenya-2026' },
     { text: '.' },
   ]),
@@ -558,13 +526,13 @@ async function seed() {
     slug: { _type: 'slug', current: 'watamu-areas-neighbourhood-guide' },
     status: 'published',
     excerpt:
-      'Where you stay in Watamu changes everything. This guide breaks down every neighbourhood, from Turtle Bay and Garoda to Timboni, Blue Lagoon, Seven Islands, and Mida Creek, so you can choose the right base.',
+      'Watamu is one road, 9 km end to end. Each area has its own vibe, its own beauty, and its own reasons to explore. Here is everything you need to choose your base and make the most of all of it.',
     tags: ['Watamu', 'Coast', 'Beach', 'Travel Tips'],
-    readingTime: 11,
+    readingTime: 12,
     publishedAt: '2026-03-20T08:00:00Z',
-    seoTitle: 'Watamu Areas Explained: Neighbourhood Guide 2026 (Garoda, Turtle Bay, Timboni and More)',
+    seoTitle: 'Watamu Areas Explained: Complete Neighbourhood Guide 2026',
     seoDescription:
-      'Complete guide to Watamu neighbourhoods. Compare Turtle Bay, Garoda Beach, Blue Lagoon, Timboni, Seven Islands, and Mida Creek to find your perfect base.',
+      'Everything you need to know about Watamu\'s 4 main areas: Watamu Centre, Turtle Bay, Garoda Beach, and Seven Islands. Plus Jacaranda and Timboni. Where to stay, what to expect, and local tips.',
     body,
   })
 
