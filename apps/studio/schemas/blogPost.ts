@@ -1,45 +1,5 @@
 import { defineType, defineField } from 'sanity'
 
-/* ── Subcategory options per primary category ─── */
-const SUBCATEGORIES: Record<string, { title: string; value: string }[]> = {
-  destination_guide: [
-    { title: 'City Guide', value: 'city_guide' },
-    { title: 'Neighbourhood Guide', value: 'neighbourhood_guide' },
-    { title: 'Getting There', value: 'getting_there' },
-    { title: 'Getting Around', value: 'getting_around' },
-    { title: 'Practical Info', value: 'practical_info' },
-    { title: 'Seasonal Guide', value: 'seasonal_guide' },
-  ],
-  travel_tips: [
-    { title: 'Money & Banking', value: 'money_banking' },
-    { title: 'Visa & Entry', value: 'visa_entry' },
-    { title: 'Health & Safety', value: 'health_safety' },
-    { title: 'Budget Tips', value: 'budget_tips' },
-    { title: 'Communications', value: 'communications' },
-    { title: 'Luxury Tips', value: 'luxury_tips' },
-  ],
-  food_restaurants: [
-    { title: 'Best-of List', value: 'best_of_list' },
-    { title: 'Restaurant Review', value: 'restaurant_review' },
-    { title: 'Food Guide', value: 'food_guide' },
-    { title: 'Cuisine Guide', value: 'cuisine_guide' },
-  ],
-  where_to_stay: [
-    { title: 'Area Guide', value: 'area_guide' },
-    { title: 'Best-of List', value: 'best_of_list' },
-    { title: 'Hotel Review', value: 'hotel_review' },
-    { title: 'Villa Guide', value: 'villa_guide' },
-    { title: 'Budget Stays', value: 'budget_stays' },
-    { title: 'Luxury Stays', value: 'luxury_stays' },
-  ],
-}
-
-const DEFAULT_SUBCATEGORIES = [
-  { title: 'Guide', value: 'guide' },
-  { title: 'Review', value: 'review' },
-  { title: 'Best-of List', value: 'best_of_list' },
-  { title: 'Tips', value: 'tips' },
-]
 
 export default defineType({
   name: 'blogPost',
@@ -255,10 +215,37 @@ export default defineType({
       type: 'string',
       group: 'strategy',
       options: {
-        list: ({ document }: any) => {
-          const cat = document?.primaryCategory as string | undefined
-          return SUBCATEGORIES[cat ?? ''] ?? DEFAULT_SUBCATEGORIES
-        },
+        list: [
+          { title: '— Destination Guide —', value: '' },
+          { title: 'City Guide', value: 'city_guide' },
+          { title: 'Neighbourhood Guide', value: 'neighbourhood_guide' },
+          { title: 'Getting There', value: 'getting_there' },
+          { title: 'Getting Around', value: 'getting_around' },
+          { title: 'Practical Info', value: 'practical_info' },
+          { title: 'Seasonal Guide', value: 'seasonal_guide' },
+          { title: '— Where to Stay —', value: '' },
+          { title: 'Area Guide', value: 'area_guide' },
+          { title: 'Hotel Review', value: 'hotel_review' },
+          { title: 'Villa Guide', value: 'villa_guide' },
+          { title: 'Budget Stays', value: 'budget_stays' },
+          { title: 'Luxury Stays', value: 'luxury_stays' },
+          { title: '— Food & Events —', value: '' },
+          { title: 'Restaurant Review', value: 'restaurant_review' },
+          { title: 'Food Guide', value: 'food_guide' },
+          { title: 'Cuisine Guide', value: 'cuisine_guide' },
+          { title: '— Travel Tips —', value: '' },
+          { title: 'Money & Banking', value: 'money_banking' },
+          { title: 'Visa & Entry', value: 'visa_entry' },
+          { title: 'Health & Safety', value: 'health_safety' },
+          { title: 'Budget Tips', value: 'budget_tips' },
+          { title: 'Communications', value: 'communications' },
+          { title: 'Luxury Tips', value: 'luxury_tips' },
+          { title: '— General —', value: '' },
+          { title: 'Best-of List', value: 'best_of_list' },
+          { title: 'Guide', value: 'guide' },
+          { title: 'Review', value: 'review' },
+          { title: 'Tips', value: 'tips' },
+        ],
       },
     }),
     defineField({
