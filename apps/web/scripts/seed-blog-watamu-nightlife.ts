@@ -254,6 +254,14 @@ const body = [
 async function seed() {
   console.log('Seeding Watamu nightlife blog post...\n')
 
+  // Delete draft if one exists so Studio shows fresh content
+  try {
+    await client.delete('drafts.blog-watamu-nightlife-guide')
+    console.log('✓ Cleared existing draft')
+  } catch {
+    // No draft — that's fine
+  }
+
   await client.createOrReplace({
     _id: 'blog-watamu-nightlife-guide',
     _type: 'blogPost',
