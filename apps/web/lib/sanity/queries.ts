@@ -267,7 +267,7 @@ export const BLOG_POST_BY_SLUG_QUERY = groq`
         "photos": photos[]{
           alt,
           aspectRatio,
-          "asset": image.asset->{ url }
+          "asset": asset->{ url }
         }
       },
       _type == "inlineListingBlock" => {
