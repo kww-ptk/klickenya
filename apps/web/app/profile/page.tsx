@@ -121,13 +121,29 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
     };
   });
 
-  // Fetch enquiries
+  // Fetch enquiries (richer: include PMS fields)
   const { data: enquiries } = await adminClient
     .from("contact_requests")
-    .select("id, listing_title, listing_type, message, created_at")
+    .select("id, listing_title, listing_type, listing_sanity_id, message, check_in, check_out, guests, calendar_status, created_at")
     .eq("guest_user_id", user.id)
     .order("created_at", { ascending: false })
     .limit(20);
+
+  // Fetch bookings where guest_user_id matches
+  const { data: guestBookings } = await adminClient
+    .from("bookings")
+    .select(`
+      id, check_in_date, check_out_date, nights, guest_count,
+      status, payment_status, total_kes, amount_paid_kes, balance_kes,
+      rate_per_night, subtotal_kes, discount_kes, extras_kes,
+      property_id, room_id,
+      property:properties(name, address, check_in_time),
+      room:rooms(name),
+      booking_fees(name, amount_kes),
+      booking_payments(amount_kes, method, created_at)
+    `)
+    .eq("guest_user_id", user.id)
+    .order("check_in_date", { ascending: false });
 
   return (
     <ProfileClient
@@ -138,7 +154,9 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
       location={guestProfile.location ?? null}
       savedListings={(savedRows ?? []) as { id: string; sanity_listing_id: string; saved_at: string }[]}
       rsvps={rsvps}
-      enquiries={(enquiries ?? []) as { id: string; listing_title: string | null; listing_type: string | null; message: string | null; created_at: string }[]}
+      enquiries={(enquiries ?? []) as { id: string; listing_title: string | null; listing_type: string | null; listing_sanity_id: string | null; message: string | null; check_in: string | null; check_out: string | null; guests: number | null; calendar_status: string | null; created_at: string }[]}
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      bookings={(guestBookings ?? []) as any[]}
       initialTab={initialTab}
       isHost={userProfile?.role === "host"}
     />

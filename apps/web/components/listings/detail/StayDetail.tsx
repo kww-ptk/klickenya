@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback, useRef } from "react";
 import { Star, MapPin } from "lucide-react";
 import { PortableTextRenderer } from "@/components/blog/PortableTextRenderer";
 import { PhotoGallery } from "@/components/listings/widgets/PhotoGallery";
@@ -12,6 +12,7 @@ import { TrackPageView } from "@/lib/analytics/TrackPageView";
 import { SimilarListings } from "@/components/listings/widgets/SimilarListings";
 import { BookingSidebar } from "@/components/listings/widgets/BookingSidebar";
 import { MobileBookingBar } from "@/components/listings/widgets/MobileBookingBar";
+import { StayBookingSidebar } from "@/components/listings/widgets/StayBookingSidebar";
 import { RentingToggle } from "../widgets/RentingToggle";
 import type { ListingCardProps } from "@/components/listings/ListingCard";
 
@@ -28,6 +29,11 @@ interface StayDetailProps {
   cityName: string;
   citySlug: string;
   similarCards: ListingCardProps[];
+  roomAvailability?: Record<string, boolean>;
+  roomPriceOverrides?: Record<string, number>;
+  entirePropertyAvailable?: boolean;
+  recentBookings?: number;
+  hasPms?: boolean;
 }
 
 /* ── Component ─────────────────────────────────────── */
@@ -42,8 +48,72 @@ function StayDetail({
   cityName,
   citySlug,
   similarCards,
+  roomAvailability,
+  roomPriceOverrides,
+  entirePropertyAvailable,
+  recentBookings,
+  hasPms,
 }: StayDetailProps) {
   const [rentMode, setRentMode] = useState<"entire" | "room">("entire");
+  const [liveRoomAvail, setLiveRoomAvail] = useState<Record<string, boolean> | undefined>(undefined);
+  const [livePrices, setLivePrices] = useState<Record<string, number> | undefined>(undefined);
+  const [liveEntireAvail, setLiveEntireAvail] = useState<boolean | undefined>(undefined);
+  const [checkingDates, setCheckingDates] = useState(false);
+  const fetchRef = useRef(0);
+
+  // Room card → open booking modal with pre-selected room
+  const [bookingRoomKey, setBookingRoomKey] = useState<string | null>(null);
+
+  const listingSlug = listing.slug?.current ?? "";
+
+  // Callback when sidebar availability check completes
+  const handleAvailabilityChecked = useCallback(
+    (roomAvail: Record<string, boolean>, roomPrices: Record<string, number>, entireAvail: boolean) => {
+      setLiveRoomAvail(roomAvail);
+      setLivePrices(roomPrices);
+      setLiveEntireAvail(entireAvail);
+    },
+    []
+  );
+
+  // Live availability check when guest picks dates (from contact form)
+  const handleDatesChange = useCallback(
+    async (checkIn: string, checkOut: string) => {
+      if (!listingSlug) return;
+      const fetchId = ++fetchRef.current;
+      setCheckingDates(true);
+
+      try {
+        const res = await fetch(
+          `/api/properties/availability-by-slug?slug=${listingSlug}&check_in=${checkIn}&check_out=${checkOut}`
+        );
+        const data = await res.json();
+        if (fetchRef.current !== fetchId) return; // stale
+
+        if (data.rooms) {
+          const avail: Record<string, boolean> = {};
+          const prices: Record<string, number> = {};
+          for (const [key, val] of Object.entries(data.rooms as Record<string, { available: boolean; price: number }>)) {
+            avail[key] = val.available;
+            prices[key] = val.price;
+          }
+          setLiveRoomAvail(avail);
+          setLivePrices(prices);
+          setLiveEntireAvail(data.entireProperty);
+        }
+      } catch {
+        // silent — keep server-side values
+      }
+      if (fetchRef.current === fetchId) setCheckingDates(false);
+    },
+    [listingSlug]
+  );
+
+  // Use live values if available, otherwise server-side
+  const activeRoomAvail = liveRoomAvail ?? roomAvailability;
+  const activePrices = livePrices ?? roomPriceOverrides;
+  const activeEntireAvail = liveEntireAvail ?? entirePropertyAvailable;
+
   const highlights = listing.highlights ?? [];
   const amenities: string[] = listing.amenities ?? [];
   const hostName = listing.hostRef?.name ?? listing.hostName ?? "Klickenya";
@@ -111,11 +181,21 @@ function StayDetail({
               rooms={listing.rooms}
               listingTitle={listing.title}
               onModeChange={(mode) => setRentMode(mode)}
+              roomAvailability={activeRoomAvail}
+              roomPriceOverrides={activePrices}
+              entirePropertyAvailable={activeEntireAvail}
+              listingSlug={hasPms ? listingSlug : undefined}
+              onRoomBooking={hasPms ? (roomKey: string) => setBookingRoomKey(roomKey) : undefined}
+              onEntireBooking={hasPms ? () => setBookingRoomKey("__entire__") : undefined}
             />
+            {checkingDates && (
+              <p className="text-[12px] text-[#9C9485] mt-2 animate-pulse">Checking availability...</p>
+            )}
 
             {/* Description */}
             {listing.description && (
               <>
+                <hr className="border-border mb-7 mt-8" />
                 <div className="mb-7">
                   <h2 className="font-display text-[22px] font-bold tracking-[-0.02em] text-dark mb-4">
                     About this stay
@@ -148,28 +228,56 @@ function StayDetail({
             )}
           </div>
 
-          {/* Right column */}
-          <BookingSidebar
-            listingId={listing._id}
-            listingTitle={listing.title}
-            listingType={sanityType}
-            price={listing.price ?? 0}
-            priceUnit={listing.priceUnit ?? "night"}
-            maxGuests={listing.maxGuests}
-          />
+          {/* Right column — Booking sidebar */}
+          {hasPms ? (
+            <aside className="hidden lg:block w-[350px] shrink-0">
+              <div className="sticky top-[76px] border border-[#E2DDD5] rounded-[24px] shadow-lg p-5 bg-white max-h-[calc(100vh-92px)] overflow-y-auto scrollbar-none">
+                <StayBookingSidebar
+                  listingSlug={listingSlug}
+                  listingTitle={listing.title}
+                  listingId={listing._id}
+                  price={listing.price ?? 0}
+                  priceUnit={listing.priceUnit ?? "night"}
+                  maxGuests={listing.maxGuests}
+                  rooms={listing.rooms}
+                  avgRating={listing.avgRating}
+                  reviewCount={listing.reviewCount}
+                  isVerified={listing.isVerified}
+                  recentBookings={recentBookings}
+                  onAvailabilityChecked={handleAvailabilityChecked}
+                  openForRoom={bookingRoomKey}
+                  onOpenForRoomHandled={() => setBookingRoomKey(null)}
+                  bookingMode="enquiry"
+                  listingPhoto={photos[0]}
+                />
+              </div>
+            </aside>
+          ) : (
+            <BookingSidebar
+              listingId={listing._id}
+              listingTitle={listing.title}
+              listingType={sanityType}
+              price={listing.price ?? 0}
+              priceUnit={listing.priceUnit ?? "night"}
+              maxGuests={listing.maxGuests}
+            />
+          )}
         </div>
 
         <SimilarListings listings={similarCards} typeLabel={typeLabel} />
       </article>
 
-      <MobileBookingBar
-        type={sanityType}
-        price={listing.price ?? 0}
-        priceUnit={listing.priceUnit ?? "night"}
-        listingId={listing._id}
-        listingTitle={listing.title}
-        maxGuests={listing.maxGuests}
-      />
+      {!hasPms && (
+        <MobileBookingBar
+          type={sanityType}
+          price={listing.price ?? 0}
+          priceUnit={listing.priceUnit ?? "night"}
+          listingId={listing._id}
+          listingTitle={listing.title}
+          maxGuests={listing.maxGuests}
+          onDatesChange={handleDatesChange}
+        />
+      )}
     </>
   );
 }

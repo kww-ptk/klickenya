@@ -29,6 +29,14 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "**.supabase.co",
       },
+      {
+        protocol: "https",
+        hostname: "tribalsand.com",
+      },
+      {
+        protocol: "https",
+        hostname: "www.tribalsand.com",
+      },
     ],
   },
 };

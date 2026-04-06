@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { User, Heart, Calendar, Mail, MapPin, ArrowRight, Globe, LogOut, Settings, Compass, X } from "lucide-react";
+import { User, Heart, Calendar, Mail, MapPin, ArrowRight, Globe, LogOut, Settings, Compass, X, BookOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { sanityBrowserClient } from "@/lib/sanity/browser";
 
@@ -25,8 +25,34 @@ interface Enquiry {
   id: string;
   listing_title: string | null;
   listing_type: string | null;
+  listing_sanity_id: string | null;
   message: string | null;
+  check_in: string | null;
+  check_out: string | null;
+  guests: number | null;
+  calendar_status: string | null;
   created_at: string;
+}
+
+export interface GuestBooking {
+  id: string;
+  check_in_date: string;
+  check_out_date: string;
+  nights: number;
+  guest_count: number;
+  status: string;
+  payment_status: string;
+  total_kes: number;
+  amount_paid_kes: number;
+  balance_kes: number;
+  rate_per_night: number;
+  subtotal_kes: number;
+  discount_kes: number;
+  extras_kes: number | null;
+  property: { name: string; address: string | null; check_in_time: string | null } | { name: string; address: string | null; check_in_time: string | null }[] | null;
+  room: { name: string } | { name: string }[] | null;
+  booking_fees: Array<{ name: string; amount_kes: number }>;
+  booking_payments: Array<{ amount_kes: number; method: string | null; created_at: string }>;
 }
 
 interface SavedRow {
@@ -53,6 +79,7 @@ interface ProfileClientProps {
   savedListings: SavedRow[];
   rsvps: Rsvp[];
   enquiries: Enquiry[];
+  bookings: GuestBooking[];
   initialTab?: string;
   isHost?: boolean;
 }
@@ -60,10 +87,11 @@ interface ProfileClientProps {
 /* ── Tabs ─────────────────────────────────────────── */
 
 const TABS = [
-  { key: "profile", label: "Profile", icon: User },
-  { key: "events", label: "Events", icon: Calendar },
+  { key: "profile",   label: "Profile",   icon: User },
+  { key: "bookings",  label: "Bookings",  icon: BookOpen },
   { key: "enquiries", label: "Enquiries", icon: Mail },
-  { key: "saved", label: "Saved", icon: Heart },
+  { key: "events",    label: "Events",    icon: Calendar },
+  { key: "saved",     label: "Saved",     icon: Heart },
 ] as const;
 type Tab = (typeof TABS)[number]["key"];
 
@@ -74,6 +102,36 @@ const COUNTRIES: Record<string, string[]> = {
   Tanzania: ["Zanzibar", "Dar es Salaam", "Arusha"],
   Uganda: ["Kampala", "Entebbe", "Jinja"],
   Other: [],
+};
+
+function fmtDate(d: string) {
+  return new Date(d + "T00:00:00").toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+}
+
+function fmtKes(n: number) {
+  return `KSh ${n.toLocaleString("en-KE")}`;
+}
+
+const BOOKING_STATUS: Record<string, { label: string; className: string }> = {
+  confirmed:   { label: "Confirmed",  className: "bg-[#4F46E5]/15 text-[#4F46E5]" },
+  checked_in:  { label: "Checked in", className: "bg-[#22C55E]/15 text-[#22C55E]" },
+  checked_out: { label: "Completed",  className: "bg-[#9C9485]/15 text-[#9C9485]" },
+  cancelled:   { label: "Cancelled",  className: "bg-red-100 text-red-600" },
+  no_show:     { label: "No show",    className: "bg-red-100 text-red-600" },
+};
+
+const PAYMENT_STATUS: Record<string, { label: string; className: string }> = {
+  paid:     { label: "Paid",            className: "bg-[#22C55E]/15 text-[#22C55E]" },
+  partial:  { label: "Deposit paid",    className: "bg-[#E8A020]/15 text-[#E8A020]" },
+  pending:  { label: "Payment pending", className: "bg-red-100 text-red-600" },
+  refunded: { label: "Refunded",        className: "bg-[#9C9485]/15 text-[#9C9485]" },
+};
+
+const ENQUIRY_STATUS: Record<string, { label: string; className: string }> = {
+  pending:   { label: "Awaiting response", className: "bg-[#E8A020]/15 text-[#E8A020]" },
+  held:      { label: "On hold",           className: "bg-[#4F46E5]/15 text-[#4F46E5]" },
+  converted: { label: "Booking confirmed", className: "bg-[#22C55E]/15 text-[#22C55E]" },
+  declined:  { label: "Declined",          className: "bg-[#9C9485]/15 text-[#9C9485]" },
 };
 
 function parseLocation(loc: string | null): { country: string; city: string } {
@@ -98,10 +156,11 @@ export function ProfileClient({
   savedListings: initialSavedListings,
   rsvps,
   enquiries,
+  bookings,
   initialTab,
   isHost = false,
 }: ProfileClientProps) {
-  const validTabs: Tab[] = ["profile", "events", "enquiries", "saved"];
+  const validTabs: Tab[] = ["profile", "bookings", "events", "enquiries", "saved"];
   const startTab = validTabs.includes(initialTab as Tab) ? (initialTab as Tab) : "profile";
   const [activeTab, setActiveTab] = useState<Tab>(startTab);
   const [editingName, setEditingName] = useState(false);
@@ -152,6 +211,8 @@ export function ProfileClient({
     .slice(0, 2);
 
   const goingEvents = rsvps.filter((r) => r.status === "going");
+
+  // ── Helpers ──────────────────────────────────────────────────────────
   const interestedEvents = rsvps.filter((r) => r.status === "interested");
   const locationDisplay = city && country ? `${city}, ${country}` : city || country || "";
   const availableCities = country ? (COUNTRIES[country] ?? []) : [];
@@ -256,9 +317,10 @@ export function ProfileClient({
           {/* Quick stats */}
           <div className="flex gap-6 mt-6">
             {[
-              { label: "Events", value: rsvps.length, icon: Calendar },
+              { label: "Bookings",  value: bookings.length,  icon: BookOpen },
+              { label: "Events",    value: rsvps.length,     icon: Calendar },
               { label: "Enquiries", value: enquiries.length, icon: Mail },
-              { label: "Saved", value: savedCount, icon: Heart },
+              { label: "Saved",     value: savedCount,       icon: Heart },
             ].map((stat) => (
               <div key={stat.label} className="text-center">
                 <p className="text-[20px] font-bold text-white">{stat.value}</p>
@@ -275,9 +337,10 @@ export function ProfileClient({
           <div className="flex overflow-x-auto scrollbar-none">
             {TABS.map((tab) => {
               const Icon = tab.icon;
-              const count = tab.key === "events" ? rsvps.length
+              const count = tab.key === "bookings"  ? bookings.length
+                : tab.key === "events"    ? rsvps.length
                 : tab.key === "enquiries" ? enquiries.length
-                : tab.key === "saved" ? savedCount
+                : tab.key === "saved"     ? savedCount
                 : 0;
               return (
                 <button
@@ -480,6 +543,103 @@ export function ProfileClient({
           </div>
         )}
 
+        {/* ═══ BOOKINGS TAB ═══ */}
+        {activeTab === "bookings" && (
+          <div>
+            {bookings.length === 0 ? (
+              <EmptyState
+                icon={BookOpen}
+                title="No bookings yet"
+                description="Once a host confirms your enquiry, your booking will appear here with full details."
+                ctaLabel="Browse stays"
+                ctaHref="/stays"
+              />
+            ) : (
+              <div className="space-y-4">
+                {bookings.map((b) => {
+                  const prop = Array.isArray(b.property) ? b.property[0] : b.property;
+                  const room = Array.isArray(b.room) ? b.room[0] : b.room;
+                  const fees = b.booking_fees ?? [];
+                  const payments = b.booking_payments ?? [];
+                  const balance = b.balance_kes ?? (b.total_kes - b.amount_paid_kes);
+                  const bBadge = BOOKING_STATUS[b.status] ?? BOOKING_STATUS.confirmed;
+                  const pBadge = PAYMENT_STATUS[b.payment_status] ?? PAYMENT_STATUS.pending;
+                  return (
+                    <div key={b.id} className="rounded-2xl border border-[#E2DDD5] bg-white overflow-hidden">
+                      {/* Card header */}
+                      <div className="p-5 space-y-3">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <p className="text-[15px] font-semibold text-[#16130C] truncate">{prop?.name ?? "Property"}</p>
+                            <p className="text-[13px] text-[#9C9485] mt-0.5">{room?.name ?? "Room"}</p>
+                          </div>
+                          <div className="flex flex-col items-end gap-1.5 shrink-0">
+                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${bBadge.className}`}>
+                              {bBadge.label}
+                            </span>
+                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${pBadge.className}`}>
+                              {pBadge.label}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="flex flex-wrap gap-x-5 gap-y-1 text-[13px] text-[#16130C]">
+                          <span><span className="text-[#9C9485]">In:</span> {fmtDate(b.check_in_date)}</span>
+                          <span><span className="text-[#9C9485]">Out:</span> {fmtDate(b.check_out_date)}</span>
+                          <span className="text-[#9C9485]">{b.nights}n · {b.guest_count} guest{b.guest_count !== 1 ? "s" : ""}</span>
+                        </div>
+                        <div className="flex flex-wrap gap-x-6 gap-y-1 text-[13px]">
+                          <span><span className="text-[#9C9485]">Total:</span> <span className="font-semibold">{fmtKes(b.total_kes)}</span></span>
+                          <span><span className="text-[#9C9485]">Paid:</span> <span className="font-semibold text-[#22C55E]">{fmtKes(b.amount_paid_kes)}</span></span>
+                          {balance > 0 && <span><span className="text-[#9C9485]">Balance:</span> <span className="font-semibold text-red-600">{fmtKes(balance)}</span></span>}
+                        </div>
+                      </div>
+                      {/* Expandable breakdown */}
+                      <details className="group">
+                        <summary className="flex items-center gap-1.5 px-5 py-3 border-t border-[#E2DDD5] text-[12px] font-medium text-[#9C9485] hover:text-[#16130C] cursor-pointer transition-colors select-none list-none">
+                          <svg className="size-3.5 group-open:rotate-90 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                          </svg>
+                          Full breakdown · Ref {b.id.slice(0, 8).toUpperCase()}
+                        </summary>
+                        <div className="px-5 pb-5 pt-3 border-t border-[#E2DDD5] space-y-3 text-[13px]">
+                          <div className="space-y-1.5">
+                            <div className="flex justify-between"><span className="text-[#9C9485]">{fmtKes(b.rate_per_night)} × {b.nights}n</span><span>{fmtKes(b.subtotal_kes)}</span></div>
+                            {b.discount_kes > 0 && <div className="flex justify-between"><span className="text-[#22C55E]">Discount</span><span className="text-[#22C55E]">−{fmtKes(b.discount_kes)}</span></div>}
+                            {fees.map((f, i) => <div key={i} className="flex justify-between"><span className="text-[#9C9485]">{f.name}</span><span>{fmtKes(f.amount_kes)}</span></div>)}
+                            {(b.extras_kes ?? 0) > 0 && <div className="flex justify-between"><span className="text-[#9C9485]">Extras</span><span>{fmtKes(b.extras_kes!)}</span></div>}
+                            <div className="flex justify-between font-semibold border-t border-[#E2DDD5] pt-1.5"><span>Total</span><span>{fmtKes(b.total_kes)}</span></div>
+                            <div className="flex justify-between"><span className="text-[#9C9485]">Paid</span><span className="text-[#22C55E] font-medium">{fmtKes(b.amount_paid_kes)}</span></div>
+                            {balance > 0 && <div className="flex justify-between font-semibold"><span className="text-red-600">Balance due</span><span className="text-red-600">{fmtKes(balance)}</span></div>}
+                            {payments.length > 0 && (
+                              <div className="border-t border-[#E2DDD5] pt-2 space-y-1">
+                                <p className="text-[11px] text-[#9C9485] uppercase tracking-wider font-medium">Payments</p>
+                                {payments.map((p, i) => (
+                                  <div key={i} className="flex justify-between text-[12px]">
+                                    <span className="text-[#9C9485]">
+                                      {p.method ?? "cash"} · {new Date(p.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
+                                    </span>
+                                    <span className="text-[#22C55E] font-medium">{fmtKes(p.amount_kes)}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                          {prop && (prop.address || prop.check_in_time) && (
+                            <div className="pt-1 space-y-1 text-[#9C9485]">
+                              {prop.address && <p>{prop.address}</p>}
+                              {prop.check_in_time && <p>Check-in from {prop.check_in_time}</p>}
+                            </div>
+                          )}
+                        </div>
+                      </details>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* ═══ EVENTS TAB ═══ */}
         {activeTab === "events" && (
           <div>
@@ -527,26 +687,40 @@ export function ProfileClient({
               />
             ) : (
               <div className="space-y-3">
-                {enquiries.map((e) => (
-                  <div key={e.id} className="rounded-2xl border border-[#E2DDD5] bg-white p-4">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <p className="text-[14px] font-semibold text-[#16130C] truncate">
-                          {e.listing_title ?? "Listing"}
-                        </p>
-                        {e.listing_type && (
-                          <span className="text-[11px] text-[#9C9485] capitalize">{e.listing_type}</span>
-                        )}
-                        {e.message && (
-                          <p className="text-[13px] text-[#5E5848] mt-1 line-clamp-2">{e.message}</p>
-                        )}
+                {enquiries.map((e) => {
+                  const badge = ENQUIRY_STATUS[e.calendar_status ?? "pending"] ?? ENQUIRY_STATUS.pending;
+                  const nights = e.check_in && e.check_out
+                    ? Math.max(1, Math.ceil((new Date(e.check_out + "T00:00:00").getTime() - new Date(e.check_in + "T00:00:00").getTime()) / 86_400_000))
+                    : null;
+                  return (
+                    <div key={e.id} className="rounded-2xl border border-[#E2DDD5] bg-white p-4 space-y-2">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="text-[14px] font-semibold text-[#16130C] truncate">
+                            {e.listing_title ?? "Listing"}
+                          </p>
+                          <p className="text-[11px] text-[#9C9485] mt-0.5">
+                            {new Date(e.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
+                          </p>
+                        </div>
+                        <span className={`shrink-0 inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold whitespace-nowrap ${badge.className}`}>
+                          {badge.label}
+                        </span>
                       </div>
-                      <span className="text-[11px] text-[#9C9485] whitespace-nowrap shrink-0">
-                        {new Date(e.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
-                      </span>
+                      {e.check_in && e.check_out && (
+                        <div className="flex flex-wrap gap-x-4 gap-y-1 text-[12px] text-[#9C9485]">
+                          <span>{fmtDate(e.check_in)} → {fmtDate(e.check_out)}</span>
+                          {nights ? <span>{nights}n{e.guests ? ` · ${e.guests} guest${e.guests !== 1 ? "s" : ""}` : ""}</span> : null}
+                        </div>
+                      )}
+                      {e.calendar_status === "converted" && (
+                        <button onClick={() => setActiveTab("bookings")} className="text-[12px] font-medium text-[#22C55E] hover:underline">
+                          View booking →
+                        </button>
+                      )}
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>

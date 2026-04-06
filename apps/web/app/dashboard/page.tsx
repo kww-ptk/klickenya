@@ -162,6 +162,37 @@ export default async function DashboardPage() {
     }
   }
 
+  // Check for properties needing setup (stay owners with no rooms)
+  let propertyNeedsSetup: { id: string; name: string } | null = null;
+  // Property status map for stay listing cards
+  const propertyStatusMap = new Map<string, { id: string; is_active: boolean; room_count: number }>();
+  {
+    const { data: props } = await adminClient
+      .from("properties")
+      .select("id, name, listing_slug, is_active")
+      .eq("owner_id", user.id)
+      .limit(50);
+    if (props && props.length > 0) {
+      for (const p of props) {
+        const { count } = await adminClient
+          .from("rooms")
+          .select("id", { count: "exact", head: true })
+          .eq("property_id", p.id);
+        const roomCount = count ?? 0;
+        if (roomCount === 0 && !propertyNeedsSetup) {
+          propertyNeedsSetup = { id: p.id, name: p.name };
+        }
+        if (p.listing_slug) {
+          propertyStatusMap.set(p.listing_slug, {
+            id: p.id,
+            is_active: p.is_active,
+            room_count: roomCount,
+          });
+        }
+      }
+    }
+  }
+
   // Check for unpublished restaurant menus
   const isRestaurant = (l: { type: string; subcategory: string | null }) =>
     l.type === "restaurant" || (l.type === "experience" && l.subcategory === "restaurants");
@@ -268,6 +299,31 @@ export default async function DashboardPage() {
               className="shrink-0 bg-[#E8A020] text-[#16130C] font-bold text-[12px] px-4 h-[36px] flex items-center rounded-full hover:bg-[#d4911c] transition-colors whitespace-nowrap"
             >
               Set up your digital menu →
+            </Link>
+          </div>
+        </div>
+      )}
+
+      {/* Property setup banner for stay owners */}
+      {propertyNeedsSetup && (
+        <div className="mb-5 rounded-2xl bg-gradient-to-r from-[#4F46E5] to-[#6366F1] p-5 lg:p-6 shadow-lg">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+            <div className="size-12 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
+              <span className="text-[28px]">🏠</span>
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-[16px] font-bold text-white">
+                Your property calendar is ready to set up
+              </p>
+              <p className="text-[13px] text-white/70 mt-1">
+                Add your rooms and start accepting direct bookings from your Klickenya listing — no OTA fees.
+              </p>
+            </div>
+            <Link
+              href={`/dashboard/property/${propertyNeedsSetup.id}`}
+              className="shrink-0 bg-white text-[#4F46E5] font-bold text-[13px] px-6 h-[44px] flex items-center rounded-full hover:bg-white/90 transition-colors whitespace-nowrap shadow-sm"
+            >
+              Set up now →
             </Link>
           </div>
         </div>
@@ -408,6 +464,8 @@ export default async function DashboardPage() {
               const citySlug = (listing.city ?? "").toLowerCase().replace(/ /g, "-");
               const href = `/${typeSlug}/${citySlug}/${listing.slug}`;
               const listingEnquiries = enquiryCountMap.get(listing._id) ?? 0;
+              const isStay = listing.type === "stay";
+              const propStatus = isStay ? propertyStatusMap.get(listing.slug) : undefined;
 
               return (
                 <div
@@ -462,17 +520,51 @@ export default async function DashboardPage() {
                             {listingEnquiries} enquir{listingEnquiries === 1 ? "y" : "ies"}
                           </Link>
                         )}
+                        {isStay && propStatus && propStatus.is_active && propStatus.room_count > 0 && (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[#16A34A] bg-[#16A34A]/8 px-2 py-0.5 rounded-full">
+                            Calendar active
+                          </span>
+                        )}
+                        {isStay && propStatus && (!propStatus.is_active || propStatus.room_count === 0) && (
+                          <span className="inline-flex items-center text-[10px] font-bold text-amber-600 bg-amber-100 px-2 py-0.5 rounded-full">
+                            Setup needed
+                          </span>
+                        )}
                       </div>
                     </div>
 
-                    {/* View */}
-                    <div className="shrink-0 flex items-center">
+                    {/* View / PMS actions */}
+                    <div className="shrink-0 flex flex-col items-end gap-1.5">
                       <Link
                         href={href}
                         className="text-[12px] font-semibold text-[#9C9485] hover:text-[#16130C] transition-colors"
                       >
                         View
                       </Link>
+                      {isStay && propStatus?.is_active && propStatus.room_count > 0 && (
+                        <Link
+                          href={`/dashboard/property/${propStatus.id}`}
+                          className="text-[11px] font-semibold text-[#4F46E5] hover:text-[#4338CA] transition-colors"
+                        >
+                          Manage bookings →
+                        </Link>
+                      )}
+                      {isStay && propStatus && (!propStatus.is_active || propStatus.room_count === 0) && (
+                        <Link
+                          href={`/dashboard/property/new?edit=${propStatus.id}`}
+                          className="text-[11px] font-semibold text-[#E8A020] hover:text-[#d4911c] transition-colors"
+                        >
+                          Complete setup →
+                        </Link>
+                      )}
+                      {isStay && !propStatus && (
+                        <Link
+                          href={`/dashboard/property/new?listing_slug=${listing.slug}`}
+                          className="text-[11px] font-semibold text-[#9C9485] hover:text-[#16130C] transition-colors"
+                        >
+                          Set up calendar →
+                        </Link>
+                      )}
                     </div>
                   </div>
                 </div>

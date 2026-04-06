@@ -66,7 +66,7 @@ export async function POST(
     const replyTo = hostUser?.email ?? "hello@klickenya.com";
 
     await resend.emails.send({
-      from: "Klickenya <hello@klickenya.com>",
+      from: "Klickenya Bookings <bookings@klickenya.com>",
       to: contactRequest.email,
       replyTo,
       subject: emailSubject,
@@ -87,7 +87,7 @@ export async function POST(
     // Send confirmation to host
     if (replyTo !== "hello@klickenya.com") {
       await resend.emails.send({
-        from: "Klickenya <hello@klickenya.com>",
+        from: "Klickenya Bookings <bookings@klickenya.com>",
         to: replyTo,
         subject: `Reply sent: ${contactRequest.listing_title || listingTitle || "Enquiry"}`,
         html: `<div style="font-family:-apple-system,sans-serif;max-width:480px;margin:0 auto;padding:24px;">

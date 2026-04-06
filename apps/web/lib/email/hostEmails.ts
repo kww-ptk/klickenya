@@ -1,4 +1,4 @@
-const HEADER = `<div style="background:#16130C;padding:24px 32px;">
+const HEADER = `<div style="background:#E8A020;padding:24px 32px;">
   <span style="color:#fff;font-size:24px;font-weight:700;letter-spacing:-0.5px;">Klickenya</span>
 </div>`;
 

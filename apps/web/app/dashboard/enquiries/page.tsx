@@ -32,12 +32,17 @@ export default async function EnquiriesPage({ searchParams }: { searchParams: Pr
     listing_sanity_id: string | null;
     status: string;
     created_at: string;
+    check_in: string | null;
+    check_out: string | null;
+    guests: number | null;
+    calendar_status: string | null;
+    notes: string | null;
   }[] = [];
 
   if (listingIds.length > 0) {
     let query = adminClient
       .from("contact_requests")
-      .select("id, full_name, email, phone, message, listing_title, listing_type, listing_sanity_id, status, created_at")
+      .select("id, full_name, email, phone, message, listing_title, listing_type, listing_sanity_id, status, created_at, check_in, check_out, guests, calendar_status, notes")
       .order("created_at", { ascending: false })
       .limit(50);
 
@@ -103,6 +108,34 @@ export default async function EnquiriesPage({ searchParams }: { searchParams: Pr
               hour: "2-digit", minute: "2-digit",
             });
 
+            // Date range + nights
+            const fmtD = (d: string) => new Date(d + "T00:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+            const nights = e.check_in && e.check_out
+              ? Math.max(1, Math.ceil((new Date(e.check_out + "T00:00:00").getTime() - new Date(e.check_in + "T00:00:00").getTime()) / 86400000))
+              : null;
+
+            // Parse estimated total from notes JSON if present
+            let estimatedTotal: number | null = null;
+            if (e.notes) {
+              try {
+                const match = e.notes.match(/"estimatedTotal"\s*:\s*(\d+)/);
+                if (match) estimatedTotal = parseInt(match[1], 10);
+              } catch { /* ignore */ }
+            }
+
+            // calendar_status badge
+            const calBadge = e.calendar_status
+              ? e.calendar_status === "pending"
+                ? { label: "Pending", cls: "bg-[#E8A020]/10 text-[#E8A020]" }
+                : e.calendar_status === "converted"
+                  ? { label: "Converted", cls: "bg-[#16A34A]/10 text-[#16A34A]" }
+                  : e.calendar_status === "declined"
+                    ? { label: "Declined", cls: "bg-[#F4F1EC] text-[#9C9485]" }
+                    : e.calendar_status === "held"
+                      ? { label: "On hold", cls: "bg-[#EFF6FF] text-[#3B82F6]" }
+                      : null
+              : null;
+
             return (
               <Link
                 key={e.id}
@@ -111,19 +144,26 @@ export default async function EnquiriesPage({ searchParams }: { searchParams: Pr
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <p className="text-[15px] font-semibold text-[#16130C] truncate">
                         {e.full_name}
                       </p>
-                      <span className={`shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                        e.status === "new"
-                          ? "bg-[#E8A020]/10 text-[#E8A020]"
-                          : e.status === "replied"
-                            ? "bg-[#16A34A]/10 text-[#16A34A]"
-                            : "bg-[#F4F1EC] text-[#9C9485]"
-                      }`}>
-                        {e.status}
-                      </span>
+                      {calBadge && (
+                        <span className={`shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-full ${calBadge.cls}`}>
+                          {calBadge.label}
+                        </span>
+                      )}
+                      {!calBadge && (
+                        <span className={`shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                          e.status === "new"
+                            ? "bg-[#E8A020]/10 text-[#E8A020]"
+                            : e.status === "replied"
+                              ? "bg-[#16A34A]/10 text-[#16A34A]"
+                              : "bg-[#F4F1EC] text-[#9C9485]"
+                        }`}>
+                          {e.status}
+                        </span>
+                      )}
                     </div>
                     {e.listing_title && (
                       <p className="text-[12px] text-[#9C9485] mt-0.5">
@@ -131,10 +171,17 @@ export default async function EnquiriesPage({ searchParams }: { searchParams: Pr
                         {e.listing_title}
                       </p>
                     )}
-                    {e.message && (
-                      <p className="text-[13px] text-[#5E5848] mt-2 line-clamp-2">{e.message}</p>
+                    {/* Dates + guests */}
+                    {e.check_in && e.check_out && (
+                      <p className="text-[12px] text-[#5E5848] mt-1.5 flex items-center gap-1">
+                        <span>📅</span>
+                        <span>{fmtD(e.check_in)} → {fmtD(e.check_out)} · {nights} night{nights !== 1 ? "s" : ""}{e.guests ? ` · ${e.guests} guest${e.guests !== 1 ? "s" : ""}` : ""}</span>
+                        {estimatedTotal && (
+                          <span className="ml-2 font-semibold text-[#E8A020]">Est. KSh {estimatedTotal.toLocaleString()}</span>
+                        )}
+                      </p>
                     )}
-                    <div className="flex items-center gap-3 mt-2">
+                    <div className="flex items-center gap-3 mt-1.5">
                       <span className="text-[12px] text-[#E8A020] font-medium">
                         {e.email}
                       </span>

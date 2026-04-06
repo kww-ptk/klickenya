@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
 import { Check } from "lucide-react";
 
@@ -25,12 +26,36 @@ interface RoomType {
 interface RoomCardProps {
   room: RoomType;
   onEnquire: (roomName: string) => void;
+  /** Real availability from Supabase PMS. Overrides room.isAvailable when present. */
+  realAvailability?: boolean;
+  /** Price from Supabase PMS. Overrides room.pricePerNight when present. */
+  priceOverride?: number;
+  /** Listing slug for availability check API */
+  listingSlug?: string;
+  /** Opens the main booking modal with this room pre-selected (reuses sidebar modal) */
+  onRoomBooking?: (roomKey: string) => void;
 }
 
-export function RoomCard({ room, onEnquire }: RoomCardProps) {
+/** Check if a URL can be optimized by Next.js Image (known CDN domains) */
+function isOptimizableUrl(url: string): boolean {
+  try {
+    const host = new URL(url).hostname;
+    return host === "cdn.sanity.io" || host.endsWith(".supabase.co") || host === "images.unsplash.com";
+  } catch {
+    return false;
+  }
+}
+
+export function RoomCard({ room, onEnquire, realAvailability, priceOverride, listingSlug, onRoomBooking }: RoomCardProps) {
+  const [slideIndex, setSlideIndex] = useState(0);
+  const allPhotos = (room.photos ?? []).map((p) => p.asset?.url).filter(Boolean) as string[];
   const photo = room.photos?.[0];
-  const available = room.isAvailable !== false;
+  const available = realAvailability ?? (room.isAvailable !== false);
+  const displayPrice = priceOverride ?? room.pricePerNight;
   const amenities = room.roomAmenities ?? [];
+  const photoUrl = photo?.asset?.url;
+  const skipOptimize = photoUrl ? !isOptimizableUrl(photoUrl) : false;
+  const currentSlideUrl = allPhotos[slideIndex] ?? photoUrl;
 
   /* Build subtitle parts */
   const meta: string[] = [];
@@ -45,13 +70,14 @@ export function RoomCard({ room, onEnquire }: RoomCardProps) {
         <div className="flex gap-3.5 bg-white rounded-[var(--radius-md)] overflow-hidden">
           {/* Thumbnail */}
           <div className="relative w-[110px] h-[110px] shrink-0 rounded-[var(--radius-md)] overflow-hidden">
-            {photo?.asset?.url ? (
+            {photoUrl ? (
               <Image
-                src={photo.asset.url}
-                alt={photo.alt ?? room.roomName}
+                src={photoUrl}
+                alt={photo?.alt ?? room.roomName}
                 fill
                 className="object-cover"
                 sizes="110px"
+                unoptimized={skipOptimize}
               />
             ) : (
               <div className="absolute inset-0 bg-[#1F1C12] flex items-center justify-center">
@@ -88,18 +114,16 @@ export function RoomCard({ room, onEnquire }: RoomCardProps) {
             </div>
             <div className="flex items-center justify-between gap-2">
               <p className="text-[13.5px] font-semibold text-[#E8A020]">
-                KSh {room.pricePerNight.toLocaleString()}
+                KSh {displayPrice.toLocaleString()}
                 <span className="text-[11px] font-normal text-[#9C9485]"> /night</span>
               </p>
-              {available && (
-                <button
-                  type="button"
-                  onClick={() => onEnquire(room.roomName)}
-                  className="shrink-0 bg-[#E8A020] text-[#16130C] font-bold text-[10px] rounded-full px-3 py-1.5 transition-colors hover:bg-[#d4911c]"
-                >
-                  Enquire
-                </button>
-              )}
+              <button
+                type="button"
+                onClick={() => onRoomBooking ? onRoomBooking(room._key) : onEnquire(room.roomName)}
+                className="shrink-0 bg-[#E8A020] text-[#16130C] font-bold text-[10px] rounded-full px-3 py-1.5 transition-colors hover:bg-[#d4911c]"
+              >
+                {onRoomBooking ? "Check availability" : "Enquire"}
+              </button>
             </div>
           </div>
         </div>
@@ -107,15 +131,16 @@ export function RoomCard({ room, onEnquire }: RoomCardProps) {
 
       {/* ── DESKTOP: vertical card ── */}
       <div className="hidden sm:block bg-white rounded-xl border border-[#E2DDD5] overflow-hidden transition-shadow duration-200 hover:shadow-md group">
-        {/* Photo */}
+        {/* Photo slider */}
         <div className="relative aspect-[4/3] overflow-hidden">
-          {photo?.asset?.url ? (
+          {currentSlideUrl ? (
             <Image
-              src={photo.asset.url}
-              alt={photo.alt ?? room.roomName}
+              src={currentSlideUrl}
+              alt={photo?.alt ?? room.roomName}
               fill
               className="object-cover transition-transform duration-500 ease-out group-hover:scale-[1.04]"
               sizes="(max-width: 1024px) 50vw, 33vw"
+              unoptimized={!isOptimizableUrl(currentSlideUrl)}
             />
           ) : (
             <div className="absolute inset-0 bg-[#1F1C12] flex items-center justify-center">
@@ -126,6 +151,24 @@ export function RoomCard({ room, onEnquire }: RoomCardProps) {
             <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
               <span className="text-white font-bold">Unavailable</span>
             </div>
+          )}
+          {/* Slider arrows + dots */}
+          {allPhotos.length > 1 && (
+            <>
+              <button type="button" onClick={(e) => { e.stopPropagation(); setSlideIndex((slideIndex - 1 + allPhotos.length) % allPhotos.length); }}
+                className="absolute left-1.5 top-1/2 -translate-y-1/2 size-7 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-sm hover:bg-white">
+                <svg className="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" /></svg>
+              </button>
+              <button type="button" onClick={(e) => { e.stopPropagation(); setSlideIndex((slideIndex + 1) % allPhotos.length); }}
+                className="absolute right-1.5 top-1/2 -translate-y-1/2 size-7 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-sm hover:bg-white">
+                <svg className="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
+              </button>
+              <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1">
+                {allPhotos.map((_, i) => (
+                  <span key={i} className={`size-1.5 rounded-full transition-colors ${i === slideIndex ? "bg-white" : "bg-white/40"}`} />
+                ))}
+              </div>
+            </>
           )}
         </div>
 
@@ -160,24 +203,21 @@ export function RoomCard({ room, onEnquire }: RoomCardProps) {
           <div className="flex items-center justify-between pt-3 border-t border-[#E2DDD5]">
             <div>
               <span className="text-[18px] font-bold text-[#E8A020]">
-                KSh {room.pricePerNight.toLocaleString()}
+                KSh {displayPrice.toLocaleString()}
               </span>
               <span className="text-[12px] text-[#9C9485]"> / night</span>
             </div>
-            {available ? (
-              <button
-                type="button"
-                onClick={() => onEnquire(room.roomName)}
-                className="bg-[#E8A020] text-[#16130C] font-bold text-[12px] rounded-full px-4 py-2 transition-colors hover:bg-[#d4911c]"
-              >
-                Enquire
-              </button>
-            ) : (
-              <span className="text-[12px] font-semibold text-[#9C9485]">Unavailable</span>
-            )}
+            <button
+              type="button"
+              onClick={() => onRoomBooking ? onRoomBooking(room._key) : onEnquire(room.roomName)}
+              className="bg-[#E8A020] text-[#16130C] font-bold text-[12px] rounded-full px-4 py-2 transition-colors hover:bg-[#d4911c]"
+            >
+              {onRoomBooking ? "Check availability" : "Enquire"}
+            </button>
           </div>
         </div>
       </div>
+
     </>
   );
 }

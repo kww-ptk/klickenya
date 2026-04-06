@@ -25,9 +25,13 @@ interface RoomType {
 interface RoomsGridProps {
   rooms: RoomType[];
   listingTitle: string;
+  roomAvailability?: Record<string, boolean>;
+  roomPriceOverrides?: Record<string, number>;
+  listingSlug?: string;
+  onRoomBooking?: (roomKey: string) => void;
 }
 
-export function RoomsGrid({ rooms, listingTitle }: RoomsGridProps) {
+export function RoomsGrid({ rooms, listingTitle, roomAvailability, roomPriceOverrides, listingSlug, onRoomBooking }: RoomsGridProps) {
   const router = useRouter();
   const pathname = usePathname();
 
@@ -53,7 +57,15 @@ export function RoomsGrid({ rooms, listingTitle }: RoomsGridProps) {
       </h2>
       <div className="flex flex-col gap-4 sm:grid sm:grid-cols-2 mt-4">
         {rooms.map((room) => (
-          <RoomCard key={room._key} room={room} onEnquire={handleEnquire} />
+          <RoomCard
+            key={room._key}
+            room={room}
+            onEnquire={handleEnquire}
+            realAvailability={roomAvailability?.[room._key]}
+            priceOverride={roomPriceOverrides?.[room._key]}
+            listingSlug={listingSlug}
+            onRoomBooking={onRoomBooking}
+          />
         ))}
       </div>
     </div>

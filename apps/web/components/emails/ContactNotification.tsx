@@ -1,3 +1,15 @@
+interface PricingFee { name: string; hint: string; amount: number; }
+
+interface PricingBreakdown {
+  roomName: string;
+  perNight: number;
+  nights: number;
+  subtotal: number;
+  mandatoryFees: PricingFee[];
+  upsellFees: PricingFee[];
+  estimatedTotal: number;
+}
+
 interface ContactNotificationProps {
   listingTitle: string;
   listingType: string;
@@ -7,7 +19,10 @@ interface ContactNotificationProps {
   guestPhone: string;
   message?: string;
   enquiryDetails: Record<string, string>;
+  pricingBreakdown?: PricingBreakdown;
 }
+
+const ksh = (n: number) => `KSh ${n.toLocaleString("en-KE")}`;
 
 export function contactNotificationHtml(props: ContactNotificationProps): string {
   const {
@@ -19,6 +34,7 @@ export function contactNotificationHtml(props: ContactNotificationProps): string
     guestPhone,
     message,
     enquiryDetails,
+    pricingBreakdown,
   } = props;
 
   const detailRows = Object.entries(enquiryDetails)
@@ -106,6 +122,41 @@ export function contactNotificationHtml(props: ContactNotificationProps): string
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;border:1px solid #e5e7eb;border-radius:6px;overflow:hidden;">
                 ${detailRows}
               </table>
+
+              ${pricingBreakdown ? `
+              <!-- Price Breakdown -->
+              <h2 style="margin:0 0 12px;font-size:16px;font-weight:600;color:#111;">Price breakdown</h2>
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:${message ? "24px" : "0"};border:1px solid #e5e7eb;border-radius:6px;overflow:hidden;">
+                <tr>
+                  <td colspan="2" style="background-color:#fafafa;padding:10px 14px;border-bottom:1px solid #e5e7eb;">
+                    <strong style="font-size:13px;color:#111;">${pricingBreakdown.roomName}</strong>
+                    <span style="font-size:12px;color:#888;margin-left:8px;">${pricingBreakdown.nights} night${pricingBreakdown.nights !== 1 ? "s" : ""}</span>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding:8px 14px;border-bottom:1px solid #eee;color:#666;font-size:13px;">${ksh(pricingBreakdown.perNight)} × ${pricingBreakdown.nights} night${pricingBreakdown.nights !== 1 ? "s" : ""}</td>
+                  <td style="padding:8px 14px;border-bottom:1px solid #eee;color:#333;font-size:13px;font-weight:600;text-align:right;">${ksh(pricingBreakdown.subtotal)}</td>
+                </tr>
+                ${pricingBreakdown.mandatoryFees.map((f) => `
+                <tr>
+                  <td style="padding:8px 14px;border-bottom:1px solid #eee;color:#666;font-size:13px;">${f.name}${f.hint ? ` <span style="color:#aaa;">${f.hint}</span>` : ""}</td>
+                  <td style="padding:8px 14px;border-bottom:1px solid #eee;color:#333;font-size:13px;font-weight:600;text-align:right;">${ksh(f.amount)}</td>
+                </tr>`).join("")}
+                ${pricingBreakdown.upsellFees.length > 0 ? `
+                <tr>
+                  <td colspan="2" style="padding:6px 14px;background-color:#f5f3ff;font-size:11px;font-weight:700;color:#7c3aed;letter-spacing:0.05em;border-bottom:1px solid #ede9fe;">OPTIONAL EXTRAS (GUEST SELECTED)</td>
+                </tr>
+                ${pricingBreakdown.upsellFees.map((f) => `
+                <tr>
+                  <td style="padding:8px 14px;border-bottom:1px solid #ede9fe;color:#6d28d9;font-size:13px;">${f.name}${f.hint ? ` <span style="color:#a78bfa;">${f.hint}</span>` : ""}</td>
+                  <td style="padding:8px 14px;border-bottom:1px solid #ede9fe;color:#6d28d9;font-size:13px;font-weight:600;text-align:right;">${ksh(f.amount)}</td>
+                </tr>`).join("")}` : ""}
+                <tr>
+                  <td style="padding:10px 14px;background-color:#fffbeb;border-top:2px solid #fcd34d;font-size:14px;font-weight:700;color:#92400e;">Estimated total</td>
+                  <td style="padding:10px 14px;background-color:#fffbeb;border-top:2px solid #fcd34d;font-size:16px;font-weight:800;color:#E8A020;text-align:right;">${ksh(pricingBreakdown.estimatedTotal)}</td>
+                </tr>
+              </table>
+              ` : ""}
 
               ${messageSection}
 

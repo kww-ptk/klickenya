@@ -59,6 +59,7 @@ interface MobileBookingBarProps {
   maxGuests?: number;
   ticketTypes?: string[];
   menuSlug?: string | null;
+  onDatesChange?: (checkIn: string, checkOut: string) => void;
 }
 
 function MobileBookingBar({
@@ -72,6 +73,7 @@ function MobileBookingBar({
   maxGuests,
   ticketTypes,
   menuSlug,
+  onDatesChange,
 }: MobileBookingBarProps) {
   const cta = CTA_MAP[type] ?? DEFAULT_CTA;
   const isRestaurant = type === "restaurant";
@@ -154,6 +156,7 @@ function MobileBookingBar({
             priceUnit={priceUnit}
             maxGuests={maxGuests}
             ticketTypes={ticketTypes}
+            onDatesChange={onDatesChange}
           />
         </div>
       </div>

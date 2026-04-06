@@ -31,12 +31,31 @@ const baseFields = {
   room: z.string().optional(),
 };
 
+const pricingFeeSchema = z.object({
+  name: z.string(),
+  hint: z.string(),
+  amount: z.number(),
+});
+
+const pricingBreakdownSchema = z.object({
+  roomName: z.string(),
+  perNight: z.number(),
+  nights: z.number(),
+  subtotal: z.number(),
+  mandatoryFees: z.array(pricingFeeSchema),
+  upsellFees: z.array(pricingFeeSchema),
+  estimatedTotal: z.number(),
+}).optional();
+
 const staySchema = z.object({
   ...baseFields,
   listingType: z.literal("stay"),
   checkIn: z.string().min(1),
   checkOut: z.string().min(1),
   guests: z.number().min(1).max(50),
+  pricingBreakdown: pricingBreakdownSchema,
+  room_id: z.string().optional().nullable(),
+  property_id: z.string().optional().nullable(),
 });
 
 const experienceSchema = z.object({
@@ -201,6 +220,10 @@ export async function POST(request: NextRequest) {
         guest_user_id: guestUserId,
         notes: `Listing: ${data.listingTitle} (${data.listingId})\nType: ${data.listingType}${data.room ? `\nRoom: ${data.room}` : ""}\n${Object.entries(enquirySummary).map(([k, v]) => `${k}: ${v}`).join("\n")}`,
         status: "new",
+        check_in: data.listingType === "stay" ? data.checkIn : null,
+        check_out: data.listingType === "stay" ? data.checkOut : null,
+        room_id: data.listingType === "stay" ? (data.room_id ?? null) : null,
+        property_id: data.listingType === "stay" ? (data.property_id ?? null) : null,
       })
       .select("id")
       .single();
@@ -253,8 +276,10 @@ export async function POST(request: NextRequest) {
         const confirmationSummary = data.room
           ? { "Requested room": data.room, ...enquirySummary }
           : enquirySummary;
+        type PricingBreakdown = z.infer<typeof pricingBreakdownSchema>;
+        const pb: PricingBreakdown = data.listingType === "stay" ? (data as z.infer<typeof staySchema>).pricingBreakdown : undefined;
         await resend.emails.send({
-          from: "Klickenya <hello@klickenya.com>",
+          from: "Klickenya Bookings <bookings@klickenya.com>",
           to: data.email,
           subject: data.room
             ? `Your enquiry for ${data.room} at ${data.listingTitle}`
@@ -264,6 +289,7 @@ export async function POST(request: NextRequest) {
             listingTitle: data.listingTitle,
             listingType: data.listingType,
             enquirySummary: confirmationSummary,
+            pricingBreakdown: pb,
           }),
         });
 
@@ -283,7 +309,7 @@ export async function POST(request: NextRequest) {
             : enquirySummary;
           const subjectPrefix = hostDisplayName ? `New enquiry for ${hostDisplayName}` : "New enquiry";
           await resend.emails.send({
-            from: "Klickenya <hello@klickenya.com>",
+            from: "Klickenya Bookings <bookings@klickenya.com>",
             to: allRecipients,
             subject: data.room
               ? `${subjectPrefix}: ${data.room} at ${data.listingTitle}`
@@ -297,6 +323,7 @@ export async function POST(request: NextRequest) {
               guestPhone: data.phone,
               message: data.message,
               enquiryDetails: notificationDetails,
+              pricingBreakdown: pb,
             }),
           });
         }

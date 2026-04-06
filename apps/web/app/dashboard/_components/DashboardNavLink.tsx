@@ -9,6 +9,7 @@ interface DashboardNavLinkProps {
   icon: React.ReactNode;
   badge?: number;
   disabled?: boolean;
+  exact?: boolean;
 }
 
 export function DashboardNavLink({
@@ -17,10 +18,14 @@ export function DashboardNavLink({
   icon,
   badge,
   disabled,
+  exact,
 }: DashboardNavLinkProps) {
   const pathname = usePathname();
-  const isActive =
-    href === "/dashboard" ? pathname === "/dashboard" : pathname.startsWith(href);
+  const isActive = exact
+    ? pathname === href
+    : href === "/dashboard"
+      ? pathname === "/dashboard"
+      : pathname.startsWith(href);
 
   if (disabled) {
     return (

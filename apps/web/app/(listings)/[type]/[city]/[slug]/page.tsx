@@ -299,6 +299,138 @@ export default async function ListingDetailPage({ params }: PageProps) {
     attendees = (attendeesRes.data ?? []) as { name: string }[];
   }
 
+  // Fetch room data from Supabase PMS for stays — replaces Sanity rooms when PMS linked
+  let roomAvailability: Record<string, boolean> | undefined;
+  let roomPriceOverrides: Record<string, number> | undefined;
+  let entirePropertyAvailable: boolean | undefined;
+  let recentBookings: number | undefined;
+  let hasPms = false;
+  if (sanityType === "stay") {
+    try {
+      // Fetch linked property — try with extended columns, fall back to basic
+      let linkedProps: any[] | null = null;
+      {
+        const res = await adminClient
+          .from("properties")
+          .select("id, renting_type, entire_place_price")
+          .eq("listing_slug", slug)
+          .eq("is_active", true);
+        if (!res.error) {
+          linkedProps = res.data;
+        } else {
+          // Columns not migrated yet — basic query
+          const basic = await adminClient
+            .from("properties")
+            .select("id")
+            .eq("listing_slug", slug)
+            .eq("is_active", true);
+          linkedProps = basic.data;
+        }
+      }
+
+      const property = linkedProps?.[0];
+      const propertyIds = linkedProps?.map((p: { id: string }) => p.id) ?? [];
+
+      if (property && propertyIds.length > 0) {
+        // Fetch room fields from Supabase — try full, fall back to basic
+        let pmsRooms: any[] | null = null;
+        {
+          const res = await adminClient
+            .from("rooms")
+            .select("id, name, description, photos, amenities, bed_type, room_size_sqm, max_guests, base_price_kes, sanity_room_key, is_active")
+            .in("property_id", propertyIds)
+            .eq("is_active", true)
+            .order("display_order");
+          if (!res.error) {
+            pmsRooms = res.data;
+          } else {
+            // New columns not migrated — basic query
+            const basic = await adminClient
+              .from("rooms")
+              .select("id, name, description, photos, amenities, max_guests, base_price_kes, sanity_room_key, is_active")
+              .in("property_id", propertyIds)
+              .eq("is_active", true)
+              .order("display_order");
+            pmsRooms = basic.data;
+          }
+        }
+
+        if (pmsRooms && pmsRooms.length > 0) {
+          const todayStr = new Date().toISOString().split("T")[0];
+          const tomorrowStr = new Date(Date.now() + 86400000).toISOString().split("T")[0];
+
+          // Check availability for all active PMS rooms
+          const roomAvailResults = await Promise.all(
+            pmsRooms.map(async (r) => {
+              const { data: available } = await adminClient.rpc("is_room_available", {
+                p_room_id: r.id,
+                p_check_in: todayStr,
+                p_check_out: tomorrowStr,
+              });
+              return { ...r, available: available === true };
+            })
+          );
+
+          entirePropertyAvailable = roomAvailResults.every((r) => r.available);
+
+          // Build RoomType objects from Supabase data — REPLACES Sanity rooms
+          const supabaseRooms = roomAvailResults.map((r) => ({
+            _key: r.sanity_room_key ?? r.id,
+            roomName: r.name,
+            roomDescription: r.description ?? undefined,
+            photos: (r.photos ?? []).map((url: string) => ({
+              asset: { _id: url, url, metadata: undefined },
+              alt: r.name,
+            })),
+            pricePerNight: r.base_price_kes,
+            capacity: r.max_guests,
+            bedType: r.bed_type ?? undefined,
+            roomSizeSqm: r.room_size_sqm ?? undefined,
+            roomAmenities: r.amenities ?? [],
+            isAvailable: true, // Default to available — actual availability checked when guest picks dates
+            quantity: 1,
+          }));
+
+          // Override listing data with PMS data
+          hasPms = true;
+          listing.rooms = supabaseRooms;
+          if (property.renting_type) listing.rentingType = property.renting_type;
+          if (property.entire_place_price) listing.price = property.entire_place_price;
+
+          // Build avail/price maps for the availability-by-slug API (client-side checks)
+          const avail: Record<string, boolean> = {};
+          const prices: Record<string, number> = {};
+          for (const r of supabaseRooms) {
+            avail[r._key] = r.isAvailable;
+            prices[r._key] = r.pricePerNight;
+          }
+          roomAvailability = avail;
+          roomPriceOverrides = prices;
+
+          // Count recent bookings (last 30 days) for social proof
+          const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000).toISOString().split("T")[0];
+          const { count: bookingCount } = await adminClient
+            .from("bookings")
+            .select("id", { count: "exact", head: true })
+            .in("property_id", propertyIds)
+            .gte("created_at", thirtyDaysAgo)
+            .neq("status", "cancelled");
+          recentBookings = bookingCount ?? 0;
+        }
+      }
+    } catch {
+      // Non-blocking — fall back to Sanity rooms
+    }
+  }
+
+  // TODO: Remove — test data for Maya Kobe demo
+  if (slug === "maya-kobe") {
+    listing.avgRating = listing.avgRating || 4.8;
+    listing.reviewCount = listing.reviewCount || 27;
+    listing.isVerified = true;
+    recentBookings = recentBookings || 9;
+  }
+
   // Common props shared by all detail components
   const detailProps = {
     listing,
@@ -313,6 +445,11 @@ export default async function ListingDetailPage({ params }: PageProps) {
     attendeeCount,
     attendees,
     menuData,
+    roomAvailability,
+    roomPriceOverrides,
+    entirePropertyAvailable,
+    recentBookings,
+    hasPms,
   };
 
   const Detail = (() => {

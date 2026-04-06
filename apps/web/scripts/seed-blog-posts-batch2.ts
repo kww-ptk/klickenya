@@ -557,6 +557,74 @@ const watamuNightlifeBody = [
     ],
   },
 
+  textBlock("Speedy's Backyard — The New Local Favourite", 'h2'),
+
+  richTextBlock([
+    { text: "Speedy's Backyard has quickly become one of the most talked-about spots in Watamu — and for good reason. This is " },
+    { text: 'a proper Kenyan night out', bold: true },
+    { text: ', the kind that feels authentic, lively, and completely unpretentious.' },
+  ]),
+
+  textBlock("Walk in and you'll find tourists and Kenyans side by side, having the time of their lives. The energy here is different from the beach bars — it's louder, more vibrant, and deeply local. Great music, cold drinks, and a crowd that knows how to have fun."),
+
+  richTextBlock([
+    { text: "If you want to experience Watamu the way locals actually live it — not just the beach-bar expat circuit — " },
+    { text: "Speedy's Backyard is a must", bold: true },
+    { text: '. Follow them on Instagram ' },
+    { text: '@speedys_backyard', bold: true },
+    { text: ' for upcoming nights and events.' },
+  ]),
+
+  {
+    _type: 'tipCardBlock',
+    _key: key(),
+    variant: 'teal',
+    icon: '🍻',
+    label: "Why Speedy's Backyard stands out",
+    text: "One of the few spots in Watamu where you'll genuinely mix with Kenyan locals and visitors alike. The atmosphere is electric, the prices are fair, and it has the kind of organic energy that no amount of marketing can manufacture. A must-try for anyone serious about their Watamu night out.",
+  },
+
+  textBlock('The Watamu Nightlife Scene Is Growing', 'h2'),
+
+  textBlock("What's exciting about Watamu right now is the momentum. The scene is no longer just a handful of beach bars — it's slowly but surely becoming a real nightlife destination on the Kenya coast. Between the Friday Lab at Sunset Lab, the Saturday beach parties at Paparemo, the local energy at Speedy's Backyard, and the annual spectacle of Kaleidoscope, there is a genuine ecosystem taking shape."),
+
+  richTextBlock([
+    { text: "And it's only getting started. " },
+    { text: 'We can only hope to see new contenders joining the scene soon', bold: true },
+    { text: " — more venues, more events, more reasons to stay out past midnight in this little beach town. Watch this space." },
+  ]),
+
+  textBlock('Weekly Events — What\'s On in Watamu', 'h2'),
+
+  textBlock("These are the regular weekly events running right now. Both are free to enter and have been drawing consistent crowds of locals and travellers alike."),
+
+  {
+    _type: 'tipCardBlock',
+    _key: key(),
+    variant: 'teal',
+    icon: '🎵',
+    label: 'Friday Lab — Every Friday at Sunset Beach Lab',
+    text: 'Live music every Friday evening at Sunset Beach Lab on Mapango Beach — local and visiting artists playing acoustic sets, reggae, Afro-soul, and jazz. Famous wood-fired pizzas, craft cocktails, and the best sunset views in Watamu. Family-friendly early evening. Free entry, walk-ins welcome — but arrive early for a good table.',
+  },
+
+  {
+    _type: 'tipCardBlock',
+    _key: key(),
+    variant: 'amber',
+    icon: '🏖️',
+    label: 'Papa Remo Beach Party — Every Saturday',
+    text: 'The signature Saturday night beach party. Live DJs spinning Afrobeats, amapiano, reggaeton and international hits on a sand dance floor under the stars. Full bar, Italian kitchen with pizza and grilled fish. No cover charge. Mixed crowd of locals, expats, and travellers. Best atmosphere from 8–9 PM onwards.',
+  },
+
+  {
+    _type: 'tipCardBlock',
+    _key: key(),
+    variant: 'purple',
+    icon: '📣',
+    label: 'Are you a venue or event organiser in Watamu?',
+    text: 'We want to feature your events. List your venue or party on Klick Kenya to reach thousands of travellers planning their Watamu trip. Create a free host account to add your events directly — we review and publish within 48 hours.',
+  },
+
   textBlock('Getting Around at Night', 'h2'),
 
   richTextBlock([
@@ -571,7 +639,7 @@ const watamuNightlifeBody = [
     variant: 'tip',
     icon: '🛺',
     label: 'Night transport price guide',
-    text: 'Motorbike (boda boda): KSh 100–300 for short hops. Tuk-tuk between venues: KSh 300–600. Night surcharge after 10pm: add KSh 100–200. Most drivers know Sunset Lab, Paparemo, and Lichthaus by name. Always carry cash.',
+    text: 'Motorbike (boda boda): KSh 100–300 for short hops. Tuk-tuk between venues: KSh 300–600. Night surcharge after 10pm: add KSh 100–200. Most drivers know Sunset Lab, Paparemo, Speedy\'s Backyard, and Lichthaus by name. Always carry cash.',
   },
 ]
 
@@ -625,13 +693,13 @@ async function seed() {
     slug: { _type: 'slug', current: 'watamu-nightlife-guide' },
     status: 'published',
     excerpt:
-      'The real guide to Watamu nightlife — Sunset Lab Fridays, Paparemo Beach Parties, Lichthaus sunsets, Kaleidoscope Festival and more.',
-    tags: ['Coast', 'Food & Culture', 'Beach'],
-    readingTime: 7,
+      "The real guide to Watamu nightlife — Sunset Lab Fridays, Paparemo Beach Parties, Speedy's Backyard, Lichthaus sunsets, Kaleidoscope Festival and more.",
+    tags: ['Coast', 'Food & Culture', 'Beach', 'Nightlife'],
+    readingTime: 9,
     publishedAt: '2026-03-13T08:00:00Z',
-    seoTitle: 'Watamu Nightlife 2026 — Bars, Beach Parties & Late Nights',
+    seoTitle: "Watamu Nightlife 2026 — Bars, Beach Parties & Speedy's Backyard",
     seoDescription:
-      'The real guide to Watamu nightlife. Sunset Lab Fridays, Paparemo Beach Parties, Lichthaus sunsets, Kaleidoscope Festival and more.',
+      "The real guide to Watamu nightlife. Sunset Lab Fridays, Paparemo Beach Parties, Speedy's Backyard, Lichthaus sunsets, Kaleidoscope Festival and more.",
     body: watamuNightlifeBody,
   })
   console.log('✓ Post 3: watamu-nightlife-guide')
