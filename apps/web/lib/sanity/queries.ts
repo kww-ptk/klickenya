@@ -262,6 +262,14 @@ export const BLOG_POST_BY_SLUG_QUERY = groq`
     excerpt,
     body[]{
       ...,
+      _type == "photoRowBlock" => {
+        ...,
+        "photos": photos[]{
+          alt,
+          aspectRatio,
+          "asset": image.asset->{ url }
+        }
+      },
       _type == "inlineListingBlock" => {
         ...,
         "listing": listing->{
