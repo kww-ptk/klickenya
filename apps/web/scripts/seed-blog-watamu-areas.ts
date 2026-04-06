@@ -95,7 +95,7 @@ const body = [
   placeholder('Watamu coastline from above'),
 
   // ── Comparison Table ──
-  textBlock('All 4 Areas at a Glance', 'h2'),
+  textBlock('All Areas at a Glance', 'h2'),
 
   {
     _type: 'compareTableBlock',
@@ -104,13 +104,15 @@ const body = [
       { _key: key(), label: 'Area', color: 'amber' },
       { _key: key(), label: 'Vibe', color: 'teal' },
       { _key: key(), label: 'Best for', color: 'blue' },
-      { _key: key(), label: 'Shopping', color: 'purple' },
+      { _key: key(), label: 'Highlight', color: 'purple' },
     ],
     rows: [
-      { _key: key(), criterion: 'Watamu Centre', values: ['Busy, lively, convenient', 'First-timers, families, foodies', 'Carrefour, banks, ATM, 3 petrol stations'] },
-      { _key: key(), criterion: 'Turtle Bay', values: ['Calm, beautiful, local', 'Snorkellers, beach lovers', 'Blue Moon Mall'] },
-      { _key: key(), criterion: 'Garoda', values: ['Wild, lush, sporty, stunning', 'Kite surfers, couples, villa stays', 'Small local shops'] },
-      { _key: key(), criterion: 'Seven Islands', values: ['Resort, growing fast, reef', 'Resort stays, divers, families', 'Watamu Mall, Non Solo Padel'] },
+      { _key: key(), criterion: 'Watamu Centre', values: ['Busy, lively, convenient', 'First-timers, families, foodies', 'Carrefour, ATM, banks, 3 petrol stations, central beach'] },
+      { _key: key(), criterion: 'Turtle Bay', values: ['Calm, beautiful, relaxed', 'Snorkellers, beach lovers', 'Best snorkelling in Watamu, turtle-shaped rock, Blue Moon Mall'] },
+      { _key: key(), criterion: 'Garoda', values: ['Wild, lush, sporty, stunning', 'Kite surfers, couples, villa stays', 'Best beach, sandbank at low tide, Lichthaus, Prawn Lake, Mida Creek'] },
+      { _key: key(), criterion: 'Seven Islands', values: ['Resort, growing fast, reef', 'Resort stays, divers, families', 'Walk the reef at low tide, Watamu Mall, Non Solo Padel, Snake Farm'] },
+      { _key: key(), criterion: 'Jacaranda', values: ['Remote, beautiful, dry', 'Day trips, beach lovers, kite surfers', 'Maldives of Kenya, stunning sandbanks, 15 km north of centre'] },
+      { _key: key(), criterion: 'Timboni', values: ['Bustling, local, chaotic', 'Culture seekers, bargain hunters', 'Mitumba second-hand market, Swahili Cafe, real Kenyan street life'] },
     ],
   },
 
