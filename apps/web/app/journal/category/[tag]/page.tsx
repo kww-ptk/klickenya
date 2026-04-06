@@ -14,7 +14,7 @@ export const revalidate = 3600;
 
 export async function generateStaticParams() {
   const tags: string[] = await sanityClient.fetch(ALL_BLOG_TAGS_QUERY);
-  return tags.map((t) => ({ tag: t.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "") }));
+  return tags.filter(Boolean).map((t) => ({ tag: t.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "") }));
 }
 
 /* ---------- Metadata ---------- */
