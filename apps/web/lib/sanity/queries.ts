@@ -279,12 +279,22 @@ export const BLOG_POST_BY_SLUG_QUERY = groq`
       },
       _type == "eventSliderBlock" => {
         ...,
-        "events": events[]->{
-          _id, title, slug, type, subcategory, city,
-          "price": pricePerNight, priceUnit,
-          hostName, eventDate, eventEndDate, venue,
-          "coverPhotoUrl": coalesce(mainImage.asset->url, photos[0].asset->url) + "?w=400&h=300&fit=crop&auto=format&q=80"
-        }
+        "events": select(
+          defined(events[0]) => events[]->{
+            _id, title, slug, type, subcategory, city,
+            isFree, priceFrom, isRecurring, recurrenceRule,
+            hostName, eventDate, eventEndDate, venue,
+            schedule[]{ _key, day, startTime, endTime },
+            "coverPhotoUrl": coalesce(mainImage.asset->url, photos[0].asset->url) + "?w=400&h=300&fit=crop&auto=format&q=80"
+          },
+          defined(filterCity) => *[_type == "listing" && type == "event" && status == "published" && lower(city) == lower(^.filterCity)] | order(eventDate asc, _createdAt desc) [0...6]{
+            _id, title, slug, type, subcategory, city,
+            isFree, priceFrom, isRecurring, recurrenceRule,
+            hostName, eventDate, eventEndDate, venue,
+            schedule[]{ _key, day, startTime, endTime },
+            "coverPhotoUrl": coalesce(mainImage.asset->url, photos[0].asset->url) + "?w=400&h=300&fit=crop&auto=format&q=80"
+          }
+        )
       }
     },
     tags,
