@@ -23,11 +23,11 @@ Available Portable Text block types (use _type field):
 - packingListBlock: { _type, _key, title, items: [{icon, text}] }
 - pullQuoteBlock: { _type, _key, text, attribution, accentColor (amber|purple) }
 - inlineListingBlock: { _type, _key, label } (listing reference added separately)
-- compareTableBlock: { _type, _key, columns: [{label, color (teal|blue|purple)}], rows: [{criterion, values: [string], winners: [number]}] }
+- compareTableBlock: { _type, _key, columns: [{label, color (teal|blue|purple|slate|amber)}], rows: [{criterion, values: [string]}] }
 - verdictCardBlock: { _type, _key, variant (teal|blue|purple|amber), label, title, pros: [string], cons: [string] }
 - whoIsItForBlock: { _type, _key, title, items: [{icon, text}] }
 - destinationSectionBlock: { _type, _key, number, pill, pillColor (teal|blue|purple), title }
-- distanceChipsBlock: { _type, _key, chips: [{icon (pin|clock), text}] }
+- distanceChipsBlock: { _type, _key, chips: [{icon (pin|clock), label: string, value: string}] }
 - deciderGridBlock: { _type, _key, cards: [{label, color (teal|blue|purple), title, items: [string]}] }
 
 Standard Portable Text block: { _type: "block", _key, style: "normal"|"h2"|"h3"|"h4"|"blockquote", children: [{_type: "span", _key, text, marks: []}] }
