@@ -10,6 +10,38 @@ interface SelectedOption {
   price_add: number;
 }
 
+/* ── Allergen heuristic ─────────────────────────────── */
+
+const ALLERGEN_KEYWORDS = [
+  "nut", "peanut", "dairy", "milk", "lactose", "gluten", "wheat",
+  "egg", "shellfish", "shrimp", "prawn", "soy", "sesame",
+];
+
+function parseAllergyText(text: string | null | undefined): {
+  allergenPart: string | null;
+  notesPart: string | null;
+} {
+  if (!text?.trim()) return { allergenPart: null, notesPart: null };
+
+  const parts = text.split(/[,;]+/).map((p) => p.trim()).filter(Boolean);
+  const allergens: string[] = [];
+  const notes: string[] = [];
+
+  for (const part of parts) {
+    const lower = part.toLowerCase();
+    if (ALLERGEN_KEYWORDS.some((kw) => lower.includes(kw))) {
+      allergens.push(part);
+    } else {
+      notes.push(part);
+    }
+  }
+
+  return {
+    allergenPart: allergens.length > 0 ? allergens.join(", ") : null,
+    notesPart:    notes.length    > 0 ? notes.join(", ")    : null,
+  };
+}
+
 interface OrderItem {
   id: string;
   item_name: string;
@@ -138,53 +170,94 @@ function OrderCard({ order, isNew, updating, onAction, onCancel, tick }: OrderCa
       </div>
 
       {/* Items */}
-      <div className="space-y-1 mb-3">
-        {order.order_items.map((item) => (
-          <div key={item.id} className="flex items-start gap-2">
-            <span className="text-[13px] font-bold text-[#16130C] shrink-0 w-[20px] text-right tabular-nums">
-              {item.quantity}×
-            </span>
-            <div className="flex-1 min-w-0">
-              <span className="text-[13px] text-[#16130C]">{item.item_name}</span>
+      <div className="space-y-2.5 mb-3">
+        {order.order_items.map((item) => {
+          const { allergenPart, notesPart } = parseAllergyText(item.allergy_notes);
+          return (
+            <div key={item.id}>
+              {/* Qty · Name · Line total */}
+              <div className="flex items-baseline gap-2">
+                <span className="text-[13px] font-bold text-[#16130C] shrink-0 w-[20px] text-right tabular-nums">
+                  {item.quantity}×
+                </span>
+                <span className="flex-1 text-[13px] font-semibold text-[#16130C] leading-snug">
+                  {item.item_name}
+                </span>
+                {item.line_total != null && (
+                  <span className="text-[12px] font-bold text-[#16130C] shrink-0 tabular-nums">
+                    KSh {item.line_total.toLocaleString("en-KE")}
+                  </span>
+                )}
+              </div>
+
+              {/* Selected options: › Group: Choice */}
               {item.selected_options && item.selected_options.length > 0 && (
-                <div className="mt-0.5 space-y-0">
+                <div className="ml-[28px] mt-0.5 space-y-0">
                   {item.selected_options.map((o, i) => (
                     <p key={i} className="text-[12px] text-[#3D3A32]">
-                      › {o.choice}
+                      › {o.group}: {o.choice}
                     </p>
                   ))}
                 </div>
               )}
-              {item.allergy_notes && (
-                <div style={{
-                  background: '#FEE2E2',
-                  border: '1px solid #DC2626',
-                  borderRadius: '6px',
-                  padding: '4px 8px',
-                  marginTop: '4px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '5px'
-                }}>
-                  <span style={{ fontSize: '13px' }}>⚠</span>
-                  <span style={{
-                    fontSize: '12px',
-                    fontWeight: '700',
-                    color: '#DC2626',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.03em'
-                  }}>
-                    ALLERGY: {item.allergy_notes}
+
+              {/* Allergy pill (red, unmissable) */}
+              {allergenPart && (
+                <div
+                  className="ml-[28px]"
+                  style={{
+                    background: "#FEE2E2",
+                    border: "1px solid #DC2626",
+                    borderRadius: "6px",
+                    padding: "4px 8px",
+                    marginTop: "4px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "5px",
+                  }}
+                >
+                  <span style={{ fontSize: "13px" }}>⚠</span>
+                  <span
+                    style={{
+                      fontSize: "12px",
+                      fontWeight: "700",
+                      color: "#DC2626",
+                      textTransform: "uppercase",
+                      letterSpacing: "0.03em",
+                    }}
+                  >
+                    ALLERGY: {allergenPart}
                   </span>
                 </div>
               )}
+
+              {/* Special instructions (amber) */}
+              {notesPart && (
+                <p className="ml-[28px] mt-1 text-[12px] text-[#E8A020] font-medium">
+                  ⚑ {notesPart}
+                </p>
+              )}
+
+              {/* Legacy notes field */}
               {item.notes && (
-                <p className="text-[12px] text-[#9C9485] italic">{item.notes}</p>
+                <p className="ml-[28px] text-[12px] text-[#9C9485] italic">{item.notes}</p>
               )}
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
+
+      {/* Order total */}
+      {order.order_items.some((i) => i.line_total != null) && (
+        <div className="flex items-center justify-between pt-2 border-t border-[#F4F1EC] mb-3">
+          <span className="text-[12px] font-semibold text-[#5E5848]">Total</span>
+          <span className="text-[13px] font-bold text-[#16130C] tabular-nums">
+            KSh {order.order_items
+              .reduce((s, i) => s + (i.line_total ?? 0), 0)
+              .toLocaleString("en-KE")}
+          </span>
+        </div>
+      )}
 
       {/* Footer: elapsed + actions */}
       <div className="flex items-center justify-between gap-2 pt-3 border-t border-[#F4F1EC]">

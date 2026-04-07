@@ -11,11 +11,20 @@ import { ItemModal, type CartItem } from "@/components/menu/ItemModal";
 
 type View = "browse" | "cart" | "confirmed";
 
+interface ReceiptLineItem {
+  name: string;
+  options_summary: string | null;
+  line_total: number;
+  quantity: number;
+}
+
 interface ConfirmData {
   orderId: string;
   shortId: string;
   tableNumber: string;
   estimatedMinutes: number;
+  lineItems: ReceiptLineItem[];
+  orderTotal: number;
 }
 
 /* ── Constants ─────────────────────────────────────── */
@@ -202,10 +211,12 @@ function CartPanel({ cart, menuId, onBack, onConfirmed, onUpdateQty, onEditLine 
       }
 
       onConfirmed({
-        orderId: data.order_id,
-        shortId: data.short_id,
-        tableNumber: tableNumber.trim(),
-        estimatedMinutes: data.estimated_minutes ?? 20,
+        orderId:           data.order_id,
+        shortId:           data.short_id,
+        tableNumber:       data.table_number ?? tableNumber.trim(),
+        estimatedMinutes:  data.estimated_minutes ?? 20,
+        lineItems:         data.line_items ?? [],
+        orderTotal:        data.order_total ?? 0,
       });
     } catch {
       setError("Network error — please check your connection and try again.");
@@ -375,38 +386,78 @@ function CartPanel({ cart, menuId, onBack, onConfirmed, onUpdateQty, onEditLine 
 
 /* ── Confirmation screen ───────────────────────────── */
 
-function ConfirmationScreen({ data }: { data: ConfirmData }) {
+function ConfirmationScreen({ data, onDone }: { data: ConfirmData; onDone: () => void }) {
   return (
-    <div className="min-h-screen bg-canvas flex flex-col items-center justify-center px-6 text-center">
-      <div className="w-20 h-20 rounded-full bg-emerald-100 flex items-center justify-center mb-5">
-        <svg className="size-10 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-        </svg>
-      </div>
+    <div className="min-h-screen bg-canvas flex flex-col">
+      <div className="max-w-[480px] w-full mx-auto px-5 py-10">
+        {/* Success mark */}
+        <div className="flex items-center gap-3 mb-6">
+          <div className="size-10 rounded-full bg-emerald-100 flex items-center justify-center shrink-0">
+            <svg className="size-5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <div>
+            <h1 className="font-display text-[22px] font-extrabold text-dark tracking-[-0.02em] leading-tight">
+              Order confirmed
+            </h1>
+            <p className="text-[13px] text-text3">
+              Table {data.tableNumber} · #{data.shortId}
+            </p>
+          </div>
+        </div>
 
-      <h1 className="font-display text-[26px] font-extrabold text-dark tracking-[-0.03em] leading-tight mb-2">
-        Order received!
-      </h1>
-      <p className="text-[16px] text-text2 leading-relaxed mb-1">
-        We&apos;ll bring it to <strong className="text-dark">table {data.tableNumber}</strong> shortly.
-      </p>
-      <p className="text-[14px] text-text3 mb-8">Estimated time: ~{data.estimatedMinutes} minutes</p>
+        {/* Receipt */}
+        <div className="bg-white rounded-2xl border border-border overflow-hidden shadow-sm">
+          {/* Line items */}
+          <div className="divide-y divide-border">
+            {data.lineItems.map((item, i) => (
+              <div key={i} className="px-5 py-3">
+                <div className="flex items-baseline justify-between gap-3">
+                  <span className="text-[14px] font-semibold text-dark leading-snug">
+                    ×{item.quantity} {item.name}
+                  </span>
+                  <span className="text-[14px] font-bold text-dark tabular-nums shrink-0">
+                    {formatPrice(item.line_total)}
+                  </span>
+                </div>
+                {item.options_summary && (
+                  <p className="text-[12px] text-text3 mt-0.5">{item.options_summary}</p>
+                )}
+              </div>
+            ))}
+          </div>
 
-      <div className="bg-white rounded-2xl border border-border px-6 py-4 shadow-sm">
-        <p className="text-[12px] font-bold text-text3 uppercase tracking-widest mb-1">
-          Order reference
+          {/* Total */}
+          <div className="px-5 py-3 bg-[#FAFAF8] border-t border-border flex items-center justify-between">
+            <span className="text-[14px] font-bold text-dark">Total</span>
+            <span className="text-[16px] font-extrabold text-dark tabular-nums">
+              {formatPrice(data.orderTotal)}
+            </span>
+          </div>
+        </div>
+
+        {/* ETA */}
+        <p className="text-[14px] text-text2 text-center mt-5 leading-relaxed">
+          We&apos;ll bring it to{" "}
+          <strong className="text-dark">table {data.tableNumber}</strong> in ~{data.estimatedMinutes} min.
         </p>
-        <p className="font-display text-[28px] font-extrabold text-dark tracking-[0.05em]">
-          #{data.shortId}
+
+        {/* Done */}
+        <button
+          onClick={onDone}
+          className="w-full h-[52px] rounded-full bg-dark text-white font-bold text-[15px] mt-6 hover:bg-[#2A2520] transition-colors active:scale-[0.98]"
+        >
+          Done
+        </button>
+
+        <p className="text-[12px] text-text3 text-center mt-5">
+          Powered by{" "}
+          <a href="https://klickenya.com" className="text-amber hover:underline">
+            Klickenya
+          </a>
         </p>
       </div>
-
-      <p className="text-[12px] text-text3 mt-8">
-        Powered by{" "}
-        <a href="https://klickenya.com" className="text-amber hover:underline">
-          Klickenya
-        </a>
-      </p>
     </div>
   );
 }
@@ -523,6 +574,12 @@ export function MenuWithCart({ sections, menuId }: MenuWithCartProps) {
     return sum;
   }, [cart]);
 
+  function handleDone() {
+    setCart(new Map());
+    setConfirmData(null);
+    setView("browse");
+  }
+
   /* ── Modal handlers ── */
 
   function openFreshModal(item: MenuItem) {
@@ -556,7 +613,7 @@ export function MenuWithCart({ sections, menuId }: MenuWithCartProps) {
   /* ── Views ── */
 
   if (view === "confirmed" && confirmData) {
-    return <ConfirmationScreen data={confirmData} />;
+    return <ConfirmationScreen data={confirmData} onDone={handleDone} />;
   }
 
   if (view === "cart") {
