@@ -47,6 +47,13 @@ function unitPrice(cartItem: CartItem): number {
   return cartItem.base_price + cartItem.selected_options.reduce((s, o) => s + o.price_add, 0);
 }
 
+// True if item has at least one non-allergy group with an available option
+function hasRealVariants(item: MenuItem): boolean {
+  return (item.item_option_groups ?? []).some(
+    (g) => g.group_type !== "allergy" && g.item_options.some((o) => o.is_available)
+  );
+}
+
 /* ── Item card ─────────────────────────────────────── */
 
 interface CartItemCardProps {
@@ -478,6 +485,8 @@ export function MenuWithCart({ sections, menuId }: MenuWithCartProps) {
   // Modal state: which item is open, and optionally which cart line is being edited
   const [modalItem, setModalItem] = useState<MenuItem | null>(null);
   const [editingCartItem, setEditingCartItem] = useState<CartItem | undefined>(undefined);
+  // Ticker: when ON, always show modal even for items with no variants (for special instructions)
+  const [alwaysShowModal, setAlwaysShowModal] = useState(false);
 
   /* ── Dietary filter helpers ── */
 
@@ -580,9 +589,46 @@ export function MenuWithCart({ sections, menuId }: MenuWithCartProps) {
     setView("browse");
   }
 
+  /* ── Direct-add (no-variant items) ── */
+
+  function addDirectItem(item: MenuItem) {
+    setCart((prev) => {
+      // Find existing no-options cart line for this item
+      let existingKey: string | null = null;
+      prev.forEach((entry, key) => {
+        if (entry.menu_item_id === item.id && entry.selected_options.length === 0) {
+          existingKey = key;
+        }
+      });
+      const next = new Map(prev);
+      if (existingKey) {
+        const line = next.get(existingKey)!;
+        const newQty = line.quantity + 1;
+        next.set(existingKey, { ...line, quantity: newQty, display_total: line.base_price * newQty });
+      } else {
+        const cartId = crypto.randomUUID();
+        next.set(cartId, {
+          cart_id: cartId,
+          menu_item_id: item.id,
+          item_name: item.name,
+          base_price: item.price_kes,
+          selected_options: [],
+          allergy_notes: "",
+          quantity: 1,
+          display_total: item.price_kes,
+        });
+      }
+      return next;
+    });
+  }
+
   /* ── Modal handlers ── */
 
   function openFreshModal(item: MenuItem) {
+    if (!hasRealVariants(item) && !alwaysShowModal) {
+      addDirectItem(item);
+      return;
+    }
     setEditingCartItem(undefined);
     setModalItem(item);
   }
@@ -652,6 +698,28 @@ export function MenuWithCart({ sections, menuId }: MenuWithCartProps) {
         activeTags={activeTags}
         onChange={setActiveTags}
       />
+
+      {/* Special instructions ticker */}
+      <div className="max-w-[480px] mx-auto px-4 pt-2 flex justify-end">
+        <button
+          onClick={() => setAlwaysShowModal((v) => !v)}
+          className="flex items-center gap-1.5 text-[12px] font-medium text-text3 hover:text-text2 transition-colors"
+          aria-label="Toggle special instructions"
+        >
+          <span
+            className={`relative w-7 h-4 rounded-full transition-colors ${
+              alwaysShowModal ? "bg-amber" : "bg-[#D4CFC8]"
+            }`}
+          >
+            <span
+              className={`absolute top-0.5 size-3 rounded-full bg-white shadow transition-transform ${
+                alwaysShowModal ? "translate-x-3.5" : "translate-x-0.5"
+              }`}
+            />
+          </span>
+          Special instructions
+        </button>
+      </div>
 
       <main className={`max-w-[480px] mx-auto px-4 ${totalItems > 0 ? "pb-28" : "pb-16"}`}>
         {noResults ? (

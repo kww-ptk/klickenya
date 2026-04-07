@@ -352,7 +352,7 @@ export function ItemModal({ item, existingCartItem, onClose, onConfirm }: ItemMo
         aria-label={item.name}
         className="item-modal fixed z-50 bg-white flex flex-col shadow-2xl
           bottom-0 left-0 right-0 max-h-[92vh] rounded-t-2xl animate-slide-up
-          md:bottom-auto md:top-1/2 md:left-1/2 md:w-[520px] md:max-h-[88vh]
+          md:bottom-auto md:right-auto md:top-1/2 md:left-1/2 md:w-[520px] md:max-h-[88vh]
           md:rounded-2xl md:animate-fade-scale"
         onClick={(e) => e.stopPropagation()}
       >
