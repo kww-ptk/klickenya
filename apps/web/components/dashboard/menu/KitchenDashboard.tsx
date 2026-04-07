@@ -4,12 +4,21 @@ import { useState, useEffect, useRef, useCallback } from "react";
 
 /* ── Types ─────────────────────────────────────────── */
 
+interface SelectedOption {
+  group: string;
+  choice: string;
+  price_add: number;
+}
+
 interface OrderItem {
   id: string;
   item_name: string;
   item_price: number;
   quantity: number;
   notes: string | null;
+  selected_options?: SelectedOption[];
+  allergy_notes?: string | null;
+  line_total?: number | null;
 }
 
 export interface KitchenOrder {
@@ -137,6 +146,20 @@ function OrderCard({ order, isNew, updating, onAction, onCancel, tick }: OrderCa
             </span>
             <div className="flex-1 min-w-0">
               <span className="text-[13px] text-[#16130C]">{item.item_name}</span>
+              {item.selected_options && item.selected_options.length > 0 && (
+                <div className="mt-0.5 space-y-0">
+                  {item.selected_options.map((o, i) => (
+                    <p key={i} className="text-[11px] text-[#5E5848]">
+                      › {o.choice}
+                    </p>
+                  ))}
+                </div>
+              )}
+              {item.allergy_notes && (
+                <p className="text-[11px] text-[#DC2626] font-semibold mt-0.5">
+                  ⚠ {item.allergy_notes}
+                </p>
+              )}
               {item.notes && (
                 <p className="text-[12px] text-[#9C9485] italic">{item.notes}</p>
               )}

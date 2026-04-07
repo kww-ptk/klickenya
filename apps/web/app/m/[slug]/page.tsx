@@ -26,7 +26,13 @@ async function getMenu(slug: string): Promise<MenuWithOrdering | null> {
         id, title, display_order, is_visible,
         menu_items (
           id, name, description, price_kes,
-          dietary_tags, is_available, display_order, photo_url
+          dietary_tags, is_available, display_order, photo_url,
+          item_option_groups (
+            id, name, group_type, is_required, min_select, max_select, display_order,
+            item_options (
+              id, name, price_modifier, is_available, display_order
+            )
+          )
         )
       )
     `

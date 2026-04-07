@@ -4,6 +4,7 @@ import { useState, useCallback } from "react";
 import Link from "next/link";
 import type { MenuData, MenuSection, MenuItem } from "@/components/listings/detail/restaurant/MenuDisplay";
 import { ItemForm } from "./ItemForm";
+import { OptionGroupEditor } from "./OptionGroupEditor";
 import { useToast } from "@/components/ui/Toast";
 
 /* ── Toggle switch (reusable within this file) ─────── */
@@ -64,6 +65,7 @@ export function MenuBuilder({ menu: initialMenu, scanCount, tableOrdering: initi
     sectionId: string;
     item?: MenuItem;
   } | null>(null);
+  const [optionsItemId, setOptionsItemId] = useState<string | null>(null);
   const [editingSectionId, setEditingSectionId] = useState<string | null>(null);
   const [editingSectionTitle, setEditingSectionTitle] = useState("");
   const [addingSectionName, setAddingSectionName] = useState("");
@@ -515,6 +517,19 @@ export function MenuBuilder({ menu: initialMenu, scanCount, tableOrdering: initi
                             </span>
                             <div className="flex items-center gap-1 shrink-0">
                               <button
+                                onClick={() => setOptionsItemId(
+                                  optionsItemId === item.id ? null : item.id
+                                )}
+                                className={`text-[11px] font-semibold px-2 h-[24px] rounded-full border transition-colors ${
+                                  optionsItemId === item.id
+                                    ? "border-[#E8A020] text-[#E8A020] bg-[#E8A020]/8"
+                                    : "border-[#E2DDD5] text-[#9C9485] hover:border-[#E8A020]/60 hover:text-[#E8A020]"
+                                }`}
+                                title="Manage customisation options"
+                              >
+                                Options
+                              </button>
+                              <button
                                 onClick={() =>
                                   setEditingForm({
                                     type: "edit",
@@ -536,6 +551,16 @@ export function MenuBuilder({ menu: initialMenu, scanCount, tableOrdering: initi
                               </button>
                             </div>
                           </div>
+
+                          {/* Option group editor */}
+                          {optionsItemId === item.id && (
+                            <OptionGroupEditor
+                              menuItemId={item.id}
+                              menuItemName={item.name}
+                              onClose={() => setOptionsItemId(null)}
+                              showToast={showToast}
+                            />
+                          )}
 
                           {/* Inline edit form */}
                           {editingForm?.type === "edit" &&

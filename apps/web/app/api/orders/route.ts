@@ -4,6 +4,12 @@ import { adminClient } from "@/lib/supabase/admin";
 
 /* ── Validation schema ──────────────────────────────── */
 
+const selectedOptionSchema = z.object({
+  group:     z.string().max(200),
+  choice:    z.string().max(200),
+  price_add: z.number().min(0),
+});
+
 const orderSchema = z.object({
   menu_id: z.string().uuid(),
   table_number: z.string().min(1).max(20),
@@ -11,9 +17,10 @@ const orderSchema = z.object({
   items: z
     .array(
       z.object({
-        menu_item_id: z.string().uuid(),
-        quantity: z.number().int().min(1).max(99),
-        notes: z.string().max(200).optional(),
+        menu_item_id:     z.string().uuid(),
+        quantity:         z.number().int().min(1).max(99),
+        selected_options: z.array(selectedOptionSchema).max(20).optional(),
+        allergy_notes:    z.string().max(300).optional(),
       })
     )
     .min(1)
@@ -47,7 +54,6 @@ export async function POST(req: NextRequest) {
 
     /* STEP 2 — Fetch all submitted items from DB (never trust client prices) */
     // Join through menu_sections to confirm every item belongs to this menu.
-    // Items from a different menu will simply not appear in the results.
     const itemIds = data.items.map((i) => i.menu_item_id);
 
     const { data: dbItems } = await adminClient
@@ -60,8 +66,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No valid items found." }, { status: 400 });
     }
 
-    // If the returned count is fewer than submitted, at least one ID came from
-    // a different menu (or doesn't exist at all).
     if (dbItems.length !== itemIds.length) {
       return NextResponse.json(
         { error: "One or more items do not belong to this menu." },
@@ -88,10 +92,17 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    /* STEP 4 — Compute subtotal from DB prices (client prices are ignored) */
+    /* STEP 4 — Compute per-item line totals from DB base prices + client option snapshots
+       selected_options is a client-provided snapshot — price_add values are what
+       the customer saw. We trust the base price from DB but accept the option
+       price_add from client (options don't have a server-side price check yet;
+       full option validation can be added in V2 when option IDs are submitted). */
     const subtotal = data.items.reduce((sum, orderItem) => {
       const dbItem = itemMap.get(orderItem.menu_item_id)!;
-      return sum + dbItem.price_kes * orderItem.quantity;
+      const optionTotal = (orderItem.selected_options ?? []).reduce(
+        (s, o) => s + (o.price_add ?? 0), 0
+      );
+      return sum + (dbItem.price_kes + optionTotal) * orderItem.quantity;
     }, 0);
 
     const total = subtotal; // delivery_fee_kes = 0 for dine_in V1
@@ -118,16 +129,22 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Failed to place order." }, { status: 500 });
     }
 
-    /* STEP 6 — Insert order items as snapshots */
+    /* STEP 6 — Insert order items as snapshots (with option snapshot + line_total) */
     const orderItemRows = data.items.map((orderItem) => {
       const dbItem = itemMap.get(orderItem.menu_item_id)!;
+      const selectedOptions = orderItem.selected_options ?? [];
+      const optionTotal = selectedOptions.reduce((s, o) => s + (o.price_add ?? 0), 0);
+      const lineTotal = (dbItem.price_kes + optionTotal) * orderItem.quantity;
+
       return {
-        order_id: order.id,
-        menu_item_id: orderItem.menu_item_id,
-        item_name: dbItem.name,          // SNAPSHOT
-        item_price: dbItem.price_kes,    // SNAPSHOT
-        quantity: orderItem.quantity,
-        notes: orderItem.notes ?? null,
+        order_id:         order.id,
+        menu_item_id:     orderItem.menu_item_id,
+        item_name:        dbItem.name,             // SNAPSHOT
+        item_price:       dbItem.price_kes,        // SNAPSHOT
+        quantity:         orderItem.quantity,
+        selected_options: selectedOptions,         // SNAPSHOT
+        allergy_notes:    orderItem.allergy_notes ?? null,
+        line_total:       lineTotal,
       };
     });
 
@@ -136,7 +153,6 @@ export async function POST(req: NextRequest) {
       .insert(orderItemRows);
 
     if (itemsErr) {
-      // Order row exists — log for investigation but don't fail the guest
       console.error("[orders] order_items insert error:", itemsErr);
     }
 

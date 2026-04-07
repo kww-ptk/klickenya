@@ -6,6 +6,25 @@ import Image from "next/image";
 
 /* ── Types ─────────────────────────────────────────── */
 
+export interface ItemOption {
+  id: string;
+  name: string;
+  price_modifier: number;
+  is_available: boolean;
+  display_order: number;
+}
+
+export interface ItemOptionGroup {
+  id: string;
+  name: string;
+  group_type: "single" | "multi" | "allergy";
+  is_required: boolean;
+  min_select: number;
+  max_select: number | null;
+  display_order: number;
+  item_options: ItemOption[];
+}
+
 export interface MenuItem {
   id: string;
   name: string;
@@ -15,6 +34,7 @@ export interface MenuItem {
   is_available: boolean;
   display_order: number;
   photo_url: string | null;
+  item_option_groups?: ItemOptionGroup[];
 }
 
 export interface MenuSection {
