@@ -332,28 +332,24 @@ export function ItemModal({ item, existingCartItem, onClose, onConfirm }: ItemMo
 
   return (
     <>
-      {/* Backdrop */}
+      {/* Backdrop + centering container combined.
+          pointer-events-none lets clicks on the grey area fall through to the backdrop div,
+          which fires onClose. The modal itself re-enables pointer events.
+          Mobile: flex items-end → bottom sheet.
+          Desktop: flex items-center justify-center → true centre. */}
       <div
         className="fixed inset-0 z-40 bg-black/50"
         onClick={onClose}
         aria-hidden
       />
-
-      {/*
-        Mobile: full-width bottom sheet, slides up
-        Desktop (md+): centred modal, fades+scales in
-        NOTE: the desktop variant uses absolute positioning via CSS class,
-        not the Tailwind translate shorthand, because the animation keyframe
-        already incorporates the -50% translate.
-      */}
+      <div className="fixed inset-0 z-50 flex items-end md:items-center md:justify-center pointer-events-none">
       <div
         role="dialog"
         aria-modal
         aria-label={item.name}
-        className="item-modal fixed z-50 bg-white flex flex-col shadow-2xl
-          bottom-0 left-0 right-0 max-h-[92vh] rounded-t-2xl animate-slide-up
-          md:bottom-auto md:right-auto md:top-1/2 md:left-1/2 md:w-[520px] md:max-h-[88vh]
-          md:rounded-2xl md:animate-fade-scale"
+        className="item-modal pointer-events-auto bg-white flex flex-col shadow-2xl
+          w-full max-h-[92vh] rounded-t-2xl animate-slide-up
+          md:w-[520px] md:max-h-[88vh] md:rounded-2xl md:animate-fade-scale"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Photo */}
@@ -505,6 +501,7 @@ export function ItemModal({ item, existingCartItem, onClose, onConfirm }: ItemMo
             </button>
           </div>
         </div>
+      </div>
       </div>
     </>
   );
