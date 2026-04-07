@@ -10,9 +10,10 @@ import { DietaryFilter } from "@/components/menu/DietaryFilter";
 
 /** One resolved option choice stored per cart entry */
 interface SelectedOption {
-  group: string;       // group name (snapshot)
-  choice: string;      // option name (snapshot)
-  price_add: number;   // price_modifier at add time (snapshot)
+  option_id: string;   // DB id — sent to server for price validation
+  group: string;       // group name (snapshot — display only)
+  choice: string;      // option name (snapshot — display only)
+  price_add: number;   // price_modifier from DB at add time — UI display only, NOT sent to server
 }
 
 interface CartEntry {
@@ -261,13 +262,13 @@ function OptionSheet({ item, onClose, onAddToCart }: OptionSheetProps) {
         const selId = singleSelections[g.id];
         if (selId) {
           const opt = g.item_options.find((o) => o.id === selId);
-          if (opt) resolved.push({ group: g.name, choice: opt.name, price_add: opt.price_modifier });
+          if (opt) resolved.push({ option_id: opt.id, group: g.name, choice: opt.name, price_add: opt.price_modifier });
         }
       } else {
         const set = multiSelections[g.id] ?? new Set();
         for (const optId of set) {
           const opt = g.item_options.find((o) => o.id === optId);
-          if (opt) resolved.push({ group: g.name, choice: opt.name, price_add: g.group_type === "allergy" ? 0 : opt.price_modifier });
+          if (opt) resolved.push({ option_id: opt.id, group: g.name, choice: opt.name, price_add: g.group_type === "allergy" ? 0 : opt.price_modifier });
         }
       }
     }
@@ -461,7 +462,8 @@ function CartPanel({ cart, menuId, onBack, onConfirmed, onUpdateQty }: CartPanel
           items: entries.map((e) => ({
             menu_item_id: e.menu_item_id,
             quantity: e.quantity,
-            selected_options: e.selected_options,
+            // Send option_id + labels only — price_add is re-fetched server-side
+            selected_options: e.selected_options.map(({ option_id, group, choice }) => ({ option_id, group, choice })),
             allergy_notes: e.allergy_notes || undefined,
           })),
         }),

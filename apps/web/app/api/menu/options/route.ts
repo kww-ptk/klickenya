@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod/v4";
+import { createClient } from "@/lib/supabase/server";
 import { getMenuAuth, verifyMenuAccess } from "@/app/api/menu/_lib/auth";
+
+type SupabaseClient = Awaited<ReturnType<typeof createClient>>;
 
 /* ── Schemas ─────────────────────────────────────────── */
 
@@ -164,10 +167,39 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({ error: "Unknown action" }, { status: 400 });
 }
 
+/* ── Ownership helpers ───────────────────────────────── */
+
+async function resolveMenuIdFromGroup(
+  supabase: SupabaseClient,
+  groupId: string
+): Promise<string | null> {
+  const { data } = await supabase
+    .from("item_option_groups")
+    .select("id, menu_item_id, menu_items!inner(menu_sections!inner(menu_id))")
+    .eq("id", groupId)
+    .single();
+  if (!data) return null;
+  return (data.menu_items as { menu_sections: { menu_id: string } }).menu_sections.menu_id;
+}
+
+async function resolveMenuIdFromOption(
+  supabase: SupabaseClient,
+  optionId: string
+): Promise<string | null> {
+  const { data } = await supabase
+    .from("item_options")
+    .select("id, item_option_groups!inner(menu_item_id, menu_items!inner(menu_sections!inner(menu_id)))")
+    .eq("id", optionId)
+    .single();
+  if (!data) return null;
+  const grp = data.item_option_groups as { menu_items: { menu_sections: { menu_id: string } } };
+  return grp.menu_items.menu_sections.menu_id;
+}
+
 /* ── PATCH — update a group or option ────────────────── */
 
 export async function PATCH(req: NextRequest) {
-  const { userId, supabase } = await getMenuAuth();
+  const { userId, isAdmin, supabase } = await getMenuAuth();
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = await req.json();
@@ -177,6 +209,11 @@ export async function PATCH(req: NextRequest) {
     const parsed = updateGroupSchema.safeParse(body);
     if (!parsed.success) return NextResponse.json({ error: "Invalid data" }, { status: 400 });
     const { group_id, ...fields } = parsed.data;
+
+    const menuId = await resolveMenuIdFromGroup(supabase, group_id);
+    if (!menuId) return NextResponse.json({ error: "Group not found" }, { status: 404 });
+    const access = await verifyMenuAccess(supabase, menuId, userId, isAdmin);
+    if (!access) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
     const { data, error } = await supabase
       .from("item_option_groups")
@@ -193,6 +230,11 @@ export async function PATCH(req: NextRequest) {
     const parsed = updateOptionSchema.safeParse(body);
     if (!parsed.success) return NextResponse.json({ error: "Invalid data" }, { status: 400 });
     const { option_id, ...fields } = parsed.data;
+
+    const menuId = await resolveMenuIdFromOption(supabase, option_id);
+    if (!menuId) return NextResponse.json({ error: "Option not found" }, { status: 404 });
+    const access = await verifyMenuAccess(supabase, menuId, userId, isAdmin);
+    if (!access) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
     const { data, error } = await supabase
       .from("item_options")
@@ -211,7 +253,7 @@ export async function PATCH(req: NextRequest) {
 /* ── DELETE — remove a group or option ───────────────── */
 
 export async function DELETE(req: NextRequest) {
-  const { userId, supabase } = await getMenuAuth();
+  const { userId, isAdmin, supabase } = await getMenuAuth();
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = await req.json();
@@ -220,6 +262,11 @@ export async function DELETE(req: NextRequest) {
   const { type, id } = parsed.data;
 
   if (type === "group") {
+    const menuId = await resolveMenuIdFromGroup(supabase, id);
+    if (!menuId) return NextResponse.json({ error: "Group not found" }, { status: 404 });
+    const access = await verifyMenuAccess(supabase, menuId, userId, isAdmin);
+    if (!access) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
     const { error } = await supabase
       .from("item_option_groups")
       .delete()
@@ -229,6 +276,11 @@ export async function DELETE(req: NextRequest) {
   }
 
   // type === "option"
+  const menuId = await resolveMenuIdFromOption(supabase, id);
+  if (!menuId) return NextResponse.json({ error: "Option not found" }, { status: 404 });
+  const access = await verifyMenuAccess(supabase, menuId, userId, isAdmin);
+  if (!access) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
   const { error } = await supabase
     .from("item_options")
     .delete()

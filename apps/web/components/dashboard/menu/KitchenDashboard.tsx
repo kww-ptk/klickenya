@@ -149,16 +149,34 @@ function OrderCard({ order, isNew, updating, onAction, onCancel, tick }: OrderCa
               {item.selected_options && item.selected_options.length > 0 && (
                 <div className="mt-0.5 space-y-0">
                   {item.selected_options.map((o, i) => (
-                    <p key={i} className="text-[11px] text-[#5E5848]">
+                    <p key={i} className="text-[12px] text-[#3D3A32]">
                       › {o.choice}
                     </p>
                   ))}
                 </div>
               )}
               {item.allergy_notes && (
-                <p className="text-[11px] text-[#DC2626] font-semibold mt-0.5">
-                  ⚠ {item.allergy_notes}
-                </p>
+                <div style={{
+                  background: '#FEE2E2',
+                  border: '1px solid #DC2626',
+                  borderRadius: '6px',
+                  padding: '4px 8px',
+                  marginTop: '4px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '5px'
+                }}>
+                  <span style={{ fontSize: '13px' }}>⚠</span>
+                  <span style={{
+                    fontSize: '12px',
+                    fontWeight: '700',
+                    color: '#DC2626',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.03em'
+                  }}>
+                    ALLERGY: {item.allergy_notes}
+                  </span>
+                </div>
               )}
               {item.notes && (
                 <p className="text-[12px] text-[#9C9485] italic">{item.notes}</p>

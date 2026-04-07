@@ -4,10 +4,12 @@ import { adminClient } from "@/lib/supabase/admin";
 
 /* ── Validation schema ──────────────────────────────── */
 
+// Client submits option IDs + display labels only — NO price_add.
+// Server fetches price_modifier from DB (same pattern as item base prices).
 const selectedOptionSchema = z.object({
-  group:     z.string().max(200),
-  choice:    z.string().max(200),
-  price_add: z.number().min(0),
+  option_id: z.string().uuid(),
+  group:     z.string().max(200),   // display label snapshot
+  choice:    z.string().max(200),   // display label snapshot
 });
 
 const orderSchema = z.object({
@@ -53,7 +55,6 @@ export async function POST(req: NextRequest) {
     }
 
     /* STEP 2 — Fetch all submitted items from DB (never trust client prices) */
-    // Join through menu_sections to confirm every item belongs to this menu.
     const itemIds = data.items.map((i) => i.menu_item_id);
 
     const { data: dbItems } = await adminClient
@@ -92,22 +93,72 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    /* STEP 4 — Compute per-item line totals from DB base prices + client option snapshots
-       selected_options is a client-provided snapshot — price_add values are what
-       the customer saw. We trust the base price from DB but accept the option
-       price_add from client (options don't have a server-side price check yet;
-       full option validation can be added in V2 when option IDs are submitted). */
+    /* STEP 4 — Fetch option prices from DB (never trust client price_add)
+       Collect all submitted option_ids, fetch in one query, validate each
+       option belongs to the correct menu_item for this menu. */
+    const allOptionIds = data.items.flatMap(
+      (i) => (i.selected_options ?? []).map((o) => o.option_id)
+    );
+
+    // Map from option_id → DB row (price_modifier + parent item ID for validation)
+    const dbOptionMap = new Map<string, { price_modifier: number; menu_item_id: string }>();
+
+    if (allOptionIds.length > 0) {
+      const { data: dbOptions } = await adminClient
+        .from("item_options")
+        .select(`
+          id,
+          price_modifier,
+          is_available,
+          item_option_groups!inner (
+            menu_item_id
+          )
+        `)
+        .in("id", allOptionIds);
+
+      if (dbOptions) {
+        for (const opt of dbOptions) {
+          const group = opt.item_option_groups as { menu_item_id: string };
+          dbOptionMap.set(opt.id, {
+            price_modifier: opt.price_modifier,
+            menu_item_id:   group.menu_item_id,
+          });
+        }
+      }
+
+      // Validate every submitted option_id exists and belongs to the correct item
+      for (const orderItem of data.items) {
+        for (const selectedOpt of orderItem.selected_options ?? []) {
+          const dbOpt = dbOptionMap.get(selectedOpt.option_id);
+          if (!dbOpt) {
+            return NextResponse.json(
+              { error: "One or more options are no longer available." },
+              { status: 400 }
+            );
+          }
+          if (dbOpt.menu_item_id !== orderItem.menu_item_id) {
+            return NextResponse.json(
+              { error: "Option does not belong to the submitted menu item." },
+              { status: 400 }
+            );
+          }
+        }
+      }
+    }
+
+    /* STEP 5 — Compute totals using DB prices only */
     const subtotal = data.items.reduce((sum, orderItem) => {
       const dbItem = itemMap.get(orderItem.menu_item_id)!;
-      const optionTotal = (orderItem.selected_options ?? []).reduce(
-        (s, o) => s + (o.price_add ?? 0), 0
-      );
+      const optionTotal = (orderItem.selected_options ?? []).reduce((s, o) => {
+        const dbOpt = dbOptionMap.get(o.option_id);
+        return s + (dbOpt?.price_modifier ?? 0);
+      }, 0);
       return sum + (dbItem.price_kes + optionTotal) * orderItem.quantity;
     }, 0);
 
     const total = subtotal; // delivery_fee_kes = 0 for dine_in V1
 
-    /* STEP 5 — Insert order */
+    /* STEP 6 — Insert order */
     const { data: order, error: orderErr } = await adminClient
       .from("orders")
       .insert({
@@ -129,20 +180,26 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Failed to place order." }, { status: 500 });
     }
 
-    /* STEP 6 — Insert order items as snapshots (with option snapshot + line_total) */
+    /* STEP 7 — Insert order items as snapshots
+       selected_options snapshot is built from DB prices — client labels (group/choice)
+       are kept for display but price_add always comes from DB price_modifier. */
     const orderItemRows = data.items.map((orderItem) => {
       const dbItem = itemMap.get(orderItem.menu_item_id)!;
-      const selectedOptions = orderItem.selected_options ?? [];
-      const optionTotal = selectedOptions.reduce((s, o) => s + (o.price_add ?? 0), 0);
+      const selectedOptions = (orderItem.selected_options ?? []).map((o) => ({
+        group:     o.group,
+        choice:    o.choice,
+        price_add: dbOptionMap.get(o.option_id)?.price_modifier ?? 0, // DB price
+      }));
+      const optionTotal = selectedOptions.reduce((s, o) => s + o.price_add, 0);
       const lineTotal = (dbItem.price_kes + optionTotal) * orderItem.quantity;
 
       return {
         order_id:         order.id,
         menu_item_id:     orderItem.menu_item_id,
-        item_name:        dbItem.name,             // SNAPSHOT
-        item_price:       dbItem.price_kes,        // SNAPSHOT
+        item_name:        dbItem.name,          // SNAPSHOT
+        item_price:       dbItem.price_kes,     // SNAPSHOT
         quantity:         orderItem.quantity,
-        selected_options: selectedOptions,         // SNAPSHOT
+        selected_options: selectedOptions,      // SNAPSHOT — prices from DB
         allergy_notes:    orderItem.allergy_notes ?? null,
         line_total:       lineTotal,
       };
@@ -156,7 +213,7 @@ export async function POST(req: NextRequest) {
       console.error("[orders] order_items insert error:", itemsErr);
     }
 
-    /* STEP 7 — Return confirmation */
+    /* STEP 8 — Return confirmation */
     return NextResponse.json({
       order_id: order.id,
       short_id: order.id.slice(0, 8).toUpperCase(),
