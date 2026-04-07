@@ -48,9 +48,18 @@ SANITY_API_TOKEN=skCbj0aGyKfa66eCmPPkvfR8v3PqEbDkgEVIiAC1t52iwcSjv6ZttWbSwQYXN6V
 
 # Performance
 
-- Server-side auth helpers in `apps/web/app/dashboard/_lib/auth.ts` are wrapped in React `cache()` for per-request deduplication. Do not unwrap them.
-- Do NOT wrap `createClient()` from `lib/supabase/server.ts` in `cache()`. It owns mutable cookie state and sharing one instance across callers risks cross-request auth confusion. The minor perf gain is not worth the multi-tenant risk.
-- For owner-scoped reference data caching (menus, sections, items, option groups, restaurant tables, settings), use `unstable_cache` with per-owner tags and `revalidateTag` invalidation. That work is planned but not yet implemented.
+## Performance notes
+
+- Server-side auth helpers in `apps/web/app/dashboard/_lib/auth.ts` (`getAuthUser`, `getUserProfile`, `getHostProfile`) are wrapped in React `cache()` for per-request deduplication. Do not unwrap them.
+- Do NOT wrap `createClient()` from `lib/supabase/server.ts` in `cache()`. It owns mutable cookie state via setAll, and sharing one instance across callers risks cross-request auth confusion. The minor perf gain is not worth the multi-tenant risk.
+- For owner-scoped reference data caching (menus, sections, items, option groups, restaurant tables, settings), use `unstable_cache` with per-owner tags and `revalidateTag` invalidation. Planned but not yet implemented as of today.
+
+## Error monitoring
+
+- Sentry is installed via `@sentry/nextjs`. Client init lives in `apps/web/instrumentation-client.ts` (Next.js 16 convention — do not rename). Server init in `instrumentation.ts`. Configs in `sentry.server.config.ts` and `sentry.edge.config.ts`.
+- Sentry is gated by `enabled: process.env.NODE_ENV === "production"` so dev never burns the free tier quota.
+- Source maps are not yet uploaded. To enable readable stack traces, add `SENTRY_AUTH_TOKEN` to Vercel env vars (Production + Preview).
+- The kitchen orders page is tagged with `route: kitchen_orders` for a future Sentry alert.
 
 ---
 
