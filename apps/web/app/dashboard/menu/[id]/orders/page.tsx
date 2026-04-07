@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/nextjs";
 import { redirect } from "next/navigation";
 import { getAuthUser } from "@/app/dashboard/_lib/auth";
 import { adminClient } from "@/lib/supabase/admin";
@@ -9,6 +10,7 @@ interface PageProps {
 
 export default async function KitchenDashboardPage({ params }: PageProps) {
   const { id } = await params;
+  Sentry.setTag("route", "kitchen_orders");
   const { user } = await getAuthUser();
 
   if (!user) redirect("/login");
