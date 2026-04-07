@@ -175,6 +175,59 @@ function RestaurantDetail({
               <h2 className="font-display text-[22px] font-bold tracking-[-0.02em] text-dark mb-4">
                 Menu
               </h2>
+
+              {/* View full menu + table ordering badges */}
+              {menuData && (
+                <>
+                  <style>{`
+                    @keyframes menuPulse {
+                      0%, 100% { opacity: 1; }
+                      50%       { opacity: 0.4; }
+                    }
+                    .menu-pulse-dot {
+                      animation: menuPulse 2s ease-in-out infinite;
+                    }
+                    @media (prefers-reduced-motion: reduce) {
+                      .menu-pulse-dot { animation: none; }
+                    }
+                  `}</style>
+                  <div className="flex flex-wrap items-center gap-3 mb-4">
+                    {/* Element 1 — View full menu */}
+                    <a
+                      href={`/m/${menuData.slug}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border text-[13px] font-medium transition-colors hover:bg-[#E8A020]/5"
+                      style={{ borderColor: "#E8A020", color: "#E8A020", borderWidth: "1.5px" }}
+                    >
+                      <span
+                        className="menu-pulse-dot shrink-0 rounded-full"
+                        style={{ width: 6, height: 6, background: "#E8A020", display: "inline-block" }}
+                      />
+                      View full menu →
+                    </a>
+
+                    {/* Element 2 — Table ordering live (conditional) */}
+                    {menuData.table_ordering && (
+                      <span
+                        className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-[13px] font-medium"
+                        style={{
+                          background: "rgba(22,163,74,0.08)",
+                          border: "1.5px solid rgba(22,163,74,0.35)",
+                          color: "#16A34A",
+                        }}
+                      >
+                        <span
+                          className="menu-pulse-dot shrink-0 rounded-full"
+                          style={{ width: 6, height: 6, background: "#16A34A", display: "inline-block" }}
+                        />
+                        Order from your table
+                      </span>
+                    )}
+                  </div>
+                </>
+              )}
+
               <MenuDisplay menuData={menuData ?? null} />
             </div>
 

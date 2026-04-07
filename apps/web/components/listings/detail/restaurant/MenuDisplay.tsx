@@ -50,6 +50,7 @@ export interface MenuData {
   slug: string;
   name: string;
   is_published: boolean;
+  table_ordering: boolean;
   menu_sections: MenuSection[];
 }
 
