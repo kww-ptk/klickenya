@@ -4,18 +4,24 @@ import Link from "next/link";
 import { adminClient } from "@/lib/supabase/admin";
 import type { MenuData, MenuSection } from "@/components/listings/detail/restaurant/MenuDisplay";
 import { MenuWithFilters } from "@/components/menu/MenuWithFilters";
+import { MenuWithCart } from "@/components/menu/MenuWithCart";
 import { ScanTracker } from "@/components/menu/ScanTracker";
 
 export const revalidate = 60;
 
+/* ── Types ─────────────────────────────────────────── */
+
+// Extends MenuData with the table_ordering flag used only by this page
+type MenuWithOrdering = MenuData & { table_ordering: boolean };
+
 /* ── Data fetching ─────────────────────────────────── */
 
-async function getMenu(slug: string): Promise<MenuData | null> {
+async function getMenu(slug: string): Promise<MenuWithOrdering | null> {
   const { data } = await adminClient
     .from("menus")
     .select(
       `
-      id, name, is_published,
+      id, name, is_published, table_ordering,
       menu_sections (
         id, title, display_order, is_visible,
         menu_items (
@@ -29,7 +35,8 @@ async function getMenu(slug: string): Promise<MenuData | null> {
     .eq("is_published", true)
     .single();
 
-  return (data as MenuData) ?? null;
+  // Add slug to satisfy MenuData shape (not stored in the select but needed by type)
+  return data ? ({ ...data, slug } as MenuWithOrdering) : null;
 }
 
 /* ── Static params ─────────────────────────────────── */
@@ -63,7 +70,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 /* ── Helpers ───────────────────────────────────────── */
 
-function prepareSections(menu: MenuData): MenuSection[] {
+function prepareSections(menu: MenuWithOrdering): MenuSection[] {
   return menu.menu_sections
     .filter((s) => s.is_visible && s.menu_items.length > 0)
     .sort((a, b) => a.display_order - b.display_order)
@@ -98,18 +105,29 @@ export default async function MenuPage({ params }: PageProps) {
         </h1>
       </header>
 
-      {/* Tab bar + dietary filters + sections (client-side for filtering) */}
-      <MenuWithFilters sections={sections} />
+      {/*
+        Conditional rendering based on table_ordering flag:
+        - table_ordering = false → read-only browse (MenuWithFilters, unchanged)
+        - table_ordering = true  → cart-enabled browse (MenuWithCart)
+        The browse UI is identical in both cases; MenuWithCart layers cart controls on top.
+      */}
+      {menu.table_ordering ? (
+        <MenuWithCart sections={sections} menuId={menu.id} />
+      ) : (
+        <MenuWithFilters sections={sections} />
+      )}
 
-      {/* Powered by */}
-      <div className="text-center pb-6">
-        <Link
-          href="https://klickenya.com"
-          className="text-[12px] text-text3 hover:text-text2 transition-colors"
-        >
-          Powered by Klickenya
-        </Link>
-      </div>
+      {/* Powered by — only shown in read-only mode; cart mode has its own footer */}
+      {!menu.table_ordering && (
+        <div className="text-center pb-6">
+          <Link
+            href="https://klickenya.com"
+            className="text-[12px] text-text3 hover:text-text2 transition-colors"
+          >
+            Powered by Klickenya
+          </Link>
+        </div>
+      )}
     </div>
   );
 }

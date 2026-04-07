@@ -6,6 +6,37 @@ import type { MenuData, MenuSection, MenuItem } from "@/components/listings/deta
 import { ItemForm } from "./ItemForm";
 import { useToast } from "@/components/ui/Toast";
 
+/* ── Toggle switch (reusable within this file) ─────── */
+
+function Toggle({
+  checked,
+  onChange,
+  disabled,
+}: {
+  checked: boolean;
+  onChange: () => void;
+  disabled?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      onClick={onChange}
+      disabled={disabled}
+      className={`relative w-10 h-[22px] rounded-full transition-colors disabled:opacity-50 ${
+        checked ? "bg-[#16A34A]" : "bg-[#E2DDD5]"
+      }`}
+    >
+      <span
+        className={`absolute top-[2px] size-[18px] rounded-full bg-white shadow transition-transform ${
+          checked ? "translate-x-[20px]" : "translate-x-[2px]"
+        }`}
+      />
+    </button>
+  );
+}
+
 /* ── Price formatter ───────────────────────────────── */
 
 function formatPrice(amount: number): string {
@@ -17,14 +48,17 @@ function formatPrice(amount: number): string {
 interface MenuBuilderProps {
   menu: MenuData;
   scanCount: number;
+  tableOrdering: boolean;
   backHref?: string;
   backLabel?: string;
 }
 
 /* ── Component ─────────────────────────────────────── */
 
-export function MenuBuilder({ menu: initialMenu, scanCount, backHref, backLabel }: MenuBuilderProps) {
+export function MenuBuilder({ menu: initialMenu, scanCount, tableOrdering: initialTableOrdering, backHref, backLabel }: MenuBuilderProps) {
   const [menu, setMenu] = useState<MenuData>(initialMenu);
+  const [tableOrdering, setTableOrdering] = useState(initialTableOrdering);
+  const [togglingOrdering, setTogglingOrdering] = useState(false);
   const [editingForm, setEditingForm] = useState<{
     type: "add" | "edit";
     sectionId: string;
@@ -189,6 +223,48 @@ export function MenuBuilder({ menu: initialMenu, scanCount, backHref, backLabel 
     }
   }, [showToast]);
 
+  /* ── Table ordering toggle ───────────────────────── */
+
+  const toggleTableOrdering = useCallback(async () => {
+    const enabling = !tableOrdering;
+
+    // If disabling, warn user if there are open orders
+    if (!enabling) {
+      if (!confirm("Disable table ordering? Guests will no longer be able to place orders from their table.")) {
+        return;
+      }
+    }
+
+    setTogglingOrdering(true);
+    try {
+      const res = await fetch("/api/menu/settings", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ menu_id: menu.id, table_ordering: enabling }),
+      });
+
+      if (!res.ok) throw new Error();
+
+      const data = await res.json();
+
+      // Warn about open orders after disabling
+      if (!enabling && data.open_order_count > 0) {
+        showToast(
+          `Table ordering disabled. ${data.open_order_count} order${data.open_order_count > 1 ? "s" : ""} still in progress.`,
+          "error"
+        );
+      } else {
+        showToast(enabling ? "Table ordering enabled" : "Table ordering disabled");
+      }
+
+      setTableOrdering(enabling);
+    } catch {
+      showToast("Failed to update table ordering setting", "error");
+    } finally {
+      setTogglingOrdering(false);
+    }
+  }, [menu.id, tableOrdering, showToast]);
+
   /* ── Publish ─────────────────────────────────────── */
 
   const togglePublish = useCallback(async () => {
@@ -290,6 +366,40 @@ export function MenuBuilder({ menu: initialMenu, scanCount, backHref, backLabel 
             <p className="text-[12px] text-[#9C9485]">
               People are viewing your menu
             </p>
+          )}
+        </div>
+
+        {/* Table ordering toggle */}
+        <div className="bg-white rounded-xl lg:rounded-2xl border border-[#E2DDD5] p-4 lg:p-5 shadow-sm">
+          <div className="flex items-center justify-between mb-1">
+            <p className="text-[14px] font-semibold text-[#16130C]">Table ordering</p>
+            <Toggle
+              checked={tableOrdering}
+              onChange={toggleTableOrdering}
+              disabled={togglingOrdering}
+            />
+          </div>
+          <p className="text-[12px] text-[#9C9485]">
+            {tableOrdering
+              ? "Guests can order from their table using the menu QR code."
+              : "Enable to let guests place orders from their table."}
+          </p>
+
+          {tableOrdering && (
+            <>
+              <div className="mt-3 p-3 rounded-lg bg-[#E8A020]/8 border border-[#E8A020]/20">
+                <p className="text-[12px] text-[#5E5848]">
+                  <span className="font-bold">Heads up:</span> Make sure someone is watching the kitchen dashboard when ordering is active.
+                </p>
+              </div>
+              <Link
+                href={`/dashboard/menu/${menu.id}/orders`}
+                className="mt-3 flex items-center justify-center gap-2 w-full h-[36px] rounded-full bg-[#16130C] text-white text-[13px] font-bold hover:bg-[#2A2520] transition-colors"
+              >
+                <span>🍳</span>
+                Kitchen view →
+              </Link>
+            </>
           )}
         </div>
       </div>

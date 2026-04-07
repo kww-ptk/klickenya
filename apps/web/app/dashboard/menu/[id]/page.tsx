@@ -20,7 +20,7 @@ export default async function MenuBuilderPage({ params }: PageProps) {
     .from("menus")
     .select(
       `
-      id, slug, name, is_published,
+      id, slug, name, is_published, table_ordering,
       menu_sections (
         id, title, display_order, is_visible,
         menu_items (
@@ -46,7 +46,11 @@ export default async function MenuBuilderPage({ params }: PageProps) {
 
   return (
     <ToastProvider>
-      <MenuBuilder menu={menu as MenuData} scanCount={scanCount ?? 0} />
+      <MenuBuilder
+        menu={menu as MenuData}
+        scanCount={scanCount ?? 0}
+        tableOrdering={menu.table_ordering ?? false}
+      />
     </ToastProvider>
   );
 }
