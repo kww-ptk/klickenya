@@ -17,7 +17,7 @@ export const sanityPreviewClient = createClient({
 })
 
 // Simple fetch wrapper with ISR revalidation
-export async function sanityFetch<T>({
+export async function sanityFetch<T = any>({
   query,
   params,
 }: {
