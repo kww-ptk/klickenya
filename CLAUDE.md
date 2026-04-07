@@ -46,6 +46,14 @@ SANITY_API_TOKEN=skCbj0aGyKfa66eCmPPkvfR8v3PqEbDkgEVIiAC1t52iwcSjv6ZttWbSwQYXN6V
 
 ---
 
+# Performance
+
+- Server-side auth helpers in `apps/web/app/dashboard/_lib/auth.ts` are wrapped in React `cache()` for per-request deduplication. Do not unwrap them.
+- Do NOT wrap `createClient()` from `lib/supabase/server.ts` in `cache()`. It owns mutable cookie state and sharing one instance across callers risks cross-request auth confusion. The minor perf gain is not worth the multi-tenant risk.
+- For owner-scoped reference data caching (menus, sections, items, option groups, restaurant tables, settings), use `unstable_cache` with per-owner tags and `revalidateTag` invalidation. That work is planned but not yet implemented.
+
+---
+
 # Claude Code Rules
 - ALWAYS work on the dev branch
 - NEVER create claude/* branches
