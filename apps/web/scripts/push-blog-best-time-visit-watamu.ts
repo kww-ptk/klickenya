@@ -78,6 +78,9 @@ const body = [
     ],
   },
 
+  // ── Tide Chart ──
+  { _type: 'tideChartBlock', _key: key() },
+
   // ── The Two Seasons ──
   textBlock('The Two Main Seasons', 'h2'),
 
@@ -266,6 +269,9 @@ const body = [
       { _key: key(), label: 'December', values: ['33°C, dry', 'Calm', 'Busy', 'High season begins, Christmas very busy, book early'] },
     ],
   },
+
+  // ── Wind Chart ──
+  { _type: 'windChartBlock', _key: key() },
 
   // ── Who Is It For ──
   {
