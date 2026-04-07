@@ -145,8 +145,9 @@ export async function POST(req: NextRequest) {
       .single();
 
     if (!groupRow) return NextResponse.json({ error: "Group not found" }, { status: 404 });
-    const ms = (groupRow.menu_items as { menu_sections: { menu_id: string } }).menu_sections;
-    const menuId = ms.menu_id;
+    const _mi = Array.isArray(groupRow.menu_items) ? groupRow.menu_items[0] : groupRow.menu_items;
+    const _ms = Array.isArray(_mi?.menu_sections) ? _mi.menu_sections[0] : _mi?.menu_sections;
+    const menuId = (_ms as { menu_id: string }).menu_id;
     const access = await verifyMenuAccess(supabase, menuId, userId, isAdmin);
     if (!access) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
@@ -181,7 +182,9 @@ async function resolveMenuIdFromGroup(
     .eq("id", groupId)
     .single();
   if (!data) return null;
-  return (data.menu_items as { menu_sections: { menu_id: string } }).menu_sections.menu_id;
+  const _mi = Array.isArray(data.menu_items) ? data.menu_items[0] : data.menu_items;
+  const _ms = Array.isArray(_mi?.menu_sections) ? _mi.menu_sections[0] : _mi?.menu_sections;
+  return (_ms as { menu_id: string })?.menu_id ?? null;
 }
 
 async function resolveMenuIdFromOption(
@@ -194,8 +197,10 @@ async function resolveMenuIdFromOption(
     .eq("id", optionId)
     .single();
   if (!data) return null;
-  const grp = data.item_option_groups as { menu_items: { menu_sections: { menu_id: string } } };
-  return grp.menu_items.menu_sections.menu_id;
+  const _grp = Array.isArray(data.item_option_groups) ? data.item_option_groups[0] : data.item_option_groups;
+  const _mi  = Array.isArray(_grp?.menu_items)    ? _grp.menu_items[0]    : _grp?.menu_items;
+  const _ms  = Array.isArray(_mi?.menu_sections)  ? _mi.menu_sections[0]  : _mi?.menu_sections;
+  return (_ms as { menu_id: string })?.menu_id ?? null;
 }
 
 /* ── PATCH — update a group or option ────────────────── */
