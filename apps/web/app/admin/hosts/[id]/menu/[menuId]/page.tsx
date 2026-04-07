@@ -17,7 +17,7 @@ export default async function AdminMenuBuilderPage({ params }: PageProps) {
     .from("menus")
     .select(
       `
-      id, slug, name, is_published,
+      id, slug, name, is_published, table_ordering,
       menu_sections (
         id, title, display_order, is_visible,
         menu_items (
@@ -45,6 +45,7 @@ export default async function AdminMenuBuilderPage({ params }: PageProps) {
       <MenuBuilder
         menu={menu as MenuData}
         scanCount={scanCount ?? 0}
+        tableOrdering={menu.table_ordering ?? false}
         backHref={`/admin/hosts/${id}`}
         backLabel="← Back to host"
       />
