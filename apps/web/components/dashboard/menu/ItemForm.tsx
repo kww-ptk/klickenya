@@ -105,6 +105,7 @@ export function ItemForm({ sectionId, menuId, item, onSave, onCancel }: ItemForm
       is_available: isAvailable,
       display_order: item?.display_order ?? 999,
       photo_url: photoUrl.trim() || null,
+      is_featured: item?.is_featured ?? false,
     };
 
     // Optimistic: update UI immediately
