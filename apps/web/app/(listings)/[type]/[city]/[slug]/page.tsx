@@ -241,7 +241,7 @@ export default async function ListingDetailPage({ params }: PageProps) {
         )
       `
       )
-      .eq("slug", slug)
+      .eq("listing_slug", slug)
       .eq("is_published", true)
       .single();
     menuData = (data as MenuData) ?? null;
