@@ -67,7 +67,8 @@ export async function GET(req: NextRequest) {
     .single();
 
   if (!itemRow) return NextResponse.json({ error: "Item not found" }, { status: 404 });
-  const menuId = (itemRow.menu_sections as { menu_id: string }).menu_id;
+  const _sec0 = Array.isArray(itemRow.menu_sections) ? itemRow.menu_sections[0] : itemRow.menu_sections;
+  const menuId = (_sec0 as { menu_id: string }).menu_id;
 
   const access = await verifyMenuAccess(supabase, menuId, userId, isAdmin);
   if (!access) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
@@ -108,7 +109,8 @@ export async function POST(req: NextRequest) {
       .single();
 
     if (!itemRow) return NextResponse.json({ error: "Item not found" }, { status: 404 });
-    const menuId = (itemRow.menu_sections as { menu_id: string }).menu_id;
+    const _sec1 = Array.isArray(itemRow.menu_sections) ? itemRow.menu_sections[0] : itemRow.menu_sections;
+    const menuId = (_sec1 as { menu_id: string }).menu_id;
     const access = await verifyMenuAccess(supabase, menuId, userId, isAdmin);
     if (!access) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
