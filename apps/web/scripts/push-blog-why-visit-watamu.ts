@@ -75,7 +75,7 @@ const body = [
     title: '✦ Watamu at a glance',
     accentColor: 'teal',
     items: [
-      { icon: '📍', label: 'Location', value: '120 km north of Mombasa, 25 km south of Malindi' },
+      { icon: '📍', label: 'Location', value: '108 km north of Mombasa, 25 km south of Malindi' },
       { icon: '✈️', label: 'Getting there', value: 'Fly to Malindi (45 min from Nairobi), 30 min taxi to Watamu' },
       { icon: '📅', label: 'Best time to visit', value: 'December to March and June to October' },
       { icon: '🌊', label: 'Known for', value: 'Marine park, sandbanks, Italian food, kitesurfing, turtles' },
@@ -171,7 +171,7 @@ const body = [
   richText([
     { text: 'Ten minutes from Watamu town is the ' },
     { text: 'Arabuko Sokoke Forest', bold: true },
-    { text: ', the largest remaining fragment of East African coastal forest. A small population of around 100 forest elephants lives here, and they come to the salt lick at the forest edge in the early evening. Watching elephants at sunset, 15 minutes from your beach villa, is the kind of thing that makes you realise how extraordinary the Kenya coast is.' },
+    { text: ', the largest remaining fragment of East African coastal forest. Around 200 forest elephants live here, and they come to the salt lick at the forest edge in the early evening. Watching elephants at sunset, 15 minutes from your beach villa, is the kind of thing that makes you realise how extraordinary the Kenya coast is.' },
   ]),
 
   textBlock('The forest is also exceptional for birdwatching. The Sokoke Scops Owl, the Amani Sunbird and the Clarke\'s Weaver are all globally threatened species found here and almost nowhere else on earth.'),
@@ -219,6 +219,34 @@ const body = [
   ]),
 
   placeholder('Fresh seafood and sunset cocktails in Watamu'),
+
+  // ── Italian Origin Story ──
+  textBlock('Why Are There So Many Italians in Watamu?', 'h2'),
+
+  richText([
+    { text: 'This is one of the questions every first-time visitor asks, and the answer is one of the most fascinating stories on the Kenya coast. In the 1960s, around 120 Italians arrived in the area to build and operate the ' },
+    { text: 'Luigi Broglio Space Centre', bold: true },
+    { text: ', an Italian space research station that was established near Malindi and used to launch satellites from a platform off the coast. It was genuinely one of the earliest space launch facilities in Africa.' },
+  ]),
+
+  textBlock('Many of those Italians never left. They discovered pristine beaches, warm water, abundant seafood, and a pace of life that was impossible to give up. Word spread back in Italy, friends and family came to visit, and over the following decades a full Italian community took root along this stretch of coast.'),
+
+  richText([
+    { text: 'Today, Italians make up around ' },
+    { text: '70 percent of annual visitors to Watamu.', bold: true },
+    { text: ' Most of the hotels and villas are Italian-owned. Children in Watamu learn Italian at primary school and many locals speak it as a second language alongside Swahili and English. The Italian restaurants are not a tourist imitation of Italian food. They are run by Italians, using Italian techniques, with fresh Kenyan ingredients. That is why the food is so good.' },
+  ]),
+
+  {
+    _type: 'tipCardBlock',
+    _key: key(),
+    variant: 'tip',
+    icon: '🇮🇹',
+    label: 'A local tip about the Italian community',
+    text: 'If you want to understand Watamu, spend an evening at one of the Italian-owned beach bars. The stories you will hear about how this community built itself here over 60 years are genuinely extraordinary. The connection between Kenya and Italy along this stretch of coast is unlike anything else in Africa.',
+  },
+
+  placeholder('Italian influence in Watamu: the restaurants, the architecture, the people'),
 
   // ── Villas ──
   textBlock('The Most Stunning Villas in Kenya', 'h2'),
