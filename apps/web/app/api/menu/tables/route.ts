@@ -98,7 +98,7 @@ export async function POST(req: NextRequest) {
 
     const startOrder = (existing?.[0]?.display_order ?? -1) + 1;
     const rows = labels.map((table_number, i) => ({
-      menu_id,
+      menu_id: menuId,
       table_number,
       capacity:      4,
       display_order: startOrder + i,
