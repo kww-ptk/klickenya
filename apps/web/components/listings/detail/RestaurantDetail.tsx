@@ -73,9 +73,15 @@ function RestaurantDetail({
     : [];
 
   // "Order from your table" badge — only show during likely operating hours
-  // (07:00–23:00 EAT = UTC+3). If no opening hours are set, always show.
-  const nowEAT = new Date(Date.now() + 3 * 60 * 60 * 1000);
-  const hourEAT = nowEAT.getUTCHours();
+  // (07:00–23:00 Africa/Nairobi). If no opening hours are set, always show.
+  const hourEAT = parseInt(
+    new Intl.DateTimeFormat("en-US", {
+      timeZone: "Africa/Nairobi",
+      hour: "numeric",
+      hour12: false,
+    }).format(new Date()),
+    10
+  );
   const isWithinOperatingHours = hourEAT >= 7 && hourEAT < 23;
   const showOrderBadge =
     !!menuData?.table_ordering &&
