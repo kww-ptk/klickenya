@@ -236,7 +236,7 @@ export default async function ListingDetailPage({ params }: PageProps) {
           id, title, display_order, is_visible,
           menu_items (
             id, name, description, price_kes,
-            dietary_tags, is_available, display_order, photo_url
+            dietary_tags, is_available, display_order, photo_url, is_featured
           )
         )
       `

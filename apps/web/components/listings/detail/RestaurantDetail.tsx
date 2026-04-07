@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { Star, MapPin, Clock } from "lucide-react";
 import { PortableTextRenderer } from "@/components/blog/PortableTextRenderer";
 import { PhotoGallery } from "@/components/listings/widgets/PhotoGallery";
@@ -32,6 +33,10 @@ interface RestaurantDetailProps {
 
 /* ── Helpers ───────────────────────────────────────── */
 
+function formatPrice(n: number): string {
+  return `KSh ${n.toLocaleString("en-KE")}`;
+}
+
 const PRICE_RANGE_MAP: Record<string, { label: string; symbol: string }> = {
   budget: { label: "Budget-friendly", symbol: "$" },
   "mid-range": { label: "Mid-range", symbol: "$$" },
@@ -57,6 +62,24 @@ function RestaurantDetail({
   const hostName = listing.hostRef?.name ?? listing.hostName ?? "Klickenya";
   const cuisine: string[] = listing.cuisine ?? [];
   const priceInfo = PRICE_RANGE_MAP[listing.priceRange ?? ""] ?? null;
+
+  // Featured items — collect across all sections, max 5, available only
+  const featuredItems = menuData
+    ? menuData.menu_sections
+        .flatMap((s) => s.menu_items)
+        .filter((i) => i.is_featured && i.is_available)
+        .sort((a, b) => a.display_order - b.display_order)
+        .slice(0, 5)
+    : [];
+
+  // "Order from your table" badge — only show during likely operating hours
+  // (07:00–23:00 EAT = UTC+3). If no opening hours are set, always show.
+  const nowEAT = new Date(Date.now() + 3 * 60 * 60 * 1000);
+  const hourEAT = nowEAT.getUTCHours();
+  const isWithinOperatingHours = hourEAT >= 7 && hourEAT < 23;
+  const showOrderBadge =
+    !!menuData?.table_ordering &&
+    (!listing.openingHours || isWithinOperatingHours);
 
   return (
     <>
@@ -192,7 +215,6 @@ function RestaurantDetail({
                     }
                   `}</style>
                   <div className="flex flex-wrap items-center gap-3 mb-4">
-                    {/* Element 1 — View full menu */}
                     <a
                       href={`/m/${menuData.slug}`}
                       target="_blank"
@@ -207,8 +229,7 @@ function RestaurantDetail({
                       View full menu →
                     </a>
 
-                    {/* Element 2 — Table ordering live (conditional) */}
-                    {menuData.table_ordering && (
+                    {showOrderBadge && (
                       <span
                         className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-[13px] font-medium"
                         style={{
@@ -225,6 +246,54 @@ function RestaurantDetail({
                       </span>
                     )}
                   </div>
+
+                  {/* Featured dishes */}
+                  {featuredItems.length > 0 && (
+                    <div className="mb-5">
+                      <h3 className="font-display text-[16px] font-bold text-dark mb-3">
+                        Featured dishes
+                      </h3>
+                      <div className="flex gap-3 overflow-x-auto pb-1 md:grid md:grid-cols-3 md:overflow-visible">
+                        {featuredItems.map((item) => (
+                          <div
+                            key={item.id}
+                            className="shrink-0 w-[155px] md:w-auto rounded-xl border border-border overflow-hidden bg-white"
+                          >
+                            {/* Photo / letter placeholder */}
+                            <div className="relative w-full aspect-[4/3] bg-amber/10">
+                              {item.photo_url ? (
+                                <Image
+                                  src={item.photo_url}
+                                  alt={item.name}
+                                  fill
+                                  className="object-cover"
+                                  sizes="(min-width: 768px) 220px, 155px"
+                                />
+                              ) : (
+                                <span className="absolute inset-0 flex items-center justify-center text-amber font-bold text-[24px]">
+                                  {item.name[0]}
+                                </span>
+                              )}
+                              <span className="absolute top-1.5 left-1.5 bg-amber text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none">
+                                ★
+                              </span>
+                            </div>
+                            <div className="p-2.5">
+                              <p className="text-[13px] font-bold text-dark leading-snug">{item.name}</p>
+                              <p className="text-[12px] font-semibold text-amber mt-0.5">
+                                {formatPrice(item.price_kes)}
+                              </p>
+                              {item.description && (
+                                <p className="text-[11px] text-text3 mt-0.5 line-clamp-2 leading-relaxed">
+                                  {item.description}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </>
               )}
 

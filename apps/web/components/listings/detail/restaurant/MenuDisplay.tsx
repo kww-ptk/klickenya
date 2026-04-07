@@ -34,6 +34,7 @@ export interface MenuItem {
   is_available: boolean;
   display_order: number;
   photo_url: string | null;
+  is_featured: boolean;
   item_option_groups?: ItemOptionGroup[];
 }
 

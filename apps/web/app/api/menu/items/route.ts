@@ -117,13 +117,36 @@ export async function PATCH(req: NextRequest) {
     if (fields.photo_url !== undefined) update.photo_url = fields.photo_url?.trim() || null;
     if (fields.dietary_tags !== undefined) update.dietary_tags = fields.dietary_tags;
     if (fields.is_available !== undefined) update.is_available = fields.is_available;
+    if (fields.is_featured !== undefined) update.is_featured = Boolean(fields.is_featured);
 
     const client = isAdmin ? adminClient : supabase;
+
+    // Enforce max 5 featured items per menu
+    if (update.is_featured === true) {
+      const { data: sections } = await client
+        .from("menu_sections")
+        .select("id")
+        .eq("menu_id", owned.id);
+      const sectionIds = (sections ?? []).map((s: { id: string }) => s.id);
+      const { count } = await client
+        .from("menu_items")
+        .select("id", { count: "exact", head: true })
+        .in("section_id", sectionIds)
+        .eq("is_featured", true)
+        .neq("id", item_id);
+      if ((count ?? 0) >= 5) {
+        return NextResponse.json(
+          { error: "You can feature up to 5 items. Unstar one to add another." },
+          { status: 400 }
+        );
+      }
+    }
+
     const { data: item, error } = await client
       .from("menu_items")
       .update(update)
       .eq("id", item_id)
-      .select("id, name, description, price_kes, dietary_tags, is_available, display_order, photo_url")
+      .select("id, name, description, price_kes, dietary_tags, is_available, display_order, photo_url, is_featured")
       .single();
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });

@@ -230,6 +230,57 @@ export function MenuBuilder({ menu: initialMenu, scanCount, tableOrdering: initi
     }
   }, [showToast]);
 
+  /* ── Featured toggle ────────────────────────────── */
+
+  const toggleFeatured = useCallback(async (item: MenuItem) => {
+    const newFeatured = !item.is_featured;
+
+    if (newFeatured) {
+      const featuredCount = menu.menu_sections
+        .flatMap((s) => s.menu_items)
+        .filter((i) => i.is_featured).length;
+      if (featuredCount >= 5) {
+        showToast("You can feature up to 5 items. Unstar one to add another.", "error");
+        return;
+      }
+    }
+
+    // Optimistic update
+    setMenu((prev) => ({
+      ...prev,
+      menu_sections: prev.menu_sections.map((s) => ({
+        ...s,
+        menu_items: s.menu_items.map((i) =>
+          i.id === item.id ? { ...i, is_featured: newFeatured } : i
+        ),
+      })),
+    }));
+
+    try {
+      const res = await fetch("/api/menu/items", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ item_id: item.id, is_featured: newFeatured }),
+      });
+      if (!res.ok) {
+        // Revert
+        setMenu((prev) => ({
+          ...prev,
+          menu_sections: prev.menu_sections.map((s) => ({
+            ...s,
+            menu_items: s.menu_items.map((i) =>
+              i.id === item.id ? { ...i, is_featured: item.is_featured } : i
+            ),
+          })),
+        }));
+        const data = await res.json().catch(() => ({}));
+        showToast((data as { error?: string }).error ?? "Failed to update", "error");
+      }
+    } catch {
+      showToast("Failed to update", "error");
+    }
+  }, [menu.menu_sections, showToast]);
+
   /* ── Table ordering toggle ───────────────────────── */
 
   const toggleTableOrdering = useCallback(async () => {
@@ -536,6 +587,15 @@ export function MenuBuilder({ menu: initialMenu, scanCount, tableOrdering: initi
                       .map((item) => (
                         <div key={item.id}>
                           <div className="flex items-center gap-3 px-4 py-3">
+                            {/* Star / featured toggle */}
+                            <button
+                              onClick={() => toggleFeatured(item)}
+                              title={item.is_featured ? "Remove from featured" : "Feature this item"}
+                              className="shrink-0 text-[15px] leading-none transition-colors"
+                              style={{ color: item.is_featured ? "#E8A020" : "#D4CFC8" }}
+                            >
+                              {item.is_featured ? "★" : "☆"}
+                            </button>
                             <div className="flex-1 min-w-0">
                               <span className="text-[13px] font-semibold text-[#16130C]">
                                 {item.name}
