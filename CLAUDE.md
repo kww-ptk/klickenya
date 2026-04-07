@@ -38,6 +38,14 @@ SANITY_API_TOKEN=skCbj0aGyKfa66eCmPPkvfR8v3PqEbDkgEVIiAC1t52iwcSjv6ZttWbSwQYXN6V
 
 ---
 
+# Database connections
+
+- All server-side Supabase access goes through `@supabase/ssr` / `@supabase/supabase-js` → PostgREST (HTTP). Supabase handles connection pooling internally. No raw Postgres connection strings are used.
+- Browser clients use `NEXT_PUBLIC_SUPABASE_URL` via the JS SDK only.
+- If a raw Postgres client (Drizzle, Prisma, `pg`) is ever added: use the Supavisor pooled URL (port 6543, `?pgbouncer=true&connection_limit=1`) for runtime, and the direct URL (port 5432) for migrations only. Never import either into a client component.
+
+---
+
 # Claude Code Rules
 - ALWAYS work on the dev branch
 - NEVER create claude/* branches
