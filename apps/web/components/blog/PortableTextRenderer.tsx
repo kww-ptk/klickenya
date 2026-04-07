@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { urlForImage } from "@/lib/sanity/image";
 import {
   PortableText,
   type PortableTextComponents,
@@ -94,11 +95,12 @@ function makeComponents(slug?: string): PortableTextComponents {
     types: {
       image: ({ value }) => {
         if (!value?.asset) return null;
+        const src = value.asset.url || urlForImage(value).width(1200).auto('format').url();
         return (
           <figure className="my-8">
             <div className="relative aspect-[16/10] rounded-xl overflow-hidden shadow-md">
               <Image
-                src={value.asset.url || ""}
+                src={src}
                 alt={value.alt || ""}
                 fill
                 className="object-cover"
