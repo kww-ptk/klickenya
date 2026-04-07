@@ -46,15 +46,27 @@ export async function POST(req: NextRequest) {
     }
 
     /* STEP 2 — Fetch all submitted items from DB (never trust client prices) */
+    // Join through menu_sections to confirm every item belongs to this menu.
+    // Items from a different menu will simply not appear in the results.
     const itemIds = data.items.map((i) => i.menu_item_id);
 
     const { data: dbItems } = await adminClient
       .from("menu_items")
-      .select("id, name, price_kes, is_available")
-      .in("id", itemIds);
+      .select("id, name, price_kes, is_available, menu_sections!inner(menu_id)")
+      .in("id", itemIds)
+      .eq("menu_sections.menu_id", data.menu_id);
 
     if (!dbItems || dbItems.length === 0) {
       return NextResponse.json({ error: "No valid items found." }, { status: 400 });
+    }
+
+    // If the returned count is fewer than submitted, at least one ID came from
+    // a different menu (or doesn't exist at all).
+    if (dbItems.length !== itemIds.length) {
+      return NextResponse.json(
+        { error: "One or more items do not belong to this menu." },
+        { status: 400 }
+      );
     }
 
     const itemMap = new Map(dbItems.map((i) => [i.id, i]));

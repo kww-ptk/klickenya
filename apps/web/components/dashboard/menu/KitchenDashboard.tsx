@@ -76,6 +76,7 @@ interface OrderCardProps {
   isNew: boolean;
   updating: boolean;
   onAction: (orderId: string, newStatus: string) => void;
+  onCancel: (orderId: string, tableNumber: string | null, shortId: string) => void;
   tick: number; // increments every 30s to refresh elapsed time
 }
 
@@ -85,8 +86,9 @@ const STATUS_NEXT: Record<string, { label: string; next: string; color: string }
   ready:     { label: "Done",            next: "delivered",  color: "bg-emerald-600 text-white hover:bg-emerald-700" },
 };
 
-function OrderCard({ order, isNew, updating, onAction, tick }: OrderCardProps) {
+function OrderCard({ order, isNew, updating, onAction, onCancel, tick }: OrderCardProps) {
   const action = STATUS_NEXT[order.status];
+  const shortId = order.id.slice(0, 8).toUpperCase();
 
   return (
     <div
@@ -143,21 +145,30 @@ function OrderCard({ order, isNew, updating, onAction, tick }: OrderCardProps) {
         ))}
       </div>
 
-      {/* Footer: elapsed + action */}
+      {/* Footer: elapsed + actions */}
       <div className="flex items-center justify-between gap-2 pt-3 border-t border-[#F4F1EC]">
         {/* tick is read here so the component re-renders every 30s */}
         <span className="text-[12px] text-[#9C9485]" suppressHydrationWarning>
           {tick >= 0 ? elapsed(order.created_at) : ""}
         </span>
-        {action && (
+        <div className="flex items-center gap-2">
           <button
-            onClick={() => onAction(order.id, action.next)}
+            onClick={() => onCancel(order.id, order.table_number, shortId)}
             disabled={updating}
-            className={`text-[12px] font-bold px-4 h-[34px] rounded-full transition-colors disabled:opacity-50 ${action.color}`}
+            className="text-[11px] font-semibold text-[#9C9485] hover:text-[#DC2626] border border-[#E2DDD5] hover:border-[#DC2626]/40 px-3 h-[30px] rounded-full transition-colors disabled:opacity-50"
           >
-            {updating ? "…" : action.label}
+            Cancel
           </button>
-        )}
+          {action && (
+            <button
+              onClick={() => onAction(order.id, action.next)}
+              disabled={updating}
+              className={`text-[12px] font-bold px-4 h-[34px] rounded-full transition-colors disabled:opacity-50 ${action.color}`}
+            >
+              {updating ? "…" : action.label}
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -239,6 +250,34 @@ export function KitchenDashboard({ menuId, menuName, initialOrders }: KitchenDas
   useEffect(() => {
     const interval = setInterval(() => setTick((t) => t + 1), 30000);
     return () => clearInterval(interval);
+  }, []);
+
+  /* ── Cancel order ────────────────────────────────── */
+  const handleCancel = useCallback(async (orderId: string, tableNumber: string | null, shortId: string) => {
+    const label = tableNumber ? `table ${tableNumber}` : `order #${shortId}`;
+    if (!window.confirm(`Cancel order #${shortId} for ${label}?`)) return;
+
+    setUpdatingIds((prev) => new Set([...prev, orderId]));
+    try {
+      const res = await fetch("/api/menu/orders", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ order_id: orderId, status: "cancelled" }),
+      });
+      if (!res.ok) return;
+
+      const next = ordersRef.current.filter((o) => o.id !== orderId);
+      ordersRef.current = next;
+      setOrders(next);
+    } catch {
+      // Server error — next poll will correct state
+    } finally {
+      setUpdatingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(orderId);
+        return next;
+      });
+    }
   }, []);
 
   /* ── Update order status ─────────────────────────── */
@@ -331,6 +370,7 @@ export function KitchenDashboard({ menuId, menuName, initialOrders }: KitchenDas
                   isNew={newOrderIds.has(order.id)}
                   updating={updatingIds.has(order.id)}
                   onAction={handleAction}
+                  onCancel={handleCancel}
                   tick={tick}
                 />
               ))}
@@ -354,6 +394,7 @@ export function KitchenDashboard({ menuId, menuName, initialOrders }: KitchenDas
                   isNew={false}
                   updating={updatingIds.has(order.id)}
                   onAction={handleAction}
+                  onCancel={handleCancel}
                   tick={tick}
                 />
               ))}
@@ -377,6 +418,7 @@ export function KitchenDashboard({ menuId, menuName, initialOrders }: KitchenDas
                   isNew={false}
                   updating={updatingIds.has(order.id)}
                   onAction={handleAction}
+                  onCancel={handleCancel}
                   tick={tick}
                 />
               ))}
