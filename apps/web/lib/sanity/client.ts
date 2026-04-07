@@ -1,5 +1,4 @@
 import { createClient } from 'next-sanity'
-import { defineLive } from 'next-sanity/live'
 
 export const sanityClient = createClient({
   projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID!,
@@ -17,13 +16,21 @@ export const sanityPreviewClient = createClient({
   token: process.env.SANITY_API_TOKEN,
 })
 
-// Visual Editing — live content + click-to-edit in Presentation tool
-export const { sanityFetch, SanityLive } = defineLive({
-  client: sanityClient.withConfig({
-    apiVersion: '2024-01-01',
-  }),
-  serverToken: process.env.SANITY_API_TOKEN,
-  fetchOptions: {
-    revalidate: 60,
-  },
-})
+// Simple fetch wrapper with ISR revalidation
+export async function sanityFetch<T>({
+  query,
+  params,
+}: {
+  query: string
+  params?: Record<string, unknown>
+}): Promise<{ data: T }> {
+  const data = await sanityClient.fetch<T>(query, params ?? {}, {
+    next: { revalidate: 60 },
+  })
+  return { data }
+}
+
+// No-op — was used for Sanity visual editing (defineLive), not needed in production
+export function SanityLive() {
+  return null
+}
