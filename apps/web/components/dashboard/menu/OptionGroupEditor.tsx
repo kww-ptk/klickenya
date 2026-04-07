@@ -240,6 +240,79 @@ export function OptionGroupEditor({ menuItemId, menuItemName, onClose, showToast
     }
   }, [menuItemId, newGroupName, newGroupType, newGroupRequired, groups.length, showToast]);
 
+  /* ── Allergen shortcut ─────────────────────────── */
+  // Creates an "Allergens" allergy group + 7 common options in one click.
+
+  const COMMON_ALLERGENS = [
+    "Contains nuts",
+    "Contains gluten",
+    "Contains dairy",
+    "Contains eggs",
+    "Contains shellfish",
+    "Contains soy",
+    "Contains sesame",
+  ];
+
+  const [addingAllergens, setAddingAllergens] = useState(false);
+
+  const handleAllergenShortcut = useCallback(async () => {
+    // Don't add if an "Allergens" group already exists
+    if (groups.some((g) => g.group_type === "allergy")) {
+      showToast("An allergen group already exists on this item", "error");
+      return;
+    }
+    setAddingAllergens(true);
+    try {
+      // 1. Create the group
+      const grpRes = await fetch("/api/menu/options", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action:       "create_group",
+          menu_item_id: menuItemId,
+          name:         "Allergens",
+          group_type:   "allergy",
+          is_required:  false,
+          display_order: groups.length,
+        }),
+      });
+      if (!grpRes.ok) throw new Error();
+      const { group: newGroup } = await grpRes.json();
+
+      // 2. Create all 7 allergen options in parallel
+      const optionResults = await Promise.all(
+        COMMON_ALLERGENS.map((name, i) =>
+          fetch("/api/menu/options", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              action:          "create_option",
+              option_group_id: newGroup.id,
+              name,
+              price_modifier:  0,
+              display_order:   i,
+            }),
+          }).then((r) => r.json())
+        )
+      );
+
+      const createdOptions = optionResults
+        .filter((r) => r.option)
+        .map((r) => r.option);
+
+      setGroups((prev) => [
+        ...prev,
+        { ...newGroup, item_options: createdOptions },
+      ]);
+      showToast("Allergen group added with 7 common allergens");
+    } catch {
+      showToast("Failed to add allergen group", "error");
+    } finally {
+      setAddingAllergens(false);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [menuItemId, groups, showToast]);
+
   /* ── Delete group ──────────────────────────────── */
 
   const handleDeleteGroup = useCallback(async (groupId: string, name: string) => {
@@ -426,12 +499,24 @@ export function OptionGroupEditor({ menuItemId, menuItemName, onClose, showToast
               </div>
             </div>
           ) : (
-            <button
-              onClick={() => setShowAddGroup(true)}
-              className="w-full border border-dashed border-[#E2DDD5] rounded-xl py-2.5 text-[12px] font-semibold text-[#9C9485] hover:text-[#E8A020] hover:border-[#E8A020]/40 transition-colors"
-            >
-              + Add option group
-            </button>
+            <div className="space-y-1.5">
+              <button
+                onClick={() => setShowAddGroup(true)}
+                className="w-full border border-dashed border-[#E2DDD5] rounded-xl py-2.5 text-[12px] font-semibold text-[#9C9485] hover:text-[#E8A020] hover:border-[#E8A020]/40 transition-colors"
+              >
+                + Add option group
+              </button>
+              {!groups.some((g) => g.group_type === "allergy") && (
+                <button
+                  onClick={handleAllergenShortcut}
+                  disabled={addingAllergens}
+                  className="w-full border border-dashed border-[#E2DDD5] rounded-xl py-2 text-[11px] font-semibold text-[#9C9485] hover:text-[#DC2626] hover:border-[#DC2626]/40 transition-colors disabled:opacity-50 flex items-center justify-center gap-1.5"
+                >
+                  <span>⚡</span>
+                  {addingAllergens ? "Adding allergens…" : "Quick add: allergen group (nuts, gluten, dairy +4)"}
+                </button>
+              )}
+            </div>
           )}
         </div>
       )}

@@ -5,6 +5,7 @@ import Link from "next/link";
 import type { MenuData, MenuSection, MenuItem } from "@/components/listings/detail/restaurant/MenuDisplay";
 import { ItemForm } from "./ItemForm";
 import { OptionGroupEditor } from "./OptionGroupEditor";
+import { TableSetup } from "./TableSetup";
 import { useToast } from "@/components/ui/Toast";
 
 /* ── Toggle switch (reusable within this file) ─────── */
@@ -434,6 +435,12 @@ export function MenuBuilder({ menu: initialMenu, scanCount, tableOrdering: initi
       <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
         {/* Left: sections + items (60%) */}
         <div className="flex-1 min-w-0 lg:max-w-[60%]">
+
+          {/* Table setup — only shown when table ordering is enabled */}
+          {tableOrdering && (
+            <TableSetup menuId={menu.id} showToast={showToast} />
+          )}
+
           {sections.length === 0 && !showAddSection ? (
             <div className="bg-white rounded-2xl border border-[#E2DDD5] p-8 text-center shadow-sm">
               <div className="w-16 h-16 rounded-full bg-[#E8A020]/10 flex items-center justify-center mx-auto mb-3">
