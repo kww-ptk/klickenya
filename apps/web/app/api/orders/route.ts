@@ -143,7 +143,10 @@ export async function POST(req: NextRequest) {
 
       if (dbOptions) {
         for (const opt of dbOptions) {
-          const grp = opt.item_option_groups as {
+          const _grpRaw = Array.isArray(opt.item_option_groups)
+            ? opt.item_option_groups[0]
+            : opt.item_option_groups;
+          const grp = _grpRaw as {
             id: string;
             name: string;
             menu_item_id: string;
