@@ -2,10 +2,12 @@
 
 import { useState, useCallback } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import type { MenuData, MenuSection, MenuItem } from "@/components/listings/detail/restaurant/MenuDisplay";
 import { ItemForm } from "./ItemForm";
 import { OptionGroupEditor } from "./OptionGroupEditor";
 import { TableSetup } from "./TableSetup";
+import { MenuImporter } from "./MenuImporter";
 import { useToast } from "@/components/ui/Toast";
 
 /* ── Toggle switch (reusable within this file) ─────── */
@@ -58,6 +60,7 @@ interface MenuBuilderProps {
 /* ── Component ─────────────────────────────────────── */
 
 export function MenuBuilder({ menu: initialMenu, scanCount, tableOrdering: initialTableOrdering, backHref, backLabel }: MenuBuilderProps) {
+  const router = useRouter();
   const [menu, setMenu] = useState<MenuData>(initialMenu);
   const [tableOrdering, setTableOrdering] = useState(initialTableOrdering);
   const [togglingOrdering, setTogglingOrdering] = useState(false);
@@ -72,6 +75,7 @@ export function MenuBuilder({ menu: initialMenu, scanCount, tableOrdering: initi
   const [addingSectionName, setAddingSectionName] = useState("");
   const [showAddSection, setShowAddSection] = useState(false);
   const [publishing, setPublishing] = useState(false);
+  const [showImporter, setShowImporter] = useState(false);
   const { showToast } = useToast();
 
   const sections = [...menu.menu_sections].sort(
@@ -421,10 +425,33 @@ export function MenuBuilder({ menu: initialMenu, scanCount, tableOrdering: initi
         >
           {backLabel ?? "← Back to dashboard"}
         </Link>
-        <h1 className="font-display text-[22px] lg:text-[28px] font-bold tracking-[-0.03em] text-[#16130C] mt-2">
-          {menu.name}
-        </h1>
+        <div className="flex items-center gap-3 mt-2">
+          <h1 className="font-display text-[22px] lg:text-[28px] font-bold tracking-[-0.03em] text-[#16130C] flex-1">
+            {menu.name}
+          </h1>
+          <button
+            onClick={() => setShowImporter(true)}
+            className="shrink-0 h-[36px] px-4 rounded-full border border-[#E2DDD5] text-[13px] font-semibold text-[#5E5848] hover:border-[#E8A020]/60 hover:text-[#E8A020] transition-colors"
+          >
+            Import menu
+          </button>
+        </div>
       </div>
+
+      {/* Import overlay */}
+      {showImporter && (
+        <div className="fixed inset-0 z-50 bg-white flex flex-col overflow-hidden">
+          <MenuImporter
+            menuId={menu.id}
+            onClose={() => setShowImporter(false)}
+            onComplete={() => {
+              setShowImporter(false);
+              router.refresh();
+              showToast("Menu imported successfully");
+            }}
+          />
+        </div>
+      )}
 
       {/* Mobile: publish panel first */}
       <div className="lg:hidden mb-5">
