@@ -2,30 +2,12 @@
 
 import { useState, useMemo, useCallback } from "react";
 import Image from "next/image";
-import type { MenuSection, MenuItem, ItemOptionGroup } from "@/components/listings/detail/restaurant/MenuDisplay";
+import type { MenuSection, MenuItem } from "@/components/listings/detail/restaurant/MenuDisplay";
 import { MenuTabBar } from "@/components/menu/MenuTabBar";
 import { DietaryFilter } from "@/components/menu/DietaryFilter";
+import { ItemModal, type CartItem } from "@/components/menu/ItemModal";
 
 /* ── Types ─────────────────────────────────────────── */
-
-/** One resolved option choice stored per cart entry */
-interface SelectedOption {
-  option_id: string;   // DB id — sent to server for price validation
-  group: string;       // group name (snapshot — display only)
-  choice: string;      // option name (snapshot — display only)
-  price_add: number;   // price_modifier from DB at add time — UI display only, NOT sent to server
-}
-
-interface CartEntry {
-  menu_item_id: string;
-  name: string;
-  base_price: number;
-  selected_options: SelectedOption[];
-  allergy_notes: string;
-  /** (base_price + sum(price_add)) × quantity */
-  line_total: number;
-  quantity: number;
-}
 
 type View = "browse" | "cart" | "confirmed";
 
@@ -52,312 +34,21 @@ function formatPrice(amount: number): string {
   return `KSh ${amount.toLocaleString("en-KE")}`;
 }
 
-function unitPriceFromOptions(basePrice: number, opts: SelectedOption[]): number {
-  return basePrice + opts.reduce((s, o) => s + o.price_add, 0);
+function unitPrice(cartItem: CartItem): number {
+  return cartItem.base_price + cartItem.selected_options.reduce((s, o) => s + o.price_add, 0);
 }
 
-/* ── Quantity control ──────────────────────────────── */
-
-interface QtyControlProps {
-  quantity: number;
-  onAdd: () => void;
-  onRemove: () => void;
-}
-
-function QtyControl({ quantity, onAdd, onRemove }: QtyControlProps) {
-  if (quantity === 0) {
-    return (
-      <button
-        onClick={onAdd}
-        className="shrink-0 h-[32px] px-4 rounded-full bg-amber text-dark text-[13px] font-bold hover:bg-[#d4911c] transition-colors active:scale-95"
-        aria-label="Add to order"
-      >
-        Add
-      </button>
-    );
-  }
-
-  return (
-    <div className="shrink-0 flex items-center gap-2">
-      <button
-        onClick={onRemove}
-        className="size-[28px] rounded-full bg-[#F4F1EC] text-dark text-[17px] font-bold flex items-center justify-center hover:bg-[#E2DDD5] transition-colors active:scale-95"
-        aria-label="Remove one"
-      >
-        −
-      </button>
-      <span className="text-[14px] font-bold text-dark w-[18px] text-center tabular-nums">
-        {quantity}
-      </span>
-      <button
-        onClick={onAdd}
-        className="size-[28px] rounded-full bg-amber text-dark text-[17px] font-bold flex items-center justify-center hover:bg-[#d4911c] transition-colors active:scale-95"
-        aria-label="Add one more"
-      >
-        +
-      </button>
-    </div>
-  );
-}
-
-/* ── Option group section (inside sheet) ───────────── */
-
-interface OptionGroupSectionProps {
-  group: ItemOptionGroup;
-  singleSelected: string | null;
-  multiSelected: Set<string>;
-  onSingleChange: (optionId: string) => void;
-  onMultiToggle: (optionId: string) => void;
-}
-
-function OptionGroupSection({
-  group, singleSelected, multiSelected, onSingleChange, onMultiToggle
-}: OptionGroupSectionProps) {
-  const options = [...group.item_options].sort((a, b) => a.display_order - b.display_order);
-
-  const subtitle = group.group_type === "single"
-    ? group.is_required ? "Required · Choose one" : "Optional · Choose one"
-    : group.group_type === "allergy"
-    ? "Select all that apply"
-    : group.max_select
-    ? `Choose up to ${group.max_select}`
-    : "Select all that apply";
-
-  return (
-    <div>
-      <div className="flex items-baseline justify-between mb-2">
-        <p className="text-[14px] font-bold text-dark">{group.name}</p>
-        <span className="text-[11px] text-text3 font-medium">{subtitle}</span>
-      </div>
-      <div className="space-y-1.5">
-        {options.map((opt) => {
-          const isChecked = group.group_type === "single"
-            ? singleSelected === opt.id
-            : multiSelected.has(opt.id);
-          const isRadio = group.group_type === "single";
-
-          return (
-            <button
-              key={opt.id}
-              disabled={!opt.is_available}
-              onClick={() => {
-                if (isRadio) onSingleChange(opt.id);
-                else onMultiToggle(opt.id);
-              }}
-              className={`w-full flex items-center gap-3 rounded-xl border px-4 py-3 text-left transition-colors disabled:opacity-40 ${
-                isChecked
-                  ? "border-amber bg-amber/5"
-                  : "border-border bg-white hover:border-amber/50"
-              }`}
-            >
-              <span
-                className={`shrink-0 size-4 flex items-center justify-center transition-colors border-2 ${
-                  isRadio ? "rounded-full" : "rounded-md"
-                } ${isChecked ? "border-amber bg-amber" : "border-[#D4CFC8]"}`}
-              >
-                {isChecked && (
-                  <svg className="size-2.5 text-dark" fill="none" viewBox="0 0 10 10">
-                    {isRadio
-                      ? <circle cx="5" cy="5" r="2.5" fill="currentColor" />
-                      : <path d="M1.5 5l2.5 2.5 4.5-4.5" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" />}
-                  </svg>
-                )}
-              </span>
-              <span className="flex-1 text-[14px] text-dark">{opt.name}</span>
-              {opt.price_modifier > 0 && (
-                <span className="text-[13px] font-semibold text-text2 shrink-0">
-                  +{formatPrice(opt.price_modifier)}
-                </span>
-              )}
-              {!opt.is_available && (
-                <span className="text-[11px] text-text3 shrink-0">Unavailable</span>
-              )}
-            </button>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-/* ── Item option sheet ─────────────────────────────── */
-
-interface OptionSheetProps {
-  item: MenuItem;
-  onClose: () => void;
-  onAddToCart: (opts: SelectedOption[], allergyNotes: string) => void;
-}
-
-function OptionSheet({ item, onClose, onAddToCart }: OptionSheetProps) {
-  const groups = [...(item.item_option_groups ?? [])]
-    .filter((g) => g.item_options.length > 0)
-    .sort((a, b) => a.display_order - b.display_order);
-
-  const [singleSelections, setSingleSelections] = useState<Record<string, string>>(() => {
-    const init: Record<string, string> = {};
-    for (const g of groups) {
-      if (g.group_type === "single" && g.is_required) {
-        const first = [...g.item_options]
-          .filter((o) => o.is_available)
-          .sort((a, b) => a.display_order - b.display_order)[0];
-        if (first) init[g.id] = first.id;
-      }
-    }
-    return init;
-  });
-
-  const [multiSelections, setMultiSelections] = useState<Record<string, Set<string>>>({});
-  const [allergyNotes, setAllergyNotes] = useState("");
-  const [validationError, setValidationError] = useState<string | null>(null);
-
-  function toggleMulti(groupId: string, optionId: string) {
-    setMultiSelections((prev) => {
-      const next = { ...prev };
-      const set = new Set(prev[groupId] ?? []);
-      if (set.has(optionId)) set.delete(optionId);
-      else set.add(optionId);
-      next[groupId] = set;
-      return next;
-    });
-  }
-
-  const optionTotal = useMemo(() => {
-    let total = 0;
-    for (const g of groups) {
-      if (g.group_type === "single") {
-        const selId = singleSelections[g.id];
-        if (selId) {
-          const opt = g.item_options.find((o) => o.id === selId);
-          if (opt) total += opt.price_modifier;
-        }
-      } else {
-        const set = multiSelections[g.id] ?? new Set();
-        for (const optId of set) {
-          const opt = g.item_options.find((o) => o.id === optId);
-          if (opt) total += opt.price_modifier;
-        }
-      }
-    }
-    return total;
-  }, [groups, singleSelections, multiSelections]);
-
-  function handleAdd() {
-    for (const g of groups) {
-      if (g.group_type === "single" && g.is_required && !singleSelections[g.id]) {
-        setValidationError(`Please select a ${g.name}.`);
-        return;
-      }
-      if (g.group_type === "multi" && g.min_select > 0) {
-        const count = (multiSelections[g.id] ?? new Set()).size;
-        if (count < g.min_select) {
-          setValidationError(`Please select at least ${g.min_select} option(s) for ${g.name}.`);
-          return;
-        }
-      }
-    }
-
-    const resolved: SelectedOption[] = [];
-    for (const g of groups) {
-      if (g.group_type === "single") {
-        const selId = singleSelections[g.id];
-        if (selId) {
-          const opt = g.item_options.find((o) => o.id === selId);
-          if (opt) resolved.push({ option_id: opt.id, group: g.name, choice: opt.name, price_add: opt.price_modifier });
-        }
-      } else {
-        const set = multiSelections[g.id] ?? new Set();
-        for (const optId of set) {
-          const opt = g.item_options.find((o) => o.id === optId);
-          if (opt) resolved.push({ option_id: opt.id, group: g.name, choice: opt.name, price_add: g.group_type === "allergy" ? 0 : opt.price_modifier });
-        }
-      }
-    }
-
-    onAddToCart(resolved, allergyNotes.trim());
-  }
-
-  return (
-    <div className="fixed inset-0 z-40 flex flex-col justify-end">
-      <div className="absolute inset-0 bg-black/40" onClick={onClose} aria-hidden />
-      <div className="relative bg-white rounded-t-2xl max-h-[85vh] flex flex-col shadow-2xl">
-        {/* Header */}
-        <div className="flex items-start gap-3 px-5 pt-5 pb-4 border-b border-border shrink-0">
-          {item.photo_url && (
-            <div className="relative w-[56px] h-[56px] rounded-lg overflow-hidden shrink-0">
-              <Image src={item.photo_url} alt={item.name} width={56} height={56} className="object-cover w-full h-full" sizes="56px" />
-            </div>
-          )}
-          <div className="flex-1 min-w-0">
-            <h3 className="font-display text-[17px] font-bold text-dark leading-snug">{item.name}</h3>
-            {item.description && (
-              <p className="text-[13px] text-text2 mt-0.5 line-clamp-2">{item.description}</p>
-            )}
-            <p className="text-[14px] font-bold text-amber mt-1">{formatPrice(item.price_kes)}</p>
-          </div>
-          <button onClick={onClose} className="shrink-0 p-1 text-text3 hover:text-dark transition-colors" aria-label="Close">
-            <svg className="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-
-        {/* Scrollable content */}
-        <div className="overflow-y-auto flex-1 px-5 py-4 space-y-5">
-          {groups.map((group) => (
-            <OptionGroupSection
-              key={group.id}
-              group={group}
-              singleSelected={singleSelections[group.id] ?? null}
-              multiSelected={multiSelections[group.id] ?? new Set()}
-              onSingleChange={(optId) => setSingleSelections((p) => ({ ...p, [group.id]: optId }))}
-              onMultiToggle={(optId) => toggleMulti(group.id, optId)}
-            />
-          ))}
-
-          <div>
-            <label className="block text-[12px] font-bold text-dark mb-1.5 uppercase tracking-wide">
-              Allergy or special request <span className="text-text3 font-normal normal-case">(optional)</span>
-            </label>
-            <textarea
-              rows={2}
-              value={allergyNotes}
-              onChange={(e) => setAllergyNotes(e.target.value)}
-              placeholder="e.g. No nuts, extra spicy…"
-              maxLength={300}
-              className="w-full border border-border rounded-xl px-3.5 py-3 text-[14px] text-dark placeholder:text-text3 focus:outline-none focus:border-amber focus:ring-1 focus:ring-amber/30 resize-none bg-white transition-colors"
-            />
-          </div>
-        </div>
-
-        {/* Footer */}
-        <div className="px-5 pb-6 pt-3 border-t border-border shrink-0">
-          {validationError && (
-            <p className="text-[13px] text-red-600 font-medium mb-2">{validationError}</p>
-          )}
-          <button
-            onClick={handleAdd}
-            className="w-full h-[52px] rounded-full bg-dark text-white font-bold text-[15px] hover:bg-[#2A2520] transition-colors active:scale-[0.98]"
-          >
-            {`Add to order · ${formatPrice(item.price_kes + optionTotal)}`}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/* ── Item card with cart controls ──────────────────── */
+/* ── Item card ─────────────────────────────────────── */
 
 interface CartItemCardProps {
   item: MenuItem;
-  quantity: number;
-  onAdd: () => void;
-  onRemove: () => void;
+  totalQty: number;  // sum across all cart lines for this menu_item_id
+  onAdd: () => void; // open fresh ItemModal
+  onRemove: () => void; // remove one unit from last cart line
 }
 
-function CartItemCard({ item, quantity, onAdd, onRemove }: CartItemCardProps) {
+function CartItemCard({ item, totalQty, onAdd, onRemove }: CartItemCardProps) {
   const hasPhoto = !!item.photo_url;
-  const hasOptions = (item.item_option_groups ?? []).some((g) => g.item_options.length > 0);
 
   return (
     <div
@@ -397,9 +88,10 @@ function CartItemCard({ item, quantity, onAdd, onRemove }: CartItemCardProps) {
             Unavailable
           </span>
         )}
-        {hasOptions && item.is_available && (
-          <p className="text-[11px] text-text3 mt-0.5">Customisable</p>
-        )}
+        {(item.item_option_groups ?? []).some((g) => g.item_options.length > 0) &&
+          item.is_available && (
+            <p className="text-[11px] text-text3 mt-0.5">Customisable</p>
+          )}
       </div>
 
       <div className="flex flex-col items-end gap-2 shrink-0">
@@ -416,7 +108,35 @@ function CartItemCard({ item, quantity, onAdd, onRemove }: CartItemCardProps) {
           </div>
         )}
         {item.is_available && (
-          <QtyControl quantity={quantity} onAdd={onAdd} onRemove={onRemove} />
+          totalQty === 0 ? (
+            <button
+              onClick={onAdd}
+              className="shrink-0 h-[32px] px-4 rounded-full bg-amber text-dark text-[13px] font-bold hover:bg-[#d4911c] transition-colors active:scale-95"
+              aria-label="Add to order"
+            >
+              Add
+            </button>
+          ) : (
+            <div className="shrink-0 flex items-center gap-2">
+              <button
+                onClick={onRemove}
+                className="size-[28px] rounded-full bg-[#F4F1EC] text-dark text-[17px] font-bold flex items-center justify-center hover:bg-[#E2DDD5] transition-colors active:scale-95"
+                aria-label="Remove one"
+              >
+                −
+              </button>
+              <span className="text-[14px] font-bold text-dark w-[18px] text-center tabular-nums">
+                {totalQty}
+              </span>
+              <button
+                onClick={onAdd}
+                className="size-[28px] rounded-full bg-amber text-dark text-[17px] font-bold flex items-center justify-center hover:bg-[#d4911c] transition-colors active:scale-95"
+                aria-label="Add one more"
+              >
+                +
+              </button>
+            </div>
+          )
         )}
       </div>
     </div>
@@ -426,21 +146,22 @@ function CartItemCard({ item, quantity, onAdd, onRemove }: CartItemCardProps) {
 /* ── Cart panel ────────────────────────────────────── */
 
 interface CartPanelProps {
-  cart: Map<string, CartEntry>;
+  cart: Map<string, CartItem>;
   menuId: string;
   onBack: () => void;
   onConfirmed: (data: ConfirmData) => void;
-  onUpdateQty: (key: string, delta: number) => void;
+  onUpdateQty: (cartId: string, delta: number) => void;
+  onEditLine: (cartItem: CartItem) => void;
 }
 
-function CartPanel({ cart, menuId, onBack, onConfirmed, onUpdateQty }: CartPanelProps) {
+function CartPanel({ cart, menuId, onBack, onConfirmed, onUpdateQty, onEditLine }: CartPanelProps) {
   const [tableNumber, setTableNumber] = useState("");
   const [customerName, setCustomerName] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const entries = Array.from(cart.values()).filter((e) => e.quantity > 0);
-  const subtotal = entries.reduce((sum, e) => sum + e.line_total, 0);
+  const subtotal = entries.reduce((sum, e) => sum + e.display_total, 0);
 
   async function handlePlaceOrder() {
     if (!tableNumber.trim()) {
@@ -462,8 +183,12 @@ function CartPanel({ cart, menuId, onBack, onConfirmed, onUpdateQty }: CartPanel
           items: entries.map((e) => ({
             menu_item_id: e.menu_item_id,
             quantity: e.quantity,
-            // Send option_id + labels only — price_add is re-fetched server-side
-            selected_options: e.selected_options.map(({ option_id, group, choice }) => ({ option_id, group, choice })),
+            // Strip price_add — server fetches prices from DB
+            selected_options: e.selected_options.map(({ option_id, group, choice }) => ({
+              option_id,
+              group,
+              choice,
+            })),
             allergy_notes: e.allergy_notes || undefined,
           })),
         }),
@@ -504,9 +229,7 @@ function CartPanel({ cart, menuId, onBack, onConfirmed, onUpdateQty }: CartPanel
             <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
           </svg>
         </button>
-        <h2 className="font-display text-[18px] font-bold text-dark tracking-tight">
-          Your order
-        </h2>
+        <h2 className="font-display text-[18px] font-bold text-dark tracking-tight">Your order</h2>
         <span className="ml-auto text-[13px] font-semibold text-text3">
           {entries.reduce((s, e) => s + e.quantity, 0)} items
         </span>
@@ -514,51 +237,87 @@ function CartPanel({ cart, menuId, onBack, onConfirmed, onUpdateQty }: CartPanel
 
       <div className="flex-1 max-w-[480px] w-full mx-auto px-4 py-4 space-y-2">
         {entries.map((entry) => (
-          <div
-            key={entry.menu_item_id}
-            className="bg-white rounded-xl border border-border px-4 py-3"
-          >
-            <div className="flex items-center gap-3">
+          <div key={entry.cart_id} className="bg-white rounded-xl border border-border px-4 py-3">
+            <div className="flex items-start gap-3">
               <div className="flex-1 min-w-0">
-                <p className="text-[14px] font-semibold text-dark truncate">{entry.name}</p>
+                {/* Name + edit icon */}
+                <div className="flex items-start justify-between gap-2">
+                  <p className="text-[14px] font-semibold text-dark leading-snug">{entry.item_name}</p>
+                  <button
+                    onClick={() => onEditLine(entry)}
+                    className="shrink-0 text-text3 hover:text-dark transition-colors p-0.5 mt-0.5"
+                    aria-label="Edit item"
+                  >
+                    <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z"
+                      />
+                    </svg>
+                  </button>
+                </div>
                 <p className="text-[13px] text-text2 mt-0.5">
-                  {formatPrice(unitPriceFromOptions(entry.base_price, entry.selected_options))} × {entry.quantity}
+                  {formatPrice(unitPrice(entry))} × {entry.quantity}
                 </p>
-              </div>
-              <div className="flex items-center gap-2 shrink-0">
-                <QtyControl
-                  quantity={entry.quantity}
-                  onAdd={() => onUpdateQty(entry.menu_item_id, 1)}
-                  onRemove={() => onUpdateQty(entry.menu_item_id, -1)}
-                />
-              </div>
-              <span className="text-[14px] font-bold text-dark shrink-0 w-[72px] text-right tabular-nums">
-                {formatPrice(entry.line_total)}
-              </span>
-            </div>
 
-            {/* Selected options summary */}
-            {entry.selected_options.length > 0 && (
-              <div className="mt-2 pt-2 border-t border-border/60 space-y-0.5">
-                {entry.selected_options.map((o, i) => (
-                  <p key={i} className="text-[12px] text-text3">
-                    {o.choice}{o.price_add > 0 ? ` (+${formatPrice(o.price_add)})` : ""}
-                  </p>
-                ))}
+                {/* Option tags */}
+                {entry.selected_options.length > 0 && (
+                  <div className="flex flex-wrap gap-1 mt-1.5">
+                    {entry.selected_options.map((o, i) => (
+                      <span
+                        key={i}
+                        className="inline-block rounded-full bg-[#F4F1EC] px-2 py-0.5 text-[11px] text-text2 font-medium"
+                      >
+                        {o.choice}
+                        {o.price_add > 0 ? ` +${formatPrice(o.price_add)}` : ""}
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+                {/* Special instructions / allergy notes */}
+                {entry.allergy_notes && (
+                  <div className="flex items-start gap-1.5 mt-1.5">
+                    <span className="text-[12px] mt-px">⚠</span>
+                    <span className="text-[12px] text-amber font-semibold">{entry.allergy_notes}</span>
+                  </div>
+                )}
               </div>
-            )}
-            {entry.allergy_notes && (
-              <p className="text-[12px] text-text3 italic mt-1">{entry.allergy_notes}</p>
-            )}
+
+              {/* Qty control + line total */}
+              <div className="flex flex-col items-end gap-2 shrink-0">
+                <span className="text-[14px] font-bold text-dark tabular-nums">
+                  {formatPrice(entry.display_total)}
+                </span>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    onClick={() => onUpdateQty(entry.cart_id, -1)}
+                    className="size-[26px] rounded-full bg-[#F4F1EC] text-dark text-[15px] font-bold flex items-center justify-center hover:bg-[#E2DDD5] transition-colors active:scale-95"
+                    aria-label="Remove one"
+                  >
+                    −
+                  </button>
+                  <span className="text-[13px] font-bold text-dark w-[18px] text-center tabular-nums">
+                    {entry.quantity}
+                  </span>
+                  <button
+                    onClick={() => onUpdateQty(entry.cart_id, 1)}
+                    className="size-[26px] rounded-full bg-amber text-dark text-[15px] font-bold flex items-center justify-center hover:bg-[#d4911c] transition-colors active:scale-95"
+                    aria-label="Add one more"
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         ))}
 
         {/* Subtotal */}
         <div className="bg-white rounded-xl border border-border px-4 py-3 flex items-center justify-between mt-2">
           <span className="text-[14px] font-semibold text-text2">Subtotal</span>
-          <span className="text-[16px] font-bold text-dark tabular-nums">
-            {formatPrice(subtotal)}
-          </span>
+          <span className="text-[16px] font-bold text-dark tabular-nums">{formatPrice(subtotal)}</span>
         </div>
 
         {/* Table number + name */}
@@ -580,7 +339,8 @@ function CartPanel({ cart, menuId, onBack, onConfirmed, onUpdateQty }: CartPanel
           </div>
           <div>
             <label className="block text-[12px] font-bold text-dark mb-1.5 uppercase tracking-wide">
-              Your name <span className="text-text3 font-normal normal-case">(optional)</span>
+              Your name{" "}
+              <span className="text-text3 font-normal normal-case">(optional)</span>
             </label>
             <input
               type="text"
@@ -630,9 +390,7 @@ function ConfirmationScreen({ data }: { data: ConfirmData }) {
       <p className="text-[16px] text-text2 leading-relaxed mb-1">
         We&apos;ll bring it to <strong className="text-dark">table {data.tableNumber}</strong> shortly.
       </p>
-      <p className="text-[14px] text-text3 mb-8">
-        Estimated time: ~{data.estimatedMinutes} minutes
-      </p>
+      <p className="text-[14px] text-text3 mb-8">Estimated time: ~{data.estimatedMinutes} minutes</p>
 
       <div className="bg-white rounded-2xl border border-border px-6 py-4 shadow-sm">
         <p className="text-[12px] font-bold text-text3 uppercase tracking-widest mb-1">
@@ -662,20 +420,21 @@ interface MenuWithCartProps {
 
 export function MenuWithCart({ sections, menuId }: MenuWithCartProps) {
   const [activeTags, setActiveTags] = useState<string[]>([]);
-  const [cart, setCart] = useState<Map<string, CartEntry>>(new Map());
+  // Cart keyed by cart_id — same item with different options = separate lines
+  const [cart, setCart] = useState<Map<string, CartItem>>(new Map());
   const [view, setView] = useState<View>("browse");
   const [confirmData, setConfirmData] = useState<ConfirmData | null>(null);
-  const [sheetItem, setSheetItem] = useState<MenuItem | null>(null);
+  // Modal state: which item is open, and optionally which cart line is being edited
+  const [modalItem, setModalItem] = useState<MenuItem | null>(null);
+  const [editingCartItem, setEditingCartItem] = useState<CartItem | undefined>(undefined);
 
-  /* ── Dietary filter helpers ──────────────────────── */
+  /* ── Dietary filter helpers ── */
 
   const availableTags = useMemo(() => {
     const tags = new Set<string>();
-    for (const section of sections) {
-      for (const item of section.menu_items) {
+    for (const section of sections)
+      for (const item of section.menu_items)
         for (const tag of item.dietary_tags) tags.add(tag);
-      }
-    }
     return Array.from(tags);
   }, [sections]);
 
@@ -694,88 +453,63 @@ export function MenuWithCart({ sections, menuId }: MenuWithCartProps) {
   const tabs = filteredSections.map((s) => ({ id: s.id, title: s.title }));
   const noResults = activeTags.length > 0 && filteredSections.length === 0;
 
-  /* ── Cart helpers ────────────────────────────────── */
+  /* ── Cart helpers ── */
 
-  function addItem(item: MenuItem, selectedOptions: SelectedOption[], allergyNotes: string) {
-    setCart((prev) => {
-      const next = new Map(prev);
-      const existing = next.get(item.id);
-      if (existing) {
-        const newQty = existing.quantity + 1;
-        next.set(item.id, {
-          ...existing,
-          quantity: newQty,
-          line_total: unitPriceFromOptions(existing.base_price, existing.selected_options) * newQty,
-        });
-      } else {
-        const unit = unitPriceFromOptions(item.price_kes, selectedOptions);
-        next.set(item.id, {
-          menu_item_id: item.id,
-          name: item.name,
-          base_price: item.price_kes,
-          selected_options: selectedOptions,
-          allergy_notes: allergyNotes,
-          line_total: unit,
-          quantity: 1,
-        });
-      }
-      return next;
+  // Total quantity per menu_item_id (for card display)
+  const itemQtyMap = useMemo(() => {
+    const map = new Map<string, number>();
+    cart.forEach((entry) => {
+      map.set(entry.menu_item_id, (map.get(entry.menu_item_id) ?? 0) + entry.quantity);
     });
-  }
-
-  const handleAddPress = useCallback((item: MenuItem) => {
-    const hasOptions = (item.item_option_groups ?? []).some((g) => g.item_options.length > 0);
-    // If item already in cart, just increment (don't re-open sheet)
-    if (cart.has(item.id)) {
-      addItem(item, cart.get(item.id)!.selected_options, cart.get(item.id)!.allergy_notes);
-      return;
-    }
-    if (hasOptions) {
-      setSheetItem(item);
-    } else {
-      addItem(item, [], "");
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    return map;
   }, [cart]);
 
-  const removeItem = useCallback((itemId: string) => {
+  function upsertCartItem(cartItem: CartItem) {
+    setCart((prev) => new Map(prev).set(cartItem.cart_id, cartItem));
+  }
+
+  // Remove one unit from the most-recently-inserted cart line for a given menu_item_id
+  const removeOneUnit = useCallback((menuItemId: string) => {
     setCart((prev) => {
+      let lastKey: string | null = null;
+      prev.forEach((entry, key) => {
+        if (entry.menu_item_id === menuItemId) lastKey = key;
+      });
+      if (!lastKey) return prev;
       const next = new Map(prev);
-      const existing = next.get(itemId);
-      if (!existing) return prev;
+      const existing = next.get(lastKey)!;
       if (existing.quantity <= 1) {
-        next.delete(itemId);
+        next.delete(lastKey);
       } else {
         const newQty = existing.quantity - 1;
-        next.set(itemId, {
+        next.set(lastKey, {
           ...existing,
           quantity: newQty,
-          line_total: unitPriceFromOptions(existing.base_price, existing.selected_options) * newQty,
+          display_total: unitPrice(existing) * newQty,
         });
       }
       return next;
     });
   }, []);
 
-  const updateQty = useCallback((itemId: string, delta: number) => {
-    if (delta > 0) {
-      setCart((prev) => {
-        const next = new Map(prev);
-        const existing = next.get(itemId);
-        if (existing) {
-          const newQty = existing.quantity + delta;
-          next.set(itemId, {
-            ...existing,
-            quantity: newQty,
-            line_total: unitPriceFromOptions(existing.base_price, existing.selected_options) * newQty,
-          });
-        }
-        return next;
-      });
-    } else {
-      removeItem(itemId);
-    }
-  }, [removeItem]);
+  const updateCartQty = useCallback((cartId: string, delta: number) => {
+    setCart((prev) => {
+      const existing = prev.get(cartId);
+      if (!existing) return prev;
+      const newQty = existing.quantity + delta;
+      const next = new Map(prev);
+      if (newQty <= 0) {
+        next.delete(cartId);
+      } else {
+        next.set(cartId, {
+          ...existing,
+          quantity: newQty,
+          display_total: unitPrice(existing) * newQty,
+        });
+      }
+      return next;
+    });
+  }, []);
 
   const totalItems = useMemo(() => {
     let count = 0;
@@ -785,11 +519,41 @@ export function MenuWithCart({ sections, menuId }: MenuWithCartProps) {
 
   const totalKes = useMemo(() => {
     let sum = 0;
-    cart.forEach((e) => { sum += e.line_total; });
+    cart.forEach((e) => { sum += e.display_total; });
     return sum;
   }, [cart]);
 
-  /* ── Views ───────────────────────────────────────── */
+  /* ── Modal handlers ── */
+
+  function openFreshModal(item: MenuItem) {
+    setEditingCartItem(undefined);
+    setModalItem(item);
+  }
+
+  function openEditModal(cartItem: CartItem) {
+    // Find the corresponding MenuItem across all sections
+    for (const section of sections) {
+      const item = section.menu_items.find((m) => m.id === cartItem.menu_item_id);
+      if (item) {
+        setEditingCartItem(cartItem);
+        setModalItem(item);
+        return;
+      }
+    }
+  }
+
+  function handleModalConfirm(cartItem: CartItem) {
+    upsertCartItem(cartItem);
+    setModalItem(null);
+    setEditingCartItem(undefined);
+  }
+
+  function closeModal() {
+    setModalItem(null);
+    setEditingCartItem(undefined);
+  }
+
+  /* ── Views ── */
 
   if (view === "confirmed" && confirmData) {
     return <ConfirmationScreen data={confirmData} />;
@@ -797,16 +561,28 @@ export function MenuWithCart({ sections, menuId }: MenuWithCartProps) {
 
   if (view === "cart") {
     return (
-      <CartPanel
-        cart={cart}
-        menuId={menuId}
-        onBack={() => setView("browse")}
-        onConfirmed={(data) => {
-          setConfirmData(data);
-          setView("confirmed");
-        }}
-        onUpdateQty={updateQty}
-      />
+      <>
+        <CartPanel
+          cart={cart}
+          menuId={menuId}
+          onBack={() => setView("browse")}
+          onConfirmed={(data) => {
+            setConfirmData(data);
+            setView("confirmed");
+          }}
+          onUpdateQty={updateCartQty}
+          onEditLine={openEditModal}
+        />
+        {/* Allow editing from cart panel too */}
+        {modalItem && (
+          <ItemModal
+            item={modalItem}
+            existingCartItem={editingCartItem}
+            onClose={closeModal}
+            onConfirm={handleModalConfirm}
+          />
+        )}
+      </>
     );
   }
 
@@ -844,9 +620,9 @@ export function MenuWithCart({ sections, menuId }: MenuWithCartProps) {
                   <CartItemCard
                     key={item.id}
                     item={item}
-                    quantity={cart.get(item.id)?.quantity ?? 0}
-                    onAdd={() => handleAddPress(item)}
-                    onRemove={() => removeItem(item.id)}
+                    totalQty={itemQtyMap.get(item.id) ?? 0}
+                    onAdd={() => openFreshModal(item)}
+                    onRemove={() => removeOneUnit(item.id)}
                   />
                 ))}
               </div>
@@ -866,9 +642,7 @@ export function MenuWithCart({ sections, menuId }: MenuWithCartProps) {
               <span className="size-[26px] rounded-lg bg-amber text-dark text-[12px] font-extrabold flex items-center justify-center shrink-0 tabular-nums">
                 {totalItems}
               </span>
-              <span className="flex-1 text-center text-[15px] font-bold">
-                View order
-              </span>
+              <span className="flex-1 text-center text-[15px] font-bold">View order</span>
               <span className="text-[14px] font-semibold text-white/80 tabular-nums shrink-0">
                 {formatPrice(totalKes)}
               </span>
@@ -877,15 +651,13 @@ export function MenuWithCart({ sections, menuId }: MenuWithCartProps) {
         </div>
       )}
 
-      {/* Option selection bottom sheet */}
-      {sheetItem && (
-        <OptionSheet
-          item={sheetItem}
-          onClose={() => setSheetItem(null)}
-          onAddToCart={(opts, notes) => {
-            addItem(sheetItem, opts, notes);
-            setSheetItem(null);
-          }}
+      {/* Item modal */}
+      {modalItem && (
+        <ItemModal
+          item={modalItem}
+          existingCartItem={editingCartItem}
+          onClose={closeModal}
+          onConfirm={handleModalConfirm}
         />
       )}
     </>

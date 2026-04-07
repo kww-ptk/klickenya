@@ -140,6 +140,45 @@ body {
   animation: mobileSearchSlideUp 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
+/* ─── Item modal animations ──────────────────────────────────── */
+
+@keyframes slideUp {
+  from { transform: translateY(100%); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+@keyframes fadeScale {
+  from { opacity: 0; transform: translate(-50%, -48%) scale(0.96); }
+  to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%       { transform: translateX(-6px); }
+  40%       { transform: translateX(6px); }
+  60%       { transform: translateX(-4px); }
+  80%       { transform: translateX(4px); }
+}
+
+.animate-slide-up {
+  animation: slideUp 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.animate-fade-scale {
+  animation: fadeScale 0.2s ease-out both;
+}
+
+.animate-shake {
+  animation: shake 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+/* Desktop item modal: override Tailwind translate so the fade-scale keyframe owns positioning */
+@media (min-width: 768px) {
+  .item-modal {
+    transform-origin: center center;
+  }
+}
+
 /* ─── Blog Animations ────────────────────────────────────────── */
 
 @keyframes shimmer {
