@@ -251,15 +251,14 @@ Rules:
 
       if (itemRows.length > 0) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { error: itemErr, count } = await adminClient
+        const { error: itemErr } = await adminClient
           .from("menu_items")
-          .insert(itemRows as any[])
-          .select("id", { count: "exact", head: true });
+          .insert(itemRows as any[]);
 
         if (itemErr) {
           console.error("Item insert error:", itemErr);
         } else {
-          createdItems += count ?? itemRows.length;
+          createdItems += itemRows.length;
         }
       }
     }
