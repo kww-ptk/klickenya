@@ -1,8 +1,8 @@
 -- 044_performance_indexes.sql
 -- Three indexes identified as missing by a full codebase audit against
 -- all query patterns in API routes, server components, and dashboard pages.
--- All use CONCURRENTLY so they can be applied to a live database without
--- locking writes. Run each statement separately if your tooling requires it.
+-- Note: CONCURRENTLY is omitted because Supabase SQL Editor runs inside a
+-- transaction block. These indexes build quickly on typical table sizes.
 
 -- ─────────────────────────────────────────────────────────────────────────────
 -- menu_sections(menu_id)
@@ -14,7 +14,7 @@
 -- menu_sections_owner_all and menu_sections_public_read policies join on
 -- menu_sections.menu_id = menus.id, evaluated for every row access.
 -- ─────────────────────────────────────────────────────────────────────────────
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_menu_sections_menu_id
+CREATE INDEX IF NOT EXISTS idx_menu_sections_menu_id
   ON menu_sections(menu_id);
 
 -- ─────────────────────────────────────────────────────────────────────────────
@@ -34,7 +34,7 @@ CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_menu_sections_menu_id
 -- range scan within the room's rows directly, which matters as booking history
 -- grows. blocked_dates already has the equivalent composite (migration 031).
 -- ─────────────────────────────────────────────────────────────────────────────
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_bookings_room_dates
+CREATE INDEX IF NOT EXISTS idx_bookings_room_dates
   ON public.bookings(room_id, check_in_date, check_out_date);
 
 -- ─────────────────────────────────────────────────────────────────────────────
@@ -52,5 +52,5 @@ CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_bookings_room_dates
 -- skip non-confirmed rows at the index level and supports index-only scans
 -- for the count, avoiding heap access entirely.
 -- ─────────────────────────────────────────────────────────────────────────────
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_event_attendees_event_status
+CREATE INDEX IF NOT EXISTS idx_event_attendees_event_status
   ON event_attendees(event_sanity_id, status);
