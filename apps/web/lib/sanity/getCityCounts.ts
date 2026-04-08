@@ -9,7 +9,7 @@ export interface CityCount {
 }
 
 const CITY_LISTINGS_QUERY = groq`
-  *[_type == "listing" && status == "published" && defined(city) && city != ""]{ city }
+  *[_type in ["stay", "experience", "event", "rental", "service", "restaurant"] && status == "published" && defined(city) && city != ""]{ city }
 `;
 
 const DESTINATION_IMAGES_QUERY = groq`
