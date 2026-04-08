@@ -11,7 +11,7 @@ import { urlForImage } from "@/lib/sanity/image";
 import { ListingGrid } from "@/components/listings/ListingGrid";
 import SubcategoryBar from "@/components/listings/SubcategoryBar";
 import TagFilter from "@/components/listings/TagFilter";
-import { LocationFilterBar } from "@/components/listings/LocationFilterBar";
+import { LocationHeading } from "@/components/listings/LocationHeading";
 import type { ListingCardProps } from "@/components/listings/ListingCard";
 import { SUBCATEGORY_LABELS } from "@/lib/constants/subcategories";
 
@@ -204,7 +204,6 @@ export default async function TypePage({ params, searchParams }: PageProps) {
 
   return (
     <>
-      <LocationFilterBar type={type} activeCity={null} />
       <SubcategoryBar
         type={sanityType}
         activeSubcategory={subcategory}
@@ -213,17 +212,12 @@ export default async function TypePage({ params, searchParams }: PageProps) {
       <TagFilter availableTags={availableTags} activeTags={tags} />
 
       <section className="max-w-[1280px] mx-auto px-5 md:px-10 py-10">
-        {/* Heading */}
-        <div className="mb-8">
-          <h1 className="font-display text-[clamp(28px,3.5vw,42px)] font-extrabold tracking-[-0.03em] text-dark">
-            {subLabel} in {location}
-          </h1>
-          <p className="mt-2 text-[15px] text-text2">
-            {cards.length > 0
-              ? `${cards.length} listing${cards.length !== 1 ? "s" : ""} found`
-              : "No listings found yet"}
-          </p>
-        </div>
+        <LocationHeading
+          type={type}
+          subLabel={subLabel}
+          activeCity={city}
+          count={cards.length}
+        />
 
         {/* Grid or empty state */}
         {cards.length > 0 ? (

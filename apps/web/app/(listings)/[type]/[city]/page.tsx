@@ -9,7 +9,7 @@ import {
 import { urlForImage } from "@/lib/sanity/image";
 import { ListingGrid } from "@/components/listings/ListingGrid";
 import { JsonLd } from "@/components/seo/JsonLd";
-import { LocationFilterBar } from "@/components/listings/LocationFilterBar";
+import { LocationHeading } from "@/components/listings/LocationHeading";
 import type { ListingCardProps } from "@/components/listings/ListingCard";
 
 export const dynamic = 'force-static';
@@ -172,8 +172,6 @@ export default async function CityPage({ params }: PageProps) {
   };
 
   return (
-    <>
-    <LocationFilterBar type={type} activeCity={city} />
     <section className="max-w-[1280px] mx-auto px-5 md:px-10 py-10">
       <JsonLd schema={breadcrumbSchema} />
 
@@ -203,17 +201,12 @@ export default async function CityPage({ params }: PageProps) {
         </ol>
       </nav>
 
-      {/* Heading */}
-      <div className="mb-8">
-        <h1 className="font-display text-[clamp(28px,3.5vw,42px)] font-extrabold tracking-[-0.03em] text-dark">
-          {label} in {cityName}
-        </h1>
-        <p className="mt-2 text-[15px] text-text2">
-          {cards.length > 0
-            ? `${cards.length} listing${cards.length !== 1 ? "s" : ""} found`
-            : "No listings found yet"}
-        </p>
-      </div>
+      <LocationHeading
+        type={type}
+        subLabel={label}
+        activeCity={city}
+        count={cards.length}
+      />
 
       {/* Grid or empty state */}
       {cards.length > 0 ? (
@@ -231,6 +224,5 @@ export default async function CityPage({ params }: PageProps) {
         </div>
       )}
     </section>
-    </>
   );
 }
