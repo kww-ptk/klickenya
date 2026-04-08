@@ -45,10 +45,8 @@ export function LocationHeading({ type, subLabel, activeCity, count }: LocationH
     <div className="mb-8">
       {/* Main heading */}
       <h1 className="font-display font-extrabold tracking-[-0.03em] text-dark leading-[1.15] text-[clamp(32px,4.5vw,52px)]">
-        {/* "Pick your" */}
-        <span className="block text-[0.55em] font-semibold text-[#9C9485] tracking-[0.04em] uppercase mb-1">
-          Find your perfect
-        </span>
+        {/* "Find" */}
+        <span className="text-dark">Find </span>
 
         {/* Category label in amber */}
         <span className="text-[#E8A020]">{subLabel}</span>
