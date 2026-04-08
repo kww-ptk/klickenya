@@ -11,6 +11,7 @@ import { urlForImage } from "@/lib/sanity/image";
 import { ListingGrid } from "@/components/listings/ListingGrid";
 import SubcategoryBar from "@/components/listings/SubcategoryBar";
 import TagFilter from "@/components/listings/TagFilter";
+import { LocationFilterBar } from "@/components/listings/LocationFilterBar";
 import type { ListingCardProps } from "@/components/listings/ListingCard";
 import { SUBCATEGORY_LABELS } from "@/lib/constants/subcategories";
 
@@ -203,6 +204,7 @@ export default async function TypePage({ params, searchParams }: PageProps) {
 
   return (
     <>
+      <LocationFilterBar type={type} activeCity={null} />
       <SubcategoryBar
         type={sanityType}
         activeSubcategory={subcategory}

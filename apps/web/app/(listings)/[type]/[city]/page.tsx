@@ -9,6 +9,7 @@ import {
 import { urlForImage } from "@/lib/sanity/image";
 import { ListingGrid } from "@/components/listings/ListingGrid";
 import { JsonLd } from "@/components/seo/JsonLd";
+import { LocationFilterBar } from "@/components/listings/LocationFilterBar";
 import type { ListingCardProps } from "@/components/listings/ListingCard";
 
 export const dynamic = 'force-static';
@@ -171,6 +172,8 @@ export default async function CityPage({ params }: PageProps) {
   };
 
   return (
+    <>
+    <LocationFilterBar type={type} activeCity={city} />
     <section className="max-w-[1280px] mx-auto px-5 md:px-10 py-10">
       <JsonLd schema={breadcrumbSchema} />
 
@@ -228,5 +231,6 @@ export default async function CityPage({ params }: PageProps) {
         </div>
       )}
     </section>
+    </>
   );
 }
