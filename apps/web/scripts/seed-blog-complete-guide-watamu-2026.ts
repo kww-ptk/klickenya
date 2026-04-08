@@ -107,8 +107,6 @@ const body: any[] = [
   },
 
   placeholder('Watamu beach, white sand and crystal clear water'),
-]
-
 
   // ═══════════════════════════════════════════════════
   // SECTION 2: HOW TO GET TO WATAMU
