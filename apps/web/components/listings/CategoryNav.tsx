@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { SlidersHorizontal } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { FilterDrawer } from "@/components/listings/FilterDrawer";
 
 interface Category {
   id: string;
@@ -50,6 +51,8 @@ function CategoryNav({
   const segments = pathname.split("/").filter(Boolean);
   const isDetailPage = segments.length >= 3;
   if (isDetailPage) return null;
+
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   /* ── Hide on scroll down, show on scroll up ── */
   const [visible, setVisible] = useState(true);
@@ -115,7 +118,7 @@ function CategoryNav({
 
           {/* Filters button */}
           <button
-            onClick={onFiltersClick}
+            onClick={() => setDrawerOpen(true)}
             className="shrink-0 flex items-center gap-[7px] px-4 py-2.5 rounded-[10px] border border-border text-[13px] font-semibold whitespace-nowrap transition-all duration-200 hover:shadow-sm hover:border-amber hover:text-amber"
           >
             <SlidersHorizontal className="size-[15px]" />
@@ -127,6 +130,8 @@ function CategoryNav({
         <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-white to-transparent pointer-events-none md:hidden" />
       </div>
     </div>
+
+    <FilterDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
   );
 }
 
