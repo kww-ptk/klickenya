@@ -262,3 +262,14 @@ body {
 .animate-cal-shake {
   animation: calShake 0.35s ease-in-out;
 }
+
+/* ─── Location dropdown pulse ring ──────────────────────────── */
+@keyframes pulseRing {
+  0%   { box-shadow: 0 0 0 0 rgba(232,160,32,0.55); }
+  70%  { box-shadow: 0 0 0 8px rgba(232,160,32,0); }
+  100% { box-shadow: 0 0 0 0 rgba(232,160,32,0); }
+}
+
+.animate-pulse-ring {
+  animation: pulseRing 1.8s ease-out infinite;
+}
