@@ -46,14 +46,14 @@ export function LocationHeading({ type, subLabel, activeCity, count }: LocationH
       {/* Main heading */}
       <h1 className="font-display font-extrabold tracking-[-0.03em] text-dark leading-[1.15] text-[clamp(32px,4.5vw,52px)]">
         {/* "Find" */}
-        <span className="text-dark">Find </span>
+        <span className="text-dark text-[clamp(18px,2.5vw,30px)] font-bold">Find </span>
 
         {/* Category label in amber */}
         <span className="text-[#E8A020]">{subLabel}</span>
         {" "}
 
         {/* "in" */}
-        <span className="text-dark">in</span>
+        <span className="text-dark text-[clamp(18px,2.5vw,30px)] font-bold">in</span>
         {" "}
 
         {/* Location dropdown trigger */}
@@ -62,14 +62,12 @@ export function LocationHeading({ type, subLabel, activeCity, count }: LocationH
             onClick={() => setOpen((v) => !v)}
             aria-label={`Filter by location, currently showing ${locationLabel}`}
             className={cn(
-              "inline-flex items-center gap-2 rounded-2xl transition-all duration-200",
+              "inline-flex items-center gap-2 rounded-xl transition-all duration-200",
               "text-[clamp(32px,4.5vw,52px)] font-extrabold tracking-[-0.03em]",
-              "px-4 py-1",
+              "px-3 py-0.5 border-2 border-dashed",
               open
-                ? "bg-[#16130C] text-white shadow-lg"
-                : "bg-[#FEF3DB] text-[#16130C] hover:bg-[#FDEAB8]",
-              // Pulse ring only when closed (draws attention)
-              !open && "ring-2 ring-[#E8A020] ring-offset-2 animate-pulse-ring"
+                ? "border-[#16130C] bg-[#16130C] text-white"
+                : "border-[#C8C3BA] text-[#16130C] hover:border-[#E8A020] hover:bg-[#FEF3DB]"
             )}
           >
             <span>{locationLabel}</span>
