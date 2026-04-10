@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminClient } from "@/lib/supabase/admin";
+import { sanityClient } from "@/lib/sanity/client";
 import { revalidateTag, revalidatePath } from "next/cache";
 import { getMenuAuth, verifyMenuAccess } from "../_lib/auth";
 
@@ -168,10 +169,31 @@ export async function PATCH(req: NextRequest) {
     revalidateTag(`menu:${menu_id}`, "default");
     revalidatePath(`/m/${menu.slug}`);
 
-    // Bust the listing page ISR cache when reservations_enabled changes
-    if ("reservations_enabled" in updates && listing_city && menu.listing_slug) {
-      const citySlug = String(listing_city).toLowerCase().replace(/\s+/g, "-");
-      revalidatePath(`/restaurants/${citySlug}/${menu.listing_slug}`);
+    // Bust the listing page ISR cache when reservations_enabled changes.
+    // Prefer listing_city from the request body; fall back to a Sanity lookup so
+    // the revalidation fires even when the client didn't send the city.
+    if ("reservations_enabled" in updates && menu.listing_slug) {
+      let resolvedCity: string | null = listing_city
+        ? String(listing_city).toLowerCase().replace(/\s+/g, "-")
+        : null;
+
+      if (!resolvedCity) {
+        try {
+          const sanityListing = await sanityClient.fetch<{ city: string } | null>(
+            `*[_type == "listing" && slug.current == $slug][0]{ city }`,
+            { slug: menu.listing_slug },
+          );
+          if (sanityListing?.city) {
+            resolvedCity = sanityListing.city.toLowerCase().replace(/\s+/g, "-");
+          }
+        } catch {
+          // Non-blocking — continue without revalidating listing page
+        }
+      }
+
+      if (resolvedCity) {
+        revalidatePath(`/restaurants/${resolvedCity}/${menu.listing_slug}`);
+      }
     }
 
     return NextResponse.json({
