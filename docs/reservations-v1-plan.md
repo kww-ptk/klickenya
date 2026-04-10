@@ -424,3 +424,332 @@ Key files for implementation:
 | `apps/web/app/api/menu/reservations/route.ts` | **New** — GET (list) + POST (create) + PATCH (status update) |
 | `apps/web/app/dashboard/menu/[id]/reservations/page.tsx` | **New** — reservation management dashboard page |
 | `apps/web/components/dashboard/menu/ReservationsDashboard.tsx` | **New** — polling dashboard, modelled on `KitchenDashboard.tsx` |
+
+---
+
+## Listing Command Center Discovery
+
+> Investigation date: 2026-04-10. No code changes — mapping only.
+
+---
+
+### Q1 — Current state of `/dashboard/listings/`
+
+**Folder structure (two levels):**
+
+```
+apps/web/app/dashboard/listings/
+├── page.tsx          ← read-only listing list
+└── loading.tsx       ← skeleton
+```
+
+**There is no `[id]` dynamic route.** The page is a simple read-only index: it queries Sanity for all listings claimed by the current user, renders a card list with photo + title + type + city + verification badge, and links each card to the public listing URL (`/{type}/{city}/{slug}`). No editing, no tabs, no feature management.
+
+**JSX layout root (page.tsx):**
+```tsx
+return (
+  <div>
+    <div className="flex items-center justify-between mb-5">
+      <h1 …>My Listings</h1>
+      <p …>{listings.length} listings · {verifiedCount} verified · {pendingCount} pending</p>
+    </div>
+    {listings.length === 0 ? <EmptyState /> : (
+      <div className="space-y-3">
+        {listings.map(listing => (
+          <div key={listing._id} …>
+            {/* photo + title + type + city + badge */}
+            <div className="flex gap-2 mt-2.5 pt-2.5 border-t …">
+              <Link href={href}>View listing →</Link>
+            </div>
+          </div>
+        ))}
+      </div>
+    )}
+  </div>
+);
+```
+
+Single page, no tabs, no per-listing management. The `[id]` route does not exist yet — it is fully greenfield.
+
+---
+
+### Q2 — How stays are managed today
+
+Stay owners do **not** manage their listing through `/dashboard/listings/`. That page is view-only. Stay management lives in a completely separate PMS system at `/dashboard/property/[id]/`.
+
+**Entry path for a stay owner:**
+1. Dashboard homepage (`/dashboard`) shows a "Property calendar is ready to set up" banner if a property exists without configuration → links to `/dashboard/property/{id}`
+2. Sidebar nav has a "Property PMS" link → `/dashboard/property/` (hub listing all properties)
+
+**Key routes:**
+
+| Route | File | Purpose |
+|---|---|---|
+| `/dashboard/property/` | `property/page.tsx` | Hub — lists all properties, 60-day unified calendar, check-in/out stats |
+| `/dashboard/property/[id]/` | `property/[id]/page.tsx` | Single property — today snapshot, per-property calendar, room management, linked listing card |
+| `/dashboard/property/[id]/settings/` | `property/[id]/settings/page.tsx` | Full settings: name, type, check-in/out times, min stay, renting type, entire-place price, weekend multiplier, date-based pricing rules, fees, listing link, booking toggle |
+| `/dashboard/property/new/` | `property/new/page.tsx` | Create or import from Sanity listing |
+
+**Layout description:** The single-property page (`property/[id]/page.tsx`) is a single-page layout (no tabs): header, TodaySnapshot stats row, PropertyCalendarWrapper (full monthly calendar with booking/block overlays), RoomManagementSection (room cards with drag-to-reorder), and a LinkedListingCard. Settings are on a **separate sub-route** (`/settings/`), not a tab. The pattern is: main page = operational view, sub-route = configuration.
+
+This is the only precedent in the dashboard for a sub-route pattern: `property/[id]/` → `property/[id]/settings/`.
+
+---
+
+### Q3 — How restaurants are managed today
+
+**Entry path for a restaurant owner:**
+1. Dashboard homepage shows "Your digital menu isn't live yet" banner → links to `/dashboard/menus`
+2. Sidebar nav has a "Menu" link → `/dashboard/menus/`
+
+**Routes:**
+
+| Route | File | Purpose |
+|---|---|---|
+| `/dashboard/menus/` | `menus/page.tsx` | Hub — lists all menus via `MenusOverview` component |
+| `/dashboard/menu/[id]/` | `menu/[id]/page.tsx` | **The restaurant command center today** — single page with MenuBuilder |
+| `/dashboard/menu/[id]/orders/` | `menu/[id]/orders/page.tsx` | Kitchen dashboard (only accessible when `table_ordering = true`) |
+| `/dashboard/menu/[id]/qr/` | `menu/[id]/qr/page.tsx` | QR code download |
+
+**There is no listing-level restaurant UI that is not menu-related.** When a restaurant owner logs in, they go to their menu. All feature configuration (publish toggle, table ordering, reservations) lives inside `MenuBuilder`'s sticky publish panel (the right column on desktop, the top section on mobile). There is no "restaurant listing command center" — only a menu builder with a settings sidebar baked in.
+
+The `MenuBuilder` component is a 957-line monolith that combines menu editing, section/item CRUD, and all feature toggles in one component. It is the pattern we are explicitly replacing with the new `/dashboard/listings/[id]` command center.
+
+---
+
+### Q4 — Existing tab/nav primitives in the dashboard
+
+**Result: no reusable tab component exists anywhere in the dashboard. Individual pages roll their own.**
+
+The only tab implementation in the entire codebase is in `apps/web/app/profile/ProfileClient.tsx` (the public guest profile page, not the dashboard):
+
+```typescript
+// ProfileClient.tsx — lines 89–96
+const TABS = [
+  { key: "profile",   label: "Profile",   icon: User },
+  { key: "bookings",  label: "Bookings",  icon: BookOpen },
+  { key: "enquiries", label: "Enquiries", icon: Mail },
+  { key: "events",    label: "Events",    icon: Calendar },
+  { key: "saved",     label: "Saved",     icon: Heart },
+] as const;
+type Tab = (typeof TABS)[number]["key"];
+
+const [activeTab, setActiveTab] = useState<Tab>(startTab);
+```
+
+Tab buttons are rendered inline with `onClick={() => setActiveTab(tab.key)}` and conditional content blocks below. No shared component, no URL-driven tabs, no search-param routing.
+
+`components/ui/` has **no Tabs component**: Badge, Button, Card, DateRangePicker, Input, Modal, PhoneInput, Select, Textarea, Toast. That is the full list.
+
+`components/dashboard/` contains only one sub-directory: `menu/` (8 files — ItemForm, KitchenDashboard, MenuBuilder, MenuImporter, MenusOverview, OptionGroupEditor, QRDownload, TableSetup).
+
+**Bottom line:** The tab system for the listing command center must be built from scratch, but it can be minimal — the ProfileClient pattern (constant array + `useState`) is proven and readable. The key upgrade needed: URL-driven tab state (search param or sub-route) so the active tab survives a page refresh and supports direct linking.
+
+---
+
+### Q5 — Existing "feature card" or "upsell card" patterns
+
+**Result: no reusable feature/upsell card component exists.** Scattered references only:
+
+| File | Pattern | Note |
+|---|---|---|
+| `property/[id]/settings/page.tsx` | `"Optional upsell"` label on fee radio button | Single text string in a form field label |
+| `dashboard/settings/SettingsClient.tsx` | `"More options coming soon."` | Inline text |
+| `admin/page.tsx` | `source: "coming-soon"` badge | Admin-only analytics |
+| `become-a-host/UpgradeButton.tsx` | `/api/auth/upgrade-to-host` flow | Role upgrade, not feature upsell |
+| `hosts/[slug]/page.tsx` | `"Reviews coming soon"` | Placeholder text |
+
+Nothing is reusable. No `FeatureCard`, no `UpsellCard`, no `ComingSoonBadge` component anywhere. The Features tab upsell surface is fully greenfield.
+
+---
+
+### Q6 — How "enabled features" are detected per listing today
+
+**Restaurants (`menus` table)** — richest flag set, fully structured:
+
+| Column | Type | Default | Status |
+|---|---|---|---|
+| `ordering_enabled` | boolean | false | Dormant (from migration 028) |
+| `table_ordering` | boolean | false | Active V1 |
+| `takeaway_enabled` | boolean | false | Dormant (from migration 028) |
+| `delivery_enabled` | boolean | false | Dormant (from migration 028) |
+| `reservations_enabled` | boolean | false | Active V1 (migration 049) |
+| `default_reservation_duration` | int | 90 | Active V1 |
+| `reservations_lead_time_hours` | int | 2 | Active V1 |
+| `reservations_max_party_size` | int | 12 | Active V1 |
+| `reservations_max_advance_days` | int | 30 | Active V1 |
+
+The dormant flags (`ordering_enabled`, `takeaway_enabled`, `delivery_enabled`) are schema-only — no UI, no API, no logic reads them. They are future features waiting for an upsell surface.
+
+**Stays (`properties` table)** — thin:
+
+| Column | Type | Default | Meaning |
+|---|---|---|---|
+| `is_active` | boolean | true | Property-level on/off |
+| `renting_type` | enum | varies | `entire_place` / `by_room` / `both` — not a feature flag |
+
+There are no per-feature boolean flags on properties analogous to `reservations_enabled`. The property PMS itself is the "feature" — having a linked property at `/dashboard/property/[id]/` means the booking engine is on. There is no `booking_engine_enabled` flag; the booking widget is gated purely by `properties.is_active`.
+
+**No unified feature flag model exists.** The restaurant flags live on `menus`, the property on/off lives on `properties.is_active`, and the two systems have no shared abstraction. The listing command center will need to define this abstraction.
+
+---
+
+### Q7 — Recommended architecture
+
+#### URL structure
+
+Use **sub-routes** with a shared `layout.tsx` containing the tab nav:
+
+```
+/dashboard/listings/[id]/                  ← redirects to /overview
+/dashboard/listings/[id]/overview/         ← stats, listing info, quick links
+/dashboard/listings/[id]/features/         ← Features tab (upsell surface, always visible)
+/dashboard/listings/[id]/reservations/     ← only rendered when reservations_enabled = true
+/dashboard/listings/[id]/orders/           ← only rendered when table_ordering = true (future)
+/dashboard/listings/[id]/menu/             ← only rendered for restaurants (future)
+```
+
+**Rationale:** Sub-routes are the only existing precedent for per-entity navigation in this codebase (`property/[id]/settings/`). Each tab is a server component with its own data-fetching. Active tab state is the URL, so it survives refresh, supports deep-linking, and does not require client state. The tab nav in `layout.tsx` reads `pathname` to highlight the active tab.
+
+Search-param routing (`?tab=reservations`) is ruled out because the Reservations tab needs server-side data — with search params it would be a client-rendered component, losing the server fetch pattern.
+
+#### Tab rendering — dynamic feature tabs
+
+A feature config file at `apps/web/app/dashboard/listings/[id]/_lib/features.config.ts` exports `LISTING_FEATURES: FeatureDefinition[]`. The layout.tsx reads this config, checks each feature's `isEnabled(ctx)` against the current listing's data, and renders tab links only for enabled features.
+
+```typescript
+// Pseudo-registration in layout.tsx
+const enabledTabs = LISTING_FEATURES.filter(f =>
+  f.appliesTo.includes(listingType) && f.isEnabled(featureCtx)
+);
+```
+
+No hardcoded conditionals in layout. Adding a new feature tab = adding one object to the config array.
+
+#### Feature registry shape (proposed TypeScript)
+
+```typescript
+// apps/web/app/dashboard/listings/[id]/_lib/features.config.ts
+
+type ListingType = "restaurant" | "stay" | "experience" | "service" | "event" | "rental";
+type FeatureStatus = "active" | "inactive" | "coming_soon" | "paid";
+
+interface FeatureContext {
+  listingType: ListingType;
+  menuId: string | null;            // restaurants only
+  propertyId: string | null;        // stays only
+  reservationsEnabled: boolean;
+  tableOrderingEnabled: boolean;
+  // add more flags as features grow
+}
+
+interface FeatureDefinition {
+  /** Unique slug — also the URL segment for the tab */
+  id: string;
+  label: string;
+  description: string;
+  icon: string; // emoji or Lucide icon name
+  /** Which listing types can have this feature */
+  appliesTo: ListingType[];
+  /**
+   * Returns the current status for this listing.
+   * "active"       → feature is on; show as a tab + green badge in Features tab
+   * "inactive"     → feature exists but is off; show toggle in Features tab, no tab link
+   * "coming_soon"  → not yet buildable; show locked card in Features tab
+   * "paid"         → requires a paid plan; show upgrade CTA in Features tab
+   */
+  getStatus: (ctx: FeatureContext) => FeatureStatus;
+  /**
+   * The page component path for the feature tab (relative to [id]/).
+   * Only rendered when getStatus returns "active".
+   * Omit for coming_soon / paid features.
+   */
+  tabSegment?: string; // e.g. "reservations"
+}
+
+// Example entries
+const LISTING_FEATURES: FeatureDefinition[] = [
+  {
+    id: "reservations",
+    label: "Table Reservations",
+    description: "Let guests book a table directly from your listing and menu page.",
+    icon: "📅",
+    appliesTo: ["restaurant"],
+    getStatus: (ctx) => ctx.reservationsEnabled ? "active" : "inactive",
+    tabSegment: "reservations",
+  },
+  {
+    id: "table_ordering",
+    label: "Table Ordering",
+    description: "Guests scan your QR code and order from their phone.",
+    icon: "🍽️",
+    appliesTo: ["restaurant"],
+    getStatus: (ctx) => ctx.tableOrderingEnabled ? "active" : "inactive",
+    tabSegment: "orders",
+  },
+  {
+    id: "delivery",
+    label: "Delivery",
+    description: "Accept delivery orders from your menu page.",
+    icon: "🛵",
+    appliesTo: ["restaurant"],
+    getStatus: () => "coming_soon",
+  },
+  {
+    id: "takeaway",
+    label: "Takeaway",
+    description: "Let guests pre-order for collection.",
+    icon: "🥡",
+    appliesTo: ["restaurant"],
+    getStatus: () => "coming_soon",
+  },
+  {
+    id: "booking_engine",
+    label: "Direct Bookings",
+    description: "Accept reservations and payments without OTA fees.",
+    icon: "🏠",
+    appliesTo: ["stay"],
+    getStatus: (ctx) => ctx.propertyId ? "active" : "inactive",
+  },
+];
+```
+
+#### Where Prompt 8 places the Reservations dashboard
+
+- **URL:** `/dashboard/listings/[id]/reservations`
+- **Page file:** `apps/web/app/dashboard/listings/[id]/reservations/page.tsx`
+- **Component:** `apps/web/components/dashboard/listings/ReservationsDashboard.tsx`
+  (new directory `components/dashboard/listings/` — mirrors existing `components/dashboard/menu/`)
+- **Mount condition:** `getStatus(ctx) === "active"` i.e. `reservations_enabled = true`
+- **If accessed when disabled:** the layout redirects to `/dashboard/listings/[id]/features`
+- **Data source:** `GET /api/menu/reservations?menu_id={menuId}` with 8-second polling, mirroring `KitchenDashboard.tsx` pattern
+
+The existing `apps/web/app/dashboard/menu/[id]/reservations/` route planned in the earlier section of this doc **is superseded** by the listing command center. Build it at `/dashboard/listings/[id]/reservations/` instead.
+
+#### Minimum-change path
+
+**Reuse / extend (zero new patterns):**
+- `property/[id]/` sub-route structure → same pattern for `listings/[id]/`
+- `ProfileClient.tsx` tab array + conditional rendering → same pattern for tab nav, upgraded with `usePathname` for URL-driven active state
+- `KitchenDashboard.tsx` 8-second polling → `ReservationsDashboard.tsx` copy + adapt
+- `MenuBuilder.tsx` toggleReservations → same PATCH `/api/menu/settings` endpoint, same toast pattern
+- `ReservationSheet.tsx` (already built) → reused in the Reservations dashboard for manual booking entry (future)
+
+**Build new (minimal, intentionally small):**
+1. `apps/web/app/dashboard/listings/[id]/layout.tsx` — fetches listing metadata + feature context, renders tab nav (client component for `usePathname`, everything else server)
+2. `apps/web/app/dashboard/listings/[id]/_lib/features.config.ts` — the feature registry (pure data, no components)
+3. `apps/web/app/dashboard/listings/[id]/_lib/context.ts` — `getListingFeatureContext(listingId, userId)` server helper that queries Supabase for menus/properties linked to the listing
+4. `apps/web/app/dashboard/listings/[id]/page.tsx` — redirect to `/overview`
+5. `apps/web/app/dashboard/listings/[id]/overview/page.tsx` — listing stats, quick-action cards
+6. `apps/web/app/dashboard/listings/[id]/features/page.tsx` — Features tab: maps LISTING_FEATURES, renders FeatureCard for each
+7. `apps/web/app/dashboard/listings/[id]/reservations/page.tsx` — Reservations tab (Prompt 8)
+8. `apps/web/components/dashboard/listings/FeatureCard.tsx` — the reusable card for the Features tab (active/inactive/coming_soon/paid states)
+9. `apps/web/components/dashboard/listings/ListingTabNav.tsx` — the client tab bar component
+
+**What does NOT need to be built:**
+- A new API route for features (all existing `/api/menu/settings` routes are reused)
+- A new Supabase table (feature flags already exist on `menus` and `properties`)
+- A Sanity schema change (listing metadata stays in Sanity, feature state stays in Supabase)
+
+**Open question for Prompt 8:** The existing `/dashboard/menu/[id]/` route is where restaurant owners currently land. After building the listing command center, should `/dashboard/menu/[id]/` be deprecated (redirect to `/dashboard/listings/[id]/menu/`) or kept as a standalone route for QR/menu-specific workflows? Recommendation: keep `/dashboard/menu/[id]/` for now — the `MenuBuilder` (menu editing itself) stays there. The command center adds a layer above it, it does not replace it.
+
