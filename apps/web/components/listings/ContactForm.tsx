@@ -4,6 +4,7 @@ import { useState, useMemo, type FormEvent } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import PhoneInput from "@/components/ui/PhoneInput";
+import { Turnstile } from "@marsidev/react-turnstile";
 
 /* ─── Types ──────────────────────────────────────── */
 
@@ -161,6 +162,8 @@ function ContactForm({
 
   const [status, setStatus] = useState<Status>("idle");
   const [error, setError] = useState<string | null>(null);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const [honeypot, setHoneypot] = useState("");
 
   function update<K extends keyof FormFields>(key: K, value: FormFields[K]) {
     setForm((prev) => {
@@ -195,6 +198,8 @@ function ContactForm({
       phone: form.phone,
       message: form.message || undefined,
       room: preselectedRoom ?? undefined,
+      website: honeypot,
+      turnstileToken,
     };
 
     switch (type) {
@@ -568,10 +573,28 @@ function ContactForm({
         />
       </div>
 
+      {/* ─── Honeypot (hidden from real users) ──── */}
+      <input
+        type="text"
+        name="website"
+        value={honeypot}
+        onChange={(e) => setHoneypot(e.target.value)}
+        style={{ display: "none" }}
+        tabIndex={-1}
+        autoComplete="off"
+        aria-hidden="true"
+      />
+
+      {/* ─── Turnstile widget ────────────────────── */}
+      <Turnstile
+        siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY!}
+        onSuccess={(token) => setTurnstileToken(token)}
+      />
+
       {/* ─── Submit button ───────────────────────── */}
       <button
         type="submit"
-        disabled={status === "loading"}
+        disabled={status === "loading" || !turnstileToken}
         className={cn(
           "w-full py-3.5 rounded-[18px] text-[15px] font-bold transition-all duration-200",
           "bg-gradient-to-r from-amber to-amber2 text-dark",
