@@ -234,6 +234,7 @@ export default async function ListingDetailPage({ params }: PageProps) {
     leadTimeHours: number;
     maxPartySize: number;
     maxAdvanceDays: number;
+    durationMinutes: number;
     areas: RestaurantArea[];
     restaurantPhone: string | null;
   } | null = null;
