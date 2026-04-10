@@ -590,7 +590,11 @@ export function ReservationsSettings({
             />
           </div>
           <div className="p-4">
-            <TableSetup menuId={menuId} showToast={showToast} />
+            <TableSetup
+              menuId={menuId}
+              showToast={showToast}
+              areas={areas.filter(a => a.is_active).map(a => ({ id: a.id, name: a.name }))}
+            />
           </div>
         </div>
       )}
