@@ -10,14 +10,24 @@ import {
   type FeatureContext,
 } from "./_lib/features.config";
 
-// DEPLOYED_SEGMENTS: tab segments that are shown in the nav even before their
-// page.tsx files exist. Any active segment NOT in this set is omitted from the
-// nav (with a dev-mode warning) to prevent dead links.
-//
-// 'orders' is pre-registered: the Orders page will 404 until Prompt 8c builds it.
-// TODO: add 'reservations' when Prompt 8c creates reservations/page.tsx
-// TODO: add 'menu' when Prompt 9 migrates the MenuBuilder into this command center
-const DEPLOYED_SEGMENTS = new Set<string>(["orders"]);
+/**
+ * DEPLOYED_SEGMENTS — Single source of truth for which feature tabSegments have
+ * a page.tsx built at /dashboard/listings/[id]/[segment].
+ *
+ * Update this set when adding new feature pages:
+ *   - 'reservations' → add when Prompt 8c creates reservations/page.tsx
+ *   - 'orders'       → add when Prompt 9 migrates the orders page here
+ *   - 'menu'         → add when Prompt 9 migrates MenuBuilder into this command center
+ *
+ * Any active tabSegment NOT in this set is rendered as a "Coming soon" card
+ * in the Overview Quick Access section and omitted from the tab nav entirely.
+ * No dead links, no 404s without a badge.
+ */
+export const DEPLOYED_SEGMENTS = new Set<string>([
+  // Empty for now — segments are added as their pages land.
+  // TODO Prompt 8c: add 'reservations' here when reservations/page.tsx is created.
+  // TODO Prompt 9: add 'orders' and 'menu' when those pages migrate here.
+]);
 
 export default async function ListingDashboardLayout({
   children,

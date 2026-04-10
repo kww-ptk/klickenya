@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { adminClient } from "@/lib/supabase/admin";
 import { Resend } from "resend";
 import { sanityClient } from "@/lib/sanity/client";
+import { getMenuAuth, verifyMenuAccess } from "../_lib/auth";
 
 /* ── Phone validation (same regex as /api/contact) ──────────────────────── */
 const internationalPhone = /^\+\d{7,15}$/;
@@ -306,26 +307,91 @@ export async function POST(req: NextRequest) {
 
 export async function GET(req: NextRequest) {
   try {
+    // ── Auth ──────────────────────────────────────────────────────────────────
+    const { userId, isAdmin, supabase } = await getMenuAuth();
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const { searchParams } = new URL(req.url);
     const menu_id = searchParams.get("menu_id");
+    const since = searchParams.get("since"); // Optional ISO timestamp for incremental sync
+
     if (!menu_id) {
       return NextResponse.json({ error: "menu_id required" }, { status: 400 });
     }
 
-    // Auth check via admin client (dashboard use only)
-    const { data, error } = await adminClient
+    // ── Ownership check (same pattern as GET /api/menu/orders) ────────────────
+    const menu = await verifyMenuAccess(supabase, menu_id, userId, isAdmin);
+    if (!menu) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
+    // ── Build query ───────────────────────────────────────────────────────────
+    // Fields: full V1 set; DORMANT V3 deposit columns deliberately excluded.
+    let query = adminClient
       .from("reservations")
       .select(
-        "id, guest_name, guest_phone, party_size, reserved_for, duration_minutes, area_id, status, guest_message, owner_note, decline_reason, source, created_at, updated_at, restaurant_areas(name)",
+        [
+          "id",
+          "menu_id",
+          "guest_name",
+          "guest_phone",
+          "party_size",
+          "reserved_for",
+          "duration_minutes",
+          "area_id",
+          "status",
+          "source",
+          "guest_message",
+          "owner_note",
+          "decline_reason",
+          "approved_at",
+          "checked_in_at",
+          "created_at",
+          "updated_at",
+          // Area join — will be flattened to area_name / area_color_hex below
+          "area:restaurant_areas!area_id(name, color_hex)",
+        ].join(", "),
       )
       .eq("menu_id", menu_id)
       .order("reserved_for", { ascending: true });
 
+    if (since) {
+      // Incremental sync: rows changed since the caller's last poll timestamp
+      query = query.gte("updated_at", since);
+    } else {
+      // Default window: last 30 days + all future reservations.
+      // reserved_for >= 30 days ago captures both groups in a single filter.
+      const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+      query = query.gte("reserved_for", thirtyDaysAgo);
+    }
+
+    // TODO V2: Add cursor pagination when historical window extends beyond 30 days.
+
+    const { data, error } = await query;
+
     if (error) {
+      console.error("[reservations GET] error:", error);
       return NextResponse.json({ error: "Failed to fetch reservations" }, { status: 500 });
     }
 
-    return NextResponse.json({ reservations: data ?? [] });
+    // ── Flatten area join ─────────────────────────────────────────────────────
+    // PostgREST returns { area: { name, color_hex } | null }; we flatten to
+    // area_name and area_color_hex so callers get a uniform row shape.
+    // Cast through unknown first because the inferred Supabase type for the
+    // "area" join column doesn't overlap cleanly with our explicit shape.
+    type RawArea = { name: string; color_hex: string | null } | null;
+    type RawRow = Record<string, unknown> & { area: RawArea };
+    const reservations = ((data ?? []) as unknown as RawRow[]).map(
+      ({ area, ...rest }) => ({
+        ...rest,
+        area_name: area?.name ?? null,
+        area_color_hex: area?.color_hex ?? null,
+      }),
+    );
+
+    return NextResponse.json({ reservations });
   } catch {
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }

@@ -10,6 +10,7 @@ import {
   countAvailable,
   type FeatureContext,
 } from "./_lib/features.config";
+import { DEPLOYED_SEGMENTS } from "./layout";
 
 /* ── Nairobi week helper ────────────────────────────────────────────────────
  * Returns ISO string for Monday 00:00 Africa/Nairobi of the current week.
@@ -253,51 +254,98 @@ export default async function ListingOverviewPage({
         )}
       </div>
 
-      {/* ── Quick links ── */}
-      {(activeTabs.length > 0 || true) && (
-        <div className="space-y-2">
-          <p className="text-[12px] font-semibold text-[#9C9485] uppercase tracking-wide">
-            Quick access
-          </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            {activeTabs.map((feature) => (
-              <Link
-                key={feature.id}
-                href={`/dashboard/listings/${id}/${feature.tabSegment}`}
-                className="flex items-center gap-3 bg-white rounded-xl border border-[#E2DDD5] p-3.5 shadow-sm hover:shadow-md hover:border-[#E8A020]/40 transition-all"
-              >
-                <span className="text-[22px] shrink-0">{featureIcon(feature.icon)}</span>
-                <div className="flex-1 min-w-0">
-                  <p className="text-[13px] font-semibold text-[#16130C]">
-                    {feature.label}
-                  </p>
-                  <p className="text-[11px] text-[#9C9485] truncate">
-                    {feature.shortDescription}
-                  </p>
-                </div>
-                <span className="text-[#9C9485] text-[16px] shrink-0">›</span>
-              </Link>
-            ))}
+      {/* ── Quick Access ─────────────────────────────────────────────────────
+           Active features each get a card. Cards for deployed tab segments
+           are clickable links. Cards for not-yet-deployed segments render
+           with an amber "Coming soon" badge and are non-clickable.
+           DEPLOYED_SEGMENTS is the single source of truth — imported from layout.tsx.
+           When Prompt 8c adds 'reservations' to DEPLOYED_SEGMENTS the badge
+           disappears and the card becomes a link automatically.
+      ─────────────────────────────────────────────────────────────────────── */}
+      <div className="space-y-2">
+        <p className="text-[12px] font-semibold text-[#9C9485] uppercase tracking-wide">
+          Quick access
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          {activeTabs.map((feature) => {
+            // ── Digital menu: special case ──────────────────────────────────
+            // tabSegment is 'menu' but the destination lives at the legacy
+            // /dashboard/menu/[id] route until Prompt 9 migrates it here.
+            // TODO Prompt 9: Menu editing will move under /dashboard/listings/[id]/menu/
+            // in Prompt 9. Until then, link to the legacy /dashboard/menu/[id] route directly.
+            if (feature.id === "menu" && featureCtx.menu) {
+              return (
+                <Link
+                  key={feature.id}
+                  href={`/dashboard/menu/${featureCtx.menu.id}`}
+                  className="flex items-center gap-3 bg-white rounded-xl border border-[#E2DDD5] p-3.5 shadow-sm hover:shadow-md hover:border-[#E8A020]/40 transition-all"
+                >
+                  <span className="text-[22px] shrink-0">{featureIcon(feature.icon)}</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[13px] font-semibold text-[#16130C]">{feature.label}</p>
+                    <p className="text-[11px] text-[#9C9485] truncate">{feature.shortDescription}</p>
+                  </div>
+                  <span className="text-[#9C9485] text-[16px] shrink-0">›</span>
+                </Link>
+              );
+            }
 
-            {/* Always-present "Configure features" card */}
-            <Link
-              href={`/dashboard/listings/${id}/features`}
-              className="flex items-center gap-3 bg-white rounded-xl border border-[#E2DDD5] p-3.5 shadow-sm hover:shadow-md hover:border-[#E8A020]/40 transition-all"
-            >
-              <span className="text-[22px] shrink-0">⚙️</span>
-              <div className="flex-1 min-w-0">
-                <p className="text-[13px] font-semibold text-[#16130C]">
-                  Configure features
-                </p>
-                <p className="text-[11px] text-[#9C9485] truncate">
-                  Turn on reservations, ordering, and more
-                </p>
+            // ── Deployed segment → normal clickable card ────────────────────
+            const isDeployed = feature.tabSegment
+              ? DEPLOYED_SEGMENTS.has(feature.tabSegment)
+              : false;
+
+            if (isDeployed) {
+              return (
+                <Link
+                  key={feature.id}
+                  href={`/dashboard/listings/${id}/${feature.tabSegment}`}
+                  className="flex items-center gap-3 bg-white rounded-xl border border-[#E2DDD5] p-3.5 shadow-sm hover:shadow-md hover:border-[#E8A020]/40 transition-all"
+                >
+                  <span className="text-[22px] shrink-0">{featureIcon(feature.icon)}</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[13px] font-semibold text-[#16130C]">{feature.label}</p>
+                    <p className="text-[11px] text-[#9C9485] truncate">{feature.shortDescription}</p>
+                  </div>
+                  <span className="text-[#9C9485] text-[16px] shrink-0">›</span>
+                </Link>
+              );
+            }
+
+            // ── Not-yet-deployed → muted card with "Coming soon" badge ──────
+            return (
+              <div
+                key={feature.id}
+                className="relative flex items-center gap-3 bg-white rounded-xl border border-[#E2DDD5] p-3.5 shadow-sm opacity-70 cursor-default select-none"
+              >
+                {/* Coming soon badge */}
+                <span className="absolute top-2.5 right-2.5 text-[9px] font-bold text-[#E8A020] bg-[#E8A020]/10 px-1.5 py-0.5 rounded-full uppercase tracking-wide">
+                  Coming soon
+                </span>
+                <span className="text-[22px] shrink-0">{featureIcon(feature.icon)}</span>
+                <div className="flex-1 min-w-0 pr-16">
+                  <p className="text-[13px] font-semibold text-[#16130C]">{feature.label}</p>
+                  <p className="text-[11px] text-[#9C9485] truncate">{feature.shortDescription}</p>
+                </div>
+                {/* No chevron — card is not clickable */}
               </div>
-              <span className="text-[#9C9485] text-[16px] shrink-0">›</span>
-            </Link>
-          </div>
+            );
+          })}
+
+          {/* Always-present "Configure features" card */}
+          <Link
+            href={`/dashboard/listings/${id}/features`}
+            className="flex items-center gap-3 bg-white rounded-xl border border-[#E2DDD5] p-3.5 shadow-sm hover:shadow-md hover:border-[#E8A020]/40 transition-all"
+          >
+            <span className="text-[22px] shrink-0">⚙️</span>
+            <div className="flex-1 min-w-0">
+              <p className="text-[13px] font-semibold text-[#16130C]">Configure features</p>
+              <p className="text-[11px] text-[#9C9485] truncate">Turn on reservations, ordering, and more</p>
+            </div>
+            <span className="text-[#9C9485] text-[16px] shrink-0">›</span>
+          </Link>
         </div>
-      )}
+      </div>
     </div>
   );
 }
