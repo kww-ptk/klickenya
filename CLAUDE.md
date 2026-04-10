@@ -63,11 +63,24 @@ SANITY_API_TOKEN=skCbj0aGyKfa66eCmPPkvfR8v3PqEbDkgEVIiAC1t52iwcSjv6ZttWbSwQYXN6V
 
 ---
 
-# Claude Code Rules
-- ALWAYS work on the dev branch
-- NEVER create claude/* branches
-- NEVER commit to main directly
-- NEVER push to main unless the user explicitly asks
-- After every task, ask: "Ready to save progress to dev?"
-- If yes: push to origin dev only
-- After production promote run: git push origin dev:main (only when user requests)
+# Branching
+
+- `main` is the production branch. Vercel auto-deploys `main` to
+  production at klickenya.com. NEVER push directly to main.
+- `dev` is the staging branch. Vercel deploys dev to a stable preview
+  URL used for integration testing.
+- Workflow for every change, no exceptions:
+  1. Create a short-lived feature branch from dev: `feat/xxx`,
+     `fix/xxx`, or `claude/xxx`
+  2. Work on the feature branch. Push to it freely.
+  3. Merge the feature branch into dev when the feature is done.
+  4. Verify on the dev preview URL (not on www.klickenya.com).
+  5. When dev is tested and stable, merge dev into main. This is
+     the production promotion — do it deliberately, not reflexively.
+  6. After the promotion to main succeeds, delete the feature
+     branch both locally and remotely.
+
+- Hotfixes follow the same path. No exceptions. Even a one-line doc
+  edit goes through feat → dev → main.
+- If main and dev diverge unexpectedly, stop and investigate before
+  pushing anything.
