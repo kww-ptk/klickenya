@@ -459,6 +459,7 @@ export default async function DashboardPage() {
               const href = `/${typeSlug}/${citySlug}/${listing.slug}`;
               const listingEnquiries = enquiryCountMap.get(listing._id) ?? 0;
               const isStay = listing.type === "stay";
+              const isRestaurantListing = listing.type === "restaurant" || listing.subcategory === "restaurants";
               const propStatus = isStay ? propertyStatusMap.get(listing.slug) : undefined;
 
               return (
@@ -535,6 +536,14 @@ export default async function DashboardPage() {
                       >
                         View
                       </Link>
+                      {isRestaurantListing && (
+                        <Link
+                          href={`/dashboard/listings/${listing._id}`}
+                          className="text-[11px] font-semibold text-[#E8A020] hover:text-[#d4911c] transition-colors"
+                        >
+                          Open dashboard →
+                        </Link>
+                      )}
                       {isStay && propStatus?.is_active && propStatus.room_count > 0 && (
                         <Link
                           href={`/dashboard/property/${propStatus.id}`}
