@@ -248,6 +248,7 @@ export function ReservationSheet({
   const [areaId, setAreaId] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("+254");
+  const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
 
   /* ── submission state ── */
@@ -283,6 +284,7 @@ export function ReservationSheet({
         setAreaId(null);
         setName("");
         setPhone("+254");
+        setEmail("");
         setMessage("");
         setSubmitError(null);
         setStep("form");
@@ -329,6 +331,7 @@ export function ReservationSheet({
           menu_id: menuId,
           guest_name: name.trim(),
           guest_phone: phone,
+          guest_email: email.trim().toLowerCase(),
           party_size: partySize,
           reserved_for: `${date}T${time}:00+03:00`,
           area_id: areaId || null,
@@ -348,7 +351,7 @@ export function ReservationSheet({
     } finally {
       setSubmitting(false);
     }
-  }, [menuId, date, time, partySize, areaId, name, phone, message, source, onSuccess]);
+  }, [menuId, date, time, partySize, areaId, name, phone, email, message, source, onSuccess]);
 
   /* ── WhatsApp pre-fill ── */
   const waText = reservationId
@@ -360,7 +363,8 @@ export function ReservationSheet({
   const waPhone = restaurantPhone?.replace(/\D/g, "");
 
   /* ── Validation ── */
-  const canSubmit = !!date && !!time && name.trim().length >= 2 && phone.length >= 8;
+  const emailValid = email.includes("@") && email.includes(".");
+  const canSubmit = !!date && !!time && name.trim().length >= 2 && phone.length >= 8 && emailValid;
 
   /* ── Render ── */
   return (
@@ -581,6 +585,24 @@ export function ReservationSheet({
                     Phone <span className="text-red-500">*</span>
                   </label>
                   <PhoneInput value={phone} onChange={setPhone} required />
+                </div>
+
+                {/* ── Email ── */}
+                <div>
+                  <label className="block text-[11px] font-bold text-text2 uppercase tracking-wide mb-1">
+                    Email <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="your@email.com"
+                    required
+                    className="w-full border border-border rounded-[14px] px-4 py-3 text-[14px] text-text placeholder:text-text3 outline-none focus:border-amber transition-colors bg-white"
+                  />
+                  <p className="text-[11px] text-text3 mt-1">
+                    We'll email your confirmation to this address.
+                  </p>
                 </div>
 
                 {/* ── Message (optional) ── */}

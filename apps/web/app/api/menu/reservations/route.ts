@@ -3,6 +3,7 @@ import { adminClient } from "@/lib/supabase/admin";
 import { Resend } from "resend";
 import { sanityClient } from "@/lib/sanity/client";
 import { getMenuAuth, verifyMenuAccess } from "../_lib/auth";
+import { fetchReservations } from "./_lib/queries";
 
 /* ── Phone validation (same regex as /api/contact) ──────────────────────── */
 const internationalPhone = /^\+\d{7,15}$/;
@@ -146,6 +147,7 @@ export async function POST(req: NextRequest) {
       menu_id,
       guest_name,
       guest_phone,
+      guest_email,
       party_size,
       reserved_for, // ISO string with timezone, e.g. "2026-04-15T19:00:00+03:00"
       area_id,
@@ -163,6 +165,12 @@ export async function POST(req: NextRequest) {
     if (!guest_phone || !internationalPhone.test(guest_phone)) {
       return NextResponse.json(
         { error: "Enter a valid phone number with country code (e.g. +254712345678)" },
+        { status: 400 },
+      );
+    }
+    if (!guest_email || typeof guest_email !== "string" || !guest_email.includes("@") || !guest_email.includes(".")) {
+      return NextResponse.json(
+        { error: "Enter a valid email address" },
         { status: 400 },
       );
     }
@@ -258,6 +266,7 @@ export async function POST(req: NextRequest) {
         menu_id,
         guest_name: guest_name.trim(),
         guest_phone,
+        guest_email: guest_email.trim().toLowerCase(),
         party_size,
         reserved_for,
         duration_minutes: menu.default_reservation_duration,
@@ -327,69 +336,16 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    // ── Build query ───────────────────────────────────────────────────────────
-    // Fields: full V1 set; DORMANT V3 deposit columns deliberately excluded.
-    let query = adminClient
-      .from("reservations")
-      .select(
-        [
-          "id",
-          "menu_id",
-          "guest_name",
-          "guest_phone",
-          "party_size",
-          "reserved_for",
-          "duration_minutes",
-          "area_id",
-          "status",
-          "source",
-          "guest_message",
-          "owner_note",
-          "decline_reason",
-          "approved_at",
-          "checked_in_at",
-          "created_at",
-          "updated_at",
-          // Area join — will be flattened to area_name / area_color_hex below
-          "area:restaurant_areas!area_id(name, color_hex)",
-        ].join(", "),
-      )
-      .eq("menu_id", menu_id)
-      .order("reserved_for", { ascending: true });
-
-    if (since) {
-      // Incremental sync: rows changed since the caller's last poll timestamp
-      query = query.gte("updated_at", since);
-    } else {
-      // Default window: last 30 days + all future reservations.
-      // reserved_for >= 30 days ago captures both groups in a single filter.
-      const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
-      query = query.gte("reserved_for", thirtyDaysAgo);
-    }
-
-    // TODO V2: Add cursor pagination when historical window extends beyond 30 days.
-
-    const { data, error } = await query;
-
-    if (error) {
-      console.error("[reservations GET] error:", error);
+    // ── Fetch via shared queries helper ──────────────────────────────────────
+    // fetchReservations handles: field selection (including guest_email),
+    // area join flattening, since-based incremental sync, and default 30-day window.
+    let reservations;
+    try {
+      reservations = await fetchReservations(menu_id, since ?? undefined);
+    } catch (err) {
+      console.error("[reservations GET] fetch error:", err);
       return NextResponse.json({ error: "Failed to fetch reservations" }, { status: 500 });
     }
-
-    // ── Flatten area join ─────────────────────────────────────────────────────
-    // PostgREST returns { area: { name, color_hex } | null }; we flatten to
-    // area_name and area_color_hex so callers get a uniform row shape.
-    // Cast through unknown first because the inferred Supabase type for the
-    // "area" join column doesn't overlap cleanly with our explicit shape.
-    type RawArea = { name: string; color_hex: string | null } | null;
-    type RawRow = Record<string, unknown> & { area: RawArea };
-    const reservations = ((data ?? []) as unknown as RawRow[]).map(
-      ({ area, ...rest }) => ({
-        ...rest,
-        area_name: area?.name ?? null,
-        area_color_hex: area?.color_hex ?? null,
-      }),
-    );
 
     return NextResponse.json({ reservations });
   } catch {

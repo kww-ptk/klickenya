@@ -24,8 +24,7 @@ import {
  * No dead links, no 404s without a badge.
  */
 export const DEPLOYED_SEGMENTS = new Set<string>([
-  // Empty for now — segments are added as their pages land.
-  // TODO Prompt 8c: add 'reservations' here when reservations/page.tsx is created.
+  "reservations",
   // TODO Prompt 9: add 'orders' and 'menu' when those pages migrate here.
 ]);
 

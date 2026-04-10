@@ -2,6 +2,11 @@
  * whatsapp.ts — Server-side WhatsApp URL generator for reservation status changes.
  * Do NOT import this in any client component.
  * Prompt 8c consumes the URL from the PATCH response verbatim.
+ *
+ * TODO: Email is the primary guest communication channel as of Prompt 8c.
+ * The wa.me deep links generated here are a manual fallback shown to the owner
+ * in the dashboard. When WhatsApp Business API integration ships, send via API
+ * in parallel with email — do not replace email.
  */
 
 export type WhatsAppTransition = "approved" | "declined" | "cancelled";
