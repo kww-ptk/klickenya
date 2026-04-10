@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminClient } from "@/lib/supabase/admin";
+import { revalidateTag, revalidatePath } from "next/cache";
 import { getMenuAuth, verifyMenuAccess } from "../_lib/auth";
 
 /* ── PATCH — update menu settings ──────────────────────────────────
@@ -62,6 +63,8 @@ export async function PATCH(req: NextRequest) {
       open_order_count = count ?? 0;
     }
 
+    revalidateTag(`menu:${menu_id}`, "default");
+    revalidatePath(`/m/${menu.slug}`);
     return NextResponse.json({ success: true, ...updates, open_order_count });
   } catch {
     return NextResponse.json({ error: "Server error" }, { status: 500 });

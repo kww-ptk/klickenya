@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getAuthUser } from "@/app/dashboard/_lib/auth";
-import { adminClient } from "@/lib/supabase/admin";
+import { getMenusForOwner } from "@/lib/cache/menu";
 import { ToastProvider } from "@/components/ui/Toast";
 import { MenusOverview } from "@/components/dashboard/menu/MenusOverview";
 
@@ -18,12 +18,7 @@ export default async function MenusPage() {
   const { user } = await getAuthUser();
   if (!user) redirect("/login");
 
-  const { data: menus } = await adminClient
-    .from("menus")
-    .select("id, slug, display_name, listing_slug, is_published, created_at")
-    .eq("business_id", user.id)
-    .order("listing_slug")
-    .order("created_at", { ascending: true });
+  const menus = await getMenusForOwner(user.id);
 
   return (
     <ToastProvider>
@@ -42,7 +37,7 @@ export default async function MenusPage() {
           </div>
         </div>
 
-        <MenusOverview menus={(menus ?? []) as MenuRow[]} />
+        <MenusOverview menus={menus as MenuRow[]} />
       </div>
     </ToastProvider>
   );

@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod/v4";
 import { createClient } from "@/lib/supabase/server";
 import { getMenuAuth, verifyMenuAccess } from "@/app/api/menu/_lib/auth";
+import { getOptionGroupsForItem } from "@/lib/cache/menu";
+import { revalidateTag, revalidatePath } from "next/cache";
 
 type SupabaseClient = Awaited<ReturnType<typeof createClient>>;
 
@@ -73,18 +75,8 @@ export async function GET(req: NextRequest) {
   const access = await verifyMenuAccess(supabase, menuId, userId, isAdmin);
   if (!access) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-  const { data: groups } = await supabase
-    .from("item_option_groups")
-    .select(`
-      id, name, group_type, is_required, min_select, max_select, display_order,
-      item_options (
-        id, name, price_modifier, is_available, display_order
-      )
-    `)
-    .eq("menu_item_id", menuItemId)
-    .order("display_order");
-
-  return NextResponse.json({ groups: groups ?? [] });
+  const groups = await getOptionGroupsForItem(menuItemId, menuId, userId);
+  return NextResponse.json({ groups });
 }
 
 /* ── POST — create a group or option ─────────────────── */
@@ -129,6 +121,8 @@ export async function POST(req: NextRequest) {
       .single();
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    revalidateTag(`menu:${menuId}`, "default");
+    revalidatePath(`/m/${access.slug}`);
     return NextResponse.json({ group: { ...data, item_options: [] } });
   }
 
@@ -164,6 +158,8 @@ export async function POST(req: NextRequest) {
       .single();
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    revalidateTag(`menu:${menuId}`, "default");
+    revalidatePath(`/m/${access.slug}`);
     return NextResponse.json({ option: data });
   }
 
@@ -230,6 +226,8 @@ export async function PATCH(req: NextRequest) {
       .single();
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    revalidateTag(`menu:${menuId}`, "default");
+    revalidatePath(`/m/${access.slug}`);
     return NextResponse.json({ group: data });
   }
 
@@ -251,6 +249,8 @@ export async function PATCH(req: NextRequest) {
       .single();
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    revalidateTag(`menu:${menuId}`, "default");
+    revalidatePath(`/m/${access.slug}`);
     return NextResponse.json({ option: data });
   }
 
@@ -279,6 +279,8 @@ export async function DELETE(req: NextRequest) {
       .delete()
       .eq("id", id);
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    revalidateTag(`menu:${menuId}`, "default");
+    revalidatePath(`/m/${access.slug}`);
     return NextResponse.json({ ok: true });
   }
 
@@ -293,5 +295,7 @@ export async function DELETE(req: NextRequest) {
     .delete()
     .eq("id", id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  revalidateTag(`menu:${menuId}`, "default");
+  revalidatePath(`/m/${access.slug}`);
   return NextResponse.json({ ok: true });
 }

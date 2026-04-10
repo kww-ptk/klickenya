@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod/v4";
 import { getMenuAuth, verifyMenuAccess } from "@/app/api/menu/_lib/auth";
+import { getTablesForMenu } from "@/lib/cache/menu";
+import { revalidateTag, revalidatePath } from "next/cache";
 
 /* ── Schemas ─────────────────────────────────────────── */
 
@@ -52,15 +54,8 @@ export async function GET(req: NextRequest) {
   const access = await verifyMenuAccess(supabase, menuId, userId, isAdmin);
   if (!access) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-  const { data, error } = await supabase
-    .from("restaurant_tables")
-    .select("id, table_number, capacity, floor_section, is_active, display_order")
-    .eq("menu_id", menuId)
-    .order("display_order", { ascending: true })
-    .order("table_number", { ascending: true });
-
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ tables: data ?? [] });
+  const tables = await getTablesForMenu(menuId, userId);
+  return NextResponse.json({ tables });
 }
 
 /* ── POST — create one table or bulk-create from range ─ */
@@ -111,6 +106,8 @@ export async function POST(req: NextRequest) {
       .select("id, table_number, capacity, floor_section, is_active, display_order");
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    revalidateTag(`menu:${menuId}:tables`, "default");
+    revalidatePath(`/m/${access.slug}`);
     return NextResponse.json({ created: data?.length ?? 0, tables: data ?? [] });
   }
 
@@ -153,6 +150,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
+  revalidateTag(`menu:${d.menu_id}:tables`, "default");
+  revalidatePath(`/m/${access.slug}`);
   return NextResponse.json({ table: data });
 }
 
@@ -193,6 +192,8 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
+  revalidateTag(`menu:${tableRow.menu_id}:tables`, "default");
+  revalidatePath(`/m/${access.slug}`);
   return NextResponse.json({ table: data });
 }
 
@@ -236,5 +237,7 @@ export async function DELETE(req: NextRequest) {
     .eq("id", id);
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  revalidateTag(`menu:${tableRow.menu_id}:tables`, "default");
+  revalidatePath(`/m/${access.slug}`);
   return NextResponse.json({ ok: true });
 }

@@ -4,6 +4,7 @@ import Image from "next/image";
 import { adminClient } from "@/lib/supabase/admin";
 import { sanityClient } from "@/lib/sanity/client";
 import { getAuthUser, getUserProfile, getHostProfile } from "./_lib/auth";
+import { getMenusForOwner } from "@/lib/cache/menu";
 
 export default async function DashboardPage() {
   const { user, supabase } = await getAuthUser();
@@ -201,21 +202,14 @@ export default async function DashboardPage() {
   let unpublishedMenuSlug: string | null = null;
 
   if (restaurantSlugs.length > 0) {
-    const { data: unpubMenus } = await adminClient
-      .from("menus")
-      .select("slug")
-      .in("slug", restaurantSlugs)
-      .eq("is_published", false)
-      .limit(1);
-    if (unpubMenus && unpubMenus.length > 0) {
-      unpublishedMenuSlug = unpubMenus[0].slug;
+    const allMenus = await getMenusForOwner(user.id);
+    const ownerMenusBySlug = allMenus.filter((m) => restaurantSlugs.includes(m.slug));
+    const unpub = ownerMenusBySlug.find((m) => !m.is_published);
+    if (unpub) {
+      unpublishedMenuSlug = unpub.slug;
     } else {
       // Check if any restaurant has no menu row at all
-      const { data: existingMenus } = await adminClient
-        .from("menus")
-        .select("slug")
-        .in("slug", restaurantSlugs);
-      const existingSlugs = new Set((existingMenus ?? []).map((m) => m.slug));
+      const existingSlugs = new Set(ownerMenusBySlug.map((m) => m.slug));
       const missingSlug = restaurantSlugs.find((s) => !existingSlugs.has(s));
       if (missingSlug) unpublishedMenuSlug = missingSlug;
     }

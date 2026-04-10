@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { getAuthUser } from "@/app/dashboard/_lib/auth";
-import { adminClient } from "@/lib/supabase/admin";
+import { getMenuForQR } from "@/lib/cache/menu";
 import { QRDownload } from "@/components/dashboard/menu/QRDownload";
 
 interface PageProps {
@@ -13,12 +13,7 @@ export default async function QRPage({ params }: PageProps) {
 
   if (!user) redirect("/login");
 
-  const { data: menu } = await adminClient
-    .from("menus")
-    .select("id, slug, display_name, listing_slug, is_published")
-    .eq("id", id)
-    .eq("business_id", user.id)
-    .single();
+  const menu = await getMenuForQR(id, user.id);
 
   if (!menu) redirect("/dashboard/menus");
 

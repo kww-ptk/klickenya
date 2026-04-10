@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod/v4";
 import { adminClient } from "@/lib/supabase/admin";
+import { revalidateTag, revalidatePath } from "next/cache";
 import { getMenuAuth, verifyMenuAccess } from "@/app/api/menu/_lib/auth";
 
 /* ── Types returned by the parse action ─────────────── */
@@ -263,6 +264,8 @@ Rules:
       }
     }
 
+    revalidateTag(`menu:${menu_id}`, "default");
+    revalidatePath(`/m/${access.slug}`);
     return NextResponse.json({ created_sections: createdSections, created_items: createdItems });
   }
 

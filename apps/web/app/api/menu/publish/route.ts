@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminClient } from "@/lib/supabase/admin";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { getMenuAuth } from "../_lib/auth";
 
 export async function PATCH(req: NextRequest) {
@@ -27,6 +27,8 @@ export async function PATCH(req: NextRequest) {
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
+    revalidateTag(`owner:${userId}`, "default");
+    revalidateTag(`menu:${menu_id}`, "default");
     revalidatePath(`/m/${menu.slug}`);
 
     return NextResponse.json({ success: true, is_published });

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidateTag, revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { adminClient } from "@/lib/supabase/admin";
 import { getMenuAuth } from "../_lib/auth";
@@ -35,13 +36,13 @@ async function verifySectionOwnership(
   if (!section) return null;
 
   if (isAdmin) {
-    const { data: menu } = await adminClient.from("menus").select("id").eq("id", section.menu_id).single();
+    const { data: menu } = await adminClient.from("menus").select("id, slug").eq("id", section.menu_id).single();
     return menu;
   }
 
   const { data: menu } = await supabase
     .from("menus")
-    .select("id")
+    .select("id, slug")
     .eq("id", section.menu_id)
     .eq("business_id", userId)
     .single();
@@ -91,6 +92,9 @@ export async function POST(req: NextRequest) {
       .single();
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+    revalidateTag(`menu:${owned.id}`, "default");
+    revalidatePath(`/m/${owned.slug}`);
 
     return NextResponse.json(item);
   } catch {
@@ -151,6 +155,9 @@ export async function PATCH(req: NextRequest) {
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
+    revalidateTag(`menu:${owned.id}`, "default");
+    revalidatePath(`/m/${owned.slug}`);
+
     return NextResponse.json(item);
   } catch {
     return NextResponse.json({ error: "Server error" }, { status: 500 });
@@ -170,6 +177,9 @@ export async function DELETE(req: NextRequest) {
 
     const client = isAdmin ? adminClient : supabase;
     await client.from("menu_items").delete().eq("id", item_id);
+
+    revalidateTag(`menu:${owned.id}`, "default");
+    revalidatePath(`/m/${owned.slug}`);
 
     return NextResponse.json({ success: true });
   } catch {

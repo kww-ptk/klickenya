@@ -36,7 +36,7 @@ export async function verifyMenuAccess(
     // Admin: fetch without ownership filter
     const { data } = await adminClient
       .from("menus")
-      .select("id")
+      .select("id, slug")
       .eq("id", menuId)
       .single();
     return data;
@@ -44,7 +44,7 @@ export async function verifyMenuAccess(
 
   const { data } = await supabase
     .from("menus")
-    .select("id")
+    .select("id, slug")
     .eq("id", menuId)
     .eq("business_id", userId)
     .single();
