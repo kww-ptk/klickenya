@@ -279,7 +279,7 @@ export async function POST(req: NextRequest) {
         menu,
         reservationId: reservation.id,
         guestName: guest_name.trim(),
-        guestPhone,
+        guestPhone: guest_phone,
         partySize: party_size,
         reservedFor: reserved_for,
         areaName,
