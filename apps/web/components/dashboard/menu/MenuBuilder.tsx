@@ -53,17 +53,45 @@ interface MenuBuilderProps {
   menu: MenuData;
   scanCount: number;
   tableOrdering: boolean;
+  /** Reservation settings fetched server-side in the dashboard page */
+  reservationsEnabled?: boolean;
+  defaultReservationDuration?: number;
+  reservationsLeadTimeHours?: number;
+  reservationsMaxPartySize?: number;
+  reservationsMaxAdvanceDays?: number;
+  listingSlug?: string | null;
+  listingCity?: string | null;
   backHref?: string;
   backLabel?: string;
 }
 
 /* ── Component ─────────────────────────────────────── */
 
-export function MenuBuilder({ menu: initialMenu, scanCount, tableOrdering: initialTableOrdering, backHref, backLabel }: MenuBuilderProps) {
+export function MenuBuilder({
+  menu: initialMenu,
+  scanCount,
+  tableOrdering: initialTableOrdering,
+  reservationsEnabled: initialReservationsEnabled = false,
+  defaultReservationDuration: initialDuration = 90,
+  reservationsLeadTimeHours: initialLeadTime = 2,
+  reservationsMaxPartySize: initialMaxParty = 12,
+  reservationsMaxAdvanceDays: initialMaxAdvance = 30,
+  listingSlug,
+  listingCity,
+  backHref,
+  backLabel,
+}: MenuBuilderProps) {
   const router = useRouter();
   const [menu, setMenu] = useState<MenuData>(initialMenu);
   const [tableOrdering, setTableOrdering] = useState(initialTableOrdering);
+  const [reservationsEnabled, setReservationsEnabled] = useState(initialReservationsEnabled);
+  const [duration, setDuration] = useState(initialDuration);
+  const [leadTime, setLeadTime] = useState(initialLeadTime);
+  const [maxParty, setMaxParty] = useState(initialMaxParty);
+  const [maxAdvance, setMaxAdvance] = useState(initialMaxAdvance);
+  const [savingRule, setSavingRule] = useState<string | null>(null);
   const [togglingOrdering, setTogglingOrdering] = useState(false);
+  const [togglingReservations, setTogglingReservations] = useState(false);
   const [editingForm, setEditingForm] = useState<{
     type: "add" | "edit";
     sectionId: string;
@@ -323,6 +351,61 @@ export function MenuBuilder({ menu: initialMenu, scanCount, tableOrdering: initi
     }
   }, [menu.id, tableOrdering, showToast]);
 
+  /* ── Reservations toggle ─────────────────────────── */
+
+  const toggleReservations = useCallback(async () => {
+    const enabling = !reservationsEnabled;
+    setTogglingReservations(true);
+    try {
+      const res = await fetch("/api/menu/settings", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          menu_id: menu.id,
+          reservations_enabled: enabling,
+          // Pass listing_city so the settings PATCH can revalidatePath for the listing page.
+          // TODO: Store listing_city on the menus table so future PATCH calls don't
+          //       need to be told where their own listing lives.
+          listing_city: listingCity ?? undefined,
+        }),
+      });
+
+      if (!res.ok) throw new Error();
+
+      const data = await res.json();
+      setReservationsEnabled(enabling);
+
+      if (enabling && data.seeded_areas) {
+        showToast("Reservations enabled — Indoor & Terrace areas created");
+      } else {
+        showToast(enabling ? "Reservations enabled" : "Reservations disabled");
+      }
+    } catch {
+      showToast("Failed to update reservations setting", "error");
+    } finally {
+      setTogglingReservations(false);
+    }
+  }, [menu.id, reservationsEnabled, listingCity, showToast]);
+
+  /* ── Reservation rule save (on blur) ────────────── */
+
+  const saveReservationRule = useCallback(async (field: string, value: number) => {
+    setSavingRule(field);
+    try {
+      const res = await fetch("/api/menu/settings", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ menu_id: menu.id, [field]: value }),
+      });
+      if (!res.ok) throw new Error();
+      showToast("Saved");
+    } catch {
+      showToast("Failed to save", "error");
+    } finally {
+      setSavingRule(null);
+    }
+  }, [menu.id, showToast]);
+
   /* ── Publish ─────────────────────────────────────── */
 
   const togglePublish = useCallback(async () => {
@@ -458,6 +541,117 @@ export function MenuBuilder({ menu: initialMenu, scanCount, tableOrdering: initi
                 Kitchen view →
               </Link>
             </>
+          )}
+        </div>
+
+        {/* Table reservations toggle */}
+        <div className="bg-white rounded-xl lg:rounded-2xl border border-[#E2DDD5] p-4 lg:p-5 shadow-sm">
+          <div className="flex items-center justify-between mb-1">
+            <p className="text-[14px] font-semibold text-[#16130C]">Table reservations</p>
+            <Toggle
+              checked={reservationsEnabled}
+              onChange={toggleReservations}
+              disabled={togglingReservations}
+            />
+          </div>
+          <p className="text-[12px] text-[#9C9485]">
+            When enabled, booking requests appear in your Reservations dashboard instead of your
+            email inbox. You&apos;ll still receive an email notification for each new request.
+            This also replaces the generic booking form on your Klickenya listing page with the
+            real reservation system.
+          </p>
+
+          {/* Booking rules — always visible, disabled when toggle is off */}
+          <div className="mt-4 grid grid-cols-2 gap-x-3 gap-y-3">
+            {/* Duration */}
+            <div>
+              <label className="block text-[11px] font-semibold text-[#5E5848] mb-1">
+                Booking duration
+              </label>
+              <div className="flex items-center gap-1.5">
+                <input
+                  type="number"
+                  min={15}
+                  max={240}
+                  step={15}
+                  value={duration}
+                  disabled={!reservationsEnabled || savingRule === "default_reservation_duration"}
+                  onChange={(e) => setDuration(Math.max(15, Math.min(240, Number(e.target.value))))}
+                  onBlur={() => saveReservationRule("default_reservation_duration", duration)}
+                  className="w-full border border-[#E2DDD5] rounded-lg px-2.5 py-1.5 text-[13px] text-[#16130C] focus:outline-none focus:border-[#E8A020] focus:ring-1 focus:ring-[#E8A020]/30 disabled:opacity-40 disabled:bg-[#F4F1EC] bg-white"
+                />
+                <span className="text-[11px] text-[#9C9485] shrink-0">min</span>
+              </div>
+            </div>
+
+            {/* Lead time */}
+            <div>
+              <label className="block text-[11px] font-semibold text-[#5E5848] mb-1">
+                Lead time
+              </label>
+              <div className="flex items-center gap-1.5">
+                <input
+                  type="number"
+                  min={0}
+                  max={168}
+                  value={leadTime}
+                  disabled={!reservationsEnabled || savingRule === "reservations_lead_time_hours"}
+                  onChange={(e) => setLeadTime(Math.max(0, Math.min(168, Number(e.target.value))))}
+                  onBlur={() => saveReservationRule("reservations_lead_time_hours", leadTime)}
+                  className="w-full border border-[#E2DDD5] rounded-lg px-2.5 py-1.5 text-[13px] text-[#16130C] focus:outline-none focus:border-[#E8A020] focus:ring-1 focus:ring-[#E8A020]/30 disabled:opacity-40 disabled:bg-[#F4F1EC] bg-white"
+                />
+                <span className="text-[11px] text-[#9C9485] shrink-0">hrs</span>
+              </div>
+            </div>
+
+            {/* Max party size */}
+            <div>
+              <label className="block text-[11px] font-semibold text-[#5E5848] mb-1">
+                Max party size
+              </label>
+              <div className="flex items-center gap-1.5">
+                <input
+                  type="number"
+                  min={1}
+                  max={50}
+                  value={maxParty}
+                  disabled={!reservationsEnabled || savingRule === "reservations_max_party_size"}
+                  onChange={(e) => setMaxParty(Math.max(1, Math.min(50, Number(e.target.value))))}
+                  onBlur={() => saveReservationRule("reservations_max_party_size", maxParty)}
+                  className="w-full border border-[#E2DDD5] rounded-lg px-2.5 py-1.5 text-[13px] text-[#16130C] focus:outline-none focus:border-[#E8A020] focus:ring-1 focus:ring-[#E8A020]/30 disabled:opacity-40 disabled:bg-[#F4F1EC] bg-white"
+                />
+                <span className="text-[11px] text-[#9C9485] shrink-0">guests</span>
+              </div>
+            </div>
+
+            {/* Max advance days */}
+            <div>
+              <label className="block text-[11px] font-semibold text-[#5E5848] mb-1">
+                Book up to
+              </label>
+              <div className="flex items-center gap-1.5">
+                <input
+                  type="number"
+                  min={1}
+                  max={365}
+                  value={maxAdvance}
+                  disabled={!reservationsEnabled || savingRule === "reservations_max_advance_days"}
+                  onChange={(e) => setMaxAdvance(Math.max(1, Math.min(365, Number(e.target.value))))}
+                  onBlur={() => saveReservationRule("reservations_max_advance_days", maxAdvance)}
+                  className="w-full border border-[#E2DDD5] rounded-lg px-2.5 py-1.5 text-[13px] text-[#16130C] focus:outline-none focus:border-[#E8A020] focus:ring-1 focus:ring-[#E8A020]/30 disabled:opacity-40 disabled:bg-[#F4F1EC] bg-white"
+                />
+                <span className="text-[11px] text-[#9C9485] shrink-0">days ahead</span>
+              </div>
+            </div>
+          </div>
+
+          {reservationsEnabled && (
+            <div className="mt-4 p-3 rounded-lg bg-[#E8A020]/8 border border-[#E8A020]/20">
+              <p className="text-[12px] text-[#5E5848]">
+                <span className="font-bold">Active.</span> Guests can now request a table via your
+                menu page and listing. You&apos;ll receive an email for each new request.
+              </p>
+            </div>
           )}
         </div>
       </div>

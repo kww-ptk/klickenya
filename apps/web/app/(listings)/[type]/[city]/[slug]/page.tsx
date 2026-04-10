@@ -12,6 +12,7 @@ import { urlForImage } from "@/lib/sanity/image";
 import { JsonLd } from "@/components/seo/JsonLd";
 import type { ListingCardProps } from "@/components/listings/ListingCard";
 import type { MenuData } from "@/components/listings/detail/restaurant/MenuDisplay";
+import type { RestaurantArea } from "@/components/reservations/ReservationSheet";
 import { StayDetail } from "@/components/listings/detail/StayDetail";
 import { RestaurantDetail } from "@/components/listings/detail/RestaurantDetail";
 import { ExperienceDetail } from "@/components/listings/detail/ExperienceDetail";
@@ -226,12 +227,26 @@ export default async function ListingDetailPage({ params }: PageProps) {
   const isRestaurantListing =
     listing.subcategory === "restaurants" || sanityType === "restaurant";
   let menuData: MenuData | null = null;
+  let reservationsConfig: {
+    enabled: boolean;
+    menuId: string;
+    menuName: string;
+    leadTimeHours: number;
+    maxPartySize: number;
+    maxAdvanceDays: number;
+    areas: RestaurantArea[];
+    restaurantPhone: string | null;
+  } | null = null;
+
   if (isRestaurantListing) {
     const { data } = await adminClient
       .from("menus")
       .select(
         `
         id, slug, name, is_published, table_ordering,
+        reservations_enabled, default_reservation_duration,
+        reservations_lead_time_hours, reservations_max_party_size,
+        reservations_max_advance_days, business_id,
         menu_sections (
           id, title, display_order, is_visible,
           menu_items (
@@ -244,7 +259,48 @@ export default async function ListingDetailPage({ params }: PageProps) {
       .eq("listing_slug", slug)
       .eq("is_published", true)
       .single();
-    menuData = (data as MenuData) ?? null;
+
+    if (data) {
+      menuData = data as MenuData;
+
+      // Fetch restaurant areas + host phone in parallel (non-blocking on error)
+      const [areasResult, hostResult] = await Promise.allSettled([
+        adminClient
+          .from("restaurant_areas")
+          .select("id, name, capacity_total, color_hex, display_order, is_active")
+          .eq("menu_id", data.id)
+          .eq("is_active", true)
+          .order("display_order"),
+        data.business_id
+          ? adminClient
+              .from("host_profiles")
+              .select("phone")
+              .eq("user_id", data.business_id)
+              .single()
+          : Promise.resolve({ data: null }),
+      ]);
+
+      const areas =
+        areasResult.status === "fulfilled"
+          ? ((areasResult.value.data ?? []) as RestaurantArea[])
+          : [];
+
+      const restaurantPhone =
+        hostResult.status === "fulfilled" && hostResult.value.data
+          ? (hostResult.value.data as { phone?: string | null }).phone ?? null
+          : null;
+
+      reservationsConfig = {
+        enabled: (data as Record<string, unknown>).reservations_enabled === true,
+        menuId: data.id,
+        menuName: data.name,
+        leadTimeHours: ((data as Record<string, unknown>).reservations_lead_time_hours as number) ?? 2,
+        maxPartySize: ((data as Record<string, unknown>).reservations_max_party_size as number) ?? 12,
+        maxAdvanceDays: ((data as Record<string, unknown>).reservations_max_advance_days as number) ?? 30,
+        areas,
+        restaurantPhone,
+      };
+    }
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -450,6 +506,7 @@ export default async function ListingDetailPage({ params }: PageProps) {
     entirePropertyAvailable,
     recentBookings,
     hasPms,
+    reservationsConfig,
   };
 
   const Detail = (() => {

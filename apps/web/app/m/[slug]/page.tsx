@@ -6,22 +6,39 @@ import type { MenuData, MenuSection } from "@/components/listings/detail/restaur
 import { MenuWithFilters } from "@/components/menu/MenuWithFilters";
 import { MenuWithCart } from "@/components/menu/MenuWithCart";
 import { ScanTracker } from "@/components/menu/ScanTracker";
+import { ReservationSheet } from "@/components/reservations/ReservationSheet";
+import type { RestaurantArea } from "@/components/reservations/ReservationSheet";
 
 export const revalidate = 60;
 
-/* ── Types ─────────────────────────────────────────── */
+/* ── Types ─────────────────────────────────────────────────────────────── */
 
-// Extends MenuData with the table_ordering flag used only by this page
-type MenuWithOrdering = MenuData & { table_ordering: boolean };
+// Extends MenuData with flags used only by this page
+type MenuWithOrdering = MenuData & {
+  table_ordering: boolean;
+  reservations_enabled: boolean;
+  default_reservation_duration: number;
+  reservations_lead_time_hours: number;
+  reservations_max_party_size: number;
+  reservations_max_advance_days: number;
+  listing_slug: string | null;
+};
 
-/* ── Data fetching ─────────────────────────────────── */
+/* ── Data fetching ─────────────────────────────────────────────────────── */
 
-async function getMenu(slug: string): Promise<MenuWithOrdering | null> {
+async function getMenu(slug: string): Promise<{
+  menu: MenuWithOrdering;
+  areas: RestaurantArea[];
+  restaurantPhone: string | null;
+} | null> {
   const { data } = await adminClient
     .from("menus")
     .select(
       `
       id, name, is_published, table_ordering,
+      reservations_enabled, default_reservation_duration,
+      reservations_lead_time_hours, reservations_max_party_size,
+      reservations_max_advance_days, listing_slug, business_id,
       menu_sections (
         id, title, display_order, is_visible,
         menu_items (
@@ -35,17 +52,44 @@ async function getMenu(slug: string): Promise<MenuWithOrdering | null> {
           )
         )
       )
-    `
+    `,
     )
     .eq("slug", slug)
     .eq("is_published", true)
     .single();
 
-  // Add slug to satisfy MenuData shape (not stored in the select but needed by type)
-  return data ? ({ ...data, slug } as MenuWithOrdering) : null;
+  if (!data) return null;
+
+  // Add slug to satisfy MenuData shape
+  const menu = { ...data, slug } as MenuWithOrdering;
+
+  // Fetch active restaurant areas (for ReservationSheet area chips)
+  let areas: RestaurantArea[] = [];
+  if (menu.reservations_enabled) {
+    const { data: areasData } = await adminClient
+      .from("restaurant_areas")
+      .select("id, name, capacity_total, color_hex, display_order, is_active")
+      .eq("menu_id", data.id)
+      .eq("is_active", true)
+      .order("display_order");
+    areas = (areasData ?? []) as RestaurantArea[];
+  }
+
+  // Fetch restaurant phone for WhatsApp link on success screen
+  let restaurantPhone: string | null = null;
+  if (data.business_id) {
+    const { data: hostProfile } = await adminClient
+      .from("host_profiles")
+      .select("phone")
+      .eq("user_id", data.business_id)
+      .single();
+    restaurantPhone = hostProfile?.phone ?? null;
+  }
+
+  return { menu, areas, restaurantPhone };
 }
 
-/* ── Static params ─────────────────────────────────── */
+/* ── Static params ─────────────────────────────────────────────────────── */
 
 export async function generateStaticParams() {
   const { data: menus } = await adminClient
@@ -56,25 +100,26 @@ export async function generateStaticParams() {
   return (menus ?? []).map((m) => ({ slug: m.slug }));
 }
 
-/* ── Metadata ──────────────────────────────────────── */
+/* ── Metadata ──────────────────────────────────────────────────────────── */
 
 interface PageProps {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ action?: string }>;
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  const menu = await getMenu(slug);
-  if (!menu) return {};
+  const result = await getMenu(slug);
+  if (!result) return {};
 
   return {
-    title: `${menu.name} | Klickenya`,
-    description: `View the full menu for ${menu.name}. Scan, browse, order.`,
+    title: `${result.menu.name} | Klickenya`,
+    description: `View the full menu for ${result.menu.name}. Scan, browse, order.`,
     robots: { index: true, follow: true },
   };
 }
 
-/* ── Helpers ───────────────────────────────────────── */
+/* ── Helpers ───────────────────────────────────────────────────────────── */
 
 function prepareSections(menu: MenuWithOrdering): MenuSection[] {
   return menu.menu_sections
@@ -83,32 +128,74 @@ function prepareSections(menu: MenuWithOrdering): MenuSection[] {
     .map((s) => ({
       ...s,
       menu_items: [...s.menu_items].sort((a, b) => {
-        // Available items first, then by display_order
         if (a.is_available !== b.is_available) return a.is_available ? -1 : 1;
         return a.display_order - b.display_order;
       }),
     }));
 }
 
-/* ── Page ──────────────────────────────────────────── */
+/* ── Page ──────────────────────────────────────────────────────────────── */
 
-export default async function MenuPage({ params }: PageProps) {
+export default async function MenuPage({ params, searchParams }: PageProps) {
   const { slug } = await params;
-  const menu = await getMenu(slug);
-  if (!menu) notFound();
+  const { action } = await searchParams;
+
+  const result = await getMenu(slug);
+  if (!result) notFound();
+
+  const { menu, areas, restaurantPhone } = result;
 
   const sections = prepareSections(menu);
   if (sections.length === 0) notFound();
+
+  const showBookButton = menu.reservations_enabled;
+  const defaultOpenSheet = action === "book" && showBookButton;
+
+  // Fetch opening hours from listing_slug for slot generation
+  // (openingHours is a Sanity plain text field — passed through for best-effort parsing)
+  // We don't do a Sanity query here to keep the menu page Supabase-only; openingHours
+  // defaults to null which causes ReservationSheet to fall back to 08:00–22:00.
+  // TODO V2: store opening hours on the menus table or do a Sanity fetch here.
+  const openingHours: string | null = null;
 
   return (
     <div className="min-h-screen bg-canvas">
       <ScanTracker menuId={menu.id} />
 
-      {/* Header */}
-      <header className="bg-white border-b border-border px-5 py-5 text-center">
-        <h1 className="font-display text-[26px] font-extrabold tracking-[-0.03em] text-dark leading-tight">
+      {/* ── Header ──────────────────────────────────────────────────────── */}
+      {/*
+        Flex layout: title is centered via absolute positioning,
+        action buttons stack on the right. Works at 360px without wrapping.
+        On mobile, if both ordering and book are enabled, they appear as a
+        compact column group on the right so the centered title is preserved.
+      */}
+      <header className="relative bg-white border-b border-border px-5 py-4 flex items-center justify-center">
+        {/* Centered title */}
+        <h1 className="font-display text-[22px] font-extrabold tracking-[-0.03em] text-dark leading-tight text-center px-24">
           {menu.name}
         </h1>
+
+        {/* Right-side action buttons */}
+        {(menu.table_ordering || showBookButton) && (
+          <div className="absolute right-4 top-1/2 -translate-y-1/2 flex flex-col items-end gap-1.5">
+            {showBookButton && (
+              <ReservationSheet
+                menuId={menu.id}
+                menuName={menu.name}
+                source="qr_menu"
+                defaultOpen={defaultOpenSheet}
+                openingHours={openingHours}
+                areas={areas}
+                maxPartySize={menu.reservations_max_party_size}
+                maxAdvanceDays={menu.reservations_max_advance_days}
+                leadTimeHours={menu.reservations_lead_time_hours}
+                restaurantPhone={restaurantPhone}
+                triggerLabel="Book"
+                triggerClassName="h-[32px] px-4 text-[12px]"
+              />
+            )}
+          </div>
+        )}
       </header>
 
       {/*

@@ -10,12 +10,24 @@ import { TrackPageView } from "@/lib/analytics/TrackPageView";
 import { SimilarListings } from "@/components/listings/widgets/SimilarListings";
 import { BookingSidebar } from "@/components/listings/widgets/BookingSidebar";
 import { MobileBookingBar } from "@/components/listings/widgets/MobileBookingBar";
+import type { RestaurantArea } from "@/components/reservations/ReservationSheet";
 import { OpenNowBadge } from "./restaurant/OpenNowBadge";
 import { MenuDisplay } from "./restaurant/MenuDisplay";
 import type { MenuData } from "./restaurant/MenuDisplay";
 import type { ListingCardProps } from "@/components/listings/ListingCard";
 
 /* ── Types ─────────────────────────────────────────── */
+
+export interface ReservationsConfig {
+  enabled: boolean;
+  menuId: string;
+  menuName: string;
+  leadTimeHours: number;
+  maxPartySize: number;
+  maxAdvanceDays: number;
+  areas: RestaurantArea[];
+  restaurantPhone: string | null;
+}
 
 interface RestaurantDetailProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -29,6 +41,7 @@ interface RestaurantDetailProps {
   citySlug: string;
   similarCards: ListingCardProps[];
   menuData?: MenuData | null;
+  reservationsConfig?: ReservationsConfig | null;
 }
 
 /* ── Helpers ───────────────────────────────────────── */
@@ -56,6 +69,7 @@ function RestaurantDetail({
   citySlug,
   similarCards,
   menuData,
+  reservationsConfig,
 }: RestaurantDetailProps) {
   const highlights = listing.highlights ?? [];
   const amenities: string[] = listing.amenities ?? [];
@@ -319,6 +333,8 @@ function RestaurantDetail({
             listingType={sanityType}
             price={listing.price ?? 0}
             priceUnit={listing.priceUnit ?? "person"}
+            reservationsConfig={reservationsConfig ?? null}
+            openingHours={listing.openingHours ?? null}
           />
         </div>
 
@@ -334,6 +350,8 @@ function RestaurantDetail({
         cuisine={cuisine}
         priceRange={listing.priceRange}
         menuSlug={menuData?.slug}
+        reservationsConfig={reservationsConfig ?? null}
+        openingHours={listing.openingHours ?? null}
       />
     </>
   );
