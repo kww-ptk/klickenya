@@ -394,15 +394,20 @@ async function sendHostNotification(opts: {
   // Resolve host email: try Sanity first, fall back to host_profiles
   let notificationEmails: string[] = [];
 
+  // Resolve Sanity listing (for notification emails + listing command center URL)
+  let sanityListingId: string | null = null;
+
   if (menu.listing_slug) {
     try {
       const sanityListing = await sanityClient.fetch<{
+        _id: string;
         notificationEmail1?: string;
         notificationEmail2?: string;
       } | null>(
-        `*[_type == "listing" && slug.current == $slug][0]{ notificationEmail1, notificationEmail2 }`,
+        `*[_type == "listing" && slug.current == $slug][0]{ _id, notificationEmail1, notificationEmail2 }`,
         { slug: menu.listing_slug },
       );
+      if (sanityListing?._id) sanityListingId = sanityListing._id;
       if (sanityListing?.notificationEmail1) notificationEmails.push(sanityListing.notificationEmail1);
       if (sanityListing?.notificationEmail2) notificationEmails.push(sanityListing.notificationEmail2);
     } catch {
@@ -427,7 +432,13 @@ async function sendHostNotification(opts: {
 
   if (allRecipients.length === 0) return;
 
-  const dashboardUrl = `https://klickenya.com/dashboard/menu/${menu.id}/reservations`;
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://klickenya.com";
+  // Point to the listing command center when the Sanity _id is available.
+  // Falls back to the legacy menu-scoped URL when listing_slug has no Sanity match.
+  // TODO: remove fallback once all menus have a valid listing_slug in Sanity.
+  const dashboardUrl = sanityListingId
+    ? `${siteUrl}/dashboard/listings/${sanityListingId}/reservations`
+    : `${siteUrl}/dashboard/menu/${menu.id}/reservations`;
 
   const resend = new Resend(process.env.RESEND_API_KEY);
   await resend.emails.send({

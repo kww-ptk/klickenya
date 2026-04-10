@@ -132,6 +132,15 @@ export default async function DashboardListingsPage() {
                   </div>
                 </div>
                 <div className="flex gap-2 mt-2.5 pt-2.5 border-t border-[#F4F1EC]">
+                  {/* "Open dashboard" for restaurant listings only */}
+                  {(listing.type === "restaurant") && (
+                    <Link
+                      href={`/dashboard/listings/${listing._id}`}
+                      className="flex-1 h-[40px] lg:h-[44px] flex items-center justify-center text-[13px] lg:text-[14px] font-semibold text-[#E8A020] bg-[#E8A020]/8 rounded-lg lg:rounded-xl hover:bg-[#E8A020]/15 transition-colors"
+                    >
+                      Open dashboard →
+                    </Link>
+                  )}
                   <Link
                     href={href}
                     className="flex-1 h-[40px] lg:h-[44px] flex items-center justify-center text-[13px] lg:text-[14px] font-semibold text-[#6B2D8B] bg-[#6B2D8B]/8 rounded-lg lg:rounded-xl hover:bg-[#6B2D8B]/15 transition-colors"
