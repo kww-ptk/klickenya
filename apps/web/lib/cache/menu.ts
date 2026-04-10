@@ -143,7 +143,7 @@ export const getMenuForQR = (menuId: string, ownerId: string) =>
     async () => {
       const { data } = await adminClient
         .from("menus")
-        .select("id, slug, display_name, listing_slug, is_published")
+        .select("id, slug, display_name, listing_slug, is_published, table_ordering")
         .eq("id", menuId)
         .eq("business_id", ownerId)
         .single();

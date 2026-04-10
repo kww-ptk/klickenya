@@ -164,14 +164,15 @@ function CartItemCard({ item, totalQty, onAdd, onRemove }: CartItemCardProps) {
 interface CartPanelProps {
   cart: Map<string, CartItem>;
   menuId: string;
+  initialTable?: string;
   onBack: () => void;
   onConfirmed: (data: ConfirmData) => void;
   onUpdateQty: (cartId: string, delta: number) => void;
   onEditLine: (cartItem: CartItem) => void;
 }
 
-function CartPanel({ cart, menuId, onBack, onConfirmed, onUpdateQty, onEditLine }: CartPanelProps) {
-  const [tableNumber, setTableNumber] = useState("");
+function CartPanel({ cart, menuId, initialTable, onBack, onConfirmed, onUpdateQty, onEditLine }: CartPanelProps) {
+  const [tableNumber, setTableNumber] = useState(initialTable ?? "");
   const [customerName, setCustomerName] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -344,16 +345,26 @@ function CartPanel({ cart, menuId, onBack, onConfirmed, onUpdateQty, onEditLine 
             <label className="block text-[12px] font-bold text-dark mb-1.5 uppercase tracking-wide">
               Table number <span className="text-red-500">*</span>
             </label>
-            <input
-              type="text"
-              inputMode="numeric"
-              value={tableNumber}
-              onChange={(e) => setTableNumber(e.target.value)}
-              placeholder="e.g. 4"
-              maxLength={20}
-              className={inputCls}
-              autoFocus
-            />
+            {initialTable ? (
+              <div className="flex items-center gap-2 w-full border border-[#16A34A]/40 rounded-xl px-3.5 py-3 bg-[#F0FDF4]">
+                <svg className="size-4 text-[#16A34A] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+                <span className="text-[15px] font-semibold text-dark flex-1">{tableNumber}</span>
+                <span className="text-[11px] text-[#16A34A] font-medium">From QR</span>
+              </div>
+            ) : (
+              <input
+                type="text"
+                inputMode="numeric"
+                value={tableNumber}
+                onChange={(e) => setTableNumber(e.target.value)}
+                placeholder="e.g. 4"
+                maxLength={20}
+                className={inputCls}
+                autoFocus
+              />
+            )}
           </div>
           <div>
             <label className="block text-[12px] font-bold text-dark mb-1.5 uppercase tracking-wide">
@@ -474,9 +485,10 @@ function ConfirmationScreen({ data, onDone }: { data: ConfirmData; onDone: () =>
 interface MenuWithCartProps {
   sections: MenuSection[];
   menuId: string;
+  initialTable?: string;
 }
 
-export function MenuWithCart({ sections, menuId }: MenuWithCartProps) {
+export function MenuWithCart({ sections, menuId, initialTable }: MenuWithCartProps) {
   const [activeTags, setActiveTags] = useState<string[]>([]);
   // Cart keyed by cart_id — same item with different options = separate lines
   const [cart, setCart] = useState<Map<string, CartItem>>(new Map());
@@ -668,6 +680,7 @@ export function MenuWithCart({ sections, menuId }: MenuWithCartProps) {
         <CartPanel
           cart={cart}
           menuId={menuId}
+          initialTable={initialTable}
           onBack={() => setView("browse")}
           onConfirmed={(data) => {
             setConfirmData(data);

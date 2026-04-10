@@ -104,7 +104,7 @@ export async function generateStaticParams() {
 
 interface PageProps {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ action?: string }>;
+  searchParams: Promise<{ action?: string; table?: string }>;
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -138,7 +138,7 @@ function prepareSections(menu: MenuWithOrdering): MenuSection[] {
 
 export default async function MenuPage({ params, searchParams }: PageProps) {
   const { slug } = await params;
-  const { action } = await searchParams;
+  const { action, table: prefilledTable } = await searchParams;
 
   const result = await getMenu(slug);
   if (!result) notFound();
@@ -205,7 +205,7 @@ export default async function MenuPage({ params, searchParams }: PageProps) {
         The browse UI is identical in both cases; MenuWithCart layers cart controls on top.
       */}
       {menu.table_ordering ? (
-        <MenuWithCart sections={sections} menuId={menu.id} />
+        <MenuWithCart sections={sections} menuId={menu.id} initialTable={prefilledTable} />
       ) : (
         <MenuWithFilters sections={sections} />
       )}

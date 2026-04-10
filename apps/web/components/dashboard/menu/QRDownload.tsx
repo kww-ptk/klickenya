@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { QRCodeSVG } from "qrcode.react";
+import { QRCodeSVG, QRCodeCanvas } from "qrcode.react";
 import html2canvas from "html2canvas";
 import { jsPDF } from "jspdf";
 
@@ -12,6 +12,15 @@ interface QRMenu {
   display_name: string | null;
   listing_slug: string | null;
   is_published: boolean;
+  table_ordering?: boolean;
+}
+
+interface RestaurantTable {
+  id: string;
+  table_number: string;
+  capacity: number;
+  floor_section: string | null;
+  is_active: boolean;
 }
 
 interface QRDownloadProps {
@@ -24,6 +33,31 @@ export function QRDownload({ menu: initialMenu }: QRDownloadProps) {
   const [generatingPdf, setGeneratingPdf] = useState(false);
   const [publishing, setPublishing] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
+
+  // Per-table QR state
+  const [tables, setTables] = useState<RestaurantTable[]>([]);
+  const [tablesLoading, setTablesLoading] = useState(false);
+  // Map of table_id → canvas element ref
+  const tableCanvasRefs = useRef<Map<string, HTMLCanvasElement>>(new Map());
+
+  useEffect(() => {
+    if (!menu.table_ordering) return;
+    setTablesLoading(true);
+    fetch(`/api/menu/tables?menu_id=${menu.id}`)
+      .then(r => r.json())
+      .then(d => setTables((d.tables ?? []).filter((t: RestaurantTable) => t.is_active)))
+      .catch(() => {})
+      .finally(() => setTablesLoading(false));
+  }, [menu.id, menu.table_ordering]);
+
+  const downloadTableQR = useCallback((tableNumber: string, tableId: string) => {
+    const canvas = tableCanvasRefs.current.get(tableId);
+    if (!canvas) return;
+    const link = document.createElement("a");
+    link.download = `${menu.slug}-table-${tableNumber}.png`;
+    link.href = canvas.toDataURL("image/png");
+    link.click();
+  }, [menu.slug]);
 
   const publicUrl = `https://klickenya.com/m/${menu.slug}`;
   const displayName = (menu.display_name ?? menu.slug).replace(/ Menu$/i, "");
@@ -346,6 +380,84 @@ export function QRDownload({ menu: initialMenu }: QRDownloadProps) {
           </div>
         </div>
       </div>
+
+      {/* ── Per-table QR codes ───────────────────────────────────────────── */}
+      {menu.table_ordering && (
+        <div className="mt-10">
+          <div className="mb-4">
+            <h2 className="text-[18px] font-bold text-[#16130C]">Table QR codes</h2>
+            <p className="text-[13px] text-[#9C9485] mt-0.5">
+              Each table gets a unique QR. When a guest scans it, their table is pre-filled — no manual entry needed.
+            </p>
+          </div>
+
+          {tablesLoading ? (
+            <p className="text-[13px] text-[#9C9485]">Loading tables…</p>
+          ) : tables.length === 0 ? (
+            <div className="bg-white rounded-xl border border-[#E2DDD5] p-5 text-center">
+              <p className="text-[13px] text-[#9C9485]">No active tables yet.</p>
+              <Link
+                href={`/dashboard/menu/${menu.id}`}
+                className="text-[13px] font-semibold text-[#E8A020] hover:underline mt-1 inline-block"
+              >
+                Add tables in the menu builder →
+              </Link>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+              {tables.map(table => {
+                const tableUrl = `https://klickenya.com/m/${menu.slug}?table=${encodeURIComponent(table.table_number)}`;
+                return (
+                  <div
+                    key={table.id}
+                    className="bg-white rounded-xl border border-[#E2DDD5] p-4 flex flex-col items-center gap-3 shadow-sm"
+                  >
+                    {/* Hidden canvas for PNG download */}
+                    <QRCodeCanvas
+                      value={tableUrl}
+                      size={200}
+                      fgColor="#16130C"
+                      bgColor="#ffffff"
+                      level="M"
+                      ref={(el: HTMLCanvasElement | null) => {
+                        if (el) tableCanvasRefs.current.set(table.id, el);
+                        else tableCanvasRefs.current.delete(table.id);
+                      }}
+                      style={{ display: "none" }}
+                    />
+
+                    {/* Visible QR */}
+                    <QRCodeSVG
+                      value={tableUrl}
+                      size={120}
+                      fgColor="#16130C"
+                      bgColor="#ffffff"
+                      level="M"
+                    />
+
+                    {/* Table label */}
+                    <div className="text-center">
+                      <p className="text-[15px] font-bold text-[#16130C]">Table {table.table_number}</p>
+                      {table.floor_section && (
+                        <p className="text-[11px] text-[#9C9485]">{table.floor_section}</p>
+                      )}
+                      <p className="text-[10px] text-[#9C9485] mt-0.5">{table.capacity} guests</p>
+                    </div>
+
+                    {/* Download */}
+                    <button
+                      onClick={() => downloadTableQR(table.table_number, table.id)}
+                      className="w-full h-[30px] rounded-full bg-[#16130C] text-white text-[11px] font-bold hover:bg-[#2A2520] transition-colors"
+                    >
+                      ⬇ Download PNG
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

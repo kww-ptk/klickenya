@@ -872,26 +872,30 @@ export function ReservationsDashboard({
               No {listFilter !== "all" ? listFilter : ""} reservations to show.
             </div>
           ) : (
-            <div className="space-y-2">
-              {filteredReservations.map(r => {
+            <div className="bg-white rounded-xl border border-[#E2DDD5] shadow-sm overflow-hidden">
+              {/* ── Column headers (desktop) ── */}
+              <div className="hidden sm:grid grid-cols-[72px_1fr_80px_72px_auto_28px] gap-x-3 px-3 py-2 border-b border-[#F4F1EC] bg-[#FAFAF8]">
+                <span className="text-[10px] font-bold text-[#9C9485] uppercase tracking-wide">Time</span>
+                <span className="text-[10px] font-bold text-[#9C9485] uppercase tracking-wide">Guest</span>
+                <span className="text-[10px] font-bold text-[#9C9485] uppercase tracking-wide">Size / Area</span>
+                <span className="text-[10px] font-bold text-[#9C9485] uppercase tracking-wide">Status</span>
+                <span className="text-[10px] font-bold text-[#9C9485] uppercase tracking-wide">Actions</span>
+                <span />
+              </div>
+
+              {filteredReservations.map((r, idx) => {
                 const isExpanded = expandedId === r.id;
                 const capacityWarning = r.status === "pending" ? getCapacityWarning(r) : null;
-                const waLink = buildWhatsAppUrl(
-                  r,
-                  r.status === "approved" ? "approved" : r.status === "declined" ? "declined" : "cancelled",
-                  menuName,
-                );
+                const isLast = idx === filteredReservations.length - 1;
 
                 return (
-                  <div key={r.id} className="bg-white rounded-xl border border-[#E2DDD5] shadow-sm overflow-hidden">
-                    {/* ── Collapsed row ── */}
-                    <button
-                      onClick={() => toggleExpand(r.id)}
-                      className="w-full text-left p-4 flex items-center gap-3 hover:bg-[#FAFAF9] transition-colors"
-                    >
-                      {/* Time */}
-                      <div className="shrink-0 w-14 text-left">
-                        <p className="text-[16px] font-bold text-[#16130C] tabular-nums leading-tight">
+                  <div key={r.id} className={!isLast ? "border-b border-[#F4F1EC]" : ""}>
+                    {/* ── Compact row ── */}
+                    <div className="flex sm:grid sm:grid-cols-[72px_1fr_80px_72px_auto_28px] items-center gap-x-3 px-3 py-2.5 hover:bg-[#FAFAF9] transition-colors">
+
+                      {/* Time + date */}
+                      <div className="shrink-0 w-[68px] sm:w-auto">
+                        <p className="text-[13px] font-bold text-[#16130C] tabular-nums leading-tight">
                           {new Intl.DateTimeFormat("en-GB", {
                             hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "Africa/Nairobi",
                           }).format(new Date(r.reserved_for))}
@@ -903,40 +907,85 @@ export function ReservationsDashboard({
                         </p>
                       </div>
 
-                      {/* Name + preview */}
+                      {/* Name */}
                       <div className="flex-1 min-w-0">
                         <p className="text-[13px] font-semibold text-[#16130C] truncate">{r.guest_name}</p>
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className="text-[11px] font-bold text-[#5E5848]">×{r.party_size}</span>
-                          <AreaChip name={r.area_name} colorHex={r.area_color_hex} />
-                          {r.guest_message && (
-                            <span className="text-[11px] text-[#9C9485] truncate max-w-[160px]">
-                              "{r.guest_message.slice(0, 60)}{r.guest_message.length > 60 ? "…" : ""}"
-                            </span>
-                          )}
-                        </div>
+                        {r.guest_message && (
+                          <p className="text-[10px] text-[#9C9485] truncate hidden sm:block">
+                            "{r.guest_message.slice(0, 50)}{r.guest_message.length > 50 ? "…" : ""}"
+                          </p>
+                        )}
                       </div>
 
-                      {/* Status + chevron */}
-                      <div className="shrink-0 flex items-center gap-2">
+                      {/* Size + area (desktop) */}
+                      <div className="hidden sm:flex items-center gap-1.5">
+                        <span className="text-[12px] font-bold text-[#5E5848]">×{r.party_size}</span>
+                        <AreaChip name={r.area_name} colorHex={r.area_color_hex} />
+                      </div>
+
+                      {/* Status */}
+                      <div className="shrink-0">
                         <StatusPill status={r.status} />
-                        <span className={`text-[#9C9485] text-[16px] transition-transform ${isExpanded ? "rotate-90" : ""}`}>›</span>
                       </div>
-                    </button>
 
-                    {/* ── Expanded row ── */}
+                      {/* Quick actions */}
+                      <div className="shrink-0 flex items-center gap-1.5">
+                        {r.status === "pending" && (
+                          <>
+                            <button
+                              onClick={() => handleApprove(r.id)}
+                              disabled={updatingIds.has(r.id)}
+                              title="Approve"
+                              className="h-7 px-2.5 rounded-full bg-[#16A34A] text-white text-[11px] font-bold hover:bg-[#15803D] transition-colors disabled:opacity-50 whitespace-nowrap"
+                            >
+                              {updatingIds.has(r.id) ? "…" : "✓ Approve"}
+                            </button>
+                            <button
+                              onClick={() => openDeclineModal(r.id)}
+                              disabled={updatingIds.has(r.id)}
+                              title="Decline"
+                              className="h-7 px-2.5 rounded-full border border-[#DC2626] text-[#DC2626] text-[11px] font-bold hover:bg-red-50 transition-colors disabled:opacity-50 whitespace-nowrap"
+                            >
+                              ✗ Decline
+                            </button>
+                          </>
+                        )}
+                        {r.status === "approved" && (
+                          <button
+                            onClick={() => handleCancel(r.id)}
+                            disabled={updatingIds.has(r.id)}
+                            className="h-7 px-2.5 rounded-full border border-[#E2DDD5] text-[#9C9485] text-[11px] font-semibold hover:border-red-300 hover:text-[#DC2626] transition-colors disabled:opacity-50 whitespace-nowrap"
+                          >
+                            Cancel
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Expand toggle */}
+                      <button
+                        onClick={() => toggleExpand(r.id)}
+                        className={`shrink-0 size-7 flex items-center justify-center rounded-full hover:bg-[#F4F1EC] transition-colors text-[#9C9485] text-[15px] ${isExpanded ? "rotate-90" : ""}`}
+                      >
+                        ›
+                      </button>
+                    </div>
+
+                    {/* ── Expanded detail panel ── */}
                     {isExpanded && (
-                      <div className="px-4 pb-4 pt-1 border-t border-[#F4F1EC] space-y-4">
-                        {/* Guest details */}
-                        <div className="grid grid-cols-2 gap-3 text-[12px]">
-                          <div>
-                            <p className="text-[10px] font-bold text-[#9C9485] uppercase tracking-wide mb-0.5">Full name</p>
-                            <p className="text-[#16130C] font-semibold">{r.guest_name}</p>
+                      <div className="px-4 pb-4 pt-3 border-t border-[#F4F1EC] space-y-4 bg-[#FAFAF9]">
+
+                        {/* Capacity warning (pending) */}
+                        {r.status === "pending" && capacityWarning && (
+                          <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2.5">
+                            <span className="text-amber-500 shrink-0">⚠️</span>
+                            <p className="text-[12px] text-amber-700">
+                              Approving puts <strong>{capacityWarning.areaName}</strong> at <strong>{capacityWarning.pct}%</strong> capacity for this slot
+                            </p>
                           </div>
-                          <div>
-                            <p className="text-[10px] font-bold text-[#9C9485] uppercase tracking-wide mb-0.5">Party size</p>
-                            <p className="text-[#16130C] font-semibold">×{r.party_size}</p>
-                          </div>
+                        )}
+
+                        {/* Guest details grid */}
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-[12px]">
                           <div>
                             <p className="text-[10px] font-bold text-[#9C9485] uppercase tracking-wide mb-0.5">Phone</p>
                             <a href={`tel:${r.guest_phone}`} className="text-[#E8A020] font-semibold hover:underline">
@@ -952,37 +1001,44 @@ export function ReservationsDashboard({
                             )}
                           </div>
                           <div>
-                            <p className="text-[10px] font-bold text-[#9C9485] uppercase tracking-wide mb-0.5">Area preference</p>
-                            <AreaChip name={r.area_name} colorHex={r.area_color_hex} />
+                            <p className="text-[10px] font-bold text-[#9C9485] uppercase tracking-wide mb-0.5">Party / Area</p>
+                            <div className="flex items-center gap-1.5">
+                              <span className="font-semibold text-[#16130C]">×{r.party_size}</span>
+                              <AreaChip name={r.area_name} colorHex={r.area_color_hex} />
+                            </div>
+                          </div>
+                          <div>
+                            <p className="text-[10px] font-bold text-[#9C9485] uppercase tracking-wide mb-0.5">Date &amp; time</p>
+                            <p className="text-[#16130C]">{formatFullNairobiDateTime(r.reserved_for)}</p>
+                            <p className="text-[10px] text-[#9C9485]">{r.duration_minutes} min hold</p>
                           </div>
                           <div>
                             <p className="text-[10px] font-bold text-[#9C9485] uppercase tracking-wide mb-0.5">Source</p>
                             <p className="text-[#16130C]">{sourceLabel(r.source)}</p>
                           </div>
-                        </div>
-
-                        {/* Date + duration */}
-                        <div>
-                          <p className="text-[10px] font-bold text-[#9C9485] uppercase tracking-wide mb-0.5">Reservation time</p>
-                          <p className="text-[13px] text-[#16130C]">{formatFullNairobiDateTime(r.reserved_for)}</p>
-                          <p className="text-[11px] text-[#9C9485]">Held for {r.duration_minutes} minutes</p>
+                          <div>
+                            <p className="text-[10px] font-bold text-[#9C9485] uppercase tracking-wide mb-0.5">Submitted</p>
+                            <p className="text-[#16130C]">{relativeTime(r.created_at)}</p>
+                          </div>
                         </div>
 
                         {/* Guest message */}
                         {r.guest_message && (
-                          <div>
-                            <p className="text-[10px] font-bold text-[#9C9485] uppercase tracking-wide mb-0.5">Guest message</p>
-                            <blockquote className="border-l-2 border-[#E8A020] pl-3 text-[13px] text-[#5E5848] italic">
-                              "{r.guest_message}"
-                            </blockquote>
-                          </div>
+                          <blockquote className="border-l-2 border-[#E8A020] pl-3 text-[12px] text-[#5E5848] italic">
+                            "{r.guest_message}"
+                          </blockquote>
                         )}
 
-                        {/* Decline reason (for declined) */}
+                        {/* Decline reason */}
                         {r.status === "declined" && r.decline_reason && (
                           <div className="bg-red-50 rounded-lg px-3 py-2 text-[12px] text-red-700">
                             <span className="font-bold">Declined:</span> {r.decline_reason}
                           </div>
+                        )}
+
+                        {/* Cancelled note */}
+                        {r.status === "cancelled" && (
+                          <p className="text-[12px] text-[#9C9485] italic">This reservation was cancelled.</p>
                         )}
 
                         {/* Owner note */}
@@ -992,69 +1048,19 @@ export function ReservationsDashboard({
                           onSave={handleSaveNote}
                         />
 
-                        {/* Submitted */}
-                        <p className="text-[11px] text-[#9C9485]">
-                          Submitted {relativeTime(r.created_at)}
-                        </p>
-
-                        {/* ── Pending actions ── */}
-                        {r.status === "pending" && (
-                          <div className="space-y-3">
-                            {/* Capacity warning */}
-                            {capacityWarning && (
-                              <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2.5">
-                                <span className="text-amber-500 shrink-0 mt-0.5">⚠️</span>
-                                <p className="text-[12px] text-amber-700">
-                                  This slot will be at <strong>{capacityWarning.pct}%</strong> capacity in <strong>{capacityWarning.areaName}</strong> after approval
-                                </p>
-                              </div>
-                            )}
-                            <div className="flex gap-2">
-                              <button
-                                onClick={() => handleApprove(r.id)}
-                                disabled={updatingIds.has(r.id)}
-                                className="flex-1 h-10 rounded-full bg-[#16A34A] text-white text-[13px] font-bold hover:bg-[#15803D] transition-colors disabled:opacity-50"
-                              >
-                                {updatingIds.has(r.id) ? "…" : "Approve"}
-                              </button>
-                              <button
-                                onClick={() => openDeclineModal(r.id)}
-                                disabled={updatingIds.has(r.id)}
-                                className="flex-1 h-10 rounded-full border border-[#DC2626] text-[#DC2626] text-[13px] font-bold hover:bg-red-50 transition-colors disabled:opacity-50"
-                              >
-                                Decline
-                              </button>
-                            </div>
-                          </div>
-                        )}
-
-                        {/* ── Approved actions ── */}
+                        {/* WhatsApp secondary action for approved */}
                         {r.status === "approved" && (
-                          <div className="space-y-2">
-                            <a
-                              href={buildWhatsAppUrl(r, "approved", menuName)}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="flex items-center justify-center gap-2 w-full h-10 rounded-full border border-[#25D366] text-[#25D366] text-[13px] font-semibold hover:bg-[#25D366]/5 transition-colors"
-                            >
-                              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
-                              </svg>
-                              Also send via WhatsApp
-                            </a>
-                            <button
-                              onClick={() => handleCancel(r.id)}
-                              disabled={updatingIds.has(r.id)}
-                              className="w-full h-9 rounded-full border border-[#E2DDD5] text-[#9C9485] text-[12px] font-semibold hover:border-red-300 hover:text-[#DC2626] transition-colors disabled:opacity-50"
-                            >
-                              Cancel reservation
-                            </button>
-                          </div>
-                        )}
-
-                        {/* Cancelled */}
-                        {r.status === "cancelled" && (
-                          <p className="text-[12px] text-[#9C9485] italic">This reservation was cancelled.</p>
+                          <a
+                            href={buildWhatsAppUrl(r, "approved", menuName)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-2 text-[12px] font-semibold text-[#25D366] hover:underline"
+                          >
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+                              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+                            </svg>
+                            Also send via WhatsApp
+                          </a>
                         )}
                       </div>
                     )}

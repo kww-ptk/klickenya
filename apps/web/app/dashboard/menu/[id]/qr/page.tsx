@@ -25,6 +25,7 @@ export default async function QRPage({ params }: PageProps) {
         display_name: string | null;
         listing_slug: string | null;
         is_published: boolean;
+        table_ordering: boolean;
       }}
     />
   );
