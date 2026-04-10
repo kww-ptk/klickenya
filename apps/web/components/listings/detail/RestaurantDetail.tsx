@@ -25,6 +25,7 @@ export interface ReservationsConfig {
   leadTimeHours: number;
   maxPartySize: number;
   maxAdvanceDays: number;
+  durationMinutes: number;
   areas: RestaurantArea[];
   restaurantPhone: string | null;
 }

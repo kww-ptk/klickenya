@@ -297,6 +297,7 @@ export default async function ListingDetailPage({ params }: PageProps) {
         leadTimeHours: ((data as Record<string, unknown>).reservations_lead_time_hours as number) ?? 2,
         maxPartySize: ((data as Record<string, unknown>).reservations_max_party_size as number) ?? 12,
         maxAdvanceDays: ((data as Record<string, unknown>).reservations_max_advance_days as number) ?? 30,
+        durationMinutes: ((data as Record<string, unknown>).default_reservation_duration as number) ?? 90,
         areas,
         restaurantPhone,
       };
