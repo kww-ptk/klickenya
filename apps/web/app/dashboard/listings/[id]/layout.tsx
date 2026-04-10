@@ -40,6 +40,7 @@ export default async function ListingDashboardLayout({
     title: string;
     slug: string;
     type: string;
+    subcategory: string | null;
     city: string | null;
   } | null>(
     `*[
@@ -51,6 +52,7 @@ export default async function ListingDashboardLayout({
       title,
       "slug": slug.current,
       type,
+      subcategory,
       city
     }`,
     {
@@ -150,7 +152,7 @@ export default async function ListingDashboardLayout({
   ];
 
   const typeLabel =
-    listing.type === "restaurant"
+    listing.type === "restaurant" || listing.subcategory === "restaurants"
       ? "Restaurant"
       : listing.type === "experience"
         ? "Experience"
