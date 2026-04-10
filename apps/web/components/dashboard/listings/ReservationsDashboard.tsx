@@ -6,6 +6,8 @@ import { useToast } from "@/components/ui/Toast";
 import { WeekView } from "./reservations-calendar/WeekView";
 import { DayView } from "./reservations-calendar/DayView";
 import type { CalendarReservation } from "./reservations-calendar/WeekView";
+import { ReservationsSettings } from "./ReservationsSettings";
+import type { RestaurantArea as SettingsArea } from "./ReservationsSettings";
 
 /* ── Capacity warning threshold (tunable after pilot) ─────────────────────── */
 // TODO V2: Capacity enforcement moves server-side via reservation_slots table in V2.
@@ -45,6 +47,15 @@ interface RestaurantArea {
   is_active: boolean;
 }
 
+interface MenuSettings {
+  reservationsEnabled: boolean;
+  duration: number;
+  leadTime: number;
+  maxParty: number;
+  maxAdvance: number;
+  listingCity: string | null;
+}
+
 interface ReservationsDashboardProps {
   menuId: string;
   menuName: string;
@@ -55,6 +66,8 @@ interface ReservationsDashboardProps {
   initialReservations: Reservation[];
   areas: RestaurantArea[];
   initialFetchedAt: string;
+  tableOrdering: boolean;
+  menuSettings: MenuSettings;
 }
 
 /* ── Audio beep (Web Audio API — no external file needed) ────────────────── */
@@ -411,16 +424,21 @@ export function ReservationsDashboard({
   listingSlug,
   listingCity,
   initialReservations,
-  areas,
+  areas: initialAreas,
   initialFetchedAt,
+  tableOrdering,
+  menuSettings,
 }: ReservationsDashboardProps) {
   const { showToast } = useToast();
   const [reservations, setReservations] = useState<Reservation[]>(initialReservations);
   const reservationsRef = useRef<Reservation[]>(initialReservations);
   const lastPollIsoRef = useRef<string>(initialFetchedAt);
 
+  // areas as mutable state so Settings tab can CRUD them
+  const [areas, setAreas] = useState<RestaurantArea[]>(initialAreas);
+
   const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<"list" | "calendar" | "floor">("list");
+  const [activeTab, setActiveTab] = useState<"list" | "calendar" | "floor" | "settings">("list");
   const [listFilter, setListFilter] = useState<"pending" | "approved" | "all">("pending");
   const [calendarMode, setCalendarMode] = useState<"week" | "day">("week");
 
@@ -805,8 +823,8 @@ export function ReservationsDashboard({
       </div>
 
       {/* ── Sub-tabs ── */}
-      <div className="flex gap-2">
-        {(["list", "calendar", "floor"] as const).map(tab => (
+      <div className="flex gap-2 flex-wrap">
+        {(["list", "calendar", "floor", "settings"] as const).map(tab => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
@@ -1094,6 +1112,24 @@ export function ReservationsDashboard({
 
       {/* ── Floor view ── */}
       {activeTab === "floor" && <FloorView />}
+
+      {/* ── Settings tab ── */}
+      {activeTab === "settings" && (
+        <ReservationsSettings
+          menuId={menuId}
+          listingCity={listingCity}
+          initialReservationsEnabled={menuSettings.reservationsEnabled}
+          initialDuration={menuSettings.duration}
+          initialLeadTime={menuSettings.leadTime}
+          initialMaxParty={menuSettings.maxParty}
+          initialMaxAdvance={menuSettings.maxAdvance}
+          initialAreas={areas as SettingsArea[]}
+          tableOrdering={tableOrdering}
+          showToast={showToast}
+          onAreasChange={(updated) => setAreas(updated as RestaurantArea[])}
+          onReservationsToggle={() => {/* state lives inside ReservationsSettings */}}
+        />
+      )}
 
       {/* ── Decline modal ── */}
       <Modal

@@ -32,11 +32,13 @@ export default async function ReservationsPage({
 
   if (!listing) redirect("/dashboard/listings");
 
-  // Fetch linked menu (same query as layout, but needs reservations_enabled + slug)
+  // Fetch linked menu (needs reservations_enabled + slug + booking rules + ordering flag)
   const { data: menu } = listing.slug
     ? await adminClient
         .from("menus")
-        .select("id, name, slug, reservations_enabled")
+        .select(
+          "id, name, slug, reservations_enabled, table_ordering, default_reservation_duration, reservations_lead_time_hours, reservations_max_party_size, reservations_max_advance_days",
+        )
         .eq("listing_slug", listing.slug)
         .eq("business_id", user.id)
         .maybeSingle()
@@ -72,6 +74,15 @@ export default async function ReservationsPage({
         initialReservations={initialReservations}
         areas={areas}
         initialFetchedAt={initialFetchedAt}
+        tableOrdering={menu.table_ordering ?? false}
+        menuSettings={{
+          reservationsEnabled: menu.reservations_enabled ?? true,
+          duration: menu.default_reservation_duration ?? 90,
+          leadTime: menu.reservations_lead_time_hours ?? 2,
+          maxParty: menu.reservations_max_party_size ?? 12,
+          maxAdvance: menu.reservations_max_advance_days ?? 30,
+          listingCity: listing.city ?? null,
+        }}
       />
     </ToastProvider>
   );

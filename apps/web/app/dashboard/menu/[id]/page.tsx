@@ -44,20 +44,22 @@ export default async function MenuBuilderPage({ params }: PageProps) {
   const listingSlug = settings?.listing_slug ?? null;
   const reservationsEnabled = settings?.reservations_enabled ?? false;
 
-  // Fetch listing city from Sanity (needed so the MenuBuilder can pass listing_city
-  // in PATCH /api/menu/settings to bust the ISR cache on the listing page).
-  // Non-blocking: if Sanity is unreachable or listing not found, city is null and
-  // the PATCH will simply skip the revalidatePath for the listing.
+  // Fetch listing city + Sanity _id from Sanity.
+  // city: needed so MenuBuilder can pass listing_city in PATCH /api/menu/settings to bust ISR cache.
+  // _id:  needed so MenuBuilder can link to /dashboard/listings/[id]/reservations.
+  // Non-blocking: if Sanity is unreachable or listing not found, both are null.
   let listingCity: string | null = null;
+  let listingId: string | null = null;
   if (listingSlug) {
     try {
-      const sanityListing = await sanityClient.fetch<{ city: string } | null>(
-        `*[_type == "listing" && slug.current == $slug][0]{ city }`,
+      const sanityListing = await sanityClient.fetch<{ city: string; _id: string } | null>(
+        `*[_type == "listing" && slug.current == $slug][0]{ city, _id }`,
         { slug: listingSlug },
       );
       listingCity = sanityListing?.city ?? null;
+      listingId = sanityListing?._id ?? null;
     } catch {
-      // Non-blocking — continue without city
+      // Non-blocking — continue without city/id
     }
   }
 
@@ -74,6 +76,7 @@ export default async function MenuBuilderPage({ params }: PageProps) {
         reservationsMaxAdvanceDays={settings?.reservations_max_advance_days ?? 30}
         listingSlug={listingSlug}
         listingCity={listingCity}
+        listingId={listingId}
       />
     </ToastProvider>
   );
