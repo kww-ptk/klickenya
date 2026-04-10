@@ -168,12 +168,12 @@ export async function POST(req: NextRequest) {
         { status: 400 },
       );
     }
-    if (!guest_email || typeof guest_email !== "string" || !guest_email.includes("@") || !guest_email.includes(".")) {
-      return NextResponse.json(
-        { error: "Enter a valid email address" },
-        { status: 400 },
-      );
-    }
+    // guest_email is required in the booking form but stored as nullable for backwards
+    // compatibility with any submissions that predate migration 051.
+    const normalizedEmail =
+      typeof guest_email === "string" && guest_email.includes("@") && guest_email.includes(".")
+        ? guest_email.trim().toLowerCase()
+        : null;
     if (!party_size || typeof party_size !== "number" || party_size < 1) {
       return NextResponse.json({ error: "Party size must be at least 1" }, { status: 400 });
     }
@@ -266,7 +266,7 @@ export async function POST(req: NextRequest) {
         menu_id,
         guest_name: guest_name.trim(),
         guest_phone,
-        guest_email: guest_email.trim().toLowerCase(),
+        guest_email: normalizedEmail,
         party_size,
         reserved_for,
         duration_minutes: menu.default_reservation_duration,
