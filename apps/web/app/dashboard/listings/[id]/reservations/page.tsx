@@ -37,7 +37,7 @@ export default async function ReservationsPage({
     ? await adminClient
         .from("menus")
         .select(
-          "id, name, slug, reservations_enabled, table_ordering, default_reservation_duration, reservations_lead_time_hours, reservations_max_party_size, reservations_max_advance_days",
+          "id, name, slug, reservations_enabled, table_ordering, default_reservation_duration, reservations_lead_time_hours, reservations_max_party_size, reservations_max_advance_days, reservations_open_time, reservations_close_time",
         )
         .eq("listing_slug", listing.slug)
         .eq("business_id", user.id)
@@ -82,6 +82,8 @@ export default async function ReservationsPage({
           maxParty: menu.reservations_max_party_size ?? 12,
           maxAdvance: menu.reservations_max_advance_days ?? 30,
           listingCity: listing.city ?? null,
+          openTime: (menu.reservations_open_time ?? "12:00:00").slice(0, 5),
+          closeTime: (menu.reservations_close_time ?? "21:00:00").slice(0, 5),
         }}
       />
     </ToastProvider>

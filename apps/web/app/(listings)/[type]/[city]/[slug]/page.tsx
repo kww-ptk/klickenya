@@ -237,6 +237,8 @@ export default async function ListingDetailPage({ params }: PageProps) {
     durationMinutes: number;
     areas: RestaurantArea[];
     restaurantPhone: string | null;
+    bookableOpenTime: string;
+    bookableCloseTime: string;
   } | null = null;
 
   if (isRestaurantListing) {
@@ -248,6 +250,7 @@ export default async function ListingDetailPage({ params }: PageProps) {
         reservations_enabled, default_reservation_duration,
         reservations_lead_time_hours, reservations_max_party_size,
         reservations_max_advance_days, business_id,
+        reservations_open_time, reservations_close_time,
         menu_sections (
           id, title, display_order, is_visible,
           menu_items (
@@ -301,6 +304,8 @@ export default async function ListingDetailPage({ params }: PageProps) {
         durationMinutes: ((data as Record<string, unknown>).default_reservation_duration as number) ?? 90,
         areas,
         restaurantPhone,
+        bookableOpenTime: ((data as Record<string, unknown>).reservations_open_time as string)?.slice(0, 5) ?? "12:00",
+        bookableCloseTime: ((data as Record<string, unknown>).reservations_close_time as string)?.slice(0, 5) ?? "21:00",
       };
     }
   }

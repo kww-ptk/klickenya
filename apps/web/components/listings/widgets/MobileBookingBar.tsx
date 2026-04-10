@@ -64,8 +64,6 @@ interface MobileBookingBarProps {
   onDatesChange?: (checkIn: string, checkOut: string) => void;
   /** Passed by RestaurantDetail when reservations_enabled = true */
   reservationsConfig?: ReservationsConfig | null;
-  /** Sanity plain-text openingHours string */
-  openingHours?: string | null;
 }
 
 function MobileBookingBar({
@@ -81,7 +79,6 @@ function MobileBookingBar({
   menuSlug,
   onDatesChange,
   reservationsConfig,
-  openingHours,
 }: MobileBookingBarProps) {
   const cta = CTA_MAP[type] ?? DEFAULT_CTA;
   const isRestaurant = type === "restaurant";
@@ -124,7 +121,8 @@ function MobileBookingBar({
                     menuId={reservationsConfig.menuId}
                     menuName={reservationsConfig.menuName}
                     source="listing"
-                    openingHours={openingHours ?? null}
+                    bookableOpenTime={reservationsConfig.bookableOpenTime}
+                    bookableCloseTime={reservationsConfig.bookableCloseTime}
                     areas={reservationsConfig.areas}
                     maxPartySize={reservationsConfig.maxPartySize}
                     maxAdvanceDays={reservationsConfig.maxAdvanceDays}

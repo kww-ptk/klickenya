@@ -13,12 +13,10 @@ interface BookingSidebarProps {
   onDatesChange?: (checkIn: string, checkOut: string) => void;
   /** Passed by RestaurantDetail when reservations_enabled = true */
   reservationsConfig?: ReservationsConfig | null;
-  /** Sanity plain-text openingHours string */
-  openingHours?: string | null;
 }
 
 function BookingSidebar(props: BookingSidebarProps) {
-  const { reservationsConfig, openingHours, ...contactProps } = props;
+  const { reservationsConfig, ...contactProps } = props;
 
   return (
     <aside className="hidden lg:block w-[350px] shrink-0">
@@ -37,7 +35,8 @@ function BookingSidebar(props: BookingSidebarProps) {
             <ReservationInline
               menuId={reservationsConfig.menuId}
               menuName={reservationsConfig.menuName}
-              openingHours={openingHours ?? null}
+              bookableOpenTime={reservationsConfig.bookableOpenTime}
+              bookableCloseTime={reservationsConfig.bookableCloseTime}
               areas={reservationsConfig.areas}
               maxPartySize={reservationsConfig.maxPartySize}
               maxAdvanceDays={reservationsConfig.maxAdvanceDays}

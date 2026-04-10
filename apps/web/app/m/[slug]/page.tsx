@@ -22,6 +22,8 @@ type MenuWithOrdering = MenuData & {
   reservations_max_party_size: number;
   reservations_max_advance_days: number;
   listing_slug: string | null;
+  reservations_open_time: string;
+  reservations_close_time: string;
 };
 
 /* ── Data fetching ─────────────────────────────────────────────────────── */
@@ -39,6 +41,7 @@ async function getMenu(slug: string): Promise<{
       reservations_enabled, default_reservation_duration,
       reservations_lead_time_hours, reservations_max_party_size,
       reservations_max_advance_days, listing_slug, business_id,
+      reservations_open_time, reservations_close_time,
       menu_sections (
         id, title, display_order, is_visible,
         menu_items (
@@ -151,13 +154,6 @@ export default async function MenuPage({ params, searchParams }: PageProps) {
   const showBookButton = menu.reservations_enabled;
   const defaultOpenSheet = action === "book" && showBookButton;
 
-  // Fetch opening hours from listing_slug for slot generation
-  // (openingHours is a Sanity plain text field — passed through for best-effort parsing)
-  // We don't do a Sanity query here to keep the menu page Supabase-only; openingHours
-  // defaults to null which causes ReservationSheet to fall back to 08:00–22:00.
-  // TODO V2: store opening hours on the menus table or do a Sanity fetch here.
-  const openingHours: string | null = null;
-
   return (
     <div className="min-h-screen bg-canvas">
       <ScanTracker menuId={menu.id} />
@@ -184,7 +180,8 @@ export default async function MenuPage({ params, searchParams }: PageProps) {
                 menuName={menu.name}
                 source="qr_menu"
                 defaultOpen={defaultOpenSheet}
-                openingHours={openingHours}
+                bookableOpenTime={(menu.reservations_open_time ?? "12:00:00").slice(0, 5)}
+                bookableCloseTime={(menu.reservations_close_time ?? "21:00:00").slice(0, 5)}
                 areas={areas}
                 maxPartySize={menu.reservations_max_party_size}
                 maxAdvanceDays={menu.reservations_max_advance_days}

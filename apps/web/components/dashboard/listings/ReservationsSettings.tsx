@@ -27,6 +27,8 @@ interface ReservationsSettingsProps {
   showToast: (msg: string, type?: "success" | "error") => void;
   onAreasChange: (areas: RestaurantArea[]) => void;
   onReservationsToggle: (enabled: boolean) => void;
+  initialOpenTime: string;  // "HH:MM" from menus.reservations_open_time
+  initialCloseTime: string; // "HH:MM" from menus.reservations_close_time
 }
 
 /* ── Toggle switch ──────────────────────────────────────────────────────────── */
@@ -368,6 +370,8 @@ export function ReservationsSettings({
   showToast,
   onAreasChange,
   onReservationsToggle,
+  initialOpenTime,
+  initialCloseTime,
 }: ReservationsSettingsProps) {
   /* ── Reservation rules state ── */
   const [enabled, setEnabled] = useState(initialReservationsEnabled);
@@ -377,6 +381,11 @@ export function ReservationsSettings({
   const [maxParty, setMaxParty] = useState(initialMaxParty);
   const [maxAdvance, setMaxAdvance] = useState(initialMaxAdvance);
   const [savingRule, setSavingRule] = useState<string | null>(null);
+
+  /* ── Bookable hours state ── */
+  const [openTime, setOpenTime] = useState(initialOpenTime.slice(0, 5));
+  const [closeTime, setCloseTime] = useState(initialCloseTime.slice(0, 5));
+  const [hoursError, setHoursError] = useState<string | null>(null);
 
   /* ── Areas state ── */
   const [areas, setAreas] = useState<RestaurantArea[]>(initialAreas);
@@ -398,6 +407,26 @@ export function ReservationsSettings({
       }
     },
     [menuId, listingCity, showToast],
+  );
+
+  const saveHours = useCallback(
+    async (field: "reservations_open_time" | "reservations_close_time", value: string) => {
+      const effectiveOpen = field === "reservations_open_time" ? value : openTime;
+      const effectiveClose = field === "reservations_close_time" ? value : closeTime;
+
+      const toMins = (t: string) => {
+        const [h, m] = t.split(":").map(Number);
+        return h * 60 + m;
+      };
+
+      if (toMins(effectiveClose) <= toMins(effectiveOpen)) {
+        setHoursError("Last booking time must be after Open from.");
+        return;
+      }
+      setHoursError(null);
+      await patchSetting(field, value);
+    },
+    [openTime, closeTime, patchSetting],
   );
 
   const toggleReservations = useCallback(async () => {
@@ -457,6 +486,48 @@ export function ReservationsSettings({
 
   return (
     <div className="space-y-6">
+
+      {/* ── Bookable hours ── */}
+      <div className="bg-white rounded-xl border border-[#E2DDD5] shadow-sm overflow-hidden">
+        <div className="p-4 border-b border-[#F4F1EC]">
+          <SectionHeader
+            title="Bookable hours"
+            subtitle="Guests can book any 30-minute slot between these times."
+          />
+        </div>
+        <div className="p-4 space-y-3">
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-[11px] font-semibold text-[#5E5848] mb-1">Open from</label>
+              <input
+                type="time"
+                value={openTime}
+                disabled={!enabled || savingRule === "reservations_open_time"}
+                onChange={(e) => { setOpenTime(e.target.value); setHoursError(null); }}
+                onBlur={() => saveHours("reservations_open_time", openTime)}
+                className={inputCls}
+              />
+            </div>
+            <div>
+              <label className="block text-[11px] font-semibold text-[#5E5848] mb-1">Last booking at</label>
+              <input
+                type="time"
+                value={closeTime}
+                disabled={!enabled || savingRule === "reservations_close_time"}
+                onChange={(e) => { setCloseTime(e.target.value); setHoursError(null); }}
+                onBlur={() => saveHours("reservations_close_time", closeTime)}
+                className={inputCls}
+              />
+            </div>
+          </div>
+          {hoursError && (
+            <p className="text-[12px] text-[#DC2626]">{hoursError}</p>
+          )}
+          <p className="text-[11px] text-[#9C9485] leading-relaxed">
+            Slots are generated every 30 minutes. Defaults are derived from your restaurant&apos;s opening hours minus a 90-minute kitchen buffer.
+          </p>
+        </div>
+      </div>
 
       {/* ── Reservation rules ── */}
       <div className="bg-white rounded-xl border border-[#E2DDD5] shadow-sm overflow-hidden">

@@ -8,6 +8,20 @@ import { fetchReservations } from "./_lib/queries";
 /* ── Phone validation (same regex as /api/contact) ──────────────────────── */
 const internationalPhone = /^\+\d{7,15}$/;
 
+/* ── Time helpers ────────────────────────────────────────────────────────── */
+
+function timeToMinutes(t: string): number {
+  const parts = t.split(":");
+  return parseInt(parts[0], 10) * 60 + parseInt(parts[1], 10);
+}
+
+function formatTime12h(t: string): string {
+  const [h, m] = t.split(":").map(Number);
+  const ampm = h >= 12 ? "PM" : "AM";
+  const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
+  return `${h12}:${String(m).padStart(2, "0")} ${ampm}`;
+}
+
 /* ── Nairobi timezone helpers ────────────────────────────────────────────── */
 // All time math uses Intl.DateTimeFormat with timeZone: 'Africa/Nairobi'. No manual UTC+3.
 
@@ -188,7 +202,7 @@ export async function POST(req: NextRequest) {
     const { data: menu, error: menuErr } = await adminClient
       .from("menus")
       .select(
-        "id, name, slug, listing_slug, business_id, reservations_enabled, reservations_lead_time_hours, reservations_max_party_size, reservations_max_advance_days, default_reservation_duration",
+        "id, name, slug, listing_slug, business_id, reservations_enabled, reservations_lead_time_hours, reservations_max_party_size, reservations_max_advance_days, default_reservation_duration, reservations_open_time, reservations_close_time",
       )
       .eq("id", menu_id)
       .single();
@@ -242,6 +256,32 @@ export async function POST(req: NextRequest) {
 
     // Suppress nairobiNow unused warning — it's used above for context, kept for future slot validation
     void nairobiNow;
+
+    /* ── 4b. Bookable hours check ── */
+    // Extract the reservation time in Nairobi wall-clock (HH:MM)
+    const reservedNairobiHHMM = new Intl.DateTimeFormat("en-GB", {
+      timeZone: "Africa/Nairobi",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    }).format(reservedDate).slice(0, 5); // "HH:MM"
+
+    const openTime = (menu.reservations_open_time ?? "12:00:00").slice(0, 5);
+    const closeTime = (menu.reservations_close_time ?? "21:00:00").slice(0, 5);
+    const lastBookingMins = timeToMinutes(closeTime) - 30;
+    const lastBookingHHMM = `${String(Math.floor(lastBookingMins / 60)).padStart(2, "0")}:${String(lastBookingMins % 60).padStart(2, "0")}`;
+
+    if (
+      timeToMinutes(reservedNairobiHHMM) < timeToMinutes(openTime) ||
+      timeToMinutes(reservedNairobiHHMM) > lastBookingMins
+    ) {
+      return NextResponse.json(
+        {
+          error: `Bookings must be between ${formatTime12h(openTime)} and ${formatTime12h(lastBookingHHMM)}.`,
+        },
+        { status: 400 },
+      );
+    }
 
     /* ── 5. Validate area_id (if provided) ── */
     let areaName: string | null = null;

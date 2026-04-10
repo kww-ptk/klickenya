@@ -54,6 +54,8 @@ interface MenuSettings {
   maxParty: number;
   maxAdvance: number;
   listingCity: string | null;
+  openTime: string;   // "HH:MM"
+  closeTime: string;  // "HH:MM"
 }
 
 interface ReservationsDashboardProps {
@@ -1134,6 +1136,8 @@ export function ReservationsDashboard({
           showToast={showToast}
           onAreasChange={(updated) => setAreas(updated as RestaurantArea[])}
           onReservationsToggle={() => {/* state lives inside ReservationsSettings */}}
+          initialOpenTime={menuSettings.openTime}
+          initialCloseTime={menuSettings.closeTime}
         />
       )}
 

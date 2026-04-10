@@ -8,49 +8,11 @@ import type { RestaurantArea } from "./ReservationSheet";
 
 /* ── Shared pure utilities (mirrors ReservationSheet) ─────────────────────── */
 
-interface ParsedHours {
-  openHour: number;
-  closeHour: number;
-  closedDays: number[];
-}
+/* ── Time string helpers ─────────────────────────────────────────────────── */
 
-function parse12hTime(timeStr: string, ampm: string): number {
-  const [hRaw, mRaw] = timeStr.split(":");
-  const h = parseInt(hRaw, 10);
-  const m = mRaw ? parseInt(mRaw, 10) : 0;
-  let hour = h;
-  if (ampm.toUpperCase() === "PM" && hour !== 12) hour += 12;
-  if (ampm.toUpperCase() === "AM" && hour === 12) hour = 0;
-  return hour + m / 60;
-}
-
-const DAY_MAP: Record<string, number> = {
-  sunday: 0, sun: 0,
-  monday: 1, mon: 1,
-  tuesday: 2, tue: 2,
-  wednesday: 3, wed: 3,
-  thursday: 4, thu: 4,
-  friday: 5, fri: 5,
-  saturday: 6, sat: 6,
-};
-
-function parseOpeningHours(str: string | null): ParsedHours {
-  const DEFAULT: ParsedHours = { openHour: 8, closeHour: 22, closedDays: [] };
-  if (!str) return DEFAULT;
-  const lower = str.toLowerCase();
-  const closedDays: number[] = [];
-  const closedMatches = lower.matchAll(/closed\s+(?:on\s+)?(\w+)/g);
-  for (const m of closedMatches) {
-    const dayStr = m[1].replace(/s$/, "");
-    const dayNum = DAY_MAP[dayStr];
-    if (dayNum !== undefined) closedDays.push(dayNum);
-  }
-  const timeRe = /(\d{1,2}(?::\d{2})?)\s*(am|pm)\s*[–\-\u2013]\s*(\d{1,2}(?::\d{2})?)\s*(am|pm)/i;
-  const m = str.match(timeRe);
-  if (m) {
-    return { openHour: parse12hTime(m[1], m[2]), closeHour: parse12hTime(m[3], m[4]), closedDays };
-  }
-  return { ...DEFAULT, closedDays };
+function timeStrToMinutes(t: string): number {
+  const parts = t.split(":");
+  return parseInt(parts[0], 10) * 60 + parseInt(parts[1], 10);
 }
 
 function getTodayNairobi(): string {
@@ -61,14 +23,6 @@ function addDays(dateStr: string, n: number): string {
   const d = new Date(`${dateStr}T09:00:00Z`);
   d.setUTCDate(d.getUTCDate() + n);
   return d.toISOString().slice(0, 10);
-}
-
-function getDayOfWeekNairobi(dateStr: string): number {
-  const dayStr = new Intl.DateTimeFormat("en-US", {
-    timeZone: "Africa/Nairobi",
-    weekday: "short",
-  }).format(new Date(`${dateStr}T09:00:00Z`));
-  return ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].indexOf(dayStr);
 }
 
 function formatDateChip(dateStr: string): { weekday: string; day: string } {
@@ -93,19 +47,21 @@ interface TimeSlot {
 
 function generateTimeSlots(
   dateStr: string,
-  hours: ParsedHours,
+  openTimeStr: string,   // "HH:MM" or "HH:MM:SS"
+  closeTimeStr: string,  // "HH:MM" or "HH:MM:SS"
   leadTimeHours: number,
-  durationMinutes: number,
 ): TimeSlot[] {
   const slots: TimeSlot[] = [];
   const cutoffMs = Date.now() + leadTimeHours * 3600 * 1000;
   const todayNairobi = getTodayNairobi();
   const isToday = dateStr === todayNairobi;
-  const lastStartHour = hours.closeHour - durationMinutes / 60;
-  let cursor = Math.round(hours.openHour * 60);
-  const endMinutes = Math.round(lastStartHour * 60);
 
-  while (cursor <= endMinutes) {
+  const openMins = timeStrToMinutes(openTimeStr.slice(0, 5));
+  const closeMins = timeStrToMinutes(closeTimeStr.slice(0, 5));
+  const lastSlotMins = closeMins - 30; // last booking at close - 30 min
+
+  let cursor = openMins;
+  while (cursor <= lastSlotMins) {
     const h = Math.floor(cursor / 60);
     const min = cursor % 60;
     const value = `${String(h).padStart(2, "0")}:${String(min).padStart(2, "0")}`;
@@ -140,7 +96,8 @@ function formatConfirmation(dateStr: string, timeStr: string): string {
 interface ReservationInlineProps {
   menuId: string;
   menuName: string;
-  openingHours: string | null;
+  bookableOpenTime: string;   // "HH:MM" — from menus.reservations_open_time
+  bookableCloseTime: string;  // "HH:MM" — from menus.reservations_close_time
   areas: RestaurantArea[];
   maxPartySize: number;
   maxAdvanceDays: number;
@@ -155,7 +112,8 @@ interface ReservationInlineProps {
 export function ReservationInline({
   menuId,
   menuName,
-  openingHours,
+  bookableOpenTime,
+  bookableCloseTime,
   areas,
   maxPartySize,
   maxAdvanceDays,
@@ -185,20 +143,18 @@ export function ReservationInline({
   const DATES_VISIBLE = 4;
 
   /* ── derived ── */
-  const parsedHours = parseOpeningHours(openingHours);
   const today = getTodayNairobi();
 
+  // All dates available — no per-day closed days in V1.5
   const allDates: string[] = [];
   for (let i = 0; i <= maxAdvanceDays; i++) {
-    const d = addDays(today, i);
-    const dow = getDayOfWeekNairobi(d);
-    if (!parsedHours.closedDays.includes(dow)) allDates.push(d);
+    allDates.push(addDays(today, i));
   }
 
   const visibleDates = allDates.slice(dateScrollIdx, dateScrollIdx + DATES_VISIBLE);
   const canScrollBack = dateScrollIdx > 0;
   const canScrollFwd = dateScrollIdx + DATES_VISIBLE < allDates.length;
-  const timeSlots = date ? generateTimeSlots(date, parsedHours, leadTimeHours, durationMinutes) : [];
+  const timeSlots = date ? generateTimeSlots(date, bookableOpenTime, bookableCloseTime, leadTimeHours) : [];
   const activeAreas = areas.filter((a) => a.is_active ?? true).sort((a, b) => a.display_order - b.display_order);
   const showAreaField = activeAreas.length >= 2;
   const emailValid = email.includes("@") && email.includes(".");
@@ -396,7 +352,7 @@ export function ReservationInline({
         <div>
           <p className="text-[11px] font-bold text-text2 uppercase tracking-wide mb-2.5">Select a time</p>
           {timeSlots.length === 0 ? (
-            <p className="text-[13px] text-text3">No available times for this date.</p>
+            <p className="text-[13px] text-text3">No slots available for this date.</p>
           ) : (
             <div className="grid grid-cols-3 gap-2">
               {timeSlots.map((slot) => (

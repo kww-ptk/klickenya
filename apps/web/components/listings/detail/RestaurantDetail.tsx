@@ -28,6 +28,8 @@ export interface ReservationsConfig {
   durationMinutes: number;
   areas: RestaurantArea[];
   restaurantPhone: string | null;
+  bookableOpenTime: string;   // "HH:MM"
+  bookableCloseTime: string;  // "HH:MM"
 }
 
 interface RestaurantDetailProps {
@@ -335,7 +337,6 @@ function RestaurantDetail({
             price={listing.price ?? 0}
             priceUnit={listing.priceUnit ?? "person"}
             reservationsConfig={reservationsConfig ?? null}
-            openingHours={listing.openingHours ?? null}
           />
         </div>
 
@@ -352,7 +353,6 @@ function RestaurantDetail({
         priceRange={listing.priceRange}
         menuSlug={menuData?.slug}
         reservationsConfig={reservationsConfig ?? null}
-        openingHours={listing.openingHours ?? null}
       />
     </>
   );
