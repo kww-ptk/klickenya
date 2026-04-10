@@ -171,6 +171,7 @@ export function ReservationInline({
   const [areaId, setAreaId] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("+254");
+  const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
 
   /* ── submission state ── */
@@ -200,7 +201,8 @@ export function ReservationInline({
   const timeSlots = date ? generateTimeSlots(date, parsedHours, leadTimeHours, durationMinutes) : [];
   const activeAreas = areas.filter((a) => a.is_active ?? true).sort((a, b) => a.display_order - b.display_order);
   const showAreaField = activeAreas.length >= 2;
-  const canSubmit = !!date && !!time && name.trim().length >= 2 && phone.length >= 8;
+  const emailValid = email.includes("@") && email.includes(".");
+  const canSubmit = !!date && !!time && name.trim().length >= 2 && phone.length >= 8 && emailValid;
 
   /* ── submit ── */
   const handleSubmit = useCallback(async () => {
@@ -215,6 +217,7 @@ export function ReservationInline({
           menu_id: menuId,
           guest_name: name.trim(),
           guest_phone: phone,
+          guest_email: email.trim() || null,
           party_size: partySize,
           reserved_for: `${date}T${time}:00+03:00`,
           area_id: areaId || null,
@@ -475,6 +478,20 @@ export function ReservationInline({
             Phone <span className="text-red-500">*</span>
           </label>
           <PhoneInput value={phone} onChange={setPhone} required />
+        </div>
+
+        <div>
+          <label className="block text-[11px] font-bold text-text2 uppercase tracking-wide mb-1">
+            Email <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="your@email.com"
+            className="w-full border border-border rounded-[12px] px-4 py-2.5 text-[14px] text-text placeholder:text-text3 outline-none focus:border-amber transition-colors bg-white"
+          />
+          <p className="text-[11px] text-text3 mt-1">We&apos;ll email your confirmation to this address.</p>
         </div>
 
         <div>
