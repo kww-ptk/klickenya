@@ -753,3 +753,318 @@ The existing `apps/web/app/dashboard/menu/[id]/reservations/` route planned in t
 
 **Open question for Prompt 8:** The existing `/dashboard/menu/[id]/` route is where restaurant owners currently land. After building the listing command center, should `/dashboard/menu/[id]/` be deprecated (redirect to `/dashboard/listings/[id]/menu/`) or kept as a standalone route for QR/menu-specific workflows? Recommendation: keep `/dashboard/menu/[id]/` for now — the `MenuBuilder` (menu editing itself) stays there. The command center adds a layer above it, it does not replace it.
 
+---
+
+## Admin Access Discovery (Prompt 10.5)
+
+> Discovery pass only — no code changes. Maps the current state for the forthcoming admin access prompt.
+
+---
+
+### 1. Admin Role Detection
+
+**Mechanism:** `users.role` column in Supabase. Checked as `profile?.role === "admin"`.
+
+There is no email allowlist, no env-var ID list, no Supabase `app_metadata`. The role string lives in a plain `users` table row alongside `host` and `guest` roles.
+
+**Primary server-side check — middleware route guard:**
+```typescript
+// apps/web/middleware.ts  lines 57–66
+const { data: profile } = await adminSupabase
+  .from("users")
+  .select("role")
+  .eq("id", user.id)
+  .single();
+
+const role = profile?.role;
+
+if (isAdmin && role !== "admin") {
+  const url = request.nextUrl.clone();
+  url.pathname = role === "host" ? "/dashboard" : "/profile";
+  return NextResponse.redirect(url);
+}
+```
+
+**API-layer check — shared menu auth helper:**
+```typescript
+// apps/web/app/api/menu/_lib/auth.ts  lines 13–22
+const { data: profile } = await adminClient
+  .from("users")
+  .select("role")
+  .eq("id", user.id)
+  .single();
+
+return {
+  userId: user.id,
+  isAdmin: profile?.role === "admin",
+  supabase,
+};
+```
+
+**Admin count:** Not visible in code — determined dynamically from `users` table at runtime. No hardcoded list.
+
+**Server-side only.** No client-side role checks found. The admin chrome in layout.tsx is server-rendered behind the middleware guard.
+
+---
+
+### 2. How Admin Sees Menus Today
+
+**URL:** Admin visits `/admin/hosts/{hostId}` → clicks "Edit menu" → lands at `/admin/hosts/{hostId}/menu/{menuId}`.
+
+This is a **parallel admin route** at `apps/web/app/admin/hosts/[id]/menu/[menuId]/page.tsx`. It fetches the menu without any ownership filter:
+
+```typescript
+// apps/web/app/admin/hosts/[id]/menu/[menuId]/page.tsx  lines ~16–31
+// Admin auth is handled by the admin layout — no extra check needed
+// Fetch menu without ownership filter (admin can edit any menu)
+const { data: menu } = await adminClient
+  .from("menus")
+  .select(...)
+  .eq("id", menuId)   // ← NO business_id filter
+  .single();
+```
+
+The admin sees **identical UI to the owner** — it renders the same `MenuBuilder` component with no special chrome or read-only mode. No "viewing as admin" banner exists today.
+
+The ownership bypass is also implemented at the API level. Every `/api/menu/*` route calls `verifyMenuAccess()` which has an explicit admin escape hatch:
+
+```typescript
+// apps/web/app/api/menu/_lib/auth.ts  lines 29–52
+export async function verifyMenuAccess(
+  supabase,
+  menuId: string,
+  userId: string,
+  isAdmin: boolean
+) {
+  if (isAdmin) {
+    // Admin: fetch without ownership filter
+    const { data } = await adminClient
+      .from("menus")
+      .select("id, slug")
+      .eq("id", menuId)
+      .single();
+    return data;
+  }
+
+  const { data } = await supabase
+    .from("menus")
+    .select("id, slug")
+    .eq("id", menuId)
+    .eq("business_id", userId)  // ← ownership check for non-admins
+    .single();
+  return data;
+}
+```
+
+**This bypass already covers every `/api/menu/*` route** — settings, areas, tables, reservations GET, reservations PATCH, sections, items, orders. All call `verifyMenuAccess`. So admin can already call all of those APIs without restriction.
+
+---
+
+### 3. Existing Admin Routes and Code Paths
+
+**`/app/admin/` folder structure (2 levels deep):**
+```
+app/admin/
+├── _components/
+│   ├── AdminNavLink.tsx
+│   ├── AdminSignOut.tsx
+│   └── AdminBottomNav.tsx
+├── ambassadors/[id]/page.tsx
+├── analytics/page.tsx
+├── bookings/[id]/page.tsx
+├── claims/[id]/page.tsx
+├── contact-requests/[id]/page.tsx
+├── events/[id]/page.tsx
+├── general-contacts/[id]/page.tsx
+├── guests/[id]/page.tsx
+├── hosts/
+│   ├── [id]/
+│   │   ├── menu/[menuId]/page.tsx   ← the only restaurant-deep admin route today
+│   │   ├── page.tsx
+│   │   └── HostListingActions.tsx
+│   ├── CreateHostModal.tsx
+│   └── page.tsx
+├── listings/page.tsx                ← exists but no restaurant command center link
+├── newsletter/page.tsx
+├── property-enquiries/[id]/page.tsx
+├── property-listings/page.tsx
+├── real-estate/page.tsx
+├── settings/page.tsx
+├── layout.tsx
+├── page.tsx
+└── error.tsx
+```
+
+**`/app/api/admin/` routes** (all require `role === "admin"` enforced in-handler):
+```
+api/admin/properties/assign/
+api/admin/hosts/create/
+api/admin/hosts/[id]/assign|unassign|sync-listings/
+api/admin/events/[id]/review/
+api/admin/delete/
+api/admin/contact-requests/[id]/send-reply|note|status/
+api/admin/general-contacts/[id]/send-reply/
+api/admin/property-enquiries/[id]/send-reply|note|status/
+api/admin/listing-requests/[id]/send-reply|note|status/
+api/admin/ambassadors/[id]/send-reply|note|status/
+api/admin/ai/draft-reply/
+```
+
+**`isAdmin` occurrences in `/api/menu/` routes** (all use the shared `verifyMenuAccess` bypass):
+- `app/api/menu/_lib/auth.ts` — defines it
+- `app/api/menu/settings/route.ts`
+- `app/api/menu/areas/route.ts`
+- `app/api/menu/tables/route.ts`
+- `app/api/menu/reservations/route.ts` (GET)
+- `app/api/menu/reservations/[id]/route.ts` (PATCH)
+- `app/api/menu/sections/route.ts`
+- `app/api/menu/items/route.ts`
+- `app/api/menu/orders/route.ts`
+
+No `requireAdmin`, `admin_only`, or `hasAdminAccess` patterns exist anywhere. `adminClient` throughout the codebase refers to the Supabase service-role client (`lib/supabase/admin.ts`), not an admin-user check.
+
+---
+
+### 4. Auth Helpers — Current State on Each Route
+
+| Route | Auth helper | Admin bypass today? |
+|---|---|---|
+| `GET /api/menu/reservations` | `getMenuAuth()` + `verifyMenuAccess()` | ✅ YES — via `verifyMenuAccess` |
+| `PATCH /api/menu/reservations/[id]` | `getMenuAuth()` + `verifyMenuAccess()` | ✅ YES — via `verifyMenuAccess` |
+| `GET/POST/PATCH/DELETE /api/menu/areas` | `getMenuAuth()` + `verifyMenuAccess()` | ✅ YES — via `verifyMenuAccess` |
+| `PATCH /api/menu/settings` | `getMenuAuth()` + `verifyMenuAccess()` | ✅ YES — via `verifyMenuAccess` |
+| `GET/POST/PATCH/DELETE /api/menu/tables` | `getMenuAuth()` + `verifyMenuAccess()` | ✅ YES — via `verifyMenuAccess` |
+| `app/dashboard/listings/[id]/layout.tsx` | Sanity ownership query | ❌ NO bypass |
+| `app/dashboard/listings/[id]/reservations/page.tsx` | Sanity ownership + `business_id` filter | ❌ NO bypass |
+
+**The gap is entirely in the page/layout layer, not the API layer.**
+
+Every `/api/menu/*` route already works for admins — the `verifyMenuAccess` bypass was built in Prompt 8b and covers all of them. The problem is the listing command center pages themselves are gated by a Sanity ownership query that has no admin escape hatch.
+
+**Listing layout ownership check (the blocker):**
+```typescript
+// apps/web/app/dashboard/listings/[id]/layout.tsx  lines 55–74
+const listing = await sanityClient.fetch<...>(
+  `*[
+    _id == $id &&
+    (_type == "listing" || _type == "event") &&
+    (hostId == $userId || host._ref == $sanityHostId)
+  ][0]{...}`,
+  {
+    id,
+    userId: user.id,
+    sanityHostId: hostProfile.sanity_host_id ?? "",
+  },
+);
+
+if (!listing) notFound();   // ← admin hits notFound() here
+```
+
+**Reservations page ownership check (second blocker):**
+```typescript
+// apps/web/app/dashboard/listings/[id]/reservations/page.tsx  lines 28–42
+const listing = await sanityClient.fetch<...>(
+  `*[_id == $id && (hostId == $userId || host._ref == $sanityHostId)][0]{...}`,
+  { id, userId: user.id, sanityHostId: hostProfile.sanity_host_id ?? "" },
+);
+
+if (!listing) redirect("/dashboard/listings");
+
+const { data: menu } = await adminClient
+  .from("menus")
+  .select(...)
+  .eq("listing_slug", listing.slug)
+  .eq("business_id", user.id)    // ← second ownership filter (Supabase)
+  .maybeSingle();
+```
+
+**Shared helper location:** `apps/web/app/dashboard/_lib/auth.ts` — contains `getAuthUser()`, `getUserProfile()`, `getHostProfile()`. These have no admin bypass. They just return the current user's profile.
+
+---
+
+### 5. Admin Discovery UI
+
+**What exists today:**
+1. `/admin/hosts` — lists all hosts in a table, each row links to `/admin/hosts/{id}`
+2. `/admin/hosts/{id}` — shows host detail + their assigned listings + "Edit menu" links to `/admin/hosts/{id}/menu/{menuId}`
+3. `/admin/listings` — page exists but contains no restaurant command center links (general listing overview only)
+
+**What's missing for "find restaurant → fix something → done":**
+- No direct path from the admin UI to `/dashboard/listings/{id}` (the listing command center)
+- The "Edit menu" link in `/admin/hosts/{id}` goes to the parallel `/admin/hosts/{id}/menu/{menuId}` route, which only shows the QR menu builder. It does not expose: reservations, areas, booking rules, bookable hours, ordering tables, or the new settings sub-tab
+- No search across restaurants — admin must browse by host
+- No `/admin/listings/{id}` route mirroring `/dashboard/listings/{id}`
+
+---
+
+### 6. Recommendation
+
+#### (a) Bypass vs parallel routes
+
+**Recommendation: Bypass (add admin escape hatches to existing ownership checks).**
+
+Rationale: The codebase already uses bypass as its convention. `verifyMenuAccess()` was written from day one with `if (isAdmin) return data` — this pattern was deliberate and consistent. The API layer is already fully permissive for admins. Building parallel routes (`/admin/listings/[id]/reservations/`) would create a second copy of every page that would immediately diverge. Two changes instead of two file edits.
+
+#### (b) Files needing bypass for listing command center access
+
+Three locations need updating:
+
+1. **`apps/web/app/dashboard/listings/[id]/layout.tsx` — Sanity ownership query**
+   The GROQ query includes `(hostId == $userId || host._ref == $sanityHostId)`. For admins, drop the ownership clause and fetch by `_id` only. Change: detect admin via `getUserProfile` or a new `isAdmin` check, then conditionally use a broader Sanity query.
+
+2. **`apps/web/app/dashboard/listings/[id]/reservations/page.tsx` — Sanity query + `business_id` filter**
+   Same Sanity query bypass needed. Also the Supabase menu fetch uses `.eq("business_id", user.id)` — replace with `adminClient` fetch without that filter when admin.
+
+3. **`apps/web/app/dashboard/_lib/auth.ts` — Add `isAdmin` helper**
+   Currently returns `getAuthUser`, `getUserProfile`, `getHostProfile`. Add `getIsAdmin(userId)` that checks `users.role === "admin"` — same pattern as `getMenuAuth()`. The layout and page can then call this and branch.
+
+All `/api/menu/*` endpoints — already done. No changes needed there.
+
+#### (c) Admin discovery entry point
+
+Add a "Restaurants" section to `/admin/hosts/{id}` that includes a direct link to `/dashboard/listings/{sanityListingId}` alongside the existing "Edit menu" link. The host detail page already fetches the host's assigned listings (Sanity `_id` available). This requires one extra link per listing card — no new page.
+
+A dedicated `/admin/restaurants` index (search by name, city, slug) would be valuable but is lower priority than the bypass fix.
+
+#### (d) "Viewing as admin" banner
+
+**Yes, mandatory.** The listing dashboard has no visual distinction between owner view and admin view today (admin sees identical MenuBuilder UI). Without a banner, an admin can forget they are acting as an admin and accidentally trigger guest-facing actions. The banner should be persistent (sticky in the layout header), clearly branded ("Viewing as admin — changes affect live restaurant"), and non-dismissable.
+
+#### (e) Communication safety
+
+**Recommendation: Server-side check — if `isAdmin`, skip guest email send.**
+
+In `PATCH /api/menu/reservations/[id]`, the `sendGuestEmail()` call is already conditional on `guestEmail` being set. Add one more condition: `&& !isAdmin`. This is the smallest possible change, guaranteed to be correct regardless of UI, and requires no UI work. The `isAdmin` flag is already extracted from `getMenuAuth()` at the top of the handler.
+
+```typescript
+// Current (line 371–386)
+if (guestEmail && whatsAppTransitions.includes(newStatus)) {
+  void sendGuestEmail({...});
+}
+
+// After fix — one extra condition
+if (guestEmail && whatsAppTransitions.includes(newStatus) && !isAdmin) {
+  void sendGuestEmail({...});
+}
+```
+
+The WhatsApp URL is still generated and returned — admin can paste it manually if needed. No communication is fired automatically.
+
+#### (f) Audit log
+
+**Defer.** No audit infrastructure exists today and building `admin_actions` table, migration, and logging hooks is scope-creep for what is a small team with few admins. Minimum viable logging: add `console.log("[admin]", userId, "updated reservation", reservationId, updates)` at the existing action points. Real audit table is V2 when the team grows or compliance requires it.
+
+---
+
+### Surprises / gaps worth flagging
+
+1. **The API is already admin-permissive; only the pages are not.** The work is smaller than it looks — two page files and the layout need bypass logic. The heavy API layer needs nothing.
+
+2. **The listing layout makes a second Sanity ownership query.** The reservations page makes its own *third* Sanity query for the same listing. Both need to be bypassed independently — there is no single place to fix both.
+
+3. **Admin email send risk is real today.** An admin who navigates to `/dashboard/menu/{menuId}/` (already accessible via `verifyMenuAccess` bypass), then uses the reservations dashboard (if they could reach it), could trigger approve/decline/cancel emails to real guests. The `sendGuestEmail()` call has no admin guard today.
+
+4. **`/admin/listings/page.tsx` exists but is a stub.** It doesn't link to individual listing command centers. It's a placeholder that will need content when admin access is built.
+
+5. **`approved_by` is set to `userId` on approve** (line 315 of `reservations/[id]/route.ts`). When an admin approves, `approved_by` would be set to the admin's user ID, not the restaurant owner's. This is actually correct behaviour for an audit trail but worth noting — the restaurant owner won't see "who approved" in the UI today, but if that's added in V2, admin approvals will be attributable.
+
