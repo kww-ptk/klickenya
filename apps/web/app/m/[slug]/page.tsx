@@ -22,8 +22,6 @@ type MenuWithOrdering = MenuData & {
   reservations_max_party_size: number;
   reservations_max_advance_days: number;
   listing_slug: string | null;
-  reservations_open_time: string;
-  reservations_close_time: string;
 };
 
 /* ── Data fetching ─────────────────────────────────────────────────────── */
@@ -32,6 +30,7 @@ async function getMenu(slug: string): Promise<{
   menu: MenuWithOrdering;
   areas: RestaurantArea[];
   restaurantPhone: string | null;
+  timeWindows: Array<{ open_time: string; close_time: string; is_active: boolean }>;
 } | null> {
   const { data } = await adminClient
     .from("menus")
@@ -41,7 +40,6 @@ async function getMenu(slug: string): Promise<{
       reservations_enabled, default_reservation_duration,
       reservations_lead_time_hours, reservations_max_party_size,
       reservations_max_advance_days, listing_slug, business_id,
-      reservations_open_time, reservations_close_time,
       menu_sections (
         id, title, display_order, is_visible,
         menu_items (
@@ -66,16 +64,28 @@ async function getMenu(slug: string): Promise<{
   // Add slug to satisfy MenuData shape
   const menu = { ...data, slug } as MenuWithOrdering;
 
-  // Fetch active restaurant areas (for ReservationSheet area chips)
+  // Fetch areas + time windows in parallel (non-blocking on error)
   let areas: RestaurantArea[] = [];
+  let timeWindows: Array<{ open_time: string; close_time: string; is_active: boolean }> = [];
   if (menu.reservations_enabled) {
-    const { data: areasData } = await adminClient
-      .from("restaurant_areas")
-      .select("id, name, capacity_total, color_hex, display_order, is_active")
-      .eq("menu_id", data.id)
-      .eq("is_active", true)
-      .order("display_order");
-    areas = (areasData ?? []) as RestaurantArea[];
+    const [areasResult, windowsResult] = await Promise.allSettled([
+      adminClient
+        .from("restaurant_areas")
+        .select("id, name, capacity_total, color_hex, display_order, is_active")
+        .eq("menu_id", data.id)
+        .eq("is_active", true)
+        .order("display_order"),
+      adminClient
+        .from("reservation_time_windows")
+        .select("open_time, close_time, is_active")
+        .eq("menu_id", data.id)
+        .eq("is_active", true)
+        .order("display_order"),
+    ]);
+    areas = areasResult.status === "fulfilled" ? ((areasResult.value.data ?? []) as RestaurantArea[]) : [];
+    timeWindows = windowsResult.status === "fulfilled"
+      ? ((windowsResult.value.data ?? []) as Array<{ open_time: string; close_time: string; is_active: boolean }>)
+      : [];
   }
 
   // Fetch restaurant phone for WhatsApp link on success screen
@@ -89,7 +99,7 @@ async function getMenu(slug: string): Promise<{
     restaurantPhone = hostProfile?.phone ?? null;
   }
 
-  return { menu, areas, restaurantPhone };
+  return { menu, areas, restaurantPhone, timeWindows };
 }
 
 /* ── Static params ─────────────────────────────────────────────────────── */
@@ -146,7 +156,7 @@ export default async function MenuPage({ params, searchParams }: PageProps) {
   const result = await getMenu(slug);
   if (!result) notFound();
 
-  const { menu, areas, restaurantPhone } = result;
+  const { menu, areas, restaurantPhone, timeWindows } = result;
 
   const sections = prepareSections(menu);
   if (sections.length === 0) notFound();
@@ -180,8 +190,7 @@ export default async function MenuPage({ params, searchParams }: PageProps) {
                 menuName={menu.name}
                 source="qr_menu"
                 defaultOpen={defaultOpenSheet}
-                bookableOpenTime={(menu.reservations_open_time ?? "12:00:00").slice(0, 5)}
-                bookableCloseTime={(menu.reservations_close_time ?? "21:00:00").slice(0, 5)}
+                timeWindows={timeWindows}
                 areas={areas}
                 maxPartySize={menu.reservations_max_party_size}
                 maxAdvanceDays={menu.reservations_max_advance_days}

@@ -47,36 +47,43 @@ interface TimeSlot {
 
 function generateTimeSlots(
   dateStr: string,
-  openTimeStr: string,   // "HH:MM" or "HH:MM:SS"
-  closeTimeStr: string,  // "HH:MM" or "HH:MM:SS"
+  timeWindows: Array<{ open_time: string; close_time: string; is_active?: boolean }>,
   leadTimeHours: number,
 ): TimeSlot[] {
-  const slots: TimeSlot[] = [];
+  const allSlots: TimeSlot[] = [];
   const cutoffMs = Date.now() + leadTimeHours * 3600 * 1000;
   const todayNairobi = getTodayNairobi();
   const isToday = dateStr === todayNairobi;
 
-  const openMins = timeStrToMinutes(openTimeStr.slice(0, 5));
-  const closeMins = timeStrToMinutes(closeTimeStr.slice(0, 5));
-  const lastSlotMins = closeMins - 30; // last booking at close - 30 min
+  // Only use active windows, sorted by open_time
+  const activeWindows = timeWindows
+    .filter((w) => w.is_active !== false)
+    .sort((a, b) => timeStrToMinutes(a.open_time.slice(0, 5)) - timeStrToMinutes(b.open_time.slice(0, 5)));
 
-  let cursor = openMins;
-  while (cursor <= lastSlotMins) {
-    const h = Math.floor(cursor / 60);
-    const min = cursor % 60;
-    const value = `${String(h).padStart(2, "0")}:${String(min).padStart(2, "0")}`;
-    let disabled = false;
-    if (isToday) {
-      const slotMs = new Date(`${dateStr}T${value}:00+03:00`).getTime();
-      disabled = slotMs < cutoffMs;
+  for (const w of activeWindows) {
+    const openMins = timeStrToMinutes(w.open_time.slice(0, 5));
+    const closeMins = timeStrToMinutes(w.close_time.slice(0, 5));
+    const lastSlotMins = closeMins - 30;
+
+    let cursor = openMins;
+    while (cursor <= lastSlotMins) {
+      const h = Math.floor(cursor / 60);
+      const min = cursor % 60;
+      const value = `${String(h).padStart(2, "0")}:${String(min).padStart(2, "0")}`;
+      let disabled = false;
+      if (isToday) {
+        const slotMs = new Date(`${dateStr}T${value}:00+03:00`).getTime();
+        disabled = slotMs < cutoffMs;
+      }
+      const ampm = h >= 12 ? "PM" : "AM";
+      const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
+      const label = `${h12}:${String(min).padStart(2, "0")} ${ampm}`;
+      allSlots.push({ value, label, disabled });
+      cursor += 30;
     }
-    const ampm = h >= 12 ? "PM" : "AM";
-    const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
-    const label = `${h12}:${String(min).padStart(2, "0")} ${ampm}`;
-    slots.push({ value, label, disabled });
-    cursor += 30;
   }
-  return slots;
+
+  return allSlots;
 }
 
 function formatConfirmation(dateStr: string, timeStr: string): string {
@@ -96,8 +103,7 @@ function formatConfirmation(dateStr: string, timeStr: string): string {
 interface ReservationInlineProps {
   menuId: string;
   menuName: string;
-  bookableOpenTime: string;   // "HH:MM" — from menus.reservations_open_time
-  bookableCloseTime: string;  // "HH:MM" — from menus.reservations_close_time
+  timeWindows: Array<{ open_time: string; close_time: string; is_active?: boolean }>;
   areas: RestaurantArea[];
   maxPartySize: number;
   maxAdvanceDays: number;
@@ -112,8 +118,7 @@ interface ReservationInlineProps {
 export function ReservationInline({
   menuId,
   menuName,
-  bookableOpenTime,
-  bookableCloseTime,
+  timeWindows,
   areas,
   maxPartySize,
   maxAdvanceDays,
@@ -154,7 +159,7 @@ export function ReservationInline({
   const visibleDates = allDates.slice(dateScrollIdx, dateScrollIdx + DATES_VISIBLE);
   const canScrollBack = dateScrollIdx > 0;
   const canScrollFwd = dateScrollIdx + DATES_VISIBLE < allDates.length;
-  const timeSlots = date ? generateTimeSlots(date, bookableOpenTime, bookableCloseTime, leadTimeHours) : [];
+  const timeSlots = date ? generateTimeSlots(date, timeWindows, leadTimeHours) : [];
   const activeAreas = areas.filter((a) => a.is_active ?? true).sort((a, b) => a.display_order - b.display_order);
   const showAreaField = activeAreas.length >= 2;
   const emailValid = email.includes("@") && email.includes(".");

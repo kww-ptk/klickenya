@@ -35,8 +35,7 @@ function BookingSidebar(props: BookingSidebarProps) {
             <ReservationInline
               menuId={reservationsConfig.menuId}
               menuName={reservationsConfig.menuName}
-              bookableOpenTime={reservationsConfig.bookableOpenTime}
-              bookableCloseTime={reservationsConfig.bookableCloseTime}
+              timeWindows={reservationsConfig.timeWindows}
               areas={reservationsConfig.areas}
               maxPartySize={reservationsConfig.maxPartySize}
               maxAdvanceDays={reservationsConfig.maxAdvanceDays}

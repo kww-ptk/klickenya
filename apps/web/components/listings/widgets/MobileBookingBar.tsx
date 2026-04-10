@@ -121,8 +121,7 @@ function MobileBookingBar({
                     menuId={reservationsConfig.menuId}
                     menuName={reservationsConfig.menuName}
                     source="listing"
-                    bookableOpenTime={reservationsConfig.bookableOpenTime}
-                    bookableCloseTime={reservationsConfig.bookableCloseTime}
+                    timeWindows={reservationsConfig.timeWindows}
                     areas={reservationsConfig.areas}
                     maxPartySize={reservationsConfig.maxPartySize}
                     maxAdvanceDays={reservationsConfig.maxAdvanceDays}

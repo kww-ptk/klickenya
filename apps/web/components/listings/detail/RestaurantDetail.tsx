@@ -28,8 +28,7 @@ export interface ReservationsConfig {
   durationMinutes: number;
   areas: RestaurantArea[];
   restaurantPhone: string | null;
-  bookableOpenTime: string;   // "HH:MM"
-  bookableCloseTime: string;  // "HH:MM"
+  timeWindows: Array<{ open_time: string; close_time: string; is_active: boolean }>;
 }
 
 interface RestaurantDetailProps {

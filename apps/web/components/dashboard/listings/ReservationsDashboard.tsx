@@ -7,7 +7,7 @@ import { WeekView } from "./reservations-calendar/WeekView";
 import { DayView } from "./reservations-calendar/DayView";
 import type { CalendarReservation } from "./reservations-calendar/WeekView";
 import { ReservationsSettings } from "./ReservationsSettings";
-import type { RestaurantArea as SettingsArea } from "./ReservationsSettings";
+import type { RestaurantArea as SettingsArea, TimeWindow } from "./ReservationsSettings";
 
 /* ── Capacity warning threshold (tunable after pilot) ─────────────────────── */
 // TODO V2: Capacity enforcement moves server-side via reservation_slots table in V2.
@@ -54,8 +54,7 @@ interface MenuSettings {
   maxParty: number;
   maxAdvance: number;
   listingCity: string | null;
-  openTime: string;   // "HH:MM"
-  closeTime: string;  // "HH:MM"
+  timeWindows: TimeWindow[];
 }
 
 interface ReservationsDashboardProps {
@@ -1132,12 +1131,11 @@ export function ReservationsDashboard({
           initialMaxParty={menuSettings.maxParty}
           initialMaxAdvance={menuSettings.maxAdvance}
           initialAreas={areas as SettingsArea[]}
+          initialWindows={menuSettings.timeWindows}
           tableOrdering={tableOrdering}
           showToast={showToast}
           onAreasChange={(updated) => setAreas(updated as RestaurantArea[])}
           onReservationsToggle={() => {/* state lives inside ReservationsSettings */}}
-          initialOpenTime={menuSettings.openTime}
-          initialCloseTime={menuSettings.closeTime}
         />
       )}
 

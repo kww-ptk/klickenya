@@ -25,6 +25,8 @@ import { getMenuAuth, verifyMenuAccess } from "../_lib/auth";
  *
  * Seed behaviour: if reservations_enabled is flipping false → true AND the menu
  * has zero restaurant_areas, two default areas are inserted (Indoor 30, Terrace 20).
+ * Also seeds a default reservation_time_windows row from Sanity opening hours if
+ * the menu has no windows yet.
  */
 
 /* ── Time helpers ────────────────────────────────────────────────────────── */
@@ -32,10 +34,6 @@ import { getMenuAuth, verifyMenuAccess } from "../_lib/auth";
 function timeToMinutes(t: string): number {
   const parts = t.split(":");
   return parseInt(parts[0], 10) * 60 + parseInt(parts[1], 10);
-}
-
-function normalizeTime(t: string): string {
-  return t.slice(0, 5); // "12:00:00" → "12:00"
 }
 
 // Parse Sanity opening hours string for bookable hours derivation
@@ -81,8 +79,6 @@ export async function PATCH(req: NextRequest) {
       reservations_max_party_size,
       reservations_max_advance_days,
       listing_city,
-      reservations_open_time,
-      reservations_close_time,
     } = body;
 
     if (!menu_id) {
@@ -98,7 +94,7 @@ export async function PATCH(req: NextRequest) {
     // Fetch current menu state for seed + revalidatePath logic
     const { data: menu } = await adminClient
       .from("menus")
-      .select("id, slug, listing_slug, reservations_enabled, reservations_open_time, reservations_close_time")
+      .select("id, slug, listing_slug, reservations_enabled")
       .eq("id", menu_id)
       .single();
     if (!menu) {
@@ -155,28 +151,6 @@ export async function PATCH(req: NextRequest) {
       updates.reservations_max_advance_days = v;
     }
 
-    // Time fields — validate merged state (open < close)
-    if (typeof reservations_open_time === "string" || typeof reservations_close_time === "string") {
-      const effectiveOpen = normalizeTime(
-        typeof reservations_open_time === "string"
-          ? reservations_open_time
-          : (menu.reservations_open_time ?? "12:00:00"),
-      );
-      const effectiveClose = normalizeTime(
-        typeof reservations_close_time === "string"
-          ? reservations_close_time
-          : (menu.reservations_close_time ?? "21:00:00"),
-      );
-      if (timeToMinutes(effectiveClose) <= timeToMinutes(effectiveOpen)) {
-        return NextResponse.json(
-          { error: "Last booking time must be after Open from." },
-          { status: 400 },
-        );
-      }
-      if (typeof reservations_open_time === "string") updates.reservations_open_time = effectiveOpen;
-      if (typeof reservations_close_time === "string") updates.reservations_close_time = effectiveClose;
-    }
-
     if (Object.keys(updates).length === 0) {
       return NextResponse.json({ error: "No valid fields to update." }, { status: 400 });
     }
@@ -184,32 +158,6 @@ export async function PATCH(req: NextRequest) {
     // Check if reservations_enabled is flipping false → true (needed for seed logic)
     const isEnablingReservations =
       updates.reservations_enabled === true && menu.reservations_enabled === false;
-
-    // ── Pre-update: Derive bookable hours from Sanity on first enable ──
-    if (isEnablingReservations) {
-      const currentOpen = normalizeTime(menu.reservations_open_time ?? "12:00:00");
-      const currentClose = normalizeTime(menu.reservations_close_time ?? "21:00:00");
-      if (
-        currentOpen === "12:00" && currentClose === "21:00" && menu.listing_slug
-        && !updates.reservations_open_time && !updates.reservations_close_time
-      ) {
-        try {
-          const sanityListing = await sanityClient.fetch<{ openingHours?: string | null } | null>(
-            `*[_type == "listing" && slug.current == $slug][0]{ openingHours }`,
-            { slug: menu.listing_slug },
-          );
-          if (sanityListing?.openingHours) {
-            const derived = parseSanityHoursForBookable(sanityListing.openingHours);
-            if (derived) {
-              updates.reservations_open_time = derived.openTime;
-              updates.reservations_close_time = derived.closeTime;
-            }
-          }
-        } catch {
-          // Non-blocking — if Sanity is unavailable, keep migration defaults
-        }
-      }
-    }
 
     const { error } = await adminClient
       .from("menus")
@@ -238,6 +186,34 @@ export async function PATCH(req: NextRequest) {
           { menu_id, name: "Terrace", capacity_total: 20, display_order: 1 },
         ]);
         seededAreas = true;
+      }
+
+      // ── Seed default time window from Sanity if no windows exist yet ──
+      const { count: windowCount } = await adminClient
+        .from("reservation_time_windows")
+        .select("id", { count: "exact", head: true })
+        .eq("menu_id", menu_id);
+
+      if ((windowCount ?? 0) === 0 && menu.listing_slug) {
+        try {
+          const sanityListing = await sanityClient.fetch<{ openingHours?: string | null } | null>(
+            `*[_type == "listing" && slug.current == $slug][0]{ openingHours }`,
+            { slug: menu.listing_slug },
+          );
+          if (sanityListing?.openingHours) {
+            const derived = parseSanityHoursForBookable(sanityListing.openingHours);
+            if (derived) {
+              await adminClient.from("reservation_time_windows").insert({
+                menu_id,
+                open_time: derived.openTime,
+                close_time: derived.closeTime,
+                display_order: 0,
+              });
+            }
+          }
+        } catch {
+          // Non-blocking — if Sanity is unavailable, owner can add windows manually
+        }
       }
     }
 

@@ -237,8 +237,7 @@ export default async function ListingDetailPage({ params }: PageProps) {
     durationMinutes: number;
     areas: RestaurantArea[];
     restaurantPhone: string | null;
-    bookableOpenTime: string;
-    bookableCloseTime: string;
+    timeWindows: Array<{ open_time: string; close_time: string; is_active: boolean }>;
   } | null = null;
 
   if (isRestaurantListing) {
@@ -250,7 +249,6 @@ export default async function ListingDetailPage({ params }: PageProps) {
         reservations_enabled, default_reservation_duration,
         reservations_lead_time_hours, reservations_max_party_size,
         reservations_max_advance_days, business_id,
-        reservations_open_time, reservations_close_time,
         menu_sections (
           id, title, display_order, is_visible,
           menu_items (
@@ -267,8 +265,8 @@ export default async function ListingDetailPage({ params }: PageProps) {
     if (data) {
       menuData = data as MenuData;
 
-      // Fetch restaurant areas + host phone in parallel (non-blocking on error)
-      const [areasResult, hostResult] = await Promise.allSettled([
+      // Fetch restaurant areas + host phone + time windows in parallel (non-blocking on error)
+      const [areasResult, hostResult, windowsResult] = await Promise.allSettled([
         adminClient
           .from("restaurant_areas")
           .select("id, name, capacity_total, color_hex, display_order, is_active")
@@ -282,6 +280,12 @@ export default async function ListingDetailPage({ params }: PageProps) {
               .eq("user_id", data.business_id)
               .single()
           : Promise.resolve({ data: null }),
+        adminClient
+          .from("reservation_time_windows")
+          .select("open_time, close_time, is_active")
+          .eq("menu_id", data.id)
+          .eq("is_active", true)
+          .order("display_order"),
       ]);
 
       const areas =
@@ -294,6 +298,11 @@ export default async function ListingDetailPage({ params }: PageProps) {
           ? (hostResult.value.data as { phone?: string | null }).phone ?? null
           : null;
 
+      const timeWindows =
+        windowsResult.status === "fulfilled"
+          ? ((windowsResult.value.data ?? []) as Array<{ open_time: string; close_time: string; is_active: boolean }>)
+          : [];
+
       reservationsConfig = {
         enabled: (data as Record<string, unknown>).reservations_enabled === true,
         menuId: data.id,
@@ -304,8 +313,7 @@ export default async function ListingDetailPage({ params }: PageProps) {
         durationMinutes: ((data as Record<string, unknown>).default_reservation_duration as number) ?? 90,
         areas,
         restaurantPhone,
-        bookableOpenTime: ((data as Record<string, unknown>).reservations_open_time as string)?.slice(0, 5) ?? "12:00",
-        bookableCloseTime: ((data as Record<string, unknown>).reservations_close_time as string)?.slice(0, 5) ?? "21:00",
+        timeWindows,
       };
     }
   }

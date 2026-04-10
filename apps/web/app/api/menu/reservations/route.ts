@@ -23,26 +23,6 @@ function formatTime12h(t: string): string {
 }
 
 /* ── Nairobi timezone helpers ────────────────────────────────────────────── */
-// All time math uses Intl.DateTimeFormat with timeZone: 'Africa/Nairobi'. No manual UTC+3.
-
-function getNairobiNow(): Date {
-  // Returns a Date whose UTC value represents the current wall-clock time in Nairobi.
-  // We achieve this by formatting current time as Nairobi local, then parsing back.
-  const fmt = new Intl.DateTimeFormat("en-CA", {
-    timeZone: "Africa/Nairobi",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-    hour12: false,
-  });
-  const parts = fmt.formatToParts(new Date());
-  const get = (t: string) => parts.find((p) => p.type === t)?.value ?? "00";
-  const isoStr = `${get("year")}-${get("month")}-${get("day")}T${get("hour")}:${get("minute")}:${get("second")}`;
-  return new Date(isoStr); // treat as local for comparison purposes
-}
 
 function formatNairobiDateTime(isoStr: string): string {
   return new Intl.DateTimeFormat("en-KE", {
@@ -202,7 +182,7 @@ export async function POST(req: NextRequest) {
     const { data: menu, error: menuErr } = await adminClient
       .from("menus")
       .select(
-        "id, name, slug, listing_slug, business_id, reservations_enabled, reservations_lead_time_hours, reservations_max_party_size, reservations_max_advance_days, default_reservation_duration, reservations_open_time, reservations_close_time",
+        "id, name, slug, listing_slug, business_id, reservations_enabled, reservations_lead_time_hours, reservations_max_party_size, reservations_max_advance_days, default_reservation_duration",
       )
       .eq("id", menu_id)
       .single();
@@ -232,7 +212,6 @@ export async function POST(req: NextRequest) {
     }
 
     // Lead time check (Nairobi wall clock)
-    const nairobiNow = getNairobiNow();
     const leadTimeMs = menu.reservations_lead_time_hours * 3600 * 1000;
     // Compare UTC epoch values — reserved_for has explicit timezone (+03:00) so getTime() is correct
     const reservedMs = reservedDate.getTime();
@@ -254,34 +233,40 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Suppress nairobiNow unused warning — it's used above for context, kept for future slot validation
-    void nairobiNow;
+    /* ── 4b. Bookable hours check (multi-window) ── */
+    const { data: activeWindows } = await adminClient
+      .from("reservation_time_windows")
+      .select("open_time, close_time")
+      .eq("menu_id", menu_id)
+      .eq("is_active", true);
 
-    /* ── 4b. Bookable hours check ── */
-    // Extract the reservation time in Nairobi wall-clock (HH:MM)
-    const reservedNairobiHHMM = new Intl.DateTimeFormat("en-GB", {
-      timeZone: "Africa/Nairobi",
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: false,
-    }).format(reservedDate).slice(0, 5); // "HH:MM"
+    if (activeWindows && activeWindows.length > 0) {
+      const reservedNairobiHHMM = new Intl.DateTimeFormat("en-GB", {
+        timeZone: "Africa/Nairobi",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+      }).format(reservedDate).slice(0, 5);
 
-    const openTime = (menu.reservations_open_time ?? "12:00:00").slice(0, 5);
-    const closeTime = (menu.reservations_close_time ?? "21:00:00").slice(0, 5);
-    const lastBookingMins = timeToMinutes(closeTime) - 30;
-    const lastBookingHHMM = `${String(Math.floor(lastBookingMins / 60)).padStart(2, "0")}:${String(lastBookingMins % 60).padStart(2, "0")}`;
+      const reservedMins = timeToMinutes(reservedNairobiHHMM);
 
-    if (
-      timeToMinutes(reservedNairobiHHMM) < timeToMinutes(openTime) ||
-      timeToMinutes(reservedNairobiHHMM) > lastBookingMins
-    ) {
-      return NextResponse.json(
-        {
-          error: `Bookings must be between ${formatTime12h(openTime)} and ${formatTime12h(lastBookingHHMM)}.`,
-        },
-        { status: 400 },
-      );
+      const withinAnyWindow = activeWindows.some((w) => {
+        const openMins = timeToMinutes(w.open_time.slice(0, 5));
+        const lastSlotMins = timeToMinutes(w.close_time.slice(0, 5)) - 30;
+        return reservedMins >= openMins && reservedMins <= lastSlotMins;
+      });
+
+      if (!withinAnyWindow) {
+        const windowList = activeWindows
+          .map((w) => `${formatTime12h(w.open_time.slice(0, 5))}–${formatTime12h(w.close_time.slice(0, 5))}`)
+          .join(", ");
+        return NextResponse.json(
+          { error: `Bookings must be within available time slots: ${windowList}.` },
+          { status: 400 },
+        );
+      }
     }
+    // If no active windows configured, skip the check (permissive fallback)
 
     /* ── 5. Validate area_id (if provided) ── */
     let areaName: string | null = null;

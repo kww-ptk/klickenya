@@ -14,6 +14,16 @@ export interface RestaurantArea {
   is_active: boolean;
 }
 
+export interface TimeWindow {
+  id: string;
+  menu_id: string;
+  open_time: string;   // "HH:MM" or "HH:MM:SS"
+  close_time: string;
+  label: string | null;
+  display_order: number;
+  is_active: boolean;
+}
+
 interface ReservationsSettingsProps {
   menuId: string;
   listingCity: string | null;
@@ -23,12 +33,11 @@ interface ReservationsSettingsProps {
   initialMaxParty: number;
   initialMaxAdvance: number;
   initialAreas: RestaurantArea[];
+  initialWindows: TimeWindow[];
   tableOrdering: boolean;
   showToast: (msg: string, type?: "success" | "error") => void;
   onAreasChange: (areas: RestaurantArea[]) => void;
   onReservationsToggle: (enabled: boolean) => void;
-  initialOpenTime: string;  // "HH:MM" from menus.reservations_open_time
-  initialCloseTime: string; // "HH:MM" from menus.reservations_close_time
 }
 
 /* ── Toggle switch ──────────────────────────────────────────────────────────── */
@@ -355,6 +364,296 @@ function AddAreaForm({ menuId, onAdd, showToast }: AddAreaFormProps) {
   );
 }
 
+/* ── Time window row ────────────────────────────────────────────────────────── */
+
+interface TimeWindowRowProps {
+  window: TimeWindow;
+  menuId: string;
+  disabled?: boolean;
+  onUpdate: (updated: TimeWindow) => void;
+  onDelete: (id: string) => void;
+  showToast: (msg: string, type?: "success" | "error") => void;
+}
+
+function TimeWindowRow({ window: w, menuId, disabled, onUpdate, onDelete, showToast }: TimeWindowRowProps) {
+  const [editing, setEditing] = useState(false);
+  const [editLabel, setEditLabel] = useState(w.label ?? "");
+  const [editOpen, setEditOpen] = useState(w.open_time.slice(0, 5));
+  const [editClose, setEditClose] = useState(w.close_time.slice(0, 5));
+  const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [togglingActive, setTogglingActive] = useState(false);
+
+  const toMins = (t: string) => { const [h, m] = t.split(":").map(Number); return h * 60 + m; };
+
+  const handleSave = async () => {
+    if (!editOpen || !editClose) return;
+    if (toMins(editClose) <= toMins(editOpen)) {
+      showToast("Close time must be after open time.", "error");
+      return;
+    }
+    setSaving(true);
+    try {
+      const res = await fetch("/api/menu/time-windows", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: w.id,
+          menu_id: menuId,
+          open_time: editOpen,
+          close_time: editClose,
+          label: editLabel.trim() || null,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      onUpdate(data.window);
+      setEditing(false);
+    } catch {
+      showToast("Failed to save time window.", "error");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleToggleActive = async () => {
+    setTogglingActive(true);
+    try {
+      const res = await fetch("/api/menu/time-windows", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: w.id, menu_id: menuId, is_active: !w.is_active }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      onUpdate(data.window);
+    } catch {
+      showToast("Failed to update time window.", "error");
+    } finally {
+      setTogglingActive(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!confirm(`Delete this time window? This cannot be undone.`)) return;
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/menu/time-windows?id=${w.id}&menu_id=${menuId}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) throw new Error();
+      onDelete(w.id);
+      showToast("Time window deleted.");
+    } catch {
+      showToast("Failed to delete time window.", "error");
+      setDeleting(false);
+    }
+  };
+
+  const timeRange = `${w.open_time.slice(0, 5)} – ${w.close_time.slice(0, 5)}`;
+
+  if (editing) {
+    return (
+      <div className="px-4 py-3 bg-[#FDFCFB] border-b border-[#F4F1EC] space-y-2">
+        <div className="flex gap-2 flex-wrap items-end">
+          <div className="flex-1 min-w-[120px]">
+            <label className="block text-[10px] font-bold text-[#9C9485] uppercase tracking-wide mb-1">Label (optional)</label>
+            <input
+              value={editLabel}
+              onChange={e => setEditLabel(e.target.value)}
+              placeholder="e.g. Lunch, Dinner"
+              className="w-full border border-[#E2DDD5] rounded-lg px-3 py-1.5 text-[13px] text-[#16130C] focus:outline-none focus:border-[#E8A020] bg-white"
+            />
+          </div>
+          <div className="w-[110px]">
+            <label className="block text-[10px] font-bold text-[#9C9485] uppercase tracking-wide mb-1">Open from</label>
+            <input
+              type="time"
+              value={editOpen}
+              onChange={e => setEditOpen(e.target.value)}
+              className="w-full border border-[#E2DDD5] rounded-lg px-3 py-1.5 text-[13px] text-[#16130C] focus:outline-none focus:border-[#E8A020] bg-white"
+            />
+          </div>
+          <div className="w-[110px]">
+            <label className="block text-[10px] font-bold text-[#9C9485] uppercase tracking-wide mb-1">Last booking</label>
+            <input
+              type="time"
+              value={editClose}
+              onChange={e => setEditClose(e.target.value)}
+              className="w-full border border-[#E2DDD5] rounded-lg px-3 py-1.5 text-[13px] text-[#16130C] focus:outline-none focus:border-[#E8A020] bg-white"
+            />
+          </div>
+        </div>
+        <div className="flex gap-2">
+          <button
+            onClick={handleSave}
+            disabled={saving || !editOpen || !editClose}
+            className="text-[12px] font-bold text-white bg-[#16130C] px-3 h-[28px] rounded-full hover:bg-[#2A2520] transition-colors disabled:opacity-50"
+          >
+            {saving ? "Saving…" : "Save"}
+          </button>
+          <button
+            onClick={() => { setEditing(false); setEditLabel(w.label ?? ""); setEditOpen(w.open_time.slice(0, 5)); setEditClose(w.close_time.slice(0, 5)); }}
+            className="text-[12px] text-[#9C9485] hover:text-[#16130C] transition-colors"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className={`flex items-center gap-3 px-4 py-3 border-b border-[#F4F1EC] last:border-0 ${!w.is_active ? "opacity-50" : ""}`}>
+      {/* Info */}
+      <div className="flex-1 min-w-0">
+        <p className="text-[13px] font-semibold text-[#16130C] truncate">{w.label || <span className="text-[#9C9485]">—</span>}</p>
+        <p className="text-[11px] text-[#9C9485]">{timeRange}</p>
+      </div>
+
+      {/* Active toggle */}
+      <Toggle
+        checked={w.is_active}
+        onChange={handleToggleActive}
+        disabled={togglingActive || disabled}
+      />
+
+      {/* Edit */}
+      <button
+        onClick={() => setEditing(true)}
+        disabled={disabled}
+        className="text-[12px] text-[#9C9485] hover:text-[#16130C] transition-colors px-1 disabled:opacity-40"
+      >
+        Edit
+      </button>
+
+      {/* Delete */}
+      <button
+        onClick={handleDelete}
+        disabled={deleting || disabled}
+        className="text-[12px] text-[#DC2626] hover:text-red-700 transition-colors px-1 disabled:opacity-50"
+      >
+        Delete
+      </button>
+    </div>
+  );
+}
+
+/* ── Add time window form ────────────────────────────────────────────────────── */
+
+interface AddTimeWindowFormProps {
+  menuId: string;
+  disabled?: boolean;
+  onAdd: (window: TimeWindow) => void;
+  showToast: (msg: string, type?: "success" | "error") => void;
+}
+
+function AddTimeWindowForm({ menuId, disabled, onAdd, showToast }: AddTimeWindowFormProps) {
+  const [open, setOpen] = useState(false);
+  const [label, setLabel] = useState("");
+  const [openTime, setOpenTime] = useState("12:00");
+  const [closeTime, setCloseTime] = useState("15:00");
+  const [adding, setAdding] = useState(false);
+
+  const toMins = (t: string) => { const [h, m] = t.split(":").map(Number); return h * 60 + m; };
+
+  const handleAdd = async () => {
+    if (!openTime || !closeTime) return;
+    if (toMins(closeTime) <= toMins(openTime)) {
+      showToast("Close time must be after open time.", "error");
+      return;
+    }
+    setAdding(true);
+    try {
+      const res = await fetch("/api/menu/time-windows", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          menu_id: menuId,
+          open_time: openTime,
+          close_time: closeTime,
+          label: label.trim() || null,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      onAdd(data.window);
+      setLabel("");
+      setOpenTime("12:00");
+      setCloseTime("15:00");
+      setOpen(false);
+      showToast("Time window added.");
+    } catch {
+      showToast("Failed to add time window.", "error");
+    } finally {
+      setAdding(false);
+    }
+  };
+
+  if (!open) {
+    return (
+      <button
+        onClick={() => setOpen(true)}
+        disabled={disabled}
+        className="w-full h-[36px] rounded-full border border-dashed border-[#E2DDD5] text-[12px] font-semibold text-[#9C9485] hover:border-[#E8A020]/50 hover:text-[#E8A020] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+      >
+        + Add time window
+      </button>
+    );
+  }
+
+  return (
+    <div className="border border-[#E2DDD5] rounded-xl p-4 space-y-3 bg-[#FDFCFB]">
+      <p className="text-[12px] font-bold text-[#16130C]">New time window</p>
+      <div className="flex gap-2 flex-wrap items-end">
+        <div className="flex-1 min-w-[120px]">
+          <label className="block text-[10px] font-bold text-[#9C9485] uppercase tracking-wide mb-1">Label (optional)</label>
+          <input
+            value={label}
+            onChange={e => setLabel(e.target.value)}
+            placeholder="e.g. Lunch, Dinner"
+            autoFocus
+            className="w-full border border-[#E2DDD5] rounded-lg px-3 py-1.5 text-[13px] text-[#16130C] focus:outline-none focus:border-[#E8A020] bg-white"
+          />
+        </div>
+        <div className="w-[110px]">
+          <label className="block text-[10px] font-bold text-[#9C9485] uppercase tracking-wide mb-1">Open from</label>
+          <input
+            type="time"
+            value={openTime}
+            onChange={e => setOpenTime(e.target.value)}
+            className="w-full border border-[#E2DDD5] rounded-lg px-3 py-1.5 text-[13px] text-[#16130C] focus:outline-none focus:border-[#E8A020] bg-white"
+          />
+        </div>
+        <div className="w-[110px]">
+          <label className="block text-[10px] font-bold text-[#9C9485] uppercase tracking-wide mb-1">Last booking</label>
+          <input
+            type="time"
+            value={closeTime}
+            onChange={e => setCloseTime(e.target.value)}
+            className="w-full border border-[#E2DDD5] rounded-lg px-3 py-1.5 text-[13px] text-[#16130C] focus:outline-none focus:border-[#E8A020] bg-white"
+          />
+        </div>
+      </div>
+      <div className="flex gap-2">
+        <button
+          onClick={handleAdd}
+          disabled={adding || !openTime || !closeTime}
+          className="text-[12px] font-bold text-white bg-[#E8A020] px-4 h-[30px] rounded-full hover:bg-[#d4911c] transition-colors disabled:opacity-50"
+        >
+          {adding ? "Adding…" : "Add window"}
+        </button>
+        <button
+          onClick={() => setOpen(false)}
+          className="text-[12px] text-[#9C9485] hover:text-[#16130C] transition-colors"
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+  );
+}
+
 /* ── Main Settings component ────────────────────────────────────────────────── */
 
 export function ReservationsSettings({
@@ -366,12 +665,11 @@ export function ReservationsSettings({
   initialMaxParty,
   initialMaxAdvance,
   initialAreas,
+  initialWindows,
   tableOrdering,
   showToast,
   onAreasChange,
   onReservationsToggle,
-  initialOpenTime,
-  initialCloseTime,
 }: ReservationsSettingsProps) {
   /* ── Reservation rules state ── */
   const [enabled, setEnabled] = useState(initialReservationsEnabled);
@@ -382,10 +680,8 @@ export function ReservationsSettings({
   const [maxAdvance, setMaxAdvance] = useState(initialMaxAdvance);
   const [savingRule, setSavingRule] = useState<string | null>(null);
 
-  /* ── Bookable hours state ── */
-  const [openTime, setOpenTime] = useState(initialOpenTime.slice(0, 5));
-  const [closeTime, setCloseTime] = useState(initialCloseTime.slice(0, 5));
-  const [hoursError, setHoursError] = useState<string | null>(null);
+  /* ── Time windows state ── */
+  const [windows, setWindows] = useState<TimeWindow[]>(initialWindows);
 
   /* ── Areas state ── */
   const [areas, setAreas] = useState<RestaurantArea[]>(initialAreas);
@@ -407,26 +703,6 @@ export function ReservationsSettings({
       }
     },
     [menuId, listingCity, showToast],
-  );
-
-  const saveHours = useCallback(
-    async (field: "reservations_open_time" | "reservations_close_time", value: string) => {
-      const effectiveOpen = field === "reservations_open_time" ? value : openTime;
-      const effectiveClose = field === "reservations_close_time" ? value : closeTime;
-
-      const toMins = (t: string) => {
-        const [h, m] = t.split(":").map(Number);
-        return h * 60 + m;
-      };
-
-      if (toMins(effectiveClose) <= toMins(effectiveOpen)) {
-        setHoursError("Last booking time must be after Open from.");
-        return;
-      }
-      setHoursError(null);
-      await patchSetting(field, value);
-    },
-    [openTime, closeTime, patchSetting],
   );
 
   const toggleReservations = useCallback(async () => {
@@ -453,6 +729,14 @@ export function ReservationsSettings({
         if (areasData.areas) {
           setAreas(areasData.areas);
           onAreasChange(areasData.areas);
+        }
+      }
+      // Refresh time windows (may have been seeded from Sanity on first enable)
+      if (next) {
+        const windowsRes = await fetch(`/api/menu/time-windows?menu_id=${menuId}`);
+        const windowsData = await windowsRes.json();
+        if (windowsData.windows) {
+          setWindows(windowsData.windows);
         }
       }
       showToast(next ? "Reservations enabled." : "Reservations disabled.");
@@ -492,40 +776,40 @@ export function ReservationsSettings({
         <div className="p-4 border-b border-[#F4F1EC]">
           <SectionHeader
             title="Bookable hours"
-            subtitle="Guests can book any 30-minute slot between these times."
+            subtitle="Add the time windows when guests can book. Add multiple windows if you close for a break (e.g. Lunch + Dinner)."
           />
         </div>
-        <div className="p-4 space-y-3">
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-[11px] font-semibold text-[#5E5848] mb-1">Open from</label>
-              <input
-                type="time"
-                value={openTime}
-                disabled={!enabled || savingRule === "reservations_open_time"}
-                onChange={(e) => { setOpenTime(e.target.value); setHoursError(null); }}
-                onBlur={() => saveHours("reservations_open_time", openTime)}
-                className={inputCls}
-              />
-            </div>
-            <div>
-              <label className="block text-[11px] font-semibold text-[#5E5848] mb-1">Last booking at</label>
-              <input
-                type="time"
-                value={closeTime}
-                disabled={!enabled || savingRule === "reservations_close_time"}
-                onChange={(e) => { setCloseTime(e.target.value); setHoursError(null); }}
-                onBlur={() => saveHours("reservations_close_time", closeTime)}
-                className={inputCls}
-              />
-            </div>
+
+        {windows.length === 0 ? (
+          <div className="px-4 py-5 text-center text-[13px] text-[#9C9485]">
+            No time windows yet. Add one below.
           </div>
-          {hoursError && (
-            <p className="text-[12px] text-[#DC2626]">{hoursError}</p>
-          )}
-          <p className="text-[11px] text-[#9C9485] leading-relaxed">
-            Slots are generated every 30 minutes. Defaults are derived from your restaurant&apos;s opening hours minus a 90-minute kitchen buffer.
-          </p>
+        ) : (
+          <div>
+            {windows
+              .slice()
+              .sort((a, b) => a.display_order - b.display_order)
+              .map((w) => (
+                <TimeWindowRow
+                  key={w.id}
+                  window={w}
+                  menuId={menuId}
+                  disabled={!enabled}
+                  onUpdate={(updated) => setWindows((prev) => prev.map((x) => x.id === updated.id ? updated : x))}
+                  onDelete={(id) => setWindows((prev) => prev.filter((x) => x.id !== id))}
+                  showToast={showToast}
+                />
+              ))}
+          </div>
+        )}
+
+        <div className="p-4">
+          <AddTimeWindowForm
+            menuId={menuId}
+            disabled={!enabled}
+            onAdd={(w) => setWindows((prev) => [...prev, w])}
+            showToast={showToast}
+          />
         </div>
       </div>
 
