@@ -2,6 +2,8 @@
 
 import { Star } from "lucide-react";
 import { ContactForm } from "@/components/listings/ContactForm";
+import { ReservationSheet } from "@/components/reservations/ReservationSheet";
+import type { ReservationsConfig } from "@/components/listings/detail/RestaurantDetail";
 import { cn } from "@/lib/utils";
 
 /* ── Type-specific CTA config ─────────────────────── */
@@ -60,6 +62,8 @@ interface MobileBookingBarProps {
   ticketTypes?: string[];
   menuSlug?: string | null;
   onDatesChange?: (checkIn: string, checkOut: string) => void;
+  /** Passed by RestaurantDetail when reservations_enabled = true */
+  reservationsConfig?: ReservationsConfig | null;
 }
 
 function MobileBookingBar({
@@ -74,9 +78,11 @@ function MobileBookingBar({
   ticketTypes,
   menuSlug,
   onDatesChange,
+  reservationsConfig,
 }: MobileBookingBarProps) {
   const cta = CTA_MAP[type] ?? DEFAULT_CTA;
   const isRestaurant = type === "restaurant";
+  const useRealReservations = isRestaurant && reservationsConfig?.enabled === true;
 
   function trackClick() {
     fetch("/api/analytics/track", {
@@ -109,13 +115,30 @@ function MobileBookingBar({
                     Menu
                   </a>
                 )}
-                <a
-                  href="#mobile-contact"
-                  onClick={trackClick}
-                  className="h-[36px] px-4 rounded-full text-[13px] font-bold bg-gradient-to-r from-amber to-amber2 text-dark flex items-center"
-                >
-                  Book a table
-                </a>
+                {/* Real ReservationSheet replaces scroll-to-form anchor when enabled */}
+                {useRealReservations && reservationsConfig ? (
+                  <ReservationSheet
+                    menuId={reservationsConfig.menuId}
+                    menuName={reservationsConfig.menuName}
+                    source="listing"
+                    timeWindows={reservationsConfig.timeWindows}
+                    areas={reservationsConfig.areas}
+                    maxPartySize={reservationsConfig.maxPartySize}
+                    maxAdvanceDays={reservationsConfig.maxAdvanceDays}
+                    leadTimeHours={reservationsConfig.leadTimeHours}
+                    restaurantPhone={reservationsConfig.restaurantPhone}
+                    triggerLabel="Book a table"
+                    triggerClassName="h-[36px] px-4 text-[13px]"
+                  />
+                ) : (
+                  <a
+                    href="#mobile-contact"
+                    onClick={trackClick}
+                    className="h-[36px] px-4 rounded-full text-[13px] font-bold bg-gradient-to-r from-amber to-amber2 text-dark flex items-center"
+                  >
+                    Book a table
+                  </a>
+                )}
               </div>
             </div>
           ) : (
@@ -142,24 +165,26 @@ function MobileBookingBar({
         </div>
       </div>
 
-      {/* ── Mobile booking form ────────────── */}
-      <div
-        id="mobile-contact"
-        className="lg:hidden max-w-[560px] mx-auto px-5 pb-24"
-      >
-        <div className="border border-border rounded-[32px] shadow-lg p-7 bg-white">
-          <ContactForm
-            listingId={listingId}
-            listingTitle={listingTitle}
-            listingType={type}
-            price={price}
-            priceUnit={priceUnit}
-            maxGuests={maxGuests}
-            ticketTypes={ticketTypes}
-            onDatesChange={onDatesChange}
-          />
+      {/* ── Mobile booking form (hidden when real reservations are enabled) ── */}
+      {!useRealReservations && (
+        <div
+          id="mobile-contact"
+          className="lg:hidden max-w-[560px] mx-auto px-5 pb-24"
+        >
+          <div className="border border-border rounded-[32px] shadow-lg p-7 bg-white">
+            <ContactForm
+              listingId={listingId}
+              listingTitle={listingTitle}
+              listingType={type}
+              price={price}
+              priceUnit={priceUnit}
+              maxGuests={maxGuests}
+              ticketTypes={ticketTypes}
+              onDatesChange={onDatesChange}
+            />
+          </div>
         </div>
-      </div>
+      )}
     </>
   );
 }

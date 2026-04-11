@@ -26,12 +26,18 @@ type Listing = {
   title: string;
   slug: { current: string };
   type: string;
+  subcategory: string | null;
   city: string;
   status: string;
   price: number;
   priceUnit: string;
   _createdAt: string;
 };
+
+// Restaurants appear as type="restaurant" OR type="experience" + subcategory="restaurants"
+function isRestaurantListing(l: Listing): boolean {
+  return l.type === "restaurant" || (l.type === "experience" && l.subcategory === "restaurants");
+}
 
 function formatPrice(price: number, priceUnit: string): string {
   const formatted = new Intl.NumberFormat("en-KE").format(price);
@@ -63,14 +69,15 @@ export default async function AdminListingsPage({
   const studioUrl =
     process.env.NEXT_PUBLIC_SANITY_STUDIO_URL ?? "http://localhost:3333";
 
-  // Fetch listings from Sanity and enquiry counts from Supabase in parallel
-  const [listings, { data: contactRequests }] = await Promise.all([
+  // Fetch listings from Sanity, enquiry counts, and menu data in parallel
+  const [listings, { data: contactRequests }, { data: menuData }] = await Promise.all([
     sanityClient.fetch<Listing[]>(
       `*[_type == "listing"] | order(_createdAt desc) {
-        _id, title, slug, type, city, status, price, priceUnit, _createdAt
+        _id, title, slug, type, subcategory, city, status, price, priceUnit, _createdAt
       }`
     ),
     adminClient.from("contact_requests").select("listing_id"),
+    adminClient.from("menus").select("listing_slug, reservations_enabled"),
   ]);
 
   // Build enquiry count map
@@ -78,6 +85,11 @@ export default async function AdminListingsPage({
   contactRequests?.forEach((r: { listing_id: string }) => {
     countMap.set(r.listing_id, (countMap.get(r.listing_id) ?? 0) + 1);
   });
+
+  // Build menu map keyed by listing_slug for reservation status lookup
+  const menuBySlug = new Map(
+    (menuData ?? []).map((m: { listing_slug: string | null; reservations_enabled: boolean }) => [m.listing_slug, m])
+  );
 
   // Apply filters
   const filtered = listings.filter((listing) => {
@@ -159,7 +171,7 @@ export default async function AdminListingsPage({
       {/* Table */}
       <div className="overflow-hidden rounded-2xl bg-white shadow-sm">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[900px]">
+          <table className="w-full min-w-[1000px]">
             <thead>
               <tr className="border-b border-[#F0EDE8]">
                 <th className="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-[#9C9485]">
@@ -181,6 +193,9 @@ export default async function AdminListingsPage({
                   Enquiries
                 </th>
                 <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-[#9C9485]">
+                  Reservations
+                </th>
+                <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-[#9C9485]">
                   Published
                 </th>
                 <th className="px-6 py-3 text-right text-[11px] font-semibold uppercase tracking-wide text-[#9C9485]">
@@ -192,7 +207,7 @@ export default async function AdminListingsPage({
               {filtered.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={8}
+                    colSpan={9}
                     className="px-6 py-12 text-center text-[13px] text-[#9C9485]"
                   >
                     No listings found.
@@ -201,6 +216,8 @@ export default async function AdminListingsPage({
               ) : (
                 filtered.map((listing) => {
                   const enquiryCount = countMap.get(listing._id) ?? 0;
+                  const isRestaurant = isRestaurantListing(listing);
+                  const menuInfo = isRestaurant ? menuBySlug.get(listing.slug.current) : undefined;
                   return (
                     <tr
                       key={listing._id}
@@ -224,11 +241,30 @@ export default async function AdminListingsPage({
                       <td className="px-4 py-3 text-[13px] text-[#16130C]">
                         {enquiryCount > 0 ? enquiryCount : "\u2014"}
                       </td>
+                      <td className="px-4 py-3">
+                        {isRestaurant ? (
+                          menuInfo?.reservations_enabled ? (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-[#7C3AED]/10 text-[#7C3AED]">On</span>
+                          ) : (
+                            <span className="text-[13px] text-[#9C9485]">\u2014</span>
+                          )
+                        ) : (
+                          <span className="text-[13px] text-[#F0EDE8]">\u2014</span>
+                        )}
+                      </td>
                       <td className="whitespace-nowrap px-4 py-3 text-[13px] text-[#9C9485]">
                         {formatDate(listing._createdAt)}
                       </td>
                       <td className="whitespace-nowrap px-6 py-3 text-right">
                         <div className="flex items-center justify-end gap-3">
+                          {isRestaurant && (
+                            <Link
+                              href={`/dashboard/listings/${listing._id}/reservations`}
+                              className="text-[13px] font-medium text-[#7C3AED] underline-offset-2 hover:underline"
+                            >
+                              Command center
+                            </Link>
+                          )}
                           <a
                             href={`${studioUrl}/structure/listing;${listing._id}`}
                             target="_blank"

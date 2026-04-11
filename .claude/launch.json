@@ -3,8 +3,8 @@
   "configurations": [
     {
       "name": "Next.js Web",
-      "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["--filter", "@klickenya/web", "dev"],
+      "runtimeExecutable": "/bin/zsh",
+      "runtimeArgs": ["-l", "-c", "/Users/patrikgiuliana/Library/pnpm/pnpm --filter @klickenya/web dev"],
       "port": 3000,
       "autoPort": true
     },

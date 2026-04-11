@@ -1,7 +1,7 @@
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { getAuthUser } from "../../_lib/auth";
+import { getAuthUser, getIsAdmin } from "../../_lib/auth";
 import { adminClient } from "@/lib/supabase/admin";
 import { sanityClient } from "@/lib/sanity/client";
 import { RoomManagementSection } from "./_components/RoomManagementSection";
@@ -18,13 +18,15 @@ export default async function PropertyDashboardPage({
   const { user } = await getAuthUser();
   if (!user) redirect("/login");
 
-  // Fetch property
-  const { data: property } = await adminClient
+  const isAdmin = await getIsAdmin(user.id);
+
+  // Fetch property — admin bypasses owner_id filter
+  let propertyQuery = adminClient
     .from("properties")
     .select("*")
-    .eq("id", id)
-    .eq("owner_id", user.id)
-    .single();
+    .eq("id", id);
+  if (!isAdmin) propertyQuery = propertyQuery.eq("owner_id", user.id);
+  const { data: property } = await propertyQuery.single();
 
   if (!property) notFound();
 

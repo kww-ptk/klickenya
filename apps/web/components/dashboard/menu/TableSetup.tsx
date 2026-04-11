@@ -13,9 +13,16 @@ interface RestaurantTable {
   display_order: number;
 }
 
+interface AreaOption {
+  id: string;
+  name: string;
+}
+
 interface TableSetupProps {
   menuId: string;
   showToast: (msg: string, type?: "success" | "error") => void;
+  /** Seating areas — when provided, floor section becomes a dropdown instead of free text */
+  areas?: AreaOption[];
 }
 
 /* ── Input style ───────────────────────────────────── */
@@ -30,6 +37,7 @@ interface TableRowProps {
   index: number;
   total: number;
   isEditing: boolean;
+  areas?: AreaOption[];
   onEdit: () => void;
   onCancelEdit: () => void;
   onSaveEdit: (updates: Partial<RestaurantTable>) => Promise<void>;
@@ -40,7 +48,7 @@ interface TableRowProps {
 
 function TableRow({
   table, index, total,
-  isEditing, onEdit, onCancelEdit, onSaveEdit,
+  isEditing, areas, onEdit, onCancelEdit, onSaveEdit,
   onDelete, onToggleActive, onMove,
 }: TableRowProps) {
   const [editNumber, setEditNumber]  = useState(table.table_number);
@@ -63,7 +71,7 @@ function TableRow({
     await onSaveEdit({
       table_number:  editNumber.trim(),
       capacity:      parseInt(editCap, 10) || 4,
-      floor_section: editFloor.trim() || null,
+      floor_section: editFloor || null,
     });
     setSaving(false);
   }
@@ -88,12 +96,25 @@ function TableRow({
             placeholder="Capacity"
             className={`${inputCls} w-[80px]`}
           />
-          <input
-            value={editFloor}
-            onChange={(e) => setEditFloor(e.target.value)}
-            placeholder="Floor section (optional)"
-            className={`${inputCls} flex-1 min-w-[120px]`}
-          />
+          {areas && areas.length > 0 ? (
+            <select
+              value={editFloor}
+              onChange={(e) => setEditFloor(e.target.value)}
+              className={`${inputCls} flex-1 min-w-[120px]`}
+            >
+              <option value="">No area</option>
+              {areas.map((a) => (
+                <option key={a.id} value={a.name}>{a.name}</option>
+              ))}
+            </select>
+          ) : (
+            <input
+              value={editFloor}
+              onChange={(e) => setEditFloor(e.target.value)}
+              placeholder="Floor section (optional)"
+              className={`${inputCls} flex-1 min-w-[120px]`}
+            />
+          )}
         </div>
         <div className="flex gap-2">
           <button
@@ -185,7 +206,7 @@ function TableRow({
 
 /* ── Main component ────────────────────────────────── */
 
-export function TableSetup({ menuId, showToast }: TableSetupProps) {
+export function TableSetup({ menuId, showToast, areas }: TableSetupProps) {
   const [tables, setTables]       = useState<RestaurantTable[]>([]);
   const [loading, setLoading]     = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -433,6 +454,7 @@ export function TableSetup({ menuId, showToast }: TableSetupProps) {
               index={index}
               total={sortedTables.length}
               isEditing={editingId === table.id}
+              areas={areas}
               onEdit={() => setEditingId(table.id)}
               onCancelEdit={() => setEditingId(null)}
               onSaveEdit={(updates) => handleSaveEdit(table.id, updates)}
@@ -466,12 +488,25 @@ export function TableSetup({ menuId, showToast }: TableSetupProps) {
               placeholder="Capacity"
               className={`${inputCls} w-[80px]`}
             />
-            <input
-              value={addFloor}
-              onChange={(e) => setAddFloor(e.target.value)}
-              placeholder="Main Hall (optional)"
-              className={`${inputCls} flex-1 min-w-[140px]`}
-            />
+            {areas && areas.length > 0 ? (
+              <select
+                value={addFloor}
+                onChange={(e) => setAddFloor(e.target.value)}
+                className={`${inputCls} flex-1 min-w-[140px]`}
+              >
+                <option value="">No area</option>
+                {areas.map((a) => (
+                  <option key={a.id} value={a.name}>{a.name}</option>
+                ))}
+              </select>
+            ) : (
+              <input
+                value={addFloor}
+                onChange={(e) => setAddFloor(e.target.value)}
+                placeholder="Floor section (optional)"
+                className={`${inputCls} flex-1 min-w-[140px]`}
+              />
+            )}
           </div>
           <div className="flex gap-2">
             <button

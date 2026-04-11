@@ -51,14 +51,31 @@ export default async function AdminHostDetailPage({ params }: PageProps) {
     l.type === "restaurant" || (l.type === "experience" && l.subcategory === "restaurants");
   const restaurantSlugs = assignedListings.filter(isRestaurant).map((l) => l.slug);
 
-  let menus: { id: string; slug: string; display_name: string | null; is_published: boolean; listing_slug: string | null }[] = [];
+  let menus: { id: string; slug: string; display_name: string | null; is_published: boolean; listing_slug: string | null; reservations_enabled: boolean }[] = [];
   if (restaurantSlugs.length > 0) {
     const { data } = await adminClient
       .from("menus")
-      .select("id, slug, display_name, is_published, listing_slug")
+      .select("id, slug, display_name, is_published, listing_slug, reservations_enabled")
       .in("slug", restaurantSlugs);
     menus = data ?? [];
   }
+
+  // Build slug → Sanity _id map so menu cards can link to the listing command center
+  const listingIdBySlug = new Map(assignedListings.map((l) => [l.slug, l._id]));
+
+  // Detect stay/rental listings and fetch their linked properties (for dashboard links)
+  const isStay = (l: { type: string }) => l.type === "stay" || l.type === "rental";
+  const staySlugs = assignedListings.filter(isStay).map((l) => l.slug);
+  let properties: { id: string; listing_slug: string | null }[] = [];
+  if (staySlugs.length > 0) {
+    const { data } = await adminClient
+      .from("properties")
+      .select("id, listing_slug")
+      .in("listing_slug", staySlugs);
+    properties = data ?? [];
+  }
+  // Build listing_slug → property id map
+  const propertyIdBySlug = new Map(properties.map((p) => [p.listing_slug, p.id]));
 
   const initials = (host.display_name ?? "?")
     .split(/\s+/)
@@ -179,6 +196,17 @@ export default async function AdminHostDetailPage({ params }: PageProps) {
                         </Link>
                       ) : null;
                     })()}
+                    {isStay(listing) && (() => {
+                      const propId = propertyIdBySlug.get(listing.slug);
+                      return propId ? (
+                        <Link
+                          href={`/dashboard/property/${propId}`}
+                          className="text-[12px] font-medium text-[#0D7377] hover:underline"
+                        >
+                          Dashboard ↗
+                        </Link>
+                      ) : null;
+                    })()}
                     <a
                       href={`${sanityStudioUrl}/structure/listing;${listing._id}`}
                       target="_blank"
@@ -215,11 +243,14 @@ export default async function AdminHostDetailPage({ params }: PageProps) {
                   <p className="text-[13px] font-medium text-[#16130C] truncate">{menu.display_name ?? menu.slug}</p>
                   <p className="text-[11px] text-[#9C9485] font-mono">/m/{menu.slug}</p>
                 </div>
-                <div className="flex items-center gap-2 shrink-0">
+                <div className="flex items-center gap-2 shrink-0 flex-wrap justify-end">
                   {menu.is_published ? (
                     <span className="text-[10px] font-bold text-[#16A34A] bg-[#16A34A]/8 px-2 py-0.5 rounded-full">Live</span>
                   ) : (
                     <span className="text-[10px] font-bold text-[#9C9485] bg-[#F4F1EC] px-2 py-0.5 rounded-full">Draft</span>
+                  )}
+                  {menu.reservations_enabled && (
+                    <span className="text-[10px] font-bold text-[#7C3AED] bg-[#7C3AED]/8 px-2 py-0.5 rounded-full">Reservations</span>
                   )}
                   <Link
                     href={`/admin/hosts/${id}/menu/${menu.id}`}
@@ -227,6 +258,14 @@ export default async function AdminHostDetailPage({ params }: PageProps) {
                   >
                     Edit menu
                   </Link>
+                  {menu.listing_slug && listingIdBySlug.has(menu.listing_slug) && (
+                    <Link
+                      href={`/dashboard/listings/${listingIdBySlug.get(menu.listing_slug)}/reservations`}
+                      className="text-[12px] font-semibold text-[#7C3AED] hover:underline"
+                    >
+                      Dashboard ↗
+                    </Link>
+                  )}
                   {menu.is_published && (
                     <Link
                       href={`/m/${menu.slug}`}

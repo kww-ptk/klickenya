@@ -53,17 +53,39 @@ interface MenuBuilderProps {
   menu: MenuData;
   scanCount: number;
   tableOrdering: boolean;
+  /** Reservation settings — used only to show the toggle status */
+  reservationsEnabled?: boolean;
+  defaultReservationDuration?: number;
+  reservationsLeadTimeHours?: number;
+  reservationsMaxPartySize?: number;
+  reservationsMaxAdvanceDays?: number;
+  listingSlug?: string | null;
+  listingCity?: string | null;
+  /** Sanity listing _id — links to /dashboard/listings/[id]/reservations */
+  listingId?: string | null;
   backHref?: string;
   backLabel?: string;
 }
 
 /* ── Component ─────────────────────────────────────── */
 
-export function MenuBuilder({ menu: initialMenu, scanCount, tableOrdering: initialTableOrdering, backHref, backLabel }: MenuBuilderProps) {
+export function MenuBuilder({
+  menu: initialMenu,
+  scanCount,
+  tableOrdering: initialTableOrdering,
+  reservationsEnabled: initialReservationsEnabled = false,
+  listingSlug,
+  listingCity,
+  listingId,
+  backHref,
+  backLabel,
+}: MenuBuilderProps) {
   const router = useRouter();
   const [menu, setMenu] = useState<MenuData>(initialMenu);
   const [tableOrdering, setTableOrdering] = useState(initialTableOrdering);
+  const [reservationsEnabled, setReservationsEnabled] = useState(initialReservationsEnabled);
   const [togglingOrdering, setTogglingOrdering] = useState(false);
+  const [togglingReservations, setTogglingReservations] = useState(false);
   const [editingForm, setEditingForm] = useState<{
     type: "add" | "edit";
     sectionId: string;
@@ -323,6 +345,42 @@ export function MenuBuilder({ menu: initialMenu, scanCount, tableOrdering: initi
     }
   }, [menu.id, tableOrdering, showToast]);
 
+  /* ── Reservations toggle ─────────────────────────── */
+
+  const toggleReservations = useCallback(async () => {
+    const enabling = !reservationsEnabled;
+    setTogglingReservations(true);
+    try {
+      const res = await fetch("/api/menu/settings", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          menu_id: menu.id,
+          reservations_enabled: enabling,
+          // Pass listing_city so the settings PATCH can revalidatePath for the listing page.
+          // TODO: Store listing_city on the menus table so future PATCH calls don't
+          //       need to be told where their own listing lives.
+          listing_city: listingCity ?? undefined,
+        }),
+      });
+
+      if (!res.ok) throw new Error();
+
+      const data = await res.json();
+      setReservationsEnabled(enabling);
+
+      if (enabling && data.seeded_areas) {
+        showToast("Reservations enabled — Indoor & Terrace areas created");
+      } else {
+        showToast(enabling ? "Reservations enabled" : "Reservations disabled");
+      }
+    } catch {
+      showToast("Failed to update reservations setting", "error");
+    } finally {
+      setTogglingReservations(false);
+    }
+  }, [menu.id, reservationsEnabled, listingCity, showToast]);
+
   /* ── Publish ─────────────────────────────────────── */
 
   const togglePublish = useCallback(async () => {
@@ -458,6 +516,38 @@ export function MenuBuilder({ menu: initialMenu, scanCount, tableOrdering: initi
                 Kitchen view →
               </Link>
             </>
+          )}
+        </div>
+
+        {/* Table reservations — compact card; full settings live in listing dashboard */}
+        <div className="bg-white rounded-xl lg:rounded-2xl border border-[#E2DDD5] p-4 lg:p-5 shadow-sm">
+          <div className="flex items-center justify-between mb-1">
+            <p className="text-[14px] font-semibold text-[#16130C]">Table reservations</p>
+            <Toggle
+              checked={reservationsEnabled}
+              onChange={toggleReservations}
+              disabled={togglingReservations}
+            />
+          </div>
+          <p className="text-[12px] text-[#9C9485]">
+            {reservationsEnabled
+              ? "Active — guests can request tables via your listing and menu page."
+              : "Enable to accept table reservation requests from guests."}
+          </p>
+          {reservationsEnabled && listingId && (
+            <Link
+              href={`/dashboard/listings/${listingId}/reservations`}
+              className="mt-3 flex items-center justify-center gap-2 w-full h-[36px] rounded-full bg-[#16130C] text-white text-[13px] font-bold hover:bg-[#2A2520] transition-colors"
+            >
+              Manage reservations →
+            </Link>
+          )}
+          {reservationsEnabled && !listingId && (
+            <div className="mt-3 p-3 rounded-lg bg-[#E8A020]/8 border border-[#E8A020]/20">
+              <p className="text-[12px] text-[#5E5848]">
+                <span className="font-bold">Active.</span> Configure booking rules and seating areas in your listing&apos;s Reservations → Settings tab.
+              </p>
+            </div>
           )}
         </div>
       </div>

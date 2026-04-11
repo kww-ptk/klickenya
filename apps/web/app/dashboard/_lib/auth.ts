@@ -1,5 +1,6 @@
 import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
+import { adminClient } from "@/lib/supabase/admin";
 
 /** Cached per-request: returns { user, supabase } */
 export const getAuthUser = cache(async () => {
@@ -29,3 +30,14 @@ export const getHostProfile = cache(async (userId: string) => {
     .single();
   return data;
 });
+
+/** Returns true if the authenticated user has role = "admin".
+ *  Uses adminClient (service role) so the check cannot be spoofed via RLS. */
+export async function getIsAdmin(userId: string): Promise<boolean> {
+  const { data } = await adminClient
+    .from("users")
+    .select("role")
+    .eq("id", userId)
+    .single();
+  return data?.role === "admin";
+}

@@ -17,6 +17,7 @@ export default async function DashboardListingsPage() {
     title: string;
     slug: string;
     type: string;
+    subcategory: string | null;
     city: string | null;
     imageUrl: string | null;
     isVerified: boolean;
@@ -24,10 +25,10 @@ export default async function DashboardListingsPage() {
 
   try {
     const raw = await sanityClient.fetch<
-      { _id: string; title: string; slug: string; type: string; city: string | null; coverPhoto: { asset?: { url?: string } } | null; isVerified: boolean }[]
+      { _id: string; title: string; slug: string; type: string; subcategory: string | null; city: string | null; coverPhoto: { asset?: { url?: string } } | null; isVerified: boolean }[]
     >(
       `*[_type == "listing" && (hostId == $hostId || host._ref == $sanityHostId)] | order(_createdAt desc) {
-        _id, title, "slug": slug.current, type, city,
+        _id, title, "slug": slug.current, type, subcategory, city,
         "coverPhoto": photos[0]{ asset->{ _id, url } },
         isVerified
       }`,
@@ -38,6 +39,7 @@ export default async function DashboardListingsPage() {
       title: l.title,
       slug: l.slug,
       type: l.type,
+      subcategory: l.subcategory ?? null,
       city: l.city,
       imageUrl: l.coverPhoto?.asset?.url ? `${l.coverPhoto.asset.url}?w=400&auto=format` : null,
       isVerified: l.isVerified,
@@ -132,6 +134,15 @@ export default async function DashboardListingsPage() {
                   </div>
                 </div>
                 <div className="flex gap-2 mt-2.5 pt-2.5 border-t border-[#F4F1EC]">
+                  {/* "Open dashboard" for restaurant listings only */}
+                  {(listing.type === "restaurant" || listing.subcategory === "restaurants") && (
+                    <Link
+                      href={`/dashboard/listings/${listing._id}`}
+                      className="flex-1 h-[40px] lg:h-[44px] flex items-center justify-center text-[13px] lg:text-[14px] font-semibold text-[#E8A020] bg-[#E8A020]/8 rounded-lg lg:rounded-xl hover:bg-[#E8A020]/15 transition-colors"
+                    >
+                      Open dashboard →
+                    </Link>
+                  )}
                   <Link
                     href={href}
                     className="flex-1 h-[40px] lg:h-[44px] flex items-center justify-center text-[13px] lg:text-[14px] font-semibold text-[#6B2D8B] bg-[#6B2D8B]/8 rounded-lg lg:rounded-xl hover:bg-[#6B2D8B]/15 transition-colors"
