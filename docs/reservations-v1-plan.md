@@ -1070,3 +1070,210 @@ The WhatsApp URL is still generated and returned — admin can paste it manually
 
 5. **`approved_by` is set to `userId` on approve** (line 315 of `reservations/[id]/route.ts`). When an admin approves, `approved_by` would be set to the admin's user ID, not the restaurant owner's. This is actually correct behaviour for an audit trail but worth noting — the restaurant owner won't see "who approved" in the UI today, but if that's added in V2, admin approvals will be attributable.
 
+---
+
+## Admin Panel Inventory (Prompt 10.6)
+
+> Discovery pass only — no code changes. Catalogs every /app/admin/ page, what it does, and where it's stale relative to the restaurant/reservation schema built in Prompts 7–10.
+
+---
+
+### 1. Navigation & Layout Shell
+
+**File:** `apps/web/app/admin/layout.tsx`
+
+Persistent sidebar (desktop) + bottom nav (mobile). Unread/pending badge counts are fetched on every layout load:
+
+```typescript
+// Tables queried on layout mount for badge counts
+contact_requests       (status = "new")
+property_enquiries     (status = "new")
+listing_requests       (status = "new")
+general_contacts       (all)
+ambassador_applications (status = "new")
+claim_requests         (status in ["pending", "verified"])
+newsletter_subscribers (total count)
+events_pending         (status = "pending")
+```
+
+**Nav links in order:** Dashboard · Contact Requests · Listing Requests · General Contacts · Property Enquiries · Bookings · Guests · Ambassadors · Verification Requests · Events · Hosts · Analytics · Newsletter Subscribers · Listings · Real Estate · Blog Posts (Sanity Studio external link) · Settings
+
+No restaurant-specific nav items. No reservations nav item.
+
+---
+
+### 2. Admin Dashboard Home
+
+**File:** `apps/web/app/admin/page.tsx`  
+**Page title:** "Dashboard"
+
+Stats cards + recent-activity tables. Queries: contact_requests, property_enquiries, listing_requests, general_contacts, ambassador_applications, newsletter_subscribers, claim_requests, events_pending, Sanity listings/blog post counts.
+
+**Restaurant/reservation relevance: NONE.** No reservation metrics, no restaurant-specific widgets.
+
+---
+
+### 3. Hosts Module
+
+#### `/admin/hosts` — Hosts list
+**File:** `apps/web/app/admin/hosts/page.tsx`  
+**Queries:** host_profiles, Sanity listing counts per host.  
+**Renders:** Table of all hosts with listing count and "View →" link.  
+**Restaurant relevance:** Indirect entry point only.
+
+#### `/admin/hosts/[id]` — Host detail
+**File:** `apps/web/app/admin/hosts/[id]/page.tsx`
+
+This is the **primary admin entry point for restaurant management today.** Key fetch:
+
+```typescript
+// Lines 49–61
+const restaurantSlugs = assignedListings.filter(isRestaurant).map((l) => l.slug);
+const { data } = await adminClient
+  .from("menus")
+  .select("id, slug, display_name, is_published, listing_slug")
+  .in("slug", restaurantSlugs);
+```
+
+Renders: Host details → Assigned listings (all types) → **Menu Management section** with "Edit menu" link per restaurant → Assign a listing interface.
+
+The "Edit menu" link goes to `/admin/hosts/[id]/menu/[menuId]`. There is **no link to `/dashboard/listings/[id]`** — the listing command center is unreachable from admin today.
+
+No badge or indicator for whether reservations_enabled is true on any menu.
+
+#### `/admin/hosts/[id]/menu/[menuId]` — Menu editor
+**File:** `apps/web/app/admin/hosts/[id]/menu/[menuId]/page.tsx`
+
+The only admin page that goes into a specific restaurant. Fetches:
+
+```typescript
+// Lines 18–31 — does NOT fetch any reservation columns
+await adminClient
+  .from("menus")
+  .select(`
+    id, slug, name, is_published, table_ordering,
+    menu_sections ( id, title, display_order, is_visible,
+      menu_items ( id, name, description, price_kes,
+        dietary_tags, is_available, display_order, photo_url ) )
+  `)
+  .eq("id", menuId)
+  .single();
+```
+
+Delegates to the shared `MenuBuilder` component. MenuBuilder shows a `reservations_enabled` toggle (calls `PATCH /api/menu/settings`) but only as an on/off switch with a hardcoded note: "Configure full reservation settings in the listing dashboard." The link to the listing dashboard is only rendered when `listingId` is passed as a prop — **the admin page does not pass `listingId`,** so the link is invisible in admin context.
+
+**STALE.** Does not query or display: `reservations_enabled` status badge, `default_reservation_duration`, `reservations_lead_time_hours`, `reservations_max_party_size`, `reservations_max_advance_days`, `restaurant_areas`, `restaurant_tables`, `reservation_time_windows`.
+
+---
+
+### 4. Bookings Module
+
+**Files:** `apps/web/app/admin/bookings/page.tsx` + `/[id]/page.tsx`  
+**Page title:** "All Bookings"
+
+Queries: bookings (with nested properties + rooms), booking_fees, booking_payments.  
+Searchable/filterable by status (Confirmed, Checked in, Checked out, Cancelled) and payment status.
+
+**Restaurant/reservation relevance: NONE.** This is strictly property stay bookings (`bookings` table). The restaurant `reservations` table is entirely separate and has NO admin UI equivalent.
+
+---
+
+### 5. Guests Module
+
+**File:** `apps/web/app/admin/guests/page.tsx`  
+Queries: bookings + contact_requests aggregated per guest user.  
+**Restaurant/reservation relevance: NONE.**
+
+---
+
+### 6. Listings Module
+
+**File:** `apps/web/app/admin/listings/page.tsx`  
+**Page title:** "Listings"
+
+Reads all Sanity listings. Has a type filter that includes "restaurant." Links to Sanity Studio edit or the public listing page. **No links to `/dashboard/listings/[id]` or any reservation management.**
+
+**STALE / STUB.** Shows restaurants but provides zero management capability for the new restaurant features. No reservation status column, no "Open command center" link.
+
+---
+
+### 7. Other Modules (No Restaurant Relevance)
+
+| Page | Purpose | Tables |
+|---|---|---|
+| `/admin/contact-requests` | Inbound contact form submissions | contact_requests |
+| `/admin/general-contacts` | General platform contact messages | general_contacts |
+| `/admin/property-enquiries` | Stay property enquiries | property_enquiries |
+| `/admin/listing-requests` | New listing applications | listing_requests |
+| `/admin/claims` | Listing verification/ownership claims | claim_requests |
+| `/admin/events` | Event submission review | events_pending |
+| `/admin/ambassadors` | Ambassador program applications | ambassador_applications |
+| `/admin/analytics` | Platform-wide listing view analytics | listing_events |
+| `/admin/real-estate` | Real estate property listings (Sanity) | Sanity |
+| `/admin/newsletter` | Newsletter subscriber management | newsletter_subscribers |
+| `/admin/settings` | Service status, webhook config | env vars only |
+
+None of these touch restaurants, menus, reservations, or the new schema tables.
+
+---
+
+### 8. Admin UI Patterns
+
+**Entity index pages:** Table (paginated) with search/filter and row-level "View →" link. Standard pattern across bookings, guests, hosts, claims.
+
+**Entity detail pages:** Info card at top, nested related entities below, action buttons or API calls for status changes.
+
+**Shared component reuse:** Admin menu editor reuses `MenuBuilder` directly — same component as owner dashboard. This is the only case of shared UI between admin and owner surfaces.
+
+**Admin chrome:** All admin pages render inside the layout with the sidebar nav. No "admin banner" or visual marker on pages that admin reaches via the owner flow.
+
+**Authentication:** Middleware enforces `role === "admin"` at the edge for all `/admin/*` routes. Individual pages don't re-check role (rely on middleware).
+
+---
+
+### 9. Gap Analysis
+
+#### Blocker — Admin cannot reach the listing command center at all
+
+The listing command center at `/dashboard/listings/[id]` (reservations dashboard, areas CRUD, booking rules, ordering tables, bookable hours) is completely unreachable from the admin panel. The only path from admin to a restaurant is `/admin/hosts/[id]/menu/[menuId]` which shows only the menu builder. No bypass exists yet in `dashboard/listings/[id]/layout.tsx` (the Sanity ownership query returns notFound() for admin).
+
+#### Blocker — No platform-wide reservations dashboard
+
+The admin `bookings` module covers property stays only. There is no `/admin/reservations` equivalent for restaurant table reservations. Admin has no visibility into pending/confirmed/cancelled reservations across all restaurants without navigating into each one individually.
+
+#### Stale — Admin menu editor missing reservation config
+
+`/admin/hosts/[id]/menu/[menuId]` fetches menus but ignores all new columns (`reservations_enabled` status, duration, lead time, party size, advance days). The MenuBuilder toggle exists but the link to full reservation config is suppressed because `listingId` is not passed as a prop. An admin enabling reservations from this page has no way to configure the settings.
+
+#### Stale — Listings page has no reservation status
+
+`/admin/listings` shows all restaurants but no column for `reservations_enabled`. An admin trying to understand which restaurants have reservations active must check each one individually.
+
+#### Stale — Host detail page has no reservation badge
+
+`/admin/hosts/[id]` shows menu cards but no indicator of whether reservations are turned on. Admin needs to click into the menu editor to find out.
+
+#### Nice-to-have — Dashboard has no reservation metrics
+
+Admin dashboard home shows stay booking counts but nothing for restaurant reservations. Adding a "Pending reservations this week" stat card would give platform-level visibility.
+
+---
+
+### 10. Architecture Recommendation
+
+**Recommendation: Deep-link (hybrid) approach.**
+
+The admin panel already reuses owner components (MenuBuilder) rather than building parallel UI. The stays Bookings module is admin-native because admins genuinely need cross-property booking views — that use case doesn't translate to restaurant reservations at V1 scale. The right split:
+
+**(a) Deep-link for individual restaurant management.**  
+Add admin bypass to `layout.tsx` + `reservations/page.tsx` (per Prompt 10.5 recommendation). Admin navigates: `/admin/hosts/[id]` → "Open listing dashboard" link → `/dashboard/listings/[id]` with bypass active + admin banner. Admin sees and edits everything the owner sees using the same UI. Zero duplication.
+
+**(b) Add two admin-native cross-restaurant pages where admin needs platform views:**
+1. **`/admin/reservations`** — all reservations across all restaurants, filterable by status/date/restaurant. Same pattern as `/admin/bookings`. Add nav badge for pending reservations.
+2. **Enrich `/admin/listings`** — add `reservations_enabled` status column and "Open command center" link per restaurant row.
+
+**(c) Fix the broken listingId prop in admin menu editor.**  
+Pass `listingId` to `MenuBuilder` in `/admin/hosts/[id]/menu/[menuId]` so the "Configure full reservation settings" link appears for admins. One-line fix.
+
+This hybrid gives admin full depth (via deep-link) and breadth (via the new reservations index page) without duplicating any of the owner-facing management UI.
+
