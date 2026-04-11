@@ -23,7 +23,7 @@ export default async function AdminMenuBuilderPage({ params }: PageProps) {
         id, title, display_order, is_visible,
         menu_items (
           id, name, description, price_kes,
-          dietary_tags, is_available, display_order, photo_url
+          dietary_tags, is_available, is_featured, display_order, photo_url
         )
       )
     `
