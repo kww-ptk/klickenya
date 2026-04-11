@@ -63,6 +63,20 @@ export default async function AdminHostDetailPage({ params }: PageProps) {
   // Build slug → Sanity _id map so menu cards can link to the listing command center
   const listingIdBySlug = new Map(assignedListings.map((l) => [l.slug, l._id]));
 
+  // Detect stay/rental listings and fetch their linked properties (for dashboard links)
+  const isStay = (l: { type: string }) => l.type === "stay" || l.type === "rental";
+  const staySlugs = assignedListings.filter(isStay).map((l) => l.slug);
+  let properties: { id: string; listing_slug: string | null }[] = [];
+  if (staySlugs.length > 0) {
+    const { data } = await adminClient
+      .from("properties")
+      .select("id, listing_slug")
+      .in("listing_slug", staySlugs);
+    properties = data ?? [];
+  }
+  // Build listing_slug → property id map
+  const propertyIdBySlug = new Map(properties.map((p) => [p.listing_slug, p.id]));
+
   const initials = (host.display_name ?? "?")
     .split(/\s+/)
     .map((w: string) => w[0])
@@ -179,6 +193,17 @@ export default async function AdminHostDetailPage({ params }: PageProps) {
                           className="text-[12px] font-medium text-[#0D7377] hover:underline"
                         >
                           Menu
+                        </Link>
+                      ) : null;
+                    })()}
+                    {isStay(listing) && (() => {
+                      const propId = propertyIdBySlug.get(listing.slug);
+                      return propId ? (
+                        <Link
+                          href={`/dashboard/property/${propId}`}
+                          className="text-[12px] font-medium text-[#0D7377] hover:underline"
+                        >
+                          Dashboard ↗
                         </Link>
                       ) : null;
                     })()}
