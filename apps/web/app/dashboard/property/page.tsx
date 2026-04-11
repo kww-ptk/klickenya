@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { getAuthUser } from "../_lib/auth";
+import { getAuthUser, getIsAdmin } from "../_lib/auth";
 import { adminClient } from "@/lib/supabase/admin";
 import { UnifiedCalendarWrapper } from "./calendar/_components/UnifiedCalendarWrapper";
 
@@ -18,11 +18,15 @@ export default async function PropertyPMSPage() {
   const { user } = await getAuthUser();
   if (!user) redirect("/login");
 
-  const { data: properties } = await adminClient
+  const isAdmin = await getIsAdmin(user.id);
+
+  // Admin bypasses owner_id filter — sees all platform properties
+  let propertiesQuery = adminClient
     .from("properties")
     .select("id, name, property_type, city, is_active")
-    .eq("owner_id", user.id)
     .order("created_at", { ascending: true });
+  if (!isAdmin) propertiesQuery = propertiesQuery.eq("owner_id", user.id);
+  const { data: properties } = await propertiesQuery;
 
   /* ── No properties yet ── */
   if (!properties || properties.length === 0) {
