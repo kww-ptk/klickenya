@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { getAuthUser, getHostProfile } from "../../../_lib/auth";
+import { getAuthUser, getHostProfile, getIsAdmin } from "../../../_lib/auth";
 import { adminClient } from "@/lib/supabase/admin";
 import { sanityClient } from "@/lib/sanity/client";
 import { fetchReservations } from "@/app/api/menu/reservations/_lib/queries";
@@ -16,32 +16,38 @@ export default async function ReservationsPage({
   const { user } = await getAuthUser();
   if (!user) redirect("/login");
 
-  const hostProfile = await getHostProfile(user.id);
-  if (!hostProfile) redirect("/dashboard");
+  const isAdmin = await getIsAdmin(user.id);
 
-  // Fetch listing ownership (layout already validated, but we need slug + city for URLs)
+  const hostProfile = await getHostProfile(user.id);
+  // Admin users may not have a host_profile — only redirect non-admins
+  if (!hostProfile && !isAdmin) redirect("/dashboard");
+
+  // Fetch listing — admin bypasses ownership filter
   const listing = await sanityClient.fetch<{
     slug: string;
     city: string | null;
   } | null>(
-    `*[_id == $id && (hostId == $userId || host._ref == $sanityHostId)][0]{
-      "slug": slug.current, city
-    }`,
-    { id, userId: user.id, sanityHostId: hostProfile.sanity_host_id ?? "" },
+    isAdmin
+      ? `*[_id == $id][0]{ "slug": slug.current, city }`
+      : `*[_id == $id && (hostId == $userId || host._ref == $sanityHostId)][0]{
+          "slug": slug.current, city
+        }`,
+    { id, userId: user.id, sanityHostId: hostProfile?.sanity_host_id ?? "" },
   );
 
   if (!listing) redirect("/dashboard/listings");
 
-  // Fetch linked menu (needs reservations_enabled + slug + booking rules + ordering flag)
+  // Fetch linked menu — admin bypasses business_id ownership filter
+  let menuQuery = adminClient
+    .from("menus")
+    .select(
+      "id, name, slug, reservations_enabled, table_ordering, default_reservation_duration, reservations_lead_time_hours, reservations_max_party_size, reservations_max_advance_days",
+    )
+    .eq("listing_slug", listing.slug);
+  if (!isAdmin) menuQuery = menuQuery.eq("business_id", user.id);
+
   const { data: menu } = listing.slug
-    ? await adminClient
-        .from("menus")
-        .select(
-          "id, name, slug, reservations_enabled, table_ordering, default_reservation_duration, reservations_lead_time_hours, reservations_max_party_size, reservations_max_advance_days",
-        )
-        .eq("listing_slug", listing.slug)
-        .eq("business_id", user.id)
-        .maybeSingle()
+    ? await menuQuery.maybeSingle()
     : { data: null };
 
   // Guard: reservations not enabled → redirect to overview

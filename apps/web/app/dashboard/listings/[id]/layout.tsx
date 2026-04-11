@@ -1,6 +1,6 @@
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
-import { getAuthUser, getHostProfile } from "../../_lib/auth";
+import { getAuthUser, getHostProfile, getIsAdmin } from "../../_lib/auth";
 import { adminClient } from "@/lib/supabase/admin";
 import { sanityClient } from "@/lib/sanity/client";
 import { ListingTabNav } from "@/components/dashboard/listings/ListingTabNav";
@@ -40,10 +40,13 @@ export default async function ListingDashboardLayout({
   const { user } = await getAuthUser();
   if (!user) redirect("/login");
 
-  const hostProfile = await getHostProfile(user.id);
-  if (!hostProfile) redirect("/dashboard");
+  const isAdmin = await getIsAdmin(user.id);
 
-  // Fetch Sanity listing with ownership check
+  const hostProfile = await getHostProfile(user.id);
+  // Admin users may not have a host_profile — only redirect non-admins
+  if (!hostProfile && !isAdmin) redirect("/dashboard");
+
+  // Fetch Sanity listing — admin bypasses ownership filter
   const listing = await sanityClient.fetch<{
     _id: string;
     title: string;
@@ -52,22 +55,21 @@ export default async function ListingDashboardLayout({
     subcategory: string | null;
     city: string | null;
   } | null>(
-    `*[
-      _id == $id &&
-      (_type == "listing" || _type == "event") &&
-      (hostId == $userId || host._ref == $sanityHostId)
-    ][0]{
-      _id,
-      title,
-      "slug": slug.current,
-      type,
-      subcategory,
-      city
-    }`,
+    isAdmin
+      ? `*[_id == $id && (_type == "listing" || _type == "event")][0]{
+          _id, title, "slug": slug.current, type, subcategory, city
+        }`
+      : `*[
+          _id == $id &&
+          (_type == "listing" || _type == "event") &&
+          (hostId == $userId || host._ref == $sanityHostId)
+        ][0]{
+          _id, title, "slug": slug.current, type, subcategory, city
+        }`,
     {
       id,
       userId: user.id,
-      sanityHostId: hostProfile.sanity_host_id ?? "",
+      sanityHostId: hostProfile?.sanity_host_id ?? "",
     },
   );
 
@@ -78,12 +80,12 @@ export default async function ListingDashboardLayout({
   //          Settings) here in a future migration. Currently redirected to the
   //          legacy PMS route.
   if (listing.type === "stay" || listing.type === "rental") {
-    const { data: property } = await adminClient
+    let stayQuery = adminClient
       .from("properties")
       .select("id")
-      .eq("listing_slug", listing.slug)
-      .eq("owner_id", user.id)
-      .maybeSingle();
+      .eq("listing_slug", listing.slug);
+    if (!isAdmin) stayQuery = stayQuery.eq("owner_id", user.id);
+    const { data: property } = await stayQuery.maybeSingle();
 
     if (property) {
       redirect(`/dashboard/property/${property.id}`);
@@ -106,15 +108,15 @@ export default async function ListingDashboardLayout({
   } | null = null;
 
   if (listing.slug) {
-    const { data } = await adminClient
+    // Admin bypasses business_id ownership filter
+    let menuQuery = adminClient
       .from("menus")
       .select(
         "id, name, listing_slug, table_ordering, reservations_enabled, ordering_enabled, takeaway_enabled, delivery_enabled",
       )
-      .eq("listing_slug", listing.slug)
-      .eq("business_id", user.id)
-      // cache: 'no-store' equivalent — toggle flips must reflect immediately
-      .maybeSingle();
+      .eq("listing_slug", listing.slug);
+    if (!isAdmin) menuQuery = menuQuery.eq("business_id", user.id);
+    const { data } = await menuQuery.maybeSingle();
     menu = data ?? null;
   }
 

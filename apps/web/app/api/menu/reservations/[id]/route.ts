@@ -367,6 +367,9 @@ export async function PATCH(
       : null;
 
     // ── Guest notification email (non-blocking — failure never fails the PATCH) ─
+    // NOTE: Guest emails (approve/decline/cancel) fire on admin actions identically
+    // to owner actions. Per April 2026 decision: admin = full superuser parity,
+    // no email guard. Do not add isAdmin suppression without revisiting this decision.
     const guestEmail = reservation.guest_email as string | null;
     if (
       guestEmail &&

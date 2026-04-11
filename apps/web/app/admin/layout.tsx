@@ -188,7 +188,7 @@ export default async function AdminLayout({
   } = await supabase.auth.getUser();
 
   // Fetch unread counts (using adminClient to bypass RLS)
-  const [contactRes, enquiryRes, listingReqRes, generalContactRes, ambassadorRes, claimRes, newsletterRes, eventsRes] = await Promise.all([
+  const [contactRes, enquiryRes, listingReqRes, generalContactRes, ambassadorRes, claimRes, newsletterRes, eventsRes, reservationsRes] = await Promise.all([
     adminClient
       .from("contact_requests")
       .select("id", { count: "exact", head: true })
@@ -219,6 +219,10 @@ export default async function AdminLayout({
       .from("events_pending")
       .select("id", { count: "exact", head: true })
       .eq("status", "pending"),
+    adminClient
+      .from("reservations")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "pending"),
   ]);
 
   const unreadContacts = contactRes.count ?? 0;
@@ -229,6 +233,7 @@ export default async function AdminLayout({
   const pendingClaims = claimRes.count ?? 0;
   const totalSubscribers = newsletterRes.count ?? 0;
   const pendingEvents = eventsRes.count ?? 0;
+  const pendingReservations = reservationsRes.count ?? 0;
 
   const sanityStudioUrl =
     process.env.NEXT_PUBLIC_SANITY_STUDIO_URL || "http://localhost:3333";
@@ -287,6 +292,12 @@ export default async function AdminLayout({
             href="/admin/bookings"
             label="Bookings"
             icon={<CalendarIcon />}
+          />
+          <AdminNavLink
+            href="/admin/reservations"
+            label="Reservations"
+            icon={<CalendarIcon />}
+            badge={pendingReservations}
           />
           <AdminNavLink
             href="/admin/guests"
