@@ -917,6 +917,7 @@ api/admin/ai/draft-reply/
 - `app/api/menu/tables/route.ts`
 - `app/api/menu/reservations/route.ts` (GET)
 - `app/api/menu/reservations/[id]/route.ts` (PATCH)
+- `app/api/menu/time-windows/route.ts` (GET/POST/PATCH/DELETE — added Prompt 10 multiple-windows)
 - `app/api/menu/sections/route.ts`
 - `app/api/menu/items/route.ts`
 - `app/api/menu/orders/route.ts`
@@ -934,6 +935,7 @@ No `requireAdmin`, `admin_only`, or `hasAdminAccess` patterns exist anywhere. `a
 | `GET/POST/PATCH/DELETE /api/menu/areas` | `getMenuAuth()` + `verifyMenuAccess()` | ✅ YES — via `verifyMenuAccess` |
 | `PATCH /api/menu/settings` | `getMenuAuth()` + `verifyMenuAccess()` | ✅ YES — via `verifyMenuAccess` |
 | `GET/POST/PATCH/DELETE /api/menu/tables` | `getMenuAuth()` + `verifyMenuAccess()` | ✅ YES — via `verifyMenuAccess` |
+| `GET/POST/PATCH/DELETE /api/menu/time-windows` | `getMenuAuth()` + `verifyMenuAccess()` | ✅ YES — via `verifyMenuAccess` |
 | `app/dashboard/listings/[id]/layout.tsx` | Sanity ownership query | ❌ NO bypass |
 | `app/dashboard/listings/[id]/reservations/page.tsx` | Sanity ownership + `business_id` filter | ❌ NO bypass |
 
