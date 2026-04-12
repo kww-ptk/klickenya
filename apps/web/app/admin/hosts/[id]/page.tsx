@@ -36,11 +36,20 @@ export default async function AdminHostDetailPage({ params }: PageProps) {
     photoUrl = sanityHost?.photoUrl ?? null;
   }
 
-  // Fetch assigned listings from Sanity
+  // Fetch assigned listings from Sanity.
+  // Three ways a listing can be linked to this host:
+  //   1. hostId == user_id  (forward field, set on listing)
+  //   2. host._ref == sanity_host_id  (reference field, set on listing)
+  //   3. _id in host document's listings[] array  (inverse array, always populated on assign)
+  // Condition 3 catches listings assigned before hostId/host._ref were written correctly.
   const assignedListings = await sanityClient.fetch<
     { _id: string; title: string; type: string; subcategory: string | null; city: string | null; slug: string; isVerified: boolean }[]
   >(
-    `*[_type == "listing" && (hostId == $hostId || host._ref == $sanityHostId)] | order(_createdAt desc) {
+    `*[_type == "listing" && (
+      hostId == $hostId
+      || host._ref == $sanityHostId
+      || (_type == "listing" && _id in *[_type == "host" && _id == $sanityHostId][0].listings[]._ref)
+    )] | order(_createdAt desc) {
       _id, title, type, subcategory, city, "slug": slug.current, isVerified
     }`,
     { hostId: host.user_id, sanityHostId: host.sanity_host_id ?? "" }

@@ -132,7 +132,11 @@ export default async function DashboardLayout({
       ),
       (async () => {
         const listingIds = await sanityClient.fetch<string[]>(
-          `*[_type == "listing" && (hostId == $hostId || host._ref == $sanityHostId)]._id`,
+          `*[_type == "listing" && (
+            hostId == $hostId
+            || host._ref == $sanityHostId
+            || _id in *[_type == "host" && _id == $sanityHostId][0].listings[]._ref
+          )]._id`,
           { hostId: user.id, sanityHostId: hostProfile.sanity_host_id }
         );
         if (listingIds.length === 0) return 0;

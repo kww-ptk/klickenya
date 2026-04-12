@@ -27,7 +27,11 @@ export default async function DashboardListingsPage() {
     const raw = await sanityClient.fetch<
       { _id: string; title: string; slug: string; type: string; subcategory: string | null; city: string | null; coverPhoto: { asset?: { url?: string } } | null; isVerified: boolean }[]
     >(
-      `*[_type == "listing" && (hostId == $hostId || host._ref == $sanityHostId)] | order(_createdAt desc) {
+      `*[_type == "listing" && (
+        hostId == $hostId
+        || host._ref == $sanityHostId
+        || _id in *[_type == "host" && _id == $sanityHostId][0].listings[]._ref
+      )] | order(_createdAt desc) {
         _id, title, "slug": slug.current, type, subcategory, city,
         "coverPhoto": photos[0]{ asset->{ _id, url } },
         isVerified
