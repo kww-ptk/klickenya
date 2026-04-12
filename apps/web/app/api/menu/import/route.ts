@@ -100,7 +100,14 @@ Return this exact structure:
 
 Rules:
 - price_kes must be a number (no currency symbols). If price is ambiguous or missing, use 0.
-- dietary_tags must be an array of strings from: ["Vegetarian","Vegan","Gluten-free","Halal","Spicy","Contains nuts","Contains dairy","Contains eggs","Contains shellfish","Contains soy","Contains sesame"]
+- dietary_tags must be an array of short codes ONLY from this list: ["V","VG","GF","H","S","DF"]
+  V  = Vegetarian (no meat/fish)
+  VG = Vegan (no animal products at all)
+  GF = Gluten-free (no wheat/gluten)
+  H  = Halal (halal certified or clearly halal)
+  S  = Spicy (contains chilli/hot spices)
+  DF = Dairy-free (contains no dairy/milk/cheese/butter)
+  Use only codes that are clearly indicated in the text. Do not guess. Use [] if unsure.
 - If there are no clear sections, put everything in a single section called "Menu"
 - Maximum 50 sections, 200 items total
 - Trim and clean all text

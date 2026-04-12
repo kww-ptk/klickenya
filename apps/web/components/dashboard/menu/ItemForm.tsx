@@ -6,11 +6,12 @@ import imageCompression from "browser-image-compression";
 import type { MenuItem } from "@/components/listings/detail/restaurant/MenuDisplay";
 
 const DIETARY_OPTIONS = [
-  { tag: "V", label: "Vegetarian" },
+  { tag: "V",  label: "Vegetarian" },
   { tag: "VG", label: "Vegan" },
   { tag: "GF", label: "Gluten-free" },
-  { tag: "H", label: "Halal" },
-  { tag: "S", label: "Spicy" },
+  { tag: "H",  label: "Halal" },
+  { tag: "S",  label: "Spicy" },
+  { tag: "DF", label: "Dairy-free" },
 ];
 
 interface ItemFormProps {

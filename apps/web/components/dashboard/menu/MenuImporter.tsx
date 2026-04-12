@@ -20,10 +20,14 @@ interface ImportedSection {
 
 const MAX_CHARS = 15000;
 
+// Short codes must match TAG_STYLES in MenuDisplay.tsx and DIETARY_OPTIONS in ItemForm.tsx
 const DIETARY_OPTIONS = [
-  "Vegetarian", "Vegan", "Gluten-free", "Halal", "Spicy",
-  "Contains nuts", "Contains dairy", "Contains eggs",
-  "Contains shellfish", "Contains soy", "Contains sesame",
+  { tag: "V",  label: "Vegetarian" },
+  { tag: "VG", label: "Vegan" },
+  { tag: "GF", label: "Gluten-free" },
+  { tag: "H",  label: "Halal" },
+  { tag: "S",  label: "Spicy" },
+  { tag: "DF", label: "Dairy-free" },
 ];
 
 const EXAMPLE_CHIPS = [
@@ -500,16 +504,19 @@ function ItemRow({
       <div>
         {item.dietary_tags.length > 0 && (
           <div className="flex flex-wrap gap-1 mb-1.5">
-            {item.dietary_tags.map((tag) => (
-              <button
-                key={tag}
-                onClick={() => onToggleTag(tag)}
-                className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-2 h-[20px] hover:bg-red-50 hover:border-red-200 hover:text-red-600 transition-colors"
-                title="Click to remove"
-              >
-                {tag} ×
-              </button>
-            ))}
+            {item.dietary_tags.map((tag) => {
+              const opt = DIETARY_OPTIONS.find((o) => o.tag === tag);
+              return (
+                <button
+                  key={tag}
+                  onClick={() => onToggleTag(tag)}
+                  className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-2 h-[20px] hover:bg-red-50 hover:border-red-200 hover:text-red-600 transition-colors"
+                  title="Click to remove"
+                >
+                  {opt?.label ?? tag} ×
+                </button>
+              );
+            })}
           </div>
         )}
         <button
@@ -520,7 +527,7 @@ function ItemRow({
         </button>
         {showTags && (
           <div className="flex flex-wrap gap-1 mt-1.5">
-            {DIETARY_OPTIONS.map((tag) => {
+            {DIETARY_OPTIONS.map(({ tag, label }) => {
               const active = item.dietary_tags.includes(tag);
               return (
                 <button
@@ -532,7 +539,7 @@ function ItemRow({
                       : "text-[#5E5848] bg-white border-[#E2DDD5] hover:border-emerald-300 hover:text-emerald-700"
                   }`}
                 >
-                  {active ? `✓ ${tag}` : tag}
+                  {active ? `✓ ${label}` : label}
                 </button>
               );
             })}
