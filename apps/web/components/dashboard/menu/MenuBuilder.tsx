@@ -98,7 +98,30 @@ export function MenuBuilder({
   const [showAddSection, setShowAddSection] = useState(false);
   const [publishing, setPublishing] = useState(false);
   const [showImporter, setShowImporter] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+  // saveStatus: tracks whether any background save is in flight
+  const [activeSaves, setActiveSaves] = useState(0);
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const { showToast } = useToast();
+
+  // Helper: wrap any async save operation with status tracking
+  const withSave = useCallback(async <T,>(fn: () => Promise<T>): Promise<T> => {
+    setActiveSaves((n) => n + 1);
+    try {
+      const result = await fn();
+      setLastSaved(new Date());
+      return result;
+    } finally {
+      setActiveSaves((n) => n - 1);
+    }
+  }, []);
+
+  // Sync: full reload so server state replaces client useState
+  const handleSync = useCallback(async () => {
+    setSyncing(true);
+    // router.refresh() alone won't reset useState — full reload is reliable
+    window.location.reload();
+  }, []);
 
   const sections = [...menu.menu_sections].sort(
     (a, b) => a.display_order - b.display_order
@@ -111,19 +134,18 @@ export function MenuBuilder({
     if (!title) return;
 
     try {
-      const res = await fetch("/api/menu/sections", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ menu_id: menu.id, title }),
+      const section = await withSave(async () => {
+        const res = await fetch("/api/menu/sections", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ menu_id: menu.id, title }),
+        });
+        if (!res.ok) throw new Error();
+        return res.json();
       });
-      if (!res.ok) throw new Error();
-      const section = await res.json();
       setMenu((prev) => ({
         ...prev,
-        menu_sections: [
-          ...prev.menu_sections,
-          { ...section, menu_items: [] },
-        ],
+        menu_sections: [...prev.menu_sections, { ...section, menu_items: [] }],
       }));
       setAddingSectionName("");
       setShowAddSection(false);
@@ -131,7 +153,7 @@ export function MenuBuilder({
     } catch {
       showToast("Failed to add section", "error");
     }
-  }, [addingSectionName, menu.id, showToast]);
+  }, [addingSectionName, menu.id, withSave, showToast]);
 
   const renameSection = useCallback(async (sectionId: string, title: string) => {
     const trimmed = title.trim();
@@ -150,16 +172,18 @@ export function MenuBuilder({
     setEditingSectionId(null);
 
     try {
-      const res = await fetch("/api/menu/sections", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ section_id: sectionId, title: trimmed }),
+      await withSave(async () => {
+        const res = await fetch("/api/menu/sections", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ section_id: sectionId, title: trimmed }),
+        });
+        if (!res.ok) throw new Error();
       });
-      if (!res.ok) throw new Error();
     } catch {
       showToast("Failed to rename section", "error");
     }
-  }, [showToast]);
+  }, [withSave, showToast]);
 
   const moveSection = useCallback(async (sectionId: string, direction: "up" | "down") => {
     const idx = sections.findIndex((s) => s.id === sectionId);
@@ -181,16 +205,18 @@ export function MenuBuilder({
     }));
 
     try {
-      const res = await fetch("/api/menu/sections", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "reorder", menu_id: menu.id, ordered_ids: orderedIds }),
+      await withSave(async () => {
+        const res = await fetch("/api/menu/sections", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "reorder", menu_id: menu.id, ordered_ids: orderedIds }),
+        });
+        if (!res.ok) throw new Error();
       });
-      if (!res.ok) throw new Error();
     } catch {
       showToast("Failed to reorder sections", "error");
     }
-  }, [sections, menu.id, showToast]);
+  }, [sections, menu.id, withSave, showToast]);
 
   const deleteSection = useCallback(async (sectionId: string, sectionTitle: string) => {
     if (!confirm(`Delete "${sectionTitle}"? This will also delete all items in this section.`)) return;
@@ -202,17 +228,19 @@ export function MenuBuilder({
     }));
 
     try {
-      const res = await fetch("/api/menu/sections", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ section_id: sectionId }),
+      await withSave(async () => {
+        const res = await fetch("/api/menu/sections", {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ section_id: sectionId }),
+        });
+        if (!res.ok) throw new Error();
       });
-      if (!res.ok) throw new Error();
       showToast("Section deleted");
     } catch {
       showToast("Failed to delete section", "error");
     }
-  }, [showToast]);
+  }, [withSave, showToast]);
 
   /* ── Item CRUD ───────────────────────────────────── */
 
@@ -271,17 +299,19 @@ export function MenuBuilder({
     }));
 
     try {
-      const res = await fetch("/api/menu/items", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ item_id: itemId }),
+      await withSave(async () => {
+        const res = await fetch("/api/menu/items", {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ item_id: itemId }),
+        });
+        if (!res.ok) throw new Error();
       });
-      if (!res.ok) throw new Error();
       showToast("Item deleted");
     } catch {
       showToast("Failed to delete item", "error");
     }
-  }, [showToast]);
+  }, [withSave, showToast]);
 
   /* ── Featured toggle ────────────────────────────── */
 
@@ -601,6 +631,32 @@ export function MenuBuilder({
           <h1 className="font-display text-[22px] lg:text-[28px] font-bold tracking-[-0.03em] text-[#16130C] flex-1">
             {menu.name}
           </h1>
+
+          {/* Auto-save status */}
+          <span className="hidden sm:inline-flex items-center gap-1.5 text-[12px] shrink-0">
+            {activeSaves > 0 ? (
+              <>
+                <span className="inline-block size-1.5 rounded-full bg-amber-400 animate-pulse" />
+                <span className="text-[#9C9485]">Saving…</span>
+              </>
+            ) : lastSaved ? (
+              <>
+                <span className="inline-block size-1.5 rounded-full bg-emerald-500" />
+                <span className="text-[#9C9485]">Saved</span>
+              </>
+            ) : null}
+          </span>
+
+          {/* Sync button */}
+          <button
+            onClick={handleSync}
+            disabled={syncing}
+            title="Reload menu from server"
+            className="shrink-0 h-[36px] px-3 rounded-full border border-[#E2DDD5] text-[13px] font-semibold text-[#5E5848] hover:border-[#9C9485] transition-colors disabled:opacity-50"
+          >
+            {syncing ? "⟳" : "↺ Sync"}
+          </button>
+
           <button
             onClick={() => setShowImporter(true)}
             className="shrink-0 h-[36px] px-4 rounded-full border border-[#E2DDD5] text-[13px] font-semibold text-[#5E5848] hover:border-[#E8A020]/60 hover:text-[#E8A020] transition-colors"
@@ -617,9 +673,10 @@ export function MenuBuilder({
             menuId={menu.id}
             onClose={() => setShowImporter(false)}
             onComplete={() => {
-              setShowImporter(false);
-              router.refresh();
-              showToast("Menu imported successfully");
+              // Full reload so useState re-initialises with fresh server data.
+              // router.refresh() alone re-fetches server components but cannot
+              // reset client-side useState, so imported sections would not appear.
+              window.location.reload();
             }}
           />
         </div>
