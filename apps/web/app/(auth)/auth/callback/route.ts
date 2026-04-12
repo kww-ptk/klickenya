@@ -49,14 +49,28 @@ export async function GET(request: Request) {
 
         const avatarUrl = user.user_metadata?.avatar_url ?? null;
 
-        // Upsert user row — default role is ALWAYS guest
+        // Safety net: check if admin pre-created a host_profiles row for this user.
+        // If so, they should be a host even if the users row didn't exist yet.
+        let isAdminCreatedHost = false;
+        if (isNewUser) {
+          const { data: preexistingHostProfile } = await adminClient
+            .from("host_profiles")
+            .select("id")
+            .eq("user_id", user.id)
+            .maybeSingle();
+          isAdminCreatedHost = !!preexistingHostProfile;
+        }
+
+        // Upsert user row.
+        // - Existing users: only update name/avatar (never overwrite role).
+        // - New users: default to "guest", unless admin pre-created a host profile.
         await supabase.from("users").upsert(
           {
             id: user.id,
             email: user.email!,
             full_name: fullName,
             avatar_url: avatarUrl,
-            ...(isNewUser ? { role: "guest" } : {}),
+            ...(isNewUser ? { role: isAdminCreatedHost ? "host" : "guest" } : {}),
           },
           { onConflict: "id" }
         );
@@ -94,7 +108,7 @@ export async function GET(request: Request) {
         }
 
         // Create guest_profiles row for new users (if they're a guest)
-        if (isNewUser) {
+        if (isNewUser && !isAdminCreatedHost) {
           const finalRole = roleIntent === "host" ? "host" : "guest";
           if (finalRole === "guest") {
             await adminClient.from("guest_profiles").upsert(

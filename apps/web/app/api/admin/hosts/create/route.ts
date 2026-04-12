@@ -46,11 +46,14 @@ export async function POST(request: NextRequest) {
 
     const userId = authData.user.id;
 
-    // Set role to host in users table
+    // Upsert the users row — auth.admin.createUser() does NOT auto-create
+    // a public.users row, so update() would silently fail on a new account.
     await adminClient
       .from("users")
-      .update({ role: "host", full_name: name })
-      .eq("id", userId);
+      .upsert(
+        { id: userId, email, full_name: name, role: "host" },
+        { onConflict: "id" }
+      );
 
     // Create host_profiles row
     const { data: hostProfile, error: profileError } = await adminClient
@@ -70,10 +73,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: profileError.message }, { status: 500 });
     }
 
-    // Generate magic link (24h)
+    // Generate magic link (24h) with explicit redirect so the link
+    // always lands on the correct domain regardless of Supabase Site URL setting.
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://klickenya.com";
     const { data: linkData } = await supabaseAdmin.auth.admin.generateLink({
       type: "magiclink",
       email,
+      options: { redirectTo: `${siteUrl}/auth/callback` },
     });
 
     const magicLink = linkData?.properties?.action_link ?? `https://klickenya.com/login`;
