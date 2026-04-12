@@ -58,12 +58,12 @@ export interface MenuData {
 /* ── Dietary tag config ────────────────────────────── */
 
 const TAG_STYLES: Record<string, { label: string; bg: string; text: string }> = {
-  V:  { label: "V",  bg: "bg-green-100",  text: "text-green-700" },
-  VG: { label: "VG", bg: "bg-green-100",  text: "text-green-800" },
-  GF: { label: "GF", bg: "bg-amber-100",  text: "text-amber-700" },
-  H:  { label: "H",  bg: "bg-sky-100",    text: "text-sky-700" },
-  S:  { label: "S",  bg: "bg-red-100",    text: "text-red-700" },
-  DF: { label: "DF", bg: "bg-blue-100",   text: "text-blue-700" },
+  V:  { label: "🌿 V",  bg: "bg-green-100",  text: "text-green-700" },
+  VG: { label: "🌱 VG", bg: "bg-green-100",  text: "text-green-800" },
+  GF: { label: "🌾 GF", bg: "bg-amber-100",  text: "text-amber-700" },
+  H:  { label: "☪️ H",  bg: "bg-teal-100",   text: "text-teal-700" },
+  S:  { label: "🌶️ S",  bg: "bg-red-100",    text: "text-red-700" },
+  DF: { label: "🥛 LF", bg: "bg-blue-100",   text: "text-blue-700" },
 };
 
 /* ── Price formatter ───────────────────────────────── */

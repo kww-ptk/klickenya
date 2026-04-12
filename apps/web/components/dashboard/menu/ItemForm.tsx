@@ -11,7 +11,7 @@ const DIETARY_OPTIONS = [
   { tag: "GF", label: "Gluten-free" },
   { tag: "H",  label: "Halal" },
   { tag: "S",  label: "Spicy" },
-  { tag: "DF", label: "Dairy-free" },
+  { tag: "DF", label: "Lactose Free" },
 ];
 
 interface ItemFormProps {

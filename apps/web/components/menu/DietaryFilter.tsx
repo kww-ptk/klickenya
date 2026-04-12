@@ -3,11 +3,12 @@
 import { useState } from "react";
 
 const FILTER_OPTIONS = [
-  { tag: "V",  label: "Vegetarian", bg: "bg-green-100",  text: "text-green-700",  activeBg: "bg-green-600",  activeText: "text-white" },
-  { tag: "VG", label: "Vegan",      bg: "bg-green-100",  text: "text-green-800",  activeBg: "bg-green-700",  activeText: "text-white" },
-  { tag: "GF", label: "Gluten-free",bg: "bg-amber-100",  text: "text-amber-700",  activeBg: "bg-amber-600",  activeText: "text-white" },
-  { tag: "H",  label: "Halal",      bg: "bg-teal-100",   text: "text-teal-700",   activeBg: "bg-teal-600",   activeText: "text-white" },
-  { tag: "S",  label: "Spicy",      bg: "bg-red-100",    text: "text-red-700",    activeBg: "bg-red-600",    activeText: "text-white" },
+  { tag: "V",  icon: "🌿", label: "Vegetarian",   bg: "bg-green-100",  text: "text-green-700",  activeBg: "bg-green-600",  activeText: "text-white" },
+  { tag: "VG", icon: "🌱", label: "Vegan",         bg: "bg-green-100",  text: "text-green-800",  activeBg: "bg-green-700",  activeText: "text-white" },
+  { tag: "GF", icon: "🌾", label: "Gluten-free",   bg: "bg-amber-100",  text: "text-amber-700",  activeBg: "bg-amber-600",  activeText: "text-white" },
+  { tag: "H",  icon: "☪️", label: "Halal",         bg: "bg-teal-100",   text: "text-teal-700",   activeBg: "bg-teal-600",   activeText: "text-white" },
+  { tag: "S",  icon: "🌶️", label: "Spicy",         bg: "bg-red-100",    text: "text-red-700",    activeBg: "bg-red-600",    activeText: "text-white" },
+  { tag: "DF", icon: "🥛", label: "Lactose Free",  bg: "bg-blue-100",   text: "text-blue-700",   activeBg: "bg-blue-600",   activeText: "text-white" },
 ] as const;
 
 interface DietaryFilterProps {
@@ -66,12 +67,13 @@ export function DietaryFilter({ availableTags, activeTags, onChange }: DietaryFi
                 <button
                   key={f.tag}
                   onClick={() => toggle(f.tag)}
-                  className={`rounded-full px-3 py-1.5 text-[12px] font-semibold transition-colors ${
+                  className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12px] font-semibold transition-colors ${
                     isActive
                       ? `${f.activeBg} ${f.activeText}`
                       : `${f.bg} ${f.text} hover:opacity-80`
                   }`}
                 >
+                  <span>{f.icon}</span>
                   {f.label}
                 </button>
               );

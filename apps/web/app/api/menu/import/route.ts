@@ -106,7 +106,7 @@ Rules:
   GF = Gluten-free (no wheat/gluten)
   H  = Halal (halal certified or clearly halal)
   S  = Spicy (contains chilli/hot spices)
-  DF = Dairy-free (contains no dairy/milk/cheese/butter)
+  DF = Lactose Free (contains no dairy/milk/cheese/butter)
   Use only codes that are clearly indicated in the text. Do not guess. Use [] if unsure.
 - If there are no clear sections, put everything in a single section called "Menu"
 - Maximum 50 sections, 200 items total
