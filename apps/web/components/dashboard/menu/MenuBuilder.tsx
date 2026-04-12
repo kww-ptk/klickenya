@@ -161,6 +161,37 @@ export function MenuBuilder({
     }
   }, [showToast]);
 
+  const moveSection = useCallback(async (sectionId: string, direction: "up" | "down") => {
+    const idx = sections.findIndex((s) => s.id === sectionId);
+    if (direction === "up" && idx === 0) return;
+    if (direction === "down" && idx === sections.length - 1) return;
+
+    const newOrder = [...sections];
+    const swapIdx = direction === "up" ? idx - 1 : idx + 1;
+    [newOrder[idx], newOrder[swapIdx]] = [newOrder[swapIdx], newOrder[idx]];
+    const orderedIds = newOrder.map((s) => s.id);
+
+    // Optimistic update
+    setMenu((prev) => ({
+      ...prev,
+      menu_sections: prev.menu_sections.map((s) => {
+        const newPos = orderedIds.indexOf(s.id);
+        return newPos === -1 ? s : { ...s, display_order: newPos };
+      }),
+    }));
+
+    try {
+      const res = await fetch("/api/menu/sections", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "reorder", menu_id: menu.id, ordered_ids: orderedIds }),
+      });
+      if (!res.ok) throw new Error();
+    } catch {
+      showToast("Failed to reorder sections", "error");
+    }
+  }, [sections, menu.id, showToast]);
+
   const deleteSection = useCallback(async (sectionId: string, sectionTitle: string) => {
     if (!confirm(`Delete "${sectionTitle}"? This will also delete all items in this section.`)) return;
 
@@ -636,7 +667,27 @@ export function MenuBuilder({
                 >
                   {/* Section header */}
                   <div className="flex items-center gap-2 px-4 py-3 border-b border-[#F4F1EC]">
-                    <span className="text-[#E2DDD5] cursor-grab select-none">≡</span>
+                    {/* Up / down reorder buttons */}
+                    <div className="flex flex-col shrink-0">
+                      <button
+                        onClick={() => moveSection(section.id, "up")}
+                        disabled={sections.indexOf(section) === 0}
+                        className="text-[#C5BFB5] hover:text-[#E8A020] disabled:opacity-20 disabled:cursor-default leading-none transition-colors"
+                        title="Move section up"
+                        aria-label="Move section up"
+                      >
+                        ▲
+                      </button>
+                      <button
+                        onClick={() => moveSection(section.id, "down")}
+                        disabled={sections.indexOf(section) === sections.length - 1}
+                        className="text-[#C5BFB5] hover:text-[#E8A020] disabled:opacity-20 disabled:cursor-default leading-none transition-colors"
+                        title="Move section down"
+                        aria-label="Move section down"
+                      >
+                        ▼
+                      </button>
+                    </div>
                     {editingSectionId === section.id ? (
                       <input
                         type="text"

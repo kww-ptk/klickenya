@@ -82,7 +82,36 @@ export async function PATCH(req: NextRequest) {
     const { userId, isAdmin, supabase } = await getMenuAuth();
     if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    const { section_id, title } = await req.json();
+    const body = await req.json();
+
+    /* ── action: reorder — bulk update display_order ── */
+    if (body.action === "reorder") {
+      const { menu_id, ordered_ids } = body as { menu_id: string; ordered_ids: string[] };
+      if (!menu_id || !Array.isArray(ordered_ids) || ordered_ids.length === 0) {
+        return NextResponse.json({ error: "menu_id and ordered_ids required" }, { status: 400 });
+      }
+
+      // Verify menu ownership
+      const client = isAdmin ? adminClient : supabase;
+      const menuQuery = client.from("menus").select("id, slug").eq("id", menu_id);
+      if (!isAdmin) menuQuery.eq("business_id", userId);
+      const { data: menu } = await menuQuery.single();
+      if (!menu) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
+      // Bulk update each section's display_order
+      await Promise.all(
+        ordered_ids.map((id, index) =>
+          client.from("menu_sections").update({ display_order: index }).eq("id", id).eq("menu_id", menu_id)
+        )
+      );
+
+      revalidateTag(`menu:${menu_id}`, "default");
+      revalidatePath(`/m/${menu.slug}`);
+      return NextResponse.json({ success: true });
+    }
+
+    /* ── default: rename ─────────────────────────────── */
+    const { section_id, title } = body;
     if (!section_id || !title?.trim()) {
       return NextResponse.json({ error: "section_id and title required" }, { status: 400 });
     }
