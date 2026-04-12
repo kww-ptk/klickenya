@@ -91,7 +91,6 @@ export function MenuBuilder({
     sectionId: string;
     item?: MenuItem;
   } | null>(null);
-  const [optionsItemId, setOptionsItemId] = useState<string | null>(null);
   const [editingSectionId, setEditingSectionId] = useState<string | null>(null);
   const [editingSectionTitle, setEditingSectionTitle] = useState("");
   const [addingSectionName, setAddingSectionName] = useState("");
@@ -809,25 +808,12 @@ export function MenuBuilder({
                             </span>
                             <div className="flex items-center gap-1 shrink-0">
                               <button
-                                onClick={() => setOptionsItemId(
-                                  optionsItemId === item.id ? null : item.id
-                                )}
-                                className={`text-[11px] font-semibold px-2 h-[24px] rounded-full border transition-colors ${
-                                  optionsItemId === item.id
-                                    ? "border-[#E8A020] text-[#E8A020] bg-[#E8A020]/8"
-                                    : "border-[#E2DDD5] text-[#9C9485] hover:border-[#E8A020]/60 hover:text-[#E8A020]"
-                                }`}
-                                title="Manage customisation options"
-                              >
-                                Options
-                              </button>
-                              <button
                                 onClick={() =>
-                                  setEditingForm({
-                                    type: "edit",
-                                    sectionId: section.id,
-                                    item,
-                                  })
+                                  setEditingForm(
+                                    editingForm?.item?.id === item.id
+                                      ? null
+                                      : { type: "edit", sectionId: section.id, item }
+                                  )
                                 }
                                 className="text-[#E2DDD5] hover:text-[#E8A020] transition-colors text-[14px] px-0.5"
                                 title="Edit item"
@@ -844,27 +830,26 @@ export function MenuBuilder({
                             </div>
                           </div>
 
-                          {/* Option group editor */}
-                          {optionsItemId === item.id && (
-                            <OptionGroupEditor
-                              menuItemId={item.id}
-                              menuItemName={item.name}
-                              onClose={() => setOptionsItemId(null)}
-                              showToast={showToast}
-                            />
-                          )}
-
-                          {/* Inline edit form */}
+                          {/* Inline edit form + options — combined panel */}
                           {editingForm?.type === "edit" &&
                             editingForm.sectionId === section.id &&
                             editingForm.item?.id === item.id && (
-                              <div className="px-4 pb-3">
-                                <ItemForm
-                                  sectionId={section.id}
-                                  menuId={menu.id}
-                                  item={item}
-                                  onSave={(saved) => handleItemSave(section.id, saved)}
-                                  onCancel={() => setEditingForm(null)}
+                              <div className="px-4 pb-4 border-t border-[#F4F1EC] bg-[#FAFAF8]">
+                                <div className="pt-3">
+                                  <ItemForm
+                                    sectionId={section.id}
+                                    menuId={menu.id}
+                                    item={item}
+                                    onSave={(saved) => handleItemSave(section.id, saved)}
+                                    onCancel={() => setEditingForm(null)}
+                                  />
+                                </div>
+                                <OptionGroupEditor
+                                  menuItemId={item.id}
+                                  menuItemName={item.name}
+                                  onClose={() => setEditingForm(null)}
+                                  showToast={showToast}
+                                  embedded
                                 />
                               </div>
                             )}

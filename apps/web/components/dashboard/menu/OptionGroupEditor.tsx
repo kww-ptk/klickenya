@@ -10,6 +10,8 @@ interface OptionGroupEditorProps {
   menuItemName: string;
   onClose: () => void;
   showToast: (msg: string, type?: "success" | "error") => void;
+  /** When true, renders without the header title/close button — for use inside ItemForm */
+  embedded?: boolean;
 }
 
 /* ── Helper ────────────────────────────────────────── */
@@ -183,7 +185,7 @@ function GroupCard({ group, onDeleteGroup, onDeleteOption, onToggleOption, onAdd
 
 /* ── Main editor ───────────────────────────────────── */
 
-export function OptionGroupEditor({ menuItemId, menuItemName, onClose, showToast }: OptionGroupEditorProps) {
+export function OptionGroupEditor({ menuItemId, menuItemName, onClose, showToast, embedded = false }: OptionGroupEditorProps) {
   const [groups, setGroups] = useState<ItemOptionGroup[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -409,18 +411,27 @@ export function OptionGroupEditor({ menuItemId, menuItemName, onClose, showToast
   /* ── Render ────────────────────────────────────── */
 
   return (
-    <div className="bg-[#FAFAF8] border-t-2 border-[#E8A020]/40 px-4 py-4">
-      <div className="flex items-center justify-between mb-3">
-        <p className="text-[13px] font-bold text-[#16130C]">
-          Options for <span className="text-[#E8A020]">{menuItemName}</span>
+    <div className={embedded ? "pt-4 mt-4 border-t border-[#F4F1EC]" : "bg-[#FAFAF8] border-t-2 border-[#E8A020]/40 px-4 py-4"}>
+      {/* Header — hidden when embedded inside the edit form */}
+      {!embedded && (
+        <div className="flex items-center justify-between mb-3">
+          <p className="text-[13px] font-bold text-[#16130C]">
+            Options for <span className="text-[#E8A020]">{menuItemName}</span>
+          </p>
+          <button
+            onClick={onClose}
+            className="text-[#9C9485] hover:text-[#16130C] transition-colors text-[12px] font-semibold"
+          >
+            Done ✕
+          </button>
+        </div>
+      )}
+
+      {embedded && (
+        <p className="text-[12px] font-bold text-[#16130C] uppercase tracking-wide mb-3">
+          Customisation options
         </p>
-        <button
-          onClick={onClose}
-          className="text-[#9C9485] hover:text-[#16130C] transition-colors text-[12px] font-semibold"
-        >
-          Done ✕
-        </button>
-      </div>
+      )}
 
       {loading ? (
         <p className="text-[12px] text-[#9C9485] py-2">Loading…</p>
@@ -451,7 +462,7 @@ export function OptionGroupEditor({ menuItemId, menuItemName, onClose, showToast
                 type="text"
                 value={newGroupName}
                 onChange={(e) => setNewGroupName(e.target.value)}
-                placeholder='e.g. "Size", "Extras", "Allergens"'
+                placeholder='e.g. "Size", "Extras"'
                 className="w-full border border-[#E2DDD5] rounded-lg px-3 py-2 text-[13px] text-[#16130C] placeholder:text-[#9C9485] focus:outline-none focus:border-[#E8A020] bg-white"
                 autoFocus
               />
@@ -499,24 +510,12 @@ export function OptionGroupEditor({ menuItemId, menuItemName, onClose, showToast
               </div>
             </div>
           ) : (
-            <div className="space-y-1.5">
-              <button
-                onClick={() => setShowAddGroup(true)}
-                className="w-full border border-dashed border-[#E2DDD5] rounded-xl py-2.5 text-[12px] font-semibold text-[#9C9485] hover:text-[#E8A020] hover:border-[#E8A020]/40 transition-colors"
-              >
-                + Add option group
-              </button>
-              {!groups.some((g) => g.group_type === "allergy") && (
-                <button
-                  onClick={handleAllergenShortcut}
-                  disabled={addingAllergens}
-                  className="w-full border border-dashed border-[#E2DDD5] rounded-xl py-2 text-[11px] font-semibold text-[#9C9485] hover:text-[#DC2626] hover:border-[#DC2626]/40 transition-colors disabled:opacity-50 flex items-center justify-center gap-1.5"
-                >
-                  <span>⚡</span>
-                  {addingAllergens ? "Adding allergens…" : "Quick add: allergen group (nuts, gluten, dairy +4)"}
-                </button>
-              )}
-            </div>
+            <button
+              onClick={() => setShowAddGroup(true)}
+              className="w-full border border-dashed border-[#E2DDD5] rounded-xl py-2.5 text-[12px] font-semibold text-[#9C9485] hover:text-[#E8A020] hover:border-[#E8A020]/40 transition-colors"
+            >
+              + Add option group
+            </button>
           )}
         </div>
       )}
