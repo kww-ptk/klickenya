@@ -15,7 +15,7 @@ import { BlogPostClient, NewsletterForm, ShareButtons } from "@/components/blog/
 
 /* ── ISR ────────────────────────────────────────────────────────── */
 export const dynamic = 'force-static';
-export const revalidate = 3600;
+export const revalidate = 60;
 
 /* ── Type mapping for listing hrefs ─────────────────────────────── */
 const TYPE_TO_PLURAL: Record<string, string> = {
