@@ -9,37 +9,7 @@ import { OptionGroupEditor } from "./OptionGroupEditor";
 import { TableSetup } from "./TableSetup";
 import { MenuImporter } from "./MenuImporter";
 import { useToast } from "@/components/ui/Toast";
-
-/* ── Toggle switch (reusable within this file) ─────── */
-
-function Toggle({
-  checked,
-  onChange,
-  disabled,
-}: {
-  checked: boolean;
-  onChange: () => void;
-  disabled?: boolean;
-}) {
-  return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={checked}
-      onClick={onChange}
-      disabled={disabled}
-      className={`relative w-10 h-[22px] rounded-full transition-colors disabled:opacity-50 ${
-        checked ? "bg-[#16A34A]" : "bg-[#E2DDD5]"
-      }`}
-    >
-      <span
-        className={`absolute top-[2px] size-[18px] rounded-full bg-white shadow transition-transform ${
-          checked ? "translate-x-[20px]" : "translate-x-[2px]"
-        }`}
-      />
-    </button>
-  );
-}
+import { Toggle } from "@/components/ui/Toggle";
 
 /* ── Price formatter ───────────────────────────────── */
 
