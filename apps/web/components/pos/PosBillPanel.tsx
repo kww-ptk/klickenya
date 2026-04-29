@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { applyBillTotals, formatKes } from "@/lib/pos/bill";
 import { posFetch } from "./_shell/posFetch";
+import { ManagerOverridePrompt } from "./ManagerOverridePrompt";
 
 /**
  * Bill management panel: discount controls, split stepper, totals preview,
@@ -32,6 +33,8 @@ export interface BillPanelSession {
   payment_method:      string | null;
   mpesa_ref:           string | null;
   receipt_sent_to:     string | null;
+  /** Discount % above this requires a manager override. Default 10. */
+  manager_discount_threshold_pct: number;
 }
 
 interface Props {
@@ -67,7 +70,24 @@ export function PosBillPanel({ session, initialEmail, showToast, onSaved }: Prop
     split_count:         splitCount,
   }), [session.subtotal_kes, session.service_charge_pct, discountPct, discountFlat, splitCount]);
 
-  async function patchSession(field: string, body: Record<string, unknown>) {
+  /* ── Manager-override modal state ─────────────────────────────────────────
+   * When the server rejects an action with `requires_manager: true`, we
+   * stash the original PATCH body here and show the modal. On confirm we
+   * re-issue the same PATCH with manager_override_pin + reason attached.
+   */
+  const [pendingOverride, setPendingOverride] = useState<{
+    field:   string;
+    body:    Record<string, unknown>;
+    title:   string;
+    message: string;
+    reasonRequired: boolean;
+  } | null>(null);
+
+  async function patchSession(
+    field: string,
+    body: Record<string, unknown>,
+    opts?: { override?: { title: string; message: string; reasonRequired: boolean } },
+  ): Promise<boolean> {
     setSavingField(field);
     try {
       const res = await posFetch(`/api/menu/sessions/${session.id}`, {
@@ -77,6 +97,18 @@ export function PosBillPanel({ session, initialEmail, showToast, onSaved }: Prop
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
+        // Server says this needs a manager — open the override modal so the
+        // waiter can grab a manager (or the manager themselves taps in).
+        if (res.status === 403 && data.requires_manager && opts?.override) {
+          setPendingOverride({
+            field,
+            body,
+            title:   opts.override.title,
+            message: opts.override.message,
+            reasonRequired: opts.override.reasonRequired,
+          });
+          return false;
+        }
         showToast(data.error || "Failed to save", "error");
         // Revert local value to the server value on failure.
         onSaved();
@@ -89,10 +121,35 @@ export function PosBillPanel({ session, initialEmail, showToast, onSaved }: Prop
     }
   }
 
+  const confirmOverride = async ({ pin, reason }: { pin: string; reason: string | null }) => {
+    if (!pendingOverride) return;
+    const { field, body } = pendingOverride;
+    setPendingOverride(null);
+    const ok = await patchSession(field, {
+      ...body,
+      manager_override_pin: pin,
+      reason,
+    });
+    if (ok) showToast("Manager override applied");
+  };
+
   const saveDiscountPct = () => {
     const v = Number(discountPct) || 0;
     if (v === Number(session.discount_pct ?? 0)) return;
-    patchSession("discount_pct", { discount_pct: v });
+    const threshold = session.manager_discount_threshold_pct;
+    patchSession(
+      "discount_pct",
+      { discount_pct: v },
+      v > threshold
+        ? {
+            override: {
+              title:   `Discount above ${threshold}%`,
+              message: `Discounts above ${threshold}% require a manager.`,
+              reasonRequired: false,
+            },
+          }
+        : undefined,
+    );
   };
   const saveDiscountFlat = () => {
     const v = Number(discountFlat) || 0;
@@ -333,6 +390,15 @@ export function PosBillPanel({ session, initialEmail, showToast, onSaved }: Prop
         )}
       </div>
 
+      {pendingOverride && (
+        <ManagerOverridePrompt
+          title={pendingOverride.title}
+          message={pendingOverride.message}
+          reasonRequired={pendingOverride.reasonRequired}
+          onCancel={() => setPendingOverride(null)}
+          onConfirm={confirmOverride}
+        />
+      )}
     </div>
   );
 }

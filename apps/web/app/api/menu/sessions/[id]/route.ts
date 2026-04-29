@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminClient } from "@/lib/supabase/admin";
 import { getPosOrOwnerAuth } from "@/app/api/pos/_lib/auth";
+import { resolveManagerApproval, writeAuditLog } from "@/app/api/pos/_lib/managerOverride";
 import { recomputeSessionTotals } from "../_lib/sessions";
 import { computeBill } from "@/lib/pos/bill";
 
@@ -111,6 +112,15 @@ export async function GET(req: NextRequest, ctx: RouteContext) {
     openedByName = s?.name ?? null;
   }
 
+  // Look up the menu's manager-discount threshold so the bill panel can
+  // tell the waiter "above 10% needs a manager" up front.
+  const { data: menuRow } = await adminClient
+    .from("menus")
+    .select("manager_discount_threshold_pct")
+    .eq("id", full.menu_id)
+    .single();
+  const managerDiscountThresholdPct = Number(menuRow?.manager_discount_threshold_pct ?? 10);
+
   // TODO V3: auto-populate guest_email when check-in flow spawns the session
   // from a reservation. For now, look up reservations linked to this session
   // defensively — if a reservation has session_id = this id, surface its
@@ -169,6 +179,7 @@ export async function GET(req: NextRequest, ctx: RouteContext) {
       receipt_sent_at:     full.receipt_sent_at ?? null,
       receipt_sent_to:     full.receipt_sent_to ?? null,
       linked_guest_email:  linkedGuestEmail,
+      manager_discount_threshold_pct: managerDiscountThresholdPct,
       opened_at:           full.opened_at,
       billed_at:           full.billed_at,
       paid_at:             full.paid_at,
@@ -225,6 +236,17 @@ interface PatchBody {
   bill_notes?:          string | null;
   split_count?:         number;
   notes?:               string | null;
+  /**
+   * Manager override PIN. Required when the requested change crosses a
+   * manager-only threshold (large discount, void on a billed/paid session).
+   * Ignored if the acting staff is a manager already.
+   */
+  manager_override_pin?: string | null;
+  /**
+   * Free-form reason logged alongside the override. Required for void on
+   * billed/paid sessions; optional for discount overrides.
+   */
+  reason?:               string | null;
 }
 
 function isValidTransition(from: SessionStatus, to: SessionStatus): boolean {
@@ -256,6 +278,19 @@ export async function PATCH(req: NextRequest, ctx: RouteContext) {
   let needsTotalsRecompute = false;
   const currentStatus = session.status as SessionStatus;
   const now = new Date().toISOString();
+
+  // ── Audit-log accumulator ────────────────────────────────────────────────
+  // Restricted actions (void after billed/paid, discount above threshold)
+  // queue up audit entries here. Once the row is updated successfully we
+  // flush them in one go — keeps the action atomic from the waiter's view
+  // even if the audit insert later fails (write failure is logged, not
+  // surfaced).
+  const auditQueue: Parameters<typeof writeAuditLog>[0][] = [];
+
+  // The role of the *acting* request — owner or one of the staff roles.
+  // resolveManagerApproval() understands this shape.
+  const actingRole = auth.type === "owner" ? "owner" : auth.role;
+  const actingStaffId = auth.type === "staff" ? auth.staffId : null;
 
   // ── Status transition ────────────────────────────────────────────────────
   if (body.status) {
@@ -296,6 +331,42 @@ export async function PATCH(req: NextRequest, ctx: RouteContext) {
         needsTotalsRecompute = true;
       }
     } else if (target === "void") {
+      // Voiding a session that's already billed or paid is a manager-only
+      // action — it removes a real payable from the day's total. (Voiding
+      // an "open" session is fine — it never reached the kitchen as a bill,
+      // so the surface area for theft is just the items already sent, which
+      // are gated separately on the order-cancel path.)
+      if (currentStatus === "billed" || currentStatus === "paid") {
+        const reason = (body.reason ?? "").trim();
+        if (!reason) {
+          return NextResponse.json(
+            { error: "Reason required to void a billed or paid session" },
+            { status: 400 },
+          );
+        }
+        const approval = await resolveManagerApproval({
+          actingRole,
+          actingStaffId,
+          menuId:      session.menu_id,
+          overridePin: body.manager_override_pin,
+        });
+        if (!approval.ok) {
+          return NextResponse.json({ error: approval.error }, { status: 403 });
+        }
+        auditQueue.push({
+          menuId:           session.menu_id,
+          actingStaffId,
+          approvingStaffId: approval.approvingStaffId,
+          action:           "void_session",
+          targetType:       "session",
+          targetId:         id,
+          reason,
+          metadata: {
+            previous_status: currentStatus,
+            payment_method:  session.status === "paid" ? null : null,
+          },
+        });
+      }
       updates.status = "void";
       updates.closed_at = now;
     }
@@ -341,6 +412,47 @@ export async function PATCH(req: NextRequest, ctx: RouteContext) {
     if (v < 0 || v > 100) {
       return NextResponse.json({ error: "discount_pct must be 0–100" }, { status: 400 });
     }
+
+    // Discounts above the menu's manager threshold need a manager approval.
+    // We only check on the *raise* — a waiter lowering an existing high
+    // discount back down to a normal value shouldn't be blocked.
+    const previousDiscount = Number(session.discount_pct ?? 0);
+    if (v > previousDiscount + 0.01) {
+      const { data: menuRow } = await adminClient
+        .from("menus")
+        .select("manager_discount_threshold_pct")
+        .eq("id", session.menu_id)
+        .single();
+      const threshold = Number(menuRow?.manager_discount_threshold_pct ?? 10);
+      if (v > threshold + 0.01) {
+        const approval = await resolveManagerApproval({
+          actingRole,
+          actingStaffId,
+          menuId:      session.menu_id,
+          overridePin: body.manager_override_pin,
+        });
+        if (!approval.ok) {
+          return NextResponse.json(
+            { error: approval.error, requires_manager: true, threshold },
+            { status: 403 },
+          );
+        }
+        auditQueue.push({
+          menuId:           session.menu_id,
+          actingStaffId,
+          approvingStaffId: approval.approvingStaffId,
+          action:           "discount_above_threshold",
+          targetType:       "session",
+          targetId:         id,
+          reason:           (body.reason ?? "").trim() || null,
+          metadata: {
+            discount_pct: v,
+            threshold,
+          },
+        });
+      }
+    }
+
     updates.discount_pct = Math.round(v * 100) / 100;
     needsTotalsRecompute = true;
   }
@@ -417,6 +529,10 @@ export async function PATCH(req: NextRequest, ctx: RouteContext) {
   if (needsTotalsRecompute) {
     await recomputeSessionTotals(id);
   }
+
+  // Flush the audit queue. Best-effort — writeAuditLog logs and swallows
+  // any failure so a hiccup in the audit table doesn't break the bill flow.
+  await Promise.all(auditQueue.map((entry) => writeAuditLog(entry)));
 
   // Return the updated row plus a fresh computeBill() snapshot so the client
   // can mirror the server's totals without a follow-up GET.

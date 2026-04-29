@@ -61,6 +61,7 @@ interface SessionDetail {
   opened_by_name:        string | null;
   receipt_sent_to:       string | null;
   linked_guest_email:    string | null;
+  manager_discount_threshold_pct: number;
   table_number:          string | null;
   orders:                OrderSummary[];
 }
@@ -407,6 +408,7 @@ export function PosSessionDetail({
                       payment_method:      detail.payment_method,
                       mpesa_ref:           detail.mpesa_ref,
                       receipt_sent_to:     detail.receipt_sent_to,
+                      manager_discount_threshold_pct: detail.manager_discount_threshold_pct ?? 10,
                     }}
                   />
                 )}

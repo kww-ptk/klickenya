@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminClient } from "@/lib/supabase/admin";
 import { getPosOrOwnerAuth } from "@/app/api/pos/_lib/auth";
+import { resolveManagerApproval, writeAuditLog } from "@/app/api/pos/_lib/managerOverride";
 
 /* ── GET — fetch active orders for a menu (kitchen + waiter polling) ── */
 //
@@ -116,7 +117,11 @@ const KITCHEN_DRIVING_ROLES: ReadonlySet<string> = new Set(["kitchen", "manager"
 
 export async function PATCH(req: NextRequest) {
   try {
-    const { order_id, status: newStatus } = await req.json();
+    const body = await req.json();
+    const order_id          = body?.order_id;
+    const newStatus         = body?.status;
+    const reason            = (body?.reason ?? "").toString().trim() || null;
+    const managerOverridePin = body?.manager_override_pin ?? null;
 
     if (!order_id || !newStatus) {
       return NextResponse.json(
@@ -143,18 +148,55 @@ export async function PATCH(req: NextRequest) {
 
     // Role gate: a waiter shouldn't be able to mark a "new" order as
     // "preparing" — that's kitchen territory. Owners and kitchen staff drive
-    // the full lifecycle; waiters can only complete ready→delivered (or
-    // cancel, which is rare but useful for mistakes).
+    // the full lifecycle; waiters can only complete ready→delivered.
     const isKitchenDriver =
       auth.type === "owner" || (auth.type === "staff" && KITCHEN_DRIVING_ROLES.has(auth.role));
     if (!isKitchenDriver) {
-      const isWaiterCompleting = order.status === "ready" && (newStatus === "delivered" || newStatus === "cancelled");
+      const isWaiterCompleting = order.status === "ready" && newStatus === "delivered";
       if (!isWaiterCompleting) {
         return NextResponse.json(
           { error: "Forbidden — only kitchen or manager can drive this transition." },
           { status: 403 },
         );
       }
+    }
+
+    // Cancelling an order that's already been sent to the kitchen (status
+    // new / preparing / ready → cancelled) is a manager-only action with an
+    // audit log entry. This is the "send steak, void it, eat the steak"
+    // path — even kitchen staff need a reason on the record.
+    let auditEntry: Parameters<typeof writeAuditLog>[0] | null = null;
+    if (newStatus === "cancelled" && (order.status === "new" || order.status === "preparing" || order.status === "ready")) {
+      if (!reason) {
+        return NextResponse.json(
+          { error: "Reason required to cancel an order that's been sent to the kitchen" },
+          { status: 400 },
+        );
+      }
+      const actingRole = auth.type === "owner" ? "owner" : auth.role;
+      const actingStaffId = auth.type === "staff" ? auth.staffId : null;
+      const approval = await resolveManagerApproval({
+        actingRole,
+        actingStaffId,
+        menuId:      order.menu_id,
+        overridePin: managerOverridePin,
+      });
+      if (!approval.ok) {
+        return NextResponse.json(
+          { error: approval.error, requires_manager: true },
+          { status: 403 },
+        );
+      }
+      auditEntry = {
+        menuId:           order.menu_id,
+        actingStaffId,
+        approvingStaffId: approval.approvingStaffId,
+        action:           "void_order_after_send",
+        targetType:       "order",
+        targetId:         order_id,
+        reason,
+        metadata:         { previous_status: order.status },
+      };
     }
 
     // Validate the status transition
@@ -174,6 +216,10 @@ export async function PATCH(req: NextRequest) {
     if (error) {
       console.error("[menu/orders PATCH] error:", error);
       return NextResponse.json({ error: "Failed to update order." }, { status: 500 });
+    }
+
+    if (auditEntry) {
+      await writeAuditLog(auditEntry);
     }
 
     return NextResponse.json({ success: true, order_id, status: newStatus });

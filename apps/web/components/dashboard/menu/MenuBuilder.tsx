@@ -545,6 +545,13 @@ export function MenuBuilder({
                 <span>🍳</span>
                 Kitchen view →
               </Link>
+              <Link
+                href={`/dashboard/menu/${menu.id}/audit`}
+                className="mt-2 flex items-center justify-center gap-2 w-full h-[36px] rounded-full bg-white border border-[#E2DDD5] text-[#16130C] text-[13px] font-bold hover:border-[#16130C] transition-colors"
+              >
+                <span>📋</span>
+                Audit log →
+              </Link>
             </>
           )}
         </div>
