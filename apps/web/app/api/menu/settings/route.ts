@@ -78,6 +78,7 @@ export async function PATCH(req: NextRequest) {
       reservations_lead_time_hours,
       reservations_max_party_size,
       reservations_max_advance_days,
+      default_service_charge_pct,
       listing_city,
     } = body;
 
@@ -149,6 +150,16 @@ export async function PATCH(req: NextRequest) {
         );
       }
       updates.reservations_max_advance_days = v;
+    }
+    if (typeof default_service_charge_pct === "number") {
+      const v = Math.round(default_service_charge_pct * 100) / 100;
+      if (v < 0 || v > 100) {
+        return NextResponse.json(
+          { error: "default_service_charge_pct must be 0–100" },
+          { status: 400 },
+        );
+      }
+      updates.default_service_charge_pct = v;
     }
 
     if (Object.keys(updates).length === 0) {

@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod/v4";
 import { adminClient } from "@/lib/supabase/admin";
+import {
+  findOpenSessionForTable,
+  openSessionForTable,
+  recomputeSessionTotals,
+} from "@/app/api/menu/sessions/_lib/sessions";
 
 /* ── Helpers ────────────────────────────────────────── */
 
@@ -51,7 +56,7 @@ export async function POST(req: NextRequest) {
     /* STEP 1 — Verify menu exists and table ordering is enabled */
     const { data: menu } = await adminClient
       .from("menus")
-      .select("id, table_ordering, is_published")
+      .select("id, table_ordering, is_published, default_service_charge_pct")
       .eq("id", data.menu_id)
       .single();
 
@@ -215,7 +220,9 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    /* STEP 6 — Validate table_id if provided */
+    /* STEP 6 — Validate table_id if provided, otherwise try to resolve by
+       table_number so we can attach to a session even when the QR predates
+       table registration. */
     let tableDisplayNumber = data.table_number;
     let resolvedTableId: string | null = null;
 
@@ -235,6 +242,21 @@ export async function POST(req: NextRequest) {
 
       tableDisplayNumber = tableRow.table_number;
       resolvedTableId = tableRow.id;
+    } else if (data.table_number) {
+      // Best-effort lookup by table_number; if the table isn't registered the
+      // order still proceeds (resolvedTableId stays null) and no session is
+      // attached — preserving V1 behaviour for restaurants without table rows.
+      const { data: tableRow } = await adminClient
+        .from("restaurant_tables")
+        .select("id, table_number, menu_id, is_active")
+        .eq("menu_id", data.menu_id)
+        .eq("table_number", data.table_number)
+        .eq("is_active", true)
+        .maybeSingle();
+      if (tableRow) {
+        resolvedTableId = tableRow.id;
+        tableDisplayNumber = tableRow.table_number;
+      }
     }
 
     /* STEP 7 — Build per-item snapshots and compute totals using DB prices only */
@@ -268,6 +290,30 @@ export async function POST(req: NextRequest) {
     const subtotal = orderItemRows.reduce((s, r) => s + r.line_total, 0);
     const total = subtotal; // delivery_fee_kes = 0 for dine_in V1
 
+    /* STEP 7.5 — Attach to (or auto-create) a table session.
+       Backward-compat bridge: every order with a registered table_id now lives
+       under a table_session. Restaurants that don't use the POS still get
+       sessions silently attached — invisible to them unless they look.
+       If we couldn't resolve a registered table (resolvedTableId null), the
+       order is left session-less.
+       TODO V3: handle tableless orders (takeaway?) once the takeaway flow ships. */
+    let sessionId: string | null = null;
+    if (resolvedTableId) {
+      const existing = await findOpenSessionForTable(resolvedTableId);
+      if (existing && existing.menu_id === data.menu_id) {
+        sessionId = existing.id;
+      } else {
+        const created = await openSessionForTable({
+          menuId:           data.menu_id,
+          tableId:          resolvedTableId,
+          covers:           1,
+          openedByStaffId:  null, // guest-initiated
+          serviceChargePct: Number(menu.default_service_charge_pct ?? 0),
+        });
+        sessionId = created?.id ?? null;
+      }
+    }
+
     /* STEP 8 — Insert order */
     const { data: order, error: orderErr } = await adminClient
       .from("orders")
@@ -277,6 +323,7 @@ export async function POST(req: NextRequest) {
         status:           "new",
         table_number:     tableDisplayNumber,
         table_id:         resolvedTableId,
+        table_session_id: sessionId,
         customer_name:    data.customer_name ?? null,
         notes:            sanitizeNotes(data.order_note),
         subtotal_kes:     subtotal,
@@ -301,6 +348,17 @@ export async function POST(req: NextRequest) {
 
     if (itemsErr) {
       console.error("[orders] order_items insert error:", itemsErr);
+    }
+
+    /* STEP 9.5 — Refresh cached session totals so the POS table grid sees
+       this order on its next 8s poll. Best-effort: failure here doesn't
+       break the order flow, the next session-side write will heal totals. */
+    if (sessionId) {
+      try {
+        await recomputeSessionTotals(sessionId);
+      } catch (e) {
+        console.error("[orders] session totals recompute failed:", e);
+      }
     }
 
     /* STEP 10 — Return enriched confirmation */

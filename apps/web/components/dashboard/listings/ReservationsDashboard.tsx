@@ -53,6 +53,7 @@ interface MenuSettings {
   leadTime: number;
   maxParty: number;
   maxAdvance: number;
+  serviceChargePct: number;
   listingCity: string | null;
   timeWindows: TimeWindow[];
 }
@@ -1124,12 +1125,14 @@ export function ReservationsDashboard({
       {activeTab === "settings" && (
         <ReservationsSettings
           menuId={menuId}
+          menuSlug={menuSlug}
           listingCity={listingCity}
           initialReservationsEnabled={menuSettings.reservationsEnabled}
           initialDuration={menuSettings.duration}
           initialLeadTime={menuSettings.leadTime}
           initialMaxParty={menuSettings.maxParty}
           initialMaxAdvance={menuSettings.maxAdvance}
+          initialServiceChargePct={menuSettings.serviceChargePct}
           initialAreas={areas as SettingsArea[]}
           initialWindows={menuSettings.timeWindows}
           tableOrdering={tableOrdering}

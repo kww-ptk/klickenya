@@ -41,7 +41,7 @@ export default async function ReservationsPage({
   let menuQuery = adminClient
     .from("menus")
     .select(
-      "id, name, slug, reservations_enabled, table_ordering, default_reservation_duration, reservations_lead_time_hours, reservations_max_party_size, reservations_max_advance_days",
+      "id, name, slug, reservations_enabled, table_ordering, default_reservation_duration, reservations_lead_time_hours, reservations_max_party_size, reservations_max_advance_days, default_service_charge_pct",
     )
     .eq("listing_slug", listing.slug);
   if (!isAdmin) menuQuery = menuQuery.eq("business_id", user.id);
@@ -93,6 +93,7 @@ export default async function ReservationsPage({
           leadTime: menu.reservations_lead_time_hours ?? 2,
           maxParty: menu.reservations_max_party_size ?? 12,
           maxAdvance: menu.reservations_max_advance_days ?? 30,
+          serviceChargePct: Number(menu.default_service_charge_pct ?? 0),
           listingCity: listing.city ?? null,
           timeWindows,
         }}

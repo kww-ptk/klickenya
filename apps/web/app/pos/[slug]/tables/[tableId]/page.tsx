@@ -1,0 +1,61 @@
+import { notFound, redirect } from "next/navigation";
+import { cookies } from "next/headers";
+import { adminClient } from "@/lib/supabase/admin";
+import { getPosMenuBySlug } from "../../_lib/menuFromSlug";
+import { POS_SESSION_COOKIE, verifyPosSession } from "@/app/api/pos/_lib/auth";
+import { PosSessionDetail } from "@/components/pos/PosSessionDetail";
+
+interface PageProps {
+  params: Promise<{ slug: string; tableId: string }>;
+}
+
+export default async function PosTableDetailPage({ params }: PageProps) {
+  const { slug, tableId } = await params;
+  const menu = await getPosMenuBySlug(slug);
+  if (!menu) notFound();
+
+  const cookieStore = await cookies();
+  const session = verifyPosSession(cookieStore.get(POS_SESSION_COOKIE)?.value);
+  if (!session || session.menu_id !== menu.id) {
+    redirect(`/pos/${slug}`);
+  }
+
+  const { data: staffRow } = await adminClient
+    .from("restaurant_staff")
+    .select("id, is_active, name, role")
+    .eq("id", session.staff_id)
+    .single();
+  if (!staffRow || !staffRow.is_active) {
+    redirect(`/pos/${slug}`);
+  }
+
+  const { data: table } = await adminClient
+    .from("restaurant_tables")
+    .select("id, table_number, menu_id")
+    .eq("id", tableId)
+    .single();
+  if (!table || table.menu_id !== menu.id) notFound();
+
+  // Find the open or billed session for this table.
+  const { data: openSession } = await adminClient
+    .from("table_sessions")
+    .select("id")
+    .eq("table_id", tableId)
+    .in("status", ["open", "billed"])
+    .order("opened_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  return (
+    <PosSessionDetail
+      slug={slug}
+      menuId={menu.id}
+      menuName={menu.name}
+      tableId={tableId}
+      tableNumber={table.table_number}
+      sessionId={openSession?.id ?? null}
+      staffName={staffRow.name}
+      staffRole={staffRow.role as "waiter" | "manager" | "cashier"}
+    />
+  );
+}
