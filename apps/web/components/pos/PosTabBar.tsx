@@ -3,20 +3,19 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LayoutGrid, ChefHat, History } from "lucide-react";
+import { usePosShell } from "./_shell/PosShellProvider";
 
-interface PosTabBarProps {
-  slug:    string;
-  menuId?: string;
-}
-
-export function PosTabBar({ slug, menuId }: PosTabBarProps) {
+export function PosTabBar() {
+  const { menu } = usePosShell();
   const pathname = usePathname();
+  const slug = menu.slug;
+
   const tabs = [
-    { id: "tables",  href: `/pos/${slug}/tables`,        icon: LayoutGrid, label: "Tables" },
+    { id: "tables",  href: `/pos/${slug}/tables`,             icon: LayoutGrid, label: "Tables" },
     // Kitchen still lives in the dashboard for V2 — link out so staff can see
     // the same KitchenDashboard the owner uses.
-    { id: "kitchen", href: menuId ? `/dashboard/menu/${menuId}/orders` : `/pos/${slug}/tables`, icon: ChefHat, label: "Kitchen", external: true },
-    { id: "history", href: `/pos/${slug}/history`,       icon: History, label: "History" },
+    { id: "kitchen", href: `/dashboard/menu/${menu.id}/orders`, icon: ChefHat, label: "Kitchen", external: true },
+    { id: "history", href: `/pos/${slug}/history`,            icon: History, label: "History" },
   ] as const;
 
   return (

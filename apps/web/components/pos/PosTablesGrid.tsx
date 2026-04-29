@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { Users, Clock, Search, X } from "lucide-react";
 import { PosHeader } from "./PosHeader";
 import { PosTabBar } from "./PosTabBar";
+import { usePosShell } from "./_shell/PosShellProvider";
+import { posFetch } from "./_shell/posFetch";
 
 /* ── Types ──────────────────────────────────────────────────────────────────── */
 
@@ -31,15 +33,13 @@ interface PosSession {
 }
 
 interface PosTablesGridProps {
-  slug:          string;
-  menuId:        string;
-  menuName:      string;
-  staffName:     string;
-  staffRole:     "waiter" | "manager" | "cashier";
   initialTables: PosTable[];
 }
 
-const POLL_MS = 8_000;
+// 5s polling — realtime is too many channels when watching every table at
+// once (one channel per session × ~30 tables). 5s is the right tradeoff for
+// the grid view; the session-detail view drops to true realtime.
+const POLL_MS = 5_000;
 
 /* ── Helpers ────────────────────────────────────────────────────────────────── */
 
@@ -56,14 +56,10 @@ function formatMins(m: number): string {
 
 /* ── Main grid ──────────────────────────────────────────────────────────────── */
 
-export function PosTablesGrid({
-  slug,
-  menuId,
-  menuName,
-  staffName,
-  staffRole,
-  initialTables,
-}: PosTablesGridProps) {
+export function PosTablesGrid({ initialTables }: PosTablesGridProps) {
+  const { menu } = usePosShell();
+  const slug = menu.slug;
+  const menuId = menu.id;
   const router = useRouter();
   const [sessions, setSessions] = useState<PosSession[]>([]);
   const [openingTableId, setOpeningTableId] = useState<string | null>(null);
@@ -93,10 +89,10 @@ export function PosTablesGrid({
     });
   }, [initialTables, sessions, search, statusFilter]);
 
-  /* ── Poll sessions every 8s ── */
+  /* ── Poll sessions every 5s ── */
   const fetchSessions = useCallback(async () => {
     try {
-      const res = await fetch(`/api/menu/sessions?menu_id=${menuId}&status=all`);
+      const res = await posFetch(`/api/menu/sessions?menu_id=${menuId}&status=all`);
       if (!res.ok) return;
       const data = await res.json();
       const incoming: PosSession[] = (data.sessions ?? []).filter(
@@ -137,7 +133,7 @@ export function PosTablesGrid({
     async (tableId: string, covers: number) => {
       setOpeningTableId(tableId);
       try {
-        const res = await fetch("/api/menu/sessions", {
+        const res = await posFetch("/api/menu/sessions", {
           method:  "POST",
           headers: { "Content-Type": "application/json" },
           body:    JSON.stringify({ menu_id: menuId, table_id: tableId, covers }),
@@ -162,7 +158,7 @@ export function PosTablesGrid({
     async (sessionId: string, method: "cash" | "card" | "mpesa") => {
       setPaymentBusyId(sessionId);
       try {
-        const res = await fetch(`/api/menu/sessions/${sessionId}`, {
+        const res = await posFetch(`/api/menu/sessions/${sessionId}`, {
           method:  "PATCH",
           headers: { "Content-Type": "application/json" },
           body:    JSON.stringify({ status: "paid", payment_method: method }),
@@ -185,7 +181,7 @@ export function PosTablesGrid({
 
   return (
     <div className="min-h-screen flex flex-col">
-      <PosHeader slug={slug} menuName={menuName} staffName={staffName} staffRole={staffRole} />
+      <PosHeader />
 
       <main className="flex-1 max-w-screen-2xl mx-auto w-full px-3 sm:px-6 pt-4 pb-24">
         <div className="flex items-baseline justify-between mb-3">
@@ -278,7 +274,7 @@ export function PosTablesGrid({
         )}
       </main>
 
-      <PosTabBar slug={slug} menuId={menuId} />
+      <PosTabBar />
 
       {openModalTable && (
         <OpenTableModal

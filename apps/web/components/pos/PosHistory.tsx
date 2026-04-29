@@ -14,26 +14,21 @@ export interface HistoryRow {
 }
 
 interface PosHistoryProps {
-  slug:      string;
-  menuId:    string;
-  menuName:  string;
-  staffName: string;
-  staffRole: "waiter" | "manager" | "cashier";
-  rows:      HistoryRow[];
+  rows: HistoryRow[];
 }
 
 function formatKes(n: number) {
   return `KES ${Math.round(n).toLocaleString("en-KE")}`;
 }
 
-export function PosHistory({ slug, menuId, menuName, staffName, staffRole, rows }: PosHistoryProps) {
+export function PosHistory({ rows }: PosHistoryProps) {
   const totalCollected = rows
     .filter((r) => r.status === "paid")
     .reduce((s, r) => s + r.total_kes, 0);
 
   return (
     <div className="min-h-screen flex flex-col">
-      <PosHeader slug={slug} menuName={menuName} staffName={staffName} staffRole={staffRole} />
+      <PosHeader />
 
       <main className="flex-1 max-w-screen-md mx-auto w-full px-3 sm:px-6 pt-4 pb-24">
         <h1 className="text-[20px] font-bold text-white">History · today</h1>
@@ -78,7 +73,7 @@ export function PosHistory({ slug, menuId, menuName, staffName, staffRole, rows 
         </div>
       </main>
 
-      <PosTabBar slug={slug} menuId={menuId} />
+      <PosTabBar />
     </div>
   );
 }

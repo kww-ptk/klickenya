@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Delete } from "lucide-react";
+import { posFetch } from "./_shell/posFetch";
 
 interface PosLoginProps {
   slug:     string;
@@ -27,7 +28,7 @@ export function PosLogin({ slug, menuId, menuName }: PosLoginProps) {
       setSubmitting(true);
       setError(null);
       try {
-        const res = await fetch("/api/pos/auth", {
+        const res = await posFetch("/api/pos/auth", {
           method:  "POST",
           headers: { "Content-Type": "application/json" },
           body:    JSON.stringify({ menu_id: menuId, pin: value }),

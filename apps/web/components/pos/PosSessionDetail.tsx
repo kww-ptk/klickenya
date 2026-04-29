@@ -4,21 +4,17 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ArrowLeft, ChevronDown, ChevronRight } from "lucide-react";
-import type { MenuSection } from "@/components/listings/detail/restaurant/MenuDisplay";
 import { PosHeader } from "./PosHeader";
 import { PosTabBar } from "./PosTabBar";
 import { PosOrderEntry } from "./PosOrderEntry";
+import { usePosShell } from "./_shell/PosShellProvider";
+import { posFetch } from "./_shell/posFetch";
+import { subscribeSessionRealtime } from "./_shell/realtime";
 
 interface PosSessionDetailProps {
-  slug:         string;
-  menuId:       string;
-  menuName:     string;
-  tableId:      string;
-  tableNumber:  string;
-  sessionId:    string | null;
-  staffName:    string;
-  staffRole:    "waiter" | "manager" | "cashier";
-  menuSections: MenuSection[];
+  tableId:     string;
+  tableNumber: string;
+  sessionId:   string | null;
 }
 
 interface OrderItem {
@@ -58,7 +54,8 @@ interface SessionDetail {
   orders:                OrderSummary[];
 }
 
-const POLL_MS = 8_000;
+// Fallback poll if realtime is unavailable. Realtime drives the hot path.
+const FALLBACK_POLL_MS = 30_000;
 
 function formatKes(n: number) {
   return `KES ${Math.round(n).toLocaleString("en-KE")}`;
@@ -73,15 +70,11 @@ interface Toast {
 }
 
 export function PosSessionDetail({
-  slug,
-  menuId,
-  menuName,
   tableNumber,
   sessionId,
-  staffName,
-  staffRole,
-  menuSections,
 }: PosSessionDetailProps) {
+  const { menu, sections: menuSections } = usePosShell();
+  const slug = menu.slug;
   const router = useRouter();
   const [detail, setDetail] = useState<SessionDetail | null>(null);
   // True until the first refresh resolves. Prevents the "no open session"
@@ -110,7 +103,7 @@ export function PosSessionDetail({
       return;
     }
     try {
-      const res = await fetch(`/api/menu/sessions/${sessionId}`);
+      const res = await posFetch(`/api/menu/sessions/${sessionId}`);
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         setError(data.error || "Failed to load session");
@@ -126,6 +119,10 @@ export function PosSessionDetail({
     }
   }, [sessionId]);
 
+  // Realtime: subscribe to orders + table_sessions changes for THIS session.
+  // New guest orders show up in ~150 ms; payment / void transitions instant.
+  // We keep a 30s fallback poll so a flaky realtime channel can't leave the
+  // detail page stale forever.
   useEffect(() => {
     refresh();
     if (!sessionId) return;
@@ -133,10 +130,15 @@ export function PosSessionDetail({
       if (document.visibilityState === "visible") refresh();
     };
     document.addEventListener("visibilitychange", onVis);
-    const i = setInterval(refresh, POLL_MS);
+    const fallback = setInterval(refresh, FALLBACK_POLL_MS);
+    const unsubscribe = subscribeSessionRealtime({
+      sessionId,
+      onChange: refresh,
+    });
     return () => {
-      clearInterval(i);
+      clearInterval(fallback);
       document.removeEventListener("visibilitychange", onVis);
+      unsubscribe();
     };
   }, [refresh, sessionId]);
 
@@ -159,7 +161,7 @@ export function PosSessionDetail({
           action === "pay-cash"  ? { status: "paid", payment_method: "cash" } :
           action === "pay-card"  ? { status: "paid", payment_method: "card" } :
                                    { status: "paid", payment_method: "mpesa" };
-        const res = await fetch(`/api/menu/sessions/${sessionId}`, {
+        const res = await posFetch(`/api/menu/sessions/${sessionId}`, {
           method:  "PATCH",
           headers: { "Content-Type": "application/json" },
           body:    JSON.stringify(body),
@@ -196,7 +198,7 @@ export function PosSessionDetail({
 
   return (
     <div className="min-h-screen flex flex-col">
-      <PosHeader slug={slug} menuName={menuName} staffName={staffName} staffRole={staffRole} />
+      <PosHeader />
 
       <main className="flex-1 max-w-screen-2xl mx-auto w-full px-3 sm:px-6 pt-3 pb-24">
         {/* Top bar: back + table label + status */}
@@ -431,7 +433,7 @@ export function PosSessionDetail({
         )}
       </main>
 
-      <PosTabBar slug={slug} menuId={menuId} />
+      <PosTabBar />
 
       {/* Toasts */}
       <div className="fixed top-16 right-3 z-50 space-y-2 pointer-events-none">

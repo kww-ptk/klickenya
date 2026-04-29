@@ -1,4 +1,4 @@
-import { notFound, redirect } from "next/navigation";
+import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { adminClient } from "@/lib/supabase/admin";
 import { getPosMenuBySlug } from "../_lib/menuFromSlug";
@@ -9,10 +9,16 @@ interface PageProps {
   params: Promise<{ slug: string }>;
 }
 
+/**
+ * Tables grid page. The shared layout already fetched menu + staff into
+ * context, so this page only fetches the lightweight table list. Auth
+ * verification still lives here as a defence-in-depth check (layout context
+ * is for the UI; redirect is for the server response).
+ */
 export default async function PosTablesPage({ params }: PageProps) {
   const { slug } = await params;
   const menu = await getPosMenuBySlug(slug);
-  if (!menu) notFound();
+  if (!menu) return null;
 
   const cookieStore = await cookies();
   const session = verifyPosSession(cookieStore.get(POS_SESSION_COOKIE)?.value);
@@ -20,17 +26,6 @@ export default async function PosTablesPage({ params }: PageProps) {
     redirect(`/pos/${slug}`);
   }
 
-  // Verify staff is still active.
-  const { data: staffRow } = await adminClient
-    .from("restaurant_staff")
-    .select("id, is_active, name, role")
-    .eq("id", session.staff_id)
-    .single();
-  if (!staffRow || !staffRow.is_active) {
-    redirect(`/pos/${slug}`);
-  }
-
-  // Initial table list.
   const { data: tables } = await adminClient
     .from("restaurant_tables")
     .select("id, table_number, capacity, display_order, is_active")
@@ -44,14 +39,5 @@ export default async function PosTablesPage({ params }: PageProps) {
     capacity:     t.capacity ?? 4,
   }));
 
-  return (
-    <PosTablesGrid
-      slug={slug}
-      menuId={menu.id}
-      menuName={menu.name}
-      staffName={staffRow.name}
-      staffRole={staffRow.role as "waiter" | "manager" | "cashier"}
-      initialTables={initialTables}
-    />
-  );
+  return <PosTablesGrid initialTables={initialTables} />;
 }

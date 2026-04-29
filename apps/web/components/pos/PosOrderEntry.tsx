@@ -1,12 +1,18 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Plus, Minus, Search, X } from "lucide-react";
 import type {
   MenuSection,
   MenuItem,
 } from "@/components/listings/detail/restaurant/MenuDisplay";
 import { ItemModal, type CartItem } from "@/components/menu/ItemModal";
+import { posFetch } from "./_shell/posFetch";
+import {
+  clearDraft as clearStoredDraft,
+  loadDraft,
+  saveDraft,
+} from "./_shell/draftStorage";
 
 /* ── Types ──────────────────────────────────────────────────────────────────── */
 
@@ -73,6 +79,32 @@ export function PosOrderEntry({
   const [submitting, setSubmitting] = useState(false);
   const [optionModalItem, setOptionModalItem] = useState<MenuItem | null>(null);
   const [draftOpen, setDraftOpen] = useState(false); // mobile sheet
+  const restoredRef = useRef(false);
+
+  /* ── Restore persisted draft on mount ─────────────────────────────────────
+   * Keyed by session_id. Survives tab close, browser crash, accidental
+   * navigation. Cleared on successful Send and manual Clear. */
+  useEffect(() => {
+    if (!sessionId || restoredRef.current) return;
+    restoredRef.current = true;
+    const persisted = loadDraft(sessionId);
+    if (persisted && persisted.length > 0) {
+      setDraft(persisted);
+      const itemCount = persisted.reduce((s, l) => s + l.quantity, 0);
+      showToast(`Restored unsaved order — ${itemCount} ${itemCount === 1 ? "item" : "items"}`);
+    }
+  }, [sessionId, showToast]);
+
+  /* ── Mirror draft → localStorage on every change ─────────────────────────── */
+  useEffect(() => {
+    if (!sessionId) return;
+    if (draft.length === 0) {
+      // Don't write empty drafts — clearStoredDraft has already happened (or
+      // there was nothing there). Avoids churning localStorage for nothing.
+      return;
+    }
+    saveDraft(sessionId, draft);
+  }, [sessionId, draft]);
 
   /* ── Filter shown items by search OR active section ── */
   const visibleItems = useMemo<MenuItem[]>(() => {
@@ -202,7 +234,8 @@ export function PosOrderEntry({
     if (draft.length === 0) return;
     if (!confirm("Clear current order?")) return;
     setDraft([]);
-  }, [draft.length]);
+    if (sessionId) clearStoredDraft(sessionId);
+  }, [draft.length, sessionId]);
 
   const subtotal = draft.reduce((s, l) => s + l.unit_price * l.quantity, 0);
   const draftItemCount = draft.reduce((s, l) => s + l.quantity, 0);
@@ -230,9 +263,12 @@ export function PosOrderEntry({
     const snapshot = draft;
     setDraft([]);
     setDraftOpen(false);
+    // Clear persisted copy too so a refresh during the in-flight POST doesn't
+    // ressurect the just-sent order. If the POST fails we re-persist below.
+    clearStoredDraft(sessionId);
 
     try {
-      const res = await fetch("/api/pos/orders", {
+      const res = await posFetch("/api/pos/orders", {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
         body:    JSON.stringify({

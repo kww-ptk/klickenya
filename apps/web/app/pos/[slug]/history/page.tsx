@@ -1,4 +1,4 @@
-import { notFound, redirect } from "next/navigation";
+import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { adminClient } from "@/lib/supabase/admin";
 import { getPosMenuBySlug } from "../_lib/menuFromSlug";
@@ -10,38 +10,26 @@ interface PageProps {
 }
 
 /**
- * Read-only list of sessions closed today (paid or voided).
- * Filters by Africa/Nairobi day boundaries — UTC offset is +03:00 with no DST,
- * so plain offset arithmetic is safe.
+ * Read-only list of sessions closed today. Africa/Nairobi is UTC+03:00 with
+ * no DST, so plain offset arithmetic is safe.
  */
 function startOfNairobiDayUtc(): Date {
   const now = new Date();
-  // Compute "now in Nairobi" by shifting UTC +03:00, then strip the time.
   const nairobi = new Date(now.getTime() + 3 * 3600 * 1000);
   const startNairobi = new Date(
     Date.UTC(nairobi.getUTCFullYear(), nairobi.getUTCMonth(), nairobi.getUTCDate()),
   );
-  // Convert that midnight Nairobi back to UTC.
   return new Date(startNairobi.getTime() - 3 * 3600 * 1000);
 }
 
 export default async function PosHistoryPage({ params }: PageProps) {
   const { slug } = await params;
   const menu = await getPosMenuBySlug(slug);
-  if (!menu) notFound();
+  if (!menu) return null;
 
   const cookieStore = await cookies();
   const session = verifyPosSession(cookieStore.get(POS_SESSION_COOKIE)?.value);
   if (!session || session.menu_id !== menu.id) {
-    redirect(`/pos/${slug}`);
-  }
-
-  const { data: staffRow } = await adminClient
-    .from("restaurant_staff")
-    .select("name, role, is_active")
-    .eq("id", session.staff_id)
-    .single();
-  if (!staffRow || !staffRow.is_active) {
     redirect(`/pos/${slug}`);
   }
 
@@ -72,14 +60,5 @@ export default async function PosHistoryPage({ params }: PageProps) {
     };
   });
 
-  return (
-    <PosHistory
-      slug={slug}
-      menuId={menu.id}
-      menuName={menu.name}
-      staffName={staffRow.name}
-      staffRole={staffRow.role as "waiter" | "manager" | "cashier"}
-      rows={history}
-    />
-  );
+  return <PosHistory rows={history} />;
 }
