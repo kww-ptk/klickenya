@@ -5,17 +5,24 @@
  * we use here — text(), line(), rect()). The codebase already ships jsPDF
  * for the QR PDF download in QRDownload.tsx, so no new dependency is added.
  *
+ * jsPDF is loaded via dynamic import inside renderBillPdf() so it stays out
+ * of the cold-start bundle for routes that import this module but never end
+ * up generating a PDF (e.g. the /api/menu/sessions/[id] PATCH handler chain
+ * that imports the receipt-send route's siblings). ~250 KB shaved off cold
+ * starts on the hot path.
+ *
  * Format: A5 portrait, single page. A5 (148 × 210 mm) is the standard
  * receipt-printer-friendly size in this region — fits a thermal 80mm roll
  * if the user scales to fit, and prints cleanly on standard A4 with
  * margins via "Fit to page".
  */
 
-import { jsPDF } from "jspdf";
+import type { jsPDF as JsPdfType } from "jspdf";
 import type { FullBill } from "./sessions";
 import { formatKes, formatNairobiDateTime } from "@/lib/pos/bill";
 
-export function renderBillPdf(full: FullBill): Buffer {
+export async function renderBillPdf(full: FullBill): Promise<Buffer> {
+  const { jsPDF } = await import("jspdf");
   const doc = new jsPDF({ unit: "mm", format: "a5" });
   const pageW = doc.internal.pageSize.getWidth();   // 148
   const margin = 10;
@@ -173,13 +180,13 @@ export function renderBillPdf(full: FullBill): Buffer {
   return Buffer.from(ab);
 }
 
-function divider(doc: jsPDF, x: number, y: number, w: number) {
+function divider(doc: JsPdfType, x: number, y: number, w: number) {
   doc.setDrawColor(180, 180, 180);
   doc.setLineWidth(0.2);
   doc.line(x, y, x + w, y);
 }
 
-function metaLine(doc: jsPDF, x: number, y: number, label: string, value: string) {
+function metaLine(doc: JsPdfType, x: number, y: number, label: string, value: string) {
   doc.setFont("helvetica", "normal");
   doc.setTextColor(100, 100, 100);
   doc.text(label, x, y);
@@ -189,7 +196,7 @@ function metaLine(doc: jsPDF, x: number, y: number, label: string, value: string
   doc.setFont("helvetica", "normal");
 }
 
-function totalLine(doc: jsPDF, x: number, y: number, w: number, label: string, value: string) {
+function totalLine(doc: JsPdfType, x: number, y: number, w: number, label: string, value: string) {
   doc.text(label, x, y);
   doc.text(value, x + w, y, { align: "right" });
 }
