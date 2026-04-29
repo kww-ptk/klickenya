@@ -2,11 +2,7 @@
 
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import type { MenuSection } from "@/components/listings/detail/restaurant/MenuDisplay";
-import {
-  computeMenuVersion,
-  readMenuCache,
-  writeMenuCache,
-} from "./menuCache";
+import { readMenuCache, writeMenuCache } from "./menuCache";
 import { setOnline } from "./status";
 
 /* ── Public types ───────────────────────────────────────────────────────────── */
