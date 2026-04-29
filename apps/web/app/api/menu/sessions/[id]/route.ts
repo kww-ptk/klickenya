@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { adminClient } from "@/lib/supabase/admin";
 import { getPosOrOwnerAuth } from "@/app/api/pos/_lib/auth";
 import { recomputeSessionTotals } from "../_lib/sessions";
-import { computeBill } from "../_lib/bill";
+import { computeBill } from "@/lib/pos/bill";
 
 /* ── Types ───────────────────────────────────────────────────────────────────── */
 

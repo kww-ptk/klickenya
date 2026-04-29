@@ -4,7 +4,7 @@ import { adminClient } from "@/lib/supabase/admin";
 import { getPosOrOwnerAuth } from "@/app/api/pos/_lib/auth";
 import { loadFullBillForSession, getMenuIdForSession } from "../../../_lib/sessions";
 import { renderBillPdf } from "../../../_lib/billPdf";
-import { buildBillText, formatNairobiDate } from "../../../_lib/bill";
+import { buildBillText, formatNairobiDate } from "@/lib/pos/bill";
 
 export const runtime = "nodejs";
 

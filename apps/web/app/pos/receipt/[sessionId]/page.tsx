@@ -4,7 +4,7 @@ import { adminClient } from "@/lib/supabase/admin";
 import { POS_SESSION_COOKIE, verifyPosSession } from "@/app/api/pos/_lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { loadFullBillForSession } from "@/app/api/menu/sessions/_lib/sessions";
-import { formatKes, formatNairobiDateTime } from "@/app/api/menu/sessions/_lib/bill";
+import { formatKes, formatNairobiDateTime } from "@/lib/pos/bill";
 import { ReceiptAutoPrint } from "./ReceiptAutoPrint";
 
 /**

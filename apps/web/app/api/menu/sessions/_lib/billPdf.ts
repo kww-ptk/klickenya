@@ -13,7 +13,7 @@
 
 import { jsPDF } from "jspdf";
 import type { FullBill } from "./sessions";
-import { formatKes, formatNairobiDateTime } from "./bill";
+import { formatKes, formatNairobiDateTime } from "@/lib/pos/bill";
 
 export function renderBillPdf(full: FullBill): Buffer {
   const doc = new jsPDF({ unit: "mm", format: "a5" });

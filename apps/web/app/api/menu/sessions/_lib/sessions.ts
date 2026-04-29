@@ -1,6 +1,6 @@
 import { adminClient } from "@/lib/supabase/admin";
-import type { BillOutput, BillRestaurantMeta } from "./bill";
-import { computeBill } from "./bill";
+import type { BillOutput, BillRestaurantMeta } from "@/lib/pos/bill";
+import { computeBill } from "@/lib/pos/bill";
 
 /**
  * Shared helpers for reading/writing table_sessions.

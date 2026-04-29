@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getPosOrOwnerAuth } from "@/app/api/pos/_lib/auth";
 import { loadFullBillForSession, getMenuIdForSession } from "../../_lib/sessions";
 import { renderBillPdf } from "../../_lib/billPdf";
-import { formatNairobiDate } from "../../_lib/bill";
+import { formatNairobiDate } from "@/lib/pos/bill";
 
 // jsPDF allocates Buffers — keep this on Node, not Edge.
 export const runtime = "nodejs";

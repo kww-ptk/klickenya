@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { applyBillTotals, formatKes } from "@/app/api/menu/sessions/_lib/bill";
+import { applyBillTotals, formatKes } from "@/lib/pos/bill";
 import { posFetch } from "./_shell/posFetch";
 
 /**
