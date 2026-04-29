@@ -7,6 +7,7 @@ import { ArrowLeft, ChevronDown, ChevronRight } from "lucide-react";
 import { PosHeader } from "./PosHeader";
 import { PosTabBar } from "./PosTabBar";
 import { PosOrderEntry } from "./PosOrderEntry";
+import { PosBillPanel } from "./PosBillPanel";
 import { usePosShell } from "./_shell/PosShellProvider";
 import { posFetch } from "./_shell/posFetch";
 import { subscribeSessionRealtime } from "./_shell/realtime";
@@ -46,11 +47,21 @@ interface SessionDetail {
   service_charge_amount: number;
   discount_pct:          number;
   discount_amount:       number;
+  discount_amount_kes:   number;
+  total_discount:        number;
+  after_discount:        number;
+  split_count:           number;
+  bill_notes:            string | null;
+  per_person:            number;
   subtotal_kes:          number;
   total_kes:             number;
   payment_method:        string | null;
+  mpesa_ref:             string | null;
   opened_at:             string;
   opened_by_name:        string | null;
+  receipt_sent_to:       string | null;
+  linked_guest_email:    string | null;
+  table_number:          string | null;
   orders:                OrderSummary[];
 }
 
@@ -85,6 +96,8 @@ export function PosSessionDetail({
   const [error, setError] = useState<string | null>(null);
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
+  const [mpesaPromptOpen, setMpesaPromptOpen] = useState(false);
+  const [mpesaRef, setMpesaRef] = useState("");
   const toastIdRef = useRef(0);
 
   const showToast = useCallback((msg: string, type: "success" | "error" = "success") => {
@@ -145,6 +158,7 @@ export function PosSessionDetail({
   const transition = useCallback(
     async (
       action: "bill" | "pay-cash" | "pay-card" | "pay-mpesa" | "void",
+      extras?: { mpesa_ref?: string },
     ) => {
       if (!sessionId) return;
       const ok =
@@ -160,7 +174,7 @@ export function PosSessionDetail({
           action === "void"      ? { status: "void" } :
           action === "pay-cash"  ? { status: "paid", payment_method: "cash" } :
           action === "pay-card"  ? { status: "paid", payment_method: "card" } :
-                                   { status: "paid", payment_method: "mpesa" };
+                                   { status: "paid", payment_method: "mpesa", mpesa_ref: extras?.mpesa_ref ?? null };
         const res = await posFetch(`/api/menu/sessions/${sessionId}`, {
           method:  "PATCH",
           headers: { "Content-Type": "application/json" },
@@ -171,11 +185,13 @@ export function PosSessionDetail({
           showToast(data.error || "Failed to update session.", "error");
           return;
         }
-        if (action !== "bill") {
+        if (action === "void") {
           router.replace(`/pos/${slug}/tables`);
           router.refresh();
           return;
         }
+        // For pay-* and bill, stay on the session page so the waiter can
+        // print / share / email the receipt before walking away.
         await refresh();
       } finally {
         setBusy(null);
@@ -183,6 +199,16 @@ export function PosSessionDetail({
     },
     [sessionId, refresh, router, slug, showToast],
   );
+
+  const onPayMpesa = useCallback(() => {
+    setMpesaRef("");
+    setMpesaPromptOpen(true);
+  }, []);
+
+  const confirmMpesa = useCallback(async () => {
+    setMpesaPromptOpen(false);
+    await transition("pay-mpesa", { mpesa_ref: mpesaRef.trim() || undefined });
+  }, [mpesaRef, transition]);
 
   const sortedOrders = useMemo(
     () =>
@@ -361,72 +387,93 @@ export function PosSessionDetail({
                   )}
                 </div>
 
-                {/* Totals */}
-                <div className="rounded-2xl border border-[#2A2520] bg-[#1A170F] p-4 space-y-2">
-                  <Row label="Subtotal" value={formatKes(detail.subtotal_kes)} />
-                  {detail.service_charge_pct > 0 && (
-                    <Row
-                      label={`Service (${detail.service_charge_pct}%)`}
-                      value={formatKes(detail.service_charge_amount)}
-                    />
-                  )}
-                  {detail.discount_pct > 0 && (
-                    <Row
-                      label={`Discount (${detail.discount_pct}%)`}
-                      value={`− ${formatKes(detail.discount_amount)}`}
-                    />
-                  )}
-                  <div className="h-px bg-[#2A2520]" />
-                  <Row label="Total" value={formatKes(detail.total_kes)} highlight />
-                </div>
+                {/* Bill panel — only when there's at least one order. Bill
+                    rendering, discount controls, split, share buttons. */}
+                {sortedOrders.length > 0 && (
+                  <PosBillPanel
+                    initialEmail={detail.linked_guest_email}
+                    showToast={showToast}
+                    onSaved={refresh}
+                    session={{
+                      id:                  detail.id,
+                      status:              detail.status,
+                      subtotal_kes:        detail.subtotal_kes,
+                      service_charge_pct:  detail.service_charge_pct,
+                      discount_pct:        detail.discount_pct,
+                      discount_amount_kes: detail.discount_amount_kes,
+                      split_count:         detail.split_count,
+                      bill_notes:          detail.bill_notes,
+                      table_number:        tableNumber,
+                      payment_method:      detail.payment_method,
+                      mpesa_ref:           detail.mpesa_ref,
+                      receipt_sent_to:     detail.receipt_sent_to,
+                    }}
+                  />
+                )}
 
-                {/* Actions */}
-                <div className="grid grid-cols-2 gap-2">
-                  {detail.status === "open" && (
+                {/* Payment + lifecycle actions */}
+                {detail.status !== "paid" && detail.status !== "void" && (
+                  <div className="grid grid-cols-2 gap-2">
+                    {detail.status === "open" && (
+                      <button
+                        type="button"
+                        onClick={() => transition("bill")}
+                        disabled={busy !== null}
+                        className="h-12 rounded-full bg-[#E8A020] text-[#16130C] text-[13px] font-bold disabled:opacity-40"
+                      >
+                        {busy === "bill" ? "Marking…" : "Mark as billed"}
+                      </button>
+                    )}
                     <button
                       type="button"
-                      onClick={() => transition("bill")}
+                      onClick={() => transition("pay-cash")}
                       disabled={busy !== null}
-                      className="h-12 rounded-full bg-[#E8A020] text-[#16130C] text-[13px] font-bold disabled:opacity-40"
+                      className="h-12 rounded-full bg-[#5BA1FF] text-[#0F0D08] text-[13px] font-bold disabled:opacity-40"
                     >
-                      {busy === "bill" ? "Marking…" : "Mark as billed"}
+                      {busy === "pay-cash" ? "Saving…" : "Mark paid (Cash)"}
                     </button>
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => transition("pay-cash")}
-                    disabled={busy !== null}
-                    className="h-12 rounded-full bg-[#5BA1FF] text-[#0F0D08] text-[13px] font-bold disabled:opacity-40"
-                  >
-                    {busy === "pay-cash" ? "Saving…" : "Pay (Cash)"}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => transition("pay-card")}
-                    disabled={busy !== null}
-                    className="h-12 rounded-full bg-[#5BA1FF] text-[#0F0D08] text-[13px] font-bold disabled:opacity-40"
-                  >
-                    {busy === "pay-card" ? "Saving…" : "Pay (Card)"}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => transition("pay-mpesa")}
-                    disabled={busy !== null}
-                    className="h-12 rounded-full bg-[#5BA1FF] text-[#0F0D08] text-[13px] font-bold disabled:opacity-40"
-                  >
-                    {busy === "pay-mpesa" ? "Saving…" : "Pay (M-Pesa)"}
-                  </button>
-                  {detail.status === "open" && (
                     <button
                       type="button"
-                      onClick={() => transition("void")}
+                      onClick={() => transition("pay-card")}
                       disabled={busy !== null}
-                      className="h-12 rounded-full bg-[#252019] text-[#FF8A6B] text-[13px] font-bold disabled:opacity-40"
+                      className="h-12 rounded-full bg-[#5BA1FF] text-[#0F0D08] text-[13px] font-bold disabled:opacity-40"
                     >
-                      {busy === "void" ? "Voiding…" : "Void session"}
+                      {busy === "pay-card" ? "Saving…" : "Mark paid (Card)"}
                     </button>
-                  )}
-                </div>
+                    <button
+                      type="button"
+                      onClick={onPayMpesa}
+                      disabled={busy !== null}
+                      className="h-12 rounded-full bg-[#5BA1FF] text-[#0F0D08] text-[13px] font-bold disabled:opacity-40"
+                    >
+                      {busy === "pay-mpesa" ? "Saving…" : "Mark paid (M-Pesa)"}
+                    </button>
+                    {detail.status === "open" && (
+                      <button
+                        type="button"
+                        onClick={() => transition("void")}
+                        disabled={busy !== null}
+                        className="h-12 rounded-full bg-[#252019] text-[#FF8A6B] text-[13px] font-bold disabled:opacity-40"
+                      >
+                        {busy === "void" ? "Voiding…" : "Void session"}
+                      </button>
+                    )}
+                  </div>
+                )}
+
+                {/* Paid summary — once payment lands, the bill panel goes
+                    read-only but the share buttons remain active above. */}
+                {detail.status === "paid" && (
+                  <div className="rounded-2xl border border-[#1F3A1F] bg-[#0F1A0E] p-4 text-center">
+                    <p className="text-[12px] text-[#7CC97C] uppercase tracking-wide font-bold">
+                      Paid by {detail.payment_method === "mpesa" ? "M-Pesa" : detail.payment_method === "card" ? "Card" : "Cash"}
+                      {detail.mpesa_ref ? ` · ref ${detail.mpesa_ref}` : ""}
+                    </p>
+                    <p className="text-[18px] font-bold text-white mt-1">
+                      {formatKes(detail.total_kes)}
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -434,6 +481,48 @@ export function PosSessionDetail({
       </main>
 
       <PosTabBar />
+
+      {/* M-Pesa reference prompt */}
+      {mpesaPromptOpen && (
+        <div
+          className="fixed inset-0 z-50 bg-black/70 grid place-items-center px-4"
+          onClick={() => setMpesaPromptOpen(false)}
+        >
+          <div
+            className="w-full max-w-sm rounded-2xl bg-[#1A170F] border border-[#2A2520] p-5 space-y-3"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <p className="text-[14px] font-bold text-white">M-Pesa reference</p>
+            <p className="text-[12px] text-[#9C9485]">Optional: enter the M-Pesa transaction code from the SMS.</p>
+            <input
+              type="text"
+              autoFocus
+              maxLength={64}
+              value={mpesaRef}
+              onChange={(e) => setMpesaRef(e.target.value.toUpperCase())}
+              placeholder="e.g. SLM4XYZ8K2"
+              className="w-full h-11 rounded-lg bg-[#252019] border border-[#2A2520] text-white text-[14px] px-3 tracking-wider"
+              onKeyDown={(e) => { if (e.key === "Enter") confirmMpesa(); }}
+            />
+            <div className="flex gap-2 pt-1">
+              <button
+                type="button"
+                onClick={() => setMpesaPromptOpen(false)}
+                className="flex-1 h-11 rounded-full bg-[#252019] text-[#F4F1EC] text-[13px] font-bold"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={confirmMpesa}
+                className="flex-1 h-11 rounded-full bg-[#5BA1FF] text-[#0F0D08] text-[13px] font-bold"
+              >
+                Confirm payment
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Toasts */}
       <div className="fixed top-16 right-3 z-50 space-y-2 pointer-events-none">
@@ -454,15 +543,3 @@ export function PosSessionDetail({
   );
 }
 
-function Row({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
-  return (
-    <div className="flex items-baseline justify-between">
-      <span className={`${highlight ? "text-white text-[14px] font-bold" : "text-[12px] text-[#9C9485]"}`}>
-        {label}
-      </span>
-      <span className={`${highlight ? "text-white text-[18px] font-bold" : "text-[13px] text-[#F4F1EC]"}`}>
-        {value}
-      </span>
-    </div>
-  );
-}
