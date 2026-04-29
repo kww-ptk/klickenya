@@ -494,8 +494,11 @@ export function KitchenDashboard({ menuId, menuName, initialOrders }: KitchenDas
           <p className="text-[13px] text-[#9C9485]">New orders will appear here automatically.</p>
         </div>
       ) : (
-        <div className="p-4 lg:p-6">
-          <div className="flex gap-4 lg:gap-6 items-start">
+        <div className="p-3 sm:p-4 lg:p-6">
+          {/* Stack columns vertically on phones, side-by-side from md up.
+              Kitchen staff on a phone scroll the single thread top-down:
+              new at the top, ready at the bottom — matches workflow. */}
+          <div className="flex flex-col md:flex-row gap-4 lg:gap-6 items-stretch md:items-start">
             {/* New */}
             <Column
               title="New"
