@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import { useCallback, useMemo, useState } from "react";
 import { Plus, Minus, Search, X } from "lucide-react";
 import type {
@@ -356,6 +355,7 @@ export function PosOrderEntry({
                 onRemoveLine={removeLine}
                 onClear={clearDraft}
                 onSend={handleSend}
+                onContinue={() => setDraftOpen(false)}
                 bare
               />
             </div>
@@ -376,6 +376,9 @@ export function PosOrderEntry({
 }
 
 /* ── MenuItemCard ───────────────────────────────────────────────────────────── */
+//
+// Text-only by design. The waiter POS doesn't render item photos — speed
+// matters more than recognition during service, and the waiter knows the menu.
 
 function MenuItemCard({ item, onTap }: { item: MenuItem; onTap: () => void }) {
   const customisable = hasRealVariants(item);
@@ -384,36 +387,23 @@ function MenuItemCard({ item, onTap }: { item: MenuItem; onTap: () => void }) {
       type="button"
       onClick={onTap}
       disabled={!item.is_available}
-      className={`min-h-[80px] rounded-xl border p-2 text-left flex items-stretch gap-2 transition-colors active:scale-[0.98] ${
+      className={`min-h-[72px] rounded-xl border p-3 text-left flex flex-col justify-between transition-colors active:scale-[0.98] ${
         item.is_available
           ? "border-[#3A342B] bg-[#252019] hover:bg-[#3A342B]"
           : "border-[#2A2520] bg-[#1A170F] opacity-50 cursor-not-allowed"
       }`}
     >
-      {item.photo_url && (
-        <div className="relative w-14 h-14 rounded-lg overflow-hidden shrink-0 bg-[#0F0D08]">
-          <Image
-            src={item.photo_url}
-            alt={item.name}
-            fill
-            sizes="56px"
-            className="object-cover"
-          />
-        </div>
-      )}
-      <div className="flex-1 min-w-0 flex flex-col justify-between">
-        <p className="text-[13px] font-semibold text-white leading-snug line-clamp-2">{item.name}</p>
-        <div className="flex items-baseline justify-between gap-2 mt-1">
-          <span className="text-[13px] font-bold text-[#E8A020]">
-            {formatKes(item.price_kes)}
-          </span>
-          {customisable && item.is_available && (
-            <span className="text-[10px] text-[#9C9485] uppercase tracking-wide">Custom</span>
-          )}
-          {!item.is_available && (
-            <span className="text-[10px] text-[#FF8A6B] uppercase tracking-wide">Unavailable</span>
-          )}
-        </div>
+      <p className="text-[13px] font-semibold text-white leading-snug line-clamp-2">{item.name}</p>
+      <div className="flex items-baseline justify-between gap-2 mt-1.5">
+        <span className="text-[13px] font-bold text-[#E8A020]">
+          {formatKes(item.price_kes)}
+        </span>
+        {customisable && item.is_available && (
+          <span className="text-[10px] text-[#9C9485] uppercase tracking-wide">Custom</span>
+        )}
+        {!item.is_available && (
+          <span className="text-[10px] text-[#FF8A6B] uppercase tracking-wide">Unavailable</span>
+        )}
       </div>
     </button>
   );
@@ -431,6 +421,7 @@ function DraftPanel({
   onRemoveLine,
   onClear,
   onSend,
+  onContinue,
   bare,
 }: {
   draft:         DraftLine[];
@@ -442,6 +433,9 @@ function DraftPanel({
   onRemoveLine:  (cartId: string) => void;
   onClear:       () => void;
   onSend:        () => void;
+  /** When provided, the action row shows two buttons side-by-side: continue
+   *  building the order (closes the mobile sheet) vs send to kitchen. */
+  onContinue?:   () => void;
   bare?:         boolean;
 }) {
   const wrapper = bare
@@ -533,14 +527,35 @@ function DraftPanel({
           <span className="text-[12px] text-[#9C9485]">Subtotal</span>
           <span className="text-[16px] font-bold text-white">{formatKes(subtotal)}</span>
         </div>
-        <button
-          type="button"
-          onClick={onSend}
-          disabled={submitting || draft.length === 0 || !sessionOpen}
-          className="w-full h-14 rounded-full bg-[#E8A020] text-[#16130C] text-[14px] font-bold disabled:opacity-40"
-        >
-          {submitting ? "Sending…" : !sessionOpen ? "Session not open" : "Send to kitchen"}
-        </button>
+        {onContinue ? (
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={onContinue}
+              disabled={submitting}
+              className="h-14 rounded-full bg-[#252019] text-[#F4F1EC] text-[13px] font-semibold disabled:opacity-40"
+            >
+              Add to order
+            </button>
+            <button
+              type="button"
+              onClick={onSend}
+              disabled={submitting || draft.length === 0 || !sessionOpen}
+              className="h-14 rounded-full bg-[#E8A020] text-[#16130C] text-[13px] font-bold disabled:opacity-40"
+            >
+              {submitting ? "Sending…" : !sessionOpen ? "Session not open" : "Send to kitchen"}
+            </button>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={onSend}
+            disabled={submitting || draft.length === 0 || !sessionOpen}
+            className="w-full h-14 rounded-full bg-[#E8A020] text-[#16130C] text-[14px] font-bold disabled:opacity-40"
+          >
+            {submitting ? "Sending…" : !sessionOpen ? "Session not open" : "Send to kitchen"}
+          </button>
+        )}
       </div>
     </div>
   );
