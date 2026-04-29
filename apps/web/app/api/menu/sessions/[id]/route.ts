@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { adminClient } from "@/lib/supabase/admin";
 import { getPosOrOwnerAuth } from "@/app/api/pos/_lib/auth";
 import { recomputeSessionTotals } from "../_lib/sessions";
+import { computeBill } from "../_lib/bill";
 
 /* ── Types ───────────────────────────────────────────────────────────────────── */
 
@@ -39,7 +40,7 @@ interface RouteContext {
 async function loadSessionForAuth(id: string) {
   const { data } = await adminClient
     .from("table_sessions")
-    .select("id, menu_id, status, table_id, opened_by, service_charge_pct, discount_pct")
+    .select("id, menu_id, status, table_id, opened_by, service_charge_pct, discount_pct, discount_amount_kes, split_count, subtotal_kes")
     .eq("id", id)
     .single();
   return data;
@@ -60,9 +61,11 @@ export async function GET(req: NextRequest, ctx: RouteContext) {
     .from("table_sessions")
     .select(`
       id, menu_id, table_id, status, covers,
-      service_charge_pct, discount_pct,
+      service_charge_pct, discount_pct, discount_amount_kes,
+      split_count, bill_notes,
       subtotal_kes, total_kes,
-      payment_method, opened_by, notes,
+      payment_method, mpesa_ref, opened_by, notes,
+      receipt_sent_at, receipt_sent_to,
       opened_at, billed_at, paid_at, closed_at, created_at,
       restaurant_tables ( id, table_number )
     `)
@@ -108,11 +111,31 @@ export async function GET(req: NextRequest, ctx: RouteContext) {
     openedByName = s?.name ?? null;
   }
 
+  // TODO V3: auto-populate guest_email when check-in flow spawns the session
+  // from a reservation. For now, look up reservations linked to this session
+  // defensively — if a reservation has session_id = this id, surface its
+  // guest_email so the bill panel can pre-fill the "Email bill" field.
+  let linkedGuestEmail: string | null = null;
+  {
+    const { data: linked } = await adminClient
+      .from("reservations")
+      .select("guest_email")
+      .eq("session_id", id)
+      .not("guest_email", "is", null)
+      .limit(1)
+      .maybeSingle();
+    linkedGuestEmail = linked?.guest_email ?? null;
+  }
+
   const subtotal = Number(full.subtotal_kes ?? 0);
   const servicePct = Number(full.service_charge_pct ?? 0);
   const discountPct = Number(full.discount_pct ?? 0);
-  const serviceAmt = Math.round(subtotal * (servicePct / 100) * 100) / 100;
-  const discountAmt = Math.round(subtotal * (discountPct / 100) * 100) / 100;
+  const discountFlat = Number(full.discount_amount_kes ?? 0);
+  const splitCount = Math.max(1, Number(full.split_count ?? 1));
+  const discountPctAmount = Math.round(subtotal * (discountPct / 100) * 100) / 100;
+  const totalDiscount = Math.round((discountPctAmount + discountFlat) * 100) / 100;
+  const afterDiscount = Math.max(0, Math.round((subtotal - totalDiscount) * 100) / 100);
+  const serviceAmt = Math.round(afterDiscount * (servicePct / 100) * 100) / 100;
 
   const tableJoin = Array.isArray(full.restaurant_tables)
     ? full.restaurant_tables[0]
@@ -128,14 +151,24 @@ export async function GET(req: NextRequest, ctx: RouteContext) {
       covers:              full.covers,
       service_charge_pct:  servicePct,
       discount_pct:        discountPct,
+      discount_amount_kes: discountFlat,
       service_charge_amount: serviceAmt,
-      discount_amount:     discountAmt,
+      discount_amount:     discountPctAmount,
+      total_discount:      totalDiscount,
+      after_discount:      afterDiscount,
+      split_count:         splitCount,
+      bill_notes:          full.bill_notes ?? null,
+      per_person:          Math.ceil(Number(full.total_kes ?? 0) / splitCount),
       subtotal_kes:        subtotal,
       total_kes:           Number(full.total_kes ?? 0),
       payment_method:      full.payment_method,
+      mpesa_ref:           full.mpesa_ref ?? null,
       opened_by:           full.opened_by,
       opened_by_name:      openedByName,
       notes:               full.notes,
+      receipt_sent_at:     full.receipt_sent_at ?? null,
+      receipt_sent_to:     full.receipt_sent_to ?? null,
+      linked_guest_email:  linkedGuestEmail,
       opened_at:           full.opened_at,
       billed_at:           full.billed_at,
       paid_at:             full.paid_at,
@@ -182,12 +215,16 @@ export async function GET(req: NextRequest, ctx: RouteContext) {
 const VALID_PAYMENT_METHODS: PaymentMethod[] = ["cash", "card", "mpesa"];
 
 interface PatchBody {
-  status?:             SessionStatus;
-  payment_method?:     PaymentMethod;
-  covers?:             number;
-  service_charge_pct?: number;
-  discount_pct?:       number;
-  notes?:              string | null;
+  status?:              SessionStatus;
+  payment_method?:      PaymentMethod;
+  mpesa_ref?:           string | null;
+  covers?:              number;
+  service_charge_pct?:  number;
+  discount_pct?:        number;
+  discount_amount_kes?: number;
+  bill_notes?:          string | null;
+  split_count?:         number;
+  notes?:               string | null;
 }
 
 function isValidTransition(from: SessionStatus, to: SessionStatus): boolean {
@@ -250,6 +287,9 @@ export async function PATCH(req: NextRequest, ctx: RouteContext) {
       updates.payment_method = pm;
       updates.paid_at = now;
       updates.closed_at = now;
+      if (pm === "mpesa" && body.mpesa_ref) {
+        updates.mpesa_ref = String(body.mpesa_ref).trim().slice(0, 64);
+      }
       if (currentStatus === "open") {
         // Quick-cash path — also stamp billed_at so the lifecycle is well-formed.
         updates.billed_at = now;
@@ -271,6 +311,11 @@ export async function PATCH(req: NextRequest, ctx: RouteContext) {
     }
     updates.covers = Math.max(1, Math.min(99, Math.round(body.covers)));
   }
+  // Bill controls (discount_pct, discount_amount_kes, bill_notes, split_count)
+  // are editable on open AND billed sessions — the waiter often tweaks the
+  // discount after pressing "Mark as billed" but before payment lands.
+  const billEditable = currentStatus === "open" || currentStatus === "billed";
+
   if (typeof body.service_charge_pct === "number") {
     if (currentStatus !== "open") {
       return NextResponse.json(
@@ -286,9 +331,9 @@ export async function PATCH(req: NextRequest, ctx: RouteContext) {
     needsTotalsRecompute = true;
   }
   if (typeof body.discount_pct === "number") {
-    if (currentStatus !== "open") {
+    if (!billEditable) {
       return NextResponse.json(
-        { error: "discount_pct can only change while session is open" },
+        { error: "discount_pct can only change while session is open or billed" },
         { status: 400 },
       );
     }
@@ -299,8 +344,60 @@ export async function PATCH(req: NextRequest, ctx: RouteContext) {
     updates.discount_pct = Math.round(v * 100) / 100;
     needsTotalsRecompute = true;
   }
+  if (typeof body.discount_amount_kes === "number") {
+    if (!billEditable) {
+      return NextResponse.json(
+        { error: "discount_amount_kes can only change while session is open or billed" },
+        { status: 400 },
+      );
+    }
+    const v = body.discount_amount_kes;
+    if (!isFinite(v) || v < 0) {
+      return NextResponse.json({ error: "discount_amount_kes must be ≥ 0" }, { status: 400 });
+    }
+    updates.discount_amount_kes = Math.round(v * 100) / 100;
+    needsTotalsRecompute = true;
+  }
+  if (body.bill_notes !== undefined) {
+    if (!billEditable) {
+      return NextResponse.json(
+        { error: "bill_notes can only change while session is open or billed" },
+        { status: 400 },
+      );
+    }
+    updates.bill_notes = body.bill_notes ? String(body.bill_notes).slice(0, 500) : null;
+  }
+  if (typeof body.split_count === "number") {
+    if (!billEditable) {
+      return NextResponse.json(
+        { error: "split_count can only change while session is open or billed" },
+        { status: 400 },
+      );
+    }
+    const v = Math.round(body.split_count);
+    if (v < 1 || v > 20) {
+      return NextResponse.json({ error: "split_count must be 1–20" }, { status: 400 });
+    }
+    updates.split_count = v;
+  }
   if (body.notes !== undefined) {
     updates.notes = body.notes ? String(body.notes).slice(0, 500) : null;
+  }
+
+  // Combined discount sanity check: percentage + flat amount can't exceed
+  // the live subtotal. We do this before persisting so the waiter sees a
+  // 400 immediately rather than a silent zero total.
+  const willHaveDiscountPct  = typeof updates.discount_pct === "number" ? Number(updates.discount_pct) : Number(session.discount_pct ?? 0);
+  const willHaveDiscountFlat = typeof updates.discount_amount_kes === "number" ? Number(updates.discount_amount_kes) : Number(session.discount_amount_kes ?? 0);
+  const subtotal = Number(session.subtotal_kes ?? 0);
+  if (subtotal > 0) {
+    const pctAmount = subtotal * (willHaveDiscountPct / 100);
+    if (pctAmount + willHaveDiscountFlat > subtotal + 0.01) {
+      return NextResponse.json(
+        { error: "Combined discount cannot exceed the subtotal" },
+        { status: 400 },
+      );
+    }
   }
 
   if (Object.keys(updates).length === 0) {
@@ -321,16 +418,73 @@ export async function PATCH(req: NextRequest, ctx: RouteContext) {
     await recomputeSessionTotals(id);
   }
 
-  // Return the updated row.
+  // Return the updated row plus a fresh computeBill() snapshot so the client
+  // can mirror the server's totals without a follow-up GET.
   const { data: updated } = await adminClient
     .from("table_sessions")
     .select(`
       id, status, covers, service_charge_pct, discount_pct,
-      subtotal_kes, total_kes, payment_method,
+      discount_amount_kes, split_count, bill_notes,
+      subtotal_kes, total_kes, payment_method, mpesa_ref,
       opened_at, billed_at, paid_at, closed_at
     `)
     .eq("id", id)
     .single();
 
-  return NextResponse.json({ session: updated });
+  return NextResponse.json({ session: updated, bill: await buildBillForSession(id) });
+}
+
+async function buildBillForSession(sessionId: string) {
+  const { data: s } = await adminClient
+    .from("table_sessions")
+    .select("service_charge_pct, discount_pct, discount_amount_kes, split_count")
+    .eq("id", sessionId)
+    .single();
+  if (!s) return null;
+
+  const { data: orders } = await adminClient
+    .from("orders")
+    .select("id, status, created_at")
+    .eq("table_session_id", sessionId);
+  const liveOrders = (orders ?? []).filter((o) => o.status !== "cancelled");
+  const orderIds = liveOrders.map((o) => o.id);
+  type ItemRow = {
+    order_id: string; item_name: string; item_price: number | string;
+    quantity: number; selected_options: unknown; allergy_notes: string | null;
+  };
+  let items: ItemRow[] = [];
+  if (orderIds.length > 0) {
+    const { data } = await adminClient
+      .from("order_items")
+      .select("order_id, item_name, item_price, quantity, selected_options, allergy_notes")
+      .in("order_id", orderIds);
+    items = (data ?? []) as ItemRow[];
+  }
+  const itemsByOrder = new Map<string, ItemRow[]>();
+  for (const it of items) {
+    const arr = itemsByOrder.get(it.order_id) ?? [];
+    arr.push(it);
+    itemsByOrder.set(it.order_id, arr);
+  }
+  return computeBill({
+    orders: liveOrders.map((o) => ({
+      created_at: o.created_at,
+      items: (itemsByOrder.get(o.id) ?? []).map((it) => ({
+        item_name:  it.item_name,
+        item_price: Number(it.item_price ?? 0),
+        quantity:   Number(it.quantity ?? 0),
+        selected_options: Array.isArray(it.selected_options)
+          ? (it.selected_options as Array<Record<string, unknown>>).map((o) => ({
+              name:           String(o.name ?? o.choice ?? ""),
+              price_modifier: Number(o.price_modifier ?? o.price_add ?? 0),
+            }))
+          : [],
+        allergy_notes: it.allergy_notes,
+      })),
+    })),
+    service_charge_pct:  Number(s.service_charge_pct ?? 0),
+    discount_pct:        Number(s.discount_pct ?? 0),
+    discount_amount_kes: Number(s.discount_amount_kes ?? 0),
+    split_count:         Number(s.split_count ?? 1),
+  });
 }
