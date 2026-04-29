@@ -49,7 +49,7 @@ interface ReservationsSettingsProps {
 export interface StaffMember {
   id: string;
   name: string;
-  role: "waiter" | "manager" | "cashier";
+  role: "waiter" | "manager" | "cashier" | "kitchen";
   is_active: boolean;
   created_at: string;
 }
@@ -822,6 +822,7 @@ function StaffSection({ menuId, menuSlug, showToast }: StaffSectionProps) {
                 className="border border-[#E2DDD5] rounded-lg px-3 py-1.5 text-[13px] text-[#16130C] focus:outline-none focus:border-[#E8A020] bg-white"
               >
                 <option value="waiter">Waiter</option>
+                <option value="kitchen">Kitchen</option>
                 <option value="manager">Manager</option>
                 <option value="cashier">Cashier</option>
               </select>
@@ -947,6 +948,7 @@ function StaffRowEdit({
           className="border border-[#E2DDD5] rounded-lg px-3 py-1.5 text-[13px] text-[#16130C] focus:outline-none focus:border-[#E8A020] bg-white"
         >
           <option value="waiter">Waiter</option>
+          <option value="kitchen">Kitchen</option>
           <option value="manager">Manager</option>
           <option value="cashier">Cashier</option>
         </select>

@@ -20,6 +20,11 @@ export default async function PosLoginPage({ params }: PageProps) {
   const cookieStore = await cookies();
   const session = verifyPosSession(cookieStore.get(POS_SESSION_COOKIE)?.value);
   if (session && session.menu_id === menu.id) {
+    // Kitchen staff who land here go straight to the kitchen view — they
+    // don't have a use for the waiter tables grid.
+    if (session.role === "kitchen") {
+      redirect(`/kitchen/${slug}/orders`);
+    }
     redirect(`/pos/${slug}/tables`);
   }
 

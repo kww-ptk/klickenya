@@ -22,7 +22,7 @@ export interface PosStaffSession {
   staff_id:   string;
   menu_id:    string;
   staff_name: string;
-  role:       "waiter" | "manager" | "cashier";
+  role:       "waiter" | "manager" | "cashier" | "kitchen";
   exp:        number; // unix seconds
 }
 
