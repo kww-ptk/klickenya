@@ -23,7 +23,7 @@ export async function GET(req: NextRequest, ctx: RouteContext) {
   const full = await loadFullBillForSession(id);
   if (!full) return NextResponse.json({ error: "Session not found" }, { status: 404 });
 
-  const pdf = renderBillPdf(full);
+  const pdf = await renderBillPdf(full);
 
   const datePart = formatNairobiDate(full.opened_at).replace(/\s+/g, "-");
   const restoSlug = full.restaurant.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
