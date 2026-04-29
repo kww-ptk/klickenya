@@ -174,6 +174,7 @@ interface CartPanelProps {
 function CartPanel({ cart, menuId, initialTable, onBack, onConfirmed, onUpdateQty, onEditLine }: CartPanelProps) {
   const [tableNumber, setTableNumber] = useState(initialTable ?? "");
   const [customerName, setCustomerName] = useState("");
+  const [orderNote, setOrderNote] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -197,6 +198,7 @@ function CartPanel({ cart, menuId, initialTable, onBack, onConfirmed, onUpdateQt
           menu_id: menuId,
           table_number: tableNumber.trim(),
           customer_name: customerName.trim() || undefined,
+          order_note: orderNote.trim() || undefined,
           items: entries.map((e) => ({
             menu_item_id: e.menu_item_id,
             quantity: e.quantity,
@@ -380,6 +382,20 @@ function CartPanel({ cart, menuId, initialTable, onBack, onConfirmed, onUpdateQt
               className={inputCls}
             />
           </div>
+          <div>
+            <label className="block text-[12px] font-bold text-dark mb-1.5 uppercase tracking-wide">
+              Additional information{" "}
+              <span className="text-text3 font-normal normal-case">(optional)</span>
+            </label>
+            <textarea
+              value={orderNote}
+              onChange={(e) => setOrderNote(e.target.value)}
+              placeholder="Allergies, special requests, anything the kitchen should know"
+              maxLength={500}
+              rows={3}
+              className={`${inputCls} resize-none`}
+            />
+          </div>
         </div>
 
         {error && (
@@ -497,8 +513,6 @@ export function MenuWithCart({ sections, menuId, initialTable }: MenuWithCartPro
   // Modal state: which item is open, and optionally which cart line is being edited
   const [modalItem, setModalItem] = useState<MenuItem | null>(null);
   const [editingCartItem, setEditingCartItem] = useState<CartItem | undefined>(undefined);
-  // Ticker: when ON, always show modal even for items with no variants (for special instructions)
-  const [alwaysShowModal, setAlwaysShowModal] = useState(false);
 
   /* ── Dietary filter helpers ── */
 
@@ -637,7 +651,7 @@ export function MenuWithCart({ sections, menuId, initialTable }: MenuWithCartPro
   /* ── Modal handlers ── */
 
   function openFreshModal(item: MenuItem) {
-    if (!hasRealVariants(item) && !alwaysShowModal) {
+    if (!hasRealVariants(item)) {
       addDirectItem(item);
       return;
     }
@@ -711,28 +725,6 @@ export function MenuWithCart({ sections, menuId, initialTable }: MenuWithCartPro
         activeTags={activeTags}
         onChange={setActiveTags}
       />
-
-      {/* Special instructions ticker */}
-      <div className="max-w-[480px] mx-auto px-4 pt-2 flex justify-end">
-        <button
-          onClick={() => setAlwaysShowModal((v) => !v)}
-          className="flex items-center gap-1.5 text-[12px] font-medium text-text3 hover:text-text2 transition-colors"
-          aria-label="Toggle special instructions"
-        >
-          <span
-            className={`relative w-7 h-4 rounded-full transition-colors ${
-              alwaysShowModal ? "bg-amber" : "bg-[#D4CFC8]"
-            }`}
-          >
-            <span
-              className={`absolute top-0.5 size-3 rounded-full bg-white shadow transition-transform ${
-                alwaysShowModal ? "translate-x-3.5" : "translate-x-0.5"
-              }`}
-            />
-          </span>
-          Special instructions
-        </button>
-      </div>
 
       <main className={`max-w-[480px] mx-auto px-4 ${totalItems > 0 ? "pb-28" : "pb-16"}`}>
         {noResults ? (

@@ -27,6 +27,7 @@ const orderSchema = z.object({
   table_number:  z.string().min(1).max(20),
   table_id:      z.string().uuid().optional(), // registered table (optional)
   customer_name: z.string().max(100).optional(),
+  order_note:    z.string().max(500).optional(),
   items: z
     .array(
       z.object({
@@ -277,6 +278,7 @@ export async function POST(req: NextRequest) {
         table_number:     tableDisplayNumber,
         table_id:         resolvedTableId,
         customer_name:    data.customer_name ?? null,
+        notes:            sanitizeNotes(data.order_note),
         subtotal_kes:     subtotal,
         delivery_fee_kes: 0,
         total_kes:        total,

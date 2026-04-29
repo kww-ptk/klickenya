@@ -38,6 +38,7 @@ export async function GET(req: NextRequest) {
         status,
         table_number,
         customer_name,
+        notes,
         total_kes,
         created_at,
         order_items (

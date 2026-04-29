@@ -58,6 +58,7 @@ export interface KitchenOrder {
   status: "new" | "preparing" | "ready";
   table_number: string | null;
   customer_name: string | null;
+  notes: string | null;
   total_kes: number | null;
   created_at: string;
   order_items: OrderItem[];
@@ -168,6 +169,18 @@ function OrderCard({ order, isNew, updating, onAction, onCancel, tick }: OrderCa
           {order.status}
         </span>
       </div>
+
+      {/* Order-level note from the guest */}
+      {order.notes && (
+        <div className="mb-3 rounded-lg border border-[#E8A020]/40 bg-[#E8A020]/8 px-3 py-2">
+          <p className="text-[10px] font-bold text-[#E8A020] uppercase tracking-wide mb-0.5">
+            Note from guest
+          </p>
+          <p className="text-[12px] text-[#16130C] leading-snug whitespace-pre-wrap">
+            {order.notes}
+          </p>
+        </div>
+      )}
 
       {/* Items */}
       <div className="space-y-2.5 mb-3">
