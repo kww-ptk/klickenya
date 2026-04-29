@@ -118,5 +118,6 @@ export function usePosShell(): PosShellValue {
   return ctx;
 }
 
-/** Re-export so child components don't need to know about the cache util. */
-export { computeMenuVersion };
+// NOTE: do NOT re-export computeMenuVersion from this "use client" file —
+// the server layout calls it, and Next.js 16 forbids servers from calling
+// functions exported by client modules. Import it from "./menuCache" instead.

@@ -5,10 +5,12 @@ import { adminClient } from "@/lib/supabase/admin";
 import { POS_SESSION_COOKIE, verifyPosSession } from "@/app/api/pos/_lib/auth";
 import { getPosMenuBySlug } from "./_lib/menuFromSlug";
 import { fetchPosMenu } from "./_lib/posMenu";
-import {
-  PosShellProvider,
-  computeMenuVersion,
-} from "@/components/pos/_shell/PosShellProvider";
+import { PosShellProvider } from "@/components/pos/_shell/PosShellProvider";
+// computeMenuVersion is a pure helper that lives in menuCache.ts. Import it
+// directly here — re-exporting it through the "use client" PosShellProvider
+// makes the server-side call illegal under Next.js 16's strict server/client
+// boundary enforcement.
+import { computeMenuVersion } from "@/components/pos/_shell/menuCache";
 
 export const metadata: Metadata = {
   title: "POS Terminal · Klickenya",
