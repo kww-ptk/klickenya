@@ -46,7 +46,7 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
     return NextResponse.json({ ok: false, error: "Email not configured" }, { status: 200 });
   }
 
-  const pdf = renderBillPdf(full);
+  const pdf = await renderBillPdf(full);
   const dateLabel = formatNairobiDate(full.opened_at);
   const subject = `Your bill from ${full.restaurant.name} — ${dateLabel}`;
   const textBody = buildBillText(full.bill, full.restaurant, full.table_number, {
