@@ -114,7 +114,7 @@ export function PosBillPanel({ session, initialEmail, showToast, onSaved }: Prop
   /* ── Share actions ──────────────────────────────────────────────────── */
 
   const printBill = () => {
-    window.open(`/pos/receipt/${session.id}`, "_blank", "noopener");
+    window.open(`/receipt/${session.id}`, "_blank", "noopener");
   };
 
   const whatsappShare = async () => {
