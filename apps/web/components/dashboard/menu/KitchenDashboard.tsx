@@ -61,6 +61,8 @@ export interface KitchenOrder {
   notes: string | null;
   total_kes: number | null;
   created_at: string;
+  /** Set when the order was placed by a waiter on the POS terminal. Null for guest QR orders. */
+  waiter_name?: string | null;
   order_items: OrderItem[];
 }
 
@@ -155,6 +157,16 @@ function OrderCard({ order, isNew, updating, onAction, onCancel, tick }: OrderCa
           </p>
           {order.customer_name && (
             <p className="text-[13px] text-[#5E5848] mt-0.5">{order.customer_name}</p>
+          )}
+          {/* Source chip: waiter name when placed via POS, "QR" for self-orders */}
+          {order.waiter_name ? (
+            <span className="inline-block mt-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide bg-[#16130C] text-white">
+              {order.waiter_name}
+            </span>
+          ) : (
+            <span className="inline-block mt-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide bg-[#F4F1EC] text-[#9C9485]">
+              QR
+            </span>
           )}
         </div>
         <span

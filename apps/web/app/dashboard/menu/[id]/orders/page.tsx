@@ -41,6 +41,7 @@ export default async function KitchenDashboardPage({ params }: PageProps) {
       notes,
       total_kes,
       created_at,
+      waiter_id,
       order_items (
         id,
         item_name,
@@ -56,11 +57,30 @@ export default async function KitchenDashboardPage({ params }: PageProps) {
     .in("status", ["new", "preparing", "ready"])
     .order("created_at", { ascending: false });
 
+  // Resolve waiter names so the first paint shows the staff chip without
+  // waiting for the first poll to enrich.
+  const waiterIds = Array.from(
+    new Set((orders ?? []).map((o) => o.waiter_id).filter((v): v is string => !!v)),
+  );
+  const waiterMap = new Map<string, string>();
+  if (waiterIds.length > 0) {
+    const { data: waiters } = await adminClient
+      .from("restaurant_staff")
+      .select("id, name")
+      .in("id", waiterIds);
+    for (const w of waiters ?? []) waiterMap.set(w.id, w.name);
+  }
+
+  const enriched = (orders ?? []).map((o) => ({
+    ...o,
+    waiter_name: o.waiter_id ? waiterMap.get(o.waiter_id) ?? null : null,
+  })) as KitchenOrder[];
+
   return (
     <KitchenDashboard
       menuId={menu.id}
       menuName={menu.name}
-      initialOrders={(orders ?? []) as KitchenOrder[]}
+      initialOrders={enriched}
     />
   );
 }

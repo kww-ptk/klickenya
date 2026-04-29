@@ -2,6 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { adminClient } from "@/lib/supabase/admin";
 import { getPosMenuBySlug } from "../../_lib/menuFromSlug";
+import { fetchPosMenu } from "../../_lib/posMenu";
 import { POS_SESSION_COOKIE, verifyPosSession } from "@/app/api/pos/_lib/auth";
 import { PosSessionDetail } from "@/components/pos/PosSessionDetail";
 
@@ -36,15 +37,18 @@ export default async function PosTableDetailPage({ params }: PageProps) {
     .single();
   if (!table || table.menu_id !== menu.id) notFound();
 
-  // Find the open or billed session for this table.
-  const { data: openSession } = await adminClient
-    .from("table_sessions")
-    .select("id")
-    .eq("table_id", tableId)
-    .in("status", ["open", "billed"])
-    .order("opened_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
+  // Parallel fetch: open session + full menu (sections + items + options).
+  const [{ data: openSession }, sections] = await Promise.all([
+    adminClient
+      .from("table_sessions")
+      .select("id")
+      .eq("table_id", tableId)
+      .in("status", ["open", "billed"])
+      .order("opened_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    fetchPosMenu(menu.id),
+  ]);
 
   return (
     <PosSessionDetail
@@ -56,6 +60,7 @@ export default async function PosTableDetailPage({ params }: PageProps) {
       sessionId={openSession?.id ?? null}
       staffName={staffRow.name}
       staffRole={staffRow.role as "waiter" | "manager" | "cashier"}
+      menuSections={sections}
     />
   );
 }

@@ -41,6 +41,7 @@ export async function GET(req: NextRequest) {
         notes,
         total_kes,
         created_at,
+        waiter_id,
         order_items (
           id,
           item_name,
@@ -61,7 +62,26 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Failed to fetch orders." }, { status: 500 });
     }
 
-    return NextResponse.json({ orders: orders ?? [] });
+    // Resolve waiter names in a single follow-up query so the kitchen card can
+    // show "Marco" next to waiter-placed orders. Cheap — typically <10 staff.
+    const waiterIds = Array.from(
+      new Set((orders ?? []).map((o) => o.waiter_id).filter((v): v is string => !!v)),
+    );
+    const waiterMap = new Map<string, string>();
+    if (waiterIds.length > 0) {
+      const { data: waiters } = await adminClient
+        .from("restaurant_staff")
+        .select("id, name")
+        .in("id", waiterIds);
+      for (const w of waiters ?? []) waiterMap.set(w.id, w.name);
+    }
+
+    const enriched = (orders ?? []).map((o) => ({
+      ...o,
+      waiter_name: o.waiter_id ? waiterMap.get(o.waiter_id) ?? null : null,
+    }));
+
+    return NextResponse.json({ orders: enriched });
   } catch {
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
