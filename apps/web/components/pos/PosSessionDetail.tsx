@@ -84,6 +84,10 @@ export function PosSessionDetail({
 }: PosSessionDetailProps) {
   const router = useRouter();
   const [detail, setDetail] = useState<SessionDetail | null>(null);
+  // True until the first refresh resolves. Prevents the "no open session"
+  // empty state flashing while we're still loading detail for a session that
+  // *does* exist (passed in as sessionId from the server).
+  const [loadingDetail, setLoadingDetail] = useState<boolean>(!!sessionId);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [toasts, setToasts] = useState<Toast[]>([]);
@@ -102,6 +106,7 @@ export function PosSessionDetail({
   const refresh = useCallback(async () => {
     if (!sessionId) {
       setDetail(null);
+      setLoadingDetail(false);
       return;
     }
     try {
@@ -116,6 +121,8 @@ export function PosSessionDetail({
       setError(null);
     } catch {
       /* network error — try again next tick */
+    } finally {
+      setLoadingDetail(false);
     }
   }, [sessionId]);
 
@@ -220,7 +227,12 @@ export function PosSessionDetail({
           )}
         </div>
 
-        {!sessionId || !detail ? (
+        {loadingDetail ? (
+          <div className="rounded-2xl border border-[#2A2520] bg-[#1A170F] p-8 text-center">
+            <div className="inline-block w-6 h-6 rounded-full border-2 border-[#3A342B] border-t-[#E8A020] animate-spin" />
+            <p className="text-[12px] text-[#9C9485] mt-3">Loading session…</p>
+          </div>
+        ) : !sessionId || !detail ? (
           <div className="rounded-2xl border border-[#2A2520] bg-[#1A170F] p-8 text-center">
             <p className="text-[14px] text-[#9C9485]">
               {error ?? "No open session for this table."}

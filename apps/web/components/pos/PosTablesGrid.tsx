@@ -1,8 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Users, Clock } from "lucide-react";
+import { Users, Clock, Search, X } from "lucide-react";
 import { PosHeader } from "./PosHeader";
 import { PosTabBar } from "./PosTabBar";
 
@@ -68,7 +68,30 @@ export function PosTablesGrid({
   const [sessions, setSessions] = useState<PosSession[]>([]);
   const [openingTableId, setOpeningTableId] = useState<string | null>(null);
   const [paymentBusyId, setPaymentBusyId] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] =
+    useState<"all" | "available" | "occupied" | "billed">("all");
   const sessionsRef = useRef<PosSession[]>([]);
+
+  /* ── Counts per status for the filter pills ── */
+  const occupiedCount = sessions.filter((s) => s.status === "open").length;
+  const billedCount   = sessions.filter((s) => s.status === "billed").length;
+  const availableCount = initialTables.length - occupiedCount - billedCount;
+
+  /* ── Apply search + status filter to the table list ── */
+  const filteredTables = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return initialTables.filter((t) => {
+      if (q && !t.table_number.toLowerCase().includes(q)) return false;
+      if (statusFilter === "all") return true;
+      const s = sessions.find((x) => x.table_id === t.id);
+      const status = s?.status ?? "available";
+      if (statusFilter === "available") return !s;
+      if (statusFilter === "occupied")  return status === "open";
+      if (statusFilter === "billed")    return status === "billed";
+      return true;
+    });
+  }, [initialTables, sessions, search, statusFilter]);
 
   /* ── Poll sessions every 8s ── */
   const fetchSessions = useCallback(async () => {
@@ -106,7 +129,10 @@ export function PosTablesGrid({
     return () => clearInterval(i);
   }, []);
 
-  /* ── Open session for a table ── */
+  /* ── Open session for a table ──────────────────────────────────────────────
+   * After successful creation we navigate straight to the session detail page
+   * (order entry) rather than dropping the waiter back on the grid. The grid
+   * poll picks up the change for any other terminal viewing it. */
   const openSession = useCallback(
     async (tableId: string, covers: number) => {
       setOpeningTableId(tableId);
@@ -121,12 +147,14 @@ export function PosTablesGrid({
           alert(data.error || "Could not open session.");
           return;
         }
-        await fetchSessions();
+        // Jump straight to the order-entry screen so the waiter can start
+        // taking the order immediately without an extra tap.
+        router.push(`/pos/${slug}/tables/${tableId}`);
       } finally {
         setOpeningTableId(null);
       }
     },
-    [menuId, fetchSessions],
+    [menuId, router, slug],
   );
 
   /* ── Pay action ── */
@@ -165,15 +193,67 @@ export function PosTablesGrid({
           <p className="text-[11px] text-[#9C9485]">Live · {sessions.length} occupied</p>
         </div>
 
+        {/* Search + status filter */}
+        {initialTables.length > 0 && (
+          <div className="mb-3 space-y-2">
+            <div className="flex items-center gap-2 rounded-2xl border border-[#2A2520] bg-[#1A170F] px-3 py-2">
+              <Search className="w-4 h-4 text-[#9C9485] shrink-0" />
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search by table number…"
+                className="flex-1 bg-transparent outline-none text-[14px] text-white placeholder:text-[#5E5848]"
+              />
+              {search && (
+                <button
+                  type="button"
+                  onClick={() => setSearch("")}
+                  className="text-[#9C9485] hover:text-white"
+                  aria-label="Clear search"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+            <div className="flex gap-1 overflow-x-auto scrollbar-hide">
+              {(["all", "available", "occupied", "billed"] as const).map((f) => {
+                const count =
+                  f === "all"       ? initialTables.length :
+                  f === "available" ? availableCount :
+                  f === "occupied"  ? occupiedCount :
+                                      billedCount;
+                return (
+                  <button
+                    key={f}
+                    type="button"
+                    onClick={() => setStatusFilter(f)}
+                    className={`shrink-0 h-9 px-3 rounded-full text-[12px] font-semibold transition-colors capitalize ${
+                      statusFilter === f
+                        ? "bg-[#E8A020] text-[#16130C]"
+                        : "bg-[#252019] text-[#F4F1EC] hover:bg-[#3A342B]"
+                    }`}
+                  >
+                    {f} <span className="opacity-60">{count}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         {initialTables.length === 0 ? (
           <div className="rounded-2xl border border-[#2A2520] bg-[#1A170F] p-8 text-center">
             <p className="text-[14px] text-[#9C9485]">
               No tables registered yet. Ask the owner to add tables in the dashboard.
             </p>
           </div>
+        ) : filteredTables.length === 0 ? (
+          <div className="rounded-2xl border border-[#2A2520] bg-[#1A170F] p-8 text-center">
+            <p className="text-[14px] text-[#9C9485]">No tables match the current filter.</p>
+          </div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
-            {initialTables.map((table) => {
+            {filteredTables.map((table) => {
               const session = sessions.find((s) => s.table_id === table.id);
               return (
                 <TableCard
