@@ -76,7 +76,7 @@ export async function POST(req: NextRequest) {
     staff_id:   staff.id,
     menu_id:    menu.id,
     staff_name: staff.name,
-    role:       staff.role as "waiter" | "manager" | "cashier",
+    role:       staff.role as "waiter" | "manager" | "cashier" | "kitchen",
   });
 
   const res = NextResponse.json({

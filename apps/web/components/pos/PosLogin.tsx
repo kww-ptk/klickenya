@@ -9,11 +9,23 @@ interface PosLoginProps {
   slug:     string;
   menuId:   string;
   menuName: string;
+  /**
+   * Where to send the staff member after a successful PIN sign-in.
+   * Defaults to the waiter tables grid; the kitchen entry overrides this
+   * to land on /kitchen/[slug]/orders. Layouts on the destination route
+   * enforce role match (e.g. a kitchen-role staff signing in here gets
+   * redirected to /kitchen/[slug] by the destination layout).
+   */
+  redirectTo?: string;
+  /** Override the "POS Terminal" label above the restaurant name. */
+  contextLabel?: string;
 }
 
 const PIN_LEN = 4;
 
-export function PosLogin({ slug, menuId, menuName }: PosLoginProps) {
+export function PosLogin({ slug, menuId, menuName, redirectTo, contextLabel }: PosLoginProps) {
+  const destination = redirectTo ?? `/pos/${slug}/tables`;
+  const label = contextLabel ?? "POS Terminal";
   const router = useRouter();
   const [pin, setPin] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -42,7 +54,7 @@ export function PosLogin({ slug, menuId, menuName }: PosLoginProps) {
           submittedFor.current = null;
           return;
         }
-        router.replace(`/pos/${slug}/tables`);
+        router.replace(destination);
         router.refresh();
       } catch {
         setError("Network error. Try again.");
@@ -52,7 +64,7 @@ export function PosLogin({ slug, menuId, menuName }: PosLoginProps) {
         setSubmitting(false);
       }
     },
-    [menuId, router, slug],
+    [menuId, router, destination],
   );
 
   useEffect(() => {
@@ -91,7 +103,7 @@ export function PosLogin({ slug, menuId, menuName }: PosLoginProps) {
           <div className="mx-auto w-16 h-16 rounded-2xl bg-[#E8A020] text-[#16130C] grid place-items-center text-[22px] font-bold mb-3">
             {menuName.slice(0, 1).toUpperCase()}
           </div>
-          <p className="text-[12px] uppercase tracking-[0.18em] text-[#9C9485]">POS Terminal</p>
+          <p className="text-[12px] uppercase tracking-[0.18em] text-[#9C9485]">{label}</p>
           <h1 className="mt-1 text-[22px] font-bold text-white truncate">{menuName}</h1>
           <p className="text-[12px] text-[#9C9485] mt-2">Enter your 4-digit staff PIN</p>
         </div>

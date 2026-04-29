@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutGrid, ChefHat, History } from "lucide-react";
+import { LayoutGrid, BellRing, History } from "lucide-react";
 import { usePosShell } from "./_shell/PosShellProvider";
 
 export function PosTabBar() {
@@ -11,11 +11,12 @@ export function PosTabBar() {
   const slug = menu.slug;
 
   const tabs = [
-    { id: "tables",  href: `/pos/${slug}/tables`,             icon: LayoutGrid, label: "Tables" },
-    // Kitchen still lives in the dashboard for V2 — link out so staff can see
-    // the same KitchenDashboard the owner uses.
-    { id: "kitchen", href: `/dashboard/menu/${menu.id}/orders`, icon: ChefHat, label: "Kitchen", external: true },
-    { id: "history", href: `/pos/${slug}/history`,            icon: History, label: "History" },
+    { id: "tables",  href: `/pos/${slug}/tables`,  icon: LayoutGrid, label: "Tables"  },
+    // "Ready" replaces the old Kitchen link for waiters: a curated view of
+    // orders that have come back from the kitchen and need to be picked up.
+    // Kitchen-role staff have their own dedicated /kitchen/[slug] terminal.
+    { id: "ready",   href: `/pos/${slug}/ready`,   icon: BellRing,   label: "Ready"   },
+    { id: "history", href: `/pos/${slug}/history`, icon: History,    label: "History" },
   ] as const;
 
   return (
@@ -24,7 +25,8 @@ export function PosTabBar() {
         {tabs.map((tab) => {
           const Icon = tab.icon;
           const active =
-            tab.id === "tables"  ? pathname.startsWith(`/pos/${slug}/tables`) :
+            tab.id === "tables"  ? pathname.startsWith(`/pos/${slug}/tables`)  :
+            tab.id === "ready"   ? pathname.startsWith(`/pos/${slug}/ready`)   :
             tab.id === "history" ? pathname.startsWith(`/pos/${slug}/history`) :
             false;
           return (

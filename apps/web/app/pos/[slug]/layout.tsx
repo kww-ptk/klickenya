@@ -63,7 +63,7 @@ export default async function PosLayout({ params, children }: LayoutProps) {
   // We over-fetch slightly when the cookie turns out invalid (we discard the
   // sections in that case), but the win on the happy path — the only path
   // that matters for waiter UX — is ~150–300 ms shaved off every navigation.
-  let staff: { id: string; menu_id: string; name: string; role: "waiter" | "manager" | "cashier" } | null = null;
+  let staff: { id: string; menu_id: string; name: string; role: "waiter" | "manager" | "cashier" | "kitchen" } | null = null;
   let sections: Awaited<ReturnType<typeof fetchPosMenu>> | null = null;
 
   if (session && session.menu_id === menu.id) {
@@ -82,7 +82,7 @@ export default async function PosLayout({ params, children }: LayoutProps) {
         id:      row.id,
         menu_id: row.menu_id,
         name:    row.name,
-        role:    row.role as "waiter" | "manager" | "cashier",
+        role:    row.role as "waiter" | "manager" | "cashier" | "kitchen",
       };
       sections = fetchedSections;
     }
