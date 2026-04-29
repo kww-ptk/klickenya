@@ -225,6 +225,7 @@ export function ReservationSheet({
         setSubmitError(null);
         setStep("form");
         setDateScrollIdx(0);
+        setReservationId("");
       }
     },
     [],
@@ -287,7 +288,7 @@ export function ReservationSheet({
   }, [menuId, date, time, partySize, areaId, name, phone, email, message, source, onSuccess]);
 
   /* ── WhatsApp pre-fill ── */
-  const waText = reservationId
+  const waText = reservationId && date && time
     ? encodeURIComponent(
         `Hi, I just submitted a reservation for ${partySize} on ${formatConfirmationDateTime(date, time)}. Reservation ID: ${reservationId}.`,
       )
