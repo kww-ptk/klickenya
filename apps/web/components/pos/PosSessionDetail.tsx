@@ -3,12 +3,12 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, ChevronDown, ChevronRight, X } from "lucide-react";
+import { ArrowLeft, ChevronDown, ChevronRight, Pencil } from "lucide-react";
 import { PosHeader } from "./PosHeader";
 import { PosTabBar } from "./PosTabBar";
 import { PosOrderEntry } from "./PosOrderEntry";
 import { PosBillPanel } from "./PosBillPanel";
-import { ManagerOverridePrompt } from "./ManagerOverridePrompt";
+import { OrderItemEditPrompt } from "./OrderItemEditPrompt";
 import { usePosShell } from "./_shell/PosShellProvider";
 import { posFetch } from "./_shell/posFetch";
 import { subscribeSessionRealtime } from "./_shell/realtime";
@@ -102,10 +102,10 @@ export function PosSessionDetail({
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
   const [mpesaPromptOpen, setMpesaPromptOpen] = useState(false);
   const [mpesaRef, setMpesaRef] = useState("");
-  // Item being voided (after manager confirms PIN). Null when no void
-  // is in flight. The {item, orderId} pair lets the modal render the
-  // item name in its title so the manager knows what they're approving.
-  const [pendingVoidItem, setPendingVoidItem] = useState<{
+  // Item being edited (quantity reduced or removed entirely). Null when
+  // no edit is in flight. The current quantity is captured so the modal
+  // can render the stepper bounded to "less than current".
+  const [pendingEditItem, setPendingEditItem] = useState<{
     itemId:    string;
     itemName:  string;
     quantity:  number;
@@ -222,35 +222,42 @@ export function PosSessionDetail({
     await transition("pay-mpesa", { mpesa_ref: mpesaRef.trim() || undefined });
   }, [mpesaRef, transition]);
 
-  /* ── Void item flow ────────────────────────────────────────────────────────
-   * Each item in the previous-orders list has a small × button that opens
-   * the manager-override modal. On confirm we hit the void endpoint, which
-   * soft-deletes the line, recomputes the session totals, and writes one
-   * audit log row. We then refresh the session view.
+  /* ── Edit item flow ───────────────────────────────────────────────────────
+   * Each item in the previous-orders list has a small ✎ button that opens
+   * the edit modal. The waiter (with manager PIN) can reduce the quantity
+   * or remove the line entirely. The API soft-deletes when the quantity
+   * goes to 0, otherwise reduces quantity + recomputes line_total. Either
+   * way the session totals re-cache and we write one audit log row.
    */
-  const confirmVoidItem = useCallback(
-    async ({ pin, reason }: { pin: string; reason: string | null }) => {
-      if (!pendingVoidItem) return;
-      const { itemId } = pendingVoidItem;
-      setPendingVoidItem(null);
+  const confirmEditItem = useCallback(
+    async ({ newQuantity, pin, reason }: { newQuantity: number; pin: string; reason: string }) => {
+      if (!pendingEditItem) return;
+      const { itemId, quantity } = pendingEditItem;
+      setPendingEditItem(null);
       const res = await posFetch(`/api/menu/order-items/${itemId}`, {
         method:  "PATCH",
         headers: { "Content-Type": "application/json" },
         body:    JSON.stringify({
-          action:               "void",
+          action:               "edit",
+          new_quantity:         newQuantity,
           reason,
           manager_override_pin: pin,
         }),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        showToast(data.error || "Failed to void item", "error");
+        showToast(data.error || "Failed to update item", "error");
         return;
       }
-      showToast("Item removed");
+      const removed = quantity - newQuantity;
+      showToast(
+        newQuantity === 0
+          ? "Item removed"
+          : `Reduced by ${removed} (now ${newQuantity})`,
+      );
       await refresh();
     },
-    [pendingVoidItem, refresh, showToast],
+    [pendingEditItem, refresh, showToast],
   );
 
   const sortedOrders = useMemo(
@@ -330,9 +337,12 @@ export function PosSessionDetail({
               />
             )}
 
-            {/* Previous orders + meta + totals + actions */}
+            {/* Right-aligned column on md+ so this stack visually sits under
+                the "Current order" panel inside PosOrderEntry (which uses
+                col-span-2 of a 5-col split). On mobile it's a single column,
+                full width, naturally below the order entry sheet. */}
             <div className="md:grid md:grid-cols-5 md:gap-3">
-              <div className="md:col-span-3 space-y-3">
+              <div className="md:col-start-4 md:col-span-2 space-y-3">
                 {/* Previous orders */}
                 <div className="rounded-2xl border border-[#2A2520] bg-[#1A170F] overflow-hidden">
                   <div className="px-4 py-3 border-b border-[#2A2520] flex items-baseline justify-between">
@@ -424,17 +434,17 @@ export function PosSessionDetail({
                                       <button
                                         type="button"
                                         onClick={() =>
-                                          setPendingVoidItem({
+                                          setPendingEditItem({
                                             itemId:   it.id,
                                             itemName: it.name,
                                             quantity: it.quantity,
                                           })
                                         }
-                                        className="shrink-0 w-7 h-7 rounded-full bg-[#252019] text-[#9C9485] hover:bg-[#3A1F1F] hover:text-[#FF8A6B] grid place-items-center transition-colors"
-                                        aria-label={`Remove ${it.name}`}
-                                        title="Remove item (manager required)"
+                                        className="shrink-0 w-7 h-7 rounded-full bg-[#252019] text-[#9C9485] hover:bg-[#231D12] hover:text-[#E8A020] grid place-items-center transition-colors"
+                                        aria-label={`Edit ${it.name}`}
+                                        title="Edit quantity or remove (manager required)"
                                       >
-                                        <X className="w-3.5 h-3.5" />
+                                        <Pencil className="w-3.5 h-3.5" />
                                       </button>
                                     )}
                                   </li>
@@ -447,9 +457,7 @@ export function PosSessionDetail({
                     })
                   )}
                 </div>
-              </div>
 
-              <div className="md:col-span-2 space-y-3 mt-3 md:mt-0">
                 {/* Session meta */}
                 <div className="rounded-2xl border border-[#2A2520] bg-[#1A170F] p-4 space-y-2">
                   <div className="flex items-center justify-between text-[12px] text-[#9C9485]">
@@ -602,15 +610,13 @@ export function PosSessionDetail({
         </div>
       )}
 
-      {/* Manager override prompt for voiding an item */}
-      {pendingVoidItem && (
-        <ManagerOverridePrompt
-          title={`Remove ${pendingVoidItem.quantity}× ${pendingVoidItem.itemName}`}
-          message="Removing an item that's been sent to the kitchen needs a manager."
-          reasonRequired
-          reasonPlaceholder="Reason (e.g. wrong item, customer changed mind)"
-          onCancel={() => setPendingVoidItem(null)}
-          onConfirm={confirmVoidItem}
+      {/* Edit / remove an item from a sent order */}
+      {pendingEditItem && (
+        <OrderItemEditPrompt
+          itemName={pendingEditItem.itemName}
+          currentQuantity={pendingEditItem.quantity}
+          onCancel={() => setPendingEditItem(null)}
+          onConfirm={confirmEditItem}
         />
       )}
 

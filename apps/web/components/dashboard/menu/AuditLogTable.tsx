@@ -54,6 +54,18 @@ function formatMetadata(action: string, metadata: Record<string, unknown> | null
     const prev = metadata.previous_status;
     if (typeof prev === "string") return `Was: ${prev}`;
   }
+  if (action === "void_order_item") {
+    const itemName = typeof metadata.item_name === "string" ? metadata.item_name : null;
+    const fromQty = typeof metadata.from_qty === "number" ? metadata.from_qty : null;
+    const toQty   = typeof metadata.to_qty === "number"   ? metadata.to_qty   : null;
+    if (fromQty != null && toQty != null) {
+      const removed = fromQty - toQty;
+      const itemPart = itemName ? ` ${itemName}` : "";
+      return toQty === 0
+        ? `Removed all ${fromQty}×${itemPart}`
+        : `Reduced${itemPart}: ${fromQty} → ${toQty} (removed ${removed})`;
+    }
+  }
   return null;
 }
 
