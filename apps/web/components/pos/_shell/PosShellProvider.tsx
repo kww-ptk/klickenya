@@ -1,6 +1,7 @@
 "use client";
 
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import type { MenuSection } from "@/components/listings/detail/restaurant/MenuDisplay";
 import { readMenuCache, writeMenuCache } from "./menuCache";
 import { setOnline } from "./status";
@@ -57,16 +58,24 @@ export function PosShellProvider({
   serverMenuVersion,
   children,
 }: ProviderProps) {
-  // Lazy initialiser runs once at mount only — no setState-in-effect.
-  // Prefers server-supplied sections, falls back to cached copy if the server
-  // didn't ship any (only happens on routes where staff is null, which is the
-  // login page — no rendering of menu there).
-  const [sections] = useState<MenuSection[]>(() => {
-    if (serverSections && serverSections.length > 0) return serverSections;
+  const router = useRouter();
+
+  // Cached copy from localStorage, loaded once at mount. Used as a fallback
+  // when the server didn't ship sections (login page) — for everything else
+  // we derive sections directly from the latest serverSections prop on each
+  // render so a layout refresh immediately propagates fresh menu data.
+  const [cachedSections] = useState<MenuSection[]>(() => {
     if (typeof window === "undefined") return [];
     const cached = readMenuCache(menu.id);
     return cached?.sections ?? [];
   });
+
+  // Derived state — recomputed every render. If the server has fresh data,
+  // always trust it; otherwise fall back to the cached copy. No setState
+  // in effects, so a router.refresh() that brings new sections is picked
+  // up on the next render automatically.
+  const sections =
+    serverSections && serverSections.length > 0 ? serverSections : cachedSections;
 
   // Mirror server sections to localStorage as a side-effect. This is the
   // write-through cache — keeps the cached copy in sync with the latest
@@ -82,6 +91,21 @@ export function PosShellProvider({
       });
     }
   }, [menu.id, staff, serverSections, serverMenuVersion]);
+
+  // Self-heal on the rare first render where the layout reported zero
+  // sections but a staff cookie is present (cold-start race / Supabase
+  // hiccup / stale Vercel cache). Trigger a one-shot router.refresh() so
+  // the layout runs again and ships real data; the version-keyed effect
+  // above adopts the result. Guarded with a ref so we don't loop on a
+  // genuinely empty (unpublished) menu.
+  const selfHealedRef = useRef(false);
+  useEffect(() => {
+    if (!staff) return;
+    if (sections.length > 0) return;
+    if (selfHealedRef.current) return;
+    selfHealedRef.current = true;
+    router.refresh();
+  }, [staff, sections.length, router]);
 
   // Online/offline event listeners feed the status store.
   useEffect(() => {
