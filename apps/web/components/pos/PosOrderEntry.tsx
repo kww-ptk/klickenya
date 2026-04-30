@@ -36,6 +36,15 @@ export interface PosOrderEntryProps {
   onOrderSent: (info: { itemsCount: number; total: number }) => void;
   /** Toast helper from the parent. */
   showToast:   (msg: string, type?: "success" | "error") => void;
+  /**
+   * Optional content rendered inside the right column (md+) directly below
+   * the current-order draft. Lets the parent stack Previous orders / Bill /
+   * Payment under the draft *within the same grid* so the right sidebar
+   * sticks to the top of the page instead of starting below the menu's
+   * full height. On mobile this slot renders below the floating draft
+   * sheet; layout is the same single-column stack.
+   */
+  rightSidebarSlot?: React.ReactNode;
 }
 
 /* ── Helpers ────────────────────────────────────────────────────────────────── */
@@ -62,6 +71,7 @@ export function PosOrderEntry({
   menuSections,
   onOrderSent,
   showToast,
+  rightSidebarSlot,
 }: PosOrderEntryProps) {
   const visibleSections = useMemo(
     () =>
@@ -370,8 +380,11 @@ export function PosOrderEntry({
         </div>
       </div>
 
-      {/* Right panel: draft + (parent renders previous orders below) */}
-      <div className="hidden md:block md:col-span-2 mt-3 md:mt-0">
+      {/* Right panel: draft + parent-supplied sidebar (Previous orders,
+          bill, payment). Both stack inside the same col-span-2 so the
+          sidebar starts directly under "Current order" instead of below
+          the menu's full height. */}
+      <div className="hidden md:block md:col-span-2 mt-3 md:mt-0 space-y-3">
         <DraftPanel
           draft={draft}
           subtotal={subtotal}
@@ -383,6 +396,7 @@ export function PosOrderEntry({
           onClear={clearDraft}
           onSend={handleSend}
         />
+        {rightSidebarSlot}
       </div>
 
       {/* Mobile floating "View order" button */}
@@ -437,6 +451,12 @@ export function PosOrderEntry({
           onClose={() => setOptionModalItem(null)}
           onConfirm={handleOptionConfirm}
         />
+      )}
+
+      {/* Mobile sidebar slot — rendered after the menu, since the desktop
+          slot lives inside `hidden md:block` above. */}
+      {rightSidebarSlot && (
+        <div className="md:hidden mt-3 space-y-3">{rightSidebarSlot}</div>
       )}
     </div>
   );
