@@ -20,7 +20,8 @@ import { adminClient } from "@/lib/supabase/admin";
 export type AuditAction =
   | "discount_above_threshold"
   | "void_session"
-  | "void_order_after_send";
+  | "void_order_after_send"
+  | "void_order_item";
 
 export type AuditTargetType = "session" | "order";
 

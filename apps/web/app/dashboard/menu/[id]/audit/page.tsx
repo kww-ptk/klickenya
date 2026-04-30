@@ -29,6 +29,8 @@ export default async function AuditLogPage({ params, searchParams }: PageProps) 
   if (!menu) redirect("/dashboard");
 
   const days = Math.max(1, Math.min(90, Number(sp.days) || 7));
+  // Server component, fresh per request — Date.now() is fine here.
+  // eslint-disable-next-line react-hooks/purity
   const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
   const actionFilter = sp.action;
 
@@ -98,6 +100,7 @@ export default async function AuditLogPage({ params, searchParams }: PageProps) 
         {[
           { label: "All actions",         action: "all" },
           { label: "Discount > threshold", action: "discount_above_threshold" },
+          { label: "Removed item",         action: "void_order_item" },
           { label: "Voided session",       action: "void_session" },
           { label: "Voided sent order",    action: "void_order_after_send" },
         ].map((f) => {

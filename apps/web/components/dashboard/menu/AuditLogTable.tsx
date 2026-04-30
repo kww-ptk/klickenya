@@ -20,12 +20,14 @@ const ACTION_LABEL: Record<string, string> = {
   discount_above_threshold: "Discount above threshold",
   void_session:             "Voided session",
   void_order_after_send:    "Voided sent order",
+  void_order_item:          "Removed item from order",
 };
 
 const ACTION_COLOR: Record<string, string> = {
   discount_above_threshold: "bg-[#E8A020]/15 text-[#E8A020]",
   void_session:             "bg-rose-100 text-rose-700",
   void_order_after_send:    "bg-rose-100 text-rose-700",
+  void_order_item:          "bg-rose-100 text-rose-700",
 };
 
 function formatNairobi(iso: string): string {

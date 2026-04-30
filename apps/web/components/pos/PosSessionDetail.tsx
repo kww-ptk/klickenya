@@ -3,11 +3,12 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, ChevronDown, ChevronRight } from "lucide-react";
+import { ArrowLeft, ChevronDown, ChevronRight, X } from "lucide-react";
 import { PosHeader } from "./PosHeader";
 import { PosTabBar } from "./PosTabBar";
 import { PosOrderEntry } from "./PosOrderEntry";
 import { PosBillPanel } from "./PosBillPanel";
+import { ManagerOverridePrompt } from "./ManagerOverridePrompt";
 import { usePosShell } from "./_shell/PosShellProvider";
 import { posFetch } from "./_shell/posFetch";
 import { subscribeSessionRealtime } from "./_shell/realtime";
@@ -25,6 +26,8 @@ interface OrderItem {
   line_total:       number | null;
   selected_options: Array<{ group: string; choice: string; price_add: number }>;
   allergy_notes:    string | null;
+  is_voided:        boolean;
+  voided_reason:    string | null;
 }
 
 interface OrderSummary {
@@ -99,6 +102,14 @@ export function PosSessionDetail({
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
   const [mpesaPromptOpen, setMpesaPromptOpen] = useState(false);
   const [mpesaRef, setMpesaRef] = useState("");
+  // Item being voided (after manager confirms PIN). Null when no void
+  // is in flight. The {item, orderId} pair lets the modal render the
+  // item name in its title so the manager knows what they're approving.
+  const [pendingVoidItem, setPendingVoidItem] = useState<{
+    itemId:    string;
+    itemName:  string;
+    quantity:  number;
+  } | null>(null);
   const toastIdRef = useRef(0);
 
   const showToast = useCallback((msg: string, type: "success" | "error" = "success") => {
@@ -210,6 +221,37 @@ export function PosSessionDetail({
     setMpesaPromptOpen(false);
     await transition("pay-mpesa", { mpesa_ref: mpesaRef.trim() || undefined });
   }, [mpesaRef, transition]);
+
+  /* ── Void item flow ────────────────────────────────────────────────────────
+   * Each item in the previous-orders list has a small × button that opens
+   * the manager-override modal. On confirm we hit the void endpoint, which
+   * soft-deletes the line, recomputes the session totals, and writes one
+   * audit log row. We then refresh the session view.
+   */
+  const confirmVoidItem = useCallback(
+    async ({ pin, reason }: { pin: string; reason: string | null }) => {
+      if (!pendingVoidItem) return;
+      const { itemId } = pendingVoidItem;
+      setPendingVoidItem(null);
+      const res = await posFetch(`/api/menu/order-items/${itemId}`, {
+        method:  "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({
+          action:               "void",
+          reason,
+          manager_override_pin: pin,
+        }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        showToast(data.error || "Failed to void item", "error");
+        return;
+      }
+      showToast("Item removed");
+      await refresh();
+    },
+    [pendingVoidItem, refresh, showToast],
+  );
 
   const sortedOrders = useMemo(
     () =>
@@ -347,23 +389,57 @@ export function PosSessionDetail({
                             </p>
                           </button>
                           {expanded && (
-                            <ul className="px-10 pb-3 space-y-0.5">
-                              {order.items.map((it) => (
-                                <li key={it.id} className="text-[12px] text-[#F4F1EC]">
-                                  <span className="text-[#9C9485]">{it.quantity}×</span> {it.name}
-                                  {it.selected_options?.length ? (
-                                    <span className="text-[#9C9485]">
-                                      {" — "}
-                                      {it.selected_options.map((o) => o.choice).join(", ")}
-                                    </span>
-                                  ) : null}
-                                  {it.allergy_notes ? (
-                                    <span className="block text-[11px] text-[#FF8A6B] ml-5">
-                                      Note: {it.allergy_notes}
-                                    </span>
-                                  ) : null}
-                                </li>
-                              ))}
+                            <ul className="px-10 pb-3 space-y-1.5">
+                              {order.items.map((it) => {
+                                const voidEditable =
+                                  !it.is_voided &&
+                                  (detail.status === "open" || detail.status === "billed");
+                                return (
+                                  <li
+                                    key={it.id}
+                                    className={`flex items-start gap-2 text-[12px] ${
+                                      it.is_voided ? "text-[#5E5848] line-through" : "text-[#F4F1EC]"
+                                    }`}
+                                  >
+                                    <div className="flex-1 min-w-0">
+                                      <span className="text-[#9C9485]">{it.quantity}×</span> {it.name}
+                                      {it.selected_options?.length ? (
+                                        <span className="text-[#9C9485]">
+                                          {" — "}
+                                          {it.selected_options.map((o) => o.choice).join(", ")}
+                                        </span>
+                                      ) : null}
+                                      {it.is_voided && (
+                                        <span className="ml-2 px-1.5 py-0.5 rounded text-[10px] uppercase tracking-wide font-bold bg-[#3A1F1F] text-[#FF8A6B] no-underline align-middle">
+                                          Voided{it.voided_reason ? ` · ${it.voided_reason}` : ""}
+                                        </span>
+                                      )}
+                                      {it.allergy_notes && !it.is_voided ? (
+                                        <span className="block text-[11px] text-[#FF8A6B] ml-5">
+                                          Note: {it.allergy_notes}
+                                        </span>
+                                      ) : null}
+                                    </div>
+                                    {voidEditable && (
+                                      <button
+                                        type="button"
+                                        onClick={() =>
+                                          setPendingVoidItem({
+                                            itemId:   it.id,
+                                            itemName: it.name,
+                                            quantity: it.quantity,
+                                          })
+                                        }
+                                        className="shrink-0 w-7 h-7 rounded-full bg-[#252019] text-[#9C9485] hover:bg-[#3A1F1F] hover:text-[#FF8A6B] grid place-items-center transition-colors"
+                                        aria-label={`Remove ${it.name}`}
+                                        title="Remove item (manager required)"
+                                      >
+                                        <X className="w-3.5 h-3.5" />
+                                      </button>
+                                    )}
+                                  </li>
+                                );
+                              })}
                             </ul>
                           )}
                         </div>
@@ -524,6 +600,18 @@ export function PosSessionDetail({
             </div>
           </div>
         </div>
+      )}
+
+      {/* Manager override prompt for voiding an item */}
+      {pendingVoidItem && (
+        <ManagerOverridePrompt
+          title={`Remove ${pendingVoidItem.quantity}× ${pendingVoidItem.itemName}`}
+          message="Removing an item that's been sent to the kitchen needs a manager."
+          reasonRequired
+          reasonPlaceholder="Reason (e.g. wrong item, customer changed mind)"
+          onCancel={() => setPendingVoidItem(null)}
+          onConfirm={confirmVoidItem}
+        />
       )}
 
       {/* Toasts */}
