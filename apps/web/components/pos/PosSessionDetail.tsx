@@ -322,27 +322,17 @@ export function PosSessionDetail({
               Back to tables
             </Link>
           </div>
-        ) : (
-          <div className="space-y-4">
-            {/* Order entry split panel — only when session is open */}
-            {sessionOpen && (
-              <PosOrderEntry
-                sessionId={sessionId}
-                sessionOpen={sessionOpen}
-                menuSections={menuSections}
-                onOrderSent={() => {
-                  refresh();
-                }}
-                showToast={showToast}
-              />
-            )}
-
-            {/* Right-aligned column on md+ so this stack visually sits under
-                the "Current order" panel inside PosOrderEntry (which uses
-                col-span-2 of a 5-col split). On mobile it's a single column,
-                full width, naturally below the order entry sheet. */}
-            <div className="md:grid md:grid-cols-5 md:gap-3">
-              <div className="md:col-start-4 md:col-span-2 space-y-3">
+        ) : (() => {
+          // The full right-column stack: previous orders → session meta →
+          // bill panel → payment buttons / paid summary. We hand this to
+          // PosOrderEntry as the rightSidebarSlot so it renders inside the
+          // *same* col-span-2 as "Current order" — that way the sidebar
+          // sits flush under the draft instead of starting below the
+          // (much taller) menu's full height. On billed/paid/void sessions
+          // PosOrderEntry isn't shown; we fall back to a standalone
+          // right-aligned column with the same content.
+          const rightSidebar = (
+            <>
                 {/* Previous orders */}
                 <div className="rounded-2xl border border-[#2A2520] bg-[#1A170F] overflow-hidden">
                   <div className="px-4 py-3 border-b border-[#2A2520] flex items-baseline justify-between">
@@ -560,10 +550,26 @@ export function PosSessionDetail({
                     </p>
                   </div>
                 )}
+            </>
+          );
+
+          return sessionOpen ? (
+            <PosOrderEntry
+              sessionId={sessionId}
+              sessionOpen={sessionOpen}
+              menuSections={menuSections}
+              onOrderSent={refresh}
+              showToast={showToast}
+              rightSidebarSlot={rightSidebar}
+            />
+          ) : (
+            <div className="md:grid md:grid-cols-5 md:gap-3">
+              <div className="md:col-start-4 md:col-span-2 space-y-3">
+                {rightSidebar}
               </div>
             </div>
-          </div>
-        )}
+          );
+        })()}
       </main>
 
       <PosTabBar />
