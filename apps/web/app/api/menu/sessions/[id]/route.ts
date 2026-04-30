@@ -18,6 +18,8 @@ interface OrderItemRow {
   line_total: number | string | null;
   selected_options: unknown;
   allergy_notes: string | null;
+  is_voided: boolean | null;
+  voided_reason: string | null;
 }
 
 interface OrderRow {
@@ -82,7 +84,8 @@ export async function GET(req: NextRequest, ctx: RouteContext) {
       total_kes, waiter_id,
       order_items (
         id, item_name, item_price, quantity, line_total,
-        selected_options, allergy_notes
+        selected_options, allergy_notes,
+        is_voided, voided_reason
       )
     `)
     .eq("table_session_id", id)
@@ -202,6 +205,8 @@ export async function GET(req: NextRequest, ctx: RouteContext) {
           line_total:       it.line_total == null ? null : Number(it.line_total),
           selected_options: it.selected_options ?? [],
           allergy_notes:    it.allergy_notes,
+          is_voided:        !!it.is_voided,
+          voided_reason:    it.voided_reason,
         })),
       })),
     },
