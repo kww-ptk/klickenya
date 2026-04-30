@@ -3,11 +3,12 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, ChevronDown, ChevronRight } from "lucide-react";
+import { ArrowLeft, ChevronDown, ChevronRight, Pencil } from "lucide-react";
 import { PosHeader } from "./PosHeader";
 import { PosTabBar } from "./PosTabBar";
 import { PosOrderEntry } from "./PosOrderEntry";
 import { PosBillPanel } from "./PosBillPanel";
+import { OrderItemEditPrompt } from "./OrderItemEditPrompt";
 import { usePosShell } from "./_shell/PosShellProvider";
 import { posFetch } from "./_shell/posFetch";
 import { subscribeSessionRealtime } from "./_shell/realtime";
@@ -25,6 +26,8 @@ interface OrderItem {
   line_total:       number | null;
   selected_options: Array<{ group: string; choice: string; price_add: number }>;
   allergy_notes:    string | null;
+  is_voided:        boolean;
+  voided_reason:    string | null;
 }
 
 interface OrderSummary {
@@ -61,6 +64,7 @@ interface SessionDetail {
   opened_by_name:        string | null;
   receipt_sent_to:       string | null;
   linked_guest_email:    string | null;
+  manager_discount_threshold_pct: number;
   table_number:          string | null;
   orders:                OrderSummary[];
 }
@@ -98,6 +102,14 @@ export function PosSessionDetail({
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
   const [mpesaPromptOpen, setMpesaPromptOpen] = useState(false);
   const [mpesaRef, setMpesaRef] = useState("");
+  // Item being edited (quantity reduced or removed entirely). Null when
+  // no edit is in flight. The current quantity is captured so the modal
+  // can render the stepper bounded to "less than current".
+  const [pendingEditItem, setPendingEditItem] = useState<{
+    itemId:    string;
+    itemName:  string;
+    quantity:  number;
+  } | null>(null);
   const toastIdRef = useRef(0);
 
   const showToast = useCallback((msg: string, type: "success" | "error" = "success") => {
@@ -210,6 +222,44 @@ export function PosSessionDetail({
     await transition("pay-mpesa", { mpesa_ref: mpesaRef.trim() || undefined });
   }, [mpesaRef, transition]);
 
+  /* ── Edit item flow ───────────────────────────────────────────────────────
+   * Each item in the previous-orders list has a small ✎ button that opens
+   * the edit modal. The waiter (with manager PIN) can reduce the quantity
+   * or remove the line entirely. The API soft-deletes when the quantity
+   * goes to 0, otherwise reduces quantity + recomputes line_total. Either
+   * way the session totals re-cache and we write one audit log row.
+   */
+  const confirmEditItem = useCallback(
+    async ({ newQuantity, pin, reason }: { newQuantity: number; pin: string; reason: string }) => {
+      if (!pendingEditItem) return;
+      const { itemId, quantity } = pendingEditItem;
+      setPendingEditItem(null);
+      const res = await posFetch(`/api/menu/order-items/${itemId}`, {
+        method:  "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({
+          action:               "edit",
+          new_quantity:         newQuantity,
+          reason,
+          manager_override_pin: pin,
+        }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        showToast(data.error || "Failed to update item", "error");
+        return;
+      }
+      const removed = quantity - newQuantity;
+      showToast(
+        newQuantity === 0
+          ? "Item removed"
+          : `Reduced by ${removed} (now ${newQuantity})`,
+      );
+      await refresh();
+    },
+    [pendingEditItem, refresh, showToast],
+  );
+
   const sortedOrders = useMemo(
     () =>
       detail
@@ -272,24 +322,17 @@ export function PosSessionDetail({
               Back to tables
             </Link>
           </div>
-        ) : (
-          <div className="space-y-4">
-            {/* Order entry split panel — only when session is open */}
-            {sessionOpen && (
-              <PosOrderEntry
-                sessionId={sessionId}
-                sessionOpen={sessionOpen}
-                menuSections={menuSections}
-                onOrderSent={() => {
-                  refresh();
-                }}
-                showToast={showToast}
-              />
-            )}
-
-            {/* Previous orders + meta + totals + actions */}
-            <div className="md:grid md:grid-cols-5 md:gap-3">
-              <div className="md:col-span-3 space-y-3">
+        ) : (() => {
+          // The full right-column stack: previous orders → session meta →
+          // bill panel → payment buttons / paid summary. We hand this to
+          // PosOrderEntry as the rightSidebarSlot so it renders inside the
+          // *same* col-span-2 as "Current order" — that way the sidebar
+          // sits flush under the draft instead of starting below the
+          // (much taller) menu's full height. On billed/paid/void sessions
+          // PosOrderEntry isn't shown; we fall back to a standalone
+          // right-aligned column with the same content.
+          const rightSidebar = (
+            <>
                 {/* Previous orders */}
                 <div className="rounded-2xl border border-[#2A2520] bg-[#1A170F] overflow-hidden">
                   <div className="px-4 py-3 border-b border-[#2A2520] flex items-baseline justify-between">
@@ -346,23 +389,57 @@ export function PosSessionDetail({
                             </p>
                           </button>
                           {expanded && (
-                            <ul className="px-10 pb-3 space-y-0.5">
-                              {order.items.map((it) => (
-                                <li key={it.id} className="text-[12px] text-[#F4F1EC]">
-                                  <span className="text-[#9C9485]">{it.quantity}×</span> {it.name}
-                                  {it.selected_options?.length ? (
-                                    <span className="text-[#9C9485]">
-                                      {" — "}
-                                      {it.selected_options.map((o) => o.choice).join(", ")}
-                                    </span>
-                                  ) : null}
-                                  {it.allergy_notes ? (
-                                    <span className="block text-[11px] text-[#FF8A6B] ml-5">
-                                      Note: {it.allergy_notes}
-                                    </span>
-                                  ) : null}
-                                </li>
-                              ))}
+                            <ul className="px-10 pb-3 space-y-1.5">
+                              {order.items.map((it) => {
+                                const voidEditable =
+                                  !it.is_voided &&
+                                  (detail.status === "open" || detail.status === "billed");
+                                return (
+                                  <li
+                                    key={it.id}
+                                    className={`flex items-start gap-2 text-[12px] ${
+                                      it.is_voided ? "text-[#5E5848] line-through" : "text-[#F4F1EC]"
+                                    }`}
+                                  >
+                                    <div className="flex-1 min-w-0">
+                                      <span className="text-[#9C9485]">{it.quantity}×</span> {it.name}
+                                      {it.selected_options?.length ? (
+                                        <span className="text-[#9C9485]">
+                                          {" — "}
+                                          {it.selected_options.map((o) => o.choice).join(", ")}
+                                        </span>
+                                      ) : null}
+                                      {it.is_voided && (
+                                        <span className="ml-2 px-1.5 py-0.5 rounded text-[10px] uppercase tracking-wide font-bold bg-[#3A1F1F] text-[#FF8A6B] no-underline align-middle">
+                                          Voided{it.voided_reason ? ` · ${it.voided_reason}` : ""}
+                                        </span>
+                                      )}
+                                      {it.allergy_notes && !it.is_voided ? (
+                                        <span className="block text-[11px] text-[#FF8A6B] ml-5">
+                                          Note: {it.allergy_notes}
+                                        </span>
+                                      ) : null}
+                                    </div>
+                                    {voidEditable && (
+                                      <button
+                                        type="button"
+                                        onClick={() =>
+                                          setPendingEditItem({
+                                            itemId:   it.id,
+                                            itemName: it.name,
+                                            quantity: it.quantity,
+                                          })
+                                        }
+                                        className="shrink-0 w-7 h-7 rounded-full bg-[#252019] text-[#9C9485] hover:bg-[#231D12] hover:text-[#E8A020] grid place-items-center transition-colors"
+                                        aria-label={`Edit ${it.name}`}
+                                        title="Edit quantity or remove (manager required)"
+                                      >
+                                        <Pencil className="w-3.5 h-3.5" />
+                                      </button>
+                                    )}
+                                  </li>
+                                );
+                              })}
                             </ul>
                           )}
                         </div>
@@ -370,9 +447,7 @@ export function PosSessionDetail({
                     })
                   )}
                 </div>
-              </div>
 
-              <div className="md:col-span-2 space-y-3 mt-3 md:mt-0">
                 {/* Session meta */}
                 <div className="rounded-2xl border border-[#2A2520] bg-[#1A170F] p-4 space-y-2">
                   <div className="flex items-center justify-between text-[12px] text-[#9C9485]">
@@ -407,6 +482,7 @@ export function PosSessionDetail({
                       payment_method:      detail.payment_method,
                       mpesa_ref:           detail.mpesa_ref,
                       receipt_sent_to:     detail.receipt_sent_to,
+                      manager_discount_threshold_pct: detail.manager_discount_threshold_pct ?? 10,
                     }}
                   />
                 )}
@@ -474,10 +550,26 @@ export function PosSessionDetail({
                     </p>
                   </div>
                 )}
+            </>
+          );
+
+          return sessionOpen ? (
+            <PosOrderEntry
+              sessionId={sessionId}
+              sessionOpen={sessionOpen}
+              menuSections={menuSections}
+              onOrderSent={refresh}
+              showToast={showToast}
+              rightSidebarSlot={rightSidebar}
+            />
+          ) : (
+            <div className="md:grid md:grid-cols-5 md:gap-3">
+              <div className="md:col-start-4 md:col-span-2 space-y-3">
+                {rightSidebar}
               </div>
             </div>
-          </div>
-        )}
+          );
+        })()}
       </main>
 
       <PosTabBar />
@@ -522,6 +614,16 @@ export function PosSessionDetail({
             </div>
           </div>
         </div>
+      )}
+
+      {/* Edit / remove an item from a sent order */}
+      {pendingEditItem && (
+        <OrderItemEditPrompt
+          itemName={pendingEditItem.itemName}
+          currentQuantity={pendingEditItem.quantity}
+          onCancel={() => setPendingEditItem(null)}
+          onConfirm={confirmEditItem}
+        />
       )}
 
       {/* Toasts */}

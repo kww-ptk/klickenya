@@ -25,6 +25,12 @@ export default async function PosTablesPage({ params }: PageProps) {
   if (!session || session.menu_id !== menu.id) {
     redirect(`/pos/${slug}`);
   }
+  // Kitchen staff don't have access to the waiter tables grid — bounce them
+  // to the kitchen view. Defence in depth; the page.tsx login already does
+  // this when they're signing in, but a direct nav here would slip through.
+  if (session.role === "kitchen") {
+    redirect(`/kitchen/${slug}/orders`);
+  }
 
   const { data: tables } = await adminClient
     .from("restaurant_tables")

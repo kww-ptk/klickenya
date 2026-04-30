@@ -1,22 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminClient } from "@/lib/supabase/admin";
-import { getMenuAuth, verifyMenuAccess } from "../_lib/auth";
+import { getPosOrOwnerAuth } from "@/app/api/pos/_lib/auth";
+import { resolveManagerApproval, writeAuditLog } from "@/app/api/pos/_lib/managerOverride";
 
-/* ── GET — fetch active orders for a menu (kitchen polling) ─────── */
+/* ── GET — fetch active orders for a menu (kitchen + waiter polling) ── */
 //
 // Query params:
 //   menu_id  — required, UUID of the menu
+//   status   — optional, comma-separated subset of "new,preparing,ready".
+//              Defaults to all three. Waiter "Ready" tab passes "ready".
 //
-// Returns orders with status in (new, preparing, ready), newest first,
-// including their order_items.
+// Returns orders with the requested statuses, newest first, including their
+// order_items. Auth: owner (Supabase) or any staff role with a valid PIN
+// cookie scoped to this menu.
 
 export async function GET(req: NextRequest) {
   try {
-    const { userId, isAdmin, supabase } = await getMenuAuth();
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
     const { searchParams } = new URL(req.url);
     const menuId = searchParams.get("menu_id");
 
@@ -24,11 +23,21 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "menu_id required" }, { status: 400 });
     }
 
-    // Verify the caller owns this menu (or is admin)
-    const menu = await verifyMenuAccess(supabase, menuId, userId, isAdmin);
-    if (!menu) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    const auth = await getPosOrOwnerAuth(req, menuId);
+    if (!auth) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+
+    // Status filter — defaults to the kitchen-active set. Callers who want
+    // only "ready" (waiter Ready tab) pass status=ready.
+    const ALLOWED_STATUSES = ["new", "preparing", "ready"] as const;
+    const requested = (searchParams.get("status") ?? "new,preparing,ready")
+      .split(",")
+      .map((s) => s.trim())
+      .filter((s): s is (typeof ALLOWED_STATUSES)[number] =>
+        (ALLOWED_STATUSES as readonly string[]).includes(s),
+      );
+    const statuses = requested.length > 0 ? requested : ALLOWED_STATUSES;
 
     // Fetch active orders with their items
     const { data: orders, error } = await adminClient
@@ -54,7 +63,7 @@ export async function GET(req: NextRequest) {
         )
       `)
       .eq("menu_id", menuId)
-      .in("status", ["new", "preparing", "ready"])
+      .in("status", statuses)
       .order("created_at", { ascending: false });
 
     if (error) {
@@ -91,7 +100,12 @@ export async function GET(req: NextRequest) {
 //
 // Body: { order_id: string, status: "preparing" | "ready" | "delivered" | "cancelled" }
 //
-// The caller must own the menu that the order belongs to.
+// Auth: owner OR staff PIN cookie. Role-based authorisation:
+//   - kitchen / manager / owner: any valid transition
+//   - waiter / cashier:           ready → delivered only (their pickup flow)
+//
+// Other roles trying ready → delivered are fine because "everyone can complete
+// an order" was the explicit product call.
 
 const VALID_TRANSITIONS: Record<string, string[]> = {
   new:       ["preparing", "cancelled"],
@@ -99,14 +113,15 @@ const VALID_TRANSITIONS: Record<string, string[]> = {
   ready:     ["delivered", "cancelled"],
 };
 
+const KITCHEN_DRIVING_ROLES: ReadonlySet<string> = new Set(["kitchen", "manager"]);
+
 export async function PATCH(req: NextRequest) {
   try {
-    const { userId, isAdmin, supabase } = await getMenuAuth();
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const { order_id, status: newStatus } = await req.json();
+    const body = await req.json();
+    const order_id          = body?.order_id;
+    const newStatus         = body?.status;
+    const reason            = (body?.reason ?? "").toString().trim() || null;
+    const managerOverridePin = body?.manager_override_pin ?? null;
 
     if (!order_id || !newStatus) {
       return NextResponse.json(
@@ -115,7 +130,7 @@ export async function PATCH(req: NextRequest) {
       );
     }
 
-    // Fetch the order to verify ownership and current status
+    // Fetch the order so we can authorise against its menu_id.
     const { data: order } = await adminClient
       .from("orders")
       .select("id, status, menu_id")
@@ -126,10 +141,62 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ error: "Order not found." }, { status: 404 });
     }
 
-    // Verify caller owns the menu
-    const menu = await verifyMenuAccess(supabase, order.menu_id, userId, isAdmin);
-    if (!menu) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    const auth = await getPosOrOwnerAuth(req, order.menu_id);
+    if (!auth) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Role gate: a waiter shouldn't be able to mark a "new" order as
+    // "preparing" — that's kitchen territory. Owners and kitchen staff drive
+    // the full lifecycle; waiters can only complete ready→delivered.
+    const isKitchenDriver =
+      auth.type === "owner" || (auth.type === "staff" && KITCHEN_DRIVING_ROLES.has(auth.role));
+    if (!isKitchenDriver) {
+      const isWaiterCompleting = order.status === "ready" && newStatus === "delivered";
+      if (!isWaiterCompleting) {
+        return NextResponse.json(
+          { error: "Forbidden — only kitchen or manager can drive this transition." },
+          { status: 403 },
+        );
+      }
+    }
+
+    // Cancelling an order that's already been sent to the kitchen (status
+    // new / preparing / ready → cancelled) is a manager-only action with an
+    // audit log entry. This is the "send steak, void it, eat the steak"
+    // path — even kitchen staff need a reason on the record.
+    let auditEntry: Parameters<typeof writeAuditLog>[0] | null = null;
+    if (newStatus === "cancelled" && (order.status === "new" || order.status === "preparing" || order.status === "ready")) {
+      if (!reason) {
+        return NextResponse.json(
+          { error: "Reason required to cancel an order that's been sent to the kitchen" },
+          { status: 400 },
+        );
+      }
+      const actingRole = auth.type === "owner" ? "owner" : auth.role;
+      const actingStaffId = auth.type === "staff" ? auth.staffId : null;
+      const approval = await resolveManagerApproval({
+        actingRole,
+        actingStaffId,
+        menuId:      order.menu_id,
+        overridePin: managerOverridePin,
+      });
+      if (!approval.ok) {
+        return NextResponse.json(
+          { error: approval.error, requires_manager: true },
+          { status: 403 },
+        );
+      }
+      auditEntry = {
+        menuId:           order.menu_id,
+        actingStaffId,
+        approvingStaffId: approval.approvingStaffId,
+        action:           "void_order_after_send",
+        targetType:       "order",
+        targetId:         order_id,
+        reason,
+        metadata:         { previous_status: order.status },
+      };
     }
 
     // Validate the status transition
@@ -149,6 +216,10 @@ export async function PATCH(req: NextRequest) {
     if (error) {
       console.error("[menu/orders PATCH] error:", error);
       return NextResponse.json({ error: "Failed to update order." }, { status: 500 });
+    }
+
+    if (auditEntry) {
+      await writeAuditLog(auditEntry);
     }
 
     return NextResponse.json({ success: true, order_id, status: newStatus });

@@ -17,7 +17,7 @@ export interface PosStaff {
   id:      string;
   menu_id: string;
   name:    string;
-  role:    "waiter" | "manager" | "cashier";
+  role:    "waiter" | "manager" | "cashier" | "kitchen";
 }
 
 export interface PosShellValue {

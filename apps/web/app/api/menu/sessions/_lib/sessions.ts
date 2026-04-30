@@ -51,7 +51,10 @@ export async function recomputeSessionTotals(sessionId: string): Promise<Session
     const { data } = await adminClient
       .from("order_items")
       .select("order_id, item_name, item_price, quantity, selected_options, allergy_notes")
-      .in("order_id", liveOrderIds);
+      .in("order_id", liveOrderIds)
+      // Exclude voided lines from the bill aggregation. They stay in the
+      // table for the audit trail; they just stop counting toward totals.
+      .eq("is_voided", false);
     items = (data ?? []) as ItemRow[];
   }
 
@@ -177,7 +180,10 @@ export async function loadFullBillForSession(sessionId: string): Promise<FullBil
     const { data } = await adminClient
       .from("order_items")
       .select("order_id, item_name, item_price, quantity, selected_options, allergy_notes")
-      .in("order_id", orderIds);
+      .in("order_id", orderIds)
+      // Voided items don't appear on the receipt — they stay in the DB for
+      // audit but the customer's bill drops them.
+      .eq("is_voided", false);
     items = (data ?? []) as ItemRow[];
   }
   const itemsByOrder = new Map<string, ItemRow[]>();
