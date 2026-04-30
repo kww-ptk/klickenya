@@ -165,13 +165,15 @@ interface CartPanelProps {
   cart: Map<string, CartItem>;
   menuId: string;
   initialTable?: string;
+  /** Active tables for the dropdown picker. Empty = falls back to text input. */
+  tables: Array<{ id: string; table_number: string; floor_section: string | null }>;
   onBack: () => void;
   onConfirmed: (data: ConfirmData) => void;
   onUpdateQty: (cartId: string, delta: number) => void;
   onEditLine: (cartItem: CartItem) => void;
 }
 
-function CartPanel({ cart, menuId, initialTable, onBack, onConfirmed, onUpdateQty, onEditLine }: CartPanelProps) {
+function CartPanel({ cart, menuId, initialTable, tables, onBack, onConfirmed, onUpdateQty, onEditLine }: CartPanelProps) {
   const [tableNumber, setTableNumber] = useState(initialTable ?? "");
   const [customerName, setCustomerName] = useState("");
   const [orderNote, setOrderNote] = useState("");
@@ -355,7 +357,40 @@ function CartPanel({ cart, menuId, initialTable, onBack, onConfirmed, onUpdateQt
                 <span className="text-[15px] font-semibold text-dark flex-1">{tableNumber}</span>
                 <span className="text-[11px] text-[#16A34A] font-medium">From QR</span>
               </div>
+            ) : tables.length > 0 ? (
+              // Dropdown of the restaurant's active tables. Grouped by
+              // floor_section when multiple sections exist (terrace / inside
+              // / patio), otherwise flat. The value we pass to the order
+              // API is the table_number, matching what the manual input
+              // sent before.
+              <select
+                value={tableNumber}
+                onChange={(e) => setTableNumber(e.target.value)}
+                className={`${inputCls} appearance-none bg-white pr-10 bg-[url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 fill=%27none%27 viewBox=%270 0 24 24%27 stroke=%27%2316130C%27 stroke-width=%272%27%3E%3Cpath stroke-linecap=%27round%27 stroke-linejoin=%27round%27 d=%27M19 9l-7 7-7-7%27 /%3E%3C/svg%3E")] bg-[length:18px] bg-[position:right_12px_center] bg-no-repeat`}
+                autoFocus
+              >
+                <option value="" disabled>Select your table</option>
+                {groupTablesBySection(tables).map((group) => (
+                  group.label ? (
+                    <optgroup key={group.label} label={group.label}>
+                      {group.tables.map((t) => (
+                        <option key={t.id} value={t.table_number}>
+                          Table {t.table_number}
+                        </option>
+                      ))}
+                    </optgroup>
+                  ) : (
+                    group.tables.map((t) => (
+                      <option key={t.id} value={t.table_number}>
+                        Table {t.table_number}
+                      </option>
+                    ))
+                  )
+                ))}
+              </select>
             ) : (
+              // Fallback when the restaurant hasn't set up tables yet —
+              // don't block ordering, let the guest type their table.
               <input
                 type="text"
                 inputMode="numeric"
@@ -496,15 +531,55 @@ function ConfirmationScreen({ data, onDone }: { data: ConfirmData; onDone: () =>
   );
 }
 
+/**
+ * Group the table dropdown by floor_section. If no section info exists
+ * (legacy menus), returns one ungrouped bucket. Sections render in the
+ * order they first appear, which matches how the dashboard lists them.
+ */
+function groupTablesBySection(
+  tables: Array<{ id: string; table_number: string; floor_section: string | null }>,
+): Array<{ label: string | null; tables: Array<{ id: string; table_number: string }> }> {
+  const sectioned = new Map<string, Array<{ id: string; table_number: string }>>();
+  const ungrouped: Array<{ id: string; table_number: string }> = [];
+  const order: string[] = [];
+  for (const t of tables) {
+    const s = t.floor_section?.trim();
+    if (!s) {
+      ungrouped.push({ id: t.id, table_number: t.table_number });
+      continue;
+    }
+    if (!sectioned.has(s)) {
+      sectioned.set(s, []);
+      order.push(s);
+    }
+    sectioned.get(s)!.push({ id: t.id, table_number: t.table_number });
+  }
+  // If everything is in one section (or none), don't bother with optgroups.
+  if (order.length === 0) return [{ label: null, tables: ungrouped }];
+  if (order.length === 1 && ungrouped.length === 0) {
+    return [{ label: null, tables: sectioned.get(order[0])! }];
+  }
+  const groups = order.map((label) => ({ label, tables: sectioned.get(label)! }));
+  if (ungrouped.length > 0) groups.push({ label: "Other", tables: ungrouped });
+  return groups;
+}
+
 /* ── Main component ────────────────────────────────── */
 
 interface MenuWithCartProps {
   sections: MenuSection[];
   menuId: string;
   initialTable?: string;
+  /**
+   * Active tables for this menu. When non-empty, the cart shows a dropdown
+   * picker keyed on table_number. Empty array → fall back to a free-text
+   * input (e.g., a restaurant that hasn't set up tables yet, so we don't
+   * block ordering entirely).
+   */
+  tables?: Array<{ id: string; table_number: string; floor_section: string | null }>;
 }
 
-export function MenuWithCart({ sections, menuId, initialTable }: MenuWithCartProps) {
+export function MenuWithCart({ sections, menuId, initialTable, tables = [] }: MenuWithCartProps) {
   const [activeTags, setActiveTags] = useState<string[]>([]);
   // Cart keyed by cart_id — same item with different options = separate lines
   const [cart, setCart] = useState<Map<string, CartItem>>(new Map());
@@ -695,6 +770,7 @@ export function MenuWithCart({ sections, menuId, initialTable }: MenuWithCartPro
           cart={cart}
           menuId={menuId}
           initialTable={initialTable}
+          tables={tables}
           onBack={() => setView("browse")}
           onConfirmed={(data) => {
             setConfirmData(data);

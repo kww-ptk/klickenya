@@ -31,6 +31,7 @@ async function getMenu(slug: string): Promise<{
   areas: RestaurantArea[];
   restaurantPhone: string | null;
   timeWindows: Array<{ open_time: string; close_time: string; is_active: boolean }>;
+  tables: Array<{ id: string; table_number: string; floor_section: string | null }>;
 } | null> {
   const { data } = await adminClient
     .from("menus")
@@ -99,7 +100,25 @@ async function getMenu(slug: string): Promise<{
     restaurantPhone = hostProfile?.phone ?? null;
   }
 
-  return { menu, areas, restaurantPhone, timeWindows };
+  // Active tables for the table-number dropdown in the cart. We only ship
+  // them when the menu has table_ordering enabled — they're useless on
+  // browse-only menus and we'd rather skip the query.
+  let tables: Array<{ id: string; table_number: string; floor_section: string | null }> = [];
+  if (data.table_ordering) {
+    const { data: tableRows } = await adminClient
+      .from("restaurant_tables")
+      .select("id, table_number, floor_section, display_order, is_active")
+      .eq("menu_id", data.id)
+      .eq("is_active", true)
+      .order("display_order");
+    tables = (tableRows ?? []).map((t) => ({
+      id:            t.id,
+      table_number:  t.table_number,
+      floor_section: t.floor_section,
+    }));
+  }
+
+  return { menu, areas, restaurantPhone, timeWindows, tables };
 }
 
 /* ── Static params ─────────────────────────────────────────────────────── */
@@ -156,7 +175,7 @@ export default async function MenuPage({ params, searchParams }: PageProps) {
   const result = await getMenu(slug);
   if (!result) notFound();
 
-  const { menu, areas, restaurantPhone, timeWindows } = result;
+  const { menu, areas, restaurantPhone, timeWindows, tables } = result;
 
   const sections = prepareSections(menu);
   if (sections.length === 0) notFound();
@@ -211,7 +230,12 @@ export default async function MenuPage({ params, searchParams }: PageProps) {
         The browse UI is identical in both cases; MenuWithCart layers cart controls on top.
       */}
       {menu.table_ordering ? (
-        <MenuWithCart sections={sections} menuId={menu.id} initialTable={prefilledTable} />
+        <MenuWithCart
+          sections={sections}
+          menuId={menu.id}
+          initialTable={prefilledTable}
+          tables={tables}
+        />
       ) : (
         <MenuWithFilters sections={sections} />
       )}
