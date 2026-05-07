@@ -27,25 +27,40 @@ export default async function StockHomePage({ params }: PageProps) {
   if (!menu) redirect("/dashboard");
 
   // Aggregates only matter once stock is enabled — fetch in parallel.
-  const [{ count: ingredientCount }, { count: recipeCount }, { count: movementCount }] =
-    menu.stock_enabled
-      ? await Promise.all([
-          adminClient
-            .from("ingredients")
-            .select("id", { count: "exact", head: true })
-            .eq("business_id", user.id)
-            .eq("archived", false),
-          adminClient
-            .from("recipes")
-            .select("id", { count: "exact", head: true })
-            .eq("business_id", user.id),
-          adminClient
-            .from("stock_movements")
-            .select("id", { count: "exact", head: true })
-            .eq("business_id", user.id)
-            .gte("created_at", sevenDaysAgoIso()),
-        ])
-      : [{ count: 0 }, { count: 0 }, { count: 0 }];
+  const [
+    { count: ingredientCount },
+    { count: recipeCount },
+    { count: movementCount },
+    { count: openPoCount },
+    { count: supplierCount },
+  ] = menu.stock_enabled
+    ? await Promise.all([
+        adminClient
+          .from("ingredients")
+          .select("id", { count: "exact", head: true })
+          .eq("business_id", user.id)
+          .eq("archived", false),
+        adminClient
+          .from("recipes")
+          .select("id", { count: "exact", head: true })
+          .eq("business_id", user.id),
+        adminClient
+          .from("stock_movements")
+          .select("id", { count: "exact", head: true })
+          .eq("business_id", user.id)
+          .gte("created_at", sevenDaysAgoIso()),
+        adminClient
+          .from("purchase_orders")
+          .select("id", { count: "exact", head: true })
+          .eq("business_id", user.id)
+          .in("status", ["draft", "sent", "partial"]),
+        adminClient
+          .from("suppliers")
+          .select("id", { count: "exact", head: true })
+          .eq("business_id", user.id)
+          .eq("archived", false),
+      ])
+    : [{ count: 0 }, { count: 0 }, { count: 0 }, { count: 0 }, { count: 0 }];
 
   return (
     <div>
@@ -120,7 +135,7 @@ export default async function StockHomePage({ params }: PageProps) {
         </div>
       ) : (
         /* ─── Tile grid ───────────────────────────────────────── */
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 lg:gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-5">
           <Tile
             href={`/dashboard/menu/${menu.id}/stock/ingredients`}
             icon="🥬"
@@ -146,11 +161,20 @@ export default async function StockHomePage({ params }: PageProps) {
             description="Live feed of every purchase, deduction and waste entry"
           />
           <Tile
-            href={null}
+            href={`/dashboard/menu/${menu.id}/stock/purchases`}
             icon="🧾"
             title="Purchase orders"
-            badge="Coming soon"
-            description="Send orders to suppliers and auto-receive into stock"
+            count={openPoCount ?? 0}
+            countLabel="open"
+            description="Draft, send and receive supplier orders into stock"
+          />
+          <Tile
+            href={`/dashboard/menu/${menu.id}/stock/suppliers`}
+            icon="🤝"
+            title="Suppliers"
+            count={supplierCount ?? 0}
+            countLabel="active"
+            description="Who you buy from — used on purchase orders"
           />
         </div>
       )}
