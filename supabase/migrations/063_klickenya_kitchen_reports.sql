@@ -426,21 +426,20 @@ from revenue r
 create unique index if not exists ux_mv_dish_margin_30d
   on mv_dish_margin_30d (business_id, menu_item_id);
 
--- RLS on the materialised view itself (PG 15+).
-alter materialized view mv_dish_margin_30d enable row level security;
+-- Securing the MV: Postgres does NOT support
+--   ALTER MATERIALIZED VIEW ... ENABLE ROW LEVEL SECURITY
+-- (only tables and regular views support RLS). So we keep the MV itself
+-- non-public and front it with a security-barrier view that filters by
+-- the caller's auth.uid(). Authenticated users only ever read through
+-- the wrapper.
+revoke all on mv_dish_margin_30d from public;
+revoke all on mv_dish_margin_30d from authenticated;
 
-do $$
-begin
-  if not exists (
-    select 1 from pg_policies
-    where schemaname='public' and tablename='mv_dish_margin_30d' and policyname='mv_dish_margin_30d_owner_read'
-  ) then
-    create policy "mv_dish_margin_30d_owner_read" on mv_dish_margin_30d
-      for select using (business_id = auth.uid());
-  end if;
-end$$;
+drop view if exists v_dish_margin_30d;
+create view v_dish_margin_30d with (security_barrier = true) as
+  select * from mv_dish_margin_30d where business_id = auth.uid();
 
-grant select on mv_dish_margin_30d to authenticated;
+grant select on v_dish_margin_30d to authenticated;
 
 -- Refresh helper. Caller is the menu owner; we use security definer so
 -- they don't need REFRESH privilege on the MV. The CONCURRENT refresh
