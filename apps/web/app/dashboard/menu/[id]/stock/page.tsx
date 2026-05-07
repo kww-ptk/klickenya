@@ -33,6 +33,7 @@ export default async function StockHomePage({ params }: PageProps) {
     { count: movementCount },
     { count: openPoCount },
     { count: supplierCount },
+    missingRecipesRpc,
   ] = menu.stock_enabled
     ? await Promise.all([
         adminClient
@@ -59,8 +60,11 @@ export default async function StockHomePage({ params }: PageProps) {
           .select("id", { count: "exact", head: true })
           .eq("business_id", user.id)
           .eq("archived", false),
+        adminClient.rpc("fn_count_missing_recipes", { p_menu_id: menu.id }),
       ])
-    : [{ count: 0 }, { count: 0 }, { count: 0 }, { count: 0 }, { count: 0 }];
+    : [{ count: 0 }, { count: 0 }, { count: 0 }, { count: 0 }, { count: 0 }, { data: 0 }];
+
+  const missingRecipes = Number((missingRecipesRpc as { data: number | null }).data ?? 0);
 
   return (
     <div>
@@ -134,7 +138,29 @@ export default async function StockHomePage({ params }: PageProps) {
           </div>
         </div>
       ) : (
-        /* ─── Tile grid ───────────────────────────────────────── */
+        <div className="space-y-4">
+          {/* Missing recipes banner — only when count > 0 */}
+          {missingRecipes > 0 && (
+            <Link
+              href={`/dashboard/menu/${menu.id}/stock/missing-recipes`}
+              className="block rounded-2xl border border-amber-200 bg-amber-50 p-4 hover:bg-amber-100 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <span className="text-[22px]">⚠️</span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[14px] font-bold text-amber-900">
+                    {missingRecipes} item{missingRecipes !== 1 ? "s" : ""} missing a recipe
+                  </p>
+                  <p className="text-[12px] text-amber-800">
+                    These items don&apos;t deduct stock when ordered. Tap to fix.
+                  </p>
+                </div>
+                <span className="text-amber-900 font-bold text-[14px]">→</span>
+              </div>
+            </Link>
+          )}
+
+        {/* ─── Tile grid ───────────────────────────────────────── */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-5">
           <Tile
             href={`/dashboard/menu/${menu.id}/stock/ingredients`}
@@ -177,6 +203,7 @@ export default async function StockHomePage({ params }: PageProps) {
             description="Who you buy from — used on purchase orders"
           />
         </div>
+      </div>
       )}
     </div>
   );
