@@ -25,6 +25,7 @@ import {
  */
 export const DEPLOYED_SEGMENTS = new Set<string>([
   "reservations",
+  "kitchen",
   // TODO Prompt 9: add 'orders' and 'menu' when those pages migrate here.
 ]);
 
@@ -105,6 +106,7 @@ export default async function ListingDashboardLayout({
     ordering_enabled: boolean;
     takeaway_enabled: boolean;
     delivery_enabled: boolean;
+    stock_enabled: boolean;
   } | null = null;
 
   if (listing.slug) {
@@ -112,7 +114,7 @@ export default async function ListingDashboardLayout({
     let menuQuery = adminClient
       .from("menus")
       .select(
-        "id, name, listing_slug, table_ordering, reservations_enabled, ordering_enabled, takeaway_enabled, delivery_enabled",
+        "id, name, listing_slug, table_ordering, reservations_enabled, ordering_enabled, takeaway_enabled, delivery_enabled, stock_enabled",
       )
       .eq("listing_slug", listing.slug);
     if (!isAdmin) menuQuery = menuQuery.eq("business_id", user.id);
@@ -130,6 +132,7 @@ export default async function ListingDashboardLayout({
           ordering_enabled: menu.ordering_enabled ?? false,
           takeaway_enabled: menu.takeaway_enabled ?? false,
           delivery_enabled: menu.delivery_enabled ?? false,
+          stock_enabled: menu.stock_enabled ?? false,
         }
       : undefined,
   };

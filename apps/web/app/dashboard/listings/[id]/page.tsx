@@ -66,7 +66,7 @@ export default async function ListingOverviewPage({
     ? await adminClient
         .from("menus")
         .select(
-          "id, table_ordering, reservations_enabled, ordering_enabled, takeaway_enabled, delivery_enabled",
+          "id, table_ordering, reservations_enabled, ordering_enabled, takeaway_enabled, delivery_enabled, stock_enabled",
         )
         .eq("listing_slug", listing.slug)
         .eq("business_id", user.id)
@@ -83,6 +83,7 @@ export default async function ListingOverviewPage({
           ordering_enabled: menu.ordering_enabled ?? false,
           takeaway_enabled: menu.takeaway_enabled ?? false,
           delivery_enabled: menu.delivery_enabled ?? false,
+          stock_enabled: menu.stock_enabled ?? false,
         }
       : undefined,
   };
@@ -290,6 +291,27 @@ export default async function ListingOverviewPage({
               );
             }
 
+            // ── Klickenya Kitchen: same special-case as Digital menu ────────
+            // Real pages live under /dashboard/menu/[menu.id]/stock. The
+            // /dashboard/listings/[id]/kitchen page is just a redirect, but
+            // we link directly to skip the round-trip.
+            if (feature.id === "klickenya_kitchen" && featureCtx.menu) {
+              return (
+                <Link
+                  key={feature.id}
+                  href={`/dashboard/menu/${featureCtx.menu.id}/stock`}
+                  className="flex items-center gap-3 bg-white rounded-xl border border-[#E2DDD5] p-3.5 shadow-sm hover:shadow-md hover:border-[#E8A020]/40 transition-all"
+                >
+                  <span className="text-[22px] shrink-0">{featureIcon(feature.icon)}</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[13px] font-semibold text-[#16130C]">{feature.label}</p>
+                    <p className="text-[11px] text-[#9C9485] truncate">{feature.shortDescription}</p>
+                  </div>
+                  <span className="text-[#9C9485] text-[16px] shrink-0">›</span>
+                </Link>
+              );
+            }
+
             // ── Deployed segment → normal clickable card ────────────────────
             const isDeployed = feature.tabSegment
               ? DEPLOYED_SEGMENTS.has(feature.tabSegment)
@@ -360,6 +382,7 @@ function featureIcon(iconName: string): string {
     CalendarCheck: "📅",
     ShoppingBag: "🥡",
     Bike: "🛵",
+    ChefHat: "🍳",
   };
   return map[iconName] ?? "⚡";
 }

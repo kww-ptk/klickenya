@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { Lock, UtensilsCrossed, ShoppingCart, CalendarCheck, ShoppingBag, Bike } from "lucide-react";
+import { Lock, UtensilsCrossed, ShoppingCart, CalendarCheck, ShoppingBag, Bike, ChefHat } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { getAuthUser, getHostProfile } from "../../../_lib/auth";
 import { adminClient } from "@/lib/supabase/admin";
@@ -17,6 +17,7 @@ const ICON_MAP: Record<string, LucideIcon> = {
   CalendarCheck,
   ShoppingBag,
   Bike,
+  ChefHat,
 };
 
 /* ── Status pill config ─────────────────────────────────────────────────── */
@@ -67,7 +68,7 @@ export default async function FeaturesPage({
     ? await adminClient
         .from("menus")
         .select(
-          "id, table_ordering, reservations_enabled, ordering_enabled, takeaway_enabled, delivery_enabled",
+          "id, table_ordering, reservations_enabled, ordering_enabled, takeaway_enabled, delivery_enabled, stock_enabled",
         )
         .eq("listing_slug", listing.slug)
         .eq("business_id", user.id)
@@ -84,6 +85,7 @@ export default async function FeaturesPage({
           ordering_enabled: menu.ordering_enabled ?? false,
           takeaway_enabled: menu.takeaway_enabled ?? false,
           delivery_enabled: menu.delivery_enabled ?? false,
+          stock_enabled: menu.stock_enabled ?? false,
         }
       : undefined,
   };
