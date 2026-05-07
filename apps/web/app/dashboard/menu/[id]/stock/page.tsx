@@ -202,6 +202,12 @@ export default async function StockHomePage({ params }: PageProps) {
             countLabel="active"
             description="Who you buy from — used on purchase orders"
           />
+          <Tile
+            href={`/dashboard/menu/${menu.id}/stock/reports`}
+            icon="📈"
+            title="Reports"
+            description="Variance, margin by dish, supplier prices, dead inventory"
+          />
         </div>
       </div>
       )}
