@@ -10,7 +10,7 @@ import { posFetch } from "./_shell/posFetch";
 import { FloorMapCanvas } from "@/components/dashboard/listings/floor-map/FloorMapCanvas";
 import type { TileState } from "@/components/dashboard/listings/floor-map/FloorTile";
 
-/* ── Types ──────────────────────────────────────────────────────────────────── */
+/* ── Types ───────────────────────────────────────────────── */
 
 export interface PosTable {
   id:            string;
@@ -59,7 +59,7 @@ interface PosTablesGridProps {
 // the grid view; the session-detail view drops to true realtime.
 const POLL_MS = 5_000;
 
-/* ── Helpers ────────────────────────────────────────────────────────────────── */
+/* ── Helpers ───────────────────────────────────────────── */
 
 function formatKes(n: number): string {
   return `KES ${Math.round(n).toLocaleString("en-KE")}`;
@@ -72,7 +72,7 @@ function formatMins(m: number): string {
   return rem === 0 ? `${h}h` : `${h}h ${rem}m`;
 }
 
-/* ── Main grid ──────────────────────────────────────────────────────────────── */
+/* ── Main grid ─────────────────────────────────────────── */
 
 export function PosTablesGrid({ initialTables, initialAreas = [] }: PosTablesGridProps) {
   const { menu } = usePosShell();
@@ -153,7 +153,7 @@ export function PosTablesGrid({ initialTables, initialAreas = [] }: PosTablesGri
     return () => clearInterval(i);
   }, []);
 
-  /* ── Open session for a table ──────────────────────────────────────────────
+  /* ── Open session for a table ───────────────────────────────────────
    * After successful creation we navigate straight to the session detail page
    * (order entry) rather than dropping the waiter back on the grid. The grid
    * poll picks up the change for any other terminal viewing it. */
@@ -334,18 +334,16 @@ export function PosTablesGrid({ initialTables, initialAreas = [] }: PosTablesGri
           /* Floor-map view -- read-only for staff. Tap a tile = same handler
              as the list cards (open modal if no session, navigate to detail
              if one exists). Tile colors come from the session list we're
-             already polling, no extra round-trip. The dashboard FloorMapCanvas
-             expects a light-on-dark caller environment, so we wrap it in a
-             panel that matches the POS chrome. */
-          <div className="rounded-2xl border border-[#2A2520] bg-white p-3 sm:p-4">
-            <FloorMapCanvas
-              mode="live"
-              areas={initialAreas}
-              tables={initialTables}
-              getState={tileStateFor}
-              onTileTap={handleTileTap}
-            />
-          </div>
+             already polling, no extra round-trip. theme='dark' matches the
+             POS chrome (charcoal surface, light-on-dark tiles). */
+          <FloorMapCanvas
+            mode="live"
+            theme="dark"
+            areas={initialAreas}
+            tables={initialTables}
+            getState={tileStateFor}
+            onTileTap={handleTileTap}
+          />
         ) : filteredTables.length === 0 ? (
           <div className="rounded-2xl border border-[#2A2520] bg-[#1A170F] p-8 text-center">
             <p className="text-[14px] text-[#9C9485]">No tables match the current filter.</p>
@@ -394,7 +392,7 @@ export function PosTablesGrid({ initialTables, initialAreas = [] }: PosTablesGri
   );
 }
 
-/* ── Table card ─────────────────────────────────────────────────────────────── */
+/* ── Table card ───────────────────────────────────────────── */
 
 function TableCard({
   table,
@@ -500,7 +498,7 @@ function PayButton({ onClick, disabled, label }: { onClick: () => void; disabled
   );
 }
 
-/* ── Open-table modal ───────────────────────────────────────────────────────── */
+/* ── Open-table modal ──────────────────────────────────────── */
 
 function OpenTableModal({
   table,
