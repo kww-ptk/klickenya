@@ -4,7 +4,7 @@ import { useCallback, useMemo, useRef, useState } from "react";
 import { FloorTile, type FloorTileData, type TileState } from "./FloorTile";
 import { FloorMapPicker, type PickerArea } from "./FloorMapPicker";
 
-/* ── Public types ──────────────────────────────────── */
+/* ── Public types ─────────────────────────────────── */
 
 /** Caller-side row shape — same projection getTablesForMenu returns. */
 export interface FloorMapTableRow {
@@ -48,9 +48,11 @@ interface Props {
   ) => Promise<boolean>;
   /** Optional pre-selected area id; defaults to first area. */
   defaultAreaId?: string;
+  /** Visual theme. Light = owner dashboard surfaces; Dark = POS terminal. */
+  theme?: "light" | "dark";
 }
 
-/* ── Auto-arrange ─────────────────────────────────── */
+/* ── Auto-arrange ──────────────────────────────────── */
 //
 // Places tiles with no pos_x/pos_y in a 4-column grid, biggest tables
 // first. Used both for first-time editor empty-state and as a "Reset
@@ -83,6 +85,7 @@ export function FloorMapCanvas({
   onTileTap,
   onSavePositions,
   defaultAreaId,
+  theme = "light",
 }: Props) {
   /* Selected area */
   const [selectedAreaId, setSelectedAreaId] = useState<string | null>(
@@ -232,7 +235,7 @@ export function FloorMapCanvas({
     });
   }, [areas, tables, mode, getState]);
 
-  /* ── Render ─────────────────────────────────────── */
+  /* ── Render ────────────────────────────────── */
 
   return (
     <div className="space-y-3">
@@ -241,6 +244,7 @@ export function FloorMapCanvas({
         areas={pickerAreas}
         selectedId={selectedAreaId}
         onSelect={setSelectedAreaId}
+        theme={theme}
       />
 
       {/* Toolbar — edit mode only */}
@@ -271,7 +275,12 @@ export function FloorMapCanvas({
       {/* Canvas */}
       <div
         ref={canvasRef}
-        className="relative w-full bg-[#FAFAF8] border border-[#E2DDD5] rounded-2xl overflow-hidden touch-none"
+        className={[
+          "relative w-full rounded-2xl overflow-hidden touch-none border",
+          theme === "dark"
+            ? "bg-[#0F0D08] border-[#2A2520]"
+            : "bg-[#FAFAF8] border-[#E2DDD5]",
+        ].join(" ")}
         style={{
           // Fixed aspect ratio so percent positions render the same on every
           // screen size. 4:3 reads well as a "floor".
@@ -279,7 +288,9 @@ export function FloorMapCanvas({
           // Subtle grid hint in edit mode so dragging feels precise.
           backgroundImage:
             mode === "edit"
-              ? "linear-gradient(to right, rgba(0,0,0,0.04) 1px, transparent 1px), linear-gradient(to bottom, rgba(0,0,0,0.04) 1px, transparent 1px)"
+              ? theme === "dark"
+                ? "linear-gradient(to right, rgba(255,255,255,0.04) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.04) 1px, transparent 1px)"
+                : "linear-gradient(to right, rgba(0,0,0,0.04) 1px, transparent 1px), linear-gradient(to bottom, rgba(0,0,0,0.04) 1px, transparent 1px)"
               : undefined,
           backgroundSize: mode === "edit" ? "5% 6.66%" : undefined,
         }}
@@ -296,6 +307,7 @@ export function FloorMapCanvas({
               table={t}
               canvasRef={canvasRef}
               mode={mode}
+              theme={theme}
               onMove={mode === "edit" ? handleMove : undefined}
               onCommit={mode === "edit" ? handleMove : undefined}
               onTap={mode === "live" ? onTileTap : undefined}
