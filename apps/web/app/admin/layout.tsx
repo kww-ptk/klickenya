@@ -200,7 +200,7 @@ export default async function AdminLayout({
     adminClient
       .from("listing_requests")
       .select("id", { count: "exact", head: true })
-      .eq("status", "new"),
+      .in("status", ["new", "submitted"]),
     adminClient
       .from("general_contacts")
       .select("id", { count: "exact", head: true }),
