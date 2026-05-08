@@ -21,6 +21,23 @@ const updateTableSchema = z.object({
   display_order: z.number().int().optional(),
 });
 
+/** Batch-position update body for the floor-map editor.
+ *  pos_x / pos_y are stored as percent (0-100) of the area canvas;
+ *  null clears the position so the tile falls back to auto-arrange. */
+const batchPositionsSchema = z.object({
+  menu_id: z.string().uuid(),
+  positions: z
+    .array(
+      z.object({
+        id: z.string().uuid(),
+        pos_x: z.number().min(0).max(100).nullable(),
+        pos_y: z.number().min(0).max(100).nullable(),
+      }),
+    )
+    .min(1)
+    .max(500),
+});
+
 /* ── Bulk range parser ──────────────────────────────── */
 // Accepts "T1-T10", "1-20", "Bar 1-Bar 10" (matching prefix)
 // Returns null if unparseable or range > 100.
@@ -155,12 +172,65 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({ table: data });
 }
 
-/* ── PATCH — update one table ───────────────────────── */
+/* ── PATCH — update one table OR batch-update positions ───────────────
+ *
+ * Two modes, distinguished by whether `?id=...` is on the URL:
+ *   - With id:    behaves as before (per-row update; updateTableSchema)
+ *   - Without id: expects { menu_id, positions: [{id, pos_x, pos_y}] }
+ *                 used by the floor-map editor to save the layout in
+ *                 one round-trip
+ */
 
 export async function PATCH(req: NextRequest) {
   const id = req.nextUrl.searchParams.get("id");
-  if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
 
+  /* ── Batch positions (floor map "Save layout") ──────────────────── */
+  if (!id) {
+    const { userId, isAdmin, supabase } = await getMenuAuth();
+    if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+    const parsed = batchPositionsSchema.safeParse(await req.json().catch(() => null));
+    if (!parsed.success) {
+      return NextResponse.json({ error: "Invalid data" }, { status: 400 });
+    }
+    const { menu_id, positions } = parsed.data;
+
+    const access = await verifyMenuAccess(supabase, menu_id, userId, isAdmin);
+    if (!access) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
+    // Belt-and-braces: every position id must belong to this menu, regardless of
+    // what the client sent. RLS would catch cross-menu writes too, but a clear
+    // 403 here is friendlier than a partial success.
+    const ids = positions.map((p) => p.id);
+    const { data: owned } = await supabase
+      .from("restaurant_tables")
+      .select("id")
+      .in("id", ids)
+      .eq("menu_id", menu_id);
+    if (!owned || owned.length !== new Set(ids).size) {
+      return NextResponse.json({ error: "Forbidden (table not in menu)" }, { status: 403 });
+    }
+
+    // PostgREST has no "update many with different values" so we batch the
+    // round-trips. Sequential is fine: max 500 rows, predicate is the PK.
+    let updated = 0;
+    for (const p of positions) {
+      const { error } = await supabase
+        .from("restaurant_tables")
+        .update({ pos_x: p.pos_x, pos_y: p.pos_y })
+        .eq("id", p.id)
+        .eq("menu_id", menu_id);
+      if (error) {
+        return NextResponse.json({ error: error.message, updated }, { status: 500 });
+      }
+      updated += 1;
+    }
+
+    revalidateTag(`menu:${menu_id}:tables`, "default");
+    return NextResponse.json({ updated });
+  }
+
+  /* ── Single-row update (existing behaviour) ─────────────────────── */
   const { userId, isAdmin, supabase } = await getMenuAuth();
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 

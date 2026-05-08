@@ -66,7 +66,7 @@ export default async function ListingOverviewPage({
     ? await adminClient
         .from("menus")
         .select(
-          "id, table_ordering, reservations_enabled, ordering_enabled, takeaway_enabled, delivery_enabled, stock_enabled",
+          "id, slug, table_ordering, reservations_enabled, ordering_enabled, takeaway_enabled, delivery_enabled, stock_enabled",
         )
         .eq("listing_slug", listing.slug)
         .eq("business_id", user.id)
@@ -317,16 +317,15 @@ export default async function ListingOverviewPage({
               );
             }
 
-            // ── Table ordering: short-circuit to the live kitchen view ──────
-            // Same pattern as menu / klickenya_kitchen: the real screen lives
-            // at /dashboard/menu/[menu.id]/orders. Skips the redirect hop on
-            // most navs; the orders/page.tsx redirect is fallback for tab
-            // clicks and direct URLs.
+            // ── Table ordering: short-circuit to the dedicated SETUP page,
+            // not the live kitchen view. The setup page hosts the toggle +
+            // table CRUD + operational deep-links. The Tools 'Kitchen view'
+            // card is the one that opens the live order screen.
             if (feature.id === "table_ordering" && featureCtx.menu) {
               return (
                 <Link
                   key={feature.id}
-                  href={`/dashboard/menu/${featureCtx.menu.id}/orders?${back}`}
+                  href={`/dashboard/listings/${id}/orders`}
                   className="flex items-center gap-3 bg-white rounded-xl border border-[#E2DDD5] p-3.5 shadow-sm hover:shadow-md hover:border-[#E8A020]/40 transition-all"
                 >
                   <span className="text-[22px] shrink-0">{featureIcon(feature.icon)}</span>
@@ -407,6 +406,21 @@ export default async function ListingOverviewPage({
                 <div className="flex-1 min-w-0">
                   <p className="text-[13px] font-semibold text-[#16130C]">Kitchen view</p>
                   <p className="text-[11px] text-[#9C9485] truncate">Live order screen for the kitchen team</p>
+                </div>
+                <span className="text-[#9C9485] text-[16px] shrink-0">›</span>
+              </Link>
+            )}
+            {/* POS — landing on a management page (URL, staff PINs)
+                that links out to /pos/[slug] for the actual terminal. */}
+            {menu?.slug && (
+              <Link
+                href={`/dashboard/listings/${id}/pos`}
+                className="flex items-center gap-3 bg-white rounded-xl border border-[#E2DDD5] p-3.5 shadow-sm hover:shadow-md hover:border-[#E8A020]/40 transition-all"
+              >
+                <span className="text-[22px] shrink-0">📱</span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[13px] font-semibold text-[#16130C]">POS &amp; staff</p>
+                  <p className="text-[11px] text-[#9C9485] truncate">Sign-in URL and 4-digit PIN management</p>
                 </div>
                 <span className="text-[#9C9485] text-[16px] shrink-0">›</span>
               </Link>

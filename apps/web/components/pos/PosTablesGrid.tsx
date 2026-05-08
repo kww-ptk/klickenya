@@ -7,13 +7,28 @@ import { PosHeader } from "./PosHeader";
 import { PosTabBar } from "./PosTabBar";
 import { usePosShell } from "./_shell/PosShellProvider";
 import { posFetch } from "./_shell/posFetch";
+import { FloorMapCanvas } from "@/components/dashboard/listings/floor-map/FloorMapCanvas";
+import type { TileState } from "@/components/dashboard/listings/floor-map/FloorTile";
 
-/* ── Types ──────────────────────────────────────────────────────────────────── */
+/* ── Types ───────────────────────────────────────────────── */
 
 export interface PosTable {
-  id:           string;
-  table_number: string;
-  capacity:     number;
+  id:            string;
+  table_number:  string;
+  capacity:      number;
+  // Floor-map fields. POS uses these read-only -- staff see the layout
+  // owners set up; they don't move tiles.
+  pos_x:         number | null;
+  pos_y:         number | null;
+  area_id:       string | null;
+  floor_section: string | null;
+  is_active:     boolean;
+}
+
+export interface PosFloorArea {
+  id:        string;
+  name:      string;
+  color_hex: string | null;
 }
 
 interface PosSession {
@@ -34,6 +49,9 @@ interface PosSession {
 
 interface PosTablesGridProps {
   initialTables: PosTable[];
+  /** Reservation areas for the floor-map picker. Optional -- without
+   *  them we still render a single-pane canvas with no picker. */
+  initialAreas?: PosFloorArea[];
 }
 
 // 5s polling — realtime is too many channels when watching every table at
@@ -41,7 +59,7 @@ interface PosTablesGridProps {
 // the grid view; the session-detail view drops to true realtime.
 const POLL_MS = 5_000;
 
-/* ── Helpers ────────────────────────────────────────────────────────────────── */
+/* ── Helpers ───────────────────────────────────────────── */
 
 function formatKes(n: number): string {
   return `KES ${Math.round(n).toLocaleString("en-KE")}`;
@@ -54,14 +72,24 @@ function formatMins(m: number): string {
   return rem === 0 ? `${h}h` : `${h}h ${rem}m`;
 }
 
-/* ── Main grid ──────────────────────────────────────────────────────────────── */
+/* ── Main grid ─────────────────────────────────────────── */
 
-export function PosTablesGrid({ initialTables }: PosTablesGridProps) {
+export function PosTablesGrid({ initialTables, initialAreas = [] }: PosTablesGridProps) {
   const { menu } = usePosShell();
   const slug = menu.slug;
   const menuId = menu.id;
   const router = useRouter();
   const [sessions, setSessions] = useState<PosSession[]>([]);
+  // List vs floor-map view. Sticky in localStorage so a tablet that's
+  // been swiped to "floor map" stays there across reloads.
+  const [view, setView] = useState<"list" | "map">(() => {
+    if (typeof window === "undefined") return "list";
+    try {
+      const saved = window.localStorage.getItem("klickenya:pos-tables-view");
+      if (saved === "list" || saved === "map") return saved;
+    } catch { /* ignore */ }
+    return "list";
+  });
   const [openingTableId, setOpeningTableId] = useState<string | null>(null);
   const [paymentBusyId, setPaymentBusyId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
@@ -125,7 +153,7 @@ export function PosTablesGrid({ initialTables }: PosTablesGridProps) {
     return () => clearInterval(i);
   }, []);
 
-  /* ── Open session for a table ──────────────────────────────────────────────
+  /* ── Open session for a table ───────────────────────────────────────
    * After successful creation we navigate straight to the session detail page
    * (order entry) rather than dropping the waiter back on the grid. The grid
    * poll picks up the change for any other terminal viewing it. */
@@ -179,18 +207,77 @@ export function PosTablesGrid({ initialTables }: PosTablesGridProps) {
   /* ── Modal: open table ── */
   const [openModalTable, setOpenModalTable] = useState<PosTable | null>(null);
 
+  /* ── View persistence + tile-state lookup for floor map ─────────────
+   *
+   * Map view uses the same FloorMapCanvas as the dashboard, in mode='live'.
+   * Tile state is derived from the session list we already poll every 5 s
+   * -- no extra round-trip. Tap a tile = same handler as the list cards
+   * (open modal if no session, navigate to detail if one exists).
+   */
+  function persistView(next: "list" | "map") {
+    setView(next);
+    try { window.localStorage.setItem("klickenya:pos-tables-view", next); } catch { /* ignore */ }
+  }
+
+  const tileStateFor = useCallback((tableId: string): TileState => {
+    const s = sessions.find((x) => x.table_id === tableId);
+    if (!s) return "available";
+    if (s.status === "billed") return "billed";
+    if (s.status === "open") return "occupied";
+    return "available";
+  }, [sessions]);
+
+  const handleTileTap = useCallback((tableId: string) => {
+    const t = initialTables.find((x) => x.id === tableId);
+    if (!t) return;
+    const s = sessions.find((x) => x.table_id === tableId);
+    if (!s) {
+      setOpenModalTable(t);
+    } else {
+      router.push(`/pos/${slug}/tables/${tableId}`);
+    }
+  }, [initialTables, sessions, router, slug]);
+
   return (
     <div className="min-h-screen flex flex-col">
       <PosHeader />
 
       <main className="flex-1 max-w-screen-2xl mx-auto w-full px-3 sm:px-6 pt-4 pb-24">
-        <div className="flex items-baseline justify-between mb-3">
+        <div className="flex items-center justify-between mb-3 gap-2">
           <h1 className="text-[20px] font-bold text-white">Tables</h1>
-          <p className="text-[11px] text-[#9C9485]">Live · {sessions.length} occupied</p>
+          <div className="flex items-center gap-3">
+            <p className="text-[11px] text-[#9C9485] hidden sm:block">
+              Live · {sessions.length} occupied
+            </p>
+            {/* List / Floor toggle. Stays even with no tables so a fresh
+                staff doesn't think the toggle is missing. Disabled in
+                map mode if no positions yet -- canvas auto-arranges so
+                tiles still render. */}
+            <div className="inline-flex border border-[#2A2520] rounded-full overflow-hidden bg-[#1A170F]">
+              <button
+                type="button"
+                onClick={() => persistView("list")}
+                className={`h-9 px-4 text-[12px] font-bold transition-colors ${
+                  view === "list" ? "bg-[#E8A020] text-[#16130C]" : "text-[#9C9485] hover:text-white"
+                }`}
+              >
+                List
+              </button>
+              <button
+                type="button"
+                onClick={() => persistView("map")}
+                className={`h-9 px-4 text-[12px] font-bold transition-colors ${
+                  view === "map" ? "bg-[#E8A020] text-[#16130C]" : "text-[#9C9485] hover:text-white"
+                }`}
+              >
+                Floor map
+              </button>
+            </div>
+          </div>
         </div>
 
-        {/* Search + status filter */}
-        {initialTables.length > 0 && (
+        {/* Search + status filter — list view only */}
+        {view === "list" && initialTables.length > 0 && (
           <div className="mb-3 space-y-2">
             <div className="flex items-center gap-2 rounded-2xl border border-[#2A2520] bg-[#1A170F] px-3 py-2">
               <Search className="w-4 h-4 text-[#9C9485] shrink-0" />
@@ -243,6 +330,20 @@ export function PosTablesGrid({ initialTables }: PosTablesGridProps) {
               No tables registered yet. Ask the owner to add tables in the dashboard.
             </p>
           </div>
+        ) : view === "map" ? (
+          /* Floor-map view -- read-only for staff. Tap a tile = same handler
+             as the list cards (open modal if no session, navigate to detail
+             if one exists). Tile colors come from the session list we're
+             already polling, no extra round-trip. theme='dark' matches the
+             POS chrome (charcoal surface, light-on-dark tiles). */
+          <FloorMapCanvas
+            mode="live"
+            theme="dark"
+            areas={initialAreas}
+            tables={initialTables}
+            getState={tileStateFor}
+            onTileTap={handleTileTap}
+          />
         ) : filteredTables.length === 0 ? (
           <div className="rounded-2xl border border-[#2A2520] bg-[#1A170F] p-8 text-center">
             <p className="text-[14px] text-[#9C9485]">No tables match the current filter.</p>
@@ -291,7 +392,7 @@ export function PosTablesGrid({ initialTables }: PosTablesGridProps) {
   );
 }
 
-/* ── Table card ─────────────────────────────────────────────────────────────── */
+/* ── Table card ───────────────────────────────────────────── */
 
 function TableCard({
   table,
@@ -397,7 +498,7 @@ function PayButton({ onClick, disabled, label }: { onClick: () => void; disabled
   );
 }
 
-/* ── Open-table modal ───────────────────────────────────────────────────────── */
+/* ── Open-table modal ──────────────────────────────────────── */
 
 function OpenTableModal({
   table,

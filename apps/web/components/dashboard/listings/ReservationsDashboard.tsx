@@ -8,6 +8,7 @@ import { DayView } from "./reservations-calendar/DayView";
 import type { CalendarReservation } from "./reservations-calendar/WeekView";
 import { ReservationsSettings } from "./ReservationsSettings";
 import type { RestaurantArea as SettingsArea, TimeWindow } from "./ReservationsSettings";
+import { FloorMapCanvas } from "./floor-map/FloorMapCanvas";
 
 /* ── Capacity warning threshold (tunable after pilot) ─────────────────────── */
 // TODO V2: Capacity enforcement moves server-side via reservation_slots table in V2.
@@ -439,6 +440,22 @@ export function ReservationsDashboard({
   // areas as mutable state so Settings tab can CRUD them
   const [areas, setAreas] = useState<RestaurantArea[]>(initialAreas);
 
+  // Tables for the floor view. Fetched lazily on first Floor-tab open
+  // (the list/calendar tabs don't need them). Includes pos_x/pos_y/area_id
+  // for the floor map.
+  const [floorTables, setFloorTables] = useState<Array<{
+    id: string;
+    table_number: string;
+    capacity: number;
+    pos_x: number | null;
+    pos_y: number | null;
+    area_id: string | null;
+    /** Legacy text label; canvas falls back to it when area_id is null. */
+    floor_section: string | null;
+    is_active: boolean;
+  }> | null>(null);
+  const [floorTablesLoading, setFloorTablesLoading] = useState(false);
+
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"list" | "calendar" | "floor" | "settings">("list");
   const [listFilter, setListFilter] = useState<"pending" | "approved" | "all">("pending");
@@ -725,45 +742,70 @@ export function ReservationsDashboard({
   }));
 
   /* ── Floor view ─────────────────────────────────────────────────────────── */
-  // TODO V2: Floor map editor + table assignment + drag-to-place reservations land here in V2.
+  // V1: live floor map (read-only). Canvas reuses the editor component in
+  // mode="live"; tables loaded lazily on first open.
+  // V2: drag-to-assign reservations onto specific tables (binds
+  //     reservations.table_id) — deferred per V1 plan.
+
   function FloorView() {
     const activeAreas = areas.filter(a => a.is_active);
-    const todayApprovedByArea = (areaId: string) =>
-      reservations.filter(r =>
-        r.status === "approved" &&
-        r.area_id === areaId &&
-        new Intl.DateTimeFormat("en-CA", { timeZone: "Africa/Nairobi" }).format(new Date(r.reserved_for)) === todayStr,
-      ).length;
+
+    // Lazy fetch — first time the Floor tab opens.
+    useEffect(() => {
+      if (floorTables !== null || floorTablesLoading) return;
+      setFloorTablesLoading(true);
+      fetch(`/api/menu/tables?menu_id=${menuId}`)
+        .then((r) => r.json())
+        .then((d) => setFloorTables(d.tables ?? []))
+        .catch(() => showToast("Failed to load tables for floor map", "error"))
+        .finally(() => setFloorTablesLoading(false));
+    }, []);
+
+    if (activeAreas.length === 0) {
+      return (
+        <p className="text-[13px] text-[#9C9485] text-center py-6">
+          No seating areas configured yet. Add an area in Settings to start placing tables.
+        </p>
+      );
+    }
+
+    if (floorTablesLoading || floorTables === null) {
+      return (
+        <div className="bg-white border border-[#E2DDD5] rounded-2xl p-6 text-center text-[13px] text-[#9C9485]">
+          Loading floor map…
+        </div>
+      );
+    }
+
+    if (floorTables.length === 0) {
+      return (
+        <div className="bg-white border border-[#E2DDD5] rounded-2xl p-6 text-center">
+          <p className="text-[14px] font-semibold text-[#16130C]">No tables yet</p>
+          <p className="text-[12px] text-[#9C9485] mt-1">
+            Add tables under Table ordering, then arrange them on the floor map.
+          </p>
+        </div>
+      );
+    }
 
     return (
-      <div className="space-y-4">
-        <div className="bg-[#F4F1EC] rounded-xl p-4 text-[13px] text-[#5E5848] leading-relaxed">
-          <p className="font-semibold text-[#16130C] mb-1">Floor map coming in V2</p>
-          <p>You'll be able to assign reservations to specific tables on a visual floor map. For now, here are your areas:</p>
-        </div>
-        {activeAreas.length === 0 ? (
-          <p className="text-[13px] text-[#9C9485] text-center py-6">No seating areas configured yet.</p>
-        ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-            {activeAreas.map(area => (
-              <div
-                key={area.id}
-                className="rounded-xl p-4"
-                style={{
-                  backgroundColor: area.color_hex ? `${area.color_hex}18` : "#F4F1EC",
-                  border: `2px solid ${area.color_hex ?? "#E2DDD5"}`,
-                }}
-              >
-                <p className="text-[15px] font-bold text-[#16130C] truncate">{area.name}</p>
-                <p className="text-[12px] text-[#5E5848]">Capacity: {area.capacity_total}</p>
-                <p className="text-[11px] text-[#9C9485] mt-1">
-                  {todayApprovedByArea(area.id)} reservation{todayApprovedByArea(area.id) !== 1 ? "s" : ""} today
-                </p>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+      <FloorMapCanvas
+        mode="live"
+        areas={activeAreas.map((a) => ({
+          id: a.id,
+          name: a.name,
+          color_hex: a.color_hex ?? null,
+        }))}
+        tables={floorTables}
+        // V1 reservations side has no table_id binding yet, so every tile
+        // shows "available". State coloring lights up in V2 once
+        // reservations.table_id is wired.
+        getState={() => "available"}
+        onTileTap={() => {
+          // V2: open a "Assign reservation" sheet here.
+          showToast("Drag-to-assign reservations lands in V2.");
+        }}
+      />
     );
   }
 
@@ -1125,7 +1167,7 @@ export function ReservationsDashboard({
       {activeTab === "settings" && (
         <ReservationsSettings
           menuId={menuId}
-          menuSlug={menuSlug}
+          listingId={listingId}
           listingCity={listingCity}
           initialReservationsEnabled={menuSettings.reservationsEnabled}
           initialDuration={menuSettings.duration}
