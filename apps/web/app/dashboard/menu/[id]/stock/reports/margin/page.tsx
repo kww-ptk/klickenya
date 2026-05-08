@@ -8,6 +8,12 @@ interface PageProps {
   params: Promise<{ id: string }>;
 }
 
+const ONE_HOUR_MS = 60 * 60 * 1000;
+function isStale(refreshedAt: string | null | undefined): boolean {
+  if (!refreshedAt) return true;
+  return Date.now() - new Date(refreshedAt).getTime() > ONE_HOUR_MS;
+}
+
 export default async function MarginPage({ params }: PageProps) {
   const { id } = await params;
   const { user } = await getAuthUser();
@@ -22,12 +28,18 @@ export default async function MarginPage({ params }: PageProps) {
   if (!menu) redirect("/dashboard");
   if (!menu.stock_enabled) redirect(`/dashboard/menu/${id}/stock`);
 
-  // Refresh the MV on demand if it's empty (first run before pg_cron is wired up).
-  const { count } = await adminClient
-    .from("mv_dish_margin_30d")
-    .select("menu_item_id", { count: "exact", head: true })
-    .eq("business_id", user.id);
-  if (!count) {
+  // Refresh the MV on demand iff it hasn't been refreshed recently. Previously
+  // we refreshed whenever THIS business had no rows, which (a) re-ran the
+  // expensive aggregate on every page load by a fresh business and (b)
+  // ignored the fact that the MV was already populated for other businesses.
+  // kitchen_mv_meta stores the last refresh time globally; refresh if older
+  // than an hour or never recorded.
+  const { data: meta } = await adminClient
+    .from("kitchen_mv_meta")
+    .select("refreshed_at")
+    .eq("name", "mv_dish_margin_30d")
+    .maybeSingle();
+  if (isStale(meta?.refreshed_at)) {
     await adminClient.rpc("refresh_dish_margin_30d");
   }
 

@@ -77,18 +77,19 @@ export async function POST(req: NextRequest) {
   }
 
   // Compute expected_end at count_at by summing all signed qty up to that
-  // moment. One round-trip per ingredient would be wasteful, so we batch.
-  const { data: sums, error: sumsErr } = await supabase
-    .from("stock_movements")
-    .select("ingredient_id, qty")
-    .in("ingredient_id", ingredientIds)
-    .lt("created_at", countAt.toISOString());
+  // moment. The RPC does the GROUP BY in Postgres -- one row per ingredient
+  // back over the wire, vs the previous approach of shipping every movement
+  // and reducing in JS (thousands of rows for a busy restaurant).
+  const { data: sums, error: sumsErr } = await supabase.rpc("fn_ingredient_sums_at", {
+    p_ingredient_ids: ingredientIds,
+    p_at: countAt.toISOString(),
+  });
   if (sumsErr) return NextResponse.json({ error: sumsErr.message }, { status: 500 });
 
   const expectedById = new Map<string, number>();
   for (const id of ingredientIds) expectedById.set(id, 0);
-  for (const r of sums ?? []) {
-    expectedById.set(r.ingredient_id, (expectedById.get(r.ingredient_id) ?? 0) + Number(r.qty));
+  for (const r of (sums ?? []) as Array<{ ingredient_id: string; total_qty: number }>) {
+    expectedById.set(r.ingredient_id, Number(r.total_qty));
   }
 
   // Build count_adjustment movements where actual ≠ expected. We tolerate
