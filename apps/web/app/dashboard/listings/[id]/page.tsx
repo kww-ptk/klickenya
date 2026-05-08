@@ -317,16 +317,15 @@ export default async function ListingOverviewPage({
               );
             }
 
-            // ── Table ordering: short-circuit to the live kitchen view ──────
-            // Same pattern as menu / klickenya_kitchen: the real screen lives
-            // at /dashboard/menu/[menu.id]/orders. Skips the redirect hop on
-            // most navs; the orders/page.tsx redirect is fallback for tab
-            // clicks and direct URLs.
+            // ── Table ordering: short-circuit to the dedicated SETUP page,
+            // not the live kitchen view. The setup page hosts the toggle +
+            // table CRUD + operational deep-links. The Tools 'Kitchen view'
+            // card is the one that opens the live order screen.
             if (feature.id === "table_ordering" && featureCtx.menu) {
               return (
                 <Link
                   key={feature.id}
-                  href={`/dashboard/menu/${featureCtx.menu.id}/orders?${back}`}
+                  href={`/dashboard/listings/${id}/orders`}
                   className="flex items-center gap-3 bg-white rounded-xl border border-[#E2DDD5] p-3.5 shadow-sm hover:shadow-md hover:border-[#E8A020]/40 transition-all"
                 >
                   <span className="text-[22px] shrink-0">{featureIcon(feature.icon)}</span>
