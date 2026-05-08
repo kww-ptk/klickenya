@@ -383,7 +383,7 @@ export default function ListingForm() {
 
   return (
     <div className="bg-white rounded-2xl border border-[#E2DDD5] p-6 sm:p-8">
-      {step !== "success" && <StepDots current={step} />}
+      <StepDots current={step} />
 
       {/* ---- Step 1: Choose type ---- */}
       {step === "type" && (
