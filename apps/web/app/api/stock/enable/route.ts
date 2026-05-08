@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
 import { z } from "zod/v4";
 import { createClient } from "@/lib/supabase/server";
 
@@ -35,6 +36,10 @@ export async function POST(req: NextRequest) {
   if (error || !data) {
     return NextResponse.json({ error: error?.message ?? "Forbidden" }, { status: 403 });
   }
+
+  // Bust the cached menu metadata so the next page render sees the new
+  // stock_enabled / stock_deduct_on values immediately.
+  revalidateTag(`menu:${menu_id}`, "default");
 
   return NextResponse.json(data);
 }

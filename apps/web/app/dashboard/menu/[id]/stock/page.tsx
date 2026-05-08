@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { getAuthUser } from "@/app/dashboard/_lib/auth";
 import { safeBackHref } from "@/app/dashboard/_lib/back-href";
 import { adminClient } from "@/lib/supabase/admin";
+import { getMenuMetadata } from "@/lib/cache/menu";
 import { StockEnableButton } from "./StockEnableButton";
 
 interface PageProps {
@@ -21,13 +22,7 @@ export default async function StockHomePage({ params, searchParams }: PageProps)
   const { user } = await getAuthUser();
   if (!user) redirect("/login");
 
-  const { data: menu } = await adminClient
-    .from("menus")
-    .select("id, name, stock_enabled, stock_deduct_on")
-    .eq("id", id)
-    .eq("business_id", user.id)
-    .single();
-
+  const menu = await getMenuMetadata(id, user.id);
   if (!menu) redirect("/dashboard");
 
   // Aggregates only matter once stock is enabled — fetch in parallel.

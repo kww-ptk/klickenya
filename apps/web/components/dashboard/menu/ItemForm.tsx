@@ -2,7 +2,8 @@
 
 import { useState, useRef } from "react";
 import Image from "next/image";
-import imageCompression from "browser-image-compression";
+// browser-image-compression (~18 KB) is dynamically imported on first
+// photo select to keep it out of the menu builder's main bundle.
 import type { MenuItem } from "@/components/listings/detail/restaurant/MenuDisplay";
 
 const DIETARY_OPTIONS = [
@@ -53,7 +54,9 @@ export function ItemForm({ sectionId, menuId, item, onSave, onCancel }: ItemForm
     setUploading(true);
 
     try {
-      // Compress and resize client-side
+      // Compress and resize client-side. Dynamic import keeps the lib
+      // out of the menu builder's initial bundle until someone uploads.
+      const { default: imageCompression } = await import("browser-image-compression");
       const compressed = await imageCompression(file, {
         maxSizeMB: 0.5,
         maxWidthOrHeight: 800,
