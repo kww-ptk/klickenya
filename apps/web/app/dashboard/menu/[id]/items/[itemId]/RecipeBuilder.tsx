@@ -236,6 +236,34 @@ export function RecipeBuilder({
         );
       }
 
+      // Backfill zero-cost matched pantry rows with the AI estimate. Never
+      // overwrite a non-zero price -- that's owner data. Common when the
+      // pantry was set up before the AI started returning prices.
+      const updatedPantryRows: IngredientRow[] = [];
+      for (const d of incoming) {
+        if (!d.matched_pantry_id) continue;
+        const est = Number(d.est_cost_per_unit_kes ?? 0);
+        if (est <= 0) continue;
+        const current = pantry.find((p) => p.id === d.matched_pantry_id);
+        if (!current || Number(current.cost_per_unit) > 0) continue;
+        const patchRes = await fetch("/api/stock/ingredients", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: d.matched_pantry_id, cost_per_unit: est }),
+        });
+        if (patchRes.ok) {
+          const updated: IngredientRow = await patchRes.json();
+          updatedPantryRows.push(updated);
+        }
+      }
+      if (updatedPantryRows.length > 0) {
+        setPantry((prev) =>
+          prev
+            .map((p) => updatedPantryRows.find((u) => u.id === p.id) ?? p)
+            .sort((a, b) => a.name.localeCompare(b.name)),
+        );
+      }
+
       const drafted: WorkingLine[] = incoming
         .filter((d) => d.matched_pantry_id)
         .map((d) => ({
@@ -255,6 +283,79 @@ export function RecipeBuilder({
 
   const canDraft = lines.length === 0 && itemDescription.trim().length > 0;
 
+  /* ── Find missing prices ─────────────────────────── */
+  // Surfaced whenever any recipe line points at a pantry row with cost = 0.
+  // Sends just those names to /api/stock/reference-prices (AI mode), maps
+  // results back by canonical name, PATCHes the pantry rows. Non-zero
+  // prices are NEVER overwritten -- only zeros get backfilled.
+
+  const [findingPrices, setFindingPrices] = useState(false);
+
+  const missingCostIds = useMemo(() => {
+    const seen = new Set<string>();
+    const ids: string[] = [];
+    for (const l of lines) {
+      if (!l.ingredient_id || seen.has(l.ingredient_id)) continue;
+      const ing = pantryById.get(l.ingredient_id);
+      if (ing && Number(ing.cost_per_unit) <= 0) {
+        ids.push(l.ingredient_id);
+        seen.add(l.ingredient_id);
+      }
+    }
+    return ids;
+  }, [lines, pantryById]);
+
+  async function findMissingPrices() {
+    if (missingCostIds.length === 0) return;
+    setFindingPrices(true);
+    setErr(null);
+    try {
+      const names = missingCostIds
+        .map((id) => pantryById.get(id)?.name)
+        .filter((n): n is string => !!n);
+      const res = await fetch("/api/stock/reference-prices", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ names }),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body.error ?? "Failed to fetch prices");
+      type Row = { canonical_name: string; median_kes: number };
+      const byCanonical = new Map<string, number>();
+      for (const r of (body.rows ?? []) as Row[]) {
+        byCanonical.set(r.canonical_name.toLowerCase(), Number(r.median_kes));
+      }
+
+      const updates: IngredientRow[] = [];
+      for (const id of missingCostIds) {
+        const ing = pantryById.get(id);
+        if (!ing) continue;
+        const est = byCanonical.get(ing.name.toLowerCase());
+        if (!est || est <= 0) continue;
+        const patchRes = await fetch("/api/stock/ingredients", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id, cost_per_unit: est }),
+        });
+        if (patchRes.ok) updates.push((await patchRes.json()) as IngredientRow);
+      }
+
+      if (updates.length > 0) {
+        setPantry((prev) =>
+          prev
+            .map((p) => updates.find((u) => u.id === p.id) ?? p)
+            .sort((a, b) => a.name.localeCompare(b.name)),
+        );
+      } else {
+        setErr("AI couldn't price those ingredients. Try editing the names to be more recognisable.");
+      }
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Failed to fetch prices");
+    } finally {
+      setFindingPrices(false);
+    }
+  }
+
   /* ── Render ──────────────────────────────────────── */
 
   return (
@@ -272,6 +373,19 @@ export function RecipeBuilder({
                 className="h-10 px-4 rounded-full border border-[#E8A020]/40 text-[#E8A020] text-[13px] font-bold hover:bg-[#E8A020]/5 transition-colors disabled:opacity-50"
               >
                 {drafting ? "Drafting…" : "✨ Generate draft"}
+              </button>
+            )}
+            {missingCostIds.length > 0 && (
+              <button
+                type="button"
+                onClick={findMissingPrices}
+                disabled={findingPrices}
+                className="h-10 px-4 rounded-full border border-[#E8A020]/40 text-[#E8A020] text-[13px] font-bold hover:bg-[#E8A020]/5 transition-colors disabled:opacity-50"
+                title={`AI-price ${missingCostIds.length} ingredient${missingCostIds.length === 1 ? "" : "s"} currently at KSh 0`}
+              >
+                {findingPrices
+                  ? "Pricing…"
+                  : `✨ Find missing prices (${missingCostIds.length})`}
               </button>
             )}
             <Link

@@ -102,7 +102,8 @@ Rules:
 - est_cost_per_unit_kes is per GRAM (e.g. chicken thigh ~0.5, basmati rice ~0.2, octopus ~1.5,
   tomato ~0.15, garlic ~1.0, olive oil ~0.6, parmesan ~3.0). Numbers will mostly be 0.05–5.
   Set to 0 only if you genuinely cannot estimate.
-- If matched_pantry_id is set, you can return 0 for est_cost_per_unit_kes — the pantry already has its price.
+- ALWAYS include est_cost_per_unit_kes, even when matched_pantry_id is set. The client uses
+  it to backfill pantry rows that were added without a price (it never overwrites a real price).
 - Use only ingredients you can plausibly justify from the description.`;
 
   const userPayload = JSON.stringify({
