@@ -85,9 +85,11 @@ Schema:
   "ingredients": [
     {
       "name": "Ingredient name (Title Case, singular, e.g. 'Chicken thigh')",
-      "ep_qty_g": 120,             // edible-portion quantity in GRAMS (or millilitres for liquids)
-      "yield_pct": 100,             // expected usable portion after trim/cooking, 1–100
-      "matched_pantry_id": null     // pantry id if matched, else null
+      "ep_qty_g": 120,                // edible-portion quantity in GRAMS (or millilitres for liquids)
+      "yield_pct": 100,               // expected usable portion after trim/cooking, 1–100
+      "matched_pantry_id": null,      // pantry id if matched, else null
+      "est_cost_per_unit_kes": 0.5    // estimated KES PER GRAM (or per ml for liquids).
+                                       // Use Kenyan coastal market prices, conservative.
     }
   ]
 }
@@ -97,6 +99,10 @@ Rules:
 - ep_qty_g must be a positive number; for liquids treat ml as g for consistency.
 - 4–10 ingredients typical. Skip salt/pepper unless central to the dish.
 - Match aggressively: "chicken thigh fillet" matches "chicken thigh"; "garlic clove" matches "garlic".
+- est_cost_per_unit_kes is per GRAM (e.g. chicken thigh ~0.5, basmati rice ~0.2, octopus ~1.5,
+  tomato ~0.15, garlic ~1.0, olive oil ~0.6, parmesan ~3.0). Numbers will mostly be 0.05–5.
+  Set to 0 only if you genuinely cannot estimate.
+- If matched_pantry_id is set, you can return 0 for est_cost_per_unit_kes — the pantry already has its price.
 - Use only ingredients you can plausibly justify from the description.`;
 
   const userPayload = JSON.stringify({
@@ -164,6 +170,9 @@ Rules:
     ep_qty_g: z.coerce.number().gt(0).max(100_000),
     yield_pct: z.coerce.number().gt(0).max(100).default(100),
     matched_pantry_id: z.union([z.string().uuid(), z.null()]).default(null),
+    // Optional and lenient: anything outside the sane range is silently
+    // dropped to 0 rather than rejecting the whole draft.
+    est_cost_per_unit_kes: z.coerce.number().min(0).max(10_000).default(0).catch(0),
   });
   const parsedLines = z
     .object({ ingredients: z.array(lineSchema).max(50) })
@@ -193,6 +202,7 @@ Rules:
     matched_pantry_id: i.matched_pantry_id && allowed.has(i.matched_pantry_id)
       ? i.matched_pantry_id
       : null,
+    est_cost_per_unit_kes: Number(i.est_cost_per_unit_kes ?? 0),
   }));
 
   // Log the call (one row per call, for cost tracking + abuse).

@@ -40,9 +40,17 @@ export default async function IngredientsPage({ params }: PageProps) {
         >
           ← Back to Klickenya Kitchen
         </Link>
-        <h1 className="font-display text-[22px] lg:text-[28px] font-bold tracking-[-0.03em] text-[#16130C] mt-2">
-          Ingredients
-        </h1>
+        <div className="flex items-center justify-between gap-3 mt-2 flex-wrap">
+          <h1 className="font-display text-[22px] lg:text-[28px] font-bold tracking-[-0.03em] text-[#16130C]">
+            Ingredients
+          </h1>
+          <Link
+            href={`/dashboard/menu/${menu.id}/stock/reference-prices`}
+            className="bg-white border border-[#E2DDD5] text-[#16130C] font-bold text-[13px] px-4 h-[40px] rounded-full flex items-center hover:border-[#E8A020] hover:text-[#E8A020] transition-colors"
+          >
+            📊 Reference prices
+          </Link>
+        </div>
         <p className="text-[13px] text-[#9C9485] mt-1">
           Your pantry. Each ingredient has a unit (g, ml, pcs…) and a cost per unit in KES.
         </p>

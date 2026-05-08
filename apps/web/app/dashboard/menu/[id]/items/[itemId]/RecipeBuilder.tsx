@@ -201,12 +201,15 @@ export function RecipeBuilder({
         ep_qty_g: number;
         yield_pct?: number;
         matched_pantry_id: string | null;
+        est_cost_per_unit_kes?: number;
       };
       const incoming: DraftLine[] = Array.isArray(body.ingredients) ? body.ingredients : [];
 
       // For new (unmatched) ingredients, create them in the pantry first so
       // the recipe can reference them. Use grams as the unit since the prompt
-      // returns ep_qty_g.
+      // returns ep_qty_g. Cost-per-unit comes from the AI's estimate; the
+      // owner can correct it later from the Ingredients page or by logging
+      // a real purchase.
       const newPantryRows: IngredientRow[] = [];
       for (const d of incoming) {
         if (d.matched_pantry_id) continue;
@@ -216,7 +219,7 @@ export function RecipeBuilder({
           body: JSON.stringify({
             name: d.name,
             unit: "g",
-            cost_per_unit: 0,
+            cost_per_unit: Number(d.est_cost_per_unit_kes ?? 0),
             default_yield: 1,
             category: null,
           }),
