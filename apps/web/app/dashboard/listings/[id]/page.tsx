@@ -66,7 +66,7 @@ export default async function ListingOverviewPage({
     ? await adminClient
         .from("menus")
         .select(
-          "id, table_ordering, reservations_enabled, ordering_enabled, takeaway_enabled, delivery_enabled",
+          "id, table_ordering, reservations_enabled, ordering_enabled, takeaway_enabled, delivery_enabled, stock_enabled",
         )
         .eq("listing_slug", listing.slug)
         .eq("business_id", user.id)
@@ -83,6 +83,7 @@ export default async function ListingOverviewPage({
           ordering_enabled: menu.ordering_enabled ?? false,
           takeaway_enabled: menu.takeaway_enabled ?? false,
           delivery_enabled: menu.delivery_enabled ?? false,
+          stock_enabled: menu.stock_enabled ?? false,
         }
       : undefined,
   };
@@ -139,6 +140,11 @@ export default async function ListingOverviewPage({
   // Quick-link cards: one per active feature tab + permanent Features card
   const activeTabs = getActiveTabs(featureCtx);
   const showWelcomeCallout = activeCount <= 1; // only menu active (or nothing)
+
+  // Back-nav target so the operational pages (menu builder, QR, kitchen view,
+  // audit log, stock) can render "← Back to dashboard" instead of "Back to
+  // menu builder" when the user got there via this dashboard.
+  const back = `back=${encodeURIComponent(`/dashboard/listings/${id}`)}`;
 
   return (
     <div className="space-y-5">
@@ -277,7 +283,50 @@ export default async function ListingOverviewPage({
               return (
                 <Link
                   key={feature.id}
-                  href={`/dashboard/menu/${featureCtx.menu.id}`}
+                  href={`/dashboard/menu/${featureCtx.menu.id}?${back}`}
+                  className="flex items-center gap-3 bg-white rounded-xl border border-[#E2DDD5] p-3.5 shadow-sm hover:shadow-md hover:border-[#E8A020]/40 transition-all"
+                >
+                  <span className="text-[22px] shrink-0">{featureIcon(feature.icon)}</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[13px] font-semibold text-[#16130C]">{feature.label}</p>
+                    <p className="text-[11px] text-[#9C9485] truncate">{feature.shortDescription}</p>
+                  </div>
+                  <span className="text-[#9C9485] text-[16px] shrink-0">›</span>
+                </Link>
+              );
+            }
+
+            // ── Klickenya Kitchen: same special-case as Digital menu ────────
+            // Real pages live under /dashboard/menu/[menu.id]/stock. The
+            // /dashboard/listings/[id]/kitchen page is just a redirect, but
+            // we link directly to skip the round-trip.
+            if (feature.id === "klickenya_kitchen" && featureCtx.menu) {
+              return (
+                <Link
+                  key={feature.id}
+                  href={`/dashboard/menu/${featureCtx.menu.id}/stock?${back}`}
+                  className="flex items-center gap-3 bg-white rounded-xl border border-[#E2DDD5] p-3.5 shadow-sm hover:shadow-md hover:border-[#E8A020]/40 transition-all"
+                >
+                  <span className="text-[22px] shrink-0">{featureIcon(feature.icon)}</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[13px] font-semibold text-[#16130C]">{feature.label}</p>
+                    <p className="text-[11px] text-[#9C9485] truncate">{feature.shortDescription}</p>
+                  </div>
+                  <span className="text-[#9C9485] text-[16px] shrink-0">›</span>
+                </Link>
+              );
+            }
+
+            // ── Table ordering: short-circuit to the live kitchen view ──────
+            // Same pattern as menu / klickenya_kitchen: the real screen lives
+            // at /dashboard/menu/[menu.id]/orders. Skips the redirect hop on
+            // most navs; the orders/page.tsx redirect is fallback for tab
+            // clicks and direct URLs.
+            if (feature.id === "table_ordering" && featureCtx.menu) {
+              return (
+                <Link
+                  key={feature.id}
+                  href={`/dashboard/menu/${featureCtx.menu.id}/orders?${back}`}
                   className="flex items-center gap-3 bg-white rounded-xl border border-[#E2DDD5] p-3.5 shadow-sm hover:shadow-md hover:border-[#E8A020]/40 transition-all"
                 >
                   <span className="text-[22px] shrink-0">{featureIcon(feature.icon)}</span>
@@ -332,20 +381,89 @@ export default async function ListingOverviewPage({
             );
           })}
 
-          {/* Always-present "Configure features" card */}
-          <Link
-            href={`/dashboard/listings/${id}/features`}
-            className="flex items-center gap-3 bg-white rounded-xl border border-[#E2DDD5] p-3.5 shadow-sm hover:shadow-md hover:border-[#E8A020]/40 transition-all"
-          >
-            <span className="text-[22px] shrink-0">⚙️</span>
-            <div className="flex-1 min-w-0">
-              <p className="text-[13px] font-semibold text-[#16130C]">Configure features</p>
-              <p className="text-[11px] text-[#9C9485] truncate">Turn on reservations, ordering, and more</p>
-            </div>
-            <span className="text-[#9C9485] text-[16px] shrink-0">›</span>
-          </Link>
         </div>
       </div>
+
+      {/* ── Tools ────────────────────────────────────────────────────────────
+           Operational links that aren't features in their own right -- they're
+           sub-views of an active feature (Kitchen view + Audit log are inside
+           Table ordering, QR + View live menu are inside Digital menu). Kept
+           here, surfaced from the dashboard, so owners don't have to dig into
+           the menu builder's right sidebar. Render conditionally so the
+           section is empty/quiet when nothing is relevant.
+      ─────────────────────────────────────────────────────────────────────── */}
+      {featureCtx.menu && (
+        <div className="space-y-2">
+          <p className="text-[12px] font-semibold text-[#9C9485] uppercase tracking-wide">
+            Tools
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {featureCtx.menu.table_ordering && (
+              <Link
+                href={`/dashboard/menu/${featureCtx.menu.id}/orders?${back}`}
+                className="flex items-center gap-3 bg-white rounded-xl border border-[#E2DDD5] p-3.5 shadow-sm hover:shadow-md hover:border-[#E8A020]/40 transition-all"
+              >
+                <span className="text-[22px] shrink-0">🍳</span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[13px] font-semibold text-[#16130C]">Kitchen view</p>
+                  <p className="text-[11px] text-[#9C9485] truncate">Live order screen for the kitchen team</p>
+                </div>
+                <span className="text-[#9C9485] text-[16px] shrink-0">›</span>
+              </Link>
+            )}
+            {featureCtx.menu.table_ordering && (
+              <Link
+                href={`/dashboard/menu/${featureCtx.menu.id}/audit?${back}`}
+                className="flex items-center gap-3 bg-white rounded-xl border border-[#E2DDD5] p-3.5 shadow-sm hover:shadow-md hover:border-[#E8A020]/40 transition-all"
+              >
+                <span className="text-[22px] shrink-0">📋</span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[13px] font-semibold text-[#16130C]">Audit log</p>
+                  <p className="text-[11px] text-[#9C9485] truncate">Order edits, voids and manager overrides</p>
+                </div>
+                <span className="text-[#9C9485] text-[16px] shrink-0">›</span>
+              </Link>
+            )}
+            <Link
+              href={`/dashboard/menu/${featureCtx.menu.id}/qr?${back}`}
+              className="flex items-center gap-3 bg-white rounded-xl border border-[#E2DDD5] p-3.5 shadow-sm hover:shadow-md hover:border-[#E8A020]/40 transition-all"
+            >
+              <span className="text-[22px] shrink-0">🔳</span>
+              <div className="flex-1 min-w-0">
+                <p className="text-[13px] font-semibold text-[#16130C]">QR code</p>
+                <p className="text-[11px] text-[#9C9485] truncate">Download printable QR codes for tables</p>
+              </div>
+              <span className="text-[#9C9485] text-[16px] shrink-0">›</span>
+            </Link>
+            {listing.slug && (
+              <a
+                href={`/m/${listing.slug}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-3 bg-white rounded-xl border border-[#E2DDD5] p-3.5 shadow-sm hover:shadow-md hover:border-[#E8A020]/40 transition-all"
+              >
+                <span className="text-[22px] shrink-0">🔗</span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[13px] font-semibold text-[#16130C]">View live menu</p>
+                  <p className="text-[11px] text-[#9C9485] truncate">Opens what guests see, in a new tab</p>
+                </div>
+                <span className="text-[#9C9485] text-[16px] shrink-0">↗</span>
+              </a>
+            )}
+            <Link
+              href={`/dashboard/listings/${id}/features`}
+              className="flex items-center gap-3 bg-white rounded-xl border border-[#E2DDD5] p-3.5 shadow-sm hover:shadow-md hover:border-[#E8A020]/40 transition-all"
+            >
+              <span className="text-[22px] shrink-0">⚙️</span>
+              <div className="flex-1 min-w-0">
+                <p className="text-[13px] font-semibold text-[#16130C]">Configure features</p>
+                <p className="text-[11px] text-[#9C9485] truncate">Turn on reservations, ordering, and more</p>
+              </div>
+              <span className="text-[#9C9485] text-[16px] shrink-0">›</span>
+            </Link>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -360,6 +478,7 @@ function featureIcon(iconName: string): string {
     CalendarCheck: "📅",
     ShoppingBag: "🥡",
     Bike: "🛵",
+    ChefHat: "🍳",
   };
   return map[iconName] ?? "⚡";
 }

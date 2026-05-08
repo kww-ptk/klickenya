@@ -9,10 +9,14 @@ import { ToastProvider } from "@/components/ui/Toast";
 
 interface PageProps {
   params: Promise<{ id: string }>;
+  searchParams?: Promise<{ back?: string }>;
 }
 
-export default async function MenuBuilderPage({ params }: PageProps) {
+export default async function MenuBuilderPage({ params, searchParams }: PageProps) {
   const { id } = await params;
+  const sp = (await searchParams) ?? {};
+  const { safeBackHref } = await import("@/app/dashboard/_lib/back-href");
+  const backHref = safeBackHref(sp.back);
   const { user } = await getAuthUser();
 
   if (!user) redirect("/login");
@@ -31,7 +35,7 @@ export default async function MenuBuilderPage({ params }: PageProps) {
     adminClient
       .from("menus")
       .select(
-        "listing_slug, reservations_enabled, default_reservation_duration, reservations_lead_time_hours, reservations_max_party_size, reservations_max_advance_days",
+        "listing_slug, reservations_enabled, default_reservation_duration, reservations_lead_time_hours, reservations_max_party_size, reservations_max_advance_days, stock_enabled",
       )
       .eq("id", id)
       .eq("business_id", user.id)
@@ -43,6 +47,7 @@ export default async function MenuBuilderPage({ params }: PageProps) {
   const settings = menuSettings.data;
   const listingSlug = settings?.listing_slug ?? null;
   const reservationsEnabled = settings?.reservations_enabled ?? false;
+  const stockEnabled = settings?.stock_enabled ?? false;
 
   // Fetch listing city + Sanity _id from Sanity.
   // city: needed so MenuBuilder can pass listing_city in PATCH /api/menu/settings to bust ISR cache.
@@ -77,6 +82,9 @@ export default async function MenuBuilderPage({ params }: PageProps) {
         listingSlug={listingSlug}
         listingCity={listingCity}
         listingId={listingId}
+        stockEnabled={stockEnabled}
+        backHref={backHref ?? undefined}
+        backLabel={backHref ? "← Back to dashboard" : undefined}
       />
     </ToastProvider>
   );

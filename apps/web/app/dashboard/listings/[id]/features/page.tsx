@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
-import { Lock, UtensilsCrossed, ShoppingCart, CalendarCheck, ShoppingBag, Bike } from "lucide-react";
+import Link from "next/link";
+import { Lock, UtensilsCrossed, ShoppingCart, CalendarCheck, ShoppingBag, Bike, ChefHat, ChevronRight } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { getAuthUser, getHostProfile } from "../../../_lib/auth";
 import { adminClient } from "@/lib/supabase/admin";
@@ -17,6 +18,7 @@ const ICON_MAP: Record<string, LucideIcon> = {
   CalendarCheck,
   ShoppingBag,
   Bike,
+  ChefHat,
 };
 
 /* ── Status pill config ─────────────────────────────────────────────────── */
@@ -67,7 +69,7 @@ export default async function FeaturesPage({
     ? await adminClient
         .from("menus")
         .select(
-          "id, table_ordering, reservations_enabled, ordering_enabled, takeaway_enabled, delivery_enabled",
+          "id, table_ordering, reservations_enabled, ordering_enabled, takeaway_enabled, delivery_enabled, stock_enabled",
         )
         .eq("listing_slug", listing.slug)
         .eq("business_id", user.id)
@@ -84,6 +86,7 @@ export default async function FeaturesPage({
           ordering_enabled: menu.ordering_enabled ?? false,
           takeaway_enabled: menu.takeaway_enabled ?? false,
           delivery_enabled: menu.delivery_enabled ?? false,
+          stock_enabled: menu.stock_enabled ?? false,
         }
       : undefined,
   };
@@ -117,24 +120,30 @@ export default async function FeaturesPage({
         </p>
       </div>
 
-      {/* ── Feature preview grid (disabled / locked) ── */}
+      {/* ── Feature preview grid ─────────────────────────────────────────────
+           Most cards are read-only previews (status comes from elsewhere; the
+           management surface is built feature-by-feature). For features whose
+           toggle UI already exists in another part of the app, we resolve a
+           setupHref and turn the card into a clickable Link so owners can
+           reach the toggle in one tap. Lock icon stays for read-only cards.
+      ─────────────────────────────────────────────────────────────────────── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {features.map((feature) => {
           const status = feature.getStatus(featureCtx);
           const style = STATUS_STYLES[status];
           const Icon = ICON_MAP[feature.icon];
 
-          return (
-            <div
-              key={feature.id}
-              className="relative bg-white rounded-xl lg:rounded-2xl border border-[#E2DDD5] p-4 shadow-sm opacity-90"
-            >
-              {/* Lock icon */}
+          // Where does the owner go to toggle this feature? Returns null when
+          // the toggle isn't built yet (those cards stay locked).
+          const setupHref = setupHrefFor(feature.id, featureCtx);
+          const cardCls =
+            "relative bg-white rounded-xl lg:rounded-2xl border border-[#E2DDD5] p-4 shadow-sm";
+          const inner = (
+            <>
               <div className="absolute top-3 right-3 text-[#E2DDD5]">
-                <Lock className="size-3.5" />
+                {setupHref ? <ChevronRight className="size-4" /> : <Lock className="size-3.5" />}
               </div>
 
-              {/* Icon + label */}
               <div className="flex items-start gap-3">
                 <div className="shrink-0 size-9 rounded-xl bg-[#F4F1EC] flex items-center justify-center">
                   {Icon ? (
@@ -153,18 +162,58 @@ export default async function FeaturesPage({
                 </div>
               </div>
 
-              {/* Status pill */}
-              <div className="mt-3">
+              <div className="mt-3 flex items-center gap-2">
                 <span
                   className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide ${style.className}`}
                 >
                   {style.label}
                 </span>
+                {setupHref && status === "inactive" && (
+                  <span className="text-[11px] font-bold text-[#E8A020] uppercase tracking-wide">
+                    Set up →
+                  </span>
+                )}
               </div>
+            </>
+          );
+
+          return setupHref ? (
+            <Link
+              key={feature.id}
+              href={setupHref}
+              className={`${cardCls} hover:shadow-md hover:border-[#E8A020]/40 transition-all`}
+            >
+              {inner}
+            </Link>
+          ) : (
+            <div key={feature.id} className={`${cardCls} opacity-90`}>
+              {inner}
             </div>
           );
         })}
       </div>
     </div>
   );
+}
+
+/* ── Where does each feature's enable toggle live today? ──────────────────
+ * Returns null for features whose toggle UI hasn't been built yet -- those
+ * keep the lock icon and stay non-clickable. As real management UI lands
+ * here, individual entries can be removed (the in-place toggle takes over).
+ *
+ * All current entries point at the menu builder, where the existing right-
+ * sidebar Publish panel hosts the toggles. Klickenya Kitchen is the one
+ * exception: its setup CTA lives one level deeper, on the stock home page.
+ */
+function setupHrefFor(featureId: string, ctx: FeatureContext): string | null {
+  if (!ctx.menu) return null;
+  switch (featureId) {
+    case "table_ordering":
+    case "reservations":
+      return `/dashboard/menu/${ctx.menu.id}`;
+    case "klickenya_kitchen":
+      return `/dashboard/menu/${ctx.menu.id}/stock`;
+    default:
+      return null;
+  }
 }

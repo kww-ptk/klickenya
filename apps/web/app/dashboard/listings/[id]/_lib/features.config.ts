@@ -10,6 +10,7 @@ export type FeatureContext = {
     ordering_enabled: boolean;
     takeaway_enabled: boolean;
     delivery_enabled: boolean;
+    stock_enabled: boolean;
   };
   property?: { id: string; is_active: boolean };
 };
@@ -55,6 +56,16 @@ export const LISTING_FEATURES: FeatureDefinition[] = [
     appliesTo: ['restaurant'],
     tabSegment: 'reservations',
     getStatus: (ctx) => (ctx.menu?.reservations_enabled ? 'active' : 'inactive'),
+  },
+  {
+    id: 'klickenya_kitchen',
+    label: 'Klickenya Kitchen',
+    shortDescription: 'Recipes, stock, costing and reports.',
+    longDescription: 'Build recipes for every dish, log purchases and waste, and see margin and variance per ingredient. Stock auto-deducts when orders fire.',
+    icon: 'ChefHat',
+    appliesTo: ['restaurant'],
+    tabSegment: 'kitchen',
+    getStatus: (ctx) => (ctx.menu?.stock_enabled ? 'active' : 'inactive'),
   },
   {
     id: 'takeaway',

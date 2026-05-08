@@ -33,6 +33,8 @@ interface MenuBuilderProps {
   listingCity?: string | null;
   /** Sanity listing _id — links to /dashboard/listings/[id]/reservations */
   listingId?: string | null;
+  /** Klickenya Kitchen feature flag — surfaces the stock CTA + per-item recipe link */
+  stockEnabled?: boolean;
   backHref?: string;
   backLabel?: string;
 }
@@ -47,6 +49,7 @@ export function MenuBuilder({
   listingSlug,
   listingCity,
   listingId,
+  stockEnabled = false,
   backHref,
   backLabel,
 }: MenuBuilderProps) {
@@ -587,6 +590,29 @@ export function MenuBuilder({
             </div>
           )}
         </div>
+
+        {/* Klickenya Kitchen — stock & recipe costing */}
+        <div className="bg-white rounded-xl lg:rounded-2xl border border-[#E2DDD5] p-4 lg:p-5 shadow-sm">
+          <div className="flex items-center justify-between mb-1">
+            <p className="text-[14px] font-semibold text-[#16130C]">🍳 Klickenya Kitchen</p>
+            {stockEnabled && (
+              <span className="inline-flex items-center text-[10px] font-bold text-emerald-600 bg-emerald-100 px-2 py-0.5 rounded-full uppercase tracking-wide">
+                On
+              </span>
+            )}
+          </div>
+          <p className="text-[12px] text-[#9C9485]">
+            {stockEnabled
+              ? "Recipes, stock and costing for every dish."
+              : "Track recipe costs and stock levels alongside your menu."}
+          </p>
+          <Link
+            href={`/dashboard/menu/${menu.id}/stock`}
+            className="mt-3 flex items-center justify-center gap-2 w-full h-[36px] rounded-full bg-[#16130C] text-white text-[13px] font-bold hover:bg-[#2A2520] transition-colors"
+          >
+            {stockEnabled ? "Open kitchen →" : "Set up →"}
+          </Link>
+        </div>
       </div>
     );
   }
@@ -784,6 +810,16 @@ export function MenuBuilder({
                               {item.is_available ? formatPrice(item.price_kes) : "—"}
                             </span>
                             <div className="flex items-center gap-1 shrink-0">
+                              {stockEnabled && (
+                                <Link
+                                  href={`/dashboard/menu/${menu.id}/items/${item.id}`}
+                                  className="text-[#E2DDD5] hover:text-[#E8A020] transition-colors text-[14px] px-0.5"
+                                  title="Edit recipe"
+                                  aria-label="Edit recipe"
+                                >
+                                  📖
+                                </Link>
+                              )}
                               <button
                                 onClick={() =>
                                   setEditingForm(
