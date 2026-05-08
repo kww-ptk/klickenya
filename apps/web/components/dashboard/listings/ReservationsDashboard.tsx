@@ -450,6 +450,8 @@ export function ReservationsDashboard({
     pos_x: number | null;
     pos_y: number | null;
     area_id: string | null;
+    /** Legacy text label; canvas falls back to it when area_id is null. */
+    floor_section: string | null;
     is_active: boolean;
   }> | null>(null);
   const [floorTablesLoading, setFloorTablesLoading] = useState(false);

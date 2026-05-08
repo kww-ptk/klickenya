@@ -15,15 +15,17 @@ export interface AreaOption {
 }
 
 /** Subset of restaurant_tables fed to the floor-map canvas. List view
- *  doesn't need pos_x/pos_y/area_id; the floor map does. */
+ *  doesn't need pos_x/pos_y/area_id; the floor map does. floor_section is
+ *  the legacy text label -- canvas falls back to it when area_id is null. */
 export interface InitialTable {
-  id:           string;
-  table_number: string;
-  capacity:     number;
-  pos_x:        number | null;
-  pos_y:        number | null;
-  area_id:      string | null;
-  is_active:    boolean;
+  id:            string;
+  table_number:  string;
+  capacity:      number;
+  pos_x:         number | null;
+  pos_y:         number | null;
+  area_id:       string | null;
+  floor_section: string | null;
+  is_active:     boolean;
 }
 
 interface Props {

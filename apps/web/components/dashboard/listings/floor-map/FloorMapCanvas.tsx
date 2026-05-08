@@ -13,7 +13,12 @@ export interface FloorMapTableRow {
   capacity:      number;
   pos_x:         number | null;
   pos_y:         number | null;
+  /** Canonical area FK. Often null on legacy data — see floor_section. */
   area_id:       string | null;
+  /** Legacy free-text area label from migration 045. We still match on it
+   *  case-insensitively when area_id is null so existing pre-V1 data shows
+   *  on the map. */
+  floor_section: string | null;
   is_active:     boolean;
 }
 
@@ -88,19 +93,32 @@ export function FloorMapCanvas({
     [areas, selectedAreaId],
   );
 
-  /* Active tables for the selected area. We include unassigned (area_id = null)
-     when there's no selected area or there's only one area, so a single-area
-     restaurant isn't blocked by missing area_id values. */
+  /* Active tables for the selected area. Matching priority:
+       1. area_id === selectedAreaId (canonical)
+       2. floor_section text matches area.name (case-insensitive) when
+          area_id is null -- handles legacy pre-V1 data where the dormant
+          area_id was never populated and tables were tagged with the
+          free-text floor_section instead.
+       3. Single-area listings: include any unassigned table so a setup
+          with no area metadata still renders. */
+  const selectedAreaName = useMemo(
+    () => areas.find((a) => a.id === selectedAreaId)?.name?.trim().toLowerCase() ?? null,
+    [areas, selectedAreaId],
+  );
   const visibleTables = useMemo(() => {
     if (!selectedAreaId) return tables.filter((t) => t.is_active);
-    return tables.filter(
-      (t) =>
-        t.is_active &&
-        (t.area_id === selectedAreaId ||
-          // Single-area listings often haven't set area_id — show them anyway.
-          (areas.length === 1 && t.area_id == null)),
-    );
-  }, [tables, areas.length, selectedAreaId]);
+    return tables.filter((t) => {
+      if (!t.is_active) return false;
+      if (t.area_id === selectedAreaId) return true;
+      if (t.area_id != null) return false; // bound to a different area
+      // area_id is null -- fall back to floor_section text or single-area allowlist.
+      if (selectedAreaName && t.floor_section?.trim().toLowerCase() === selectedAreaName) {
+        return true;
+      }
+      if (areas.length === 1) return true;
+      return false;
+    });
+  }, [tables, areas.length, selectedAreaId, selectedAreaName]);
 
   /* Local position state: map of id → {x, y} percent. Initialises from
      the row's pos_x/pos_y when present, else from autoArrange. Tracked
@@ -198,9 +216,14 @@ export function FloorMapCanvas({
   const pickerAreas: PickerArea[] = useMemo(() => {
     return areas.map((a) => {
       if (mode !== "live" || !getState) return { ...a };
-      const inArea = tables.filter(
-        (t) => t.is_active && (t.area_id === a.id || (areas.length === 1 && t.area_id == null)),
-      );
+      const aName = a.name.trim().toLowerCase();
+      const inArea = tables.filter((t) => {
+        if (!t.is_active) return false;
+        if (t.area_id === a.id) return true;
+        if (t.area_id != null) return false;
+        if (t.floor_section?.trim().toLowerCase() === aName) return true;
+        return areas.length === 1;
+      });
       const available = inArea.filter((t) => getState(t.id) === "available").length;
       return {
         ...a,

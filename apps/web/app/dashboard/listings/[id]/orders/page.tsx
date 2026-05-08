@@ -82,7 +82,9 @@ export default async function TableOrderingSetupPage({ params }: PageProps) {
       .order("display_order", { ascending: true }),
     adminClient
       .from("restaurant_tables")
-      .select("id, table_number, capacity, pos_x, pos_y, area_id, is_active")
+      // floor_section is the legacy text label (migration 045). The canvas
+      // uses it as a fallback when area_id is null so pre-V1 data shows up.
+      .select("id, table_number, capacity, pos_x, pos_y, area_id, floor_section, is_active")
       .eq("menu_id", menu.id)
       .order("display_order", { ascending: true }),
   ]);
