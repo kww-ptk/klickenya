@@ -23,6 +23,7 @@ const COMPANY = [
   { href: "/about", label: "About us" },
   { href: "/how-it-works", label: "How it works" },
   { href: "/become-a-host", label: "Become a host" },
+  { href: "/list", label: "List your business" },
   { href: "/journal", label: "Journal" },
   { href: "/destinations", label: "Destinations" },
   { href: "/how-it-works#ambassador", label: "Ambassadors" },

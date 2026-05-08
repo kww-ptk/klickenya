@@ -2,11 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { assertAdmin, AdminAuthError } from "@/lib/admin/auth";
 import { adminClient } from "@/lib/supabase/admin";
 
-// NOTE: The listing_requests table does not yet have a "notes" column.
-// A migration is required to add it:
-//   ALTER TABLE listing_requests ADD COLUMN notes text;
-// Until that migration is run, this endpoint will return a Supabase error.
-
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -25,7 +20,7 @@ export async function PATCH(
 
     const { error } = await adminClient
       .from("listing_requests")
-      .update({ notes: note })
+      .update({ admin_notes: note })
       .eq("id", id);
 
     if (error) {

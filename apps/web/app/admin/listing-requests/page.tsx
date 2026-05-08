@@ -7,7 +7,11 @@ export const revalidate = 0;
 
 const TABS = [
   { label: "All", value: "all" },
+  { label: "Pending OTP", value: "pending_otp" },
+  { label: "Submitted", value: "submitted" },
   { label: "New", value: "new" },
+  { label: "Approved", value: "approved" },
+  { label: "Rejected", value: "rejected" },
   { label: "Responded", value: "responded" },
   { label: "Converted", value: "converted" },
   { label: "Closed", value: "closed" },
@@ -173,6 +177,9 @@ export default async function ListingRequestsPage({
                   Location
                 </th>
                 <th className="text-left px-6 py-3 text-[11px] uppercase text-[#9C9485] tracking-wider font-medium">
+                  AI
+                </th>
+                <th className="text-left px-6 py-3 text-[11px] uppercase text-[#9C9485] tracking-wider font-medium">
                   Status
                 </th>
                 <th className="text-right px-6 py-3 text-[11px] uppercase text-[#9C9485] tracking-wider font-medium">
@@ -184,7 +191,7 @@ export default async function ListingRequestsPage({
               {items.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={8}
+                    colSpan={9}
                     className="px-6 py-16 text-center text-[14px] text-[#9C9485]"
                   >
                     No listing requests found.
@@ -222,6 +229,23 @@ export default async function ListingRequestsPage({
                     </td>
                     <td className="px-6 py-3.5 text-[#16130C]">
                       {truncate(req.location as string, 25)}
+                    </td>
+                    <td className="px-6 py-3.5">
+                      {req.ai_score != null ? (
+                        <span
+                          className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold ${
+                            (req.ai_score as number) >= 80
+                              ? "bg-green-100 text-green-700"
+                              : (req.ai_score as number) >= 60
+                              ? "bg-yellow-100 text-yellow-700"
+                              : "bg-red-100 text-red-700"
+                          }`}
+                        >
+                          {req.ai_score as number}
+                        </span>
+                      ) : (
+                        <span className="text-[#9C9485]">—</span>
+                      )}
                     </td>
                     <td className="px-6 py-3.5">
                       <StatusBadge status={(req.status as string) || "new"} />
