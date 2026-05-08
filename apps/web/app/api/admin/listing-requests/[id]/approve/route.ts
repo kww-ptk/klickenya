@@ -72,7 +72,7 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
     }
 
     /* Create Sanity listing document */
-    let sanityListingId: string | null = null;
+    let sanityListingId!: string;
     try {
       const description = request.draft_description || request.description;
       const listing = await sanityWrite.create({
@@ -200,9 +200,10 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
         .single();
 
       if (freshHost?.sanity_host_id) {
-        sanityHostId = freshHost.sanity_host_id;
+        const existingSanityHostId: string = freshHost.sanity_host_id;
+        sanityHostId = existingSanityHostId;
         await sanityWrite
-          .patch(sanityHostId)
+          .patch(existingSanityHostId)
           .setIfMissing({ listings: [] })
           .append("listings", [
             { _type: "reference", _ref: sanityListingId, _key: Math.random().toString(36).slice(2, 10) },
@@ -211,7 +212,7 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
 
         await sanityWrite
           .patch(sanityListingId)
-          .set({ host: { _type: "reference", _ref: sanityHostId } })
+          .set({ host: { _type: "reference", _ref: existingSanityHostId } })
           .commit();
       } else {
         const hostSlugBase = makeSlug(request.name);
