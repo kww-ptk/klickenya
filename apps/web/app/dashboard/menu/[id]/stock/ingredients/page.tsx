@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getAuthUser } from "@/app/dashboard/_lib/auth";
 import { adminClient } from "@/lib/supabase/admin";
+import { getMenuMetadata } from "@/lib/cache/menu";
 import { IngredientsClient, type IngredientRow } from "./IngredientsClient";
 
 interface PageProps {
@@ -13,12 +14,7 @@ export default async function IngredientsPage({ params }: PageProps) {
   const { user } = await getAuthUser();
   if (!user) redirect("/login");
 
-  const { data: menu } = await adminClient
-    .from("menus")
-    .select("id, name, stock_enabled")
-    .eq("id", id)
-    .eq("business_id", user.id)
-    .single();
+  const menu = await getMenuMetadata(id, user.id);
   if (!menu) redirect("/dashboard");
   if (!menu.stock_enabled) redirect(`/dashboard/menu/${id}/stock`);
 

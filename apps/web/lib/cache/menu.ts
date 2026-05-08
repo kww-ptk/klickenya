@@ -152,3 +152,45 @@ export const getMenuForQR = (menuId: string, ownerId: string) =>
     ["menu", ownerId, menuId, "qr"],
     { tags: [`menu:${menuId}`, `owner:${ownerId}`] },
   )();
+
+/* ------------------------------------------------------------------ */
+/*  6. getMenuMetadata                                                */
+/*                                                                    */
+/*  Lightweight ownership + feature-flag lookup. Hot path: every page */
+/*  under /dashboard/menu/[id]/stock/* checks this on render. Cached  */
+/*  with the same menu/owner tags so toggling stock_enabled (via      */
+/*  /api/stock/enable) or any menu setting (via /api/menu/settings)   */
+/*  invalidates immediately.                                          */
+/* ------------------------------------------------------------------ */
+
+export type MenuMetadata = {
+  id: string;
+  name: string;
+  slug: string;
+  currency: string | null;
+  is_published: boolean;
+  table_ordering: boolean;
+  reservations_enabled: boolean;
+  ordering_enabled: boolean;
+  takeaway_enabled: boolean;
+  delivery_enabled: boolean;
+  stock_enabled: boolean;
+  stock_deduct_on: string;
+};
+
+export const getMenuMetadata = (menuId: string, ownerId: string) =>
+  unstable_cache(
+    async () => {
+      const { data } = await adminClient
+        .from("menus")
+        .select(
+          "id, name, slug, currency, is_published, table_ordering, reservations_enabled, ordering_enabled, takeaway_enabled, delivery_enabled, stock_enabled, stock_deduct_on",
+        )
+        .eq("id", menuId)
+        .eq("business_id", ownerId)
+        .maybeSingle();
+      return (data as MenuMetadata | null) ?? null;
+    },
+    ["menu", ownerId, menuId, "meta"],
+    { tags: [`menu:${menuId}`, `owner:${ownerId}`] },
+  )();

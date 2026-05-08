@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getAuthUser } from "@/app/dashboard/_lib/auth";
 import { adminClient } from "@/lib/supabase/admin";
+import { getMenuMetadata } from "@/lib/cache/menu";
 import { ItemEditorClient, type RecipeIngredient } from "./ItemEditorClient";
 import type { IngredientRow } from "../../stock/ingredients/IngredientsClient";
 
@@ -14,32 +15,29 @@ export default async function ItemEditorPage({ params }: PageProps) {
   const { user } = await getAuthUser();
   if (!user) redirect("/login");
 
-  // Verify menu ownership + read stock_enabled flag
-  const { data: menu } = await adminClient
-    .from("menus")
-    .select("id, name, stock_enabled, currency")
-    .eq("id", menuId)
-    .eq("business_id", user.id)
-    .single();
+  // Verify menu ownership + read stock_enabled flag (cached + invalidated
+  // by /api/stock/enable and /api/menu/settings).
+  const menu = await getMenuMetadata(menuId, user.id);
   if (!menu) redirect("/dashboard");
 
-  // Fetch item (with section) — must belong to this menu
-  const { data: item } = await adminClient
-    .from("menu_items")
-    .select(
-      "id, name, description, price_kes, photo_url, dietary_tags, is_available, is_featured, display_order, section_id, menu_sections!inner(menu_id, title)",
-    )
-    .eq("id", itemId)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    .eq("menu_sections.menu_id", menuId as any)
-    .single();
-  if (!item) redirect(`/dashboard/menu/${menuId}`);
-
-  // Pre-fetch in parallel: recipe + ingredients
-  const [recipeRes, ingredientsRes] = await Promise.all([
+  // Three independent reads in parallel: item + (recipe with nested
+  // recipe_ingredients) + pantry. PostgREST nested select replaces the
+  // old "fetch recipe, then fetch its ingredients" two-step.
+  const [itemRes, recipeRes, ingredientsRes] = await Promise.all([
+    adminClient
+      .from("menu_items")
+      .select(
+        "id, name, description, price_kes, photo_url, dietary_tags, is_available, is_featured, display_order, section_id, menu_sections!inner(menu_id, title)",
+      )
+      .eq("id", itemId)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .eq("menu_sections.menu_id", menuId as any)
+      .single(),
     adminClient
       .from("recipes")
-      .select("id, menu_item_id, overhead_pct, target_food_cost_pct, notes")
+      .select(
+        "id, menu_item_id, overhead_pct, target_food_cost_pct, notes, recipe_ingredients(id, ingredient_id, ep_qty, yield_pct, display_order)",
+      )
       .eq("menu_item_id", itemId)
       .maybeSingle(),
     adminClient
@@ -50,15 +48,16 @@ export default async function ItemEditorPage({ params }: PageProps) {
       .order("name", { ascending: true }),
   ]);
 
-  let recipeLines: RecipeIngredient[] = [];
-  if (recipeRes.data?.id) {
-    const { data } = await adminClient
-      .from("recipe_ingredients")
-      .select("id, ingredient_id, ep_qty, yield_pct, display_order")
-      .eq("recipe_id", recipeRes.data.id)
-      .order("display_order", { ascending: true });
-    recipeLines = (data ?? []) as RecipeIngredient[];
-  }
+  const item = itemRes.data;
+  if (!item) redirect(`/dashboard/menu/${menuId}`);
+
+  // Sort recipe_ingredients client-side; PostgREST doesn't support order
+  // on nested embeds. Cheap -- max ~50 rows.
+  const recipeLines: RecipeIngredient[] = (
+    (recipeRes.data?.recipe_ingredients ?? []) as RecipeIngredient[]
+  )
+    .slice()
+    .sort((a, b) => a.display_order - b.display_order);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const sectionTitle = (item as any).menu_sections?.title ?? null;

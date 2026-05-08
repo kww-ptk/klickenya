@@ -66,6 +66,12 @@ export function MovementsClient({
   businessId: string;
 }) {
   const [movements, setMovements] = useState<Movement[]>(initialMovements);
+  // Cursor for "Load more". null = no more rows; undefined = unknown
+  // (haven't paginated yet -- show button if we got a full first page).
+  const [olderCursor, setOlderCursor] = useState<string | null | undefined>(
+    initialMovements.length >= 50 ? undefined : null,
+  );
+  const [loadingMore, setLoadingMore] = useState(false);
   const [typeFilter, setTypeFilter] = useState<Movement["type"] | "all">("all");
   const [ingredientFilter, setIngredientFilter] = useState<string>("all");
   const [from, setFrom] = useState<string>("");
@@ -125,6 +131,33 @@ export function MovementsClient({
     // The realtime subscription will also fire — dedupe by id.
     setMovements((prev) => (prev.some((m) => m.id === row.id) ? prev : [row, ...prev]));
     setShowNew(false);
+  }
+
+  // Older-page fetch: passes the oldest movement's created_at as the
+  // ?before= cursor, appends results to the bottom of the list. The API
+  // returns next_cursor; we stop showing the button when it comes back null.
+  async function loadOlder() {
+    if (loadingMore || olderCursor === null) return;
+    const oldest =
+      olderCursor ??
+      movements[movements.length - 1]?.created_at ??
+      null;
+    if (!oldest) return;
+    setLoadingMore(true);
+    try {
+      const res = await fetch(
+        `/api/stock/movements?before=${encodeURIComponent(oldest)}&limit=50`,
+      );
+      if (!res.ok) return;
+      const body: { movements: Movement[]; next_cursor: string | null } = await res.json();
+      setMovements((prev) => {
+        const seen = new Set(prev.map((m) => m.id));
+        return [...prev, ...body.movements.filter((m) => !seen.has(m.id))];
+      });
+      setOlderCursor(body.next_cursor ?? null);
+    } finally {
+      setLoadingMore(false);
+    }
   }
 
   return (
@@ -237,6 +270,18 @@ export function MovementsClient({
                 })}
               </tbody>
             </table>
+          </div>
+        )}
+        {filtered.length > 0 && olderCursor !== null && (
+          <div className="border-t border-[#F4F1EC] p-3 flex justify-center">
+            <button
+              type="button"
+              onClick={loadOlder}
+              disabled={loadingMore}
+              className="h-10 px-5 rounded-full text-[13px] font-bold text-[#5E5848] hover:text-[#E8A020] disabled:opacity-50"
+            >
+              {loadingMore ? "Loading…" : "Load older"}
+            </button>
           </div>
         )}
       </div>
