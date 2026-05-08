@@ -117,7 +117,10 @@ export const getTablesForMenu = (menuId: string, ownerId: string) =>
       const { data } = await adminClient
         .from("restaurant_tables")
         .select(
-          "id, table_number, capacity, floor_section, is_active, display_order",
+          // Floor-map V1 reads pos_x/pos_y (percent 0-100) and area_id;
+          // List view ignores them. Cached together because writes from
+          // the editor invalidate the same `menu:{id}:tables` tag.
+          "id, table_number, capacity, floor_section, is_active, display_order, pos_x, pos_y, area_id",
         )
         .eq("menu_id", menuId)
         .order("display_order", { ascending: true })

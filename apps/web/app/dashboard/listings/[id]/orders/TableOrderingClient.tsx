@@ -5,10 +5,25 @@ import Link from "next/link";
 import { TableSetup } from "@/components/dashboard/menu/TableSetup";
 import { Toggle } from "@/components/ui/Toggle";
 import { ToastProvider, useToast } from "@/components/ui/Toast";
+import { FloorMapCanvas, type FloorMapTableRow } from "@/components/dashboard/listings/floor-map/FloorMapCanvas";
 
 export interface AreaOption {
   id: string;
   name: string;
+  /** Hex colour for the floor-map picker pill. Optional. */
+  color_hex?: string | null;
+}
+
+/** Subset of restaurant_tables fed to the floor-map canvas. List view
+ *  doesn't need pos_x/pos_y/area_id; the floor map does. */
+export interface InitialTable {
+  id:           string;
+  table_number: string;
+  capacity:     number;
+  pos_x:        number | null;
+  pos_y:        number | null;
+  area_id:      string | null;
+  is_active:    boolean;
 }
 
 interface Props {
@@ -18,6 +33,7 @@ interface Props {
   menuSlug:  string;
   initialTableOrdering: boolean;
   areas:     AreaOption[];
+  initialTables: InitialTable[];
 }
 
 export function TableOrderingClient(props: Props) {
@@ -28,7 +44,15 @@ export function TableOrderingClient(props: Props) {
   );
 }
 
-function Inner({ listingId, menuId, menuName, menuSlug, initialTableOrdering, areas }: Props) {
+function Inner({
+  listingId,
+  menuId,
+  menuName,
+  menuSlug,
+  initialTableOrdering,
+  areas,
+  initialTables,
+}: Props) {
   const { showToast } = useToast();
   const [enabled, setEnabled] = useState(initialTableOrdering);
   const [toggling, setToggling] = useState(false);
@@ -109,14 +133,14 @@ function Inner({ listingId, menuId, menuName, menuSlug, initialTableOrdering, ar
         )}
       </div>
 
-      {/* Tables CRUD */}
-      <div>
-        <h2 className="font-display text-[16px] font-bold text-[#16130C] mb-2">Tables</h2>
-        <p className="text-[12px] text-[#9C9485] mb-3">
-          Add a row per table — these become QR-scannable destinations and identify orders to the kitchen.
-        </p>
-        <TableSetup menuId={menuId} showToast={showToast} areas={areas} />
-      </div>
+      {/* Tables — switch between list (CRUD) and floor map (positions) */}
+      <TablesSection
+        menuId={menuId}
+        areas={areas}
+        initialTables={initialTables}
+        showToast={showToast}
+      />
+
 
       {/* Operational deep links — only useful once ordering is on */}
       {enabled && (
@@ -166,6 +190,131 @@ function Inner({ listingId, menuId, menuName, menuSlug, initialTableOrdering, ar
         Public menu lives at <code>/m/{menuSlug}</code>. Each table also has its own QR code that
         encodes the table number into the URL.
       </p>
+    </div>
+  );
+}
+
+/* ── TablesSection ─────────────────────────────────────
+ *
+ * List / Floor map sub-tabs. Default = List (familiar). Sub-tab choice
+ * is sticky in localStorage so an owner who prefers the visual layout
+ * lands there next session. Floor map mode is "edit": positions persist
+ * via batched PATCH /api/menu/tables.
+ */
+
+function TablesSection({
+  menuId,
+  areas,
+  initialTables,
+  showToast,
+}: {
+  menuId:        string;
+  areas:         AreaOption[];
+  initialTables: InitialTable[];
+  showToast:     (msg: string, type?: "success" | "error") => void;
+}) {
+  const [view, setView] = useState<"list" | "map">(() => {
+    // Lazy initialiser reads localStorage once on mount. Render-time access
+    // to window.localStorage is safe in a "use client" component.
+    if (typeof window === "undefined") return "list";
+    try {
+      const saved = window.localStorage.getItem("klickenya:tables-view");
+      if (saved === "list" || saved === "map") return saved;
+    } catch {
+      // localStorage unavailable (privacy mode) -- fall back to default
+    }
+    return "list";
+  });
+  const [tables, setTables] = useState<InitialTable[]>(initialTables);
+
+  function persistView(next: "list" | "map") {
+    setView(next);
+    try { window.localStorage.setItem("klickenya:tables-view", next); } catch { /* ignore */ }
+  }
+
+  // Floor-map save handler. Returns true iff every row persisted.
+  async function savePositions(
+    positions: Array<{ id: string; pos_x: number; pos_y: number }>,
+  ): Promise<boolean> {
+    try {
+      const res = await fetch("/api/menu/tables", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ menu_id: menuId, positions }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        showToast(body.error ?? "Failed to save layout", "error");
+        return false;
+      }
+      // Optimistic in-memory update so the next view-switch shows persisted positions.
+      const map = new Map(positions.map((p) => [p.id, p]));
+      setTables((prev) =>
+        prev.map((t) => {
+          const p = map.get(t.id);
+          return p ? { ...t, pos_x: p.pos_x, pos_y: p.pos_y } : t;
+        }),
+      );
+      showToast("Floor map saved");
+      return true;
+    } catch {
+      showToast("Failed to save layout", "error");
+      return false;
+    }
+  }
+
+  // Areas need color_hex on the canvas, but list view doesn't care.
+  const canvasAreas = areas.map((a) => ({
+    id:        a.id,
+    name:      a.name,
+    color_hex: a.color_hex ?? null,
+  }));
+
+  // The canvas type is FloorMapTableRow (id/number/capacity/pos/area_id/is_active).
+  // InitialTable already matches; cast for clarity.
+  const canvasTables: FloorMapTableRow[] = tables;
+
+  return (
+    <div>
+      <div className="flex items-center gap-2 mb-3">
+        <h2 className="font-display text-[16px] font-bold text-[#16130C] flex-1">Tables</h2>
+        <div className="inline-flex border border-[#E2DDD5] rounded-full overflow-hidden bg-white">
+          <button
+            type="button"
+            onClick={() => persistView("list")}
+            className={`h-9 px-4 text-[12px] font-bold transition-colors ${
+              view === "list" ? "bg-[#16130C] text-white" : "text-[#5E5848] hover:text-[#16130C]"
+            }`}
+          >
+            List
+          </button>
+          <button
+            type="button"
+            onClick={() => persistView("map")}
+            className={`h-9 px-4 text-[12px] font-bold transition-colors ${
+              view === "map" ? "bg-[#16130C] text-white" : "text-[#5E5848] hover:text-[#16130C]"
+            }`}
+          >
+            Floor map
+          </button>
+        </div>
+      </div>
+
+      {view === "list" ? (
+        <>
+          <p className="text-[12px] text-[#9C9485] mb-3">
+            Add a row per table — these become QR-scannable destinations and identify orders to the kitchen.
+          </p>
+          <TableSetup menuId={menuId} showToast={showToast} areas={areas} />
+        </>
+      ) : (
+        <FloorMapCanvas
+          mode="edit"
+          areas={canvasAreas}
+          tables={canvasTables}
+          onSavePositions={savePositions}
+        />
+      )}
     </div>
   );
 }

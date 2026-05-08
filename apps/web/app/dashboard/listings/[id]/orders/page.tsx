@@ -4,7 +4,7 @@ import { getAuthUser, getHostProfile } from "@/app/dashboard/_lib/auth";
 import { adminClient } from "@/lib/supabase/admin";
 import { sanityClient } from "@/lib/sanity/client";
 import { TableOrderingClient } from "./TableOrderingClient";
-import type { AreaOption } from "./TableOrderingClient";
+import type { AreaOption, InitialTable } from "./TableOrderingClient";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -69,15 +69,23 @@ export default async function TableOrderingSetupPage({ params }: PageProps) {
     );
   }
 
-  // Reservation areas double as floor sections in TableSetup. Optional --
-  // the component falls back to a free-text floor field when the list is
-  // empty.
-  const { data: areasRaw } = await adminClient
-    .from("restaurant_areas")
-    .select("id, name")
-    .eq("menu_id", menu.id)
-    .eq("is_active", true)
-    .order("display_order", { ascending: true });
+  // Reservation areas double as floor sections in TableSetup AND drive
+  // the floor-map area picker. color_hex tints the picker's active pill.
+  // Tables are fetched in the same parallel batch — the floor map needs
+  // pos_x / pos_y / area_id beyond the list-view fields.
+  const [{ data: areasRaw }, { data: tablesRaw }] = await Promise.all([
+    adminClient
+      .from("restaurant_areas")
+      .select("id, name, color_hex")
+      .eq("menu_id", menu.id)
+      .eq("is_active", true)
+      .order("display_order", { ascending: true }),
+    adminClient
+      .from("restaurant_tables")
+      .select("id, table_number, capacity, pos_x, pos_y, area_id, is_active")
+      .eq("menu_id", menu.id)
+      .order("display_order", { ascending: true }),
+  ]);
 
   return (
     <TableOrderingClient
@@ -87,6 +95,7 @@ export default async function TableOrderingSetupPage({ params }: PageProps) {
       menuSlug={menu.slug}
       initialTableOrdering={menu.table_ordering ?? false}
       areas={(areasRaw ?? []) as AreaOption[]}
+      initialTables={(tablesRaw ?? []) as InitialTable[]}
     />
   );
 }
