@@ -26,7 +26,8 @@ import {
 export const DEPLOYED_SEGMENTS = new Set<string>([
   "reservations",
   "kitchen",
-  // TODO Prompt 9: add 'orders' and 'menu' when those pages migrate here.
+  "orders",
+  // TODO Prompt 9: add 'menu' when MenuBuilder migrates here.
 ]);
 
 export default async function ListingDashboardLayout({
