@@ -83,8 +83,12 @@ export default async function MenuBuilderPage({ params, searchParams }: PageProp
         listingCity={listingCity}
         listingId={listingId}
         stockEnabled={stockEnabled}
-        backHref={backHref ?? undefined}
-        backLabel={backHref ? "← Back to dashboard" : undefined}
+        // Back-link target: explicit ?back= wins, otherwise default to the
+        // restaurant's listing dashboard (the natural parent of the menu
+        // builder). Fall through to the global hub only when this menu has
+        // no linked listing (legacy / unparented).
+        backHref={backHref ?? (listingId ? `/dashboard/listings/${listingId}` : undefined)}
+        backLabel={backHref || listingId ? "← Back to dashboard" : undefined}
       />
     </ToastProvider>
   );
