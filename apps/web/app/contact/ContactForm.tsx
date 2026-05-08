@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
+import { Turnstile } from "@marsidev/react-turnstile";
 
 const SUBJECTS = [
   "General enquiry",
@@ -20,6 +21,8 @@ export function ContactForm() {
   const [message, setMessage] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [errorMessage, setErrorMessage] = useState("");
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const [honeypot, setHoneypot] = useState("");
 
   // Pre-fill subject from URL search params
   useEffect(() => {
@@ -38,7 +41,14 @@ export function ContactForm() {
       const res = await fetch("/api/contact-general", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, subject, message }),
+        body: JSON.stringify({
+          name,
+          email,
+          subject,
+          message,
+          website: honeypot,
+          turnstileToken,
+        }),
       });
 
       const data = await res.json();
@@ -52,6 +62,8 @@ export function ContactForm() {
       setEmail("");
       setSubject("General enquiry");
       setMessage("");
+      setHoneypot("");
+      setTurnstileToken(null);
     } catch (err: any) {
       setStatus("error");
       setErrorMessage(err.message ?? "Something went wrong. Please try again.");
@@ -160,6 +172,26 @@ export function ContactForm() {
         />
       </div>
 
+      {/* Honeypot (hidden from real users) */}
+      <input
+        type="text"
+        name="website"
+        value={honeypot}
+        onChange={(e) => setHoneypot(e.target.value)}
+        style={{ display: "none" }}
+        tabIndex={-1}
+        autoComplete="off"
+        aria-hidden="true"
+      />
+
+      {/* Turnstile */}
+      <Turnstile
+        siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY!}
+        onSuccess={(token) => setTurnstileToken(token)}
+        onError={() => setTurnstileToken(null)}
+        onExpire={() => setTurnstileToken(null)}
+      />
+
       {/* Error */}
       {status === "error" && (
         <div className="bg-red-50 border border-red-200 rounded-[12px] px-4 py-3">
@@ -170,7 +202,7 @@ export function ContactForm() {
       {/* Submit */}
       <button
         type="submit"
-        disabled={status === "loading"}
+        disabled={status === "loading" || !turnstileToken}
         className="inline-flex items-center justify-center px-8 py-3.5 rounded-full bg-amber text-dark font-semibold text-[15px] shadow-[0_4px_14px_rgba(232,160,32,0.35)] hover:shadow-[0_6px_20px_rgba(232,160,32,0.45)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-[0_4px_14px_rgba(232,160,32,0.35)]"
       >
         {status === "loading" ? "Sending..." : "Send message"}
