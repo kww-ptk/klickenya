@@ -34,14 +34,25 @@ function tileSizePx(capacity: number): number {
 
 /* ── State styling ─────────────────────────────────── */
 //
-// Mirrors PosTablesGrid colours. Available = quiet, occupied = warm,
-// billed = cool, reserved_soon = "soon" amber outline.
+// Two themes:
+//   light  — owner dashboard (white surface). Mirrors how PosTablesGrid
+//            cards look on the dashboard's cream background.
+//   dark   — POS terminal (charcoal surface). Matches the existing
+//            PosTablesGrid TableCard palette so floor and list views
+//            look consistent.
 
-const STATE_CLS: Record<TileState, string> = {
+const STATE_CLS_LIGHT: Record<TileState, string> = {
   available:     "border-[#E2DDD5] bg-white text-[#5E5848]",
   reserved_soon: "border-[#E8A020] bg-white text-[#16130C]",
   occupied:      "border-[#E8A020] bg-[#FCF4E5] text-[#16130C]",
   billed:        "border-sky-400 bg-sky-50 text-sky-900",
+};
+
+const STATE_CLS_DARK: Record<TileState, string> = {
+  available:     "border-[#3A342B] bg-[#1A170F] text-[#9C9485]",
+  reserved_soon: "border-[#E8A020] bg-[#1A170F] text-[#E8A020]",
+  occupied:      "border-[#E8A020] bg-[#231D12] text-[#E8A020]",
+  billed:        "border-[#5BA1FF] bg-[#192034] text-sky-300",
 };
 
 /* ── Component ─────────────────────────────────────── */
@@ -52,6 +63,9 @@ interface Props {
   canvasRef: React.RefObject<HTMLDivElement | null>;
   /** Edit mode unlocks drag; live mode unlocks tap. */
   mode:     "edit" | "live";
+  /** Visual theme. Light is the owner dashboard default; dark is for the
+   *  POS terminal where the surrounding chrome is charcoal. */
+  theme?:   "light" | "dark";
   /** Called as the tile drags (every frame). Used for the optimistic local move. */
   onMove?:  (id: string, pctX: number, pctY: number) => void;
   /** Called on pointerup IF the tile actually moved. Used for the persistence flag. */
@@ -60,7 +74,7 @@ interface Props {
   onTap?:   (id: string) => void;
 }
 
-export function FloorTile({ table, canvasRef, mode, onMove, onCommit, onTap }: Props) {
+export function FloorTile({ table, canvasRef, mode, theme = "light", onMove, onCommit, onTap }: Props) {
   const elRef = useRef<HTMLButtonElement>(null);
 
   const drag = usePointerDrag({
@@ -72,7 +86,7 @@ export function FloorTile({ table, canvasRef, mode, onMove, onCommit, onTap }: P
   });
 
   const size = tileSizePx(table.capacity);
-  const stateCls = STATE_CLS[table.state];
+  const stateCls = (theme === "dark" ? STATE_CLS_DARK : STATE_CLS_LIGHT)[table.state];
 
   return (
     <button

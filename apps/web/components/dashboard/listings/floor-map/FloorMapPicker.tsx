@@ -17,6 +17,8 @@ interface Props {
   areas:     PickerArea[];
   selectedId: string | null;
   onSelect:  (id: string) => void;
+  /** Visual theme. Light = owner dashboard, Dark = POS terminal. */
+  theme?:    "light" | "dark";
 }
 
 /* ── Component ─────────────────────────────────────── */
@@ -25,7 +27,7 @@ interface Props {
 // from restaurant_areas.color_hex (already a live field). Falls back to
 // the Klickenya orange when an area hasn't picked one.
 
-export function FloorMapPicker({ areas, selectedId, onSelect }: Props) {
+export function FloorMapPicker({ areas, selectedId, onSelect, theme = "light" }: Props) {
   const ordered = useMemo(
     () => [...areas].sort((a, b) => a.name.localeCompare(b.name)),
     [areas],
@@ -52,7 +54,9 @@ export function FloorMapPicker({ areas, selectedId, onSelect }: Props) {
                 "border",
                 active
                   ? "text-white"
-                  : "bg-white text-[#5E5848] border-[#E2DDD5] hover:border-[#9C9485]",
+                  : theme === "dark"
+                    ? "bg-[#1A170F] text-[#9C9485] border-[#2A2520] hover:border-[#3A342B] hover:text-white"
+                    : "bg-white text-[#5E5848] border-[#E2DDD5] hover:border-[#9C9485]",
               ].join(" ")}
               style={
                 active
@@ -63,7 +67,13 @@ export function FloorMapPicker({ areas, selectedId, onSelect }: Props) {
               {a.name}
               {a.badge && (
                 <span
-                  className={`ml-1.5 text-[11px] ${active ? "opacity-80" : "text-[#9C9485]"}`}
+                  className={`ml-1.5 text-[11px] ${
+                    active
+                      ? "opacity-80"
+                      : theme === "dark"
+                        ? "text-[#5E5848]"
+                        : "text-[#9C9485]"
+                  }`}
                 >
                   {a.badge}
                 </span>
