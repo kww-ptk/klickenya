@@ -1,15 +1,19 @@
 import * as Sentry from "@sentry/nextjs";
 import { redirect } from "next/navigation";
 import { getAuthUser } from "@/app/dashboard/_lib/auth";
+import { safeBackHref } from "@/app/dashboard/_lib/back-href";
 import { adminClient } from "@/lib/supabase/admin";
 import { KitchenDashboard, type KitchenOrder } from "@/components/dashboard/menu/KitchenDashboard";
 
 interface PageProps {
   params: Promise<{ id: string }>;
+  searchParams?: Promise<{ back?: string }>;
 }
 
-export default async function KitchenDashboardPage({ params }: PageProps) {
+export default async function KitchenDashboardPage({ params, searchParams }: PageProps) {
   const { id } = await params;
+  const sp = (await searchParams) ?? {};
+  const backHref = safeBackHref(sp.back);
   Sentry.setTag("route", "kitchen_orders");
   const { user } = await getAuthUser();
 
@@ -81,6 +85,7 @@ export default async function KitchenDashboardPage({ params }: PageProps) {
       menuId={menu.id}
       menuName={menu.name}
       initialOrders={enriched}
+      backHref={backHref ?? undefined}
     />
   );
 }

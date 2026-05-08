@@ -70,6 +70,8 @@ interface KitchenDashboardProps {
   menuId: string;
   menuName: string;
   initialOrders: KitchenOrder[];
+  /** Override the default "← Back to menu builder" target. */
+  backHref?: string;
 }
 
 /* ── Audio beep (Web Audio API — no external file needed) ───────── */
@@ -340,7 +342,7 @@ function Column({ title, count, colorClass, children }: ColumnProps) {
 
 /* ── Main component ────────────────────────────────── */
 
-export function KitchenDashboard({ menuId, menuName, initialOrders }: KitchenDashboardProps) {
+export function KitchenDashboard({ menuId, menuName, initialOrders, backHref }: KitchenDashboardProps) {
   const [orders, setOrders] = useState<KitchenOrder[]>(initialOrders);
   const [newOrderIds, setNewOrderIds] = useState<Set<string>>(new Set());
   const [updatingIds, setUpdatingIds] = useState<Set<string>>(new Set());
@@ -467,7 +469,12 @@ export function KitchenDashboard({ menuId, menuName, initialOrders }: KitchenDas
       {/* Header */}
       <header className="bg-white border-b border-[#E2DDD5] px-4 lg:px-6 py-4 flex items-center justify-between sticky top-0 z-10 shadow-sm">
         <div>
-          <p className="text-[11px] font-bold text-[#9C9485] uppercase tracking-widest">Kitchen</p>
+          <a
+            href={backHref ?? `/dashboard/menu/${menuId}`}
+            className="text-[11px] font-bold text-[#9C9485] hover:text-[#16130C] uppercase tracking-widest"
+          >
+            ← {backHref ? "Dashboard" : "Menu builder"}
+          </a>
           <h1 className="font-display text-[18px] lg:text-[22px] font-bold text-[#16130C] tracking-tight leading-tight">
             {menuName}
           </h1>

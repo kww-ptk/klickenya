@@ -1,19 +1,23 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getAuthUser } from "@/app/dashboard/_lib/auth";
+import { safeBackHref } from "@/app/dashboard/_lib/back-href";
 import { adminClient } from "@/lib/supabase/admin";
 import { StockEnableButton } from "./StockEnableButton";
 
 interface PageProps {
   params: Promise<{ id: string }>;
+  searchParams?: Promise<{ back?: string }>;
 }
 
 function sevenDaysAgoIso(): string {
   return new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
 }
 
-export default async function StockHomePage({ params }: PageProps) {
+export default async function StockHomePage({ params, searchParams }: PageProps) {
   const { id } = await params;
+  const sp = (await searchParams) ?? {};
+  const backHref = safeBackHref(sp.back);
   const { user } = await getAuthUser();
   if (!user) redirect("/login");
 
@@ -71,10 +75,10 @@ export default async function StockHomePage({ params }: PageProps) {
       {/* Back link + title */}
       <div className="mb-6">
         <Link
-          href={`/dashboard/menu/${menu.id}`}
+          href={backHref ?? `/dashboard/menu/${menu.id}`}
           className="text-[13px] text-[#9C9485] hover:text-[#16130C] transition-colors"
         >
-          ← Back to menu
+          {backHref ? "← Back to dashboard" : "← Back to menu"}
         </Link>
         <div className="flex items-center gap-3 mt-2">
           <h1 className="font-display text-[22px] lg:text-[28px] font-bold tracking-[-0.03em] text-[#16130C] flex-1">

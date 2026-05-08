@@ -1,11 +1,13 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getAuthUser } from "@/app/dashboard/_lib/auth";
+import { safeBackHref } from "@/app/dashboard/_lib/back-href";
 import { adminClient } from "@/lib/supabase/admin";
 import { AuditLogTable, type AuditRow } from "@/components/dashboard/menu/AuditLogTable";
 
 interface PageProps {
   params:       Promise<{ id: string }>;
-  searchParams: Promise<{ days?: string; action?: string }>;
+  searchParams: Promise<{ days?: string; action?: string; back?: string }>;
 }
 
 /**
@@ -16,6 +18,8 @@ interface PageProps {
 export default async function AuditLogPage({ params, searchParams }: PageProps) {
   const { id } = await params;
   const sp = await searchParams;
+  const backHref = safeBackHref(sp.back) ?? `/dashboard/menu/${id}`;
+  const backLabel = safeBackHref(sp.back) ? "← Back to dashboard" : "← Back to menu builder";
 
   const { user } = await getAuthUser();
   if (!user) redirect("/login");
@@ -81,6 +85,14 @@ export default async function AuditLogPage({ params, searchParams }: PageProps) 
 
   return (
     <div className="px-4 py-5 lg:px-6">
+      <div className="mb-4">
+        <Link
+          href={backHref}
+          className="text-[13px] text-[#9C9485] hover:text-[#16130C] transition-colors"
+        >
+          {backLabel}
+        </Link>
+      </div>
       <div className="flex items-baseline justify-between mb-4">
         <div>
           <p className="text-[11px] uppercase tracking-wide text-[#9C9485] font-bold">

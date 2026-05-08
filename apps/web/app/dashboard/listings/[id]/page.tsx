@@ -141,6 +141,11 @@ export default async function ListingOverviewPage({
   const activeTabs = getActiveTabs(featureCtx);
   const showWelcomeCallout = activeCount <= 1; // only menu active (or nothing)
 
+  // Back-nav target so the operational pages (menu builder, QR, kitchen view,
+  // audit log, stock) can render "← Back to dashboard" instead of "Back to
+  // menu builder" when the user got there via this dashboard.
+  const back = `back=${encodeURIComponent(`/dashboard/listings/${id}`)}`;
+
   return (
     <div className="space-y-5">
       {/* ── Welcome callout (shown when ≤1 add-on active) ── */}
@@ -278,7 +283,7 @@ export default async function ListingOverviewPage({
               return (
                 <Link
                   key={feature.id}
-                  href={`/dashboard/menu/${featureCtx.menu.id}`}
+                  href={`/dashboard/menu/${featureCtx.menu.id}?${back}`}
                   className="flex items-center gap-3 bg-white rounded-xl border border-[#E2DDD5] p-3.5 shadow-sm hover:shadow-md hover:border-[#E8A020]/40 transition-all"
                 >
                   <span className="text-[22px] shrink-0">{featureIcon(feature.icon)}</span>
@@ -299,7 +304,7 @@ export default async function ListingOverviewPage({
               return (
                 <Link
                   key={feature.id}
-                  href={`/dashboard/menu/${featureCtx.menu.id}/stock`}
+                  href={`/dashboard/menu/${featureCtx.menu.id}/stock?${back}`}
                   className="flex items-center gap-3 bg-white rounded-xl border border-[#E2DDD5] p-3.5 shadow-sm hover:shadow-md hover:border-[#E8A020]/40 transition-all"
                 >
                   <span className="text-[22px] shrink-0">{featureIcon(feature.icon)}</span>
@@ -321,7 +326,7 @@ export default async function ListingOverviewPage({
               return (
                 <Link
                   key={feature.id}
-                  href={`/dashboard/menu/${featureCtx.menu.id}/orders`}
+                  href={`/dashboard/menu/${featureCtx.menu.id}/orders?${back}`}
                   className="flex items-center gap-3 bg-white rounded-xl border border-[#E2DDD5] p-3.5 shadow-sm hover:shadow-md hover:border-[#E8A020]/40 transition-all"
                 >
                   <span className="text-[22px] shrink-0">{featureIcon(feature.icon)}</span>
@@ -395,7 +400,7 @@ export default async function ListingOverviewPage({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {featureCtx.menu.table_ordering && (
               <Link
-                href={`/dashboard/menu/${featureCtx.menu.id}/orders`}
+                href={`/dashboard/menu/${featureCtx.menu.id}/orders?${back}`}
                 className="flex items-center gap-3 bg-white rounded-xl border border-[#E2DDD5] p-3.5 shadow-sm hover:shadow-md hover:border-[#E8A020]/40 transition-all"
               >
                 <span className="text-[22px] shrink-0">🍳</span>
@@ -408,7 +413,7 @@ export default async function ListingOverviewPage({
             )}
             {featureCtx.menu.table_ordering && (
               <Link
-                href={`/dashboard/menu/${featureCtx.menu.id}/audit`}
+                href={`/dashboard/menu/${featureCtx.menu.id}/audit?${back}`}
                 className="flex items-center gap-3 bg-white rounded-xl border border-[#E2DDD5] p-3.5 shadow-sm hover:shadow-md hover:border-[#E8A020]/40 transition-all"
               >
                 <span className="text-[22px] shrink-0">📋</span>
@@ -420,7 +425,7 @@ export default async function ListingOverviewPage({
               </Link>
             )}
             <Link
-              href={`/dashboard/menu/${featureCtx.menu.id}/qr`}
+              href={`/dashboard/menu/${featureCtx.menu.id}/qr?${back}`}
               className="flex items-center gap-3 bg-white rounded-xl border border-[#E2DDD5] p-3.5 shadow-sm hover:shadow-md hover:border-[#E8A020]/40 transition-all"
             >
               <span className="text-[22px] shrink-0">🔳</span>

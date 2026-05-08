@@ -9,10 +9,14 @@ import { ToastProvider } from "@/components/ui/Toast";
 
 interface PageProps {
   params: Promise<{ id: string }>;
+  searchParams?: Promise<{ back?: string }>;
 }
 
-export default async function MenuBuilderPage({ params }: PageProps) {
+export default async function MenuBuilderPage({ params, searchParams }: PageProps) {
   const { id } = await params;
+  const sp = (await searchParams) ?? {};
+  const { safeBackHref } = await import("@/app/dashboard/_lib/back-href");
+  const backHref = safeBackHref(sp.back);
   const { user } = await getAuthUser();
 
   if (!user) redirect("/login");
@@ -79,6 +83,8 @@ export default async function MenuBuilderPage({ params }: PageProps) {
         listingCity={listingCity}
         listingId={listingId}
         stockEnabled={stockEnabled}
+        backHref={backHref ?? undefined}
+        backLabel={backHref ? "← Back to dashboard" : undefined}
       />
     </ToastProvider>
   );
