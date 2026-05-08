@@ -75,6 +75,23 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
     let sanityListingId!: string;
     try {
       const description = request.draft_description || request.description;
+
+      /* Build photos from uploaded Sanity assets */
+      let photos: object[] | undefined;
+      if (request.draft_photos) {
+        const photosArr = typeof request.draft_photos === "string"
+          ? JSON.parse(request.draft_photos)
+          : request.draft_photos;
+        if (Array.isArray(photosArr) && photosArr.length > 0) {
+          photos = photosArr.map((p: { assetId: string; alt?: string }) => ({
+            _type: "image",
+            _key: Math.random().toString(36).slice(2, 10),
+            asset: { _type: "reference", _ref: p.assetId },
+            alt: p.alt || request.draft_title || "Photo",
+          }));
+        }
+      }
+
       const listing = await sanityWrite.create({
         _type: "listing",
         title: request.draft_title || request.business_name || "New Listing",
@@ -82,9 +99,17 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
         type: request.listing_type,
         subcategory: request.draft_subcategory || undefined,
         city: request.draft_city || request.location || undefined,
+        county: request.draft_county || undefined,
+        address: request.draft_address || undefined,
         description: description ? toPortableText(description) : undefined,
+        price: request.draft_price ?? undefined,
+        priceUnit: request.draft_price_unit || undefined,
+        amenities: request.draft_amenities?.length ? request.draft_amenities : undefined,
+        tags: request.draft_tags?.length ? request.draft_tags : undefined,
+        photos: photos,
         website: request.draft_website || request.website_url || undefined,
         instagram: request.draft_instagram || undefined,
+        facebook: request.draft_facebook || undefined,
         phone: request.draft_phone || undefined,
         email: request.draft_email || undefined,
         notificationEmail1: request.email,

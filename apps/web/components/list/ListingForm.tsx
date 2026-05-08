@@ -2,12 +2,16 @@
 
 import { useState } from "react";
 import { SUBCATEGORIES_BY_TYPE, SUBCATEGORY_LABELS } from "@/lib/constants/subcategories";
+import { KENYAN_COUNTIES, AMENITIES, TAG_SUGGESTIONS } from "@/lib/constants/listing";
+import { ImageUploader, UploadedImage } from "@/components/shared/ImageUploader";
 
 /* ---------- Types ---------- */
 
 type Step = "type" | "ai" | "details" | "content" | "consent" | "otp" | "success";
 
 type ListingType = "stay" | "experience" | "event" | "service" | "real_estate";
+
+type PhotoConsent = "yes_all" | "yes_logo_only" | "no";
 
 interface FormData {
   // Step 1
@@ -24,12 +28,21 @@ interface FormData {
   title: string;
   description: string;
   city: string;
+  county: string;
+  address: string;
   subcategory: string;
+  price: string;
+  priceUnit: string;
+  amenities: string[];
+  tags: string[];
   draftWebsite: string;
   draftInstagram: string;
+  draftFacebook: string;
   draftPhone: string;
   draftEmail: string;
-  // Step 5 — consent
+  // Step 5 — consent / photos
+  photos: UploadedImage[];
+  photoConsent: PhotoConsent | "";
   consentGiven: boolean;
   // Step 6 — OTP
   otpCode: string;
@@ -71,8 +84,23 @@ const KENYAN_CITIES = [
   "Maasai Mara", "Tsavo", "Samburu", "Isiolo", "Thika", "Machakos",
 ];
 
+const PRICE_UNITS = [
+  { value: "night", label: "Per Night" },
+  { value: "person", label: "Per Person" },
+  { value: "day", label: "Per Day" },
+  { value: "session", label: "Per Session" },
+  { value: "ticket", label: "Per Ticket" },
+  { value: "once", label: "Fixed Price" },
+];
+
 const CONSENT_TEXT =
   "I confirm that I am authorised to list this business on Klickenya, that all information provided is accurate, and that I agree to Klickenya's listing terms. I understand that submissions are reviewed before going live.";
+
+const PHOTO_CONSENT_OPTIONS: { value: PhotoConsent; title: string; desc: string }[] = [
+  { value: "yes_all", title: "✓ Yes — use all my photos", desc: "We'll use photos I upload plus any from my website and social media." },
+  { value: "yes_logo_only", title: "Logo and key photos only", desc: "Use only my logo and the main photo I provide." },
+  { value: "no", title: "No — I'll provide my own separately", desc: "Email photos to hello@klickenya.com with subject: Photos for your listing." },
+];
 
 /* ---------- Step indicator ---------- */
 
@@ -81,7 +109,7 @@ const STEP_LABELS: Record<Step, string> = {
   ai: "AI Assist",
   details: "Your Details",
   content: "Listing Content",
-  consent: "Consent",
+  consent: "Photos & Consent",
   otp: "Verify Email",
   success: "Done",
 };
@@ -118,11 +146,17 @@ function StepDots({ current }: { current: Step }) {
 
 /* ---------- Input helpers ---------- */
 
-function Label({ children }: { children: React.ReactNode }) {
+function Label({ children, optional }: { children: React.ReactNode; optional?: boolean }) {
   return (
-    <label className="block text-sm font-semibold text-[#16130C] mb-1.5">{children}</label>
+    <label className="block text-sm font-semibold text-[#16130C] mb-1.5">
+      {children}
+      {optional && <span className="ml-1 font-normal text-[#9C9485]">(optional)</span>}
+    </label>
   );
 }
+
+const inputCls =
+  "w-full border border-[#D4CFC6] rounded-xl px-4 py-3 text-[16px] text-[#16130C] placeholder-[#9C9485] focus:outline-none focus:ring-2 focus:ring-[#E8A020] bg-white";
 
 function Input({
   value,
@@ -144,7 +178,7 @@ function Input({
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
       required={required}
-      className="w-full border border-[#D4CFC6] rounded-xl px-4 py-3 text-[16px] text-[#16130C] placeholder-[#9C9485] focus:outline-none focus:ring-2 focus:ring-[#E8A020] bg-white"
+      className={inputCls}
     />
   );
 }
@@ -220,11 +254,20 @@ export default function ListingForm() {
     title: "",
     description: "",
     city: "",
+    county: "",
+    address: "",
     subcategory: "",
+    price: "",
+    priceUnit: "night",
+    amenities: [],
+    tags: [],
     draftWebsite: "",
     draftInstagram: "",
+    draftFacebook: "",
     draftPhone: "",
     draftEmail: "",
+    photos: [],
+    photoConsent: "",
     consentGiven: false,
     otpCode: "",
   });
@@ -233,11 +276,29 @@ export default function ListingForm() {
     setForm((f) => ({ ...f, [key]: value }));
   }
 
+  function toggleAmenity(amenity: string) {
+    setForm((f) => ({
+      ...f,
+      amenities: f.amenities.includes(amenity)
+        ? f.amenities.filter((a) => a !== amenity)
+        : [...f.amenities, amenity],
+    }));
+  }
+
+  function toggleTag(tag: string) {
+    setForm((f) => ({
+      ...f,
+      tags: f.tags.includes(tag)
+        ? f.tags.filter((t) => t !== tag)
+        : [...f.tags, tag],
+    }));
+  }
+
   /* --- Step 1: type --- */
 
   function handleTypeSelect(type: ListingType) {
     set("listingType", type);
-    set("subcategory", ""); // reset subcategory when type changes
+    set("subcategory", "");
   }
 
   /* --- Step 2: AI Assist --- */
@@ -264,7 +325,6 @@ export default function ListingForm() {
       const analysis: AiAnalysis = json.analysis;
       setAiAnalysis(analysis);
 
-      // Pre-fill content step from draft
       const d = analysis.draft;
       setForm((f) => ({
         ...f,
@@ -272,8 +332,10 @@ export default function ListingForm() {
         description: d.description || f.description,
         city: d.city || f.city,
         subcategory: d.subcategory || f.subcategory,
+        tags: d.tags?.length ? d.tags : f.tags,
         draftWebsite: d.website || f.draftWebsite,
         draftInstagram: d.instagram || f.draftInstagram,
+        draftFacebook: d.facebook || f.draftFacebook,
         draftPhone: d.phone || f.draftPhone,
         draftEmail: d.email || f.draftEmail,
       }));
@@ -306,11 +368,20 @@ export default function ListingForm() {
           draftTitle: form.title,
           draftDescription: form.description,
           draftCity: form.city,
+          draftCounty: form.county || undefined,
+          draftAddress: form.address || undefined,
           draftSubcategory: form.subcategory,
+          draftPrice: form.price ? parseInt(form.price, 10) : undefined,
+          draftPriceUnit: form.priceUnit || undefined,
+          draftAmenities: form.amenities.length ? form.amenities : undefined,
+          draftTags: form.tags.length ? form.tags : undefined,
           draftWebsite: form.draftWebsite || undefined,
           draftInstagram: form.draftInstagram || undefined,
+          draftFacebook: form.draftFacebook || undefined,
           draftPhone: form.draftPhone || undefined,
           draftEmail: form.draftEmail || undefined,
+          draftPhotos: form.photos.length ? form.photos : undefined,
+          photoConsent: form.photoConsent || undefined,
           aiScore: aiAnalysis?.score ?? null,
           aiSummary: aiAnalysis?.summary ?? null,
           aiFlags: aiAnalysis?.flags ?? null,
@@ -342,10 +413,7 @@ export default function ListingForm() {
       const res = await fetch("/api/list/verify-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          submissionId,
-          otpCode: form.otpCode,
-        }),
+        body: JSON.stringify({ submissionId, otpCode: form.otpCode }),
       });
       const json = await res.json();
       if (!res.ok) {
@@ -381,6 +449,8 @@ export default function ListingForm() {
     );
   }
 
+  const subcats = SUBCATEGORIES_BY_TYPE[form.listingType] ?? [];
+
   return (
     <div className="bg-white rounded-2xl border border-[#E2DDD5] p-6 sm:p-8">
       <StepDots current={step} />
@@ -408,10 +478,7 @@ export default function ListingForm() {
               </button>
             ))}
           </div>
-          <PrimaryButton
-            onClick={() => setStep("ai")}
-            disabled={!form.listingType}
-          >
+          <PrimaryButton onClick={() => setStep("ai")} disabled={!form.listingType}>
             Continue →
           </PrimaryButton>
         </div>
@@ -429,31 +496,17 @@ export default function ListingForm() {
           <div className="space-y-4 mb-6">
             <div>
               <Label>Business name</Label>
-              <Input
-                value={form.businessName}
-                onChange={(v) => set("businessName", v)}
-                placeholder="e.g. Watamu Beach House"
-              />
+              <Input value={form.businessName} onChange={(v) => set("businessName", v)} placeholder="e.g. Watamu Beach House" />
             </div>
             <div>
-              <Label>Website URL (optional)</Label>
-              <Input
-                value={form.websiteUrl}
-                onChange={(v) => set("websiteUrl", v)}
-                placeholder="https://yourbusiness.com"
-                type="url"
-              />
+              <Label optional>Website URL</Label>
+              <Input value={form.websiteUrl} onChange={(v) => set("websiteUrl", v)} placeholder="https://yourbusiness.com" type="url" />
             </div>
             <div>
-              <Label>Google Place ID (optional)</Label>
-              <Input
-                value={form.googlePlaceId}
-                onChange={(v) => set("googlePlaceId", v)}
-                placeholder="ChIJ..."
-              />
+              <Label optional>Google Place ID</Label>
+              <Input value={form.googlePlaceId} onChange={(v) => set("googlePlaceId", v)} placeholder="ChIJ..." />
               <p className="text-xs text-[#9C9485] mt-1">
-                Find it at{" "}
-                <span className="text-[#E8A020]">google.com/maps</span> → share → copy link → extract the CID parameter.
+                Find it at <span className="text-[#E8A020]">google.com/maps</span> → share → copy link → extract the CID parameter.
               </p>
             </div>
           </div>
@@ -497,6 +550,13 @@ export default function ListingForm() {
             >
               Skip — fill in manually →
             </button>
+            <button
+              type="button"
+              onClick={() => setStep("type")}
+              className="w-full py-2 text-sm text-[#9C9485] hover:text-[#5E5848] transition-colors"
+            >
+              ← Back
+            </button>
           </div>
         </div>
       )}
@@ -511,42 +571,20 @@ export default function ListingForm() {
           <div className="space-y-4 mb-8">
             <div>
               <Label>Your full name *</Label>
-              <Input
-                value={form.submitterName}
-                onChange={(v) => set("submitterName", v)}
-                placeholder="e.g. Amina Wanjiru"
-                required
-              />
+              <Input value={form.submitterName} onChange={(v) => set("submitterName", v)} placeholder="e.g. Amina Wanjiru" required />
             </div>
             <div>
               <Label>Email address *</Label>
-              <Input
-                value={form.submitterEmail}
-                onChange={(v) => set("submitterEmail", v)}
-                placeholder="you@example.com"
-                type="email"
-                required
-              />
+              <Input value={form.submitterEmail} onChange={(v) => set("submitterEmail", v)} placeholder="you@example.com" type="email" required />
             </div>
             <div>
               <Label>Phone number *</Label>
-              <Input
-                value={form.submitterPhone}
-                onChange={(v) => set("submitterPhone", v)}
-                placeholder="+254 7XX XXX XXX"
-                type="tel"
-                required
-              />
+              <Input value={form.submitterPhone} onChange={(v) => set("submitterPhone", v)} placeholder="+254 7XX XXX XXX" type="tel" required />
             </div>
             {!form.businessName && (
               <div>
                 <Label>Business name *</Label>
-                <Input
-                  value={form.businessName}
-                  onChange={(v) => set("businessName", v)}
-                  placeholder="e.g. Watamu Beach House"
-                  required
-                />
+                <Input value={form.businessName} onChange={(v) => set("businessName", v)} placeholder="e.g. Watamu Beach House" required />
               </div>
             )}
           </div>
@@ -584,17 +622,14 @@ export default function ListingForm() {
           </p>
 
           <div className="space-y-5 mb-8">
+            {/* Title */}
             <div>
               <Label>Listing title *</Label>
-              <Input
-                value={form.title}
-                onChange={(v) => set("title", v)}
-                placeholder="e.g. Watamu Beach House"
-                required
-              />
+              <Input value={form.title} onChange={(v) => set("title", v)} placeholder="e.g. Watamu Beach House" required />
               <p className="text-xs text-[#9C9485] mt-1">3–8 words, e.g. the name of your business</p>
             </div>
 
+            {/* Description */}
             <div>
               <Label>Description *</Label>
               <Textarea
@@ -608,13 +643,14 @@ export default function ListingForm() {
               </p>
             </div>
 
+            {/* City + Subcategory */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <Label>City / Location *</Label>
                 <select
                   value={form.city}
                   onChange={(e) => set("city", e.target.value)}
-                  className="w-full border border-[#D4CFC6] rounded-xl px-4 py-3 text-[16px] text-[#16130C] focus:outline-none focus:ring-2 focus:ring-[#E8A020] bg-white"
+                  className={inputCls}
                 >
                   <option value="">Select city…</option>
                   {KENYAN_CITIES.map((c) => (
@@ -628,58 +664,137 @@ export default function ListingForm() {
                 <select
                   value={form.subcategory}
                   onChange={(e) => set("subcategory", e.target.value)}
-                  className="w-full border border-[#D4CFC6] rounded-xl px-4 py-3 text-[16px] text-[#16130C] focus:outline-none focus:ring-2 focus:ring-[#E8A020] bg-white"
+                  className={inputCls}
                 >
                   <option value="">Select category…</option>
-                  {(SUBCATEGORIES_BY_TYPE[form.listingType] ?? []).map((s) => (
-                    <option key={s} value={s}>
-                      {SUBCATEGORY_LABELS[s] ?? s}
-                    </option>
+                  {subcats.map((s) => (
+                    <option key={s} value={s}>{SUBCATEGORY_LABELS[s] ?? s}</option>
                   ))}
                 </select>
               </div>
             </div>
 
-            {/* Optional contact / social */}
+            {/* County + Address (optional) */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <Label optional>County</Label>
+                <select value={form.county} onChange={(e) => set("county", e.target.value)} className={inputCls}>
+                  <option value="">Select county…</option>
+                  {KENYAN_COUNTIES.map((c) => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <Label optional>Price</Label>
+                <div className="flex gap-2">
+                  <input
+                    type="number"
+                    min="0"
+                    value={form.price}
+                    onChange={(e) => set("price", e.target.value)}
+                    placeholder="0"
+                    className="w-28 border border-[#D4CFC6] rounded-xl px-4 py-3 text-[16px] text-[#16130C] focus:outline-none focus:ring-2 focus:ring-[#E8A020] bg-white"
+                  />
+                  <select value={form.priceUnit} onChange={(e) => set("priceUnit", e.target.value)} className={`${inputCls} flex-1`}>
+                    {PRICE_UNITS.map((u) => (
+                      <option key={u.value} value={u.value}>{u.label}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            {/* Address (optional expandable) */}
+            <div>
+              <Label optional>Street address</Label>
+              <textarea
+                value={form.address}
+                onChange={(e) => set("address", e.target.value)}
+                placeholder="e.g. Watamu Marine Park Road, Watamu"
+                rows={2}
+                className="w-full border border-[#D4CFC6] rounded-xl px-4 py-3 text-[16px] text-[#16130C] placeholder-[#9C9485] focus:outline-none focus:ring-2 focus:ring-[#E8A020] bg-white resize-none"
+              />
+            </div>
+
+            {/* Amenities */}
+            <details className="border border-[#E2DDD5] rounded-xl overflow-hidden">
+              <summary className="px-4 py-3 text-sm font-semibold text-[#16130C] cursor-pointer select-none hover:bg-[#FAFAF8] flex items-center justify-between">
+                <span>Amenities {form.amenities.length > 0 && <span className="ml-1 text-[#E8A020]">({form.amenities.length} selected)</span>}</span>
+                <span className="text-[#9C9485] font-normal text-xs">optional</span>
+              </summary>
+              <div className="px-4 pb-4 pt-3">
+                <div className="flex flex-wrap gap-2">
+                  {AMENITIES.map((a) => (
+                    <button
+                      key={a}
+                      type="button"
+                      onClick={() => toggleAmenity(a)}
+                      className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors ${
+                        form.amenities.includes(a)
+                          ? "bg-[#E8A020] text-white border-[#E8A020]"
+                          : "bg-white text-[#5E5848] border-[#D4CFC6] hover:border-[#E8A020]/50"
+                      }`}
+                    >
+                      {a}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </details>
+
+            {/* Tags */}
+            <details className="border border-[#E2DDD5] rounded-xl overflow-hidden">
+              <summary className="px-4 py-3 text-sm font-semibold text-[#16130C] cursor-pointer select-none hover:bg-[#FAFAF8] flex items-center justify-between">
+                <span>Tags {form.tags.length > 0 && <span className="ml-1 text-[#E8A020]">({form.tags.length} selected)</span>}</span>
+                <span className="text-[#9C9485] font-normal text-xs">optional</span>
+              </summary>
+              <div className="px-4 pb-4 pt-3">
+                <p className="text-xs text-[#9C9485] mb-3">Select keywords that describe your listing to help guests find you.</p>
+                <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto">
+                  {TAG_SUGGESTIONS.map((t) => (
+                    <button
+                      key={t}
+                      type="button"
+                      onClick={() => toggleTag(t)}
+                      className={`px-2.5 py-1 rounded-full text-xs font-medium border transition-colors ${
+                        form.tags.includes(t)
+                          ? "bg-[#16130C] text-white border-[#16130C]"
+                          : "bg-white text-[#5E5848] border-[#D4CFC6] hover:border-[#16130C]/40"
+                      }`}
+                    >
+                      {t}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </details>
+
+            {/* Contact & social (optional expandable) */}
             <details className="border border-[#E2DDD5] rounded-xl overflow-hidden">
               <summary className="px-4 py-3 text-sm font-semibold text-[#16130C] cursor-pointer select-none hover:bg-[#FAFAF8]">
-                Website & social links (optional)
+                Website & social links <span className="font-normal text-[#9C9485] text-xs">(optional)</span>
               </summary>
               <div className="px-4 pb-4 space-y-4 pt-2">
                 <div>
-                  <Label>Website URL</Label>
-                  <Input
-                    value={form.draftWebsite}
-                    onChange={(v) => set("draftWebsite", v)}
-                    placeholder="https://yourbusiness.com"
-                    type="url"
-                  />
+                  <Label optional>Website URL</Label>
+                  <Input value={form.draftWebsite} onChange={(v) => set("draftWebsite", v)} placeholder="https://yourbusiness.com" type="url" />
                 </div>
                 <div>
-                  <Label>Instagram handle</Label>
-                  <Input
-                    value={form.draftInstagram}
-                    onChange={(v) => set("draftInstagram", v)}
-                    placeholder="yourbusiness (without @)"
-                  />
+                  <Label optional>Instagram handle</Label>
+                  <Input value={form.draftInstagram} onChange={(v) => set("draftInstagram", v)} placeholder="yourbusiness (without @)" />
                 </div>
                 <div>
-                  <Label>Business phone</Label>
-                  <Input
-                    value={form.draftPhone}
-                    onChange={(v) => set("draftPhone", v)}
-                    placeholder="+254 7XX XXX XXX"
-                    type="tel"
-                  />
+                  <Label optional>Facebook URL</Label>
+                  <Input value={form.draftFacebook} onChange={(v) => set("draftFacebook", v)} placeholder="https://facebook.com/yourbusiness" type="url" />
                 </div>
                 <div>
-                  <Label>Business email</Label>
-                  <Input
-                    value={form.draftEmail}
-                    onChange={(v) => set("draftEmail", v)}
-                    placeholder="hello@yourbusiness.com"
-                    type="email"
-                  />
+                  <Label optional>Business phone</Label>
+                  <Input value={form.draftPhone} onChange={(v) => set("draftPhone", v)} placeholder="+254 7XX XXX XXX" type="tel" />
+                </div>
+                <div>
+                  <Label optional>Business email</Label>
+                  <Input value={form.draftEmail} onChange={(v) => set("draftEmail", v)} placeholder="hello@yourbusiness.com" type="email" />
                 </div>
               </div>
             </details>
@@ -708,16 +823,59 @@ export default function ListingForm() {
         </div>
       )}
 
-      {/* ---- Step 5: Consent ---- */}
+      {/* ---- Step 5: Photos & Consent ---- */}
       {step === "consent" && (
         <div>
-          <h2 className="text-xl font-extrabold text-[#16130C] mb-1">Review & consent</h2>
+          <h2 className="text-xl font-extrabold text-[#16130C] mb-1">Photos & consent</h2>
           <p className="text-sm text-[#5E5848] mb-6">
-            Please review your submission summary before submitting.
+            Upload your best photos and review your submission before sending.
           </p>
+
+          {/* Photo uploader */}
+          <div className="mb-6">
+            <ImageUploader
+              value={form.photos}
+              onChange={(imgs) => set("photos", imgs)}
+              maxImages={10}
+              label="Upload photos"
+              hint="Add up to 10 high-quality photos. Our team may also source photos from your website."
+            />
+          </div>
+
+          {/* Photo consent */}
+          <div className="mb-6">
+            <p className="text-sm font-semibold text-[#16130C] mb-3">Can we use your photos for marketing?</p>
+            <div className="space-y-2">
+              {PHOTO_CONSENT_OPTIONS.map((opt) => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => set("photoConsent", opt.value)}
+                  className={`w-full text-left border rounded-xl p-3 flex items-start gap-3 transition-all ${
+                    form.photoConsent === opt.value
+                      ? "border-[#E8A020] bg-[#FDF8F0]"
+                      : "border-[#E2DDD5] hover:border-[#E8A020]/40"
+                  }`}
+                >
+                  <div className={`mt-0.5 w-4 h-4 rounded-full border-2 flex-shrink-0 flex items-center justify-center ${
+                    form.photoConsent === opt.value ? "border-[#E8A020] bg-[#E8A020]" : "border-[#D4CFC6]"
+                  }`}>
+                    {form.photoConsent === opt.value && (
+                      <div className="w-1.5 h-1.5 rounded-full bg-white" />
+                    )}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-[#16130C]">{opt.title}</p>
+                    <p className="text-xs text-[#5E5848] mt-0.5">{opt.desc}</p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
 
           {/* Summary card */}
           <div className="bg-[#FAFAF8] border border-[#E2DDD5] rounded-xl p-5 mb-6 space-y-2 text-sm">
+            <p className="font-bold text-[#16130C] mb-3">Submission summary</p>
             <div className="flex justify-between">
               <span className="text-[#9C9485]">Type</span>
               <span className="font-semibold text-[#16130C] capitalize">{form.listingType.replace("_", " ")}</span>
@@ -742,6 +900,12 @@ export default function ListingForm() {
               <span className="text-[#9C9485]">Email</span>
               <span className="font-semibold text-[#16130C]">{form.submitterEmail}</span>
             </div>
+            {form.photos.length > 0 && (
+              <div className="flex justify-between">
+                <span className="text-[#9C9485]">Photos</span>
+                <span className="font-semibold text-[#16130C]">{form.photos.length} uploaded</span>
+              </div>
+            )}
             {aiAnalysis && (
               <div className="flex justify-between">
                 <span className="text-[#9C9485]">AI Score</span>
@@ -779,7 +943,7 @@ export default function ListingForm() {
             <PrimaryButton
               onClick={handleSubmit}
               loading={submitLoading}
-              disabled={!form.consentGiven}
+              disabled={!form.consentGiven || !form.photoConsent}
             >
               Submit listing →
             </PrimaryButton>
@@ -821,11 +985,7 @@ export default function ListingForm() {
             <p className="text-sm text-red-600 bg-red-50 rounded-xl px-4 py-3 mb-4">{otpError}</p>
           )}
 
-          <PrimaryButton
-            onClick={handleOtpVerify}
-            loading={otpLoading}
-            disabled={form.otpCode.length !== 6}
-          >
+          <PrimaryButton onClick={handleOtpVerify} loading={otpLoading} disabled={form.otpCode.length !== 6}>
             Verify & submit →
           </PrimaryButton>
         </div>
