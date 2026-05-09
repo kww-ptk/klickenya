@@ -7,29 +7,38 @@ interface ListingRequestActionsProps {
   id: string;
   currentStatus: string;
   currentNotes: string;
+  canApprove: boolean;
+  canReject: boolean;
+  submitterEmail: string;
+  submitterName: string;
+  draftTitle: string;
 }
 
 export function ListingRequestActions({
   id,
   currentStatus,
   currentNotes,
+  canApprove,
+  canReject,
+  submitterEmail,
+  submitterName,
+  draftTitle,
 }: ListingRequestActionsProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
-  // Status
   const [statusLoading, setStatusLoading] = useState<string | null>(null);
-
-  // Notes
   const [note, setNote] = useState("");
   const [noteLoading, setNoteLoading] = useState(false);
-
-  // Reply
   const [replySubject, setReplySubject] = useState("");
   const [replyMessage, setReplyMessage] = useState("");
   const [replyLoading, setReplyLoading] = useState(false);
   const [draftLoading, setDraftLoading] = useState(false);
   const [replySuccess, setReplySuccess] = useState(false);
+  const [approveLoading, setApproveLoading] = useState(false);
+  const [rejectLoading, setRejectLoading] = useState(false);
+  const [actionError, setActionError] = useState("");
+  const [actionSuccess, setActionSuccess] = useState("");
 
   async function handleStatusUpdate(newStatus: string) {
     setStatusLoading(newStatus);
@@ -81,7 +90,7 @@ export function ListingRequestActions({
       if (!res.ok) throw new Error("Failed to draft reply");
       const data = await res.json();
       if (data.subject) setReplySubject(data.subject);
-      if (data.message) setReplyMessage(data.message);
+      if (data.message || data.draft) setReplyMessage(data.message ?? data.draft ?? "");
     } catch (err) {
       console.error("AI draft failed:", err);
     } finally {
@@ -97,10 +106,7 @@ export function ListingRequestActions({
       const res = await fetch(`/api/admin/listing-requests/${id}/send-reply`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          message: replyMessage,
-          subject: replySubject,
-        }),
+        body: JSON.stringify({ message: replyMessage, subject: replySubject }),
       });
       if (!res.ok) throw new Error("Failed to send reply");
       setReplyMessage("");
@@ -115,31 +121,103 @@ export function ListingRequestActions({
     }
   }
 
+  async function handleApprove() {
+    setActionError("");
+    setActionSuccess("");
+    setApproveLoading(true);
+    try {
+      const res = await fetch(`/api/admin/listing-requests/${id}/approve`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        setActionError(json.error ?? "Approval failed.");
+        return;
+      }
+      setActionSuccess("Listing approved and created in Sanity.");
+      startTransition(() => router.refresh());
+    } catch {
+      setActionError("Something went wrong. Please try again.");
+    } finally {
+      setApproveLoading(false);
+    }
+  }
+
+  async function handleReject() {
+    setActionError("");
+    setActionSuccess("");
+    setRejectLoading(true);
+    try {
+      const res = await fetch(`/api/admin/listing-requests/${id}/reject`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        setActionError(json.error ?? "Rejection failed.");
+        return;
+      }
+      setActionSuccess("Submission rejected and submitter notified.");
+      startTransition(() => router.refresh());
+    } catch {
+      setActionError("Something went wrong. Please try again.");
+    } finally {
+      setRejectLoading(false);
+    }
+  }
+
   const statuses = [
-    {
-      value: "responded",
-      label: "Mark Responded",
-      className: "bg-[#22C55E]/10 text-[#22C55E] hover:bg-[#22C55E]/20",
-    },
-    {
-      value: "converted",
-      label: "Mark Converted",
-      className: "bg-[#3B82F6]/10 text-[#3B82F6] hover:bg-[#3B82F6]/20",
-    },
-    {
-      value: "closed",
-      label: "Mark Closed",
-      className: "bg-[#9C9485]/10 text-[#9C9485] hover:bg-[#9C9485]/20",
-    },
+    { value: "responded", label: "Mark Responded", className: "bg-[#22C55E]/10 text-[#22C55E] hover:bg-[#22C55E]/20" },
+    { value: "converted", label: "Mark Converted", className: "bg-[#3B82F6]/10 text-[#3B82F6] hover:bg-[#3B82F6]/20" },
+    { value: "closed", label: "Mark Closed", className: "bg-[#9C9485]/10 text-[#9C9485] hover:bg-[#9C9485]/20" },
   ];
 
   return (
     <div className="space-y-6">
+
+      {/* Approve / Reject */}
+      {(canApprove || canReject) && (
+        <div className="bg-white rounded-2xl border border-[#F0EDE8] p-6 space-y-4">
+          <h2 className="text-[18px] font-display font-bold text-[#16130C]">Decision</h2>
+          <p className="text-[13px] text-[#5E5848]">
+            Approving will create the listing in Sanity and send credentials to{" "}
+            <strong>{submitterEmail}</strong>.
+          </p>
+
+          {actionError && (
+            <p className="text-[13px] text-red-600 bg-red-50 rounded-xl px-4 py-3">{actionError}</p>
+          )}
+          {actionSuccess && (
+            <p className="text-[13px] text-green-600 bg-green-50 rounded-xl px-4 py-3">{actionSuccess}</p>
+          )}
+
+          <div className="flex gap-3">
+            {canApprove && (
+              <button
+                onClick={handleApprove}
+                disabled={approveLoading || rejectLoading || isPending}
+                className="flex-1 py-2.5 text-[13px] font-bold rounded-xl bg-[#22C55E] text-white hover:bg-[#16A34A] transition-colors disabled:opacity-50"
+              >
+                {approveLoading ? "Approving…" : "✓ Approve"}
+              </button>
+            )}
+            {canReject && (
+              <button
+                onClick={handleReject}
+                disabled={approveLoading || rejectLoading || isPending}
+                className="flex-1 py-2.5 text-[13px] font-bold rounded-xl bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 transition-colors disabled:opacity-50"
+              >
+                {rejectLoading ? "Rejecting…" : "✕ Reject"}
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Status Update */}
       <div className="bg-white rounded-2xl border border-[#F0EDE8] p-6 space-y-4">
-        <h2 className="text-[18px] font-display font-bold text-[#16130C]">
-          Update Status
-        </h2>
+        <h2 className="text-[18px] font-display font-bold text-[#16130C]">Update Status</h2>
         <div className="flex flex-wrap gap-2">
           {statuses
             .filter((s) => s.value !== currentStatus)
@@ -150,32 +228,7 @@ export function ListingRequestActions({
                 disabled={!!statusLoading || isPending}
                 className={`px-4 py-2 text-[13px] font-medium rounded-lg transition-colors disabled:opacity-50 ${s.className}`}
               >
-                {statusLoading === s.value ? (
-                  <span className="flex items-center gap-2">
-                    <svg
-                      className="animate-spin size-3.5"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      />
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-                      />
-                    </svg>
-                    Updating...
-                  </span>
-                ) : (
-                  s.label
-                )}
+                {statusLoading === s.value ? "Updating…" : s.label}
               </button>
             ))}
         </div>
@@ -183,9 +236,7 @@ export function ListingRequestActions({
 
       {/* Add Note */}
       <div className="bg-white rounded-2xl border border-[#F0EDE8] p-6 space-y-4">
-        <h2 className="text-[18px] font-display font-bold text-[#16130C]">
-          Add Note
-        </h2>
+        <h2 className="text-[18px] font-display font-bold text-[#16130C]">Add Note</h2>
         <textarea
           value={note}
           onChange={(e) => setNote(e.target.value)}
@@ -198,65 +249,22 @@ export function ListingRequestActions({
           disabled={!note.trim() || noteLoading || isPending}
           className="px-4 py-2 text-[13px] font-medium rounded-lg bg-[#16130C] text-white hover:bg-[#2A2520] transition-colors disabled:opacity-50"
         >
-          {noteLoading ? "Saving..." : "Save Note"}
+          {noteLoading ? "Saving…" : "Save Note"}
         </button>
       </div>
 
       {/* Reply */}
       <div className="bg-white rounded-2xl border border-[#F0EDE8] p-6 space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-[18px] font-display font-bold text-[#16130C]">
-            Reply
-          </h2>
+          <h2 className="text-[18px] font-display font-bold text-[#16130C]">Reply</h2>
           <button
             onClick={handleDraftReply}
             disabled={draftLoading}
             className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium rounded-lg bg-[#E8A020]/10 text-[#E8A020] hover:bg-[#E8A020]/20 transition-colors disabled:opacity-50"
           >
-            {draftLoading ? (
-              <>
-                <svg
-                  className="animate-spin size-3.5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                  />
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-                  />
-                </svg>
-                Drafting...
-              </>
-            ) : (
-              <>
-                <svg
-                  className="size-3.5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={2}
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456z"
-                  />
-                </svg>
-                Draft reply with AI
-              </>
-            )}
+            {draftLoading ? "Drafting…" : "✨ Draft with AI"}
           </button>
         </div>
-
         <input
           type="text"
           value={replySubject}
@@ -264,27 +272,23 @@ export function ListingRequestActions({
           placeholder="Subject line..."
           className="w-full px-4 py-2.5 text-[14px] rounded-xl border border-[#F0EDE8] bg-[#F7F5F2] text-[#16130C] placeholder:text-[#9C9485] focus:outline-none focus:ring-2 focus:ring-[#E8A020]/30 focus:border-[#E8A020]"
         />
-
         <textarea
           value={replyMessage}
           onChange={(e) => setReplyMessage(e.target.value)}
           placeholder="Write your reply..."
-          rows={6}
+          rows={5}
           className="w-full px-4 py-3 text-[14px] rounded-xl border border-[#F0EDE8] bg-[#F7F5F2] text-[#16130C] placeholder:text-[#9C9485] focus:outline-none focus:ring-2 focus:ring-[#E8A020]/30 focus:border-[#E8A020] resize-none"
         />
-
         <div className="flex items-center gap-3">
           <button
             onClick={handleSendReply}
             disabled={!replyMessage.trim() || replyLoading || isPending}
             className="px-5 py-2 text-[13px] font-medium rounded-lg bg-[#E8A020] text-white hover:bg-[#C78A1A] transition-colors disabled:opacity-50"
           >
-            {replyLoading ? "Sending..." : "Send Reply"}
+            {replyLoading ? "Sending…" : "Send Reply"}
           </button>
           {replySuccess && (
-            <span className="text-[13px] text-[#22C55E] font-medium">
-              Reply sent successfully
-            </span>
+            <span className="text-[13px] text-[#22C55E] font-medium">Reply sent</span>
           )}
         </div>
       </div>

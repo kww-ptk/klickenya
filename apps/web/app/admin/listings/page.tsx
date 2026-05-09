@@ -65,6 +65,7 @@ export default async function AdminListingsPage({
   const params = await searchParams;
   const filterType = params.type ?? "";
   const filterStatus = params.status ?? "";
+  const createdTitle = params.created ?? "";
 
   const studioUrl =
     process.env.NEXT_PUBLIC_SANITY_STUDIO_URL ?? "http://localhost:3333";
@@ -111,14 +112,37 @@ export default async function AdminListingsPage({
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="font-display text-[24px] font-bold text-[#16130C]">
-          Listings
-        </h1>
-        <p className="mt-1 text-[14px] text-[#9C9485]">
-          Manage listings in Sanity Studio. This view is read-only.
-        </p>
+      <div className="flex items-center justify-between gap-4 flex-wrap">
+        <div>
+          <h1 className="font-display text-[24px] font-bold text-[#16130C]">
+            Listings
+          </h1>
+          <p className="mt-1 text-[14px] text-[#9C9485]">
+            {filtered.length} listing{filtered.length !== 1 ? "s" : ""}
+          </p>
+        </div>
+        <Link
+          href="/admin/listings/new"
+          className="inline-flex items-center gap-2 bg-[#E8A020] hover:bg-[#D4901C] text-white font-bold text-[13px] px-4 py-2.5 rounded-xl transition-colors"
+        >
+          <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+          </svg>
+          New Listing
+        </Link>
       </div>
+
+      {/* Success banner after create */}
+      {createdTitle && (
+        <div className="flex items-center gap-3 rounded-xl bg-green-50 border border-green-200 px-4 py-3 text-[13px] text-green-700">
+          <svg className="size-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+          </svg>
+          <span>
+            <strong>{decodeURIComponent(createdTitle)}</strong> was created successfully. It may take up to 60 seconds to appear below (Sanity CDN cache).
+          </span>
+        </div>
+      )}
 
       {/* Filter tabs */}
       <div className="space-y-3">

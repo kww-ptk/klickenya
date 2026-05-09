@@ -1101,6 +1101,30 @@ export default defineType({
       validation: (rule) => rule.email(),
       group: 'notifications',
     }),
+    defineField({
+      name: 'submissionSource',
+      title: 'Submission source',
+      type: 'string',
+      description: 'How this listing was created: claim, listing_request, manual, import',
+      group: 'verification',
+      readOnly: true,
+    }),
+    defineField({
+      name: 'submissionId',
+      title: 'Submission ID',
+      type: 'string',
+      description: 'Supabase ID of the claim_request or listing_request that created this listing',
+      group: 'verification',
+      readOnly: true,
+    }),
+    defineField({
+      name: 'jsonLd',
+      title: 'JSON-LD structured data',
+      type: 'text',
+      description: 'Raw JSON-LD for search engine structured data (auto-generated, do not edit manually)',
+      group: 'seo',
+      readOnly: true,
+    }),
   ],
   preview: {
     select: {

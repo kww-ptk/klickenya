@@ -33,6 +33,8 @@ type PropertyEnquiry = {
 type ListingRequest = {
   id: string;
   name: string;
+  draft_title?: string;
+  business_name?: string;
   listing_type: string;
   email: string;
   created_at: string;
@@ -104,6 +106,7 @@ export default async function AdminDashboardPage() {
     claimRequestsThisWeek,
     pendingClaimsCount,
     recentClaims,
+    submittedListingReqsCount,
   ] = await Promise.all([
     // Sanity: total listings
     sanityClient.fetch<number>(`count(*[_type == "listing"])`),
@@ -192,7 +195,7 @@ export default async function AdminDashboardPage() {
     // Recent 5 listing requests
     adminClient
       .from("listing_requests")
-      .select("id, name, listing_type, email, created_at, status")
+      .select("id, name, draft_title, business_name, listing_type, email, created_at, status")
       .order("created_at", { ascending: false })
       .limit(5)
       .then(({ data }) => (data ?? []) as ListingRequest[]),
@@ -254,6 +257,12 @@ export default async function AdminDashboardPage() {
       .order("created_at", { ascending: false })
       .limit(5)
       .then(({ data }) => (data ?? []) as ClaimRequest[]),
+    // Listing requests awaiting admin review (submitted = OTP verified)
+    adminClient
+      .from("listing_requests")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "submitted")
+      .then(({ count }) => count ?? 0),
   ]);
 
   const draftListings = totalListings - publishedListings;
@@ -337,10 +346,18 @@ export default async function AdminDashboardPage() {
           <p className="mt-1 text-[13px] text-[#9C9485]">
             Listing Requests This Week
           </p>
-          <p className="mt-1 text-[13px] text-[#9C9485]">
-            {respondedListingReqsThisWeek} responded / {pendingListingReqs}{" "}
-            pending
-          </p>
+          {submittedListingReqsCount > 0 ? (
+            <Link
+              href="/admin/listing-requests?status=submitted"
+              className="mt-1 inline-block text-[13px] font-semibold text-[#E8A020] hover:underline"
+            >
+              {submittedListingReqsCount} awaiting review →
+            </Link>
+          ) : (
+            <p className="mt-1 text-[13px] text-[#9C9485]">
+              {respondedListingReqsThisWeek} responded
+            </p>
+          )}
         </div>
 
         {/* General Contacts This Week */}
@@ -511,10 +528,10 @@ export default async function AdminDashboardPage() {
                 >
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-[13px] font-medium text-[#16130C]">
-                      {req.name}
+                      {req.draft_title || req.business_name || req.name}
                     </p>
                     <p className="mt-0.5 text-[13px] text-[#9C9485]">
-                      {req.listing_type} &middot; {req.email}
+                      {req.listing_type} &middot; {req.name}
                     </p>
                   </div>
                   <div className="ml-4 flex shrink-0 items-center gap-3">

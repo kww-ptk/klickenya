@@ -5,9 +5,14 @@ const statusStyles: Record<string, string> = {
   responded: "bg-[#22C55E]/15 text-[#22C55E]",
   converted: "bg-[#3B82F6]/15 text-[#3B82F6]",
   closed: "bg-[#9C9485]/15 text-[#9C9485]",
-  // Ambassador statuses
+  // /list flow statuses
+  pending_otp: "bg-amber/15 text-amber",
+  submitted: "bg-[#6366F1]/15 text-[#6366F1]",
+  // Ambassador / claim / listing statuses
   approved: "bg-[#22C55E]/15 text-[#22C55E]",
   rejected: "bg-[#EF4444]/15 text-[#EF4444]",
+  pending: "bg-amber/15 text-amber",
+  verified: "bg-[#3B82F6]/15 text-[#3B82F6]",
   // Property/listing statuses
   available: "bg-[#22C55E]/15 text-[#22C55E]",
   "under-offer": "bg-amber/15 text-amber",
@@ -25,7 +30,7 @@ export function StatusBadge({ status }: { status: string }) {
         statusStyles[status] ?? "bg-[#9C9485]/15 text-[#9C9485]"
       )}
     >
-      {status.replace(/-/g, " ")}
+      {status.replace(/_/g, " ").replace(/-/g, " ")}
     </span>
   );
 }
