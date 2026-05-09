@@ -152,7 +152,7 @@ export default function HowItWorksPage() {
               Explore listings &rarr;
             </Link>
             <Link
-              href="#listing-request"
+              href="/list"
               className="inline-flex items-center justify-center px-7 py-3.5 rounded-full border border-white/20 text-white/80 font-semibold text-[15px] hover:bg-white/5 hover:border-white/35 transition-all duration-200"
             >
               List your space &rarr;

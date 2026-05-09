@@ -326,7 +326,7 @@ export default async function DestinationPage({ params }: PageProps) {
                   Get discovered by thousands of travelers looking for stays, experiences, and services in {destination.name}.
                 </p>
                 <Link
-                  href="/how-it-works"
+                  href="/list"
                   className="inline-block w-full text-center rounded-[var(--radius-md)] bg-amber text-white text-[13.5px] font-bold py-2.5 hover:bg-amber/90 transition-colors"
                 >
                   List Your Space

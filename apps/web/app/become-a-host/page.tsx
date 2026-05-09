@@ -45,7 +45,7 @@ export default function BecomeAHostPage() {
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <UpgradeButton label="Start listing for free" redirectTo="/dashboard" />
+              <UpgradeButton label="Start listing for free" redirectTo="/list" />
               <Link
                 href="#how"
                 className="text-[14px] font-semibold text-white/60 hover:text-white transition-colors"
@@ -109,7 +109,7 @@ export default function BecomeAHostPage() {
                   </li>
                 ))}
               </ul>
-              <UpgradeButton label="List my business" redirectTo="/stays" />
+              <UpgradeButton label="List my business" redirectTo="/list" />
             </div>
 
             {/* Path 2 — Events */}
@@ -213,7 +213,7 @@ export default function BecomeAHostPage() {
               It&apos;s free, it takes 5 minutes, and you&apos;ll reach people
               who are actually looking for what you offer.
             </p>
-            <UpgradeButton label="Get started — it's free" redirectTo="/dashboard" />
+            <UpgradeButton label="Get started — it's free" redirectTo="/list" />
           </div>
         </section>
       </main>
