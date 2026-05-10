@@ -25,42 +25,7 @@ import { getMenuAuth, verifyMenuAccess } from "../_lib/auth";
  *
  * Seed behaviour: if reservations_enabled is flipping false → true AND the menu
  * has zero restaurant_areas, two default areas are inserted (Indoor 30, Terrace 20).
- * Also seeds a default reservation_time_windows row from Sanity opening hours if
- * the menu has no windows yet.
  */
-
-/* ── Time helpers ────────────────────────────────────────────────────────── */
-
-function timeToMinutes(t: string): number {
-  const parts = t.split(":");
-  return parseInt(parts[0], 10) * 60 + parseInt(parts[1], 10);
-}
-
-// Parse Sanity opening hours string for bookable hours derivation
-function parseSanityHoursForBookable(str: string): { openTime: string; closeTime: string } | null {
-  const timeRe = /(\d{1,2}(?::\d{2})?)\s*(am|pm)\s*[–\-\u2013]\s*(\d{1,2}(?::\d{2})?)\s*(am|pm)/i;
-  const m = str.match(timeRe);
-  if (!m) return null;
-
-  function parse12h(timeStr: string, ampm: string): string {
-    const [hRaw, mRaw] = timeStr.split(":");
-    let h = parseInt(hRaw, 10);
-    const min = mRaw ? parseInt(mRaw, 10) : 0;
-    if (ampm.toUpperCase() === "PM" && h !== 12) h += 12;
-    if (ampm.toUpperCase() === "AM" && h === 12) h = 0;
-    return `${String(h).padStart(2, "0")}:${String(min).padStart(2, "0")}`;
-  }
-
-  const openTime = parse12h(m[1], m[2]);
-  const rawClose = parse12h(m[3], m[4]);
-
-  // Apply 90-minute kitchen buffer to close time
-  const closeMins = timeToMinutes(rawClose) - 90;
-  if (closeMins <= timeToMinutes(openTime)) return null; // sanity check
-  const closeTime = `${String(Math.floor(closeMins / 60)).padStart(2, "0")}:${String(closeMins % 60).padStart(2, "0")}`;
-
-  return { openTime, closeTime };
-}
 
 export async function PATCH(req: NextRequest) {
   try {
@@ -166,6 +131,29 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ error: "No valid fields to update." }, { status: 400 });
     }
 
+    // ── Forward safety guard for reservations ────────────────────────────
+    // We only persist reservations_enabled = true when at least one active
+    // reservation_time_windows row exists for this menu. The active-windows
+    // count is the source of truth — even if the menu row currently shows
+    // reservations_enabled = true (stale client), we re-check.
+    if (updates.reservations_enabled === true) {
+      const { count: activeWindowCount } = await adminClient
+        .from("reservation_time_windows")
+        .select("id", { count: "exact", head: true })
+        .eq("menu_id", menu_id)
+        .eq("is_active", true);
+
+      if ((activeWindowCount ?? 0) === 0) {
+        return NextResponse.json(
+          {
+            error: "no_active_windows",
+            message: "Cannot enable reservations without at least one active time window.",
+          },
+          { status: 400 },
+        );
+      }
+    }
+
     // Check if reservations_enabled is flipping false → true (needed for seed logic)
     const isEnablingReservations =
       updates.reservations_enabled === true && menu.reservations_enabled === false;
@@ -199,33 +187,10 @@ export async function PATCH(req: NextRequest) {
         seededAreas = true;
       }
 
-      // ── Seed default time window from Sanity if no windows exist yet ──
-      const { count: windowCount } = await adminClient
-        .from("reservation_time_windows")
-        .select("id", { count: "exact", head: true })
-        .eq("menu_id", menu_id);
-
-      if ((windowCount ?? 0) === 0 && menu.listing_slug) {
-        try {
-          const sanityListing = await sanityClient.fetch<{ openingHours?: string | null } | null>(
-            `*[_type == "listing" && slug.current == $slug][0]{ openingHours }`,
-            { slug: menu.listing_slug },
-          );
-          if (sanityListing?.openingHours) {
-            const derived = parseSanityHoursForBookable(sanityListing.openingHours);
-            if (derived) {
-              await adminClient.from("reservation_time_windows").insert({
-                menu_id,
-                open_time: derived.openTime,
-                close_time: derived.closeTime,
-                display_order: 0,
-              });
-            }
-          }
-        } catch {
-          // Non-blocking — if Sanity is unavailable, owner can add windows manually
-        }
-      }
+      // The previous Sanity-derived auto-seed of a default window has been
+      // removed: with the forward guard above, the only way to reach this
+      // branch is with ≥1 active window already present, so the seed could
+      // never fire.
     }
 
     // ── If disabling table ordering, return count of open orders for client warning ──
