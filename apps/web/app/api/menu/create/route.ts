@@ -43,7 +43,6 @@ export async function POST(req: NextRequest) {
         display_name: display_name.trim(),
         name: display_name.trim(),
         is_published: false,
-        ordering_enabled: false,
       })
       .select("id, slug, display_name, listing_slug, is_published")
       .single();

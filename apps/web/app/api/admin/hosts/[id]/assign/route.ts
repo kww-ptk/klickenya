@@ -110,7 +110,6 @@ export async function POST(
             name: `${listingDoc.title ?? listingTitle} Menu`,
             display_name: `${listingDoc.title ?? listingTitle} Menu`,
             is_published: false,
-            ordering_enabled: false,
           },
           { onConflict: "slug", ignoreDuplicates: true }
         );

@@ -1,0 +1,26 @@
+-- Migration 070: Drop menus.ordering_enabled (dead column).
+--
+-- Replaces: nothing. The column was introduced in 028_menu_system.sql:17 as a
+-- "V1 ordering" flag, but the actual switch that gates the QR-cart on /m/[slug]
+-- has always been menus.table_ordering. ordering_enabled was queried in 10
+-- places across the codebase but never used in any conditional logic; it was
+-- only ever written `false` in three seed paths (menu create, claim verify,
+-- admin host-assign). Removing it leaves table_ordering as the single switch.
+--
+-- Read sites cleaned up alongside this migration (every reference, found via
+--   `grep -rn "ordering_enabled"`):
+--   apps/web/lib/cache/menu.ts                                       (type + select)
+--   apps/web/app/api/admin/hosts/[id]/assign/route.ts                (insert false)
+--   apps/web/app/api/claim/verify/route.ts                           (insert false)
+--   apps/web/app/api/menu/create/route.ts                            (insert false)
+--   apps/web/app/dashboard/listings/[id]/page.tsx                    (select + map)
+--   apps/web/app/dashboard/listings/[id]/layout.tsx                  (type + select + map)
+--   apps/web/app/dashboard/listings/[id]/_lib/features.config.ts     (type)
+--   apps/web/app/dashboard/listings/[id]/features/page.tsx           (select + map)
+--   docs/reservations-v1-plan.md                                     (docs)
+--   RESTAURANT_FEATURE_MAP.md                                        (audit)
+--
+-- Reversal (manual):
+--   ALTER TABLE menus ADD COLUMN ordering_enabled boolean DEFAULT false;
+
+ALTER TABLE menus DROP COLUMN IF EXISTS ordering_enabled;

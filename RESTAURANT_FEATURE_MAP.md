@@ -40,7 +40,7 @@ Status legend: **shipped** = UI + API + DB all present and wired · **partial** 
 | 29 | Reservation auto-approve | Column exists, no logic. | scaffolded | `menus.reservations_auto_approve` | n/a | n/a | migration 049; only insert path uses `status: "pending"` (`api/menu/reservations/route.ts:299`) |
 | 30 | Reservation slots (per-day capacity) | Table created (V2 plan). Not used by any route or UI. | scaffolded | `reservation_slots` | n/a | n/a | migration 049, no readers in code |
 | 31 | Check-in / no-show / completed flow | `status` enum supports `checked_in`, `no_show`, `completed`; UI only flips between `pending`/`approved`/`declined`/`cancelled`. PATCH route accepts the others but no surface drives them. | partial (UI missing) | `reservations.status`, dormant `checked_in_at`, `completed_at` | `/dashboard/listings/[id]/reservations` (only approve/decline buttons) | n/a | `apps/web/app/api/menu/reservations/route.ts:392`, `apps/web/components/dashboard/listings/ReservationsDashboard.tsx` |
-| 32 | `ordering_enabled` flag (legacy) | Read in 7 places, only ever **written `false`** in the menu-create / claim-verify / admin-assign seed paths. The actual switch users flip is `table_ordering`. | dead (DB-only) | `menus.ordering_enabled` | none — no toggle in UI | none | grep results: read in `lib/cache/menu.ts:177-190`, `_lib/features.config.ts:10`, `dashboard/listings/[id]/page.tsx:69-83`, `…/layout.tsx:107-133`, `…/features/page.tsx:72-86`; only written by `api/menu/create/route.ts:46`, `api/claim/verify/route.ts:146`, `api/admin/hosts/[id]/assign/route.ts:113` |
+| 32 | ~~`ordering_enabled` flag (legacy)~~ | Removed in migration 070. Was a duplicate of `table_ordering` — read in 7 places but never used in any conditional and only written `false` in seed paths. | removed | n/a | n/a | n/a | `supabase/migrations/070_drop_menus_ordering_enabled.sql` |
 | 33 | Featured / coming-soon "ordering" lock-out | The features grid surfaces `takeaway` and `delivery` as `coming_soon` cards (lock icon, no link). | shipped UX, planned feature | per `features.config.ts` | `/dashboard/listings/[id]/features` | n/a | `apps/web/app/dashboard/listings/[id]/features/page.tsx` |
 
 ---
@@ -163,7 +163,7 @@ Anything the proposed flow needs that isn't fully built.
 | **A. Setup checklist UI itself** | No post-claim onboarding wizard exists. The features tile-grid at `/dashboard/listings/[id]/features` is a read-only preview ("Add-on management coming soon" callout — `features/page.tsx:111-121`). Owners must navigate by hand to find the right toggle. | Owner lands on `/dashboard/listings/[id]` with stat tiles and figures it out via the menu builder's right-side publish panel. | medium |
 | **B. Permissive-fallback in reservation hours** | `api/menu/reservations/route.ts:269` — _"If no active windows configured, skip the check (permissive fallback)"_. An owner who flips `reservations_enabled` on without configuring `reservation_time_windows` accepts bookings 24/7. | Bookings come in for 03:00 because no one ever set Lunch / Dinner. | small (require ≥1 active window or refuse) |
 | **C. "List your table" on the listing page when reservations off** | When `reservations_enabled = false`, the listing-page sidebar shows a generic contact form (`BookingSidebar.tsx:48-…`). It's labelled as a contact form, not "Reserve a table". | Owner who hasn't enabled reservations gets unrelated enquiries via `contact_requests`. | small (copy + routing tweak) |
-| **D. `ordering_enabled` is dead** | Read in 7 files (`lib/cache/menu.ts:177`, `features.config.ts:10`, `dashboard/listings/[id]/{page,layout,features}.tsx`, `_lib/features.config.ts`) but only ever written `false` in seed paths. The actual switch is `table_ordering`. | Confusing for any next dev. Two flags, one job. | small (drop the column or use it as the umbrella for `table_ordering ∨ takeaway_enabled ∨ delivery_enabled`) |
+| ~~D. `ordering_enabled` is dead~~ | _Resolved by migration 070._ The duplicate flag was dropped and all read sites cleaned up; `table_ordering` is now the single switch. | n/a | done |
 | **E. Reservation status surfaces** | DB enum supports `checked_in / no_show / completed`. Dashboard buttons only do `approved / declined / cancelled`. PATCH route accepts the missing values but nothing calls them. | Owner can't mark a no-show or check someone in, so the analytics carry the "approved → ?" gap forever. | medium (add buttons + per-row state machine in `ReservationsDashboard`) |
 | **F. Reservation deposits / auto-approve / per-day capacity slots** | Schema exists (V2/V3 columns in migration 049 and table `reservation_slots`) but no UI, no payment hookup, no capacity logic. | "Sorry we're full" must be done manually by declining. | large (deposits = M-Pesa integration is its own gap; slots = capacity engine; auto-approve = simplest of the three) |
 | **G. Takeaway** | No DB writes for takeaway, no `/m/[slug]?mode=takeaway`, no pickup-time picker, no order-status surface for "ready for pickup". | Coming-soon card only. | large |
@@ -179,7 +179,7 @@ Anything the proposed flow needs that isn't fully built.
 
 ## Section 5 — Conflicts, overlaps, dead code
 
-- **`ordering_enabled` vs `table_ordering`** — gap **D**. `table_ordering` is canonical. `ordering_enabled` is queried alongside it in five places (`features.config.ts`, `lib/cache/menu.ts`, `listings/[id]/{page,layout,features}.tsx`) but is never `true` in production data because nothing writes it `true`. Either repurpose it as a top-level "ordering on at all" umbrella (`table OR takeaway OR delivery`) or drop it.
+- ~~`ordering_enabled` vs `table_ordering`~~ — _resolved._ Migration 070 dropped `ordering_enabled`; `table_ordering` is the single canonical switch.
 - **`takeaway_enabled` / `delivery_enabled`** — feature flags that read all the way down through the features grid but render only as `coming_soon` cards. The columns are dead until those features ship.
 - **`reservation_slots` table** — empty in every codepath except migration 049. Will need schema extension when V2 capacity engine is built.
 - **`reservations.table_id`, `session_id`, `slot_id`, `approved_by`, `approved_at`, `checked_in_at`, `completed_at`, `deposit_amount_kes`, `deposit_mpesa_ref`, `deposit_paid_at`** — all dormant; defined in migration 049 with the comment "V2/V3" but no readers. Safe to leave for now.
@@ -199,7 +199,7 @@ Anything the proposed flow needs that isn't fully built.
 |---|---|
 | 005 | Adds `restaurant` listing type to taxonomy. |
 | 014 | `claim_requests` — gate for everything restaurant-side. |
-| 028 | `menus`, `menu_sections`, `menu_items`, `menu_scans` — V0 menu system + currency/`ordering_enabled`/`table_ordering`/`takeaway_enabled`/`delivery_enabled` flags + delivery cost columns. |
+| 028 | `menus`, `menu_sections`, `menu_items`, `menu_scans` — V0 menu system + currency/`table_ordering`/`takeaway_enabled`/`delivery_enabled` flags + delivery cost columns. (Also added `ordering_enabled`, dropped in 070.) |
 | 029 | `menus.listing_slug`, `display_name` — multi-menu per listing. |
 | 030 | `menu-photos` Supabase storage bucket. |
 | 043 | `orders`, `order_items` (with snapshots, `mpesa_ref` stub, delivery address stub). |
@@ -226,5 +226,6 @@ Anything the proposed flow needs that isn't fully built.
 | 067 | Floor-map `pos_x`/`pos_y` 0-100 CHECK constraints. |
 | 068 | `listing_requests` AI fields including `admin_notes`. |
 | 069 | `listing_requests` photo fields. |
+| 070 | Drops `menus.ordering_enabled` (duplicate of `table_ordering`; introduced by 028, never used in any conditional). |
 
 Gaps on disk: 046, 047, 050 (squashed/never committed — don't reuse).

@@ -569,7 +569,6 @@ Nothing is reusable. No `FeatureCard`, no `UpsellCard`, no `ComingSoonBadge` com
 
 | Column | Type | Default | Status |
 |---|---|---|---|
-| `ordering_enabled` | boolean | false | Dormant (from migration 028) |
 | `table_ordering` | boolean | false | Active V1 |
 | `takeaway_enabled` | boolean | false | Dormant (from migration 028) |
 | `delivery_enabled` | boolean | false | Dormant (from migration 028) |
@@ -579,7 +578,7 @@ Nothing is reusable. No `FeatureCard`, no `UpsellCard`, no `ComingSoonBadge` com
 | `reservations_max_party_size` | int | 12 | Active V1 |
 | `reservations_max_advance_days` | int | 30 | Active V1 |
 
-The dormant flags (`ordering_enabled`, `takeaway_enabled`, `delivery_enabled`) are schema-only — no UI, no API, no logic reads them. They are future features waiting for an upsell surface.
+The dormant flags (`takeaway_enabled`, `delivery_enabled`) are schema-only — no UI, no API, no logic reads them. They are future features waiting for an upsell surface. (`ordering_enabled` was dropped in migration 070 — it was a duplicate of `table_ordering`.)
 
 **Stays (`properties` table)** — thin:
 

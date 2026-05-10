@@ -7,7 +7,6 @@ export type FeatureContext = {
     id: string;
     table_ordering: boolean;
     reservations_enabled: boolean;
-    ordering_enabled: boolean;
     takeaway_enabled: boolean;
     delivery_enabled: boolean;
     stock_enabled: boolean;

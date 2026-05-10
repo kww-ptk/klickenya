@@ -143,7 +143,6 @@ export async function POST(req: NextRequest) {
             display_name: `${claim.listing_title} Menu`,
             listing_slug: claim.listing_slug,
             is_published: false,
-            ordering_enabled: false,
           },
           { onConflict: "slug", ignoreDuplicates: true }
         );

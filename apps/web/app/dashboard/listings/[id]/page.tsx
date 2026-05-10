@@ -66,7 +66,7 @@ export default async function ListingOverviewPage({
     ? await adminClient
         .from("menus")
         .select(
-          "id, slug, table_ordering, reservations_enabled, ordering_enabled, takeaway_enabled, delivery_enabled, stock_enabled",
+          "id, slug, table_ordering, reservations_enabled, takeaway_enabled, delivery_enabled, stock_enabled",
         )
         .eq("listing_slug", listing.slug)
         .eq("business_id", user.id)
@@ -80,7 +80,6 @@ export default async function ListingOverviewPage({
           id: menu.id,
           table_ordering: menu.table_ordering ?? false,
           reservations_enabled: menu.reservations_enabled ?? false,
-          ordering_enabled: menu.ordering_enabled ?? false,
           takeaway_enabled: menu.takeaway_enabled ?? false,
           delivery_enabled: menu.delivery_enabled ?? false,
           stock_enabled: menu.stock_enabled ?? false,

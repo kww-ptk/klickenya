@@ -174,7 +174,6 @@ export type MenuMetadata = {
   is_published: boolean;
   table_ordering: boolean;
   reservations_enabled: boolean;
-  ordering_enabled: boolean;
   takeaway_enabled: boolean;
   delivery_enabled: boolean;
   stock_enabled: boolean;
@@ -187,7 +186,7 @@ export const getMenuMetadata = (menuId: string, ownerId: string) =>
       const { data } = await adminClient
         .from("menus")
         .select(
-          "id, name, slug, currency, is_published, table_ordering, reservations_enabled, ordering_enabled, takeaway_enabled, delivery_enabled, stock_enabled, stock_deduct_on",
+          "id, name, slug, currency, is_published, table_ordering, reservations_enabled, takeaway_enabled, delivery_enabled, stock_enabled, stock_deduct_on",
         )
         .eq("id", menuId)
         .eq("business_id", ownerId)
