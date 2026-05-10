@@ -5,6 +5,7 @@ import { adminClient } from "@/lib/supabase/admin";
 import { sanityClient } from "@/lib/sanity/client";
 import { getAuthUser, getUserProfile, getHostProfile } from "./_lib/auth";
 import { getMenusForOwner } from "@/lib/cache/menu";
+import { SetupBanner } from "@/components/dashboard/SetupBanner";
 
 export default async function DashboardPage() {
   const { user, supabase } = await getAuthUser();
@@ -273,6 +274,11 @@ export default async function DashboardPage() {
             </p>
           </div>
         ))}
+      </div>
+
+      {/* Setup wizard banner — one row per unfinished restaurant menu */}
+      <div className="mb-5">
+        <SetupBanner userId={user.id} />
       </div>
 
       {/* Menu banner for restaurant owners */}
