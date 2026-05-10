@@ -5,6 +5,7 @@ import { adminClient } from "@/lib/supabase/admin";
 import { createClient as createSanityClient } from "next-sanity";
 import { Resend } from "resend";
 import { listingAssignedToHostHtml, listingAssignedToAdminHtml } from "@/lib/email/hostEmails";
+import { reassignOrSeedMenu } from "@/lib/menus/reassignOrSeedMenu";
 
 const sanityWrite = createSanityClient({
   projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID!,
@@ -102,17 +103,16 @@ export async function POST(
         (listingDoc?.type === "experience" && listingDoc?.subcategory === "restaurants");
 
       if (isRestaurant && listingDoc?.slug) {
-        await adminClient.from("menus").upsert(
-          {
-            slug: listingDoc.slug,
-            listing_slug: listingDoc.slug,
-            business_id: host.user_id,
-            name: `${listingDoc.title ?? listingTitle} Menu`,
-            display_name: `${listingDoc.title ?? listingTitle} Menu`,
-            is_published: false,
-          },
-          { onConflict: "slug", ignoreDuplicates: true }
-        );
+        // Reassign-or-seed: if a menu already exists for this slug (e.g. an
+        // earlier claim or admin pre-seed), point its business_id at the
+        // newly assigned host. Without this, the host can't see the menu in
+        // their dashboard even though /m/<slug> renders fine.
+        await reassignOrSeedMenu(adminClient, {
+          slug: listingDoc.slug,
+          listingSlug: listingDoc.slug,
+          businessId: host.user_id,
+          name: `${listingDoc.title ?? listingTitle} Menu`,
+        });
       }
     } catch (menuErr) {
       console.error("Menu seed on assign (non-blocking):", menuErr);

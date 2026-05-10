@@ -4,6 +4,7 @@ import { createClient } from "@supabase/supabase-js";
 import { createClient as createSanityClient } from "next-sanity";
 import { Resend } from "resend";
 import { updateOpportunityStage, GHL_STAGES } from "@/lib/integrations/ghl";
+import { reassignOrSeedMenu } from "@/lib/menus/reassignOrSeedMenu";
 
 /* ---------- Supabase ---------- */
 
@@ -135,17 +136,16 @@ export async function POST(req: NextRequest) {
         );
         if (!authUser) return;
 
-        await supabase.from("menus").upsert(
-          {
-            slug: claim.listing_slug,
-            business_id: authUser.id,
-            name: `${claim.listing_title} Menu`,
-            display_name: `${claim.listing_title} Menu`,
-            listing_slug: claim.listing_slug,
-            is_published: false,
-          },
-          { onConflict: "slug", ignoreDuplicates: true }
-        );
+        // Reassign-or-seed: if a menu already exists for this slug (e.g.
+        // a previous claim, or an admin pre-seed), point its business_id at
+        // the verified claimant. Without this, the new owner sees an empty
+        // dashboard even though /m/<slug> renders.
+        await reassignOrSeedMenu(supabase, {
+          slug: claim.listing_slug,
+          listingSlug: claim.listing_slug,
+          businessId: authUser.id,
+          name: `${claim.listing_title} Menu`,
+        });
       } catch (menuErr) {
         console.error("Menu seed error (non-blocking):", menuErr);
       }
