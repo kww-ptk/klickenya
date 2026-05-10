@@ -31,7 +31,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { adminClient } from "@/lib/supabase/admin";
-import { getMenuAuth, verifyMenuAccess } from "../../menu/_lib/auth";
+import { getSetupAuth } from "../_lib/auth";
 
 type Window = {
   open_time: string;
@@ -51,9 +51,6 @@ function timeToMinutes(t: string): number {
 
 export async function POST(req: NextRequest) {
   try {
-    const { userId, isAdmin, supabase } = await getMenuAuth();
-    if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
     const body = await req.json();
     const {
       menu_id,
@@ -109,9 +106,19 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // ── Ownership check ──────────────────────────────────────────────────
-    const access = await verifyMenuAccess(supabase, menu_id, userId, isAdmin);
-    if (!access) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    // ── Ownership + is_published guard ───────────────────────────────────
+    // Server-side gate: a curl with reservations_enabled = true on an
+    // unpublished menu would otherwise succeed. UI gate is convenience;
+    // this is truth. (Mirrors /api/setup/table-ordering.)
+    const { userId, menu } = await getSetupAuth(menu_id);
+    if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (!menu) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    if (!menu.is_published) {
+      return NextResponse.json(
+        { error: "menu_not_published", message: "Publish your menu before turning on reservations." },
+        { status: 400 },
+      );
+    }
 
     // ── Atomic write via RPC ────────────────────────────────────────────
     const { error } = await adminClient.rpc("fn_setup_enable_reservations", {

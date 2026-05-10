@@ -14,25 +14,32 @@
 
 import { describe, expect, test, vi, beforeEach } from "vitest";
 
-const { rpcSpy, fromSpy } = vi.hoisted(() => ({
+const { rpcSpy, fromSpy, getSetupAuthMock } = vi.hoisted(() => ({
   rpcSpy: vi.fn(),
   fromSpy: vi.fn(),
+  getSetupAuthMock: vi.fn(),
 }));
 
 vi.mock("@/lib/supabase/admin", () => ({
   adminClient: { rpc: rpcSpy, from: fromSpy },
 }));
 
-vi.mock("@/app/api/menu/_lib/auth", () => ({
-  getMenuAuth: vi.fn(async () => ({
-    userId: "owner-1",
-    isAdmin: false,
-    supabase: { rpc: rpcSpy, from: fromSpy },
-  })),
-  verifyMenuAccess: vi.fn(async () => ({ id: "menu-1", business_id: "owner-1" })),
+vi.mock("@/app/api/setup/_lib/auth", () => ({
+  getSetupAuth: getSetupAuthMock,
 }));
 
 import { POST } from "../route";
+
+const PUBLISHED_MENU = {
+  id: "menu-1",
+  slug: "kivukoni",
+  listing_slug: "kivukoni",
+  business_id: "owner-1",
+  is_published: true,
+  table_ordering: false,
+  reservations_enabled: false,
+  stock_enabled: false,
+};
 
 function makeReq(body: unknown): Request {
   return new Request("http://localhost/api/setup/reservations", {
@@ -57,6 +64,43 @@ describe("POST /api/setup/reservations — atomic write", () => {
   beforeEach(() => {
     rpcSpy.mockReset();
     fromSpy.mockReset();
+    getSetupAuthMock.mockReset();
+    // Default: authenticated owner of a published menu. Individual tests
+    // can override (e.g. the not-published case).
+    getSetupAuthMock.mockResolvedValue({
+      userId: "owner-1",
+      menu: PUBLISHED_MENU,
+    });
+  });
+
+  test("rejects when menu is not published (server-side guard, mirrors /api/setup/table-ordering)", async () => {
+    getSetupAuthMock.mockResolvedValueOnce({
+      userId: "owner-1",
+      menu: { ...PUBLISHED_MENU, is_published: false },
+    });
+
+    const res = await POST(makeReq(validBody) as never);
+    const body = await res.json();
+
+    expect(res.status).toBe(400);
+    expect(body.error).toBe("menu_not_published");
+    expect(rpcSpy).not.toHaveBeenCalled();
+  });
+
+  test("rejects when caller is unauthenticated", async () => {
+    getSetupAuthMock.mockResolvedValueOnce({ userId: null, menu: null });
+
+    const res = await POST(makeReq(validBody) as never);
+    expect(res.status).toBe(401);
+    expect(rpcSpy).not.toHaveBeenCalled();
+  });
+
+  test("rejects when caller does not own the menu (auth helper returns no menu)", async () => {
+    getSetupAuthMock.mockResolvedValueOnce({ userId: "other-user", menu: null });
+
+    const res = await POST(makeReq(validBody) as never);
+    expect(res.status).toBe(403);
+    expect(rpcSpy).not.toHaveBeenCalled();
   });
 
   test("valid input → calls fn_setup_enable_reservations and returns 200", async () => {

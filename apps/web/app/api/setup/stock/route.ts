@@ -21,6 +21,17 @@ export async function POST(req: NextRequest) {
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   if (!menu) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
+  // Server-side precondition: stock tracking is anchored to recipes which
+  // attach to menu_items. Without a published menu there's nothing real to
+  // attach recipes to, and the kitchen reports come up empty. Block at the
+  // route layer the same way table-ordering and reservations do.
+  if (!menu.is_published) {
+    return NextResponse.json(
+      { error: "menu_not_published", message: "Publish your menu before turning on Klickenya Kitchen." },
+      { status: 400 },
+    );
+  }
+
   const { error } = await adminClient
     .from("menus")
     .update({
