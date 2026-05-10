@@ -38,7 +38,7 @@ export function WizardShell({
       <header className="flex items-center justify-between gap-3">
         <div className="min-w-0">
           <p className="text-[11px] font-bold uppercase tracking-wider text-[#E8A020]">
-            Setup
+            Easy Guided Setup
           </p>
           <h1 className="font-display text-[18px] lg:text-[20px] font-bold tracking-[-0.02em] text-[#16130C] truncate">
             {restaurantName}

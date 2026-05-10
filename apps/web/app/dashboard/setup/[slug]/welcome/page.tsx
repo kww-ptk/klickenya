@@ -56,12 +56,12 @@ export default async function WelcomePage({
             <span className="text-[28px]">🍽️</span>
           </div>
           <h2 className="font-display text-[22px] font-bold tracking-[-0.02em] text-[#16130C]">
-            {isResuming ? "Welcome back" : "Let's get you set up"}
+            {isResuming ? "Welcome back to Easy Guided Setup" : "Easy Guided Setup"}
           </h2>
           <p className="text-[14px] text-[#5E5848] mt-2 leading-relaxed">
             {isResuming
               ? "Pick up where you left off. Six short questions, takes about five minutes."
-              : "Six short questions to switch on the right tools for your restaurant. Five minutes total."}
+              : "Six short questions switch on the right tools for your restaurant. Five minutes total — answer no to skip anything you don't need yet."}
           </p>
         </div>
 

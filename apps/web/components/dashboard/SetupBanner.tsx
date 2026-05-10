@@ -1,13 +1,22 @@
 /**
- * Amber dashboard banner. Reads every restaurant menu owned by the user,
- * computes resolveNextStep per menu, and renders one banner row per menu
- * that still needs setup. Hides cleanly when there is nothing to nag about.
+ * Dashboard entry point for the Easy Guided Setup wizard.
  *
- * Banner copy is exactly: "Finish setting up [restaurant name] →" —
- * mandated verbatim by the wizard spec.
+ * Renders one row per restaurant menu the host owns, regardless of whether
+ * setup is finished. That makes the wizard findable forever — not just
+ * during the short window between claim verify and dismissal/completion.
+ *
+ * Per-row state:
+ *   - In progress (resolveNextStep returns a step):
+ *       amber primary card · copy: "Finish setting up [name] →"
+ *       href: deep-link to the next unanswered step
+ *   - Completed / Dismissed:
+ *       muted neutral card · copy: "[name] — review settings →"
+ *       href: /welcome (so the recap is reachable from the top)
+ *
+ * Empty state: nothing rendered (host has no restaurant menus).
  *
  * Server component. Counts (tables/staff) are fetched in one Promise.all
- * so we don't N+1.
+ * per menu so we don't N+1.
  */
 
 import Link from "next/link";
@@ -28,24 +37,21 @@ type Menu = {
   setup_dismissed_at: string | null;
 };
 
+type RowState = "in_progress" | "complete";
+
 export async function SetupBanner({ userId }: { userId: string }) {
-  // Fetch all menus owned by this user that haven't had setup finished or
-  // dismissed. The partial index (migration 071) makes this query O(1) per
-  // unfinished menu.
   const { data: menus } = await adminClient
     .from("menus")
     .select(
       "id, name, listing_slug, is_published, table_ordering, reservations_decided_at, table_ordering_decided_at, stock_decided_at, setup_completed_at, setup_dismissed_at",
     )
     .eq("business_id", userId)
-    .is("setup_completed_at", null)
-    .is("setup_dismissed_at", null)
     .returns<Menu[]>();
 
   if (!menus || menus.length === 0) return null;
 
-  // Pull table + staff counts in parallel. We need them to compute the
-  // step-4 → step-5 transition correctly (resolver routes back to POS while
+  // Pull table + staff counts for every menu in one shot. We need them for
+  // the step-4 → step-5 transition (resolver routes back to POS while
   // table_ordering = true and either count is 0).
   const counts = await Promise.all(
     menus.map(async (m) => {
@@ -70,6 +76,9 @@ export async function SetupBanner({ userId }: { userId: string }) {
 
   const rows = menus
     .map((m) => {
+      const slug = m.listing_slug;
+      if (!slug) return null;
+
       const c = countMap.get(m.id)!;
       const state: SetupState = {
         is_published: m.is_published,
@@ -83,30 +92,77 @@ export async function SetupBanner({ userId }: { userId: string }) {
         has_staff: c.has_staff,
       };
       const next = resolveNextStep(state);
-      if (next === null) return null;
-      const segment = segmentForResolverStep(next);
-      const slug = m.listing_slug;
-      if (!slug) return null;
-      return { id: m.id, name: m.name, href: `/dashboard/setup/${slug}/${segment}` };
+
+      // resolveNextStep returns null when complete OR dismissed — both
+      // become the "review settings" affordance. When it returns a step,
+      // we deep-link there with the "Finish setting up" copy.
+      if (next === null) {
+        return {
+          id: m.id,
+          name: m.name,
+          state: "complete" as RowState,
+          href: `/dashboard/setup/${slug}/welcome`,
+        };
+      }
+      return {
+        id: m.id,
+        name: m.name,
+        state: "in_progress" as RowState,
+        href: `/dashboard/setup/${slug}/${segmentForResolverStep(next)}`,
+      };
     })
-    .filter((r): r is { id: string; name: string; href: string } => r !== null);
+    .filter((r): r is { id: string; name: string; state: RowState; href: string } => r !== null);
 
   if (rows.length === 0) return null;
 
   return (
-    <div className="space-y-2">
-      {rows.map((row) => (
-        <Link
-          key={row.id}
-          href={row.href}
-          className="block rounded-xl lg:rounded-2xl border border-[#E8A020]/20 bg-[#E8A020]/[0.06] p-4 shadow-sm hover:bg-[#E8A020]/[0.10] transition-colors"
-          style={{ borderLeft: "4px solid #E8A020" }}
-        >
-          <p className="text-[13.5px] font-bold text-[#16130C]">
-            Finish setting up {row.name} →
+    <section
+      aria-labelledby="easy-guided-setup-heading"
+      className="rounded-xl lg:rounded-2xl border border-[#E2DDD5] bg-white p-4 lg:p-5 shadow-sm"
+    >
+      <div className="flex items-center justify-between gap-3 mb-3">
+        <div className="min-w-0">
+          <p className="text-[11px] font-bold uppercase tracking-wider text-[#E8A020]">
+            Easy Guided Setup
           </p>
-        </Link>
-      ))}
-    </div>
+          <h2
+            id="easy-guided-setup-heading"
+            className="font-display text-[15px] lg:text-[16px] font-bold tracking-[-0.01em] text-[#16130C]"
+          >
+            Switch on the right tools for your restaurant
+          </h2>
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        {rows.map((row) =>
+          row.state === "in_progress" ? (
+            <Link
+              key={row.id}
+              href={row.href}
+              className="block rounded-xl border border-[#E8A020]/20 bg-[#E8A020]/[0.06] p-3.5 hover:bg-[#E8A020]/[0.10] transition-colors"
+              style={{ borderLeft: "4px solid #E8A020" }}
+            >
+              <p className="text-[13.5px] font-bold text-[#16130C]">
+                Finish setting up {row.name} →
+              </p>
+            </Link>
+          ) : (
+            <Link
+              key={row.id}
+              href={row.href}
+              className="block rounded-xl border border-[#E2DDD5] bg-[#FAFAF8] p-3.5 hover:border-[#16130C]/30 transition-colors"
+            >
+              <p className="text-[13px] font-semibold text-[#16130C]">
+                {row.name}
+              </p>
+              <p className="text-[11.5px] text-[#9C9485] mt-0.5">
+                Review settings →
+              </p>
+            </Link>
+          ),
+        )}
+      </div>
+    </section>
   );
 }
