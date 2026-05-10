@@ -51,6 +51,29 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
+
+    /* ── Honeypot check ── */
+    if (body.website) {
+      return NextResponse.json({ success: false, error: "Blocked" }, { status: 400 });
+    }
+
+    /* ── Turnstile verification ── */
+    if (!body.turnstileToken) {
+      return NextResponse.json({ success: false, error: "Bot detected" }, { status: 400 });
+    }
+    const verify = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        secret: process.env.TURNSTILE_SECRET_KEY,
+        response: body.turnstileToken,
+      }),
+    });
+    const turnstileResult = await verify.json();
+    if (!turnstileResult.success) {
+      return NextResponse.json({ success: false, error: "Bot detected" }, { status: 400 });
+    }
+
     const parsed = generalContactSchema.safeParse(body);
 
     if (!parsed.success) {
