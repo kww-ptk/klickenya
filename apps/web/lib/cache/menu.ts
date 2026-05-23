@@ -61,7 +61,7 @@ export const getMenuTree = (menuId: string, ownerId: string) =>
           `
           id, slug, name, is_published, table_ordering,
           menu_sections (
-            id, title, display_order, is_visible,
+            id, title, display_order, is_visible, station,
             menu_items (
               id, name, description, price_kes,
               dietary_tags, is_available, display_order, photo_url

@@ -157,6 +157,33 @@ export function MenuBuilder({
     }
   }, [withSave, showToast]);
 
+  const setSectionStation = useCallback(async (sectionId: string, station: "kitchen" | "bar") => {
+    const prev = menu;
+    // Optimistic update
+    setMenu((m) => ({
+      ...m,
+      menu_sections: m.menu_sections.map((row) =>
+        row.id === sectionId ? { ...row, station } : row
+      ),
+    }));
+    try {
+      const res = await fetch("/api/menu/sections", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ section_id: sectionId, station }),
+      });
+      if (!res.ok) {
+        setMenu(prev); // rollback
+        showToast("Couldn't update station", "error");
+        return;
+      }
+      showToast(`Routed to ${station === "bar" ? "Bar" : "Kitchen"}`, "success");
+    } catch {
+      setMenu(prev);
+      showToast("Network error", "error");
+    }
+  }, [menu, showToast]);
+
   const moveSection = useCallback(async (sectionId: string, direction: "up" | "down") => {
     const idx = sections.findIndex((s) => s.id === sectionId);
     if (direction === "up" && idx === 0) return;
@@ -771,6 +798,32 @@ export function MenuBuilder({
                         {section.title}
                       </button>
                     )}
+                    <div className="inline-flex shrink-0 rounded-full border border-[#E2DDD5] overflow-hidden text-[11px] font-bold">
+                      <button
+                        type="button"
+                        onClick={() => setSectionStation(section.id, "kitchen")}
+                        title="Route this section to the kitchen dashboard"
+                        className={`px-2.5 h-[26px] transition-colors ${
+                          section.station === "kitchen"
+                            ? "bg-[#E8A020] text-[#16130C]"
+                            : "bg-white text-[#9C9485] hover:bg-[#FAF6EE]"
+                        }`}
+                      >
+                        🍳
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setSectionStation(section.id, "bar")}
+                        title="Route this section to the bar dashboard"
+                        className={`px-2.5 h-[26px] transition-colors ${
+                          section.station === "bar"
+                            ? "bg-teal-500 text-white"
+                            : "bg-white text-[#9C9485] hover:bg-[#EEF7F6]"
+                        }`}
+                      >
+                        🍹
+                      </button>
+                    </div>
                     <button
                       onClick={() => deleteSection(section.id, section.title)}
                       className="text-[#E2DDD5] hover:text-[#DC2626] transition-colors text-[16px] px-1"
