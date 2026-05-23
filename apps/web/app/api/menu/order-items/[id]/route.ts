@@ -38,6 +38,7 @@ export async function PATCH(req: NextRequest, ctx: RouteContext) {
     new_quantity?:         number;
     reason?:               string;
     manager_override_pin?: string;
+    station_status?:       string;
   };
   try {
     body = await req.json();
@@ -45,8 +46,134 @@ export async function PATCH(req: NextRequest, ctx: RouteContext) {
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }
 
-  if (body.action !== "edit" && body.action !== "void") {
+  if (body.action !== "edit" && body.action !== "void" && body.action !== "set_station_status") {
     return NextResponse.json({ error: "Unsupported action" }, { status: 400 });
+  }
+
+  if (body.action === "set_station_status") {
+    // Different shape: no reason required, no manager override. Role-gated.
+    const next = body.station_status;
+    if (next !== "preparing" && next !== "ready" && next !== "delivered" && next !== "cancelled") {
+      return NextResponse.json({ error: "Invalid station_status" }, { status: 400 });
+    }
+
+    // Resolve the item + parent order for auth + transition validation.
+    const { data: item } = await adminClient
+      .from("order_items")
+      .select(`
+        id, item_name, station, station_status, is_voided,
+        orders!inner ( id, menu_id, status )
+      `)
+      .eq("id", itemId)
+      .single();
+    if (!item) return NextResponse.json({ error: "Item not found" }, { status: 404 });
+    if (item.is_voided) {
+      return NextResponse.json({ error: "Item is voided" }, { status: 400 });
+    }
+    const orderJoin = Array.isArray(item.orders) ? item.orders[0] : item.orders;
+    if (!orderJoin) return NextResponse.json({ error: "Item has no parent order" }, { status: 500 });
+
+    // Reject updates on terminal orders to mirror the trigger's safeguard.
+    if (orderJoin.status === "cancelled" || orderJoin.status === "delivered") {
+      return NextResponse.json(
+        { error: `Order is ${orderJoin.status}; cannot change items.` },
+        { status: 400 },
+      );
+    }
+
+    const auth = await getPosOrOwnerAuth(req, orderJoin.menu_id);
+    if (!auth) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+    // Role gating mirrors api/menu/orders/route.ts PATCH:
+    //   owner/manager/kitchen drive the full lifecycle
+    //   waiter/cashier can only complete ready -> delivered
+    const isKitchenDriver =
+      auth.type === "owner" ||
+      (auth.type === "staff" && (auth.role === "kitchen" || auth.role === "manager"));
+    if (!isKitchenDriver) {
+      const isWaiterCompleting = item.station_status === "ready" && next === "delivered";
+      if (!isWaiterCompleting) {
+        return NextResponse.json(
+          { error: "Forbidden — only kitchen or manager can drive this transition." },
+          { status: 403 },
+        );
+      }
+    }
+
+    // Validate transition (same FSM as the order-level PATCH).
+    const VALID_NEXT: Record<string, string[]> = {
+      new:       ["preparing", "cancelled"],
+      preparing: ["ready", "cancelled"],
+      ready:     ["delivered", "cancelled"],
+    };
+    const allowed = VALID_NEXT[item.station_status] ?? [];
+    if (!allowed.includes(next)) {
+      return NextResponse.json(
+        { error: `Cannot transition item from "${item.station_status}" to "${next}".` },
+        { status: 400 },
+      );
+    }
+
+    // Cancelling an item that's been sent to the kitchen mirrors the
+    // order-level cancel-after-send discipline: reason + manager approval
+    // + audit log. Normal progress (preparing/ready/delivered) is unchanged.
+    const actingRole = auth.type === "owner" ? "owner" : auth.role;
+    const actingStaffId = auth.type === "staff" ? auth.staffId : null;
+
+    let cancelReason = "";
+    let cancelApprovingStaffId: string | null = null;
+    if (next === "cancelled") {
+      cancelReason = (body.reason ?? "").trim();
+      if (!cancelReason) {
+        return NextResponse.json(
+          { error: "Reason required to cancel an item that's been sent to the kitchen" },
+          { status: 400 },
+        );
+      }
+
+      const approval = await resolveManagerApproval({
+        actingRole,
+        actingStaffId,
+        menuId:      orderJoin.menu_id,
+        overridePin: body.manager_override_pin,
+      });
+      if (!approval.ok) {
+        return NextResponse.json(
+          { error: approval.error, requires_manager: true },
+          { status: 403 },
+        );
+      }
+      cancelApprovingStaffId = approval.approvingStaffId;
+    }
+
+    const { error } = await adminClient
+      .from("order_items")
+      .update({ station_status: next })
+      .eq("id", itemId);
+    if (error) {
+      console.error("[order-items PATCH set_station_status] error:", error);
+      return NextResponse.json({ error: "Failed to update item" }, { status: 500 });
+    }
+
+    if (next === "cancelled") {
+      await writeAuditLog({
+        menuId:           orderJoin.menu_id,
+        actingStaffId,
+        approvingStaffId: cancelApprovingStaffId,
+        action:           "cancel_order_item_post_send",
+        targetType:       "order",
+        targetId:         orderJoin.id,
+        reason:           cancelReason,
+        metadata: {
+          item_id:                 itemId,
+          item_name:               item.item_name,
+          previous_station_status: item.station_status,
+        },
+      });
+    }
+
+    // orders.status is recomputed by the DB trigger automatically.
+    return NextResponse.json({ success: true, station_status: next });
   }
 
   const reason = (body.reason ?? "").trim();

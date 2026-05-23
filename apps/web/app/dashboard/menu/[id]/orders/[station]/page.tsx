@@ -1,43 +1,28 @@
-import * as Sentry from "@sentry/nextjs";
-import { redirect } from "next/navigation";
+import Link from "next/link";
+import { notFound, redirect } from "next/navigation";
 import { getAuthUser } from "@/app/dashboard/_lib/auth";
-import { safeBackHref } from "@/app/dashboard/_lib/back-href";
 import { adminClient } from "@/lib/supabase/admin";
 import { StationDashboard, type DashboardOrder } from "@/components/dashboard/menu/StationDashboard";
 
 interface PageProps {
-  params: Promise<{ id: string }>;
-  searchParams?: Promise<{ back?: string }>;
+  params: Promise<{ id: string; station: string }>;
 }
 
-export default async function OrdersPage({ params, searchParams }: PageProps) {
-  const { id } = await params;
-  const sp = (await searchParams) ?? {};
-  const backHref = safeBackHref(sp.back);
-  Sentry.setTag("route", "kitchen_orders");
+export default async function OwnerSingleStationPage({ params }: PageProps) {
+  const { id, station } = await params;
+  if (station !== "kitchen" && station !== "bar") notFound();
+
   const { user } = await getAuthUser();
   if (!user) redirect("/login");
 
   const { data: menu } = await adminClient
     .from("menus")
-    .select("id, name, table_ordering, order_view_mode")
+    .select("id, name, table_ordering")
     .eq("id", id)
     .eq("business_id", user.id)
     .single();
   if (!menu) redirect("/dashboard");
   if (!menu.table_ordering) redirect(`/dashboard/menu/${id}`);
-
-  // Split mode: kick over to the per-station route (kitchen by default).
-  if (menu.order_view_mode === "split") {
-    redirect(`/dashboard/menu/${id}/orders/kitchen`);
-  }
-
-  const { count: barSectionCount } = await adminClient
-    .from("menu_sections")
-    .select("id", { count: "exact", head: true })
-    .eq("menu_id", menu.id)
-    .eq("station", "bar");
-  const hasBarStation = (barSectionCount ?? 0) > 0;
 
   const { data: orders } = await adminClient
     .from("orders")
@@ -67,24 +52,25 @@ export default async function OrdersPage({ params, searchParams }: PageProps) {
     ...o, waiter_name: o.waiter_id ? waiterMap.get(o.waiter_id) ?? null : null,
   })) as DashboardOrder[];
 
+  const other = station === "kitchen" ? "bar" : "kitchen";
+
   return (
     <div className="min-h-screen bg-[#F4F1EC]">
       <header className="bg-white border-b border-[#E2DDD5] px-4 lg:px-6 py-4 flex items-center justify-between">
         <div>
-          <p className="text-[11px] font-bold text-[#9C9485] uppercase tracking-widest">Orders</p>
+          <p className="text-[11px] font-bold text-[#9C9485] uppercase tracking-widest">
+            {station === "kitchen" ? "🍳 Kitchen" : "🍹 Bar"}
+          </p>
           <h1 className="font-display text-[22px] font-bold text-[#16130C]">{menu.name}</h1>
         </div>
-        {backHref && (
-          <a href={backHref} className="text-[12px] font-bold text-[#5E5848] underline">Back</a>
-        )}
+        <Link href={`/dashboard/menu/${menu.id}/orders/${other}`}
+          className="text-[12px] font-bold text-[#5E5848] border border-[#E2DDD5] rounded-full px-3 h-[32px] inline-flex items-center hover:bg-white">
+          Switch to {other === "kitchen" ? "Kitchen" : "Bar"} →
+        </Link>
       </header>
-      <div className="p-4 lg:p-6 flex gap-4 items-start">
-        <StationDashboard menuId={menu.id} station="kitchen"
+      <div className="p-4 lg:p-6">
+        <StationDashboard menuId={menu.id} station={station as "kitchen" | "bar"}
           initialOrders={enriched} filterToStation />
-        {hasBarStation && (
-          <StationDashboard menuId={menu.id} station="bar"
-            initialOrders={enriched} filterToStation />
-        )}
       </div>
     </div>
   );

@@ -208,14 +208,32 @@ export async function PATCH(req: NextRequest) {
       );
     }
 
-    const { error } = await adminClient
-      .from("orders")
-      .update({ status: newStatus })
-      .eq("id", order_id);
-
-    if (error) {
-      console.error("[menu/orders PATCH] error:", error);
-      return NextResponse.json({ error: "Failed to update order." }, { status: 500 });
+    if (newStatus === "cancelled") {
+      // Cascade to non-voided live items so the derive_order_status trigger
+      // collapses orders.status to 'cancelled' on its own and stays there
+      // even if a stale UI click later mutates an item.
+      const { error: itemErr } = await adminClient
+        .from("order_items")
+        .update({ station_status: "cancelled" })
+        .eq("order_id", order_id)
+        .eq("is_voided", false)
+        .in("station_status", ["new", "preparing", "ready"]);
+      if (itemErr) {
+        console.error("[menu/orders PATCH cascade] error:", itemErr);
+        return NextResponse.json({ error: "Failed to cancel order." }, { status: 500 });
+      }
+      // Belt-and-braces: if the order has no live items (all voided), the
+      // trigger won't fire and orders.status would stay put. Force-set it.
+      await adminClient.from("orders").update({ status: "cancelled" }).eq("id", order_id);
+    } else {
+      const { error } = await adminClient
+        .from("orders")
+        .update({ status: newStatus })
+        .eq("id", order_id);
+      if (error) {
+        console.error("[menu/orders PATCH] error:", error);
+        return NextResponse.json({ error: "Failed to update order." }, { status: 500 });
+      }
     }
 
     if (auditEntry) {
