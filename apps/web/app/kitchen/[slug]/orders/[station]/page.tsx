@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect, notFound } from "next/navigation";
 import { cookies } from "next/headers";
 import * as Sentry from "@sentry/nextjs";
@@ -8,11 +9,12 @@ import { KitchenHeader } from "@/components/kitchen/KitchenHeader";
 import { StationDashboard, type DashboardOrder } from "@/components/dashboard/menu/StationDashboard";
 
 interface PageProps {
-  params: Promise<{ slug: string }>;
+  params: Promise<{ slug: string; station: string }>;
 }
 
-export default async function KitchenOrdersPage({ params }: PageProps) {
-  const { slug } = await params;
+export default async function PinSingleStationPage({ params }: PageProps) {
+  const { slug, station } = await params;
+  if (station !== "kitchen" && station !== "bar") notFound();
   Sentry.setTag("route", "kitchen_orders");
 
   const menu = await getPosMenuBySlug(slug);
@@ -28,13 +30,6 @@ export default async function KitchenOrdersPage({ params }: PageProps) {
   const { data: staffRow } = await adminClient
     .from("restaurant_staff").select("id, is_active").eq("id", session.staff_id).single();
   if (!staffRow || !staffRow.is_active) redirect(`/kitchen/${slug}`);
-
-  // Read view mode from the menu (getPosMenuBySlug may not include it — fetch directly).
-  const { data: menuMode } = await adminClient
-    .from("menus").select("order_view_mode").eq("id", menu.id).single();
-  if (menuMode?.order_view_mode === "split") {
-    redirect(`/kitchen/${slug}/orders/kitchen`);
-  }
 
   const { data: orders } = await adminClient
     .from("orders")
@@ -64,14 +59,23 @@ export default async function KitchenOrdersPage({ params }: PageProps) {
     ...o, waiter_name: o.waiter_id ? waiterMap.get(o.waiter_id) ?? null : null,
   })) as DashboardOrder[];
 
+  const other = station === "kitchen" ? "bar" : "kitchen";
+
   return (
     <div className="min-h-screen flex flex-col bg-[#F4F1EC]">
       <KitchenHeader slug={slug} menuName={menu.name}
         staffName={session.staff_name} role={session.role} />
-      <div className="flex-1 p-4 flex gap-4 items-start">
-        <StationDashboard menuId={menu.id} station="kitchen"
-          initialOrders={enriched} filterToStation />
-        <StationDashboard menuId={menu.id} station="bar"
+      <header className="bg-white border-b border-[#E2DDD5] px-4 py-3 flex items-center justify-between">
+        <p className="text-[12px] font-bold text-[#16130C] uppercase tracking-wide">
+          {station === "kitchen" ? "🍳 Kitchen" : "🍹 Bar"}
+        </p>
+        <Link href={`/kitchen/${slug}/orders/${other}`}
+          className="text-[11px] font-bold text-[#5E5848] border border-[#E2DDD5] rounded-full px-3 h-[28px] inline-flex items-center hover:bg-[#F4F1EC]">
+          Switch to {other === "kitchen" ? "Kitchen" : "Bar"} →
+        </Link>
+      </header>
+      <div className="flex-1 p-4">
+        <StationDashboard menuId={menu.id} station={station as "kitchen" | "bar"}
           initialOrders={enriched} filterToStation />
       </div>
     </div>
