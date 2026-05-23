@@ -259,7 +259,7 @@ export async function POST(req: NextRequest) {
     const total = subtotal;
 
     /* STEP 8 — Insert order. Same column shape as POST /api/orders so the
-       kitchen dashboard query that powers KitchenDashboard.tsx returns waiter
+       kitchen dashboard query that powers StationDashboard.tsx returns waiter
        and guest orders identically. waiter_id is the only addition. */
     const { data: order, error: orderErr } = await adminClient
       .from("orders")

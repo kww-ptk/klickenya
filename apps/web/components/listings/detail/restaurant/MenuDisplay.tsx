@@ -43,6 +43,7 @@ export interface MenuSection {
   title: string;
   display_order: number;
   is_visible: boolean;
+  station: "kitchen" | "bar";
   menu_items: MenuItem[];
 }
 

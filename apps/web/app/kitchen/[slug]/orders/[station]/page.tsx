@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect, notFound } from "next/navigation";
 import { cookies } from "next/headers";
 import * as Sentry from "@sentry/nextjs";
@@ -6,16 +7,14 @@ import { POS_SESSION_COOKIE, verifyPosSession } from "@/app/api/pos/_lib/auth";
 import { adminClient } from "@/lib/supabase/admin";
 import { KitchenHeader } from "@/components/kitchen/KitchenHeader";
 import { StationDashboard, type DashboardOrder } from "@/components/dashboard/menu/StationDashboard";
-import { StationTabs } from "@/components/dashboard/menu/StationTabs";
 
 interface PageProps {
-  params: Promise<{ slug: string }>;
-  searchParams?: Promise<{ station?: string }>;
+  params: Promise<{ slug: string; station: string }>;
 }
 
-export default async function KitchenOrdersPage({ params, searchParams }: PageProps) {
-  const { slug } = await params;
-  const sp = (await searchParams) ?? {};
+export default async function PinSingleStationPage({ params }: PageProps) {
+  const { slug, station } = await params;
+  if (station !== "kitchen" && station !== "bar") notFound();
   Sentry.setTag("route", "kitchen_orders");
 
   const menu = await getPosMenuBySlug(slug);
@@ -31,29 +30,6 @@ export default async function KitchenOrdersPage({ params, searchParams }: PagePr
   const { data: staffRow } = await adminClient
     .from("restaurant_staff").select("id, is_active").eq("id", session.staff_id).single();
   if (!staffRow || !staffRow.is_active) redirect(`/kitchen/${slug}`);
-
-  // Read view mode from the menu (getPosMenuBySlug may not include it — fetch directly).
-  const { data: menuMode } = await adminClient
-    .from("menus").select("order_view_mode").eq("id", menu.id).single();
-  if (menuMode?.order_view_mode === "split") {
-    const defaultStation = session.role === "bar" ? "bar" : "kitchen";
-    redirect(`/kitchen/${slug}/orders/${defaultStation}`);
-  }
-
-  const { count: barSectionCount } = await adminClient
-    .from("menu_sections")
-    .select("id", { count: "exact", head: true })
-    .eq("menu_id", menu.id)
-    .eq("station", "bar");
-  const hasBarStation = (barSectionCount ?? 0) > 0;
-
-  // Role-aware default + ?station override.
-  const roleDefault: "kitchen" | "bar" =
-    session.role === "bar" && hasBarStation ? "bar" : "kitchen";
-  const requested =
-    sp.station === "bar" ? "bar" : sp.station === "kitchen" ? "kitchen" : roleDefault;
-  const activeStation: "kitchen" | "bar" =
-    requested === "bar" && !hasBarStation ? "kitchen" : requested;
 
   const { data: orders } = await adminClient
     .from("orders")
@@ -83,22 +59,24 @@ export default async function KitchenOrdersPage({ params, searchParams }: PagePr
     ...o, waiter_name: o.waiter_id ? waiterMap.get(o.waiter_id) ?? null : null,
   })) as DashboardOrder[];
 
+  const other = station === "kitchen" ? "bar" : "kitchen";
+
   return (
     <div className="min-h-screen flex flex-col bg-[#F4F1EC]">
       <KitchenHeader slug={slug} menuName={menu.name}
         staffName={session.staff_name} role={session.role} />
+      <header className="bg-white border-b border-[#E2DDD5] px-4 py-3 flex items-center justify-between">
+        <p className="text-[12px] font-bold text-[#16130C] uppercase tracking-wide">
+          {station === "kitchen" ? "🍳 Kitchen" : "🍹 Bar"}
+        </p>
+        <Link href={`/kitchen/${slug}/orders/${other}`}
+          className="text-[11px] font-bold text-[#5E5848] border border-[#E2DDD5] rounded-full px-3 h-[28px] inline-flex items-center hover:bg-[#F4F1EC]">
+          Switch to {other === "kitchen" ? "Kitchen" : "Bar"} →
+        </Link>
+      </header>
       <div className="flex-1 p-4">
-        <StationTabs
-          activeStation={activeStation}
-          hasBarStation={hasBarStation}
-          baseHref={`/kitchen/${slug}/orders`}
-        />
-        <StationDashboard
-          key={activeStation}
-          menuId={menu.id}
-          station={activeStation}
-          initialOrders={enriched}
-        />
+        <StationDashboard menuId={menu.id} station={station as "kitchen" | "bar"}
+          initialOrders={enriched} />
       </div>
     </div>
   );

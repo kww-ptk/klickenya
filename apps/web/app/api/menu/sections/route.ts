@@ -110,6 +110,30 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ success: true });
     }
 
+    /* ── station-only update ────────────────────────── */
+    if (body.station !== undefined && !body.title) {
+      const { section_id, station } = body as { section_id: string; station: string };
+      if (!section_id || (station !== "kitchen" && station !== "bar")) {
+        return NextResponse.json({ error: "section_id and valid station required" }, { status: 400 });
+      }
+      const owned = await verifySectionOwnership(supabase, section_id, userId, isAdmin);
+      if (!owned) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
+      const client = isAdmin ? adminClient : supabase;
+      const { data: updated, error } = await client
+        .from("menu_sections")
+        .update({ station })
+        .eq("id", section_id)
+        .select("id, title, display_order, is_visible, station")
+        .single();
+
+      if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+      revalidateTag(`menu:${owned.id}`, "default");
+      revalidatePath(`/m/${owned.slug}`);
+      return NextResponse.json(updated);
+    }
+
     /* ── default: rename ─────────────────────────────── */
     const { section_id, title } = body;
     if (!section_id || !title?.trim()) {
@@ -124,7 +148,7 @@ export async function PATCH(req: NextRequest) {
       .from("menu_sections")
       .update({ title: title.trim() })
       .eq("id", section_id)
-      .select("id, title, display_order, is_visible")
+      .select("id, title, display_order, is_visible, station")
       .single();
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
