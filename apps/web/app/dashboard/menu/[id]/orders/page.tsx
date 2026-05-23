@@ -4,10 +4,11 @@ import { getAuthUser } from "@/app/dashboard/_lib/auth";
 import { safeBackHref } from "@/app/dashboard/_lib/back-href";
 import { adminClient } from "@/lib/supabase/admin";
 import { StationDashboard, type DashboardOrder } from "@/components/dashboard/menu/StationDashboard";
+import { StationTabs } from "@/components/dashboard/menu/StationTabs";
 
 interface PageProps {
   params: Promise<{ id: string }>;
-  searchParams?: Promise<{ back?: string }>;
+  searchParams?: Promise<{ back?: string; station?: string }>;
 }
 
 export default async function OrdersPage({ params, searchParams }: PageProps) {
@@ -38,6 +39,11 @@ export default async function OrdersPage({ params, searchParams }: PageProps) {
     .eq("menu_id", menu.id)
     .eq("station", "bar");
   const hasBarStation = (barSectionCount ?? 0) > 0;
+
+  const requested = sp.station === "bar" ? "bar" : "kitchen";
+  // Fall back to kitchen if bar is requested but no bar station exists.
+  const activeStation: "kitchen" | "bar" =
+    requested === "bar" && !hasBarStation ? "kitchen" : requested;
 
   const { data: orders } = await adminClient
     .from("orders")
@@ -78,13 +84,18 @@ export default async function OrdersPage({ params, searchParams }: PageProps) {
           <a href={backHref} className="text-[12px] font-bold text-[#5E5848] underline">Back</a>
         )}
       </header>
-      <div className="p-4 lg:p-6 flex gap-4 items-start">
-        <StationDashboard menuId={menu.id} station="kitchen"
-          initialOrders={enriched} filterToStation />
-        {hasBarStation && (
-          <StationDashboard menuId={menu.id} station="bar"
-            initialOrders={enriched} filterToStation />
-        )}
+      <div className="p-4 lg:p-6">
+        <StationTabs
+          activeStation={activeStation}
+          hasBarStation={hasBarStation}
+          baseHref={`/dashboard/menu/${menu.id}/orders`}
+        />
+        <StationDashboard
+          key={activeStation}
+          menuId={menu.id}
+          station={activeStation}
+          initialOrders={enriched}
+        />
       </div>
     </div>
   );

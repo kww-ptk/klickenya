@@ -76,7 +76,7 @@ export default async function PinSingleStationPage({ params }: PageProps) {
       </header>
       <div className="flex-1 p-4">
         <StationDashboard menuId={menu.id} station={station as "kitchen" | "bar"}
-          initialOrders={enriched} filterToStation />
+          initialOrders={enriched} />
       </div>
     </div>
   );

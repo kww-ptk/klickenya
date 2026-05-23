@@ -6,13 +6,16 @@ import { POS_SESSION_COOKIE, verifyPosSession } from "@/app/api/pos/_lib/auth";
 import { adminClient } from "@/lib/supabase/admin";
 import { KitchenHeader } from "@/components/kitchen/KitchenHeader";
 import { StationDashboard, type DashboardOrder } from "@/components/dashboard/menu/StationDashboard";
+import { StationTabs } from "@/components/dashboard/menu/StationTabs";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
+  searchParams?: Promise<{ station?: string }>;
 }
 
-export default async function KitchenOrdersPage({ params }: PageProps) {
+export default async function KitchenOrdersPage({ params, searchParams }: PageProps) {
   const { slug } = await params;
+  const sp = (await searchParams) ?? {};
   Sentry.setTag("route", "kitchen_orders");
 
   const menu = await getPosMenuBySlug(slug);
@@ -43,6 +46,14 @@ export default async function KitchenOrdersPage({ params }: PageProps) {
     .eq("menu_id", menu.id)
     .eq("station", "bar");
   const hasBarStation = (barSectionCount ?? 0) > 0;
+
+  // Role-aware default + ?station override.
+  const roleDefault: "kitchen" | "bar" =
+    session.role === "bar" && hasBarStation ? "bar" : "kitchen";
+  const requested =
+    sp.station === "bar" ? "bar" : sp.station === "kitchen" ? "kitchen" : roleDefault;
+  const activeStation: "kitchen" | "bar" =
+    requested === "bar" && !hasBarStation ? "kitchen" : requested;
 
   const { data: orders } = await adminClient
     .from("orders")
@@ -76,13 +87,18 @@ export default async function KitchenOrdersPage({ params }: PageProps) {
     <div className="min-h-screen flex flex-col bg-[#F4F1EC]">
       <KitchenHeader slug={slug} menuName={menu.name}
         staffName={session.staff_name} role={session.role} />
-      <div className="flex-1 p-4 flex gap-4 items-start">
-        <StationDashboard menuId={menu.id} station="kitchen"
-          initialOrders={enriched} filterToStation />
-        {hasBarStation && (
-          <StationDashboard menuId={menu.id} station="bar"
-            initialOrders={enriched} filterToStation />
-        )}
+      <div className="flex-1 p-4">
+        <StationTabs
+          activeStation={activeStation}
+          hasBarStation={hasBarStation}
+          baseHref={`/kitchen/${slug}/orders`}
+        />
+        <StationDashboard
+          key={activeStation}
+          menuId={menu.id}
+          station={activeStation}
+          initialOrders={enriched}
+        />
       </div>
     </div>
   );
