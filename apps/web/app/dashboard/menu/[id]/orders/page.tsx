@@ -32,6 +32,13 @@ export default async function OrdersPage({ params, searchParams }: PageProps) {
     redirect(`/dashboard/menu/${id}/orders/kitchen`);
   }
 
+  const { count: barSectionCount } = await adminClient
+    .from("menu_sections")
+    .select("id", { count: "exact", head: true })
+    .eq("menu_id", menu.id)
+    .eq("station", "bar");
+  const hasBarStation = (barSectionCount ?? 0) > 0;
+
   const { data: orders } = await adminClient
     .from("orders")
     .select(`
@@ -74,8 +81,10 @@ export default async function OrdersPage({ params, searchParams }: PageProps) {
       <div className="p-4 lg:p-6 flex gap-4 items-start">
         <StationDashboard menuId={menu.id} station="kitchen"
           initialOrders={enriched} filterToStation />
-        <StationDashboard menuId={menu.id} station="bar"
-          initialOrders={enriched} filterToStation />
+        {hasBarStation && (
+          <StationDashboard menuId={menu.id} station="bar"
+            initialOrders={enriched} filterToStation />
+        )}
       </div>
     </div>
   );
