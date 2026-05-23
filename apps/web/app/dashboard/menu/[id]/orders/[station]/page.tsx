@@ -70,7 +70,7 @@ export default async function OwnerSingleStationPage({ params }: PageProps) {
       </header>
       <div className="p-4 lg:p-6">
         <StationDashboard menuId={menu.id} station={station as "kitchen" | "bar"}
-          initialOrders={enriched} filterToStation />
+          initialOrders={enriched} />
       </div>
     </div>
   );
