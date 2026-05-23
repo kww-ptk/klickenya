@@ -79,6 +79,7 @@ export async function PATCH(req: NextRequest) {
       reservations_max_party_size,
       reservations_max_advance_days,
       default_service_charge_pct,
+      order_view_mode,
       listing_city,
     } = body;
 
@@ -160,6 +161,15 @@ export async function PATCH(req: NextRequest) {
         );
       }
       updates.default_service_charge_pct = v;
+    }
+    if (typeof order_view_mode === "string") {
+      if (order_view_mode !== "combined" && order_view_mode !== "split") {
+        return NextResponse.json(
+          { error: "order_view_mode must be 'combined' or 'split'" },
+          { status: 400 },
+        );
+      }
+      updates.order_view_mode = order_view_mode;
     }
 
     if (Object.keys(updates).length === 0) {
