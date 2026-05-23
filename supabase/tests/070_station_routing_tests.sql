@@ -23,8 +23,6 @@ declare
   v_oi_b    uuid;
   v_got     text;
 
-  -- Inline assertion helper. plpgsql doesn't allow nested procedures
-  -- inside a do block in older Postgres, so we inline the check pattern.
 begin
   select id into v_owner from auth.users limit 1;
   if v_owner is null then
@@ -123,6 +121,7 @@ begin
   raise notice 'OK 7: terminal safeguard kept orders.status = %', v_got;
 
   -- New order for cancellation scenarios (the previous one is terminal).
+  -- v_order/v_oi_k/v_oi_b are reassigned to a fresh order; scenarios 8+ operate on this.
   insert into orders (menu_id, order_type, status, table_number, subtotal_kes, total_kes)
   values (v_menu, 'dine_in', 'new', 'T2', 1100, 1100)
   returning id into v_order;
@@ -162,6 +161,41 @@ begin
     raise exception 'scenario 9 (void kitchen, bar cancelled): expected cancelled, got %', v_got;
   end if;
   raise notice 'OK 9: kitchen voided + bar cancelled -> %', v_got;
+
+  -- Scenario 10: {new, ready} with no 'preparing' anywhere -> catch-all
+  -- fallthrough in derive_order_status returns 'preparing'. Needs a fresh
+  -- order (the previous one is terminal in 'cancelled').
+  insert into orders (menu_id, order_type, status, table_number, subtotal_kes, total_kes)
+  values (v_menu, 'dine_in', 'new', 'T3', 1100, 1100)
+  returning id into v_order;
+
+  insert into order_items (order_id, menu_item_id, item_name, item_price, quantity,
+                           station, station_status)
+  values (v_order, v_item_k, 'Burger', 800, 1, 'kitchen', 'new')
+  returning id into v_oi_k;
+
+  insert into order_items (order_id, menu_item_id, item_name, item_price, quantity,
+                           station, station_status)
+  values (v_order, v_item_b, 'Beer', 300, 1, 'bar', 'ready')
+  returning id into v_oi_b;
+
+  perform derive_order_status(v_order);
+  select status into v_got from orders where id = v_order;
+  if v_got <> 'preparing' then
+    raise exception 'scenario 10 ({new, ready} catch-all): expected preparing, got %', v_got;
+  end if;
+  raise notice 'OK 10: kitchen new + bar ready (catch-all) -> %', v_got;
+
+  -- Scenario 11: void both items -> derive_order_status sees v_total = 0
+  -- non-voided rows and returns early WITHOUT touching orders.status.
+  -- Expected: orders.status stays at whatever it was before ('preparing').
+  update order_items set is_voided = true, voided_at = now(), voided_reason = 'test'
+    where order_id = v_order;
+  select status into v_got from orders where id = v_order;
+  if v_got <> 'preparing' then
+    raise exception 'scenario 11 (all voided early return): expected preparing unchanged, got %', v_got;
+  end if;
+  raise notice 'OK 11: both items voided, orders.status unchanged -> %', v_got;
 
   raise notice E'\n========================================\n  All FSM assertions passed.\n========================================';
 end;
