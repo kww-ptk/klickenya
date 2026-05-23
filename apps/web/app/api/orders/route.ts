@@ -76,7 +76,7 @@ export async function POST(req: NextRequest) {
 
     const { data: dbItems } = await adminClient
       .from("menu_items")
-      .select("id, name, price_kes, is_available, menu_sections!inner(menu_id)")
+      .select("id, name, price_kes, is_available, menu_sections!inner(menu_id, station)")
       .in("id", itemIds)
       .eq("menu_sections.menu_id", data.menu_id);
 
@@ -263,6 +263,14 @@ export async function POST(req: NextRequest) {
     const orderItemRows = data.items.map((orderItem) => {
       const dbItem = itemMap.get(orderItem.menu_item_id)!;
 
+      // station is read from the joined menu_sections row; the client value
+      // is ignored. PostgREST returns the join as either an array or single
+      // object depending on cardinality; handle both shapes.
+      const sectionRaw = (dbItem as unknown as { menu_sections: unknown }).menu_sections;
+      const section = Array.isArray(sectionRaw) ? sectionRaw[0] : sectionRaw;
+      const station: "kitchen" | "bar" =
+        (section as { station?: string } | undefined)?.station === "bar" ? "bar" : "kitchen";
+
       // Snapshot built entirely from DB values — client labels are discarded
       const selectedOptions = orderItem.selected_options.map((o) => {
         const dbOpt = dbOptionMap.get(o.option_id)!;
@@ -284,6 +292,8 @@ export async function POST(req: NextRequest) {
         selected_options: selectedOptions,   // SNAPSHOT — all values from DB
         allergy_notes:    sanitizeNotes(orderItem.allergy_notes),
         line_total:       lineTotal,
+        station,                          // SNAPSHOT — server-derived
+        station_status:   "new" as const, // explicit for clarity
       };
     });
 
