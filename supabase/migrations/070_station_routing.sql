@@ -7,19 +7,19 @@
 ------------------------------------------------------------
 
 ALTER TABLE menu_sections
-  ADD COLUMN station text NOT NULL DEFAULT 'kitchen'
+  ADD COLUMN IF NOT EXISTS station text NOT NULL DEFAULT 'kitchen'
     CHECK (station IN ('kitchen','bar'));
 
 ALTER TABLE menus
-  ADD COLUMN order_view_mode text NOT NULL DEFAULT 'combined'
+  ADD COLUMN IF NOT EXISTS order_view_mode text NOT NULL DEFAULT 'combined'
     CHECK (order_view_mode IN ('combined','split'));
 
 ALTER TABLE order_items
-  ADD COLUMN station text NOT NULL DEFAULT 'kitchen'
+  ADD COLUMN IF NOT EXISTS station text NOT NULL DEFAULT 'kitchen'
     CHECK (station IN ('kitchen','bar'));
 
 ALTER TABLE order_items
-  ADD COLUMN station_status text NOT NULL DEFAULT 'new'
+  ADD COLUMN IF NOT EXISTS station_status text NOT NULL DEFAULT 'new'
     CHECK (station_status IN ('new','preparing','ready','delivered','cancelled'));
 
 -- Non-CONCURRENT because Supabase migrations run inside a transaction.
@@ -65,6 +65,14 @@ WHERE oi.order_id = o.id
 -- Terminal-order safeguard: if orders.status is already 'cancelled'
 -- or 'delivered', we never overwrite it. Prevents UI bugs from
 -- resurrecting a closed ticket.
+--
+-- Concurrency note: this function is intentionally lock-free. Under READ
+-- COMMITTED, two concurrent station_status updates each fire the trigger and
+-- each recompute the full aggregate from their own visibility. The last
+-- commit's UPDATE on orders.status wins — which is correct for that
+-- transaction's view of the items. Brief disagreement between orders.status
+-- and the multiset is possible mid-flight; both settle to consistent values
+-- once commits land. No SELECT FOR UPDATE is needed for the kitchen flow.
 ------------------------------------------------------------
 
 CREATE OR REPLACE FUNCTION derive_order_status(p_order_id uuid)
@@ -76,7 +84,6 @@ DECLARE
   v_cancelled  int;
   v_delivered  int;
   v_ready      int;
-  v_preparing  int;
   v_new        int;
   v_active     int;
   v_new_status text;
@@ -86,9 +93,8 @@ BEGIN
     count(*) FILTER (WHERE station_status = 'cancelled'),
     count(*) FILTER (WHERE station_status = 'delivered'),
     count(*) FILTER (WHERE station_status = 'ready'),
-    count(*) FILTER (WHERE station_status = 'preparing'),
     count(*) FILTER (WHERE station_status = 'new')
-  INTO v_total, v_cancelled, v_delivered, v_ready, v_preparing, v_new
+  INTO v_total, v_cancelled, v_delivered, v_ready, v_new
   FROM order_items
   WHERE order_id = p_order_id
     AND is_voided = false;
