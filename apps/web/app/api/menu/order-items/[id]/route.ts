@@ -61,7 +61,7 @@ export async function PATCH(req: NextRequest, ctx: RouteContext) {
     const { data: item } = await adminClient
       .from("order_items")
       .select(`
-        id, station, station_status, is_voided,
+        id, item_name, station, station_status, is_voided,
         orders!inner ( id, menu_id, status )
       `)
       .eq("id", itemId)
@@ -114,6 +114,38 @@ export async function PATCH(req: NextRequest, ctx: RouteContext) {
       );
     }
 
+    // Cancelling an item that's been sent to the kitchen mirrors the
+    // order-level cancel-after-send discipline: reason + manager approval
+    // + audit log. Normal progress (preparing/ready/delivered) is unchanged.
+    const actingRole = auth.type === "owner" ? "owner" : auth.role;
+    const actingStaffId = auth.type === "staff" ? auth.staffId : null;
+
+    let cancelReason = "";
+    let cancelApprovingStaffId: string | null = null;
+    if (next === "cancelled") {
+      cancelReason = (body.reason ?? "").trim();
+      if (!cancelReason) {
+        return NextResponse.json(
+          { error: "Reason required to cancel an item that's been sent to the kitchen" },
+          { status: 400 },
+        );
+      }
+
+      const approval = await resolveManagerApproval({
+        actingRole,
+        actingStaffId,
+        menuId:      orderJoin.menu_id,
+        overridePin: body.manager_override_pin,
+      });
+      if (!approval.ok) {
+        return NextResponse.json(
+          { error: approval.error, requires_manager: true },
+          { status: 403 },
+        );
+      }
+      cancelApprovingStaffId = approval.approvingStaffId;
+    }
+
     const { error } = await adminClient
       .from("order_items")
       .update({ station_status: next })
@@ -121,6 +153,23 @@ export async function PATCH(req: NextRequest, ctx: RouteContext) {
     if (error) {
       console.error("[order-items PATCH set_station_status] error:", error);
       return NextResponse.json({ error: "Failed to update item" }, { status: 500 });
+    }
+
+    if (next === "cancelled") {
+      await writeAuditLog({
+        menuId:           orderJoin.menu_id,
+        actingStaffId,
+        approvingStaffId: cancelApprovingStaffId,
+        action:           "cancel_order_item_post_send",
+        targetType:       "order",
+        targetId:         orderJoin.id,
+        reason:           cancelReason,
+        metadata: {
+          item_id:                 itemId,
+          item_name:               item.item_name,
+          previous_station_status: item.station_status,
+        },
+      });
     }
 
     // orders.status is recomputed by the DB trigger automatically.
