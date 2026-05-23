@@ -74,7 +74,7 @@ interface ReservationsDashboardProps {
 }
 
 /* ── Audio beep (Web Audio API — no external file needed) ────────────────── */
-// Mirror StationDashboard.tsx playBeep verbatim
+// Originally mirrored from the deleted KitchenDashboard.tsx (Web Audio API beep)
 
 function playBeep() {
   try {
@@ -471,7 +471,7 @@ export function ReservationsDashboard({
   const [declineOwnerNote, setDeclineOwnerNote] = useState("");
   const [declineSubmitting, setDeclineSubmitting] = useState(false);
 
-  /* ── Polling — mirror StationDashboard.tsx verbatim (8s interval, cleanup on unmount) ── */
+  /* ── Polling — 8s interval, cleanup on unmount (pattern shared with StationDashboard.tsx) ── */
   /* ── + visibility handling per spec ── */
   useEffect(() => {
     let paused = document.visibilityState !== "visible";
