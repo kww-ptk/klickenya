@@ -42,7 +42,7 @@ async function getMenu(slug: string): Promise<{
       reservations_lead_time_hours, reservations_max_party_size,
       reservations_max_advance_days, listing_slug, business_id,
       menu_sections (
-        id, title, display_order, is_visible,
+        id, title, display_order, is_visible, station,
         menu_items (
           id, name, description, price_kes,
           dietary_tags, is_available, display_order, photo_url,
