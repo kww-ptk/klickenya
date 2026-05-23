@@ -35,6 +35,8 @@ interface MenuBuilderProps {
   listingId?: string | null;
   /** Klickenya Kitchen feature flag — surfaces the stock CTA + per-item recipe link */
   stockEnabled?: boolean;
+  /** Combined = one orders screen w/ tabs; Split = each station gets its own URL */
+  orderViewMode?: "combined" | "split";
   backHref?: string;
   backLabel?: string;
 }
@@ -50,6 +52,7 @@ export function MenuBuilder({
   listingCity,
   listingId,
   stockEnabled = false,
+  orderViewMode: initialOrderViewMode = "combined",
   backHref,
   backLabel,
 }: MenuBuilderProps) {
@@ -57,8 +60,10 @@ export function MenuBuilder({
   const [menu, setMenu] = useState<MenuData>(initialMenu);
   const [tableOrdering, setTableOrdering] = useState(initialTableOrdering);
   const [reservationsEnabled, setReservationsEnabled] = useState(initialReservationsEnabled);
+  const [orderViewMode, setOrderViewMode] = useState<"combined" | "split">(initialOrderViewMode);
   const [togglingOrdering, setTogglingOrdering] = useState(false);
   const [togglingReservations, setTogglingReservations] = useState(false);
+  const [togglingViewMode, setTogglingViewMode] = useState(false);
   const [editingForm, setEditingForm] = useState<{
     type: "add" | "edit";
     sectionId: string;
@@ -441,6 +446,38 @@ export function MenuBuilder({
     }
   }, [menu.id, reservationsEnabled, listingCity, showToast]);
 
+  /* ── Split-station view toggle ───────────────────── */
+
+  const toggleSplitMode = useCallback(async () => {
+    const next: "combined" | "split" = orderViewMode === "split" ? "combined" : "split";
+    const prev = orderViewMode;
+    setOrderViewMode(next); // optimistic
+    setTogglingViewMode(true);
+    try {
+      const res = await fetch("/api/menu/settings", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ menu_id: menu.id, order_view_mode: next }),
+      });
+      if (!res.ok) {
+        setOrderViewMode(prev);
+        showToast("Couldn't save", "error");
+        return;
+      }
+      showToast(
+        next === "split"
+          ? "Each station now has its own URL"
+          : "Kitchen and bar share one screen with tabs",
+        "success",
+      );
+    } catch {
+      setOrderViewMode(prev);
+      showToast("Network error", "error");
+    } finally {
+      setTogglingViewMode(false);
+    }
+  }, [menu.id, orderViewMode, showToast]);
+
   /* ── Publish ─────────────────────────────────────── */
 
   const togglePublish = useCallback(async () => {
@@ -466,6 +503,10 @@ export function MenuBuilder({
   /* ── Publish panel ───────────────────────────────── */
 
   function PublishPanel() {
+    // Show the split-station toggle only when the menu has at least one
+    // bar-routed section — otherwise the choice is meaningless.
+    const hasBarSections = menu.menu_sections.some((s) => s.station === "bar");
+
     return (
       <div className="space-y-4">
         {/* Status card */}
@@ -575,6 +616,25 @@ export function MenuBuilder({
                 <span>🍳</span>
                 Kitchen view →
               </Link>
+              {hasBarSections && (
+                <div className="mt-3 flex items-start gap-3 p-3 rounded-lg bg-[#F4F1EC] border border-[#E2DDD5]">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[12px] font-semibold text-[#16130C] mb-0.5">
+                      Separate kitchen and bar screens
+                    </p>
+                    <p className="text-[11px] text-[#9C9485] leading-snug">
+                      {orderViewMode === "split"
+                        ? "Each station has its own URL — perfect for a dedicated bar tablet."
+                        : "One dashboard with tabs to switch between stations."}
+                    </p>
+                  </div>
+                  <Toggle
+                    checked={orderViewMode === "split"}
+                    onChange={toggleSplitMode}
+                    disabled={togglingViewMode}
+                  />
+                </div>
+              )}
               <Link
                 href={`/dashboard/menu/${menu.id}/audit`}
                 className="mt-2 flex items-center justify-center gap-2 w-full h-[36px] rounded-full bg-white border border-[#E2DDD5] text-[#16130C] text-[13px] font-bold hover:border-[#16130C] transition-colors"
