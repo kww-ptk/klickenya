@@ -35,7 +35,7 @@ export default async function MenuBuilderPage({ params, searchParams }: PageProp
     adminClient
       .from("menus")
       .select(
-        "listing_slug, reservations_enabled, default_reservation_duration, reservations_lead_time_hours, reservations_max_party_size, reservations_max_advance_days, stock_enabled",
+        "listing_slug, reservations_enabled, default_reservation_duration, reservations_lead_time_hours, reservations_max_party_size, reservations_max_advance_days, stock_enabled, order_view_mode",
       )
       .eq("id", id)
       .eq("business_id", user.id)
@@ -83,6 +83,7 @@ export default async function MenuBuilderPage({ params, searchParams }: PageProp
         listingCity={listingCity}
         listingId={listingId}
         stockEnabled={stockEnabled}
+        orderViewMode={(settings?.order_view_mode as "combined" | "split") ?? "combined"}
         // Back-link target: explicit ?back= wins, otherwise default to the
         // restaurant's listing dashboard (the natural parent of the menu
         // builder). Fall through to the global hub only when this menu has
