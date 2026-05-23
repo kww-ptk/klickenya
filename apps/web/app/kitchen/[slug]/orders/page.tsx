@@ -21,7 +21,7 @@ export default async function KitchenOrdersPage({ params }: PageProps) {
   const cookieStore = await cookies();
   const session = verifyPosSession(cookieStore.get(POS_SESSION_COOKIE)?.value);
   if (!session || session.menu_id !== menu.id) redirect(`/kitchen/${slug}`);
-  if (session.role !== "kitchen" && session.role !== "manager") {
+  if (session.role !== "kitchen" && session.role !== "manager" && session.role !== "bar") {
     redirect(`/pos/${slug}/tables`);
   }
 
@@ -33,7 +33,8 @@ export default async function KitchenOrdersPage({ params }: PageProps) {
   const { data: menuMode } = await adminClient
     .from("menus").select("order_view_mode").eq("id", menu.id).single();
   if (menuMode?.order_view_mode === "split") {
-    redirect(`/kitchen/${slug}/orders/kitchen`);
+    const defaultStation = session.role === "bar" ? "bar" : "kitchen";
+    redirect(`/kitchen/${slug}/orders/${defaultStation}`);
   }
 
   const { count: barSectionCount } = await adminClient

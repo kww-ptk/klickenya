@@ -13,12 +13,18 @@ interface KitchenHeaderProps {
   slug:      string;
   menuName:  string;
   staffName: string;
-  role:      "kitchen" | "manager" | "waiter" | "cashier";
+  role:      "kitchen" | "manager" | "waiter" | "cashier" | "bar";
 }
 
 export function KitchenHeader({ slug, menuName, staffName, role }: KitchenHeaderProps) {
   const router = useRouter();
   const [signingOut, setSigningOut] = useState(false);
+
+  const stationLabel =
+    role === "bar" ? "Bar" :
+    role === "manager" ? "Station" :
+    "Kitchen";
+  const labelClass = role === "bar" ? "text-teal-400" : "text-[#E8A020]";
 
   const handleSwitch = async () => {
     setSigningOut(true);
@@ -35,7 +41,7 @@ export function KitchenHeader({ slug, menuName, staffName, role }: KitchenHeader
     <header className="sticky top-0 z-30 bg-[#0F0D08]/95 backdrop-blur border-b border-[#2A2520]">
       <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-2">
         <div className="flex items-center gap-2 min-w-0 flex-1">
-          <span className="text-[10px] uppercase tracking-[0.18em] text-[#E8A020] font-bold">Kitchen</span>
+          <span className={`text-[10px] uppercase tracking-[0.18em] ${labelClass} font-bold`}>{stationLabel}</span>
           <p className="text-[12px] text-[#9C9485] truncate">{menuName}</p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
