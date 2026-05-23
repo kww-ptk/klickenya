@@ -8,8 +8,8 @@ function isValidPin(v: unknown): v is string {
   return typeof v === "string" && /^\d{4}$/.test(v);
 }
 
-function isValidRole(v: unknown): v is "waiter" | "manager" | "cashier" | "kitchen" {
-  return v === "waiter" || v === "manager" || v === "cashier" || v === "kitchen";
+function isValidRole(v: unknown): v is "waiter" | "manager" | "cashier" | "kitchen" | "bar" {
+  return v === "waiter" || v === "manager" || v === "cashier" || v === "kitchen" || v === "bar";
 }
 
 const STAFF_SELECT = "id, name, role, is_active, created_at";

@@ -113,7 +113,7 @@ const VALID_TRANSITIONS: Record<string, string[]> = {
   ready:     ["delivered", "cancelled"],
 };
 
-const KITCHEN_DRIVING_ROLES: ReadonlySet<string> = new Set(["kitchen", "manager"]);
+const KITCHEN_DRIVING_ROLES: ReadonlySet<string> = new Set(["kitchen", "manager", "bar"]);
 
 export async function PATCH(req: NextRequest) {
   try {

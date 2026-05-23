@@ -89,7 +89,17 @@ export async function PATCH(req: NextRequest, ctx: RouteContext) {
     //   waiter/cashier can only complete ready -> delivered
     const isKitchenDriver =
       auth.type === "owner" ||
-      (auth.type === "staff" && (auth.role === "kitchen" || auth.role === "manager"));
+      (auth.type === "staff" && (auth.role === "kitchen" || auth.role === "manager" || auth.role === "bar"));
+    // Station scope: kitchen role drives only kitchen items; bar role drives
+    // only bar items. Owner and manager can act on either station.
+    if (auth.type === "staff" && (auth.role === "kitchen" || auth.role === "bar")) {
+      if (auth.role !== item.station) {
+        return NextResponse.json(
+          { error: `${auth.role === "bar" ? "Bar" : "Kitchen"} staff cannot advance ${item.station} items.` },
+          { status: 403 },
+        );
+      }
+    }
     if (!isKitchenDriver) {
       const isWaiterCompleting = item.station_status === "ready" && next === "delivered";
       if (!isWaiterCompleting) {

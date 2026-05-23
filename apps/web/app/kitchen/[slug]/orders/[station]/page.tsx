@@ -23,7 +23,7 @@ export default async function PinSingleStationPage({ params }: PageProps) {
   const cookieStore = await cookies();
   const session = verifyPosSession(cookieStore.get(POS_SESSION_COOKIE)?.value);
   if (!session || session.menu_id !== menu.id) redirect(`/kitchen/${slug}`);
-  if (session.role !== "kitchen" && session.role !== "manager") {
+  if (session.role !== "kitchen" && session.role !== "manager" && session.role !== "bar") {
     redirect(`/pos/${slug}/tables`);
   }
 

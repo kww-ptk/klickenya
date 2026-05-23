@@ -49,7 +49,7 @@ interface ReservationsSettingsProps {
 export interface StaffMember {
   id: string;
   name: string;
-  role: "waiter" | "manager" | "cashier" | "kitchen";
+  role: "waiter" | "manager" | "cashier" | "kitchen" | "bar";
   is_active: boolean;
   created_at: string;
 }
