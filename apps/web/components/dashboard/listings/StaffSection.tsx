@@ -9,7 +9,7 @@ import { Copy, Check } from "lucide-react";
 export interface StaffMember {
   id: string;
   name: string;
-  role: "waiter" | "manager" | "cashier" | "kitchen";
+  role: "waiter" | "manager" | "cashier" | "kitchen" | "bar";
   is_active: boolean;
   created_at: string;
 }
@@ -227,6 +227,7 @@ export function StaffSection({
               >
                 <option value="waiter">Waiter</option>
                 <option value="kitchen">Kitchen</option>
+                <option value="bar">Bar</option>
                 <option value="manager">Manager</option>
                 <option value="cashier">Cashier</option>
               </select>
@@ -354,6 +355,7 @@ function StaffRowEdit({
         >
           <option value="waiter">Waiter</option>
           <option value="kitchen">Kitchen</option>
+          <option value="bar">Bar</option>
           <option value="manager">Manager</option>
           <option value="cashier">Cashier</option>
         </select>
