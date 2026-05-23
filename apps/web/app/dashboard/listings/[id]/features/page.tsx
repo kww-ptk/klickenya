@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Lock, UtensilsCrossed, ShoppingCart, CalendarCheck, ShoppingBag, Bike, ChefHat, ChevronRight } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import { getAuthUser, getHostProfile } from "../../../_lib/auth";
+import { getAuthUser, getHostProfile, getIsAdmin } from "../../../_lib/auth";
 import { adminClient } from "@/lib/supabase/admin";
 import { sanityClient } from "@/lib/sanity/client";
 import {
@@ -51,30 +51,39 @@ export default async function FeaturesPage({
   const { user } = await getAuthUser();
   if (!user) redirect("/login");
 
-  const hostProfile = await getHostProfile(user.id);
-  if (!hostProfile) redirect("/dashboard");
+  const isAdmin = await getIsAdmin(user.id);
 
-  // Fetch listing slug + type
+  const hostProfile = await getHostProfile(user.id);
+  // Admin users may not have a host_profile — only redirect non-admins
+  if (!hostProfile && !isAdmin) redirect("/dashboard");
+
+  // Fetch listing slug + type — admin bypasses ownership filter
   const listing = await sanityClient.fetch<{ slug: string; type: string } | null>(
-    `*[_id == $id && (hostId == $userId || host._ref == $sanityHostId)][0]{
-      "slug": slug.current, type
-    }`,
-    { id, userId: user.id, sanityHostId: hostProfile.sanity_host_id ?? "" },
+    isAdmin
+      ? `*[_id == $id && (_type == "listing" || _type == "event")][0]{
+          "slug": slug.current, type
+        }`
+      : `*[_id == $id && (hostId == $userId || host._ref == $sanityHostId)][0]{
+          "slug": slug.current, type
+        }`,
+    { id, userId: user.id, sanityHostId: hostProfile?.sanity_host_id ?? "" },
   );
 
   if (!listing) redirect("/dashboard/listings");
 
-  // Fetch linked menu for feature status
-  const { data: menu } = listing.slug
-    ? await adminClient
-        .from("menus")
-        .select(
-          "id, table_ordering, reservations_enabled, ordering_enabled, takeaway_enabled, delivery_enabled, stock_enabled",
-        )
-        .eq("listing_slug", listing.slug)
-        .eq("business_id", user.id)
-        .maybeSingle()
-    : { data: null };
+  // Fetch linked menu for feature status — admin bypasses business_id filter
+  // (layout already validated listing ownership upstream).
+  const { data: menu } = await (async () => {
+    if (!listing.slug) return { data: null };
+    let menuQuery = adminClient
+      .from("menus")
+      .select(
+        "id, table_ordering, reservations_enabled, ordering_enabled, takeaway_enabled, delivery_enabled, stock_enabled",
+      )
+      .eq("listing_slug", listing.slug);
+    if (!isAdmin) menuQuery = menuQuery.eq("business_id", user.id);
+    return await menuQuery.maybeSingle();
+  })();
 
   const featureCtx: FeatureContext = {
     listingType: "restaurant",

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { getAuthUser, getHostProfile } from "@/app/dashboard/_lib/auth";
+import { getAuthUser, getHostProfile, getIsAdmin } from "@/app/dashboard/_lib/auth";
 import { adminClient } from "@/lib/supabase/admin";
 import { sanityClient } from "@/lib/sanity/client";
 import { TableOrderingClient } from "./TableOrderingClient";
@@ -26,23 +26,32 @@ export default async function TableOrderingSetupPage({ params }: PageProps) {
   const { user } = await getAuthUser();
   if (!user) redirect("/login");
 
-  const hostProfile = await getHostProfile(user.id);
-  if (!hostProfile) redirect("/dashboard");
+  const isAdmin = await getIsAdmin(user.id);
 
+  const hostProfile = await getHostProfile(user.id);
+  // Admin users may not have a host_profile — only redirect non-admins
+  if (!hostProfile && !isAdmin) redirect("/dashboard");
+
+  // Mirror layout's pattern: admin bypasses ownership filter
   const listing = await sanityClient.fetch<{ slug: string; title: string } | null>(
-    `*[_id == $id && (hostId == $userId || host._ref == $sanityHostId)][0]{
-      "slug": slug.current, title
-    }`,
-    { id, userId: user.id, sanityHostId: hostProfile.sanity_host_id ?? "" },
+    isAdmin
+      ? `*[_id == $id && (_type == "listing" || _type == "event")][0]{
+          "slug": slug.current, title
+        }`
+      : `*[_id == $id && (hostId == $userId || host._ref == $sanityHostId)][0]{
+          "slug": slug.current, title
+        }`,
+    { id, userId: user.id, sanityHostId: hostProfile?.sanity_host_id ?? "" },
   );
   if (!listing?.slug) redirect("/dashboard/listings");
 
-  const { data: menu } = await adminClient
+  // Admin bypasses business_id ownership filter (layout already validated listing ownership).
+  let menuQuery = adminClient
     .from("menus")
     .select("id, name, slug, table_ordering, listing_slug")
-    .eq("listing_slug", listing.slug)
-    .eq("business_id", user.id)
-    .maybeSingle();
+    .eq("listing_slug", listing.slug);
+  if (!isAdmin) menuQuery = menuQuery.eq("business_id", user.id);
+  const { data: menu } = await menuQuery.maybeSingle();
 
   if (!menu) {
     return (
