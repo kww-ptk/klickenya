@@ -1,8 +1,22 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { TableSetup } from "@/components/dashboard/menu/TableSetup";
 import { FloorMapCanvas, type FloorMapTableRow } from "@/components/dashboard/listings/floor-map/FloorMapCanvas";
+
+/**
+ * Shape that TableSetup emits from its internal state — strict subset of
+ * InitialTable (no pos_x/pos_y/area_id, since the list view doesn't care
+ * about positions). We merge these back onto our floor-map state by id,
+ * preserving the geometry we already had for existing tables.
+ */
+interface TableSetupRow {
+  id: string;
+  table_number: string;
+  capacity: number;
+  floor_section: string | null;
+  is_active: boolean;
+}
 
 export interface AreaOption {
   id: string;
@@ -82,6 +96,37 @@ export function TablesSection({
     try { window.localStorage.setItem("klickenya:tables-view", next); } catch { /* ignore */ }
   }
 
+  /**
+   * Reconcile TableSetup's table list into our floor-map state.
+   *
+   * TableSetup is the source of truth for list-view fields (number, capacity,
+   * floor_section, is_active). For new tables it doesn't know positions —
+   * those default to null (canvas auto-arranges). For existing tables we
+   * keep the pos_x/pos_y/area_id we already had so dragged positions don't
+   * vanish when an unrelated edit happens elsewhere in the list.
+   *
+   * Net effect: adding a table in List view → it shows up in Floor map view
+   * immediately (no reload). Same component instance, same source of truth.
+   */
+  const handleTableSetupChange = useCallback((next: TableSetupRow[]) => {
+    setTables((prev) => {
+      const prevById = new Map(prev.map((t) => [t.id, t]));
+      return next.map((t) => {
+        const existing = prevById.get(t.id);
+        return {
+          id:            t.id,
+          table_number:  t.table_number,
+          capacity:      t.capacity,
+          floor_section: t.floor_section,
+          is_active:     t.is_active,
+          pos_x:         existing?.pos_x ?? null,
+          pos_y:         existing?.pos_y ?? null,
+          area_id:       existing?.area_id ?? null,
+        };
+      });
+    });
+  }, []);
+
   // Floor-map save handler. Returns true iff every row persisted.
   async function savePositions(
     positions: Array<{ id: string; pos_x: number; pos_y: number }>,
@@ -150,7 +195,12 @@ export function TablesSection({
       {view === "list" ? (
         <>
           <p className="text-[12px] text-[#9C9485] mb-3">{listSubtitle}</p>
-          <TableSetup menuId={menuId} showToast={showToast} areas={areas} />
+          <TableSetup
+            menuId={menuId}
+            showToast={showToast}
+            areas={areas}
+            onTablesChange={handleTableSetupChange}
+          />
         </>
       ) : (
         <FloorMapCanvas

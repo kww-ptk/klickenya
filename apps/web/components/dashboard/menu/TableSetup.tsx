@@ -23,6 +23,14 @@ interface TableSetupProps {
   showToast: (msg: string, type?: "success" | "error") => void;
   /** Seating areas — when provided, floor section becomes a dropdown instead of free text */
   areas?: AreaOption[];
+  /**
+   * Optional change subscription. Fires every time the internal `tables`
+   * state changes AFTER the initial fetch completes (so the parent isn't
+   * flashed with an empty array on mount). Used by TablesSection to keep
+   * its floor-map view in sync with list-view edits — without it, adding
+   * a table here wouldn't appear on the floor map until next page load.
+   */
+  onTablesChange?: (tables: RestaurantTable[]) => void;
 }
 
 /* ── Input style ───────────────────────────────────── */
@@ -206,10 +214,20 @@ function TableRow({
 
 /* ── Main component ────────────────────────────────── */
 
-export function TableSetup({ menuId, showToast, areas }: TableSetupProps) {
+export function TableSetup({ menuId, showToast, areas, onTablesChange }: TableSetupProps) {
   const [tables, setTables]       = useState<RestaurantTable[]>([]);
   const [loading, setLoading]     = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
+
+  /* ── Subscribe parent to table changes ────────────
+   * Fires onTablesChange after every mutation. Skipped while loading so we
+   * don't briefly hand the parent an empty array on mount (which would
+   * cause the floor map to flash blank before the fetch returns).
+   */
+  useEffect(() => {
+    if (loading) return;
+    onTablesChange?.(tables);
+  }, [tables, loading, onTablesChange]);
 
   // Single add form
   const [showAdd, setShowAdd]     = useState(false);
