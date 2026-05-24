@@ -39,6 +39,21 @@ interface MenuBuilderProps {
   orderViewMode?: "combined" | "split";
   backHref?: string;
   backLabel?: string;
+  /**
+   * "full"      — legacy /dashboard/menu/<id> behaviour: all 5 PublishPanel
+   *               cards (table ordering toggle, reservations toggle, kitchen).
+   * "menu-only" — strips out non-menu toggles and replaces them with hint
+   *               cards that link to each feature's own page. Use this on
+   *               the /eat tree where features have their own dedicated tabs.
+   */
+  mode?: "full" | "menu-only";
+  /**
+   * URL prefix for the "Other features" hint cards in menu-only mode.
+   * Example: "/eat/listings/<sanityId>" → cards link to
+   *   "/eat/listings/<sanityId>/reservations", "/.../orders", "/.../kitchen".
+   * Required when mode === "menu-only".
+   */
+  featureBaseHref?: string;
 }
 
 /* ── Component ─────────────────────────────────────── */
@@ -55,6 +70,8 @@ export function MenuBuilder({
   orderViewMode: initialOrderViewMode = "combined",
   backHref,
   backLabel,
+  mode = "full",
+  featureBaseHref,
 }: MenuBuilderProps) {
   const router = useRouter();
   const [menu, setMenu] = useState<MenuData>(initialMenu);
@@ -586,123 +603,141 @@ export function MenuBuilder({
           )}
         </div>
 
-        {/* Table ordering toggle */}
-        <div className="bg-white rounded-xl lg:rounded-2xl border border-[#E2DDD5] p-4 lg:p-5 shadow-sm">
-          <div className="flex items-center justify-between mb-1">
-            <p className="text-[14px] font-semibold text-[#16130C]">Table ordering</p>
-            <Toggle
-              checked={tableOrdering}
-              onChange={toggleTableOrdering}
-              disabled={togglingOrdering}
-            />
-          </div>
-          <p className="text-[12px] text-[#9C9485]">
-            {tableOrdering
-              ? "Guests can order from their table using the menu QR code."
-              : "Enable to let guests place orders from their table."}
-          </p>
-
-          {tableOrdering && (
-            <>
-              <div className="mt-3 p-3 rounded-lg bg-[#E8A020]/8 border border-[#E8A020]/20">
-                <p className="text-[12px] text-[#5E5848]">
-                  <span className="font-bold">Heads up:</span> Make sure someone is watching the kitchen dashboard when ordering is active.
-                </p>
+        {/* ───────────────────────────────────────────────────────────────
+            menu-only mode (used by /eat): the cards below are replaced with
+            a single "Other features" hint card. Menu builder stays focused
+            on its own job — publish, scans, QR — and links out for everything
+            else. Full mode keeps the legacy toggles so /dashboard/menu/<id>
+            users don't lose their on/off switches.
+        ─────────────────────────────────────────────────────────────────── */}
+        {mode === "menu-only" ? (
+          <OtherFeaturesHintCard
+            featureBaseHref={featureBaseHref ?? ""}
+            reservationsEnabled={reservationsEnabled}
+            tableOrdering={tableOrdering}
+            stockEnabled={stockEnabled}
+          />
+        ) : (
+          <>
+            {/* Table ordering toggle */}
+            <div className="bg-white rounded-xl lg:rounded-2xl border border-[#E2DDD5] p-4 lg:p-5 shadow-sm">
+              <div className="flex items-center justify-between mb-1">
+                <p className="text-[14px] font-semibold text-[#16130C]">Table ordering</p>
+                <Toggle
+                  checked={tableOrdering}
+                  onChange={toggleTableOrdering}
+                  disabled={togglingOrdering}
+                />
               </div>
-              <Link
-                href={`/dashboard/menu/${menu.id}/orders`}
-                className="mt-3 flex items-center justify-center gap-2 w-full h-[36px] rounded-full bg-[#16130C] text-white text-[13px] font-bold hover:bg-[#2A2520] transition-colors"
-              >
-                <span>🍳</span>
-                Kitchen view →
-              </Link>
-              {hasBarSections && (
-                <div className="mt-3 flex items-start gap-3 p-3 rounded-lg bg-[#F4F1EC] border border-[#E2DDD5]">
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[12px] font-semibold text-[#16130C] mb-0.5">
-                      Separate kitchen and bar screens
-                    </p>
-                    <p className="text-[11px] text-[#9C9485] leading-snug">
-                      {orderViewMode === "split"
-                        ? "Each station has its own URL — perfect for a dedicated bar tablet."
-                        : "One dashboard with tabs to switch between stations."}
+              <p className="text-[12px] text-[#9C9485]">
+                {tableOrdering
+                  ? "Guests can order from their table using the menu QR code."
+                  : "Enable to let guests place orders from their table."}
+              </p>
+
+              {tableOrdering && (
+                <>
+                  <div className="mt-3 p-3 rounded-lg bg-[#E8A020]/8 border border-[#E8A020]/20">
+                    <p className="text-[12px] text-[#5E5848]">
+                      <span className="font-bold">Heads up:</span> Make sure someone is watching the kitchen dashboard when ordering is active.
                     </p>
                   </div>
-                  <Toggle
-                    checked={orderViewMode === "split"}
-                    onChange={toggleSplitMode}
-                    disabled={togglingViewMode}
-                  />
+                  <Link
+                    href={`/dashboard/menu/${menu.id}/orders`}
+                    className="mt-3 flex items-center justify-center gap-2 w-full h-[36px] rounded-full bg-[#16130C] text-white text-[13px] font-bold hover:bg-[#2A2520] transition-colors"
+                  >
+                    <span>🍳</span>
+                    Kitchen view →
+                  </Link>
+                  {hasBarSections && (
+                    <div className="mt-3 flex items-start gap-3 p-3 rounded-lg bg-[#F4F1EC] border border-[#E2DDD5]">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[12px] font-semibold text-[#16130C] mb-0.5">
+                          Separate kitchen and bar screens
+                        </p>
+                        <p className="text-[11px] text-[#9C9485] leading-snug">
+                          {orderViewMode === "split"
+                            ? "Each station has its own URL — perfect for a dedicated bar tablet."
+                            : "One dashboard with tabs to switch between stations."}
+                        </p>
+                      </div>
+                      <Toggle
+                        checked={orderViewMode === "split"}
+                        onChange={toggleSplitMode}
+                        disabled={togglingViewMode}
+                      />
+                    </div>
+                  )}
+                  <Link
+                    href={`/dashboard/menu/${menu.id}/audit`}
+                    className="mt-2 flex items-center justify-center gap-2 w-full h-[36px] rounded-full bg-white border border-[#E2DDD5] text-[#16130C] text-[13px] font-bold hover:border-[#16130C] transition-colors"
+                  >
+                    <span>📋</span>
+                    Audit log →
+                  </Link>
+                </>
+              )}
+            </div>
+
+            {/* Table reservations — compact card; full settings live in listing dashboard */}
+            <div className="bg-white rounded-xl lg:rounded-2xl border border-[#E2DDD5] p-4 lg:p-5 shadow-sm">
+              <div className="flex items-center justify-between mb-1">
+                <p className="text-[14px] font-semibold text-[#16130C]">Table reservations</p>
+                <Toggle
+                  checked={reservationsEnabled}
+                  onChange={toggleReservations}
+                  disabled={togglingReservations}
+                />
+              </div>
+              <p className="text-[12px] text-[#9C9485]">
+                {reservationsEnabled
+                  ? "Active — guests can request tables via your listing and menu page."
+                  : "Enable to accept table reservation requests from guests."}
+              </p>
+              {reservationsEnabled && listingId && (
+                <Link
+                  href={`/dashboard/listings/${listingId}/reservations`}
+                  className="mt-3 flex items-center justify-center gap-2 w-full h-[36px] rounded-full bg-[#16130C] text-white text-[13px] font-bold hover:bg-[#2A2520] transition-colors"
+                >
+                  Manage reservations →
+                </Link>
+              )}
+              {reservationsEnabled && !listingId && (
+                <div className="mt-3 p-3 rounded-lg bg-[#E8A020]/8 border border-[#E8A020]/20">
+                  <p className="text-[12px] text-[#5E5848]">
+                    <span className="font-bold">Active.</span> Configure booking rules and seating areas in your listing&apos;s Reservations → Settings tab.
+                  </p>
                 </div>
               )}
-              <Link
-                href={`/dashboard/menu/${menu.id}/audit`}
-                className="mt-2 flex items-center justify-center gap-2 w-full h-[36px] rounded-full bg-white border border-[#E2DDD5] text-[#16130C] text-[13px] font-bold hover:border-[#16130C] transition-colors"
-              >
-                <span>📋</span>
-                Audit log →
-              </Link>
-            </>
-          )}
-        </div>
-
-        {/* Table reservations — compact card; full settings live in listing dashboard */}
-        <div className="bg-white rounded-xl lg:rounded-2xl border border-[#E2DDD5] p-4 lg:p-5 shadow-sm">
-          <div className="flex items-center justify-between mb-1">
-            <p className="text-[14px] font-semibold text-[#16130C]">Table reservations</p>
-            <Toggle
-              checked={reservationsEnabled}
-              onChange={toggleReservations}
-              disabled={togglingReservations}
-            />
-          </div>
-          <p className="text-[12px] text-[#9C9485]">
-            {reservationsEnabled
-              ? "Active — guests can request tables via your listing and menu page."
-              : "Enable to accept table reservation requests from guests."}
-          </p>
-          {reservationsEnabled && listingId && (
-            <Link
-              href={`/dashboard/listings/${listingId}/reservations`}
-              className="mt-3 flex items-center justify-center gap-2 w-full h-[36px] rounded-full bg-[#16130C] text-white text-[13px] font-bold hover:bg-[#2A2520] transition-colors"
-            >
-              Manage reservations →
-            </Link>
-          )}
-          {reservationsEnabled && !listingId && (
-            <div className="mt-3 p-3 rounded-lg bg-[#E8A020]/8 border border-[#E8A020]/20">
-              <p className="text-[12px] text-[#5E5848]">
-                <span className="font-bold">Active.</span> Configure booking rules and seating areas in your listing&apos;s Reservations → Settings tab.
-              </p>
             </div>
-          )}
-        </div>
-        {/* Note: the embed-on-your-website panel moved to the listing's
-            Reservations → Settings tab (its proper home — it's a reservations
-            setting, not a menu-editor concern). */}
+            {/* Note: the embed-on-your-website panel moved to the listing's
+                Reservations → Settings tab (its proper home — it's a reservations
+                setting, not a menu-editor concern). */}
 
-        {/* Klickenya Kitchen — stock & recipe costing */}
-        <div className="bg-white rounded-xl lg:rounded-2xl border border-[#E2DDD5] p-4 lg:p-5 shadow-sm">
-          <div className="flex items-center justify-between mb-1">
-            <p className="text-[14px] font-semibold text-[#16130C]">🍳 Klickenya Kitchen</p>
-            {stockEnabled && (
-              <span className="inline-flex items-center text-[10px] font-bold text-emerald-600 bg-emerald-100 px-2 py-0.5 rounded-full uppercase tracking-wide">
-                On
-              </span>
-            )}
-          </div>
-          <p className="text-[12px] text-[#9C9485]">
-            {stockEnabled
-              ? "Recipes, stock and costing for every dish."
-              : "Track recipe costs and stock levels alongside your menu."}
-          </p>
-          <Link
-            href={`/dashboard/menu/${menu.id}/stock`}
-            className="mt-3 flex items-center justify-center gap-2 w-full h-[36px] rounded-full bg-[#16130C] text-white text-[13px] font-bold hover:bg-[#2A2520] transition-colors"
-          >
-            {stockEnabled ? "Open kitchen →" : "Set up →"}
-          </Link>
-        </div>
+            {/* Klickenya Kitchen — stock & recipe costing */}
+            <div className="bg-white rounded-xl lg:rounded-2xl border border-[#E2DDD5] p-4 lg:p-5 shadow-sm">
+              <div className="flex items-center justify-between mb-1">
+                <p className="text-[14px] font-semibold text-[#16130C]">🍳 Klickenya Kitchen</p>
+                {stockEnabled && (
+                  <span className="inline-flex items-center text-[10px] font-bold text-emerald-600 bg-emerald-100 px-2 py-0.5 rounded-full uppercase tracking-wide">
+                    On
+                  </span>
+                )}
+              </div>
+              <p className="text-[12px] text-[#9C9485]">
+                {stockEnabled
+                  ? "Recipes, stock and costing for every dish."
+                  : "Track recipe costs and stock levels alongside your menu."}
+              </p>
+              <Link
+                href={`/dashboard/menu/${menu.id}/stock`}
+                className="mt-3 flex items-center justify-center gap-2 w-full h-[36px] rounded-full bg-[#16130C] text-white text-[13px] font-bold hover:bg-[#2A2520] transition-colors"
+              >
+                {stockEnabled ? "Open kitchen →" : "Set up →"}
+              </Link>
+            </div>
+          </>
+        )}
       </div>
     );
   }
@@ -1069,6 +1104,104 @@ export function MenuBuilder({
             <PublishPanel />
           </div>
         </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── OtherFeaturesHintCard ──────────────────────────────────────────────
+ * Used in menu-only mode (the /eat tree) to replace the in-place toggles
+ * with three "hint" rows that link to each feature's own page. Tooltips
+ * (native title) explain the feature in plain language without dragging
+ * the owner out of menu-creation flow.
+ *
+ * Order = the feature dependency chain the user described:
+ *   1. Reservations (next step after publishing a menu)
+ *   2. Table Ordering (POS, kitchen, waiter — depends on a menu)
+ *   3. Kitchen Costing (advanced — depends on a menu)
+ * ─────────────────────────────────────────────────────────────────────── */
+function OtherFeaturesHintCard({
+  featureBaseHref,
+  reservationsEnabled,
+  tableOrdering,
+  stockEnabled,
+}: {
+  featureBaseHref: string;
+  reservationsEnabled: boolean;
+  tableOrdering: boolean;
+  stockEnabled: boolean;
+}) {
+  const hints = [
+    {
+      key: "reservations",
+      icon: "📅",
+      title: "Table reservations",
+      blurb: "Let guests book a table online; you approve or decline from your dashboard.",
+      tooltip:
+        "Accept and manage reservation requests. Guests pick a date, time, party size, and area; you approve or decline. Email + WhatsApp confirmations included.",
+      enabled: reservationsEnabled,
+      href: `${featureBaseHref}/reservations`,
+    },
+    {
+      key: "orders",
+      icon: "🛒",
+      title: "Table ordering",
+      blurb: "Guests order from their table via QR code; kitchen and bar see live tickets.",
+      tooltip:
+        "Tablet POS for staff, QR ordering for guests, real-time kitchen + bar tickets. Includes split bills, table sessions, and audit log.",
+      enabled: tableOrdering,
+      href: `${featureBaseHref}/orders`,
+    },
+    {
+      key: "kitchen",
+      icon: "🍳",
+      title: "Kitchen costing",
+      blurb: "Recipes, stock, and per-dish margin. Auto-deducts when orders fire.",
+      tooltip:
+        "Klickenya Kitchen — build recipes for every menu item, log purchases and waste, see real margin per dish. Stock deducts automatically when an order fires from table ordering or POS.",
+      enabled: stockEnabled,
+      href: `${featureBaseHref}/kitchen`,
+    },
+  ];
+
+  return (
+    <div className="bg-white rounded-xl lg:rounded-2xl border border-[#E2DDD5] p-4 lg:p-5 shadow-sm">
+      <p className="text-[14px] font-semibold text-[#16130C] mb-1">
+        Other features
+      </p>
+      <p className="text-[12px] text-[#9C9485] mb-3">
+        Each lives on its own page — open one to set it up or manage it.
+      </p>
+
+      <div className="space-y-1.5">
+        {hints.map((h) => (
+          <Link
+            key={h.key}
+            href={h.href}
+            title={h.tooltip}
+            className="group flex items-start gap-3 p-2.5 rounded-lg hover:bg-[#FAFAF8] transition-colors"
+          >
+            <span className="shrink-0 text-[18px] leading-none mt-0.5">{h.icon}</span>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2">
+                <p className="text-[13px] font-semibold text-[#16130C] group-hover:text-[#E8A020] transition-colors">
+                  {h.title}
+                </p>
+                {h.enabled && (
+                  <span className="inline-flex items-center text-[9px] font-bold text-emerald-600 bg-emerald-100 px-1.5 py-0.5 rounded-full uppercase tracking-wide">
+                    On
+                  </span>
+                )}
+              </div>
+              <p className="text-[11px] text-[#9C9485] leading-snug mt-0.5">
+                {h.blurb}
+              </p>
+            </div>
+            <span className="shrink-0 text-[#C5BFB5] text-[14px] mt-1 group-hover:text-[#E8A020] transition-colors">
+              ›
+            </span>
+          </Link>
+        ))}
       </div>
     </div>
   );

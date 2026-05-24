@@ -103,6 +103,11 @@ export default async function EatMenuPage({ params }: PageProps) {
         orderViewMode={(settings?.order_view_mode as "combined" | "split") ?? "combined"}
         backHref={`/eat/listings/${listingId}`}
         backLabel="← Back to overview"
+        // Restaurant menu page in /eat is single-purpose: create menu, publish,
+        // download QR. All other features (reservations, ordering, kitchen)
+        // get their own tabs — surface as hint cards that link out.
+        mode="menu-only"
+        featureBaseHref={`/eat/listings/${listingId}`}
       />
     </ToastProvider>
   );
