@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import type { Metadata, Viewport } from "next";
 import { adminClient } from "@/lib/supabase/admin";
@@ -78,6 +78,12 @@ export default async function PosLayout({ params, children }: LayoutProps) {
 
     const row = staffResult.data;
     if (row && row.is_active && row.menu_id === menu.id) {
+      // Kitchen and bar staff have no business on /pos/* — they don't take
+      // guest orders, they prepare incoming items. Route them to the station
+      // dashboard regardless of which /pos/* URL they direct-navigated to.
+      if (row.role === "kitchen" || row.role === "bar") {
+        redirect(`/kitchen/${slug}/orders`);
+      }
       staff = {
         id:      row.id,
         menu_id: row.menu_id,

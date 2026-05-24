@@ -20,9 +20,11 @@ export default async function PosLoginPage({ params }: PageProps) {
   const cookieStore = await cookies();
   const session = verifyPosSession(cookieStore.get(POS_SESSION_COOKIE)?.value);
   if (session && session.menu_id === menu.id) {
-    // Kitchen staff who land here go straight to the kitchen view — they
-    // don't have a use for the waiter tables grid.
-    if (session.role === "kitchen") {
+    // Kitchen and bar staff have no use for the waiter tables grid — they
+    // never take orders, they only prepare incoming items. Route them to the
+    // station dashboard, which will further route bar → /orders/bar and
+    // kitchen → /orders/kitchen (or render the tabbed combined view).
+    if (session.role === "kitchen" || session.role === "bar") {
       redirect(`/kitchen/${slug}/orders`);
     }
     redirect(`/pos/${slug}/tables`);
