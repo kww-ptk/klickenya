@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Toggle } from "@/components/ui/Toggle";
-import { Copy, Check } from "lucide-react";
+import { Copy, Check, Trash2 } from "lucide-react";
 
 /* ── Types ─────────────────────────────────────────────────────────────────── */
 
@@ -130,7 +130,39 @@ export function StaffSection({
   };
 
   const handleToggleActive = async (s: StaffMember) => {
-    await handleUpdate(s.id, { is_active: !s.is_active });
+    const next = !s.is_active;
+    const ok = await handleUpdate(s.id, { is_active: next });
+    if (ok) {
+      showToast(
+        next
+          ? `${s.name} reactivated — they can sign in again`
+          : `${s.name} deactivated — their PIN no longer works`,
+      );
+    }
+  };
+
+  const handleDelete = async (s: StaffMember) => {
+    if (!window.confirm(`Remove ${s.name}? Their PIN stops working immediately. Order history is preserved.`)) {
+      return;
+    }
+    // Optimistic remove from the list — even if DELETE soft-deletes server-side,
+    // the user expects the row gone after pressing Delete.
+    const snapshot = staff;
+    setStaff((prev) => prev.filter((row) => row.id !== s.id));
+    try {
+      const res = await fetch(`/api/menu/staff?id=${s.id}&menu_id=${menuId}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Failed to delete");
+      }
+      showToast(`${s.name} removed`);
+    } catch (e) {
+      // Roll back the optimistic remove.
+      setStaff(snapshot);
+      showToast(e instanceof Error ? e.message : "Failed to delete staff", "error");
+    }
   };
 
   const copy = async () => {
@@ -191,6 +223,7 @@ export function StaffSection({
                 if (ok) setEditingId(null);
               }}
               onToggleActive={() => handleToggleActive(s)}
+              onDelete={() => handleDelete(s)}
             />
           ))}
         </div>
@@ -294,6 +327,7 @@ function StaffRow({
   onCancel,
   onSave,
   onToggleActive,
+  onDelete,
 }: {
   staff:    StaffMember;
   isEditing: boolean;
@@ -301,6 +335,7 @@ function StaffRow({
   onCancel:  () => void;
   onSave:    (patch: { name?: string; role?: StaffMember["role"]; pin?: string; can_access_all_stations?: boolean }) => Promise<void>;
   onToggleActive: () => void;
+  onDelete:       () => void;
 }) {
   if (isEditing) {
     return <StaffRowEdit staff={staff} onCancel={onCancel} onSave={onSave} />;
@@ -318,12 +353,24 @@ function StaffRow({
           )}
         </p>
       </div>
-      <Toggle checked={staff.is_active} onChange={onToggleActive} />
+      <Toggle
+        checked={staff.is_active}
+        onChange={onToggleActive}
+        label={staff.is_active ? "Deactivate" : "Reactivate"}
+      />
       <button
         onClick={onEdit}
         className="text-[12px] text-[#9C9485] hover:text-[#16130C] transition-colors px-1"
       >
         Edit
+      </button>
+      <button
+        onClick={onDelete}
+        title={`Remove ${staff.name}`}
+        aria-label={`Remove ${staff.name}`}
+        className="text-[#C5BFB5] hover:text-[#DC2626] transition-colors p-1"
+      >
+        <Trash2 className="w-4 h-4" />
       </button>
     </div>
   );
