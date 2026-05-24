@@ -28,18 +28,21 @@ export default async function PinSingleStationPage({ params }: PageProps) {
   }
 
   const { data: staffRow } = await adminClient
-    .from("restaurant_staff").select("id, is_active").eq("id", session.staff_id).single();
+    .from("restaurant_staff").select("id, is_active, can_access_all_stations").eq("id", session.staff_id).single();
   if (!staffRow || !staffRow.is_active) redirect(`/kitchen/${slug}`);
 
   // Lock kitchen/bar staff to their own station. They'd hit a 403 from the
   // per-item PATCH if they tried to advance the other station's items
   // anyway — better to redirect than to render a view of items they can't
-  // operate.
-  if (session.role === "kitchen" && station !== "kitchen") {
-    redirect(`/kitchen/${slug}/orders/kitchen`);
-  }
-  if (session.role === "bar" && station !== "bar") {
-    redirect(`/kitchen/${slug}/orders/bar`);
+  // operate. Exception: staff with can_access_all_stations may see either.
+  const crossStation = staffRow.can_access_all_stations === true;
+  if (!crossStation) {
+    if (session.role === "kitchen" && station !== "kitchen") {
+      redirect(`/kitchen/${slug}/orders/kitchen`);
+    }
+    if (session.role === "bar" && station !== "bar") {
+      redirect(`/kitchen/${slug}/orders/bar`);
+    }
   }
 
   const { data: orders } = await adminClient
@@ -71,9 +74,9 @@ export default async function PinSingleStationPage({ params }: PageProps) {
   })) as DashboardOrder[];
 
   const other = station === "kitchen" ? "bar" : "kitchen";
-  // Only manager (and owner — but owner isn't a PIN role here) sees the
-  // "switch to other station" affordance. Kitchen/bar staff are locked.
-  const showSwitchLink = session.role === "manager";
+  // Manager and opted-in cross-station staff see the "switch" affordance.
+  // Other kitchen/bar staff are locked to their primary station.
+  const showSwitchLink = session.role === "manager" || crossStation;
 
   return (
     <div className="min-h-screen flex flex-col bg-[#F4F1EC]">
