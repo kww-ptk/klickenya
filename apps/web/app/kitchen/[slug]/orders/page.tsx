@@ -29,7 +29,7 @@ export default async function KitchenOrdersPage({ params, searchParams }: PagePr
   }
 
   const { data: staffRow } = await adminClient
-    .from("restaurant_staff").select("id, is_active").eq("id", session.staff_id).single();
+    .from("restaurant_staff").select("id, is_active, can_access_all_stations").eq("id", session.staff_id).single();
   if (!staffRow || !staffRow.is_active) redirect(`/kitchen/${slug}`);
 
   // Read view mode from the menu (getPosMenuBySlug may not include it — fetch directly).
@@ -51,12 +51,15 @@ export default async function KitchenOrdersPage({ params, searchParams }: PagePr
   // station-scope check in /api/menu/order-items/[id] set_station_status —
   // we don't want to render tabs they can't actually use (clicking would
   // 403 and the optimistic UI would snap back, looking like a bug).
+  const crossStation = staffRow.can_access_all_stations === true;
   const allowedStations: ReadonlyArray<"kitchen" | "bar"> =
-    session.role === "kitchen"
+    session.role === "manager" || crossStation
+      ? ["kitchen", "bar"]
+      : session.role === "kitchen"
       ? ["kitchen"]
       : session.role === "bar"
       ? ["bar"]
-      : ["kitchen", "bar"]; // manager / owner
+      : ["kitchen", "bar"];
 
   // Role-aware default + ?station override, clamped to allowedStations.
   const roleDefault: "kitchen" | "bar" =
