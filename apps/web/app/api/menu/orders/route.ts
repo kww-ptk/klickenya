@@ -59,7 +59,10 @@ export async function GET(req: NextRequest) {
           notes,
           selected_options,
           allergy_notes,
-          line_total
+          line_total,
+          station,
+          station_status,
+          is_voided
         )
       `)
       .eq("menu_id", menuId)
