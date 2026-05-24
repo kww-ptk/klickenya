@@ -73,6 +73,13 @@ interface ReservationsDashboardProps {
   initialFetchedAt: string;
   tableOrdering: boolean;
   menuSettings: MenuSettings;
+  /**
+   * Forwarded to ReservationsSettings. See ReservationsSettings.mode for
+   * the semantics. Default "full" preserves the legacy dashboard layout.
+   */
+  mode?: "full" | "reservation-only";
+  /** Forwarded to ReservationsSettings. Required when mode === "reservation-only". */
+  featureBaseHref?: string;
 }
 
 /* ── Audio beep (Web Audio API — no external file needed) ────────────────── */
@@ -555,6 +562,8 @@ export function ReservationsDashboard({
   initialFetchedAt,
   tableOrdering,
   menuSettings,
+  mode = "full",
+  featureBaseHref,
 }: ReservationsDashboardProps) {
   const { showToast } = useToast();
   const [reservations, setReservations] = useState<Reservation[]>(initialReservations);
@@ -1312,6 +1321,8 @@ export function ReservationsDashboard({
           menuSlug={menuSlug}
           listingId={listingId}
           listingCity={listingCity}
+          mode={mode}
+          featureBaseHref={featureBaseHref}
           initialReservationsEnabled={menuSettings.reservationsEnabled}
           initialDuration={menuSettings.duration}
           initialLeadTime={menuSettings.leadTime}
