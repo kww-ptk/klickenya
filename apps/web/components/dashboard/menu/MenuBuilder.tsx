@@ -8,6 +8,7 @@ import { ItemForm } from "./ItemForm";
 import { OptionGroupEditor } from "./OptionGroupEditor";
 import { TableSetup } from "./TableSetup";
 import { MenuImporter } from "./MenuImporter";
+import { ReservationsEmbedPanel } from "./ReservationsEmbedPanel";
 import { useToast } from "@/components/ui/Toast";
 import { Toggle } from "@/components/ui/Toggle";
 
@@ -677,6 +678,12 @@ export function MenuBuilder({
             </div>
           )}
         </div>
+
+        {/* Embed reservations on owner's website */}
+        <ReservationsEmbedPanel
+          menuSlug={menu.slug}
+          reservationsEnabled={reservationsEnabled}
+        />
 
         {/* Klickenya Kitchen — stock & recipe costing */}
         <div className="bg-white rounded-xl lg:rounded-2xl border border-[#E2DDD5] p-4 lg:p-5 shadow-sm">

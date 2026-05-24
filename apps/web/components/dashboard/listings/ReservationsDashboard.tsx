@@ -28,6 +28,8 @@ interface Reservation {
   area_id: string | null;
   status: string;
   source: string;
+  source_origin: string | null;
+  source_ref: string | null;
   guest_message: string | null;
   owner_note: string | null;
   decline_reason: string | null;
@@ -158,8 +160,130 @@ function sourceLabel(source: string): string {
     listing: "Klickenya listing",
     direct: "Direct link",
     phone: "Phone",
+    embed: "Embed",
   };
   return map[source] ?? source;
+}
+
+/** Compact badge shown alongside each reservation row. */
+function SourceBadge({
+  source,
+  origin,
+  ref,
+}: {
+  source: string;
+  origin: string | null;
+  ref: string | null;
+}) {
+  // Map source → (icon, label, css)
+  const display = (() => {
+    if (source === "embed") {
+      const truncated = origin
+        ? origin.length > 30
+          ? origin.slice(0, 27) + "…"
+          : origin
+        : "Embed";
+      return {
+        icon: "🔗",
+        label: truncated,
+        className: "bg-indigo-50 text-indigo-700",
+      };
+    }
+    if (source === "phone") {
+      return { icon: "📞", label: "Phone", className: "bg-amber-50 text-amber-700" };
+    }
+    if (source === "qr_menu") {
+      return { icon: "📱", label: "QR menu", className: "bg-emerald-50 text-emerald-700" };
+    }
+    // listing + direct + anything else → main site
+    return { icon: "🌐", label: "Main site", className: "bg-[#F4F1EC] text-[#5E5848]" };
+  })();
+
+  return (
+    <span
+      className={`inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${display.className}`}
+      title={origin ?? undefined}
+    >
+      <span aria-hidden>{display.icon}</span>
+      <span>{display.label}</span>
+      {ref && (
+        <span className="text-[9px] opacity-70">· {ref}</span>
+      )}
+    </span>
+  );
+}
+
+/** Top-of-page count strip aggregating bookings by source over the last 30d. */
+function BookingsBySourcePanel({
+  reservations,
+}: {
+  reservations: Array<{ source: string; source_origin: string | null; created_at: string }>;
+}) {
+  // Lazy state init keeps Date.now() out of the render body (react-hooks/purity).
+  // Window pins on mount — close enough for a top-of-page metric that the user
+  // can refresh if they want it more accurate.
+  const [thirtyDaysAgoMs] = useState(() => Date.now() - 30 * 24 * 60 * 60 * 1000);
+  const recent = reservations.filter(
+    (r) => new Date(r.created_at).getTime() >= thirtyDaysAgoMs,
+  );
+
+  const mainCount = recent.filter(
+    (r) => r.source !== "embed" && r.source !== "phone",
+  ).length;
+  const embedCount = recent.filter((r) => r.source === "embed").length;
+
+  // Top embed origin (skip null origins so the badge stays meaningful)
+  const originCounts = new Map<string, number>();
+  for (const r of recent) {
+    if (r.source === "embed" && r.source_origin) {
+      originCounts.set(r.source_origin, (originCounts.get(r.source_origin) ?? 0) + 1);
+    }
+  }
+  const topOrigins = Array.from(originCounts.entries())
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 3);
+
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+      <div className="bg-white rounded-xl border border-[#E2DDD5] p-4 shadow-sm">
+        <p className="text-[11px] font-semibold text-[#9C9485] uppercase tracking-wide mb-1">
+          Main site
+        </p>
+        <p className="font-display text-[26px] font-bold tracking-[-0.02em] text-[#16130C] leading-none">
+          {mainCount}
+        </p>
+        <p className="text-[11px] text-[#9C9485] mt-1">last 30 days</p>
+      </div>
+      <div className="bg-white rounded-xl border border-[#E2DDD5] p-4 shadow-sm">
+        <p className="text-[11px] font-semibold text-[#9C9485] uppercase tracking-wide mb-1">
+          Embedded
+        </p>
+        <p className="font-display text-[26px] font-bold tracking-[-0.02em] text-[#16130C] leading-none">
+          {embedCount}
+        </p>
+        <p className="text-[11px] text-[#9C9485] mt-1">last 30 days</p>
+      </div>
+      <div className="bg-white rounded-xl border border-[#E2DDD5] p-4 shadow-sm">
+        <p className="text-[11px] font-semibold text-[#9C9485] uppercase tracking-wide mb-1">
+          Top sources
+        </p>
+        {topOrigins.length === 0 ? (
+          <p className="text-[12px] text-[#9C9485] mt-1">
+            No embed bookings yet.
+          </p>
+        ) : (
+          <ul className="space-y-0.5 mt-1">
+            {topOrigins.map(([origin, count]) => (
+              <li key={origin} className="flex items-center justify-between text-[12px]">
+                <span className="text-[#16130C] truncate pr-2">{origin}</span>
+                <span className="text-[#9C9485] font-semibold">{count}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </div>
+  );
 }
 
 /* ── Capacity check ──────────────────────────────────────────────────────── */
@@ -886,6 +1010,9 @@ export function ReservationsDashboard({
       {/* ── List view ── */}
       {activeTab === "list" && (
         <div className="space-y-3">
+          {/* Where bookings come from (30-day aggregate) */}
+          <BookingsBySourcePanel reservations={reservations} />
+
           {/* Sub-filter */}
           <div className="flex gap-2">
             {(["pending", "approved", "all"] as const).map(f => (
@@ -953,10 +1080,17 @@ export function ReservationsDashboard({
 
                       {/* Name */}
                       <div className="flex-1 min-w-0">
-                        <p className="text-[13px] font-semibold text-[#16130C] truncate">{r.guest_name}</p>
+                        <div className="flex items-center gap-2">
+                          <p className="text-[13px] font-semibold text-[#16130C] truncate">{r.guest_name}</p>
+                          <SourceBadge
+                            source={r.source}
+                            origin={r.source_origin}
+                            ref={r.source_ref}
+                          />
+                        </div>
                         {r.guest_message && (
                           <p className="text-[10px] text-[#9C9485] truncate hidden sm:block">
-                            "{r.guest_message.slice(0, 50)}{r.guest_message.length > 50 ? "…" : ""}"
+                            &ldquo;{r.guest_message.slice(0, 50)}{r.guest_message.length > 50 ? "…" : ""}&rdquo;
                           </p>
                         )}
                       </div>
@@ -1058,7 +1192,15 @@ export function ReservationsDashboard({
                           </div>
                           <div>
                             <p className="text-[10px] font-bold text-[#9C9485] uppercase tracking-wide mb-0.5">Source</p>
-                            <p className="text-[#16130C]">{sourceLabel(r.source)}</p>
+                            <p className="text-[#16130C]">
+                              {sourceLabel(r.source)}
+                              {r.source === "embed" && r.source_origin && (
+                                <span className="text-[#9C9485]"> · {r.source_origin}</span>
+                              )}
+                            </p>
+                            {r.source_ref && (
+                              <p className="text-[10px] text-[#9C9485] mt-0.5">tag: {r.source_ref}</p>
+                            )}
                           </div>
                           <div>
                             <p className="text-[10px] font-bold text-[#9C9485] uppercase tracking-wide mb-0.5">Submitted</p>
