@@ -102,9 +102,91 @@ apps/web/
 
 ## Files NOT to modify (already work as-is)
 
-- `apps/web/app/api/menu/reservations/route.ts` — POST endpoint already validates input, runs Turnstile, writes to `reservations` table. No changes needed.
 - `apps/web/components/reservations/ReservationSheet.tsx` — the existing booking form. Reuse it directly; if it requires modifications, that's a sign we should extract its core form into a presentational sub-component.
 - Email/notification flow — owner gets the same email regardless of where the booking originated.
+
+## Source tracking (REQUIRED for V1)
+
+The owner needs to know **where each reservation came from** — main site, embedded widget on their own site, embedded on a third-party site, etc. Without this, embedding is half-blind: the owner can't tell which channel is producing bookings, can't justify the iframe to their web dev, can't spot a competitor scraping their form.
+
+### Data model
+
+New migration adds three columns to `reservations`:
+
+```sql
+-- 0NN_reservation_source_tracking.sql
+ALTER TABLE reservations
+  ADD COLUMN IF NOT EXISTS source        text NOT NULL DEFAULT 'main'
+    CHECK (source IN ('main', 'embed', 'pos', 'admin')),
+  ADD COLUMN IF NOT EXISTS source_origin text,
+  ADD COLUMN IF NOT EXISTS source_ref    text;
+
+CREATE INDEX IF NOT EXISTS idx_reservations_menu_source
+  ON reservations (menu_id, source);
+```
+
+- `source` — broad bucket. Values: `'main'` (booked on klickenya.com), `'embed'` (iframe), `'pos'` (staff entered via terminal — future), `'admin'` (owner manually added — future). Default `'main'` so existing rows backfill cleanly.
+- `source_origin` — the parent page's hostname when source='embed' (e.g. `napul-restaurant.com`, `www.theirsquarespacesite.com`). NULL otherwise. Don't store paths or query strings — privacy + storage discipline.
+- `source_ref` — optional owner-set label, supplied via embed URL query param `?ref=instagram-bio` or `?ref=newsletter-may`. Free text, max 64 chars. Like UTM but simpler. NULL when not set.
+
+### API change
+
+`api/menu/reservations` POST:
+- Accept optional `source`, `source_origin`, `source_ref` in the body
+- Validate: source must be in the allowed enum; source_origin must look like a hostname (regex `^[a-z0-9.-]+\.[a-z]{2,}$`, max 253 chars); source_ref max 64 chars, stripped of HTML
+- If `source` is missing, default to `'main'` (preserves existing behaviour for any caller that doesn't update)
+- Never trust client for `source='main'` from an embed URL — the embed page server component sets `source='embed'` server-side before rendering the form
+
+### Embed-side implementation
+
+The embed page's server component reads two signals:
+
+1. **Parent origin via `Sec-Fetch-Site` + `Referer` headers** on the inbound request. When a page is loaded inside an iframe, the browser sends:
+   - `Sec-Fetch-Site: cross-site` (or `same-site`)
+   - `Referer: https://parent-site.com/some/page`
+   - We parse the hostname from `Referer` → that's `source_origin`. If header is missing or unparseable, leave NULL.
+
+2. **`ref` query param** from the embed URL → that's `source_ref`.
+
+The embed page passes these as hidden form fields into the ReservationSheet → POST body. Owner can't tamper-proof this fully (any user can edit the iframe URL), but the data is good enough for "which channel works" analytics. For tamper-proof, see V1.5 allowed_origins below.
+
+### Owner-side surface
+
+Two additions:
+
+1. **Per-booking source pill in the reservations list** — `/dashboard/listings/<id>/reservations`. Each booking row shows a small badge next to the time:
+   - `🌐 Main site` (source='main')
+   - `🔗 your-site.com` (source='embed', source_origin truncated to 30 chars)
+   - `📱 POS` (source='pos', future)
+   When source_ref is set, append `· instagram-bio` so the owner can see their campaign tags.
+
+2. **"Where bookings come from" panel** at the top of `/dashboard/listings/<id>/reservations` — a 3-column count strip:
+   ```
+   ┌─ Main site ─┐  ┌─ Embedded ──┐  ┌─ Top source ──────┐
+   │     17      │  │      31      │  │ your-site.com  24 │
+   │  last 30 d  │  │   last 30 d  │  │   napul.com     5 │
+   └─────────────┘  └──────────────┘  │   instagram     2 │
+                                       └───────────────────┘
+   ```
+   Single SQL aggregate per panel; cheap to compute, refreshes on page load.
+
+### Privacy note
+
+Storing the parent hostname is fine — it's the diner's choice to book through that site. Don't store paths, query strings, or full URLs (they often contain user IDs, search params, etc.). Don't store IP addresses for analytics; we already have IP in Vercel logs for security purposes.
+
+### Schema-projection rule reminder
+
+Adding columns to `reservations`. Per CLAUDE.md "When you add a column to an existing table — READ THIS":
+
+```bash
+grep -rn '\.from("reservations")' apps/web --include='*.ts' --include='*.tsx'
+```
+
+Every `.select()` on `reservations` that powers the owner-facing dashboard or any list view needs to include `source, source_origin, source_ref`. The reservation confirmation email template may want them too. Audit all callsites.
+
+## Files NOT to modify (revised)
+
+- `apps/web/app/api/menu/reservations/route.ts` — POST endpoint **does need modifications for source tracking** (see above). Otherwise unchanged.
 
 ## Theming
 
@@ -115,6 +197,7 @@ Query params accepted by the embed page:
 | `theme` | `light` / `dark` | `light` | Sets background, text colour, input borders |
 | `accent` | hex without `#` | `E8A020` | Buttons, focus rings, accents |
 | `bg` | `transparent` / `white` / hex | `white` | Outer background of the form container |
+| `ref` | free text, max 64 chars | none | Stored as `reservations.source_ref` for owner-side attribution (e.g. `?ref=instagram-bio`) |
 
 Implementation: read params in the embed page server component, apply via inline CSS variables on a root `<div>`:
 
@@ -201,33 +284,51 @@ When implementing:
 - [ ] `X-Frame-Options` is NOT set on `/embed/*` (browser dev tools network tab)
 - [ ] `Content-Security-Policy: frame-ancestors *` IS set
 - [ ] Turnstile widget renders inside the iframe and validates
-- [ ] Submitting a booking from the embed writes a `reservations` row identical to one from `/m/<slug>`
+- [ ] Submitting a booking from the embed writes a `reservations` row identical to one from `/m/<slug>` PLUS `source='embed'`, `source_origin` = parent hostname, `source_ref` = ?ref query param value
+- [ ] Submitting a booking from `/m/<slug>` writes `source='main'`, source_origin NULL, source_ref NULL
+- [ ] Existing reservations created before the migration all default to `source='main'`
 - [ ] The owner gets the confirmation email same as before
 - [ ] Embed page returns 404 when `reservations_enabled = false`
 - [ ] Embed page returns 404 for an unknown slug
 - [ ] Theme params change colours visibly: `?theme=dark`, `?accent=00ff00`
+- [ ] `?ref=foo` query param is captured into source_ref; rejected if longer than 64 chars
 - [ ] Embed page has `<meta name="robots" content="noindex,nofollow">`
 - [ ] Owner-side ReservationsEmbedPanel renders only when `reservations_enabled = true`
 - [ ] "Copy code" button copies the snippet with current theme params applied
 - [ ] Preview iframe inside the dashboard works and matches what the embed URL renders
 - [ ] postMessage height messages fire on form expansion (e.g. user clicks "Special requests")
 - [ ] Mobile-first: form works at 320px width (Squarespace mobile preview)
+- [ ] Reservations list at `/dashboard/listings/<id>/reservations` shows per-booking source badge
+- [ ] "Where bookings come from" panel shows accurate 30-day counts grouped by source / top source_origin
 
 ## Effort estimate
 
+- Migration for source tracking (3 columns + index): 30 min
+- API change: accept + validate source fields, default 'main': 1 hour
 - Embed page + layout: 2–3 hours
+- Embed page server-side parses Referer for source_origin: 30 min
 - ReservationsEmbedPanel (snippet generator + theme picker + preview): 2 hours
+- Per-booking source badge in reservations list: 1 hour
+- "Where bookings come from" panel (3 SQL aggregates): 1.5 hours
 - Middleware CSP / X-Frame headers: 30 min
 - postMessage bridge: 30 min
 - Theming via CSS variables: 1 hour
 - Manual testing across Squarespace/Wix/raw HTML: 1 hour
 - Polish + docs page for restaurant owners: 1 hour
 
-**Total: ~1 working day.** No DB migration. No new dependencies.
+**Total: ~1.5 working days** (was 1 day before source tracking — the analytics surface adds half a day). One DB migration. No new dependencies.
 
 ## Schema-projection rule check
 
-No new columns added in V1. V1.5 (allowed_embed_origins) would add one — when implementing it, follow the CLAUDE.md "When you add a column to an existing table" rule and grep every `.from("menus")` callsite.
+New columns on `reservations`: `source`, `source_origin`, `source_ref`. Per CLAUDE.md:
+
+```bash
+grep -rn '\.from("reservations")' apps/web --include='*.ts' --include='*.tsx'
+```
+
+Every SELECT that powers a list, table, or detail view of reservations needs to include the new columns (or at least `source` and `source_origin` — `source_ref` is only relevant in the dashboard analytics).
+
+V1.5 (`allowed_embed_origins` on `menus`) would add another column; same drill when it lands.
 
 ## Open questions to settle before implementation
 
