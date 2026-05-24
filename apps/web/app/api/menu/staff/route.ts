@@ -12,7 +12,7 @@ function isValidRole(v: unknown): v is "waiter" | "manager" | "cashier" | "kitch
   return v === "waiter" || v === "manager" || v === "cashier" || v === "kitchen" || v === "bar";
 }
 
-const STAFF_SELECT = "id, name, role, is_active, created_at";
+const STAFF_SELECT = "id, name, role, is_active, created_at, can_access_all_stations";
 
 /* ── GET — list active staff for a menu ──────────────────────────────────────── */
 // PIN is never returned in the response body.
@@ -65,6 +65,8 @@ export async function POST(req: NextRequest) {
   if (!isValidRole(resolvedRole)) {
     return NextResponse.json({ error: "Invalid role" }, { status: 400 });
   }
+  const can_access_all_stations =
+    typeof body?.can_access_all_stations === "boolean" ? body.can_access_all_stations : false;
 
   const access = await verifyMenuAccess(supabase, menu_id, userId, isAdmin);
   if (!access) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
@@ -77,6 +79,7 @@ export async function POST(req: NextRequest) {
       pin,
       role: resolvedRole,
       is_active: true,
+      can_access_all_stations,
     })
     .select(STAFF_SELECT)
     .single();
@@ -102,7 +105,7 @@ export async function PATCH(req: NextRequest) {
   if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
 
   const body = await req.json().catch(() => ({}));
-  const { menu_id, name, role, pin, is_active } = body ?? {};
+  const { menu_id, name, role, pin, is_active, can_access_all_stations } = body ?? {};
 
   if (!menu_id || typeof menu_id !== "string") {
     return NextResponse.json({ error: "menu_id required" }, { status: 400 });
@@ -132,6 +135,9 @@ export async function PATCH(req: NextRequest) {
   }
   if (typeof is_active === "boolean") {
     updates.is_active = is_active;
+  }
+  if (typeof can_access_all_stations === "boolean") {
+    updates.can_access_all_stations = can_access_all_stations;
   }
 
   if (Object.keys(updates).length === 0) {

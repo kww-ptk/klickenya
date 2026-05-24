@@ -90,9 +90,27 @@ export async function PATCH(req: NextRequest, ctx: RouteContext) {
     const isKitchenDriver =
       auth.type === "owner" ||
       (auth.type === "staff" && (auth.role === "kitchen" || auth.role === "manager" || auth.role === "bar"));
+
+    // Cross-station opt-in: owner can grant a kitchen/bar staffer access to
+    // the other station. We have to look it up — the cookie session doesn't
+    // carry this flag, and re-issuing on toggle would force a re-login.
+    let canAccessAllStations = false;
+    if (auth.type === "staff") {
+      const { data: staffPerms } = await adminClient
+        .from("restaurant_staff")
+        .select("can_access_all_stations")
+        .eq("id", auth.staffId)
+        .single();
+      canAccessAllStations = staffPerms?.can_access_all_stations === true;
+    }
+
     // Station scope: kitchen role drives only kitchen items; bar role drives
-    // only bar items. Owner and manager can act on either station.
-    if (auth.type === "staff" && (auth.role === "kitchen" || auth.role === "bar")) {
+    // only bar items. Owner, manager, and explicitly-opted-in staff bypass.
+    if (
+      auth.type === "staff" &&
+      (auth.role === "kitchen" || auth.role === "bar") &&
+      !canAccessAllStations
+    ) {
       if (auth.role !== item.station) {
         return NextResponse.json(
           { error: `${auth.role === "bar" ? "Bar" : "Kitchen"} staff cannot advance ${item.station} items.` },
