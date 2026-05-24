@@ -47,13 +47,28 @@ export default async function KitchenOrdersPage({ params, searchParams }: PagePr
     .eq("station", "bar");
   const hasBarStation = (barSectionCount ?? 0) > 0;
 
-  // Role-aware default + ?station override.
+  // Which stations is this PIN-authed user allowed to operate? Mirrors the
+  // station-scope check in /api/menu/order-items/[id] set_station_status —
+  // we don't want to render tabs they can't actually use (clicking would
+  // 403 and the optimistic UI would snap back, looking like a bug).
+  const allowedStations: ReadonlyArray<"kitchen" | "bar"> =
+    session.role === "kitchen"
+      ? ["kitchen"]
+      : session.role === "bar"
+      ? ["bar"]
+      : ["kitchen", "bar"]; // manager / owner
+
+  // Role-aware default + ?station override, clamped to allowedStations.
   const roleDefault: "kitchen" | "bar" =
     session.role === "bar" && hasBarStation ? "bar" : "kitchen";
   const requested =
     sp.station === "bar" ? "bar" : sp.station === "kitchen" ? "kitchen" : roleDefault;
+  const clamped: "kitchen" | "bar" =
+    allowedStations.includes(requested as "kitchen" | "bar")
+      ? (requested as "kitchen" | "bar")
+      : allowedStations[0];
   const activeStation: "kitchen" | "bar" =
-    requested === "bar" && !hasBarStation ? "kitchen" : requested;
+    clamped === "bar" && !hasBarStation ? "kitchen" : clamped;
 
   const { data: orders } = await adminClient
     .from("orders")
@@ -92,6 +107,7 @@ export default async function KitchenOrdersPage({ params, searchParams }: PagePr
           activeStation={activeStation}
           hasBarStation={hasBarStation}
           baseHref={`/kitchen/${slug}/orders`}
+          allowedStations={allowedStations}
         />
         <StationDashboard
           key={activeStation}

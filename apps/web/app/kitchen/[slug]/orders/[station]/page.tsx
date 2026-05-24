@@ -31,6 +31,17 @@ export default async function PinSingleStationPage({ params }: PageProps) {
     .from("restaurant_staff").select("id, is_active").eq("id", session.staff_id).single();
   if (!staffRow || !staffRow.is_active) redirect(`/kitchen/${slug}`);
 
+  // Lock kitchen/bar staff to their own station. They'd hit a 403 from the
+  // per-item PATCH if they tried to advance the other station's items
+  // anyway — better to redirect than to render a view of items they can't
+  // operate.
+  if (session.role === "kitchen" && station !== "kitchen") {
+    redirect(`/kitchen/${slug}/orders/kitchen`);
+  }
+  if (session.role === "bar" && station !== "bar") {
+    redirect(`/kitchen/${slug}/orders/bar`);
+  }
+
   const { data: orders } = await adminClient
     .from("orders")
     .select(`
@@ -60,6 +71,9 @@ export default async function PinSingleStationPage({ params }: PageProps) {
   })) as DashboardOrder[];
 
   const other = station === "kitchen" ? "bar" : "kitchen";
+  // Only manager (and owner — but owner isn't a PIN role here) sees the
+  // "switch to other station" affordance. Kitchen/bar staff are locked.
+  const showSwitchLink = session.role === "manager";
 
   return (
     <div className="min-h-screen flex flex-col bg-[#F4F1EC]">
@@ -69,10 +83,12 @@ export default async function PinSingleStationPage({ params }: PageProps) {
         <p className="text-[12px] font-bold text-[#16130C] uppercase tracking-wide">
           {station === "kitchen" ? "🍳 Kitchen" : "🍹 Bar"}
         </p>
-        <Link href={`/kitchen/${slug}/orders/${other}`}
-          className="text-[11px] font-bold text-[#5E5848] border border-[#E2DDD5] rounded-full px-3 h-[28px] inline-flex items-center hover:bg-[#F4F1EC]">
-          Switch to {other === "kitchen" ? "Kitchen" : "Bar"} →
-        </Link>
+        {showSwitchLink && (
+          <Link href={`/kitchen/${slug}/orders/${other}`}
+            className="text-[11px] font-bold text-[#5E5848] border border-[#E2DDD5] rounded-full px-3 h-[28px] inline-flex items-center hover:bg-[#F4F1EC]">
+            Switch to {other === "kitchen" ? "Kitchen" : "Bar"} →
+          </Link>
+        )}
       </header>
       <div className="flex-1 p-4">
         <StationDashboard menuId={menu.id} station={station as "kitchen" | "bar"}
