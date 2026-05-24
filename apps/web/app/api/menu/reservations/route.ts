@@ -8,6 +8,29 @@ import { fetchReservations } from "./_lib/queries";
 /* ── Phone validation (same regex as /api/contact) ──────────────────────── */
 const internationalPhone = /^\+\d{7,15}$/;
 
+/* ── Source tracking validation ──────────────────────────────────────────── */
+const VALID_SOURCES = ["qr_menu", "listing", "direct", "phone", "embed"] as const;
+type ValidSource = (typeof VALID_SOURCES)[number];
+
+// Hostname regex per spec: lowercase letters/digits/dots/hyphens, at least one
+// dot, TLD ≥2 chars. Caps at 253 chars (DNS limit).
+const HOSTNAME_REGEX = /^[a-z0-9.-]+\.[a-z]{2,}$/;
+function sanitizeSourceOrigin(raw: unknown): string | null {
+  if (typeof raw !== "string") return null;
+  const trimmed = raw.trim().toLowerCase();
+  if (!trimmed || trimmed.length > 253) return null;
+  return HOSTNAME_REGEX.test(trimmed) ? trimmed : null;
+}
+
+// Free text up to 64 chars. Strip anything that looks like HTML to keep the
+// dashboard rendering safe — we display this verbatim in the source badge.
+function sanitizeSourceRef(raw: unknown): string | null {
+  if (typeof raw !== "string") return null;
+  const stripped = raw.replace(/<[^>]*>/g, "").trim();
+  if (!stripped) return null;
+  return stripped.slice(0, 64);
+}
+
 /* ── Time helpers ────────────────────────────────────────────────────────── */
 
 function timeToMinutes(t: string): number {
@@ -147,6 +170,8 @@ export async function POST(req: NextRequest) {
       area_id,
       guest_message,
       source,
+      source_origin,
+      source_ref,
     } = body;
 
     /* ── 1. Basic presence checks ── */
@@ -174,9 +199,20 @@ export async function POST(req: NextRequest) {
     if (!reserved_for || typeof reserved_for !== "string") {
       return NextResponse.json({ error: "reserved_for required" }, { status: 400 });
     }
-    if (source !== "qr_menu" && source !== "listing" && source !== "direct" && source !== "phone") {
+    const resolvedSource: ValidSource = VALID_SOURCES.includes(source as ValidSource)
+      ? (source as ValidSource)
+      : (source === undefined ? "qr_menu" : (null as never));
+    if (resolvedSource === null) {
       return NextResponse.json({ error: "Invalid source" }, { status: 400 });
     }
+
+    // source_origin and source_ref are only meaningful when source='embed'.
+    // For other sources we silently drop them — the dashboard treats NULL as
+    // "no parent / no campaign tag" which is the only correct read.
+    const normalizedSourceOrigin =
+      resolvedSource === "embed" ? sanitizeSourceOrigin(source_origin) : null;
+    const normalizedSourceRef =
+      resolvedSource === "embed" ? sanitizeSourceRef(source_ref) : null;
 
     /* ── 2. Fetch menu + validate reservations_enabled ── */
     const { data: menu, error: menuErr } = await adminClient
@@ -298,7 +334,9 @@ export async function POST(req: NextRequest) {
         area_id: area_id ?? null,
         status: "pending",
         guest_message: guest_message?.trim() || null,
-        source,
+        source: resolvedSource,
+        source_origin: normalizedSourceOrigin,
+        source_ref: normalizedSourceRef,
       })
       .select("id")
       .single();
