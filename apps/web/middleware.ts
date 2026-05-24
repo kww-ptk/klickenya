@@ -2,6 +2,19 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 export async function middleware(request: NextRequest) {
+  const pathname = request.nextUrl.pathname;
+
+  // ── /embed/* — public, iframe-friendly, no auth, no Supabase session ─────
+  // Override Next.js's default X-Frame-Options: SAMEORIGIN so third-party
+  // sites (Squarespace, Wix, anything) can embed the reservation form.
+  // Posture matches Calendly / Resy. Per-menu allowlist deferred to V1.5.
+  if (pathname.startsWith("/embed/")) {
+    const response = NextResponse.next({ request });
+    response.headers.set("Content-Security-Policy", "frame-ancestors *");
+    response.headers.delete("X-Frame-Options");
+    return response;
+  }
+
   let supabaseResponse = NextResponse.next({ request });
 
   const supabase = createServerClient(
@@ -29,8 +42,6 @@ export async function middleware(request: NextRequest) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-
-  const pathname = request.nextUrl.pathname;
 
   // Protected routes
   const isDashboard = pathname.startsWith("/dashboard");

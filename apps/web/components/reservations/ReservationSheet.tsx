@@ -21,8 +21,21 @@ export interface RestaurantArea {
 export interface ReservationSheetProps {
   menuId: string;
   menuName: string;
-  source: "qr_menu" | "listing";
+  source: "qr_menu" | "listing" | "embed";
+  /**
+   * Parent-page hostname when source='embed' (parsed server-side from the
+   * Referer header by the embed route, then passed in). API ignores when
+   * source !== 'embed'.
+   */
+  sourceOrigin?: string | null;
+  /**
+   * Optional campaign label from the embed URL's ?ref=... query param
+   * (e.g. "instagram-bio"). API caps at 64 chars and ignores when source !== 'embed'.
+   */
+  sourceRef?: string | null;
   defaultOpen?: boolean;
+  /** When true, the form renders inline (no Dialog wrapper, no trigger button). */
+  inline?: boolean;
   onSuccess?: (reservationId: string) => void;
   timeWindows: Array<{ open_time: string; close_time: string; is_active?: boolean }>;
   areas: RestaurantArea[];
@@ -163,7 +176,10 @@ export function ReservationSheet({
   menuId,
   menuName,
   source,
+  sourceOrigin = null,
+  sourceRef = null,
   defaultOpen = false,
+  inline = false,
   onSuccess,
   timeWindows,
   areas,
@@ -271,6 +287,8 @@ export function ReservationSheet({
           area_id: areaId || null,
           guest_message: message.trim() || null,
           source,
+          source_origin: sourceOrigin,
+          source_ref: sourceRef,
         }),
       });
 
@@ -285,7 +303,7 @@ export function ReservationSheet({
     } finally {
       setSubmitting(false);
     }
-  }, [menuId, date, time, partySize, areaId, name, phone, email, message, source, onSuccess]);
+  }, [menuId, date, time, partySize, areaId, name, phone, email, message, source, sourceOrigin, sourceRef, onSuccess]);
 
   /* ── WhatsApp pre-fill ── */
   const waText = reservationId && date && time
@@ -300,7 +318,327 @@ export function ReservationSheet({
   const emailValid = email.includes("@") && email.includes(".");
   const canSubmit = !!date && !!time && name.trim().length >= 2 && phone.length >= 8 && emailValid;
 
+  /* ── Render body (shared between dialog and inline modes) ── */
+  const resetForm = () => {
+    setDate("");
+    setTime("");
+    setPartySize(2);
+    setAreaId(null);
+    setName("");
+    setPhone("+254");
+    setEmail("");
+    setMessage("");
+    setSubmitError(null);
+    setStep("form");
+    setDateScrollIdx(0);
+    setReservationId("");
+  };
+
+  const renderBody = () => (
+    <>
+      {step === "form" ? (
+        <>
+          {/* ── Date picker ── */}
+          <div>
+            <p className="text-[11px] font-bold text-text2 uppercase tracking-wide mb-2">Date</p>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setDateScrollIdx((i) => Math.max(0, i - DATES_VISIBLE))}
+                disabled={!canScrollBack}
+                className="shrink-0 size-8 rounded-full border border-border flex items-center justify-center text-text2 hover:border-dark transition-colors disabled:opacity-30"
+              >
+                <ChevronLeft className="size-4" />
+              </button>
+
+              <div className="flex gap-2 overflow-hidden flex-1">
+                {visibleDates.map((d) => {
+                  const lbl = formatDateLabel(d);
+                  const isSelected = d === date;
+                  return (
+                    <button
+                      key={d}
+                      type="button"
+                      onClick={() => { setDate(d); setTime(""); }}
+                      className={cn(
+                        "flex-1 min-w-0 flex flex-col items-center py-2.5 rounded-[14px] border transition-colors text-center",
+                        isSelected
+                          ? "border-amber bg-amber/10 text-amber"
+                          : "border-border hover:border-amber/50",
+                      )}
+                    >
+                      <span className="text-[10px] font-bold uppercase tracking-wide opacity-70">{lbl.weekday}</span>
+                      <span className={cn("text-[17px] font-bold leading-tight", isSelected ? "text-amber" : "text-dark")}>{lbl.day}</span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setDateScrollIdx((i) => i + DATES_VISIBLE)}
+                disabled={!canScrollFwd}
+                className="shrink-0 size-8 rounded-full border border-border flex items-center justify-center text-text2 hover:border-dark transition-colors disabled:opacity-30"
+              >
+                <ChevronRight className="size-4" />
+              </button>
+            </div>
+          </div>
+
+          {/* ── Time picker ── */}
+          {date && (
+            <div>
+              <p className="text-[11px] font-bold text-text2 uppercase tracking-wide mb-2">Time</p>
+              {timeSlots.length === 0 ? (
+                <p className="text-[13px] text-text3">No slots available for this date.</p>
+              ) : (
+                <div className="grid grid-cols-4 gap-2">
+                  {timeSlots.map((slot) => (
+                    <button
+                      key={slot.value}
+                      type="button"
+                      disabled={slot.disabled}
+                      onClick={() => setTime(slot.value)}
+                      className={cn(
+                        "py-2.5 rounded-[12px] border text-[13px] font-semibold transition-colors",
+                        slot.disabled
+                          ? "border-border text-text3 opacity-40 cursor-not-allowed"
+                          : time === slot.value
+                          ? "border-amber bg-amber/10 text-amber"
+                          : "border-border hover:border-amber/50 text-text",
+                      )}
+                    >
+                      {slot.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ── Party size ── */}
+          <div>
+            <p className="text-[11px] font-bold text-text2 uppercase tracking-wide mb-2">Party size</p>
+            <div className="flex items-center justify-between border border-border rounded-[14px] p-3">
+              <div>
+                <span className="text-[14px] text-text">
+                  {partySize} {partySize === 1 ? "guest" : "guests"}
+                </span>
+              </div>
+              <div className="flex items-center gap-3">
+                <StepperButton
+                  onClick={() => setPartySize((n) => Math.max(1, n - 1))}
+                  disabled={partySize <= 1}
+                >
+                  &minus;
+                </StepperButton>
+                <span className="text-[15px] font-semibold w-5 text-center">{partySize}</span>
+                <StepperButton
+                  onClick={() => setPartySize((n) => Math.min(maxPartySize, n + 1))}
+                  disabled={partySize >= maxPartySize}
+                >
+                  +
+                </StepperButton>
+              </div>
+            </div>
+            <p className="text-[11px] text-text3 mt-1">Maximum {maxPartySize} guests per reservation</p>
+          </div>
+
+          {/* ── Area preference (only if ≥2 active areas) ── */}
+          {showAreaField && (
+            <div>
+              <p className="text-[11px] font-bold text-text2 uppercase tracking-wide mb-2">Seating preference</p>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => setAreaId(null)}
+                  className={cn(
+                    "px-4 py-2 rounded-full border text-[13px] font-semibold transition-colors",
+                    areaId === null
+                      ? "border-amber bg-amber/10 text-amber"
+                      : "border-border hover:border-amber/50 text-text2",
+                  )}
+                >
+                  No preference
+                </button>
+                {activeAreas.map((a) => (
+                  <button
+                    key={a.id}
+                    type="button"
+                    onClick={() => setAreaId(a.id)}
+                    className={cn(
+                      "px-4 py-2 rounded-full border text-[13px] font-semibold transition-colors",
+                      areaId === a.id
+                        ? "border-amber bg-amber/10 text-amber"
+                        : "border-border hover:border-amber/50 text-text2",
+                    )}
+                  >
+                    {a.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* ── Name ── */}
+          <div>
+            <label className="block text-[11px] font-bold text-text2 uppercase tracking-wide mb-1">
+              Your name <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Full name"
+              required
+              className="w-full border border-border rounded-[14px] px-4 py-3 text-[14px] text-text placeholder:text-text3 outline-none focus:border-amber transition-colors bg-white"
+            />
+          </div>
+
+          {/* ── Phone ── */}
+          <div>
+            <label className="block text-[11px] font-bold text-text2 uppercase tracking-wide mb-1">
+              Phone <span className="text-red-500">*</span>
+            </label>
+            <PhoneInput value={phone} onChange={setPhone} required />
+          </div>
+
+          {/* ── Email ── */}
+          <div>
+            <label className="block text-[11px] font-bold text-text2 uppercase tracking-wide mb-1">
+              Email <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="your@email.com"
+              required
+              className="w-full border border-border rounded-[14px] px-4 py-3 text-[14px] text-text placeholder:text-text3 outline-none focus:border-amber transition-colors bg-white"
+            />
+            <p className="text-[11px] text-text3 mt-1">
+              We&apos;ll email your confirmation to this address.
+            </p>
+          </div>
+
+          {/* ── Message (optional) ── */}
+          <div>
+            <label className="block text-[11px] font-bold text-text2 uppercase tracking-wide mb-1">
+              Special requests (optional)
+            </label>
+            <textarea
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              placeholder="Birthday dinner, window table if possible"
+              rows={3}
+              className="w-full border border-border rounded-[14px] px-4 py-3 text-[14px] text-text placeholder:text-text3 outline-none focus:border-amber transition-colors bg-white resize-none"
+            />
+          </div>
+
+          {/* ── Error ── */}
+          {submitError && (
+            <div className="rounded-[14px] bg-red-50 border border-red-200 px-4 py-3 text-[13px] text-red-700">
+              {submitError}
+            </div>
+          )}
+
+          {/* ── Submit ── */}
+          <button
+            type="button"
+            onClick={handleSubmit}
+            disabled={!canSubmit || submitting}
+            className="w-full h-[48px] rounded-full bg-gradient-to-r from-amber to-amber2 text-dark text-[14px] font-bold transition-opacity hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            {submitting ? "Submitting…" : "Request reservation"}
+          </button>
+
+          <p className="text-[11px] text-text3 text-center">
+            Your reservation is confirmed once the restaurant approves it.
+            {leadTimeHours > 0 && ` Requests must be made at least ${leadTimeHours}h in advance.`}
+          </p>
+        </>
+      ) : (
+        /* ── Success screen ── */
+        <div className="space-y-5 pb-4">
+          <div className="flex flex-col items-center gap-3 pt-2">
+            <div className="size-14 rounded-full bg-green-100 flex items-center justify-center">
+              <Check className="size-7 text-green-600" />
+            </div>
+            <p className="text-[15px] font-semibold text-text text-center">
+              We&apos;ll confirm your reservation within{" "}
+              <span className="text-amber">{leadTimeHours > 0 ? `${leadTimeHours} hour${leadTimeHours !== 1 ? "s" : ""}` : "shortly"}</span>.
+            </p>
+          </div>
+
+          {/* Booking summary card */}
+          <div className="rounded-[18px] border border-border bg-surface/50 p-4 space-y-2">
+            <div className="flex justify-between text-[13px]">
+              <span className="text-text2">Date &amp; time</span>
+              <span className="font-semibold text-text">{formatConfirmationDateTime(date, time)}</span>
+            </div>
+            <div className="flex justify-between text-[13px]">
+              <span className="text-text2">Party size</span>
+              <span className="font-semibold text-text">{partySize} guests</span>
+            </div>
+            {areaId && activeAreas.find((a) => a.id === areaId) && (
+              <div className="flex justify-between text-[13px]">
+                <span className="text-text2">Area</span>
+                <span className="font-semibold text-text">{activeAreas.find((a) => a.id === areaId)?.name}</span>
+              </div>
+            )}
+            <div className="flex justify-between text-[13px]">
+              <span className="text-text2">Reservation ID</span>
+              <span className="font-mono text-[12px] text-text3">{reservationId.slice(0, 8).toUpperCase()}</span>
+            </div>
+          </div>
+
+          {/* WhatsApp CTA (only if restaurant phone available) */}
+          {waPhone && (
+            <a
+              href={`https://wa.me/${waPhone}?text=${waText}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full h-[44px] rounded-full border border-[#25D366] text-[#25D366] text-[13px] font-semibold flex items-center justify-center gap-2 hover:bg-[#25D366]/5 transition-colors"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+              </svg>
+              Message restaurant directly
+            </a>
+          )}
+
+          <button
+            type="button"
+            onClick={() => (inline ? resetForm() : handleOpenChange(false))}
+            className="w-full h-[44px] rounded-full bg-surface border border-border text-[13px] font-semibold text-text hover:border-dark transition-colors"
+          >
+            {inline ? "Make another booking" : "Close"}
+          </button>
+        </div>
+      )}
+    </>
+  );
+
   /* ── Render ── */
+  // Inline mode: render the form directly (no Dialog wrapper). Used by the
+  // /embed/reservations/[slug] route where the form is the whole page.
+  if (inline) {
+    return (
+      <div className="bg-white rounded-2xl border border-border">
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-border">
+          <h2 className="font-display text-[18px] font-bold tracking-[-0.02em] text-dark">
+            {step === "success" ? "Reservation submitted" : `Book at ${menuName}`}
+          </h2>
+        </div>
+        {/* Body */}
+        <div className="px-5 py-5 space-y-5">
+          {renderBody()}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <Dialog.Root open={open} onOpenChange={handleOpenChange}>
       {/* Trigger */}
@@ -354,286 +692,7 @@ export function ReservationSheet({
 
           {/* Body */}
           <div className="px-5 py-5 space-y-5">
-            {step === "form" ? (
-              <>
-                {/* ── Date picker ── */}
-                <div>
-                  <p className="text-[11px] font-bold text-text2 uppercase tracking-wide mb-2">Date</p>
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setDateScrollIdx((i) => Math.max(0, i - DATES_VISIBLE))}
-                      disabled={!canScrollBack}
-                      className="shrink-0 size-8 rounded-full border border-border flex items-center justify-center text-text2 hover:border-dark transition-colors disabled:opacity-30"
-                    >
-                      <ChevronLeft className="size-4" />
-                    </button>
-
-                    <div className="flex gap-2 overflow-hidden flex-1">
-                      {visibleDates.map((d) => {
-                        const lbl = formatDateLabel(d);
-                        const isSelected = d === date;
-                        return (
-                          <button
-                            key={d}
-                            type="button"
-                            onClick={() => { setDate(d); setTime(""); }}
-                            className={cn(
-                              "flex-1 min-w-0 flex flex-col items-center py-2.5 rounded-[14px] border transition-colors text-center",
-                              isSelected
-                                ? "border-amber bg-amber/10 text-amber"
-                                : "border-border hover:border-amber/50",
-                            )}
-                          >
-                            <span className="text-[10px] font-bold uppercase tracking-wide opacity-70">{lbl.weekday}</span>
-                            <span className={cn("text-[17px] font-bold leading-tight", isSelected ? "text-amber" : "text-dark")}>{lbl.day}</span>
-                          </button>
-                        );
-                      })}
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={() => setDateScrollIdx((i) => i + DATES_VISIBLE)}
-                      disabled={!canScrollFwd}
-                      className="shrink-0 size-8 rounded-full border border-border flex items-center justify-center text-text2 hover:border-dark transition-colors disabled:opacity-30"
-                    >
-                      <ChevronRight className="size-4" />
-                    </button>
-                  </div>
-                </div>
-
-                {/* ── Time picker ── */}
-                {date && (
-                  <div>
-                    <p className="text-[11px] font-bold text-text2 uppercase tracking-wide mb-2">Time</p>
-                    {timeSlots.length === 0 ? (
-                      <p className="text-[13px] text-text3">No slots available for this date.</p>
-                    ) : (
-                      <div className="grid grid-cols-4 gap-2">
-                        {timeSlots.map((slot) => (
-                          <button
-                            key={slot.value}
-                            type="button"
-                            disabled={slot.disabled}
-                            onClick={() => setTime(slot.value)}
-                            className={cn(
-                              "py-2.5 rounded-[12px] border text-[13px] font-semibold transition-colors",
-                              slot.disabled
-                                ? "border-border text-text3 opacity-40 cursor-not-allowed"
-                                : time === slot.value
-                                ? "border-amber bg-amber/10 text-amber"
-                                : "border-border hover:border-amber/50 text-text",
-                            )}
-                          >
-                            {slot.label}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* ── Party size ── */}
-                <div>
-                  <p className="text-[11px] font-bold text-text2 uppercase tracking-wide mb-2">Party size</p>
-                  <div className="flex items-center justify-between border border-border rounded-[14px] p-3">
-                    <div>
-                      <span className="text-[14px] text-text">
-                        {partySize} {partySize === 1 ? "guest" : "guests"}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <StepperButton
-                        onClick={() => setPartySize((n) => Math.max(1, n - 1))}
-                        disabled={partySize <= 1}
-                      >
-                        &minus;
-                      </StepperButton>
-                      <span className="text-[15px] font-semibold w-5 text-center">{partySize}</span>
-                      <StepperButton
-                        onClick={() => setPartySize((n) => Math.min(maxPartySize, n + 1))}
-                        disabled={partySize >= maxPartySize}
-                      >
-                        +
-                      </StepperButton>
-                    </div>
-                  </div>
-                  <p className="text-[11px] text-text3 mt-1">Maximum {maxPartySize} guests per reservation</p>
-                </div>
-
-                {/* ── Area preference (only if ≥2 active areas) ── */}
-                {showAreaField && (
-                  <div>
-                    <p className="text-[11px] font-bold text-text2 uppercase tracking-wide mb-2">Seating preference</p>
-                    <div className="flex flex-wrap gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setAreaId(null)}
-                        className={cn(
-                          "px-4 py-2 rounded-full border text-[13px] font-semibold transition-colors",
-                          areaId === null
-                            ? "border-amber bg-amber/10 text-amber"
-                            : "border-border hover:border-amber/50 text-text2",
-                        )}
-                      >
-                        No preference
-                      </button>
-                      {activeAreas.map((a) => (
-                        <button
-                          key={a.id}
-                          type="button"
-                          onClick={() => setAreaId(a.id)}
-                          className={cn(
-                            "px-4 py-2 rounded-full border text-[13px] font-semibold transition-colors",
-                            areaId === a.id
-                              ? "border-amber bg-amber/10 text-amber"
-                              : "border-border hover:border-amber/50 text-text2",
-                          )}
-                        >
-                          {a.name}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* ── Name ── */}
-                <div>
-                  <label className="block text-[11px] font-bold text-text2 uppercase tracking-wide mb-1">
-                    Your name <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="Full name"
-                    required
-                    className="w-full border border-border rounded-[14px] px-4 py-3 text-[14px] text-text placeholder:text-text3 outline-none focus:border-amber transition-colors bg-white"
-                  />
-                </div>
-
-                {/* ── Phone ── */}
-                <div>
-                  <label className="block text-[11px] font-bold text-text2 uppercase tracking-wide mb-1">
-                    Phone <span className="text-red-500">*</span>
-                  </label>
-                  <PhoneInput value={phone} onChange={setPhone} required />
-                </div>
-
-                {/* ── Email ── */}
-                <div>
-                  <label className="block text-[11px] font-bold text-text2 uppercase tracking-wide mb-1">
-                    Email <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="your@email.com"
-                    required
-                    className="w-full border border-border rounded-[14px] px-4 py-3 text-[14px] text-text placeholder:text-text3 outline-none focus:border-amber transition-colors bg-white"
-                  />
-                  <p className="text-[11px] text-text3 mt-1">
-                    We'll email your confirmation to this address.
-                  </p>
-                </div>
-
-                {/* ── Message (optional) ── */}
-                <div>
-                  <label className="block text-[11px] font-bold text-text2 uppercase tracking-wide mb-1">
-                    Special requests (optional)
-                  </label>
-                  <textarea
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                    placeholder="Birthday dinner, window table if possible"
-                    rows={3}
-                    className="w-full border border-border rounded-[14px] px-4 py-3 text-[14px] text-text placeholder:text-text3 outline-none focus:border-amber transition-colors bg-white resize-none"
-                  />
-                </div>
-
-                {/* ── Error ── */}
-                {submitError && (
-                  <div className="rounded-[14px] bg-red-50 border border-red-200 px-4 py-3 text-[13px] text-red-700">
-                    {submitError}
-                  </div>
-                )}
-
-                {/* ── Submit ── */}
-                <button
-                  type="button"
-                  onClick={handleSubmit}
-                  disabled={!canSubmit || submitting}
-                  className="w-full h-[48px] rounded-full bg-gradient-to-r from-amber to-amber2 text-dark text-[14px] font-bold transition-opacity hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
-                >
-                  {submitting ? "Submitting…" : "Request reservation"}
-                </button>
-
-                <p className="text-[11px] text-text3 text-center">
-                  Your reservation is confirmed once the restaurant approves it.
-                  {leadTimeHours > 0 && ` Requests must be made at least ${leadTimeHours}h in advance.`}
-                </p>
-              </>
-            ) : (
-              /* ── Success screen ── */
-              <div className="space-y-5 pb-4">
-                <div className="flex flex-col items-center gap-3 pt-2">
-                  <div className="size-14 rounded-full bg-green-100 flex items-center justify-center">
-                    <Check className="size-7 text-green-600" />
-                  </div>
-                  <p className="text-[15px] font-semibold text-text text-center">
-                    We&apos;ll confirm your reservation within{" "}
-                    <span className="text-amber">{leadTimeHours > 0 ? `${leadTimeHours} hour${leadTimeHours !== 1 ? "s" : ""}` : "shortly"}</span>.
-                  </p>
-                </div>
-
-                {/* Booking summary card */}
-                <div className="rounded-[18px] border border-border bg-surface/50 p-4 space-y-2">
-                  <div className="flex justify-between text-[13px]">
-                    <span className="text-text2">Date &amp; time</span>
-                    <span className="font-semibold text-text">{formatConfirmationDateTime(date, time)}</span>
-                  </div>
-                  <div className="flex justify-between text-[13px]">
-                    <span className="text-text2">Party size</span>
-                    <span className="font-semibold text-text">{partySize} guests</span>
-                  </div>
-                  {areaId && activeAreas.find((a) => a.id === areaId) && (
-                    <div className="flex justify-between text-[13px]">
-                      <span className="text-text2">Area</span>
-                      <span className="font-semibold text-text">{activeAreas.find((a) => a.id === areaId)?.name}</span>
-                    </div>
-                  )}
-                  <div className="flex justify-between text-[13px]">
-                    <span className="text-text2">Reservation ID</span>
-                    <span className="font-mono text-[12px] text-text3">{reservationId.slice(0, 8).toUpperCase()}</span>
-                  </div>
-                </div>
-
-                {/* WhatsApp CTA (only if restaurant phone available) */}
-                {waPhone && (
-                  <a
-                    href={`https://wa.me/${waPhone}?text=${waText}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="w-full h-[44px] rounded-full border border-[#25D366] text-[#25D366] text-[13px] font-semibold flex items-center justify-center gap-2 hover:bg-[#25D366]/5 transition-colors"
-                  >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
-                    </svg>
-                    Message restaurant directly
-                  </a>
-                )}
-
-                <button
-                  type="button"
-                  onClick={() => handleOpenChange(false)}
-                  className="w-full h-[44px] rounded-full bg-surface border border-border text-[13px] font-semibold text-text hover:border-dark transition-colors"
-                >
-                  Close
-                </button>
-              </div>
-            )}
+            {renderBody()}
           </div>
         </Dialog.Content>
       </Dialog.Portal>
