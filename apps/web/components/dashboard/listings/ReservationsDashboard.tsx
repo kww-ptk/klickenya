@@ -876,53 +876,51 @@ export function ReservationsDashboard({
   }));
 
   /* ── Floor view ─────────────────────────────────────────────────────────── */
-  // Floor tab — full table CRUD + drag-to-arrange via the shared
-  // TablesSection. Tables are a shared concern between Reservations and
-  // Table Ordering (same restaurant_tables rows), so an owner editing
-  // their floor plan from either screen sees the same effect.
+  // Floor tab JSX is rendered inline below (see `floorTabContent`) instead
+  // of via an inner `function FloorView()` — defining a component inside the
+  // parent created a fresh function identity on every render, so when the
+  // 8s reservations polling fired and the parent re-rendered, React saw a
+  // new component type and unmounted+remounted the whole TablesSection
+  // subtree. That blew away the "Add table" form state every 8 seconds.
   //
   // V2: drag-to-assign reservations onto specific tables (binds
   //     reservations.table_id) — deferred per V1 plan. The TablesSection
   //     handles editing; the assignment overlay is the missing piece.
 
-  function FloorView() {
-    const activeAreas = areas.filter(a => a.is_active);
+  // Lazy fetch tables on first Floor-tab open. Lifted out of the previous
+  // inner-component useEffect so it runs once at the top level rather than
+  // re-arming whenever the parent re-renders.
+  useEffect(() => {
+    if (activeTab !== "floor") return;
+    if (floorTables !== null || floorTablesLoading) return;
+    setFloorTablesLoading(true);
+    fetch(`/api/menu/tables?menu_id=${menuId}`)
+      .then((r) => r.json())
+      .then((d) => setFloorTables(d.tables ?? []))
+      .catch(() => showToast("Failed to load tables for floor map", "error"))
+      .finally(() => setFloorTablesLoading(false));
+  }, [activeTab, menuId, floorTables, floorTablesLoading, showToast]);
 
-    // Lazy fetch — first time the Floor tab opens. Same endpoint as before.
-    useEffect(() => {
-      if (floorTables !== null || floorTablesLoading) return;
-      setFloorTablesLoading(true);
-      fetch(`/api/menu/tables?menu_id=${menuId}`)
-        .then((r) => r.json())
-        .then((d) => setFloorTables(d.tables ?? []))
-        .catch(() => showToast("Failed to load tables for floor map", "error"))
-        .finally(() => setFloorTablesLoading(false));
-    }, []);
+  // Inline JSX for the Floor tab. Computed every render but the resulting
+  // <TablesSection> element keeps a stable type (the imported component)
+  // so React reconciles it in place instead of unmounting.
+  const activeAreas = areas.filter((a) => a.is_active);
+  const sectionAreas: AreaOption[] = activeAreas.map((a) => ({
+    id:        a.id,
+    name:      a.name,
+    color_hex: a.color_hex ?? null,
+  }));
 
-    if (activeAreas.length === 0) {
-      return (
-        <p className="text-[13px] text-[#9C9485] text-center py-6">
-          No seating areas configured yet. Add an area in Settings to start placing tables.
-        </p>
-      );
-    }
-
-    if (floorTablesLoading || floorTables === null) {
-      return (
-        <div className="bg-white border border-[#E2DDD5] rounded-2xl p-6 text-center text-[13px] text-[#9C9485]">
-          Loading tables…
-        </div>
-      );
-    }
-
-    // Map active areas to the AreaOption shape TablesSection expects.
-    const sectionAreas: AreaOption[] = activeAreas.map((a) => ({
-      id:        a.id,
-      name:      a.name,
-      color_hex: a.color_hex ?? null,
-    }));
-
-    return (
+  const floorTabContent =
+    activeAreas.length === 0 ? (
+      <p className="text-[13px] text-[#9C9485] text-center py-6">
+        No seating areas configured yet. Add an area in Settings to start placing tables.
+      </p>
+    ) : floorTablesLoading || floorTables === null ? (
+      <div className="bg-white border border-[#E2DDD5] rounded-2xl p-6 text-center text-[13px] text-[#9C9485]">
+        Loading tables…
+      </div>
+    ) : (
       <TablesSection
         menuId={menuId}
         areas={sectionAreas}
@@ -932,7 +930,6 @@ export function ReservationsDashboard({
         listSubtitle="Tables are shared with Table ordering. Add a row per physical table — they become QR-scannable destinations AND show up on the floor map so you can drag-arrange them."
       />
     );
-  }
 
   /* ── Render ─────────────────────────────────────────────────────────────── */
   return (
@@ -1304,7 +1301,7 @@ export function ReservationsDashboard({
       )}
 
       {/* ── Floor view ── */}
-      {activeTab === "floor" && <FloorView />}
+      {activeTab === "floor" && floorTabContent}
 
       {/* ── Settings tab ── */}
       {activeTab === "settings" && (
