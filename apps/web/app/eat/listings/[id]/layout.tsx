@@ -151,12 +151,14 @@ export default async function EatListingLayout({
   if (isFeatureActive("table_ordering")) {
     tabs.push({ label: "Orders", href: `${baseHref}/orders` });
   }
+  if (menu) {
+    // POS sits between Orders and Kitchen in the setup chain: it's the
+    // staff-driven side of the same order pipeline. Available whenever a
+    // menu exists (waiter-only restaurants can use POS without QR ordering).
+    tabs.push({ label: "POS", href: `${baseHref}/pos` });
+  }
   if (isFeatureActive("klickenya_kitchen")) {
     tabs.push({ label: "Kitchen", href: `${baseHref}/kitchen` });
-  }
-  if (menu) {
-    // POS is always available once a menu exists.
-    tabs.push({ label: "POS", href: `${baseHref}/pos` });
   }
   tabs.push({ label: "Features", href: `${baseHref}/features` });
 

@@ -1115,10 +1115,11 @@ export function MenuBuilder({
  * (native title) explain the feature in plain language without dragging
  * the owner out of menu-creation flow.
  *
- * Order = the feature dependency chain the user described:
- *   1. Reservations (next step after publishing a menu)
- *   2. Table Ordering (POS, kitchen, waiter — depends on a menu)
- *   3. Kitchen Costing (advanced — depends on a menu)
+ * Order = the feature setup chain (matches /eat tab order):
+ *   1. Reservations  (next step after publishing a menu)
+ *   2. Table Ordering (guests order from their table via QR code)
+ *   3. POS           (staff-driven side of the same order pipeline)
+ *   4. Kitchen Costing (recipes + margins; auto-deducts on orders)
  * ─────────────────────────────────────────────────────────────────────── */
 function OtherFeaturesHintCard({
   featureBaseHref,
@@ -1148,9 +1149,21 @@ function OtherFeaturesHintCard({
       title: "Table ordering",
       blurb: "Guests order from their table via QR code; kitchen and bar see live tickets.",
       tooltip:
-        "Tablet POS for staff, QR ordering for guests, real-time kitchen + bar tickets. Includes split bills, table sessions, and audit log.",
+        "QR ordering for guests, real-time kitchen + bar tickets, split bills, table sessions, audit log. Pairs with POS for staff-driven orders on the same pipeline.",
       enabled: tableOrdering,
       href: `${featureBaseHref}/orders`,
+    },
+    {
+      key: "pos",
+      icon: "📱",
+      title: "POS terminal",
+      blurb: "Tablet sign-in for waiters; staff-driven side of the order pipeline.",
+      tooltip:
+        "Each staff member signs in with a 4-digit PIN. Take orders at the table, settle bills, manage table sessions. Same orders pipeline as table ordering; same kitchen view.",
+      // POS is "active" whenever a menu exists. We don't track a separate
+      // boolean — defer to "always available when menu exists".
+      enabled: false,
+      href: `${featureBaseHref}/pos`,
     },
     {
       key: "kitchen",

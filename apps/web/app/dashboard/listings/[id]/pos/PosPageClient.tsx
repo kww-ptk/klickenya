@@ -52,10 +52,11 @@ function PosPageInner({ listingId, menuId, menuName, menuSlug, mode = "full", fe
     mode === "pos-only" && featureBaseHref
       ? featureBaseHref
       : `/dashboard/listings/${listingId}`;
-  const ordersHref =
+  // POS → Kitchen is the next step in the setup chain.
+  const nextFeatureHref =
     mode === "pos-only" && featureBaseHref
-      ? `${featureBaseHref}/orders`
-      : `/dashboard/listings/${listingId}/orders`;
+      ? `${featureBaseHref}/kitchen`
+      : null;
 
   return (
     <div className="space-y-5">
@@ -116,22 +117,22 @@ function PosPageInner({ listingId, menuId, menuName, menuSlug, mode = "full", fe
         />
       </div>
 
-      {/* /eat-only: related-feature hint pointing back to Ordering setup —
-          POS and Table Ordering share the same order pipeline; POS is just
-          the staff-driven side. */}
-      {mode === "pos-only" && (
+      {/* /eat-only: "Next: Kitchen costing" hint. POS is the staff-driven
+          side of the ordering pipeline; once both ordering surfaces are
+          set up, Kitchen costing closes the loop with recipes + margins. */}
+      {mode === "pos-only" && nextFeatureHref && (
         <a
-          href={ordersHref}
-          title="Configure tables, toggle table ordering on/off, see live operational links (kitchen view, QR codes, audit log)."
+          href={nextFeatureHref}
+          title="Klickenya Kitchen — build recipes for every menu item, log purchases and waste, see real margin per dish. Stock deducts automatically when an order fires from table ordering or POS."
           className="group flex items-start gap-3 bg-white rounded-xl border border-[#E2DDD5] shadow-sm hover:shadow-md hover:border-[#E8A020]/40 transition-all p-4"
         >
-          <span className="shrink-0 text-[22px] leading-none mt-0.5">🛒</span>
+          <span className="shrink-0 text-[22px] leading-none mt-0.5">🍳</span>
           <div className="flex-1 min-w-0">
             <p className="text-[13px] font-semibold text-[#16130C] group-hover:text-[#E8A020] transition-colors">
-              Related: Table ordering setup
+              Next: Kitchen costing
             </p>
             <p className="text-[12px] text-[#9C9485] mt-0.5 leading-snug">
-              Tables, on/off toggle, and live kitchen view — POS and table ordering share the same order pipeline.
+              Recipes, stock, and per-dish margin. Auto-deducts when orders fire from POS or QR ordering.
             </p>
           </div>
           <span className="shrink-0 text-[#C5BFB5] text-[16px] mt-1 group-hover:text-[#E8A020] transition-colors">→</span>

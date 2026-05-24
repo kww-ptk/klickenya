@@ -8,7 +8,8 @@ import { DayView } from "./reservations-calendar/DayView";
 import type { CalendarReservation } from "./reservations-calendar/WeekView";
 import { ReservationsSettings } from "./ReservationsSettings";
 import type { RestaurantArea as SettingsArea, TimeWindow } from "./ReservationsSettings";
-import { FloorMapCanvas } from "./floor-map/FloorMapCanvas";
+import { TablesSection } from "./TablesSection";
+import type { AreaOption, InitialTable } from "./TablesSection";
 
 /* ── Capacity warning threshold (tunable after pilot) ─────────────────────── */
 // TODO V2: Capacity enforcement moves server-side via reservation_slots table in V2.
@@ -875,15 +876,19 @@ export function ReservationsDashboard({
   }));
 
   /* ── Floor view ─────────────────────────────────────────────────────────── */
-  // V1: live floor map (read-only). Canvas reuses the editor component in
-  // mode="live"; tables loaded lazily on first open.
+  // Floor tab — full table CRUD + drag-to-arrange via the shared
+  // TablesSection. Tables are a shared concern between Reservations and
+  // Table Ordering (same restaurant_tables rows), so an owner editing
+  // their floor plan from either screen sees the same effect.
+  //
   // V2: drag-to-assign reservations onto specific tables (binds
-  //     reservations.table_id) — deferred per V1 plan.
+  //     reservations.table_id) — deferred per V1 plan. The TablesSection
+  //     handles editing; the assignment overlay is the missing piece.
 
   function FloorView() {
     const activeAreas = areas.filter(a => a.is_active);
 
-    // Lazy fetch — first time the Floor tab opens.
+    // Lazy fetch — first time the Floor tab opens. Same endpoint as before.
     useEffect(() => {
       if (floorTables !== null || floorTablesLoading) return;
       setFloorTablesLoading(true);
@@ -905,39 +910,26 @@ export function ReservationsDashboard({
     if (floorTablesLoading || floorTables === null) {
       return (
         <div className="bg-white border border-[#E2DDD5] rounded-2xl p-6 text-center text-[13px] text-[#9C9485]">
-          Loading floor map…
+          Loading tables…
         </div>
       );
     }
 
-    if (floorTables.length === 0) {
-      return (
-        <div className="bg-white border border-[#E2DDD5] rounded-2xl p-6 text-center">
-          <p className="text-[14px] font-semibold text-[#16130C]">No tables yet</p>
-          <p className="text-[12px] text-[#9C9485] mt-1">
-            Add tables under Table ordering, then arrange them on the floor map.
-          </p>
-        </div>
-      );
-    }
+    // Map active areas to the AreaOption shape TablesSection expects.
+    const sectionAreas: AreaOption[] = activeAreas.map((a) => ({
+      id:        a.id,
+      name:      a.name,
+      color_hex: a.color_hex ?? null,
+    }));
 
     return (
-      <FloorMapCanvas
-        mode="live"
-        areas={activeAreas.map((a) => ({
-          id: a.id,
-          name: a.name,
-          color_hex: a.color_hex ?? null,
-        }))}
-        tables={floorTables}
-        // V1 reservations side has no table_id binding yet, so every tile
-        // shows "available". State coloring lights up in V2 once
-        // reservations.table_id is wired.
-        getState={() => "available"}
-        onTileTap={() => {
-          // V2: open a "Assign reservation" sheet here.
-          showToast("Drag-to-assign reservations lands in V2.");
-        }}
+      <TablesSection
+        menuId={menuId}
+        areas={sectionAreas}
+        initialTables={floorTables as InitialTable[]}
+        showToast={showToast}
+        heading="Floor & tables"
+        listSubtitle="Tables are shared with Table ordering. Add a row per physical table — they become QR-scannable destinations AND show up on the floor map so you can drag-arrange them."
       />
     );
   }
