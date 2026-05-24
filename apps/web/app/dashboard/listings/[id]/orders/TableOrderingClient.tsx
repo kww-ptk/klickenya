@@ -36,6 +36,15 @@ interface Props {
   initialTableOrdering: boolean;
   areas:     AreaOption[];
   initialTables: InitialTable[];
+  /**
+   * "full"          — legacy /dashboard layout; back link to /dashboard/listings/<id>.
+   * "ordering-only" — /eat layout; back link to /eat/listings/<id>; live-ops links
+   *                   bounce back to /eat after; surface POS related card +
+   *                   "Next: Kitchen costing" hint.
+   */
+  mode?: "full" | "ordering-only";
+  /** URL prefix for /eat hints. Required when mode === "ordering-only". */
+  featureBaseHref?: string;
 }
 
 export function TableOrderingClient(props: Props) {
@@ -54,6 +63,8 @@ function Inner({
   initialTableOrdering,
   areas,
   initialTables,
+  mode = "full",
+  featureBaseHref,
 }: Props) {
   const { showToast } = useToast();
   const [enabled, setEnabled] = useState(initialTableOrdering);
@@ -93,16 +104,35 @@ function Inner({
     }
   }
 
-  const back = `back=${encodeURIComponent(`/dashboard/listings/${listingId}/orders`)}`;
+  // Back-link target for the legacy /dashboard/menu/<id>/* operational pages
+  // (kitchen view, QR, audit) so they know where to return. In ordering-only
+  // mode we hand them the /eat URL so the user stays in the eat shell.
+  const ordersOwnHref =
+    mode === "ordering-only" && featureBaseHref
+      ? `${featureBaseHref}/orders`
+      : `/dashboard/listings/${listingId}/orders`;
+  const back = `back=${encodeURIComponent(ordersOwnHref)}`;
+  const overviewHref =
+    mode === "ordering-only" && featureBaseHref
+      ? featureBaseHref
+      : `/dashboard/listings/${listingId}`;
+  const posHref =
+    mode === "ordering-only" && featureBaseHref
+      ? `${featureBaseHref}/pos`
+      : `/dashboard/listings/${listingId}/pos`;
+  const nextFeatureHref =
+    mode === "ordering-only" && featureBaseHref
+      ? `${featureBaseHref}/kitchen`
+      : null;
 
   return (
     <div className="space-y-5">
       <div>
         <Link
-          href={`/dashboard/listings/${listingId}`}
+          href={overviewHref}
           className="text-[13px] text-[#9C9485] hover:text-[#16130C]"
         >
-          ← Back to dashboard
+          {mode === "ordering-only" ? "← Back to overview" : "← Back to dashboard"}
         </Link>
         <h1 className="font-display text-[22px] lg:text-[28px] font-bold tracking-[-0.03em] text-[#16130C] mt-2">
           Table ordering
@@ -192,6 +222,50 @@ function Inner({
         Public menu lives at <code>/m/{menuSlug}</code>. Each table also has its own QR code that
         encodes the table number into the URL.
       </p>
+
+      {/* /eat-only: related-feature + next-feature hints. POS sits inside
+          ordering conceptually (it's the staff-side of the same flow), so
+          it surfaces as a related card rather than a "next" one. Kitchen
+          costing is the natural next step in the setup chain. */}
+      {mode === "ordering-only" && (
+        <>
+          <a
+            href={posHref}
+            title="Tablet POS for waiters and managers: take orders at the table, settle bills, manage table sessions. Sign-in is per-staff with a 4-digit PIN — no email, no password."
+            className="group flex items-start gap-3 bg-white rounded-xl border border-[#E2DDD5] shadow-sm hover:shadow-md hover:border-[#E8A020]/40 transition-all p-4"
+          >
+            <span className="shrink-0 text-[22px] leading-none mt-0.5">📱</span>
+            <div className="flex-1 min-w-0">
+              <p className="text-[13px] font-semibold text-[#16130C] group-hover:text-[#E8A020] transition-colors">
+                Related: POS terminal
+              </p>
+              <p className="text-[12px] text-[#9C9485] mt-0.5 leading-snug">
+                Tablet sign-in for waiters; same orders, same kitchen view — just staff-driven instead of guest-scanned.
+              </p>
+            </div>
+            <span className="shrink-0 text-[#C5BFB5] text-[16px] mt-1 group-hover:text-[#E8A020] transition-colors">→</span>
+          </a>
+
+          {nextFeatureHref && (
+            <a
+              href={nextFeatureHref}
+              title="Klickenya Kitchen — build recipes for every menu item, log purchases and waste, see real margin per dish. Stock deducts automatically when an order fires from table ordering or POS."
+              className="group flex items-start gap-3 bg-white rounded-xl border border-[#E2DDD5] shadow-sm hover:shadow-md hover:border-[#E8A020]/40 transition-all p-4"
+            >
+              <span className="shrink-0 text-[22px] leading-none mt-0.5">🍳</span>
+              <div className="flex-1 min-w-0">
+                <p className="text-[13px] font-semibold text-[#16130C] group-hover:text-[#E8A020] transition-colors">
+                  Next: Kitchen costing
+                </p>
+                <p className="text-[12px] text-[#9C9485] mt-0.5 leading-snug">
+                  Recipes, stock, and per-dish margin. Auto-deducts when orders fire.
+                </p>
+              </div>
+              <span className="shrink-0 text-[#C5BFB5] text-[16px] mt-1 group-hover:text-[#E8A020] transition-colors">→</span>
+            </a>
+          )}
+        </>
+      )}
     </div>
   );
 }

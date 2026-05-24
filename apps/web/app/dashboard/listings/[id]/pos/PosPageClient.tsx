@@ -11,6 +11,14 @@ interface Props {
   menuId:    string;
   menuName:  string;
   menuSlug:  string;
+  /**
+   * "full"     — legacy /dashboard; back link to /dashboard/listings/<id>.
+   * "pos-only" — /eat shell; back link to overview; adds Related: Table
+   *              ordering hint (POS is the staff-side of the ordering flow).
+   */
+  mode?: "full" | "pos-only";
+  /** URL prefix for /eat hints. Required when mode === "pos-only". */
+  featureBaseHref?: string;
 }
 
 export function PosPageClient(props: Props) {
@@ -21,7 +29,7 @@ export function PosPageClient(props: Props) {
   );
 }
 
-function PosPageInner({ listingId, menuId, menuName, menuSlug }: Props) {
+function PosPageInner({ listingId, menuId, menuName, menuSlug, mode = "full", featureBaseHref }: Props) {
   const { showToast } = useToast();
   const [copied, setCopied] = useState(false);
 
@@ -40,14 +48,23 @@ function PosPageInner({ listingId, menuId, menuName, menuSlug }: Props) {
     }
   }
 
+  const overviewHref =
+    mode === "pos-only" && featureBaseHref
+      ? featureBaseHref
+      : `/dashboard/listings/${listingId}`;
+  const ordersHref =
+    mode === "pos-only" && featureBaseHref
+      ? `${featureBaseHref}/orders`
+      : `/dashboard/listings/${listingId}/orders`;
+
   return (
     <div className="space-y-5">
       <div>
         <Link
-          href={`/dashboard/listings/${listingId}`}
+          href={overviewHref}
           className="text-[13px] text-[#9C9485] hover:text-[#16130C]"
         >
-          ← Back to dashboard
+          {mode === "pos-only" ? "← Back to overview" : "← Back to dashboard"}
         </Link>
         <h1 className="font-display text-[22px] lg:text-[28px] font-bold tracking-[-0.03em] text-[#16130C] mt-2">
           POS terminal
@@ -98,6 +115,28 @@ function PosPageInner({ listingId, menuId, menuName, menuSlug }: Props) {
           showPosUrl={false}
         />
       </div>
+
+      {/* /eat-only: related-feature hint pointing back to Ordering setup —
+          POS and Table Ordering share the same order pipeline; POS is just
+          the staff-driven side. */}
+      {mode === "pos-only" && (
+        <a
+          href={ordersHref}
+          title="Configure tables, toggle table ordering on/off, see live operational links (kitchen view, QR codes, audit log)."
+          className="group flex items-start gap-3 bg-white rounded-xl border border-[#E2DDD5] shadow-sm hover:shadow-md hover:border-[#E8A020]/40 transition-all p-4"
+        >
+          <span className="shrink-0 text-[22px] leading-none mt-0.5">🛒</span>
+          <div className="flex-1 min-w-0">
+            <p className="text-[13px] font-semibold text-[#16130C] group-hover:text-[#E8A020] transition-colors">
+              Related: Table ordering setup
+            </p>
+            <p className="text-[12px] text-[#9C9485] mt-0.5 leading-snug">
+              Tables, on/off toggle, and live kitchen view — POS and table ordering share the same order pipeline.
+            </p>
+          </div>
+          <span className="shrink-0 text-[#C5BFB5] text-[16px] mt-1 group-hover:text-[#E8A020] transition-colors">→</span>
+        </a>
+      )}
     </div>
   );
 }
