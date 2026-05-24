@@ -24,11 +24,15 @@ export default async function EatListingsPage() {
   if (!hostProfile && !isAdmin) redirect("/dashboard");
 
   // Restaurants only — eat is restaurant-centric.
+  // Restaurant detection uses both `type == "restaurant"` (the modern
+  // convention) and `subcategory == "restaurants"` (legacy listings, including
+  // Napule). The dashboard layout uses the same dual check at /dashboard/listings/[id]/page.tsx:170.
   // Admin sees all restaurants; hosts see only their own.
+  const RESTAURANT_FILTER = `(type == "restaurant" || subcategory == "restaurants")`;
   const groqFilter = isAdmin
-    ? `_type == "listing" && type == "restaurant"`
+    ? `_type == "listing" && ${RESTAURANT_FILTER}`
     : `_type == "listing"
-        && type == "restaurant"
+        && ${RESTAURANT_FILTER}
         && (
           hostId == $hostId
           || host._ref == $sanityHostId

@@ -45,9 +45,14 @@ export default async function EatLayout({
         // Restaurants only — eat preview shouldn't count enquiries for
         // stays/experiences/events listings.
         const listingIds = await sanityClient.fetch<string[]>(
+          // Restaurant detection mirrors the legacy dashboard convention:
+          // a listing is restaurant-y if `type == "restaurant"` OR if it's
+          // catalogued under `subcategory == "restaurants"`. Napule and
+          // others use the latter — the type field is sometimes
+          // "experience" or "venue" with restaurants nested as a subcategory.
           `*[
             _type == "listing"
-            && type == "restaurant"
+            && (type == "restaurant" || subcategory == "restaurants")
             && (
               hostId == $hostId
               || host._ref == $sanityHostId

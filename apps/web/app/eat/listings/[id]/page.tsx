@@ -36,13 +36,14 @@ export default async function EatOverviewPage({
   const hostProfile = await getHostProfile(user.id);
   if (!hostProfile && !isAdmin) redirect("/dashboard");
 
+  // Dual restaurant check — see /eat/listings/[id]/layout.tsx for the rationale.
   const listing = await sanityClient.fetch<{
     slug: string;
     city: string | null;
   } | null>(
     isAdmin
-      ? `*[_id == $id && _type == "listing" && type == "restaurant"][0]{ "slug": slug.current, city }`
-      : `*[_id == $id && _type == "listing" && type == "restaurant" && (hostId == $userId || host._ref == $sanityHostId)][0]{
+      ? `*[_id == $id && _type == "listing" && (type == "restaurant" || subcategory == "restaurants")][0]{ "slug": slug.current, city }`
+      : `*[_id == $id && _type == "listing" && (type == "restaurant" || subcategory == "restaurants") && (hostId == $userId || host._ref == $sanityHostId)][0]{
           "slug": slug.current, city
         }`,
     {

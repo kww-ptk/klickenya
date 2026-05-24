@@ -32,8 +32,8 @@ export default async function EatMenuPage({ params }: PageProps) {
   // Fetch listing slug + city — same restaurant-only gate as the layout.
   const listing = await sanityClient.fetch<{ slug: string; city: string | null } | null>(
     isAdmin
-      ? `*[_id == $id && _type == "listing" && type == "restaurant"][0]{ "slug": slug.current, city }`
-      : `*[_id == $id && _type == "listing" && type == "restaurant" && (hostId == $userId || host._ref == $sanityHostId)][0]{
+      ? `*[_id == $id && _type == "listing" && (type == "restaurant" || subcategory == "restaurants")][0]{ "slug": slug.current, city }`
+      : `*[_id == $id && _type == "listing" && (type == "restaurant" || subcategory == "restaurants") && (hostId == $userId || host._ref == $sanityHostId)][0]{
           "slug": slug.current, city
         }`,
     {

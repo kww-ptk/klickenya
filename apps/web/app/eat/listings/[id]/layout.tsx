@@ -42,6 +42,8 @@ export default async function EatListingLayout({
   if (!hostProfile && !isAdmin) redirect("/dashboard");
 
   // Fetch listing — restaurants only on this surface.
+  // Dual restaurant check (type OR subcategory) so legacy listings like
+  // Napule (subcategory: "restaurants") are also recognised.
   const listing = await sanityClient.fetch<{
     _id: string;
     title: string;
@@ -50,13 +52,13 @@ export default async function EatListingLayout({
     city: string | null;
   } | null>(
     isAdmin
-      ? `*[_id == $id && _type == "listing" && type == "restaurant"][0]{
+      ? `*[_id == $id && _type == "listing" && (type == "restaurant" || subcategory == "restaurants")][0]{
           _id, title, "slug": slug.current, type, city
         }`
       : `*[
           _id == $id
           && _type == "listing"
-          && type == "restaurant"
+          && (type == "restaurant" || subcategory == "restaurants")
           && (hostId == $userId || host._ref == $sanityHostId)
         ][0]{
           _id, title, "slug": slug.current, type, city
