@@ -206,7 +206,12 @@ export function ReservationSheet({
   /* ── submission state ── */
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [step, setStep] = useState<"form" | "success">("form");
+  // Two-step form: 'details' (date / time / party / area) →
+  //                'contact' (name / phone / email / message) →
+  //                'success' (confirmation card).
+  // The form used to be one long screen; splitting it dropped the visible
+  // field count from ~8 to ~4 per screen — far less daunting on mobile.
+  const [step, setStep] = useState<"details" | "contact" | "success">("details");
   const [reservationId, setReservationId] = useState("");
 
   /* ── date picker scroll ── */
@@ -239,7 +244,7 @@ export function ReservationSheet({
         setEmail("");
         setMessage("");
         setSubmitError(null);
-        setStep("form");
+        setStep("details");
         setDateScrollIdx(0);
         setReservationId("");
       }
@@ -316,7 +321,10 @@ export function ReservationSheet({
 
   /* ── Validation ── */
   const emailValid = email.includes("@") && email.includes(".");
-  const canSubmit = !!date && !!time && name.trim().length >= 2 && phone.length >= 8 && emailValid;
+  // Step 1 (details): need date + time + at least 1 guest. Area is optional.
+  const canContinueToContact = !!date && !!time && partySize >= 1;
+  // Step 2 (contact): need a usable name + phone + email on top of step 1.
+  const canSubmit = canContinueToContact && name.trim().length >= 2 && phone.length >= 8 && emailValid;
 
   /* ── Render body (shared between dialog and inline modes) ── */
   const resetForm = () => {
@@ -329,15 +337,21 @@ export function ReservationSheet({
     setEmail("");
     setMessage("");
     setSubmitError(null);
-    setStep("form");
+    setStep("details");
     setDateScrollIdx(0);
     setReservationId("");
   };
 
   const renderBody = () => (
     <>
-      {step === "form" ? (
+      {step === "details" ? (
+        /* ── Step 1: date / time / party size / area ── */
         <>
+          {/* Step indicator */}
+          <p className="text-[10px] font-bold text-text3 uppercase tracking-wide -mt-1">
+            Step 1 of 2 · Booking details
+          </p>
+
           {/* ── Date picker ── */}
           <div>
             <p className="text-[11px] font-bold text-text2 uppercase tracking-wide mb-2">Date</p>
@@ -480,6 +494,46 @@ export function ReservationSheet({
             </div>
           )}
 
+          {/* ── Continue → step 2 ── */}
+          <button
+            type="button"
+            onClick={() => setStep("contact")}
+            disabled={!canContinueToContact}
+            className="w-full h-[48px] rounded-full bg-gradient-to-r from-amber to-amber2 text-dark text-[14px] font-bold transition-opacity hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            Continue
+          </button>
+        </>
+      ) : step === "contact" ? (
+        /* ── Step 2: contact details ── */
+        <>
+          {/* Step indicator + booking summary so the guest knows what they're confirming */}
+          <div>
+            <p className="text-[10px] font-bold text-text3 uppercase tracking-wide -mt-1">
+              Step 2 of 2 · Contact details
+            </p>
+            <div className="mt-2 rounded-[14px] border border-border bg-surface/50 px-3 py-2 flex items-center justify-between gap-2">
+              <div className="text-[12px] text-text2 truncate">
+                <span className="font-semibold text-text">{formatConfirmationDateTime(date, time)}</span>
+                <span className="mx-1.5">·</span>
+                <span>{partySize} {partySize === 1 ? "guest" : "guests"}</span>
+                {areaId && activeAreas.find((a) => a.id === areaId) && (
+                  <>
+                    <span className="mx-1.5">·</span>
+                    <span>{activeAreas.find((a) => a.id === areaId)?.name}</span>
+                  </>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={() => setStep("details")}
+                className="shrink-0 text-[12px] font-semibold text-amber hover:underline"
+              >
+                Edit
+              </button>
+            </div>
+          </div>
+
           {/* ── Name ── */}
           <div>
             <label className="block text-[11px] font-bold text-text2 uppercase tracking-wide mb-1">
@@ -491,6 +545,7 @@ export function ReservationSheet({
               onChange={(e) => setName(e.target.value)}
               placeholder="Full name"
               required
+              autoFocus
               className="w-full border border-border rounded-[14px] px-4 py-3 text-[14px] text-text placeholder:text-text3 outline-none focus:border-amber transition-colors bg-white"
             />
           </div>
@@ -542,15 +597,25 @@ export function ReservationSheet({
             </div>
           )}
 
-          {/* ── Submit ── */}
-          <button
-            type="button"
-            onClick={handleSubmit}
-            disabled={!canSubmit || submitting}
-            className="w-full h-[48px] rounded-full bg-gradient-to-r from-amber to-amber2 text-dark text-[14px] font-bold transition-opacity hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
-          >
-            {submitting ? "Submitting…" : "Request reservation"}
-          </button>
+          {/* ── Submit + Back row ── */}
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => setStep("details")}
+              disabled={submitting}
+              className="h-[48px] px-5 rounded-full bg-surface border border-border text-[13px] font-semibold text-text hover:border-dark transition-colors disabled:opacity-40"
+            >
+              Back
+            </button>
+            <button
+              type="button"
+              onClick={handleSubmit}
+              disabled={!canSubmit || submitting}
+              className="flex-1 h-[48px] rounded-full bg-gradient-to-r from-amber to-amber2 text-dark text-[14px] font-bold transition-opacity hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              {submitting ? "Submitting…" : "Request reservation"}
+            </button>
+          </div>
 
           <p className="text-[11px] text-text3 text-center">
             Your reservation is confirmed once the restaurant approves it.
@@ -628,7 +693,11 @@ export function ReservationSheet({
         {/* Header */}
         <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-border">
           <h2 className="font-display text-[18px] font-bold tracking-[-0.02em] text-dark">
-            {step === "success" ? "Reservation submitted" : `Book at ${menuName}`}
+            {step === "success"
+              ? "Reservation submitted"
+              : step === "contact"
+              ? "Your details"
+              : `Book at ${menuName}`}
           </h2>
         </div>
         {/* Body */}
@@ -678,7 +747,11 @@ export function ReservationSheet({
           {/* Header */}
           <div className="flex items-center justify-between px-5 pt-3 pb-4 md:pt-5 border-b border-border">
             <Dialog.Title className="font-display text-[18px] font-bold tracking-[-0.02em] text-dark">
-              {step === "success" ? "Reservation submitted" : `Book at ${menuName}`}
+              {step === "success"
+              ? "Reservation submitted"
+              : step === "contact"
+              ? "Your details"
+              : `Book at ${menuName}`}
             </Dialog.Title>
             <Dialog.Close asChild>
               <button
