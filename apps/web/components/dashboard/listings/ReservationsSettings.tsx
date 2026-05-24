@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { TableSetup } from "@/components/dashboard/menu/TableSetup";
+import { ReservationsEmbedPanel } from "@/components/dashboard/menu/ReservationsEmbedPanel";
 import { Toggle } from "@/components/ui/Toggle";
 
 /* ── Types ─────────────────────────────────────────────────────────────────── */
@@ -27,6 +28,8 @@ export interface TimeWindow {
 
 interface ReservationsSettingsProps {
   menuId: string;
+  /** Menu slug — needed by the embed snippet generator. */
+  menuSlug: string;
   /** Listing id, so we can deep-link to the new POS staff management page. */
   listingId: string;
   listingCity: string | null;
@@ -642,6 +645,7 @@ function AddTimeWindowForm({ menuId, disabled, onAdd, showToast }: AddTimeWindow
 
 export function ReservationsSettings({
   menuId,
+  menuSlug,
   listingId,
   listingCity,
   initialReservationsEnabled,
@@ -989,6 +993,18 @@ export function ReservationsSettings({
         </div>
         <span className="text-[#9C9485] text-[16px] shrink-0">›</span>
       </a>
+
+      {/* ── Embed on owner's website ────────────────────────────────────────
+           Moved here from the MenuBuilder Publish Panel — this is the right
+           home (reservations setting, not menu editing). The component is
+           the same; only the mount point changed.
+      ────────────────────────────────────────────────────────────────────── */}
+      {enabled && (
+        <ReservationsEmbedPanel
+          menuSlug={menuSlug}
+          reservationsEnabled={enabled}
+        />
+      )}
     </div>
   );
 }

@@ -12,14 +12,20 @@ export interface TabItem {
 interface ListingTabNavProps {
   listingId: string;
   tabs: TabItem[];
+  /**
+   * Optional override for the "overview" route (the one that needs exact-
+   * match active detection). Defaults to /dashboard/listings/<id> for the
+   * legacy command center; the /eat preview passes /eat/listings/<id>.
+   */
+  overviewHref?: string;
 }
 
-export function ListingTabNav({ listingId, tabs }: ListingTabNavProps) {
+export function ListingTabNav({ listingId, tabs, overviewHref: overviewHrefProp }: ListingTabNavProps) {
   const pathname = usePathname();
 
   // Active detection: exact match for overview (no trailing segment),
   // prefix match for sub-routes.
-  const overviewHref = `/dashboard/listings/${listingId}`;
+  const overviewHref = overviewHrefProp ?? `/dashboard/listings/${listingId}`;
 
   function isActive(href: string): boolean {
     if (href === overviewHref) {

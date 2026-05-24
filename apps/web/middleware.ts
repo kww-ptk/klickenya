@@ -48,8 +48,12 @@ export async function middleware(request: NextRequest) {
   const isAdmin = pathname.startsWith("/admin");
   const isAccount = pathname.startsWith("/account");
   const isProfile = pathname.startsWith("/profile");
+  // /eat/* is the restaurant-only command center preview. Same gating as
+  // /dashboard (host or admin), different navigation shell + route tree.
+  // Will move to a real eat.klickenya.com subdomain once the IA is proven.
+  const isEat = pathname.startsWith("/eat");
 
-  if ((isDashboard || isAdmin || isAccount || isProfile) && !user) {
+  if ((isDashboard || isAdmin || isAccount || isProfile || isEat) && !user) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     url.searchParams.set("returnTo", pathname);
@@ -57,7 +61,7 @@ export async function middleware(request: NextRequest) {
   }
 
   // Role-based access: fetch role once for protected routes
-  if ((isAdmin || isDashboard || isProfile) && user) {
+  if ((isAdmin || isDashboard || isProfile || isEat) && user) {
     const { createClient } = await import("@supabase/supabase-js");
     const adminSupabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -82,6 +86,13 @@ export async function middleware(request: NextRequest) {
 
     // Dashboard routes: must be host or admin
     if (isDashboard && role !== "host" && role !== "admin") {
+      const url = request.nextUrl.clone();
+      url.pathname = "/profile";
+      return NextResponse.redirect(url);
+    }
+
+    // /eat: same gating as /dashboard — host or admin only
+    if (isEat && role !== "host" && role !== "admin") {
       const url = request.nextUrl.clone();
       url.pathname = "/profile";
       return NextResponse.redirect(url);

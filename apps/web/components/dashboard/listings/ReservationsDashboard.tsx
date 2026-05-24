@@ -1309,6 +1309,7 @@ export function ReservationsDashboard({
       {activeTab === "settings" && (
         <ReservationsSettings
           menuId={menuId}
+          menuSlug={menuSlug}
           listingId={listingId}
           listingCity={listingCity}
           initialReservationsEnabled={menuSettings.reservationsEnabled}
