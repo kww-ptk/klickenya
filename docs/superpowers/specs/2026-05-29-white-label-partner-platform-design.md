@@ -65,9 +65,53 @@ Fields:
 - **Content:** contact email/phone, footer text, social links, default
   region/city
 - **Flags:** "Powered by Klickenya" badge on/off
+- **Enabled modules:** the set of Klickenya capabilities this partner uses
+  (e.g. `stays`, `tours`, `events`, `restaurant`). Drives feature scoping — see
+  section 4a.
+- **Allowed listing types:** which `listing.type` values this partner can
+  create (subset of `stay`, `experience`, `event`, `rental`, `service`).
 
 Adding a partner = creating one `partner` document plus operational setup
 (section 9).
+
+## 4a. Feature scoping per partner
+
+Klickenya is feature-rich (property PMS, QR menu, POS, kitchen, stock, events,
+real estate). **A partner must only ever see the modules relevant to them.** A
+holiday-rental agency, for example, must never see QR-menu/POS/kitchen/stock.
+
+This is distinct from the gating that already exists. Today the dashboard gates
+features **per listing**: `apps/web/app/dashboard/listings/[id]/layout.tsx`
+defines `DEPLOYED_SEGMENTS` + `getActiveTabs`, and the listing hub branches on
+`listing.type` (`stay`/`rental` vs restaurant) and per-listing capability flags
+(`reservations_enabled`, `ordering_enabled`, `stock_enabled`, etc.). White-label
+adds a higher level: gating **per partner**.
+
+The `enabledModules` set on the partner record gates three things:
+1. **Dashboard top-level nav** — the global dashboard routes (`menu`, `menus`,
+   `events`, `property`, `enquiries`, `stats`, `settings`, etc.) are filtered to
+   the partner's enabled modules. Implemented by extending the existing
+   `DEPLOYED_SEGMENTS`/`getActiveTabs` gating from per-listing to also
+   per-partner.
+2. **Allowed listing types** — listing creation/import is restricted to the
+   partner's `allowedListingTypes`, so an agency host can only create stays and
+   experiences.
+3. **Storefront surfaces** — the storefront only renders the categories/listing
+   types the partner is enabled for (search filters, nav, listing pages).
+
+### First client (holiday rental agency)
+- **Enabled modules:** `stays`, `tours` only.
+- **Disabled:** events, and the entire restaurant suite (menu, POS, kitchen,
+  stock).
+- **Allowed listing types:** `stay` (and `rental` if needed), `experience`.
+
+### Caveat — tours/experiences booking
+Klickenya's booking engine (`properties`/`rooms`/availability RPCs) is built for
+**stays**. Experiences/tours exist as a listing type but may not have a
+date/availability booking flow yet. For this client, tours are likely
+**enquiry-based** (contact/booking request) rather than calendar-bookable until
+a tour availability model is added. The implementation plan must confirm the
+tour booking flow before promising calendar availability for tours.
 
 ## 5. Data model changes (small, additive, non-breaking)
 
@@ -181,9 +225,11 @@ A repeatable checklist, not a build:
 1. **Partner data model** — Sanity `partner` doc type + `listing.partner` +
    `publishToMarketplace`; Supabase partner linkage. Verify the klickenya.com
    marketplace is unchanged for house listings.
-2. **Dashboard white-labeling** — per-domain (or per-host) theme resolution +
-   auth on the partner admin domain + partner-aware transactional email
-   branding, all on the existing dashboard.
+2. **Dashboard white-labeling + feature scoping** — per-domain (or per-host)
+   theme resolution + auth on the partner admin domain + partner-aware
+   transactional email branding, plus per-partner module gating (nav + allowed
+   listing types) via the extended `DEPLOYED_SEGMENTS`/`getActiveTabs`
+   mechanism. All on the existing dashboard.
 3. **Storefront starter** — build the starter template app + shared package
    (BFF → Klickenya availability/booking APIs + Sanity partner-filtered
    content). Includes search, listing detail, availability calendar, booking.
@@ -228,10 +274,12 @@ A repeatable checklist, not a build:
 + Studio, public availability API, the entire host dashboard (themed), listing
 detail data, and UI components/logic (via the shared package).
 
-**New:** the `partner` Sanity schema; `listing.partner` + `publishToMarketplace`
-fields; partner linkage in Supabase; per-domain theme/auth/email branding for
-the dashboard; tenant-aware marketplace GROQ; the storefront starter template +
-shared package; per-storefront SEO.
+**New:** the `partner` Sanity schema (incl. `enabledModules` +
+`allowedListingTypes`); `listing.partner` + `publishToMarketplace` fields;
+partner linkage in Supabase; per-domain theme/auth/email branding for the
+dashboard; **per-partner feature/module gating** (extending
+`DEPLOYED_SEGMENTS`/`getActiveTabs`); tenant-aware marketplace GROQ; the
+storefront starter template + shared package; per-storefront SEO.
 
 ## 14. Out of scope (for now)
 
