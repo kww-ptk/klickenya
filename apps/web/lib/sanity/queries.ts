@@ -9,6 +9,11 @@ const IMAGE_FIELDS = `
   crop
 `
 
+// White-label: klickenya.com marketplace shows house listings (no partner)
+// OR partner listings explicitly cross-listed. Interpolate inside the [ ... ]
+// filter of every PUBLIC marketplace listing query.
+const MARKETPLACE_PARTNER_FILTER = `(!defined(partner) || publishToMarketplace == true)`
+
 const LISTING_CARD_FIELDS = `
   _id,
   title,
@@ -29,7 +34,9 @@ const LISTING_CARD_FIELDS = `
   isVerified,
   verificationStatus,
   "coverPhoto": photos[0]{ ${IMAGE_FIELDS} },
-  "hostRef": host->{ _id, name, "slug": slug.current, photo{ ${IMAGE_FIELDS} }, verified }
+  "hostRef": host->{ _id, name, "slug": slug.current, photo{ ${IMAGE_FIELDS} }, verified },
+  "partnerSlug": partner->slug.current,
+  publishToMarketplace
 `
 
 const PROPERTY_CARD_FIELDS = `
@@ -58,19 +65,19 @@ const PROPERTY_CARD_FIELDS = `
 // ── Listings ─────────────────────────────────────
 
 export const LISTINGS_QUERY = groq`
-  *[_type == "listing" && status == "published"] | order(_createdAt desc) {
+  *[_type == "listing" && status == "published" && ${MARKETPLACE_PARTNER_FILTER}] | order(_createdAt desc) {
     ${LISTING_CARD_FIELDS}
   }
 `
 
 export const LISTINGS_BY_TYPE_QUERY = groq`
-  *[_type == "listing" && status == "published" && type == $type] | order(_createdAt desc) {
+  *[_type == "listing" && status == "published" && type == $type && ${MARKETPLACE_PARTNER_FILTER}] | order(_createdAt desc) {
     ${LISTING_CARD_FIELDS}
   }
 `
 
 export const LISTINGS_FILTERED_QUERY = groq`
-  *[_type == "listing" && status == "published" && type == $type
+  *[_type == "listing" && status == "published" && type == $type && ${MARKETPLACE_PARTNER_FILTER}
     && select(
       $subcategory != "" => subcategory == $subcategory,
       true
@@ -85,19 +92,19 @@ export const LISTINGS_FILTERED_QUERY = groq`
 `
 
 export const SUBCATEGORY_COUNTS_QUERY = groq`
-  *[_type == "listing" && status == "published" && type == $type] {
+  *[_type == "listing" && status == "published" && type == $type && ${MARKETPLACE_PARTNER_FILTER}] {
     subcategory
   }
 `
 
 export const LISTINGS_BY_TYPE_CITY_QUERY = groq`
-  *[_type == "listing" && status == "published" && type == $type && lower(city) == lower($city)] | order(_createdAt desc) {
+  *[_type == "listing" && status == "published" && type == $type && lower(city) == lower($city) && ${MARKETPLACE_PARTNER_FILTER}] | order(_createdAt desc) {
     ${LISTING_CARD_FIELDS}
   }
 `
 
 export const LISTING_BY_SLUG_QUERY = groq`
-  *[_type == "listing" && slug.current == $slug][0] {
+  *[_type == "listing" && slug.current == $slug && ${MARKETPLACE_PARTNER_FILTER}][0] {
     _id,
     title,
     slug,
@@ -182,7 +189,7 @@ export const LISTING_BY_SLUG_QUERY = groq`
 `
 
 export const LISTING_SLUGS_QUERY = groq`
-  *[_type == "listing" && status == "published"] {
+  *[_type == "listing" && status == "published" && ${MARKETPLACE_PARTNER_FILTER}] {
     "slug": slug.current,
     type,
     subcategory,
@@ -204,12 +211,12 @@ export const HOST_BY_SLUG_QUERY = groq`
     verified,
     createdAt,
     "listings": listings[]->{ ${LISTING_CARD_FIELDS} },
-    "events": *[_type == "listing" && type == "event" && status == "published" && host._ref == ^._id]{ ${LISTING_CARD_FIELDS}, eventDate, eventEndDate, venue, isFree, priceFrom, isRecurring, recurrenceRule, schedule[]{ _key, day, startTime, endTime }, "coverPhotoUrl": photos[0].asset->url }
+    "events": *[_type == "listing" && type == "event" && status == "published" && host._ref == ^._id && ${MARKETPLACE_PARTNER_FILTER}]{ ${LISTING_CARD_FIELDS}, eventDate, eventEndDate, venue, isFree, priceFrom, isRecurring, recurrenceRule, schedule[]{ _key, day, startTime, endTime }, "coverPhotoUrl": photos[0].asset->url }
   }
 `
 
 export const SIMILAR_LISTINGS_QUERY = groq`
-  *[_type == "listing" && status == "published" && type == $type && lower(city) == lower($city) && slug.current != $slug] | order(_createdAt desc) [0...3] {
+  *[_type == "listing" && status == "published" && type == $type && lower(city) == lower($city) && slug.current != $slug && ${MARKETPLACE_PARTNER_FILTER}] | order(_createdAt desc) [0...3] {
     ${LISTING_CARD_FIELDS}
   }
 `
