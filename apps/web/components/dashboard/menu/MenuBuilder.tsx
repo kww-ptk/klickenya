@@ -469,36 +469,36 @@ export function MenuBuilder({
     return (
       <div className="space-y-4">
         {/* Status card */}
-        <div className="bg-white rounded-xl lg:rounded-2xl border border-[#E2DDD5] p-4 lg:p-5 shadow-sm">
+        <div className="bg-white rounded-xl lg:rounded-2xl border border-border p-4 lg:p-5 shadow-sm">
           <div className="flex items-center gap-2 mb-3">
             {menu.is_published ? (
               <span className="inline-flex items-center text-[10px] font-bold text-emerald-600 bg-emerald-100 px-2.5 py-0.5 rounded-full uppercase tracking-wide">Live</span>
             ) : (
-              <span className="inline-flex items-center text-[10px] font-bold text-[#9C9485] bg-[#F4F1EC] px-2.5 py-0.5 rounded-full uppercase tracking-wide">Draft</span>
+              <span className="inline-flex items-center text-[10px] font-bold text-text3 bg-surface px-2.5 py-0.5 rounded-full uppercase tracking-wide">Draft</span>
             )}
           </div>
 
           {menu.is_published ? (
             <>
-              <p className="text-[13px] text-[#5E5848] mb-2">Your menu is live at:</p>
+              <p className="text-[13px] text-text2 mb-2">Your menu is live at:</p>
               <Link
                 href={`/m/${menu.slug}`}
                 target="_blank"
-                className="text-[13px] font-semibold text-[#E8A020] hover:underline break-all"
+                className="text-[13px] font-semibold text-amber hover:underline break-all"
               >
                 klickenya.com/m/{menu.slug}
               </Link>
               <div className="flex flex-col gap-2 mt-4">
                 <Link
                   href={`/dashboard/menu/${menu.id}/qr`}
-                  className="w-full h-[36px] rounded-full bg-[#16130C] text-white text-[13px] font-bold flex items-center justify-center hover:bg-[#2A2520] transition-colors"
+                  className="w-full h-[36px] rounded-full bg-dark text-white text-[13px] font-bold flex items-center justify-center hover:bg-[#2A2520] transition-colors"
                 >
                   Download QR code →
                 </Link>
                 <button
                   onClick={togglePublish}
                   disabled={publishing}
-                  className="w-full h-[36px] rounded-full border border-[#E2DDD5] text-[13px] font-semibold text-[#5E5848] hover:border-[#9C9485] transition-colors disabled:opacity-50"
+                  className="w-full h-[36px] rounded-full border border-border text-[13px] font-semibold text-text2 hover:border-text3 transition-colors disabled:opacity-50"
                 >
                   Take offline
                 </button>
@@ -506,21 +506,21 @@ export function MenuBuilder({
             </>
           ) : (
             <>
-              <p className="text-[13px] text-[#5E5848] mb-3">
+              <p className="text-[13px] text-text2 mb-3">
                 Your menu is not visible to customers yet.
               </p>
               <div className="flex flex-col gap-2">
                 <button
                   onClick={togglePublish}
                   disabled={publishing || sections.length === 0}
-                  className="w-full h-[40px] rounded-full bg-[#E8A020] text-[#16130C] text-[13px] font-bold hover:bg-[#d4911c] transition-colors disabled:opacity-50"
+                  className="w-full h-[40px] rounded-full bg-amber text-dark text-[13px] font-bold hover:bg-[#d4911c] transition-colors disabled:opacity-50"
                 >
                   {publishing ? "Publishing..." : "Publish menu"}
                 </button>
                 <Link
                   href={`/m/${menu.slug}`}
                   target="_blank"
-                  className="text-center text-[13px] font-semibold text-[#9C9485] hover:text-[#16130C] transition-colors"
+                  className="text-center text-[13px] font-semibold text-text3 hover:text-dark transition-colors"
                 >
                   Preview ↗
                 </Link>
@@ -530,32 +530,32 @@ export function MenuBuilder({
         </div>
 
         {/* Scan stats */}
-        <div className="bg-white rounded-xl lg:rounded-2xl border border-[#E2DDD5] p-4 lg:p-5 shadow-sm">
-          <p className="text-[14px] font-semibold text-[#16130C] mb-1">
+        <div className="bg-white rounded-xl lg:rounded-2xl border border-border p-4 lg:p-5 shadow-sm">
+          <p className="text-[14px] font-semibold text-dark mb-1">
             🔍 {scanCount} scan{scanCount !== 1 ? "s" : ""} this week
           </p>
           {scanCount === 0 ? (
-            <p className="text-[12px] text-[#9C9485]">
+            <p className="text-[12px] text-text3">
               No scans yet — publish your menu and share the QR code
             </p>
           ) : (
-            <p className="text-[12px] text-[#9C9485]">
+            <p className="text-[12px] text-text3">
               People are viewing your menu
             </p>
           )}
         </div>
 
         {/* Table ordering toggle */}
-        <div className="bg-white rounded-xl lg:rounded-2xl border border-[#E2DDD5] p-4 lg:p-5 shadow-sm">
+        <div className="bg-white rounded-xl lg:rounded-2xl border border-border p-4 lg:p-5 shadow-sm">
           <div className="flex items-center justify-between mb-1">
-            <p className="text-[14px] font-semibold text-[#16130C]">Table ordering</p>
+            <p className="text-[14px] font-semibold text-dark">Table ordering</p>
             <Toggle
               checked={tableOrdering}
               onChange={toggleTableOrdering}
               disabled={togglingOrdering}
             />
           </div>
-          <p className="text-[12px] text-[#9C9485]">
+          <p className="text-[12px] text-text3">
             {tableOrdering
               ? "Guests can order from their table using the menu QR code."
               : "Enable to let guests place orders from their table."}
@@ -563,21 +563,21 @@ export function MenuBuilder({
 
           {tableOrdering && (
             <>
-              <div className="mt-3 p-3 rounded-lg bg-[#E8A020]/8 border border-[#E8A020]/20">
-                <p className="text-[12px] text-[#5E5848]">
+              <div className="mt-3 p-3 rounded-lg bg-amber/8 border border-amber/20">
+                <p className="text-[12px] text-text2">
                   <span className="font-bold">Heads up:</span> Make sure someone is watching the kitchen dashboard when ordering is active.
                 </p>
               </div>
               <Link
                 href={`/dashboard/menu/${menu.id}/orders`}
-                className="mt-3 flex items-center justify-center gap-2 w-full h-[36px] rounded-full bg-[#16130C] text-white text-[13px] font-bold hover:bg-[#2A2520] transition-colors"
+                className="mt-3 flex items-center justify-center gap-2 w-full h-[36px] rounded-full bg-dark text-white text-[13px] font-bold hover:bg-[#2A2520] transition-colors"
               >
                 <span>🍳</span>
                 Kitchen view →
               </Link>
               <Link
                 href={`/dashboard/menu/${menu.id}/audit`}
-                className="mt-2 flex items-center justify-center gap-2 w-full h-[36px] rounded-full bg-white border border-[#E2DDD5] text-[#16130C] text-[13px] font-bold hover:border-[#16130C] transition-colors"
+                className="mt-2 flex items-center justify-center gap-2 w-full h-[36px] rounded-full bg-white border border-border text-dark text-[13px] font-bold hover:border-dark transition-colors"
               >
                 <span>📋</span>
                 Audit log →
@@ -587,16 +587,16 @@ export function MenuBuilder({
         </div>
 
         {/* Table reservations — compact card; full settings live in listing dashboard */}
-        <div className="bg-white rounded-xl lg:rounded-2xl border border-[#E2DDD5] p-4 lg:p-5 shadow-sm">
+        <div className="bg-white rounded-xl lg:rounded-2xl border border-border p-4 lg:p-5 shadow-sm">
           <div className="flex items-center justify-between mb-1">
-            <p className="text-[14px] font-semibold text-[#16130C]">Table reservations</p>
+            <p className="text-[14px] font-semibold text-dark">Table reservations</p>
             <Toggle
               checked={reservationsEnabled}
               onChange={toggleReservations}
               disabled={togglingReservations}
             />
           </div>
-          <p className="text-[12px] text-[#9C9485]">
+          <p className="text-[12px] text-text3">
             {reservationsEnabled
               ? "Active — guests can request tables via your listing and menu page."
               : "Enable to accept table reservation requests from guests."}
@@ -604,14 +604,14 @@ export function MenuBuilder({
           {reservationsEnabled && listingId && (
             <Link
               href={`/dashboard/listings/${listingId}/reservations`}
-              className="mt-3 flex items-center justify-center gap-2 w-full h-[36px] rounded-full bg-[#16130C] text-white text-[13px] font-bold hover:bg-[#2A2520] transition-colors"
+              className="mt-3 flex items-center justify-center gap-2 w-full h-[36px] rounded-full bg-dark text-white text-[13px] font-bold hover:bg-[#2A2520] transition-colors"
             >
               Manage reservations →
             </Link>
           )}
           {reservationsEnabled && !listingId && (
-            <div className="mt-3 p-3 rounded-lg bg-[#E8A020]/8 border border-[#E8A020]/20">
-              <p className="text-[12px] text-[#5E5848]">
+            <div className="mt-3 p-3 rounded-lg bg-amber/8 border border-amber/20">
+              <p className="text-[12px] text-text2">
                 <span className="font-bold">Active.</span> Configure booking rules and seating areas in your listing&apos;s Reservations → Settings tab.
               </p>
             </div>
@@ -619,23 +619,23 @@ export function MenuBuilder({
         </div>
 
         {/* Klickenya Kitchen — stock & recipe costing */}
-        <div className="bg-white rounded-xl lg:rounded-2xl border border-[#E2DDD5] p-4 lg:p-5 shadow-sm">
+        <div className="bg-white rounded-xl lg:rounded-2xl border border-border p-4 lg:p-5 shadow-sm">
           <div className="flex items-center justify-between mb-1">
-            <p className="text-[14px] font-semibold text-[#16130C]">🍳 Klickenya Kitchen</p>
+            <p className="text-[14px] font-semibold text-dark">🍳 Klickenya Kitchen</p>
             {stockEnabled && (
               <span className="inline-flex items-center text-[10px] font-bold text-emerald-600 bg-emerald-100 px-2 py-0.5 rounded-full uppercase tracking-wide">
                 On
               </span>
             )}
           </div>
-          <p className="text-[12px] text-[#9C9485]">
+          <p className="text-[12px] text-text3">
             {stockEnabled
               ? "Recipes, stock and costing for every dish."
               : "Track recipe costs and stock levels alongside your menu."}
           </p>
           <Link
             href={`/dashboard/menu/${menu.id}/stock`}
-            className="mt-3 flex items-center justify-center gap-2 w-full h-[36px] rounded-full bg-[#16130C] text-white text-[13px] font-bold hover:bg-[#2A2520] transition-colors"
+            className="mt-3 flex items-center justify-center gap-2 w-full h-[36px] rounded-full bg-dark text-white text-[13px] font-bold hover:bg-[#2A2520] transition-colors"
           >
             {stockEnabled ? "Open kitchen →" : "Set up →"}
           </Link>
@@ -652,12 +652,12 @@ export function MenuBuilder({
       <div className="mb-5">
         <Link
           href={backHref ?? "/dashboard"}
-          className="text-[13px] text-[#9C9485] hover:text-[#16130C] transition-colors"
+          className="text-[13px] text-text3 hover:text-dark transition-colors"
         >
           {backLabel ?? "← Back to dashboard"}
         </Link>
         <div className="flex items-center gap-3 mt-2">
-          <h1 className="font-display text-[22px] lg:text-[28px] font-bold tracking-[-0.03em] text-[#16130C] flex-1">
+          <h1 className="font-display text-[22px] lg:text-[28px] font-bold tracking-[-0.03em] text-dark flex-1">
             {menu.name}
           </h1>
 
@@ -666,12 +666,12 @@ export function MenuBuilder({
             {activeSaves > 0 ? (
               <>
                 <span className="inline-block size-1.5 rounded-full bg-amber-400 animate-pulse" />
-                <span className="text-[#9C9485]">Saving…</span>
+                <span className="text-text3">Saving…</span>
               </>
             ) : lastSaved ? (
               <>
                 <span className="inline-block size-1.5 rounded-full bg-emerald-500" />
-                <span className="text-[#9C9485]">Saved</span>
+                <span className="text-text3">Saved</span>
               </>
             ) : null}
           </span>
@@ -681,14 +681,14 @@ export function MenuBuilder({
             onClick={handleSync}
             disabled={syncing}
             title="Reload menu from server"
-            className="shrink-0 h-[36px] px-3 rounded-full border border-[#E2DDD5] text-[13px] font-semibold text-[#5E5848] hover:border-[#9C9485] transition-colors disabled:opacity-50"
+            className="shrink-0 h-[36px] px-3 rounded-full border border-border text-[13px] font-semibold text-text2 hover:border-text3 transition-colors disabled:opacity-50"
           >
             {syncing ? "⟳" : "↺ Sync"}
           </button>
 
           <button
             onClick={() => setShowImporter(true)}
-            className="shrink-0 h-[36px] px-4 rounded-full border border-[#E2DDD5] text-[13px] font-semibold text-[#5E5848] hover:border-[#E8A020]/60 hover:text-[#E8A020] transition-colors"
+            className="shrink-0 h-[36px] px-4 rounded-full border border-border text-[13px] font-semibold text-text2 hover:border-amber/60 hover:text-amber transition-colors"
           >
             Import menu
           </button>
@@ -727,19 +727,19 @@ export function MenuBuilder({
           )}
 
           {sections.length === 0 && !showAddSection ? (
-            <div className="bg-white rounded-2xl border border-[#E2DDD5] p-8 text-center shadow-sm">
-              <div className="w-16 h-16 rounded-full bg-[#E8A020]/10 flex items-center justify-center mx-auto mb-3">
+            <div className="bg-white rounded-2xl border border-border p-8 text-center shadow-sm">
+              <div className="w-16 h-16 rounded-full bg-amber/10 flex items-center justify-center mx-auto mb-3">
                 <span className="text-[28px]">🍽️</span>
               </div>
-              <p className="font-display text-[16px] font-bold text-[#16130C] mb-1">
+              <p className="font-display text-[16px] font-bold text-dark mb-1">
                 No sections yet
               </p>
-              <p className="text-[13px] text-[#9C9485] mb-4 max-w-[280px] mx-auto">
+              <p className="text-[13px] text-text3 mb-4 max-w-[280px] mx-auto">
                 Add your first section to get started
               </p>
               <button
                 onClick={() => setShowAddSection(true)}
-                className="inline-block bg-[#E8A020] text-[#16130C] font-bold text-[13px] px-6 h-[40px] leading-[40px] rounded-full hover:bg-[#d4911c] transition-colors shadow-sm"
+                className="inline-block bg-amber text-dark font-bold text-[13px] px-6 h-[40px] leading-[40px] rounded-full hover:bg-[#d4911c] transition-colors shadow-sm"
               >
                 Add section
               </button>
@@ -749,16 +749,16 @@ export function MenuBuilder({
               {sections.map((section) => (
                 <div
                   key={section.id}
-                  className="bg-white rounded-xl lg:rounded-2xl border border-[#E2DDD5] shadow-sm overflow-hidden"
+                  className="bg-white rounded-xl lg:rounded-2xl border border-border shadow-sm overflow-hidden"
                 >
                   {/* Section header */}
-                  <div className="flex items-center gap-2 px-4 py-3 border-b border-[#F4F1EC]">
+                  <div className="flex items-center gap-2 px-4 py-3 border-b border-surface">
                     {/* Up / down reorder buttons */}
                     <div className="flex flex-col shrink-0">
                       <button
                         onClick={() => moveSection(section.id, "up")}
                         disabled={sections.indexOf(section) === 0}
-                        className="text-[#C5BFB5] hover:text-[#E8A020] disabled:opacity-20 disabled:cursor-default leading-none transition-colors"
+                        className="text-[#C5BFB5] hover:text-amber disabled:opacity-20 disabled:cursor-default leading-none transition-colors"
                         title="Move section up"
                         aria-label="Move section up"
                       >
@@ -767,7 +767,7 @@ export function MenuBuilder({
                       <button
                         onClick={() => moveSection(section.id, "down")}
                         disabled={sections.indexOf(section) === sections.length - 1}
-                        className="text-[#C5BFB5] hover:text-[#E8A020] disabled:opacity-20 disabled:cursor-default leading-none transition-colors"
+                        className="text-[#C5BFB5] hover:text-amber disabled:opacity-20 disabled:cursor-default leading-none transition-colors"
                         title="Move section down"
                         aria-label="Move section down"
                       >
@@ -784,7 +784,7 @@ export function MenuBuilder({
                           if (e.key === "Enter") renameSection(section.id, editingSectionTitle);
                           if (e.key === "Escape") setEditingSectionId(null);
                         }}
-                        className="flex-1 text-[15px] font-bold text-[#16130C] bg-transparent border-b-2 border-[#E8A020] outline-none py-0.5"
+                        className="flex-1 text-[15px] font-bold text-dark bg-transparent border-b-2 border-amber outline-none py-0.5"
                         autoFocus
                       />
                     ) : (
@@ -793,20 +793,20 @@ export function MenuBuilder({
                           setEditingSectionId(section.id);
                           setEditingSectionTitle(section.title);
                         }}
-                        className="flex-1 text-left text-[15px] font-bold text-[#16130C] hover:text-[#E8A020] transition-colors"
+                        className="flex-1 text-left text-[15px] font-bold text-dark hover:text-amber transition-colors"
                       >
                         {section.title}
                       </button>
                     )}
-                    <div className="inline-flex shrink-0 rounded-full border border-[#E2DDD5] overflow-hidden text-[11px] font-bold">
+                    <div className="inline-flex shrink-0 rounded-full border border-border overflow-hidden text-[11px] font-bold">
                       <button
                         type="button"
                         onClick={() => setSectionStation(section.id, "kitchen")}
                         title="Route this section to the kitchen dashboard"
                         className={`px-2.5 h-[26px] transition-colors ${
                           section.station === "kitchen"
-                            ? "bg-[#E8A020] text-[#16130C]"
-                            : "bg-white text-[#9C9485] hover:bg-[#FAF6EE]"
+                            ? "bg-amber text-dark"
+                            : "bg-white text-text3 hover:bg-[#FAF6EE]"
                         }`}
                       >
                         🍳
@@ -818,7 +818,7 @@ export function MenuBuilder({
                         className={`px-2.5 h-[26px] transition-colors ${
                           section.station === "bar"
                             ? "bg-teal-500 text-white"
-                            : "bg-white text-[#9C9485] hover:bg-[#EEF7F6]"
+                            : "bg-white text-text3 hover:bg-[#EEF7F6]"
                         }`}
                       >
                         🍹
@@ -826,7 +826,7 @@ export function MenuBuilder({
                     </div>
                     <button
                       onClick={() => deleteSection(section.id, section.title)}
-                      className="text-[#E2DDD5] hover:text-[#DC2626] transition-colors text-[16px] px-1"
+                      className="text-border hover:text-[#DC2626] transition-colors text-[16px] px-1"
                       title="Delete section"
                     >
                       🗑
@@ -834,7 +834,7 @@ export function MenuBuilder({
                   </div>
 
                   {/* Items */}
-                  <div className="divide-y divide-[#F4F1EC]">
+                  <div className="divide-y divide-surface">
                     {[...section.menu_items]
                       .sort((a, b) => a.display_order - b.display_order)
                       .map((item) => (
@@ -850,23 +850,23 @@ export function MenuBuilder({
                               {item.is_featured ? "★" : "☆"}
                             </button>
                             <div className="flex-1 min-w-0">
-                              <span className="text-[13px] font-semibold text-[#16130C]">
+                              <span className="text-[13px] font-semibold text-dark">
                                 {item.name}
                               </span>
                               {item.dietary_tags.length > 0 && (
-                                <span className="text-[11px] text-[#9C9485] ml-1.5">
+                                <span className="text-[11px] text-text3 ml-1.5">
                                   {item.dietary_tags.join(", ")}
                                 </span>
                               )}
                             </div>
-                            <span className="text-[13px] font-bold text-[#E8A020] shrink-0">
+                            <span className="text-[13px] font-bold text-amber shrink-0">
                               {item.is_available ? formatPrice(item.price_kes) : "—"}
                             </span>
                             <div className="flex items-center gap-1 shrink-0">
                               {stockEnabled && (
                                 <Link
                                   href={`/dashboard/menu/${menu.id}/items/${item.id}`}
-                                  className="text-[#E2DDD5] hover:text-[#E8A020] transition-colors text-[14px] px-0.5"
+                                  className="text-border hover:text-amber transition-colors text-[14px] px-0.5"
                                   title="Edit recipe"
                                   aria-label="Edit recipe"
                                 >
@@ -881,14 +881,14 @@ export function MenuBuilder({
                                       : { type: "edit", sectionId: section.id, item }
                                   )
                                 }
-                                className="text-[#E2DDD5] hover:text-[#E8A020] transition-colors text-[14px] px-0.5"
+                                className="text-border hover:text-amber transition-colors text-[14px] px-0.5"
                                 title="Edit item"
                               >
                                 ✏️
                               </button>
                               <button
                                 onClick={() => deleteItem(section.id, item.id)}
-                                className="text-[#E2DDD5] hover:text-[#DC2626] transition-colors text-[14px] px-0.5"
+                                className="text-border hover:text-[#DC2626] transition-colors text-[14px] px-0.5"
                                 title="Delete item"
                               >
                                 🗑
@@ -900,7 +900,7 @@ export function MenuBuilder({
                           {editingForm?.type === "edit" &&
                             editingForm.sectionId === section.id &&
                             editingForm.item?.id === item.id && (
-                              <div className="px-4 pb-4 border-t border-[#F4F1EC] bg-[#FAFAF8]">
+                              <div className="px-4 pb-4 border-t border-surface bg-canvas">
                                 <div className="pt-3">
                                   <ItemForm
                                     sectionId={section.id}
@@ -926,7 +926,7 @@ export function MenuBuilder({
                   {/* Inline add form */}
                   {editingForm?.type === "add" &&
                     editingForm.sectionId === section.id && (
-                      <div className="px-4 py-3 border-t border-[#F4F1EC]">
+                      <div className="px-4 py-3 border-t border-surface">
                         <ItemForm
                           sectionId={section.id}
                           menuId={menu.id}
@@ -942,7 +942,7 @@ export function MenuBuilder({
                       onClick={() => {
                         setEditingForm({ type: "add", sectionId: section.id });
                       }}
-                      className="w-full text-left px-4 py-2.5 text-[13px] font-semibold text-[#E8A020] hover:bg-[#E8A020]/5 transition-colors"
+                      className="w-full text-left px-4 py-2.5 text-[13px] font-semibold text-amber hover:bg-amber/5 transition-colors"
                     >
                       + Add item
                     </button>
@@ -952,8 +952,8 @@ export function MenuBuilder({
 
               {/* Add section */}
               {showAddSection ? (
-                <div className="bg-white rounded-xl border border-[#E2DDD5] p-4 shadow-sm">
-                  <label className="block text-[12px] font-semibold text-[#16130C] mb-1">Section name</label>
+                <div className="bg-white rounded-xl border border-border p-4 shadow-sm">
+                  <label className="block text-[12px] font-semibold text-dark mb-1">Section name</label>
                   <div className="flex gap-2">
                     <input
                       type="text"
@@ -967,13 +967,13 @@ export function MenuBuilder({
                         }
                       }}
                       placeholder='e.g. "Mains", "Drinks", "Desserts"'
-                      className="flex-1 border border-[#E2DDD5] rounded-xl px-3.5 py-2.5 text-[14px] text-[#16130C] placeholder:text-[#9C9485] focus:outline-none focus:border-[#E8A020] focus:ring-1 focus:ring-[#E8A020]/30 bg-white"
+                      className="flex-1 border border-border rounded-xl px-3.5 py-2.5 text-[14px] text-dark placeholder:text-text3 focus:outline-none focus:border-amber focus:ring-1 focus:ring-amber/30 bg-white"
                       autoFocus
                     />
                     <button
                       onClick={addSection}
                       disabled={!addingSectionName.trim()}
-                      className="bg-[#E8A020] text-[#16130C] font-bold text-[13px] px-4 h-[40px] rounded-full hover:bg-[#d4911c] transition-colors disabled:opacity-50 shrink-0"
+                      className="bg-amber text-dark font-bold text-[13px] px-4 h-[40px] rounded-full hover:bg-[#d4911c] transition-colors disabled:opacity-50 shrink-0"
                     >
                       Add
                     </button>
@@ -982,7 +982,7 @@ export function MenuBuilder({
                         setShowAddSection(false);
                         setAddingSectionName("");
                       }}
-                      className="text-[13px] text-[#9C9485] hover:text-[#16130C] transition-colors px-2 shrink-0"
+                      className="text-[13px] text-text3 hover:text-dark transition-colors px-2 shrink-0"
                     >
                       Cancel
                     </button>
@@ -991,7 +991,7 @@ export function MenuBuilder({
               ) : (
                 <button
                   onClick={() => setShowAddSection(true)}
-                  className="w-full border border-dashed border-[#E2DDD5] rounded-xl py-3 text-[13px] font-semibold text-[#9C9485] hover:text-[#E8A020] hover:border-[#E8A020]/40 transition-colors"
+                  className="w-full border border-dashed border-border rounded-xl py-3 text-[13px] font-semibold text-text3 hover:text-amber hover:border-amber/40 transition-colors"
                 >
                   + Add section
                 </button>

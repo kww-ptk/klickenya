@@ -115,23 +115,23 @@ function fmtKes(n: number) {
 const BOOKING_STATUS: Record<string, { label: string; className: string }> = {
   confirmed:   { label: "Confirmed",  className: "bg-[#4F46E5]/15 text-[#4F46E5]" },
   checked_in:  { label: "Checked in", className: "bg-[#22C55E]/15 text-[#22C55E]" },
-  checked_out: { label: "Completed",  className: "bg-[#9C9485]/15 text-[#9C9485]" },
+  checked_out: { label: "Completed",  className: "bg-text3/15 text-text3" },
   cancelled:   { label: "Cancelled",  className: "bg-red-100 text-red-600" },
   no_show:     { label: "No show",    className: "bg-red-100 text-red-600" },
 };
 
 const PAYMENT_STATUS: Record<string, { label: string; className: string }> = {
   paid:     { label: "Paid",            className: "bg-[#22C55E]/15 text-[#22C55E]" },
-  partial:  { label: "Deposit paid",    className: "bg-[#E8A020]/15 text-[#E8A020]" },
+  partial:  { label: "Deposit paid",    className: "bg-amber/15 text-amber" },
   pending:  { label: "Payment pending", className: "bg-red-100 text-red-600" },
-  refunded: { label: "Refunded",        className: "bg-[#9C9485]/15 text-[#9C9485]" },
+  refunded: { label: "Refunded",        className: "bg-text3/15 text-text3" },
 };
 
 const ENQUIRY_STATUS: Record<string, { label: string; className: string }> = {
-  pending:   { label: "Awaiting response", className: "bg-[#E8A020]/15 text-[#E8A020]" },
+  pending:   { label: "Awaiting response", className: "bg-amber/15 text-amber" },
   held:      { label: "On hold",           className: "bg-[#4F46E5]/15 text-[#4F46E5]" },
   converted: { label: "Booking confirmed", className: "bg-[#22C55E]/15 text-[#22C55E]" },
-  declined:  { label: "Declined",          className: "bg-[#9C9485]/15 text-[#9C9485]" },
+  declined:  { label: "Declined",          className: "bg-text3/15 text-text3" },
 };
 
 function parseLocation(loc: string | null): { country: string; city: string } {
@@ -246,11 +246,11 @@ export function ProfileClient({
   }
 
   return (
-    <div className="min-h-screen bg-[#FAFAF8]">
+    <div className="min-h-screen bg-canvas">
       {/* ── Hero header with gradient ── */}
       <div className="relative overflow-hidden">
         {/* Gradient background */}
-        <div className="absolute inset-0 bg-[#16130C]" />
+        <div className="absolute inset-0 bg-dark" />
         <div
           className="absolute inset-0"
           style={{
@@ -274,7 +274,7 @@ export function ProfileClient({
           </Link>
           <div className="flex items-center gap-4">
             {isHost && (
-              <Link href="/dashboard" className="text-[#E8A020] text-[13px] font-medium hover:text-[#F5C842] transition-colors">
+              <Link href="/dashboard" className="text-amber text-[13px] font-medium hover:text-amber2 transition-colors">
                 Host Dashboard →
               </Link>
             )}
@@ -298,7 +298,7 @@ export function ProfileClient({
                 className="size-20 rounded-2xl object-cover border-2 border-white/20 shadow-lg"
               />
             ) : (
-              <div className="size-20 rounded-2xl bg-gradient-to-br from-[#E8A020] to-[#6B2D8B] flex items-center justify-center text-white text-[26px] font-bold border-2 border-white/20 shadow-lg">
+              <div className="size-20 rounded-2xl bg-gradient-to-br from-amber to-purple flex items-center justify-center text-white text-[26px] font-bold border-2 border-white/20 shadow-lg">
                 {initials}
               </div>
             )}
@@ -307,7 +307,7 @@ export function ProfileClient({
               <p className="text-[13px] text-white/40 mt-0.5">{email}</p>
               {locationDisplay && (
                 <div className="flex items-center gap-1.5 mt-2">
-                  <MapPin className="size-3.5 text-[#E8A020]" />
+                  <MapPin className="size-3.5 text-amber" />
                   <span className="text-[13px] text-white/60 font-medium">{locationDisplay}</span>
                 </div>
               )}
@@ -332,7 +332,7 @@ export function ProfileClient({
       </div>
 
       {/* ── Tab bar ── */}
-      <div className="sticky top-0 z-20 bg-white border-b border-[#E2DDD5] shadow-sm -mt-10">
+      <div className="sticky top-0 z-20 bg-white border-b border-border shadow-sm -mt-10">
         <div className="max-w-[720px] mx-auto">
           <div className="flex overflow-x-auto scrollbar-none">
             {TABS.map((tab) => {
@@ -349,8 +349,8 @@ export function ProfileClient({
                   className={cn(
                     "flex items-center gap-1.5 px-5 py-3.5 border-b-2 text-[13px] font-semibold whitespace-nowrap transition-colors shrink-0",
                     activeTab === tab.key
-                      ? "border-[#E8A020] text-[#E8A020]"
-                      : "border-transparent text-[#9C9485] hover:text-[#16130C]"
+                      ? "border-amber text-amber"
+                      : "border-transparent text-text3 hover:text-dark"
                   )}
                 >
                   <Icon className="size-4" />
@@ -358,7 +358,7 @@ export function ProfileClient({
                   {count > 0 && (
                     <span className={cn(
                       "ml-1 min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold flex items-center justify-center",
-                      activeTab === tab.key ? "bg-[#E8A020]/15 text-[#E8A020]" : "bg-[#E2DDD5] text-[#9C9485]"
+                      activeTab === tab.key ? "bg-amber/15 text-amber" : "bg-border text-text3"
                     )}>
                       {count}
                     </span>
@@ -377,17 +377,17 @@ export function ProfileClient({
         {activeTab === "profile" && (
           <div className="space-y-5">
             {/* Name */}
-            <div className="rounded-2xl border border-[#E2DDD5] bg-white p-5">
+            <div className="rounded-2xl border border-border bg-white p-5">
               <div className="flex items-center gap-3 mb-3">
-                <User className="size-4 text-[#9C9485]" />
-                <label className="text-[12px] font-semibold text-[#9C9485] uppercase tracking-wide">
+                <User className="size-4 text-text3" />
+                <label className="text-[12px] font-semibold text-text3 uppercase tracking-wide">
                   Display name
                 </label>
               </div>
               {editingName ? (
                 <div className="flex gap-2">
                   <input
-                    className="flex-1 rounded-xl border border-[#E2DDD5] px-4 py-2.5 text-[14px] text-[#16130C] outline-none focus:ring-2 focus:ring-[#E8A020]/40 focus:border-[#E8A020] transition-all"
+                    className="flex-1 rounded-xl border border-border px-4 py-2.5 text-[14px] text-dark outline-none focus:ring-2 focus:ring-amber/40 focus:border-amber transition-all"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     autoFocus
@@ -395,23 +395,23 @@ export function ProfileClient({
                   <button
                     onClick={() => { saveProfile({ displayName: name }); setEditingName(false); }}
                     disabled={saving}
-                    className="px-5 py-2.5 rounded-xl bg-[#E8A020] text-white text-[13px] font-semibold hover:bg-[#d4911c] transition-colors disabled:opacity-50"
+                    className="px-5 py-2.5 rounded-xl bg-amber text-white text-[13px] font-semibold hover:bg-[#d4911c] transition-colors disabled:opacity-50"
                   >
                     {saving ? "..." : "Save"}
                   </button>
                   <button
                     onClick={() => { setName(displayName); setEditingName(false); }}
-                    className="px-3 py-2.5 rounded-xl border border-[#E2DDD5] text-[13px] font-medium text-[#9C9485] hover:bg-[#F5F3F0] transition-colors"
+                    className="px-3 py-2.5 rounded-xl border border-border text-[13px] font-medium text-text3 hover:bg-[#F5F3F0] transition-colors"
                   >
                     Cancel
                   </button>
                 </div>
               ) : (
                 <div className="flex items-center justify-between">
-                  <p className="text-[16px] font-semibold text-[#16130C]">{name}</p>
+                  <p className="text-[16px] font-semibold text-dark">{name}</p>
                   <button
                     onClick={() => setEditingName(true)}
-                    className="text-[12px] font-semibold text-[#E8A020] hover:underline"
+                    className="text-[12px] font-semibold text-amber hover:underline"
                   >
                     Edit
                   </button>
@@ -420,10 +420,10 @@ export function ProfileClient({
             </div>
 
             {/* Location — country + city */}
-            <div className="rounded-2xl border border-[#E2DDD5] bg-white p-5">
+            <div className="rounded-2xl border border-border bg-white p-5">
               <div className="flex items-center gap-3 mb-3">
-                <Globe className="size-4 text-[#9C9485]" />
-                <label className="text-[12px] font-semibold text-[#9C9485] uppercase tracking-wide">
+                <Globe className="size-4 text-text3" />
+                <label className="text-[12px] font-semibold text-text3 uppercase tracking-wide">
                   Where are you based?
                 </label>
               </div>
@@ -434,7 +434,7 @@ export function ProfileClient({
                     setCountry(e.target.value);
                     setCity("");
                   }}
-                  className="w-full rounded-xl border border-[#E2DDD5] px-4 py-2.5 text-[14px] text-[#16130C] outline-none focus:ring-2 focus:ring-[#E8A020]/40 focus:border-[#E8A020] bg-white transition-all appearance-none"
+                  className="w-full rounded-xl border border-border px-4 py-2.5 text-[14px] text-dark outline-none focus:ring-2 focus:ring-amber/40 focus:border-amber bg-white transition-all appearance-none"
                 >
                   <option value="">Country…</option>
                   {Object.keys(COUNTRIES).map((c) => (
@@ -449,7 +449,7 @@ export function ProfileClient({
                       const loc = e.target.value ? `${e.target.value}, ${country}` : country;
                       saveProfile({ location: loc });
                     }}
-                    className="w-full rounded-xl border border-[#E2DDD5] px-4 py-2.5 text-[14px] text-[#16130C] outline-none focus:ring-2 focus:ring-[#E8A020]/40 focus:border-[#E8A020] bg-white transition-all appearance-none"
+                    className="w-full rounded-xl border border-border px-4 py-2.5 text-[14px] text-dark outline-none focus:ring-2 focus:ring-amber/40 focus:border-amber bg-white transition-all appearance-none"
                   >
                     <option value="">City…</option>
                     {availableCities.map((c) => (
@@ -464,41 +464,41 @@ export function ProfileClient({
                       if (city) saveProfile({ location: `${city}, ${country}` });
                     }}
                     placeholder="Your city…"
-                    className="w-full rounded-xl border border-[#E2DDD5] px-4 py-2.5 text-[14px] text-[#16130C] outline-none focus:ring-2 focus:ring-[#E8A020]/40 focus:border-[#E8A020] transition-all"
+                    className="w-full rounded-xl border border-border px-4 py-2.5 text-[14px] text-dark outline-none focus:ring-2 focus:ring-amber/40 focus:border-amber transition-all"
                   />
                 ) : null}
               </div>
             </div>
 
             {/* Email */}
-            <div className="rounded-2xl border border-[#E2DDD5] bg-white p-5">
+            <div className="rounded-2xl border border-border bg-white p-5">
               <div className="flex items-center gap-3 mb-3">
-                <Mail className="size-4 text-[#9C9485]" />
-                <label className="text-[12px] font-semibold text-[#9C9485] uppercase tracking-wide">
+                <Mail className="size-4 text-text3" />
+                <label className="text-[12px] font-semibold text-text3 uppercase tracking-wide">
                   Email
                 </label>
               </div>
-              <p className="text-[16px] text-[#16130C]">{email}</p>
+              <p className="text-[16px] text-dark">{email}</p>
             </div>
 
             {/* Explore CTA */}
-            <div className="rounded-2xl border border-[#E2DDD5] bg-white p-5">
+            <div className="rounded-2xl border border-border bg-white p-5">
               <div className="flex items-start gap-4">
                 <div className="size-10 rounded-xl bg-purple-600/10 flex items-center justify-center shrink-0">
                   <Compass className="size-5 text-purple-600" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="text-[15px] font-bold text-[#16130C] mb-0.5">
+                  <h3 className="text-[15px] font-bold text-dark mb-0.5">
                     Discover Kenya
                   </h3>
-                  <p className="text-[13px] text-[#5E5848] mb-3">
+                  <p className="text-[13px] text-text2 mb-3">
                     Browse stays, experiences, events and more across the country.
                   </p>
                   <div className="flex flex-wrap gap-2">
                     <Link href="/events-in-kenya" className="px-3 py-1.5 rounded-full bg-purple-600/10 text-purple-600 text-[12px] font-semibold hover:bg-purple-600/20 transition-colors">
                       Events
                     </Link>
-                    <Link href="/stays" className="px-3 py-1.5 rounded-full bg-[#E8A020]/10 text-[#E8A020] text-[12px] font-semibold hover:bg-[#E8A020]/20 transition-colors">
+                    <Link href="/stays" className="px-3 py-1.5 rounded-full bg-amber/10 text-amber text-[12px] font-semibold hover:bg-amber/20 transition-colors">
                       Stays
                     </Link>
                     <Link href="/experiences" className="px-3 py-1.5 rounded-full bg-emerald-600/10 text-emerald-600 text-[12px] font-semibold hover:bg-emerald-600/20 transition-colors">
@@ -533,7 +533,7 @@ export function ProfileClient({
                 </p>
                 <Link
                   href="/become-a-host"
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#E8A020] text-[#16130C] text-[13px] font-bold hover:bg-[#f5c842] transition-colors"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-amber text-dark text-[13px] font-bold hover:bg-amber2 transition-colors"
                 >
                   Become a host
                   <ArrowRight className="size-3.5" />
@@ -565,13 +565,13 @@ export function ProfileClient({
                   const bBadge = BOOKING_STATUS[b.status] ?? BOOKING_STATUS.confirmed;
                   const pBadge = PAYMENT_STATUS[b.payment_status] ?? PAYMENT_STATUS.pending;
                   return (
-                    <div key={b.id} className="rounded-2xl border border-[#E2DDD5] bg-white overflow-hidden">
+                    <div key={b.id} className="rounded-2xl border border-border bg-white overflow-hidden">
                       {/* Card header */}
                       <div className="p-5 space-y-3">
                         <div className="flex items-start justify-between gap-3">
                           <div className="min-w-0">
-                            <p className="text-[15px] font-semibold text-[#16130C] truncate">{prop?.name ?? "Property"}</p>
-                            <p className="text-[13px] text-[#9C9485] mt-0.5">{room?.name ?? "Room"}</p>
+                            <p className="text-[15px] font-semibold text-dark truncate">{prop?.name ?? "Property"}</p>
+                            <p className="text-[13px] text-text3 mt-0.5">{room?.name ?? "Room"}</p>
                           </div>
                           <div className="flex flex-col items-end gap-1.5 shrink-0">
                             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${bBadge.className}`}>
@@ -582,40 +582,40 @@ export function ProfileClient({
                             </span>
                           </div>
                         </div>
-                        <div className="flex flex-wrap gap-x-5 gap-y-1 text-[13px] text-[#16130C]">
-                          <span><span className="text-[#9C9485]">In:</span> {fmtDate(b.check_in_date)}</span>
-                          <span><span className="text-[#9C9485]">Out:</span> {fmtDate(b.check_out_date)}</span>
-                          <span className="text-[#9C9485]">{b.nights}n · {b.guest_count} guest{b.guest_count !== 1 ? "s" : ""}</span>
+                        <div className="flex flex-wrap gap-x-5 gap-y-1 text-[13px] text-dark">
+                          <span><span className="text-text3">In:</span> {fmtDate(b.check_in_date)}</span>
+                          <span><span className="text-text3">Out:</span> {fmtDate(b.check_out_date)}</span>
+                          <span className="text-text3">{b.nights}n · {b.guest_count} guest{b.guest_count !== 1 ? "s" : ""}</span>
                         </div>
                         <div className="flex flex-wrap gap-x-6 gap-y-1 text-[13px]">
-                          <span><span className="text-[#9C9485]">Total:</span> <span className="font-semibold">{fmtKes(b.total_kes)}</span></span>
-                          <span><span className="text-[#9C9485]">Paid:</span> <span className="font-semibold text-[#22C55E]">{fmtKes(b.amount_paid_kes)}</span></span>
-                          {balance > 0 && <span><span className="text-[#9C9485]">Balance:</span> <span className="font-semibold text-red-600">{fmtKes(balance)}</span></span>}
+                          <span><span className="text-text3">Total:</span> <span className="font-semibold">{fmtKes(b.total_kes)}</span></span>
+                          <span><span className="text-text3">Paid:</span> <span className="font-semibold text-[#22C55E]">{fmtKes(b.amount_paid_kes)}</span></span>
+                          {balance > 0 && <span><span className="text-text3">Balance:</span> <span className="font-semibold text-red-600">{fmtKes(balance)}</span></span>}
                         </div>
                       </div>
                       {/* Expandable breakdown */}
                       <details className="group">
-                        <summary className="flex items-center gap-1.5 px-5 py-3 border-t border-[#E2DDD5] text-[12px] font-medium text-[#9C9485] hover:text-[#16130C] cursor-pointer transition-colors select-none list-none">
+                        <summary className="flex items-center gap-1.5 px-5 py-3 border-t border-border text-[12px] font-medium text-text3 hover:text-dark cursor-pointer transition-colors select-none list-none">
                           <svg className="size-3.5 group-open:rotate-90 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
                           </svg>
                           Full breakdown · Ref {b.id.slice(0, 8).toUpperCase()}
                         </summary>
-                        <div className="px-5 pb-5 pt-3 border-t border-[#E2DDD5] space-y-3 text-[13px]">
+                        <div className="px-5 pb-5 pt-3 border-t border-border space-y-3 text-[13px]">
                           <div className="space-y-1.5">
-                            <div className="flex justify-between"><span className="text-[#9C9485]">{fmtKes(b.rate_per_night)} × {b.nights}n</span><span>{fmtKes(b.subtotal_kes)}</span></div>
+                            <div className="flex justify-between"><span className="text-text3">{fmtKes(b.rate_per_night)} × {b.nights}n</span><span>{fmtKes(b.subtotal_kes)}</span></div>
                             {b.discount_kes > 0 && <div className="flex justify-between"><span className="text-[#22C55E]">Discount</span><span className="text-[#22C55E]">−{fmtKes(b.discount_kes)}</span></div>}
-                            {fees.map((f, i) => <div key={i} className="flex justify-between"><span className="text-[#9C9485]">{f.name}</span><span>{fmtKes(f.amount_kes)}</span></div>)}
-                            {(b.extras_kes ?? 0) > 0 && <div className="flex justify-between"><span className="text-[#9C9485]">Extras</span><span>{fmtKes(b.extras_kes!)}</span></div>}
-                            <div className="flex justify-between font-semibold border-t border-[#E2DDD5] pt-1.5"><span>Total</span><span>{fmtKes(b.total_kes)}</span></div>
-                            <div className="flex justify-between"><span className="text-[#9C9485]">Paid</span><span className="text-[#22C55E] font-medium">{fmtKes(b.amount_paid_kes)}</span></div>
+                            {fees.map((f, i) => <div key={i} className="flex justify-between"><span className="text-text3">{f.name}</span><span>{fmtKes(f.amount_kes)}</span></div>)}
+                            {(b.extras_kes ?? 0) > 0 && <div className="flex justify-between"><span className="text-text3">Extras</span><span>{fmtKes(b.extras_kes!)}</span></div>}
+                            <div className="flex justify-between font-semibold border-t border-border pt-1.5"><span>Total</span><span>{fmtKes(b.total_kes)}</span></div>
+                            <div className="flex justify-between"><span className="text-text3">Paid</span><span className="text-[#22C55E] font-medium">{fmtKes(b.amount_paid_kes)}</span></div>
                             {balance > 0 && <div className="flex justify-between font-semibold"><span className="text-red-600">Balance due</span><span className="text-red-600">{fmtKes(balance)}</span></div>}
                             {payments.length > 0 && (
-                              <div className="border-t border-[#E2DDD5] pt-2 space-y-1">
-                                <p className="text-[11px] text-[#9C9485] uppercase tracking-wider font-medium">Payments</p>
+                              <div className="border-t border-border pt-2 space-y-1">
+                                <p className="text-[11px] text-text3 uppercase tracking-wider font-medium">Payments</p>
                                 {payments.map((p, i) => (
                                   <div key={i} className="flex justify-between text-[12px]">
-                                    <span className="text-[#9C9485]">
+                                    <span className="text-text3">
                                       {p.method ?? "cash"} · {new Date(p.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
                                     </span>
                                     <span className="text-[#22C55E] font-medium">{fmtKes(p.amount_kes)}</span>
@@ -625,7 +625,7 @@ export function ProfileClient({
                             )}
                           </div>
                           {prop && (prop.address || prop.check_in_time) && (
-                            <div className="pt-1 space-y-1 text-[#9C9485]">
+                            <div className="pt-1 space-y-1 text-text3">
                               {prop.address && <p>{prop.address}</p>}
                               {prop.check_in_time && <p>Check-in from {prop.check_in_time}</p>}
                             </div>
@@ -655,7 +655,7 @@ export function ProfileClient({
               <div className="space-y-6">
                 {goingEvents.length > 0 && (
                   <div>
-                    <h3 className="text-[13px] font-bold text-[#9C9485] uppercase tracking-wide mb-3">Going</h3>
+                    <h3 className="text-[13px] font-bold text-text3 uppercase tracking-wide mb-3">Going</h3>
                     <div className="space-y-3">
                       {goingEvents.map((r) => <RsvpCard key={r.id} rsvp={r} />)}
                     </div>
@@ -663,7 +663,7 @@ export function ProfileClient({
                 )}
                 {interestedEvents.length > 0 && (
                   <div>
-                    <h3 className="text-[13px] font-bold text-[#9C9485] uppercase tracking-wide mb-3">Interested</h3>
+                    <h3 className="text-[13px] font-bold text-text3 uppercase tracking-wide mb-3">Interested</h3>
                     <div className="space-y-3">
                       {interestedEvents.map((r) => <RsvpCard key={r.id} rsvp={r} />)}
                     </div>
@@ -693,13 +693,13 @@ export function ProfileClient({
                     ? Math.max(1, Math.ceil((new Date(e.check_out + "T00:00:00").getTime() - new Date(e.check_in + "T00:00:00").getTime()) / 86_400_000))
                     : null;
                   return (
-                    <div key={e.id} className="rounded-2xl border border-[#E2DDD5] bg-white p-4 space-y-2">
+                    <div key={e.id} className="rounded-2xl border border-border bg-white p-4 space-y-2">
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
-                          <p className="text-[14px] font-semibold text-[#16130C] truncate">
+                          <p className="text-[14px] font-semibold text-dark truncate">
                             {e.listing_title ?? "Listing"}
                           </p>
-                          <p className="text-[11px] text-[#9C9485] mt-0.5">
+                          <p className="text-[11px] text-text3 mt-0.5">
                             {new Date(e.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
                           </p>
                         </div>
@@ -708,7 +708,7 @@ export function ProfileClient({
                         </span>
                       </div>
                       {e.check_in && e.check_out && (
-                        <div className="flex flex-wrap gap-x-4 gap-y-1 text-[12px] text-[#9C9485]">
+                        <div className="flex flex-wrap gap-x-4 gap-y-1 text-[12px] text-text3">
                           <span>{fmtDate(e.check_in)} → {fmtDate(e.check_out)}</span>
                           {nights ? <span>{nights}n{e.guests ? ` · ${e.guests} guest${e.guests !== 1 ? "s" : ""}` : ""}</span> : null}
                         </div>
@@ -742,7 +742,7 @@ export function ProfileClient({
                 {savedRows.map((row) => {
                   const listing = sanityListings.get(row.sanity_listing_id);
                   return (
-                    <div key={row.id} className="flex items-center gap-4 rounded-2xl border border-[#E2DDD5] bg-white p-4 hover:shadow-sm transition-shadow">
+                    <div key={row.id} className="flex items-center gap-4 rounded-2xl border border-border bg-white p-4 hover:shadow-sm transition-shadow">
                       {/* Thumbnail */}
                       <div className="relative size-14 rounded-xl overflow-hidden shrink-0 bg-[#F5F3F0]">
                         {listing?.photo ? (
@@ -753,22 +753,22 @@ export function ProfileClient({
                           />
                         ) : (
                           <div className="size-full flex items-center justify-center">
-                            <Heart className="size-5 text-[#9C9485]" />
+                            <Heart className="size-5 text-text3" />
                           </div>
                         )}
                       </div>
                       {/* Info */}
                       <div className="flex-1 min-w-0">
-                        <p className="text-[14px] font-semibold text-[#16130C] truncate">
+                        <p className="text-[14px] font-semibold text-dark truncate">
                           {listing?.title ?? "Loading..."}
                         </p>
-                        <div className="flex items-center gap-2 text-[12px] text-[#9C9485] mt-0.5">
+                        <div className="flex items-center gap-2 text-[12px] text-text3 mt-0.5">
                           {listing?.listingType && (
                             <span className="capitalize">{listing.listingType}</span>
                           )}
                           {listing?.city && (
                             <>
-                              <span className="text-[#E2DDD5]">·</span>
+                              <span className="text-border">·</span>
                               <span>{listing.city}</span>
                             </>
                           )}
@@ -779,14 +779,14 @@ export function ProfileClient({
                         {listing?.slug && listing?.listingType && listing?.city && (
                           <Link
                             href={`/${listing.listingType}s/${listing.city.toLowerCase().replace(/\s+/g, "-")}/${listing.slug}`}
-                            className="px-3 py-1.5 rounded-lg bg-[#E8A020]/10 text-[#E8A020] text-[12px] font-semibold hover:bg-[#E8A020]/20 transition-colors"
+                            className="px-3 py-1.5 rounded-lg bg-amber/10 text-amber text-[12px] font-semibold hover:bg-amber/20 transition-colors"
                           >
                             View
                           </Link>
                         )}
                         <button
                           onClick={() => handleUnsave(row.sanity_listing_id)}
-                          className="size-8 rounded-lg flex items-center justify-center text-[#9C9485] hover:bg-red-50 hover:text-red-500 transition-colors"
+                          className="size-8 rounded-lg flex items-center justify-center text-text3 hover:bg-red-50 hover:text-red-500 transition-colors"
                           aria-label="Remove from saved"
                         >
                           <X className="size-4" />
@@ -820,18 +820,18 @@ function EmptyState({
   ctaHref?: string;
 }) {
   return (
-    <div className="rounded-2xl border border-dashed border-[#E2DDD5] bg-white p-12 text-center">
+    <div className="rounded-2xl border border-dashed border-border bg-white p-12 text-center">
       <div className="size-14 rounded-2xl bg-[#F5F3F0] flex items-center justify-center mx-auto mb-4">
-        <Icon className="size-6 text-[#9C9485]" />
+        <Icon className="size-6 text-text3" />
       </div>
-      <p className="text-[16px] font-semibold text-[#16130C] mb-1">{title}</p>
-      <p className="text-[13px] text-[#9C9485] max-w-[320px] mx-auto leading-[1.6]">
+      <p className="text-[16px] font-semibold text-dark mb-1">{title}</p>
+      <p className="text-[13px] text-text3 max-w-[320px] mx-auto leading-[1.6]">
         {description}
       </p>
       {ctaLabel && ctaHref && (
         <Link
           href={ctaHref}
-          className="inline-flex items-center gap-1.5 mt-5 px-5 py-2.5 rounded-full bg-[#E8A020] text-white text-[13px] font-semibold hover:bg-[#d4911c] transition-colors"
+          className="inline-flex items-center gap-1.5 mt-5 px-5 py-2.5 rounded-full bg-amber text-white text-[13px] font-semibold hover:bg-[#d4911c] transition-colors"
         >
           {ctaLabel}
           <ArrowRight className="size-3.5" />
@@ -848,17 +848,17 @@ function RsvpCard({ rsvp }: { rsvp: Rsvp }) {
     : null;
 
   return (
-    <div className="flex items-center gap-4 rounded-2xl border border-[#E2DDD5] bg-white p-4 hover:shadow-sm transition-shadow">
+    <div className="flex items-center gap-4 rounded-2xl border border-border bg-white p-4 hover:shadow-sm transition-shadow">
       <div className="size-12 rounded-xl bg-purple-50 flex items-center justify-center shrink-0">
         <Calendar className="size-5 text-purple-600" />
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-[14px] font-semibold text-[#16130C] truncate">{rsvp.event_title}</p>
-        <div className="flex items-center gap-2 text-[12px] text-[#9C9485] mt-0.5">
+        <p className="text-[14px] font-semibold text-dark truncate">{rsvp.event_title}</p>
+        <div className="flex items-center gap-2 text-[12px] text-text3 mt-0.5">
           {eventDate && <span>{eventDate}</span>}
           {rsvp.event_city && (
             <>
-              <span className="text-[#E2DDD5]">·</span>
+              <span className="text-border">·</span>
               <span>{rsvp.event_city}</span>
             </>
           )}
@@ -867,7 +867,7 @@ function RsvpCard({ rsvp }: { rsvp: Rsvp }) {
       {rsvp.event_slug && (
         <Link
           href={`/events/${citySlug}/${rsvp.event_slug}`}
-          className="px-3 py-1.5 rounded-lg bg-[#E8A020]/10 text-[#E8A020] text-[12px] font-semibold hover:bg-[#E8A020]/20 transition-colors shrink-0"
+          className="px-3 py-1.5 rounded-lg bg-amber/10 text-amber text-[12px] font-semibold hover:bg-amber/20 transition-colors shrink-0"
         >
           View
         </Link>

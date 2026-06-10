@@ -254,13 +254,13 @@ export function UnifiedCalendarGrid({
   );
 
   return (
-    <div className="bg-white rounded-xl lg:rounded-2xl border border-[#E2DDD5] shadow-sm overflow-hidden">
+    <div className="bg-white rounded-xl lg:rounded-2xl border border-border shadow-sm overflow-hidden">
       {/* Navigation */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-[#E2DDD5]">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-border">
         <div className="flex items-center gap-2">
           <button
             onClick={goBack}
-            className="size-8 flex items-center justify-center rounded-lg hover:bg-[#F4F1EC] transition-colors text-[#5E5848]"
+            className="size-8 flex items-center justify-center rounded-lg hover:bg-surface transition-colors text-text2"
           >
             <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
@@ -274,14 +274,14 @@ export function UnifiedCalendarGrid({
           </button>
           <button
             onClick={goForward}
-            className="size-8 flex items-center justify-center rounded-lg hover:bg-[#F4F1EC] transition-colors text-[#5E5848]"
+            className="size-8 flex items-center justify-center rounded-lg hover:bg-surface transition-colors text-text2"
           >
             <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
             </svg>
           </button>
         </div>
-        <p className="text-[13px] font-semibold text-[#16130C]">{monthLabel}</p>
+        <p className="text-[13px] font-semibold text-dark">{monthLabel}</p>
       </div>
 
       {/* Calendar grid */}
@@ -295,7 +295,7 @@ export function UnifiedCalendarGrid({
           }}
         >
           {/* Header: room label + date columns */}
-          <div className="sticky left-0 z-10 bg-[#FAFAF8] border-b border-r border-[#E2DDD5] px-3 py-2 text-[10px] font-bold text-[#9C9485] uppercase tracking-wider">
+          <div className="sticky left-0 z-10 bg-canvas border-b border-r border-border px-3 py-2 text-[10px] font-bold text-text3 uppercase tracking-wider">
             Room
           </div>
           {days.map((day) => {
@@ -305,20 +305,20 @@ export function UnifiedCalendarGrid({
             return (
               <div
                 key={ds}
-                className={`border-b border-r border-[#E2DDD5] px-1 py-1.5 text-center ${
+                className={`border-b border-r border-border px-1 py-1.5 text-center ${
                   isToday
                     ? "bg-[#4F46E5]/8"
                     : isWeekend
-                      ? "bg-[#F4F1EC]/60"
-                      : "bg-[#FAFAF8]"
+                      ? "bg-surface/60"
+                      : "bg-canvas"
                 }`}
               >
-                <p className="text-[9px] text-[#9C9485] leading-none">
+                <p className="text-[9px] text-text3 leading-none">
                   {day.toLocaleDateString("en-GB", { weekday: "short" })}
                 </p>
                 <p
                   className={`text-[12px] font-semibold leading-tight mt-0.5 ${
-                    isToday ? "text-[#4F46E5]" : "text-[#16130C]"
+                    isToday ? "text-[#4F46E5]" : "text-dark"
                   }`}
                 >
                   {day.getDate()}
@@ -336,11 +336,11 @@ export function UnifiedCalendarGrid({
                 {!singleProperty && (
                   <button
                     onClick={() => toggleCollapsed(property.id)}
-                    className="flex items-center gap-2 px-4 py-2 bg-[#F4F1EC] hover:bg-[#EAE6DE] transition-colors border-b border-[#E2DDD5] text-left"
+                    className="flex items-center gap-2 px-4 py-2 bg-surface hover:bg-[#EAE6DE] transition-colors border-b border-border text-left"
                     style={{ gridColumn: "1 / -1" }}
                   >
                     <svg
-                      className={`size-3.5 text-[#5E5848] shrink-0 transition-transform duration-150 ${
+                      className={`size-3.5 text-text2 shrink-0 transition-transform duration-150 ${
                         isCollapsed ? "-rotate-90" : ""
                       }`}
                       fill="none"
@@ -354,15 +354,15 @@ export function UnifiedCalendarGrid({
                         d="M19.5 8.25l-7.5 7.5-7.5-7.5"
                       />
                     </svg>
-                    <span className="text-[12px] font-bold text-[#16130C]">
+                    <span className="text-[12px] font-bold text-dark">
                       {property.name}
                     </span>
                     {property.city && (
-                      <span className="text-[11px] text-[#9C9485]">
+                      <span className="text-[11px] text-text3">
                         {property.city}
                       </span>
                     )}
-                    <span className="text-[10px] text-[#9C9485] ml-0.5">
+                    <span className="text-[10px] text-text3 ml-0.5">
                       · {propRooms.length}{" "}
                       {propRooms.length === 1 ? "room" : "rooms"}
                     </span>
@@ -420,7 +420,7 @@ export function UnifiedCalendarGrid({
       </div>
 
       {/* Legend */}
-      <div className="flex items-center gap-4 px-4 py-2.5 border-t border-[#E2DDD5] flex-wrap">
+      <div className="flex items-center gap-4 px-4 py-2.5 border-t border-border flex-wrap">
         {[
           { label: "Direct", color: "#4F46E5" },
           { label: "Airbnb", color: "#FF5A5F" },
@@ -434,25 +434,25 @@ export function UnifiedCalendarGrid({
               className="size-2.5 rounded-sm"
               style={{ backgroundColor: item.color }}
             />
-            <span className="text-[10px] text-[#9C9485]">{item.label}</span>
+            <span className="text-[10px] text-text3">{item.label}</span>
           </div>
         ))}
         <div className="flex items-center gap-1.5">
           <div
-            className="size-2.5 rounded-sm bg-[#9C9485] opacity-40"
+            className="size-2.5 rounded-sm bg-text3 opacity-40"
             style={{
               backgroundImage:
                 "repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(0,0,0,0.15) 2px, rgba(0,0,0,0.15) 4px)",
             }}
           />
-          <span className="text-[10px] text-[#9C9485]">Blocked</span>
+          <span className="text-[10px] text-text3">Blocked</span>
         </div>
         <div className="flex items-center gap-1.5">
           <div
             className="size-2.5 rounded-sm border border-dashed border-[#EAB308]"
             style={{ backgroundColor: "#FEF9C3" }}
           />
-          <span className="text-[10px] text-[#9C9485]">Enquiry</span>
+          <span className="text-[10px] text-text3">Enquiry</span>
         </div>
       </div>
     </div>

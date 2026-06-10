@@ -305,7 +305,7 @@ export function SearchDropdown({
                       className="size-11 rounded-lg object-cover shrink-0"
                     />
                   ) : (
-                    <div className="size-11 rounded-lg bg-gradient-to-br from-[#6B2D8B] to-[#E8A020] shrink-0 flex items-center justify-center">
+                    <div className="size-11 rounded-lg bg-gradient-to-br from-purple to-amber shrink-0 flex items-center justify-center">
                       <MapPin className="size-4 text-white" />
                     </div>
                   )}
@@ -376,7 +376,7 @@ export function SearchDropdown({
                         className="size-11 rounded-lg object-cover shrink-0"
                       />
                     ) : (
-                      <div className="size-11 rounded-lg bg-gradient-to-br from-[#6B2D8B] to-[#E8A020] shrink-0" />
+                      <div className="size-11 rounded-lg bg-gradient-to-br from-purple to-amber shrink-0" />
                     )}
                     <div className="min-w-0 flex-1">
                       <p className="text-[14px] font-semibold text-text truncate">

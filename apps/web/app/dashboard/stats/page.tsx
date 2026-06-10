@@ -117,20 +117,20 @@ export default async function DashboardStatsPage({
     <div>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="font-display text-[22px] lg:text-[28px] font-bold tracking-[-0.03em] text-[#16130C]">
+          <h1 className="font-display text-[22px] lg:text-[28px] font-bold tracking-[-0.03em] text-dark">
             Stats
           </h1>
-          <p className="text-[13px] text-[#9C9485] mt-0.5">
+          <p className="text-[13px] text-text3 mt-0.5">
             Last {days} days across {listings.length} listing{listings.length !== 1 ? "s" : ""}
           </p>
         </div>
-        <div className="flex items-center gap-1 bg-white rounded-xl border border-[#E2DDD5] p-1">
+        <div className="flex items-center gap-1 bg-white rounded-xl border border-border p-1">
           {[7, 30, 90].map((d) => (
             <Link
               key={d}
               href={`/dashboard/stats?range=${d}`}
               className={`px-3 py-1.5 text-[12px] font-semibold rounded-lg transition-colors ${
-                days === d ? "bg-[#E8A020] text-white" : "text-[#9C9485] hover:bg-[#F5F3F0]"
+                days === d ? "bg-amber text-white" : "text-text3 hover:bg-[#F5F3F0]"
               }`}
             >
               {d}d
@@ -142,14 +142,14 @@ export default async function DashboardStatsPage({
       {/* Stat cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
         {[
-          { label: "Page Views", value: totalViews, color: "text-[#16130C]" },
-          { label: "Contact Clicks", value: totalContactClicks, color: "text-[#E8A020]" },
-          { label: "Forms Sent", value: totalContactSent, color: "text-[#6B2D8B]" },
+          { label: "Page Views", value: totalViews, color: "text-dark" },
+          { label: "Contact Clicks", value: totalContactClicks, color: "text-amber" },
+          { label: "Forms Sent", value: totalContactSent, color: "text-purple" },
           { label: "Conversion", value: `${conversionRate}%`, color: "text-[#22C55E]" },
         ].map((s) => (
-          <div key={s.label} className="bg-white rounded-xl border border-[#E2DDD5] p-4 text-center">
+          <div key={s.label} className="bg-white rounded-xl border border-border p-4 text-center">
             <p className={`font-display text-[24px] font-bold tracking-[-0.02em] ${s.color}`}>{s.value}</p>
-            <p className="text-[11px] text-[#9C9485] font-medium mt-0.5">{s.label}</p>
+            <p className="text-[11px] text-text3 font-medium mt-0.5">{s.label}</p>
           </div>
         ))}
       </div>

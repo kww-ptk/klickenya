@@ -26,10 +26,10 @@ interface ProfileHeroProps {
 }
 
 const BADGE_STYLES: Record<string, string> = {
-  green: "bg-[#16A34A]/15 text-[#16A34A]",
-  amber: "bg-[#E8A020]/15 text-[#E8A020]",
+  green: "bg-green/15 text-green",
+  amber: "bg-amber/15 text-amber",
   blue: "bg-[#2563EB]/15 text-[#2563EB]",
-  purple: "bg-[#6B2D8B]/15 text-[#6B2D8B]",
+  purple: "bg-purple/15 text-purple",
 };
 
 function socialUrl(handle: string, base: string): string {
@@ -64,7 +64,7 @@ export function ProfileHero({
   const hasSocials = website || instagram || facebook || twitter;
 
   return (
-    <div className="relative bg-[#16130C] overflow-hidden">
+    <div className="relative bg-dark overflow-hidden">
       {/* Background pattern */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
@@ -72,7 +72,7 @@ export function ProfileHero({
         alt=""
         className="absolute inset-0 w-full h-full object-cover pointer-events-none"
       />
-      <div className="absolute inset-0 bg-[#16130C]/40 pointer-events-none" />
+      <div className="absolute inset-0 bg-dark/40 pointer-events-none" />
 
       <div className="relative max-w-3xl mx-auto px-5 pt-8 pb-10 text-center">
         {/* Back link */}
@@ -94,12 +94,12 @@ export function ProfileHero({
               className="w-24 h-24 rounded-full object-cover border-4 border-white/10"
             />
           ) : (
-            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-[#E8A020] to-[#6B2D8B] flex items-center justify-center text-white text-[28px] font-bold border-4 border-white/10">
+            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-amber to-purple flex items-center justify-center text-white text-[28px] font-bold border-4 border-white/10">
               {initials}
             </div>
           )}
           {verified && (
-            <span className="absolute -bottom-1 -right-1 size-7 rounded-full bg-[#16A34A] border-3 border-[#16130C] flex items-center justify-center">
+            <span className="absolute -bottom-1 -right-1 size-7 rounded-full bg-green border-3 border-dark flex items-center justify-center">
               <Check className="size-4 text-white" strokeWidth={3} />
             </span>
           )}
@@ -111,7 +111,7 @@ export function ProfileHero({
         </h1>
         <div className="flex items-center justify-center gap-2 mb-4">
           {verified && (
-            <span className="text-[12px] font-bold text-[#16A34A]">Verified</span>
+            <span className="text-[12px] font-bold text-green">Verified</span>
           )}
           {badgeLabel && (
             <span
@@ -140,7 +140,7 @@ export function ProfileHero({
                 href={website}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-[13px] text-[#E8A020] hover:text-[#F5C842] transition-colors"
+                className="text-[13px] text-amber hover:text-amber2 transition-colors"
               >
                 Website
               </a>
@@ -150,7 +150,7 @@ export function ProfileHero({
                 href={socialUrl(instagram, "https://instagram.com")}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-[13px] text-[#E8A020] hover:text-[#F5C842] transition-colors"
+                className="text-[13px] text-amber hover:text-amber2 transition-colors"
               >
                 Instagram
               </a>
@@ -160,7 +160,7 @@ export function ProfileHero({
                 href={socialUrl(facebook, "https://facebook.com")}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-[13px] text-[#E8A020] hover:text-[#F5C842] transition-colors"
+                className="text-[13px] text-amber hover:text-amber2 transition-colors"
               >
                 Facebook
               </a>
@@ -170,7 +170,7 @@ export function ProfileHero({
                 href={socialUrl(twitter, "https://x.com")}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-[13px] text-[#E8A020] hover:text-[#F5C842] transition-colors"
+                className="text-[13px] text-amber hover:text-amber2 transition-colors"
               >
                 Twitter
               </a>

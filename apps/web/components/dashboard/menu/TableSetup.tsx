@@ -28,7 +28,7 @@ interface TableSetupProps {
 /* ── Input style ───────────────────────────────────── */
 
 const inputCls =
-  "border border-[#E2DDD5] rounded-lg px-3 py-1.5 text-[13px] text-[#16130C] placeholder:text-[#9C9485] focus:outline-none focus:border-[#E8A020] bg-white transition-colors";
+  "border border-border rounded-lg px-3 py-1.5 text-[13px] text-dark placeholder:text-text3 focus:outline-none focus:border-amber bg-white transition-colors";
 
 /* ── Table row ─────────────────────────────────────── */
 
@@ -78,7 +78,7 @@ function TableRow({
 
   if (isEditing) {
     return (
-      <div className="px-3 py-3 border-b border-[#F4F1EC] bg-[#FDFCFB] space-y-2">
+      <div className="px-3 py-3 border-b border-surface bg-[#FDFCFB] space-y-2">
         <div className="flex gap-2 flex-wrap">
           <input
             value={editNumber}
@@ -120,13 +120,13 @@ function TableRow({
           <button
             onClick={handleSave}
             disabled={saving || !editNumber.trim()}
-            className="text-[12px] font-bold text-white bg-[#16130C] px-3 h-[28px] rounded-full hover:bg-[#2A2520] transition-colors disabled:opacity-50"
+            className="text-[12px] font-bold text-white bg-dark px-3 h-[28px] rounded-full hover:bg-[#2A2520] transition-colors disabled:opacity-50"
           >
             {saving ? "Saving…" : "Save"}
           </button>
           <button
             onClick={onCancelEdit}
-            className="text-[12px] text-[#9C9485] hover:text-[#16130C] transition-colors"
+            className="text-[12px] text-text3 hover:text-dark transition-colors"
           >
             Cancel
           </button>
@@ -137,7 +137,7 @@ function TableRow({
 
   return (
     <div
-      className={`flex items-center gap-2 px-3 py-2.5 border-b border-[#F4F1EC] last:border-0 ${
+      className={`flex items-center gap-2 px-3 py-2.5 border-b border-surface last:border-0 ${
         !table.is_active ? "opacity-50" : ""
       }`}
     >
@@ -146,7 +146,7 @@ function TableRow({
         <button
           onClick={() => onMove("up")}
           disabled={index === 0}
-          className="text-[10px] text-[#D4CFC8] hover:text-[#9C9485] disabled:opacity-0 transition-colors leading-none px-0.5"
+          className="text-[10px] text-[#D4CFC8] hover:text-text3 disabled:opacity-0 transition-colors leading-none px-0.5"
           title="Move up"
         >
           ▲
@@ -154,7 +154,7 @@ function TableRow({
         <button
           onClick={() => onMove("down")}
           disabled={index === total - 1}
-          className="text-[10px] text-[#D4CFC8] hover:text-[#9C9485] disabled:opacity-0 transition-colors leading-none px-0.5"
+          className="text-[10px] text-[#D4CFC8] hover:text-text3 disabled:opacity-0 transition-colors leading-none px-0.5"
           title="Move down"
         >
           ▼
@@ -163,10 +163,10 @@ function TableRow({
 
       {/* Table info */}
       <div className="flex-1 min-w-0">
-        <span className="text-[13px] font-semibold text-[#16130C]">{table.table_number}</span>
-        <span className="text-[12px] text-[#9C9485] ml-2">{table.capacity} guests</span>
+        <span className="text-[13px] font-semibold text-dark">{table.table_number}</span>
+        <span className="text-[12px] text-text3 ml-2">{table.capacity} guests</span>
         {table.floor_section && (
-          <span className="text-[11px] text-[#9C9485] ml-2 italic">{table.floor_section}</span>
+          <span className="text-[11px] text-text3 ml-2 italic">{table.floor_section}</span>
         )}
       </div>
 
@@ -177,7 +177,7 @@ function TableRow({
         className={`shrink-0 text-[11px] font-semibold px-2 h-[22px] rounded-full border transition-colors ${
           table.is_active
             ? "border-emerald-300 text-emerald-700 bg-emerald-50 hover:bg-emerald-100"
-            : "border-[#E2DDD5] text-[#9C9485] bg-white hover:border-[#9C9485]"
+            : "border-border text-text3 bg-white hover:border-text3"
         }`}
       >
         {table.is_active ? "Active" : "Off"}
@@ -186,7 +186,7 @@ function TableRow({
       {/* Edit */}
       <button
         onClick={onEdit}
-        className="text-[#E2DDD5] hover:text-[#E8A020] transition-colors text-[14px] shrink-0"
+        className="text-border hover:text-amber transition-colors text-[14px] shrink-0"
         title="Edit table"
       >
         ✏️
@@ -195,7 +195,7 @@ function TableRow({
       {/* Delete */}
       <button
         onClick={onDelete}
-        className="text-[#E2DDD5] hover:text-[#DC2626] transition-colors text-[14px] shrink-0"
+        className="text-border hover:text-[#DC2626] transition-colors text-[14px] shrink-0"
         title="Delete table"
       >
         🗑
@@ -415,23 +415,23 @@ export function TableSetup({ menuId, showToast, areas }: TableSetupProps) {
   });
 
   return (
-    <div className="bg-white rounded-xl lg:rounded-2xl border border-[#E2DDD5] shadow-sm overflow-hidden mb-4">
+    <div className="bg-white rounded-xl lg:rounded-2xl border border-border shadow-sm overflow-hidden mb-4">
       {/* Header */}
-      <div className="flex items-center gap-2 px-4 py-3 border-b border-[#F4F1EC]">
-        <span className="text-[15px] font-bold text-[#16130C]">Tables</span>
-        <span className="text-[11px] font-bold text-[#9C9485] bg-[#F4F1EC] px-2 py-0.5 rounded-full">
+      <div className="flex items-center gap-2 px-4 py-3 border-b border-surface">
+        <span className="text-[15px] font-bold text-dark">Tables</span>
+        <span className="text-[11px] font-bold text-text3 bg-surface px-2 py-0.5 rounded-full">
           {tables.length} {tables.length === 1 ? "table" : "tables"}
         </span>
         <div className="ml-auto flex items-center gap-2">
           <button
             onClick={() => { setShowBulk((v) => !v); setShowAdd(false); }}
-            className="text-[11px] font-semibold text-[#9C9485] hover:text-[#E8A020] transition-colors"
+            className="text-[11px] font-semibold text-text3 hover:text-amber transition-colors"
           >
             Bulk add
           </button>
           <button
             onClick={() => { setShowAdd((v) => !v); setShowBulk(false); }}
-            className="text-[12px] font-bold text-[#E8A020] hover:text-[#d4911c] transition-colors"
+            className="text-[12px] font-bold text-amber hover:text-[#d4911c] transition-colors"
           >
             + Add table
           </button>
@@ -440,9 +440,9 @@ export function TableSetup({ menuId, showToast, areas }: TableSetupProps) {
 
       {/* Table list */}
       {loading ? (
-        <p className="text-[12px] text-[#9C9485] px-4 py-3">Loading…</p>
+        <p className="text-[12px] text-text3 px-4 py-3">Loading…</p>
       ) : sortedTables.length === 0 && !showAdd && !showBulk ? (
-        <p className="text-[12px] text-[#9C9485] italic px-4 py-3">
+        <p className="text-[12px] text-text3 italic px-4 py-3">
           No tables yet. Add your first table below.
         </p>
       ) : (
@@ -468,8 +468,8 @@ export function TableSetup({ menuId, showToast, areas }: TableSetupProps) {
 
       {/* Add single table form */}
       {showAdd && (
-        <div className="px-4 py-3 border-t border-[#F4F1EC] bg-[#FAFAF8] space-y-2.5">
-          <p className="text-[12px] font-bold text-[#16130C] uppercase tracking-wide">Add table</p>
+        <div className="px-4 py-3 border-t border-surface bg-canvas space-y-2.5">
+          <p className="text-[12px] font-bold text-dark uppercase tracking-wide">Add table</p>
           <div className="flex gap-2 flex-wrap">
             <input
               value={addNumber}
@@ -512,13 +512,13 @@ export function TableSetup({ menuId, showToast, areas }: TableSetupProps) {
             <button
               onClick={handleAddSingle}
               disabled={addSaving || !addNumber.trim()}
-              className="text-[12px] font-bold text-white bg-[#16130C] px-4 h-[30px] rounded-full hover:bg-[#2A2520] transition-colors disabled:opacity-50"
+              className="text-[12px] font-bold text-white bg-dark px-4 h-[30px] rounded-full hover:bg-[#2A2520] transition-colors disabled:opacity-50"
             >
               {addSaving ? "Adding…" : "Add table"}
             </button>
             <button
               onClick={() => { setShowAdd(false); setAddNumber(""); setAddCap("4"); setAddFloor(""); }}
-              className="text-[12px] text-[#9C9485] hover:text-[#16130C] transition-colors"
+              className="text-[12px] text-text3 hover:text-dark transition-colors"
             >
               Cancel
             </button>
@@ -528,10 +528,10 @@ export function TableSetup({ menuId, showToast, areas }: TableSetupProps) {
 
       {/* Bulk add form */}
       {showBulk && (
-        <div className="px-4 py-3 border-t border-[#F4F1EC] bg-[#FAFAF8] space-y-2">
-          <p className="text-[12px] font-bold text-[#16130C] uppercase tracking-wide">Bulk add tables</p>
-          <p className="text-[11px] text-[#9C9485]">
-            Enter a range like <span className="font-mono text-[#5E5848]">T1-T10</span> or <span className="font-mono text-[#5E5848]">1-20</span>
+        <div className="px-4 py-3 border-t border-surface bg-canvas space-y-2">
+          <p className="text-[12px] font-bold text-dark uppercase tracking-wide">Bulk add tables</p>
+          <p className="text-[11px] text-text3">
+            Enter a range like <span className="font-mono text-text2">T1-T10</span> or <span className="font-mono text-text2">1-20</span>
           </p>
           <div className="flex gap-2">
             <input
@@ -555,13 +555,13 @@ export function TableSetup({ menuId, showToast, areas }: TableSetupProps) {
             <button
               onClick={handleBulkAdd}
               disabled={bulkSaving || !bulkPreview || bulkPreview.length === 0}
-              className="text-[12px] font-bold text-white bg-[#16130C] px-4 h-[30px] rounded-full hover:bg-[#2A2520] transition-colors disabled:opacity-50"
+              className="text-[12px] font-bold text-white bg-dark px-4 h-[30px] rounded-full hover:bg-[#2A2520] transition-colors disabled:opacity-50"
             >
               {bulkSaving ? "Adding…" : `Add ${bulkPreview?.length ?? 0} tables`}
             </button>
             <button
               onClick={() => { setShowBulk(false); setBulkRange(""); setBulkPreview(null); }}
-              className="text-[12px] text-[#9C9485] hover:text-[#16130C] transition-colors"
+              className="text-[12px] text-text3 hover:text-dark transition-colors"
             >
               Cancel
             </button>

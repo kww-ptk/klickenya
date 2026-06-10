@@ -300,7 +300,7 @@ export default async function DestinationPage({ params }: PageProps) {
               </div>
 
               {/* Ambassador CTA card */}
-              <div className="rounded-[var(--radius-xl)] bg-gradient-to-br from-[#6b2d8b] to-[#4a1a6b] p-6 text-white">
+              <div className="rounded-[var(--radius-xl)] bg-gradient-to-br from-purple to-[#4a1a6b] p-6 text-white">
                 <div className="text-[28px] mb-3">🤝</div>
                 <h3 className="text-[16px] font-bold mb-2">
                   Know {destination.name} well?
@@ -310,7 +310,7 @@ export default async function DestinationPage({ params }: PageProps) {
                 </p>
                 <Link
                   href="/how-it-works"
-                  className="inline-block w-full text-center rounded-[var(--radius-md)] bg-white text-[#6b2d8b] text-[13.5px] font-bold py-2.5 hover:bg-white/90 transition-colors"
+                  className="inline-block w-full text-center rounded-[var(--radius-md)] bg-white text-purple text-[13.5px] font-bold py-2.5 hover:bg-white/90 transition-colors"
                 >
                   Become an Ambassador
                 </Link>
@@ -349,7 +349,7 @@ export default async function DestinationPage({ params }: PageProps) {
 
       {/* ── Ambassador Banner ────────────────── */}
       <section className="max-w-[1280px] mx-auto px-5 md:px-10 pb-16">
-        <div className="relative overflow-hidden rounded-[var(--radius-xl)] bg-gradient-to-r from-[#6b2d8b] via-[#5a2378] to-[#4a1a6b] px-8 md:px-14 py-12 md:py-16">
+        <div className="relative overflow-hidden rounded-[var(--radius-xl)] bg-gradient-to-r from-purple via-[#5a2378] to-[#4a1a6b] px-8 md:px-14 py-12 md:py-16">
           <div className="absolute inset-0 opacity-10">
             <div className="absolute top-[-50%] right-[-20%] w-[60%] h-[200%] rounded-full bg-amber/30 blur-[80px]" />
             <div className="absolute bottom-[-30%] left-[-10%] w-[40%] h-[160%] rounded-full bg-white/20 blur-[60px]" />
@@ -366,7 +366,7 @@ export default async function DestinationPage({ params }: PageProps) {
             </p>
             <Link
               href="/how-it-works"
-              className="inline-flex items-center gap-2 rounded-full bg-white text-[#6b2d8b] px-7 py-3 text-[14px] font-bold hover:bg-white/90 transition-colors"
+              className="inline-flex items-center gap-2 rounded-full bg-white text-purple px-7 py-3 text-[14px] font-bold hover:bg-white/90 transition-colors"
             >
               Learn More
               <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" /></svg>

@@ -59,8 +59,8 @@ export interface StaffMember {
 function SectionHeader({ title, subtitle }: { title: string; subtitle?: string }) {
   return (
     <div className="mb-3">
-      <p className="text-[14px] font-bold text-[#16130C]">{title}</p>
-      {subtitle && <p className="text-[12px] text-[#9C9485] mt-0.5">{subtitle}</p>}
+      <p className="text-[14px] font-bold text-dark">{title}</p>
+      {subtitle && <p className="text-[12px] text-text3 mt-0.5">{subtitle}</p>}
     </div>
   );
 }
@@ -146,35 +146,35 @@ function AreaRow({ area, menuId, onUpdate, onDelete, showToast }: AreaRowProps) 
 
   if (editing) {
     return (
-      <div className="px-4 py-3 bg-[#FDFCFB] border-b border-[#F4F1EC] space-y-2">
+      <div className="px-4 py-3 bg-[#FDFCFB] border-b border-surface space-y-2">
         <div className="flex gap-2 flex-wrap items-end">
           <div className="flex-1 min-w-[120px]">
-            <label className="block text-[10px] font-bold text-[#9C9485] uppercase tracking-wide mb-1">Name</label>
+            <label className="block text-[10px] font-bold text-text3 uppercase tracking-wide mb-1">Name</label>
             <input
               value={editName}
               onChange={e => setEditName(e.target.value)}
               autoFocus
-              className="w-full border border-[#E2DDD5] rounded-lg px-3 py-1.5 text-[13px] text-[#16130C] focus:outline-none focus:border-[#E8A020] bg-white"
+              className="w-full border border-border rounded-lg px-3 py-1.5 text-[13px] text-dark focus:outline-none focus:border-amber bg-white"
             />
           </div>
           <div className="w-[80px]">
-            <label className="block text-[10px] font-bold text-[#9C9485] uppercase tracking-wide mb-1">Capacity</label>
+            <label className="block text-[10px] font-bold text-text3 uppercase tracking-wide mb-1">Capacity</label>
             <input
               type="number"
               min={1}
               max={9999}
               value={editCap}
               onChange={e => setEditCap(e.target.value)}
-              className="w-full border border-[#E2DDD5] rounded-lg px-3 py-1.5 text-[13px] text-[#16130C] focus:outline-none focus:border-[#E8A020] bg-white"
+              className="w-full border border-border rounded-lg px-3 py-1.5 text-[13px] text-dark focus:outline-none focus:border-amber bg-white"
             />
           </div>
           <div>
-            <label className="block text-[10px] font-bold text-[#9C9485] uppercase tracking-wide mb-1">Color</label>
+            <label className="block text-[10px] font-bold text-text3 uppercase tracking-wide mb-1">Color</label>
             <input
               type="color"
               value={editColor}
               onChange={e => setEditColor(e.target.value)}
-              className="h-[34px] w-[48px] rounded-lg border border-[#E2DDD5] cursor-pointer p-0.5 bg-white"
+              className="h-[34px] w-[48px] rounded-lg border border-border cursor-pointer p-0.5 bg-white"
             />
           </div>
         </div>
@@ -182,13 +182,13 @@ function AreaRow({ area, menuId, onUpdate, onDelete, showToast }: AreaRowProps) 
           <button
             onClick={handleSave}
             disabled={saving || !editName.trim()}
-            className="text-[12px] font-bold text-white bg-[#16130C] px-3 h-[28px] rounded-full hover:bg-[#2A2520] transition-colors disabled:opacity-50"
+            className="text-[12px] font-bold text-white bg-dark px-3 h-[28px] rounded-full hover:bg-[#2A2520] transition-colors disabled:opacity-50"
           >
             {saving ? "Saving…" : "Save"}
           </button>
           <button
             onClick={() => setEditing(false)}
-            className="text-[12px] text-[#9C9485] hover:text-[#16130C] transition-colors"
+            className="text-[12px] text-text3 hover:text-dark transition-colors"
           >
             Cancel
           </button>
@@ -198,7 +198,7 @@ function AreaRow({ area, menuId, onUpdate, onDelete, showToast }: AreaRowProps) 
   }
 
   return (
-    <div className={`flex items-center gap-3 px-4 py-3 border-b border-[#F4F1EC] last:border-0 ${!area.is_active ? "opacity-50" : ""}`}>
+    <div className={`flex items-center gap-3 px-4 py-3 border-b border-surface last:border-0 ${!area.is_active ? "opacity-50" : ""}`}>
       {/* Color swatch */}
       <div
         className="shrink-0 size-3 rounded-full"
@@ -207,8 +207,8 @@ function AreaRow({ area, menuId, onUpdate, onDelete, showToast }: AreaRowProps) 
 
       {/* Info */}
       <div className="flex-1 min-w-0">
-        <p className="text-[13px] font-semibold text-[#16130C] truncate">{area.name}</p>
-        <p className="text-[11px] text-[#9C9485]">{area.capacity_total} covers</p>
+        <p className="text-[13px] font-semibold text-dark truncate">{area.name}</p>
+        <p className="text-[11px] text-text3">{area.capacity_total} covers</p>
       </div>
 
       {/* Active toggle */}
@@ -221,7 +221,7 @@ function AreaRow({ area, menuId, onUpdate, onDelete, showToast }: AreaRowProps) 
       {/* Edit */}
       <button
         onClick={() => setEditing(true)}
-        className="text-[12px] text-[#9C9485] hover:text-[#16130C] transition-colors px-1"
+        className="text-[12px] text-text3 hover:text-dark transition-colors px-1"
       >
         Edit
       </button>
@@ -286,7 +286,7 @@ function AddAreaForm({ menuId, onAdd, showToast }: AddAreaFormProps) {
     return (
       <button
         onClick={() => setOpen(true)}
-        className="w-full h-[36px] rounded-full border border-dashed border-[#E2DDD5] text-[12px] font-semibold text-[#9C9485] hover:border-[#E8A020]/50 hover:text-[#E8A020] transition-colors"
+        className="w-full h-[36px] rounded-full border border-dashed border-border text-[12px] font-semibold text-text3 hover:border-amber/50 hover:text-amber transition-colors"
       >
         + Add area
       </button>
@@ -294,37 +294,37 @@ function AddAreaForm({ menuId, onAdd, showToast }: AddAreaFormProps) {
   }
 
   return (
-    <div className="border border-[#E2DDD5] rounded-xl p-4 space-y-3 bg-[#FDFCFB]">
-      <p className="text-[12px] font-bold text-[#16130C]">New area</p>
+    <div className="border border-border rounded-xl p-4 space-y-3 bg-[#FDFCFB]">
+      <p className="text-[12px] font-bold text-dark">New area</p>
       <div className="flex gap-2 flex-wrap items-end">
         <div className="flex-1 min-w-[120px]">
-          <label className="block text-[10px] font-bold text-[#9C9485] uppercase tracking-wide mb-1">Name</label>
+          <label className="block text-[10px] font-bold text-text3 uppercase tracking-wide mb-1">Name</label>
           <input
             value={name}
             onChange={e => setName(e.target.value)}
             placeholder="e.g. Rooftop"
             autoFocus
-            className="w-full border border-[#E2DDD5] rounded-lg px-3 py-1.5 text-[13px] text-[#16130C] focus:outline-none focus:border-[#E8A020] bg-white"
+            className="w-full border border-border rounded-lg px-3 py-1.5 text-[13px] text-dark focus:outline-none focus:border-amber bg-white"
           />
         </div>
         <div className="w-[80px]">
-          <label className="block text-[10px] font-bold text-[#9C9485] uppercase tracking-wide mb-1">Capacity</label>
+          <label className="block text-[10px] font-bold text-text3 uppercase tracking-wide mb-1">Capacity</label>
           <input
             type="number"
             min={1}
             max={9999}
             value={capacity}
             onChange={e => setCapacity(e.target.value)}
-            className="w-full border border-[#E2DDD5] rounded-lg px-3 py-1.5 text-[13px] text-[#16130C] focus:outline-none focus:border-[#E8A020] bg-white"
+            className="w-full border border-border rounded-lg px-3 py-1.5 text-[13px] text-dark focus:outline-none focus:border-amber bg-white"
           />
         </div>
         <div>
-          <label className="block text-[10px] font-bold text-[#9C9485] uppercase tracking-wide mb-1">Color</label>
+          <label className="block text-[10px] font-bold text-text3 uppercase tracking-wide mb-1">Color</label>
           <input
             type="color"
             value={color}
             onChange={e => setColor(e.target.value)}
-            className="h-[34px] w-[48px] rounded-lg border border-[#E2DDD5] cursor-pointer p-0.5 bg-white"
+            className="h-[34px] w-[48px] rounded-lg border border-border cursor-pointer p-0.5 bg-white"
           />
         </div>
       </div>
@@ -332,13 +332,13 @@ function AddAreaForm({ menuId, onAdd, showToast }: AddAreaFormProps) {
         <button
           onClick={handleAdd}
           disabled={adding || !name.trim()}
-          className="text-[12px] font-bold text-white bg-[#E8A020] px-4 h-[30px] rounded-full hover:bg-[#d4911c] transition-colors disabled:opacity-50"
+          className="text-[12px] font-bold text-white bg-amber px-4 h-[30px] rounded-full hover:bg-[#d4911c] transition-colors disabled:opacity-50"
         >
           {adding ? "Adding…" : "Add area"}
         </button>
         <button
           onClick={() => setOpen(false)}
-          className="text-[12px] text-[#9C9485] hover:text-[#16130C] transition-colors"
+          className="text-[12px] text-text3 hover:text-dark transition-colors"
         >
           Cancel
         </button>
@@ -437,33 +437,33 @@ function TimeWindowRow({ window: w, menuId, disabled, onUpdate, onDelete, showTo
 
   if (editing) {
     return (
-      <div className="px-4 py-3 bg-[#FDFCFB] border-b border-[#F4F1EC] space-y-2">
+      <div className="px-4 py-3 bg-[#FDFCFB] border-b border-surface space-y-2">
         <div className="flex gap-2 flex-wrap items-end">
           <div className="flex-1 min-w-[120px]">
-            <label className="block text-[10px] font-bold text-[#9C9485] uppercase tracking-wide mb-1">Label (optional)</label>
+            <label className="block text-[10px] font-bold text-text3 uppercase tracking-wide mb-1">Label (optional)</label>
             <input
               value={editLabel}
               onChange={e => setEditLabel(e.target.value)}
               placeholder="e.g. Lunch, Dinner"
-              className="w-full border border-[#E2DDD5] rounded-lg px-3 py-1.5 text-[13px] text-[#16130C] focus:outline-none focus:border-[#E8A020] bg-white"
+              className="w-full border border-border rounded-lg px-3 py-1.5 text-[13px] text-dark focus:outline-none focus:border-amber bg-white"
             />
           </div>
           <div className="w-[110px]">
-            <label className="block text-[10px] font-bold text-[#9C9485] uppercase tracking-wide mb-1">Open from</label>
+            <label className="block text-[10px] font-bold text-text3 uppercase tracking-wide mb-1">Open from</label>
             <input
               type="time"
               value={editOpen}
               onChange={e => setEditOpen(e.target.value)}
-              className="w-full border border-[#E2DDD5] rounded-lg px-3 py-1.5 text-[13px] text-[#16130C] focus:outline-none focus:border-[#E8A020] bg-white"
+              className="w-full border border-border rounded-lg px-3 py-1.5 text-[13px] text-dark focus:outline-none focus:border-amber bg-white"
             />
           </div>
           <div className="w-[110px]">
-            <label className="block text-[10px] font-bold text-[#9C9485] uppercase tracking-wide mb-1">Last booking</label>
+            <label className="block text-[10px] font-bold text-text3 uppercase tracking-wide mb-1">Last booking</label>
             <input
               type="time"
               value={editClose}
               onChange={e => setEditClose(e.target.value)}
-              className="w-full border border-[#E2DDD5] rounded-lg px-3 py-1.5 text-[13px] text-[#16130C] focus:outline-none focus:border-[#E8A020] bg-white"
+              className="w-full border border-border rounded-lg px-3 py-1.5 text-[13px] text-dark focus:outline-none focus:border-amber bg-white"
             />
           </div>
         </div>
@@ -471,13 +471,13 @@ function TimeWindowRow({ window: w, menuId, disabled, onUpdate, onDelete, showTo
           <button
             onClick={handleSave}
             disabled={saving || !editOpen || !editClose}
-            className="text-[12px] font-bold text-white bg-[#16130C] px-3 h-[28px] rounded-full hover:bg-[#2A2520] transition-colors disabled:opacity-50"
+            className="text-[12px] font-bold text-white bg-dark px-3 h-[28px] rounded-full hover:bg-[#2A2520] transition-colors disabled:opacity-50"
           >
             {saving ? "Saving…" : "Save"}
           </button>
           <button
             onClick={() => { setEditing(false); setEditLabel(w.label ?? ""); setEditOpen(w.open_time.slice(0, 5)); setEditClose(w.close_time.slice(0, 5)); }}
-            className="text-[12px] text-[#9C9485] hover:text-[#16130C] transition-colors"
+            className="text-[12px] text-text3 hover:text-dark transition-colors"
           >
             Cancel
           </button>
@@ -487,11 +487,11 @@ function TimeWindowRow({ window: w, menuId, disabled, onUpdate, onDelete, showTo
   }
 
   return (
-    <div className={`flex items-center gap-3 px-4 py-3 border-b border-[#F4F1EC] last:border-0 ${!w.is_active ? "opacity-50" : ""}`}>
+    <div className={`flex items-center gap-3 px-4 py-3 border-b border-surface last:border-0 ${!w.is_active ? "opacity-50" : ""}`}>
       {/* Info */}
       <div className="flex-1 min-w-0">
-        <p className="text-[13px] font-semibold text-[#16130C] truncate">{w.label || <span className="text-[#9C9485]">—</span>}</p>
-        <p className="text-[11px] text-[#9C9485]">{timeRange}</p>
+        <p className="text-[13px] font-semibold text-dark truncate">{w.label || <span className="text-text3">—</span>}</p>
+        <p className="text-[11px] text-text3">{timeRange}</p>
       </div>
 
       {/* Active toggle */}
@@ -505,7 +505,7 @@ function TimeWindowRow({ window: w, menuId, disabled, onUpdate, onDelete, showTo
       <button
         onClick={() => setEditing(true)}
         disabled={disabled}
-        className="text-[12px] text-[#9C9485] hover:text-[#16130C] transition-colors px-1 disabled:opacity-40"
+        className="text-[12px] text-text3 hover:text-dark transition-colors px-1 disabled:opacity-40"
       >
         Edit
       </button>
@@ -578,7 +578,7 @@ function AddTimeWindowForm({ menuId, disabled, onAdd, showToast }: AddTimeWindow
       <button
         onClick={() => setOpen(true)}
         disabled={disabled}
-        className="w-full h-[36px] rounded-full border border-dashed border-[#E2DDD5] text-[12px] font-semibold text-[#9C9485] hover:border-[#E8A020]/50 hover:text-[#E8A020] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+        className="w-full h-[36px] rounded-full border border-dashed border-border text-[12px] font-semibold text-text3 hover:border-amber/50 hover:text-amber transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
       >
         + Add time window
       </button>
@@ -586,35 +586,35 @@ function AddTimeWindowForm({ menuId, disabled, onAdd, showToast }: AddTimeWindow
   }
 
   return (
-    <div className="border border-[#E2DDD5] rounded-xl p-4 space-y-3 bg-[#FDFCFB]">
-      <p className="text-[12px] font-bold text-[#16130C]">New time window</p>
+    <div className="border border-border rounded-xl p-4 space-y-3 bg-[#FDFCFB]">
+      <p className="text-[12px] font-bold text-dark">New time window</p>
       <div className="flex gap-2 flex-wrap items-end">
         <div className="flex-1 min-w-[120px]">
-          <label className="block text-[10px] font-bold text-[#9C9485] uppercase tracking-wide mb-1">Label (optional)</label>
+          <label className="block text-[10px] font-bold text-text3 uppercase tracking-wide mb-1">Label (optional)</label>
           <input
             value={label}
             onChange={e => setLabel(e.target.value)}
             placeholder="e.g. Lunch, Dinner"
             autoFocus
-            className="w-full border border-[#E2DDD5] rounded-lg px-3 py-1.5 text-[13px] text-[#16130C] focus:outline-none focus:border-[#E8A020] bg-white"
+            className="w-full border border-border rounded-lg px-3 py-1.5 text-[13px] text-dark focus:outline-none focus:border-amber bg-white"
           />
         </div>
         <div className="w-[110px]">
-          <label className="block text-[10px] font-bold text-[#9C9485] uppercase tracking-wide mb-1">Open from</label>
+          <label className="block text-[10px] font-bold text-text3 uppercase tracking-wide mb-1">Open from</label>
           <input
             type="time"
             value={openTime}
             onChange={e => setOpenTime(e.target.value)}
-            className="w-full border border-[#E2DDD5] rounded-lg px-3 py-1.5 text-[13px] text-[#16130C] focus:outline-none focus:border-[#E8A020] bg-white"
+            className="w-full border border-border rounded-lg px-3 py-1.5 text-[13px] text-dark focus:outline-none focus:border-amber bg-white"
           />
         </div>
         <div className="w-[110px]">
-          <label className="block text-[10px] font-bold text-[#9C9485] uppercase tracking-wide mb-1">Last booking</label>
+          <label className="block text-[10px] font-bold text-text3 uppercase tracking-wide mb-1">Last booking</label>
           <input
             type="time"
             value={closeTime}
             onChange={e => setCloseTime(e.target.value)}
-            className="w-full border border-[#E2DDD5] rounded-lg px-3 py-1.5 text-[13px] text-[#16130C] focus:outline-none focus:border-[#E8A020] bg-white"
+            className="w-full border border-border rounded-lg px-3 py-1.5 text-[13px] text-dark focus:outline-none focus:border-amber bg-white"
           />
         </div>
       </div>
@@ -622,13 +622,13 @@ function AddTimeWindowForm({ menuId, disabled, onAdd, showToast }: AddTimeWindow
         <button
           onClick={handleAdd}
           disabled={adding || !openTime || !closeTime}
-          className="text-[12px] font-bold text-white bg-[#E8A020] px-4 h-[30px] rounded-full hover:bg-[#d4911c] transition-colors disabled:opacity-50"
+          className="text-[12px] font-bold text-white bg-amber px-4 h-[30px] rounded-full hover:bg-[#d4911c] transition-colors disabled:opacity-50"
         >
           {adding ? "Adding…" : "Add window"}
         </button>
         <button
           onClick={() => setOpen(false)}
-          className="text-[12px] text-[#9C9485] hover:text-[#16130C] transition-colors"
+          className="text-[12px] text-text3 hover:text-dark transition-colors"
         >
           Cancel
         </button>
@@ -753,14 +753,14 @@ export function ReservationsSettings({
     onAreasChange(next);
   };
 
-  const inputCls = "w-full border border-[#E2DDD5] rounded-lg px-2.5 py-1.5 text-[13px] text-[#16130C] focus:outline-none focus:border-[#E8A020] focus:ring-1 focus:ring-[#E8A020]/30 disabled:opacity-40 disabled:bg-[#F4F1EC] bg-white";
+  const inputCls = "w-full border border-border rounded-lg px-2.5 py-1.5 text-[13px] text-dark focus:outline-none focus:border-amber focus:ring-1 focus:ring-amber/30 disabled:opacity-40 disabled:bg-surface bg-white";
 
   return (
     <div className="space-y-6">
 
       {/* ── Bookable hours ── */}
-      <div className="bg-white rounded-xl border border-[#E2DDD5] shadow-sm overflow-hidden">
-        <div className="p-4 border-b border-[#F4F1EC]">
+      <div className="bg-white rounded-xl border border-border shadow-sm overflow-hidden">
+        <div className="p-4 border-b border-surface">
           <SectionHeader
             title="Bookable hours"
             subtitle="Add the time windows when guests can book. Add multiple windows if you close for a break (e.g. Lunch + Dinner)."
@@ -768,7 +768,7 @@ export function ReservationsSettings({
         </div>
 
         {windows.length === 0 ? (
-          <div className="px-4 py-5 text-center text-[13px] text-[#9C9485]">
+          <div className="px-4 py-5 text-center text-[13px] text-text3">
             No time windows yet. Add one below.
           </div>
         ) : (
@@ -801,12 +801,12 @@ export function ReservationsSettings({
       </div>
 
       {/* ── Reservation rules ── */}
-      <div className="bg-white rounded-xl border border-[#E2DDD5] shadow-sm overflow-hidden">
-        <div className="p-4 border-b border-[#F4F1EC]">
+      <div className="bg-white rounded-xl border border-border shadow-sm overflow-hidden">
+        <div className="p-4 border-b border-surface">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-[14px] font-bold text-[#16130C]">Table reservations</p>
-              <p className="text-[12px] text-[#9C9485] mt-0.5">
+              <p className="text-[14px] font-bold text-dark">Table reservations</p>
+              <p className="text-[12px] text-text3 mt-0.5">
                 {enabled
                   ? "Active — guests can request tables via your listing and menu page."
                   : "Enable to accept table reservation requests from guests."}
@@ -817,11 +817,11 @@ export function ReservationsSettings({
         </div>
 
         <div className="p-4 space-y-1">
-          <p className="text-[11px] font-bold text-[#9C9485] uppercase tracking-wide mb-3">Booking rules</p>
+          <p className="text-[11px] font-bold text-text3 uppercase tracking-wide mb-3">Booking rules</p>
           <div className="grid grid-cols-2 gap-x-3 gap-y-3">
             {/* Duration */}
             <div>
-              <label className="block text-[11px] font-semibold text-[#5E5848] mb-1">Booking duration</label>
+              <label className="block text-[11px] font-semibold text-text2 mb-1">Booking duration</label>
               <div className="flex items-center gap-1.5">
                 <input
                   type="number" min={15} max={240} step={15}
@@ -831,13 +831,13 @@ export function ReservationsSettings({
                   onBlur={() => patchSetting("default_reservation_duration", duration)}
                   className={inputCls}
                 />
-                <span className="text-[11px] text-[#9C9485] shrink-0">min</span>
+                <span className="text-[11px] text-text3 shrink-0">min</span>
               </div>
             </div>
 
             {/* Lead time */}
             <div>
-              <label className="block text-[11px] font-semibold text-[#5E5848] mb-1">Lead time</label>
+              <label className="block text-[11px] font-semibold text-text2 mb-1">Lead time</label>
               <div className="flex items-center gap-1.5">
                 <input
                   type="number" min={0} max={168}
@@ -847,13 +847,13 @@ export function ReservationsSettings({
                   onBlur={() => patchSetting("reservations_lead_time_hours", leadTime)}
                   className={inputCls}
                 />
-                <span className="text-[11px] text-[#9C9485] shrink-0">hrs</span>
+                <span className="text-[11px] text-text3 shrink-0">hrs</span>
               </div>
             </div>
 
             {/* Max party size */}
             <div>
-              <label className="block text-[11px] font-semibold text-[#5E5848] mb-1">Max party size</label>
+              <label className="block text-[11px] font-semibold text-text2 mb-1">Max party size</label>
               <div className="flex items-center gap-1.5">
                 <input
                   type="number" min={1} max={50}
@@ -863,13 +863,13 @@ export function ReservationsSettings({
                   onBlur={() => patchSetting("reservations_max_party_size", maxParty)}
                   className={inputCls}
                 />
-                <span className="text-[11px] text-[#9C9485] shrink-0">guests</span>
+                <span className="text-[11px] text-text3 shrink-0">guests</span>
               </div>
             </div>
 
             {/* Max advance days */}
             <div>
-              <label className="block text-[11px] font-semibold text-[#5E5848] mb-1">Book up to</label>
+              <label className="block text-[11px] font-semibold text-text2 mb-1">Book up to</label>
               <div className="flex items-center gap-1.5">
                 <input
                   type="number" min={1} max={365}
@@ -879,7 +879,7 @@ export function ReservationsSettings({
                   onBlur={() => patchSetting("reservations_max_advance_days", maxAdvance)}
                   className={inputCls}
                 />
-                <span className="text-[11px] text-[#9C9485] shrink-0">days ahead</span>
+                <span className="text-[11px] text-text3 shrink-0">days ahead</span>
               </div>
             </div>
           </div>
@@ -887,8 +887,8 @@ export function ReservationsSettings({
       </div>
 
       {/* ── Seating areas ── */}
-      <div className="bg-white rounded-xl border border-[#E2DDD5] shadow-sm overflow-hidden">
-        <div className="p-4 border-b border-[#F4F1EC]">
+      <div className="bg-white rounded-xl border border-border shadow-sm overflow-hidden">
+        <div className="p-4 border-b border-surface">
           <SectionHeader
             title="Seating areas"
             subtitle="Define your dining zones (Indoor, Terrace, Rooftop…) so guests can choose a preference when booking."
@@ -896,7 +896,7 @@ export function ReservationsSettings({
         </div>
 
         {areas.length === 0 ? (
-          <div className="px-4 py-6 text-center text-[13px] text-[#9C9485]">
+          <div className="px-4 py-6 text-center text-[13px] text-text3">
             No areas yet. Add one below.
           </div>
         ) : (
@@ -924,8 +924,8 @@ export function ReservationsSettings({
 
       {/* ── Ordering tables ── */}
       {tableOrdering && (
-        <div className="bg-white rounded-xl border border-[#E2DDD5] shadow-sm overflow-hidden">
-          <div className="p-4 border-b border-[#F4F1EC]">
+        <div className="bg-white rounded-xl border border-border shadow-sm overflow-hidden">
+          <div className="p-4 border-b border-surface">
             <SectionHeader
               title="Ordering tables"
               subtitle="Physical table numbers for QR-code ordering. Each table gets its own scan URL."
@@ -942,8 +942,8 @@ export function ReservationsSettings({
       )}
 
       {/* ── POS settings ── */}
-      <div className="bg-white rounded-xl border border-[#E2DDD5] shadow-sm overflow-hidden">
-        <div className="p-4 border-b border-[#F4F1EC]">
+      <div className="bg-white rounded-xl border border-border shadow-sm overflow-hidden">
+        <div className="p-4 border-b border-surface">
           <SectionHeader
             title="POS settings"
             subtitle="Defaults applied when staff open a new table session on the POS terminal."
@@ -952,7 +952,7 @@ export function ReservationsSettings({
         <div className="p-4 space-y-1">
           <div className="grid grid-cols-2 gap-x-3 gap-y-3">
             <div>
-              <label className="block text-[11px] font-semibold text-[#5E5848] mb-1">
+              <label className="block text-[11px] font-semibold text-text2 mb-1">
                 Default service charge
               </label>
               <div className="flex items-center gap-1.5">
@@ -964,9 +964,9 @@ export function ReservationsSettings({
                   onBlur={() => patchSetting("default_service_charge_pct", serviceChargePct)}
                   className={inputCls}
                 />
-                <span className="text-[11px] text-[#9C9485] shrink-0">%</span>
+                <span className="text-[11px] text-text3 shrink-0">%</span>
               </div>
-              <p className="text-[10px] text-[#9C9485] mt-1">Applied to every new table session. Staff can adjust per-session.</p>
+              <p className="text-[10px] text-text3 mt-1">Applied to every new table session. Staff can adjust per-session.</p>
             </div>
           </div>
         </div>
@@ -978,16 +978,16 @@ export function ReservationsSettings({
       ────────────────────────────────────────────────────────────────────── */}
       <a
         href={`/dashboard/listings/${listingId}/pos`}
-        className="block bg-white rounded-xl border border-[#E2DDD5] shadow-sm hover:shadow-md hover:border-[#E8A020]/40 transition-all p-4 flex items-center gap-3"
+        className="block bg-white rounded-xl border border-border shadow-sm hover:shadow-md hover:border-amber/40 transition-all p-4 flex items-center gap-3"
       >
         <span className="text-[22px] shrink-0">📱</span>
         <div className="flex-1 min-w-0">
-          <p className="text-[13px] font-semibold text-[#16130C]">POS &amp; staff</p>
-          <p className="text-[12px] text-[#9C9485] truncate">
+          <p className="text-[13px] font-semibold text-dark">POS &amp; staff</p>
+          <p className="text-[12px] text-text3 truncate">
             Manage staff PINs and the POS terminal URL
           </p>
         </div>
-        <span className="text-[#9C9485] text-[16px] shrink-0">›</span>
+        <span className="text-text3 text-[16px] shrink-0">›</span>
       </a>
     </div>
   );

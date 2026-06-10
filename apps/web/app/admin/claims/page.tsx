@@ -29,21 +29,21 @@ export default async function AdminClaimsPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="font-display text-[28px] font-bold text-[#16130C]">
+        <h1 className="font-display text-[28px] font-bold text-dark">
           Claim Requests
         </h1>
-        <span className="text-sm text-[#9C9485]">{allClaims.length} total</span>
+        <span className="text-sm text-text3">{allClaims.length} total</span>
       </div>
 
       <div className="rounded-2xl bg-white shadow-sm overflow-hidden">
         {allClaims.length === 0 ? (
-          <p className="px-6 py-12 text-center text-[13px] text-[#9C9485]">
+          <p className="px-6 py-12 text-center text-[13px] text-text3">
             No claim requests yet.
           </p>
         ) : (
           <table className="w-full text-left text-[13px]">
             <thead>
-              <tr className="border-b border-[#F0EDE8] text-[#9C9485]">
+              <tr className="border-b border-[#F0EDE8] text-text3">
                 <th className="px-6 py-3 font-medium">Listing</th>
                 <th className="px-6 py-3 font-medium">Claimant</th>
                 <th className="px-6 py-3 font-medium">Email</th>
@@ -56,22 +56,22 @@ export default async function AdminClaimsPage() {
               {allClaims.map((claim) => (
                 <tr key={claim.id} className="hover:bg-[#F7F5F2] transition-colors">
                   <td className="px-6 py-3">
-                    <p className="font-medium text-[#16130C] truncate max-w-[200px]">{claim.listing_title}</p>
-                    <p className="text-[11px] text-[#9C9485]">{claim.listing_type} · {claim.listing_city ?? "—"}</p>
+                    <p className="font-medium text-dark truncate max-w-[200px]">{claim.listing_title}</p>
+                    <p className="text-[11px] text-text3">{claim.listing_type} · {claim.listing_city ?? "—"}</p>
                   </td>
-                  <td className="px-6 py-3 text-[#16130C]">{claim.claimant_name}</td>
-                  <td className="px-6 py-3 text-[#9C9485]">{claim.claimant_email}</td>
+                  <td className="px-6 py-3 text-dark">{claim.claimant_name}</td>
+                  <td className="px-6 py-3 text-text3">{claim.claimant_email}</td>
                   <td className="px-6 py-3">
                     <StatusBadge status={claim.status} />
                   </td>
-                  <td className="px-6 py-3 text-[#9C9485]">
+                  <td className="px-6 py-3 text-text3">
                     {new Date(claim.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
                   </td>
                   <td className="px-6 py-3">
                     <div className="flex items-center gap-3">
                       <Link
                         href={`/admin/claims/${claim.id}`}
-                        className="text-[#E8A020] font-medium hover:underline"
+                        className="text-amber font-medium hover:underline"
                       >
                         View →
                       </Link>

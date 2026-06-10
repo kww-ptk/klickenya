@@ -76,19 +76,19 @@ export default async function ClaimPage({ params }: PageProps) {
               <Image src={listing.mainImage} alt={listing.title} fill className="object-cover" sizes="80px" />
             </div>
           )}
-          <h1 className="font-display text-2xl font-bold text-[#16130C] mb-3">{listing.title}</h1>
-          <div className="inline-flex items-center gap-2 bg-[#16A34A]/10 text-[#16A34A] font-semibold text-sm px-4 py-2 rounded-full mb-4">
-            <span className="size-2 rounded-full bg-[#16A34A]" />
+          <h1 className="font-display text-2xl font-bold text-dark mb-3">{listing.title}</h1>
+          <div className="inline-flex items-center gap-2 bg-green/10 text-green font-semibold text-sm px-4 py-2 rounded-full mb-4">
+            <span className="size-2 rounded-full bg-green" />
             This listing has already been claimed
           </div>
-          <p className="text-sm text-[#5E5848] mb-8">
+          <p className="text-sm text-text2 mb-8">
             The owner has verified their identity and claimed this listing.
           </p>
           <div className="flex flex-col gap-3">
-            <Link href={listingUrl} className="inline-block bg-[#E8A020] text-[#16130C] font-bold text-sm rounded-full px-6 py-3 hover:bg-[#d4910f] transition-colors">
+            <Link href={listingUrl} className="inline-block bg-amber text-dark font-bold text-sm rounded-full px-6 py-3 hover:bg-[#d4910f] transition-colors">
               View listing →
             </Link>
-            <Link href="/contact" className="text-sm text-[#9C9485] hover:text-[#16130C] underline underline-offset-2">
+            <Link href="/contact" className="text-sm text-text3 hover:text-dark underline underline-offset-2">
               Not the owner? Contact us
             </Link>
           </div>
@@ -108,34 +108,34 @@ export default async function ClaimPage({ params }: PageProps) {
           {/* ── Left column: form ── */}
           <div>
             {/* Listing mini card */}
-            <div className="flex items-center gap-4 border border-[#E2DDD5] rounded-2xl p-4 mb-8 bg-white shadow-sm">
+            <div className="flex items-center gap-4 border border-border rounded-2xl p-4 mb-8 bg-white shadow-sm">
               {listing.mainImage ? (
                 <div className="relative w-[72px] h-[72px] rounded-xl overflow-hidden shrink-0 shadow-sm">
                   <Image src={listing.mainImage} alt={listing.title} fill className="object-cover" sizes="72px" />
                 </div>
               ) : (
-                <div className="w-[72px] h-[72px] rounded-xl bg-gradient-to-br from-[#E8A020] to-[#6b2d8b] shrink-0 flex items-center justify-center shadow-sm">
+                <div className="w-[72px] h-[72px] rounded-xl bg-gradient-to-br from-amber to-purple shrink-0 flex items-center justify-center shadow-sm">
                   <img src="/klickenya-mark.svg" alt="" className="w-7 h-7 opacity-30" />
                 </div>
               )}
               <div className="min-w-0">
-                <p className="text-[16px] font-bold text-[#16130C] line-clamp-1">{listing.title}</p>
+                <p className="text-[16px] font-bold text-dark line-clamp-1">{listing.title}</p>
                 {listing.city && (
-                  <p className="text-[13px] text-[#9C9485] mt-0.5 flex items-center gap-1">
+                  <p className="text-[13px] text-text3 mt-0.5 flex items-center gap-1">
                     <span>📍</span> {listing.city}
                   </p>
                 )}
-                <Link href={listingUrl} className="text-[12px] text-[#E8A020] font-semibold mt-1 inline-block hover:underline">
+                <Link href={listingUrl} className="text-[12px] text-amber font-semibold mt-1 inline-block hover:underline">
                   View listing →
                 </Link>
               </div>
             </div>
 
             {/* Heading */}
-            <h1 className="font-display text-[clamp(24px,3.5vw,32px)] font-bold text-[#16130C] mb-2 tracking-[-0.02em]">
+            <h1 className="font-display text-[clamp(24px,3.5vw,32px)] font-bold text-dark mb-2 tracking-[-0.02em]">
               Is this your business?
             </h1>
-            <p className="text-[15px] text-[#5E5848] mb-8 max-w-md">
+            <p className="text-[15px] text-text2 mb-8 max-w-md">
               Claim it for free — receive enquiries directly, get a Verified badge, and take control of your listing.
             </p>
 
@@ -154,20 +154,20 @@ export default async function ClaimPage({ params }: PageProps) {
           <aside className="hidden lg:block">
             <div className="sticky top-[80px] space-y-6">
               {/* How it works */}
-              <div className="bg-white rounded-2xl border border-[#E2DDD5] p-6 shadow-sm">
-                <h3 className="text-[13px] font-bold text-[#16130C] uppercase tracking-[0.06em] mb-5">
+              <div className="bg-white rounded-2xl border border-border p-6 shadow-sm">
+                <h3 className="text-[13px] font-bold text-dark uppercase tracking-[0.06em] mb-5">
                   How claiming works
                 </h3>
                 <div className="space-y-4">
                   {STEPS.map((step, i) => (
                     <div key={step.num} className="flex items-start gap-3">
-                      <span className="flex items-center justify-center size-8 rounded-full bg-[#E8A020]/10 text-[#E8A020] text-[13px] font-bold shrink-0">
+                      <span className="flex items-center justify-center size-8 rounded-full bg-amber/10 text-amber text-[13px] font-bold shrink-0">
                         {step.num}
                       </span>
                       <div className="pt-1">
-                        <p className="text-[14px] font-semibold text-[#16130C]">{step.label}</p>
+                        <p className="text-[14px] font-semibold text-dark">{step.label}</p>
                         {i < STEPS.length - 1 && (
-                          <div className="w-px h-4 bg-[#E2DDD5] ml-[15px] mt-2" />
+                          <div className="w-px h-4 bg-border ml-[15px] mt-2" />
                         )}
                       </div>
                     </div>
@@ -176,19 +176,19 @@ export default async function ClaimPage({ params }: PageProps) {
               </div>
 
               {/* What you get */}
-              <div className="bg-white rounded-2xl border border-[#E2DDD5] p-6 shadow-sm">
-                <h3 className="text-[13px] font-bold text-[#16130C] uppercase tracking-[0.06em] mb-5">
+              <div className="bg-white rounded-2xl border border-border p-6 shadow-sm">
+                <h3 className="text-[13px] font-bold text-dark uppercase tracking-[0.06em] mb-5">
                   What you get
                 </h3>
                 <div className="space-y-4">
                   {TRUST_SIGNALS.map((ts) => (
                     <div key={ts.title} className="flex items-start gap-3">
-                      <span className="flex items-center justify-center size-8 rounded-lg bg-[#F4F1EC] text-[15px] shrink-0">
+                      <span className="flex items-center justify-center size-8 rounded-lg bg-surface text-[15px] shrink-0">
                         {ts.icon}
                       </span>
                       <div>
-                        <p className="text-[14px] font-semibold text-[#16130C]">{ts.title}</p>
-                        <p className="text-[12px] text-[#9C9485] mt-0.5">{ts.desc}</p>
+                        <p className="text-[14px] font-semibold text-dark">{ts.title}</p>
+                        <p className="text-[12px] text-text3 mt-0.5">{ts.desc}</p>
                       </div>
                     </div>
                   ))}
@@ -196,10 +196,10 @@ export default async function ClaimPage({ params }: PageProps) {
               </div>
 
               {/* Testimonial / trust */}
-              <div className="bg-[#16130C] rounded-2xl p-6 text-center">
+              <div className="bg-dark rounded-2xl p-6 text-center">
                 <div className="flex justify-center gap-1 mb-3">
                   {[1, 2, 3, 4, 5].map((s) => (
-                    <span key={s} className="text-[#E8A020] text-[16px]">★</span>
+                    <span key={s} className="text-amber text-[16px]">★</span>
                   ))}
                 </div>
                 <p className="text-[14px] text-white/70 leading-relaxed mb-3 italic">
@@ -212,8 +212,8 @@ export default async function ClaimPage({ params }: PageProps) {
 
               {/* Security note */}
               <div className="flex items-start gap-3 px-2">
-                <span className="text-[#9C9485] text-[16px] mt-0.5">🔒</span>
-                <p className="text-[12px] text-[#9C9485] leading-relaxed">
+                <span className="text-text3 text-[16px] mt-0.5">🔒</span>
+                <p className="text-[12px] text-text3 leading-relaxed">
                   Your information is encrypted and secure. We never share your personal details without your consent.
                 </p>
               </div>
@@ -229,11 +229,11 @@ export default async function ClaimPage({ params }: PageProps) {
 
 function ClaimHeader() {
   return (
-    <div className="bg-[#16130C] px-6 py-4 flex items-center justify-between">
+    <div className="bg-dark px-6 py-4 flex items-center justify-between">
       <Link href="/" className="flex items-center gap-2">
         <img src="/klickenya-mark.svg" alt="Klickenya" className="h-8 w-8" />
         <span className="text-white font-bold text-lg">
-          Klic<span className="text-[#E8A020]">Kenya</span>
+          Klic<span className="text-amber">Kenya</span>
         </span>
       </Link>
       <Link

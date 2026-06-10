@@ -66,11 +66,11 @@ export function OrderItemEditPrompt({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="text-center">
-          <p className="text-[11px] uppercase tracking-[0.18em] text-[#E8A020] font-bold">
+          <p className="text-[11px] uppercase tracking-[0.18em] text-amber font-bold">
             Edit · Manager required
           </p>
           <h2 className="mt-1 text-[18px] font-bold text-white">{itemName}</h2>
-          <p className="mt-1 text-[12px] text-[#9C9485]">
+          <p className="mt-1 text-[12px] text-text3">
             Currently {currentQuantity} on the bill. Reduce or remove entirely.
           </p>
         </div>
@@ -89,7 +89,7 @@ export function OrderItemEditPrompt({
             </button>
             <div className="text-center">
               <p className="text-[36px] font-bold text-white tabular-nums leading-none">{quantity}</p>
-              <p className="text-[10px] text-[#9C9485] uppercase tracking-wide mt-1">
+              <p className="text-[10px] text-text3 uppercase tracking-wide mt-1">
                 new quantity
               </p>
             </div>
@@ -113,7 +113,7 @@ export function OrderItemEditPrompt({
             Remove entirely
           </button>
           {removed > 0 && (
-            <p className="mt-3 text-center text-[11px] text-[#E8A020]">
+            <p className="mt-3 text-center text-[11px] text-amber">
               Removing {removed} of {currentQuantity}
             </p>
           )}
@@ -121,7 +121,7 @@ export function OrderItemEditPrompt({
 
         {/* Reason */}
         <label className="block">
-          <span className="block text-[11px] text-[#9C9485] mb-1">
+          <span className="block text-[11px] text-text3 mb-1">
             Reason <span className="text-[#FF8A6B]">*</span>
           </span>
           <input
@@ -136,14 +136,14 @@ export function OrderItemEditPrompt({
 
         {/* PIN dots */}
         <div>
-          <p className="text-[11px] text-[#9C9485] mb-2 text-center">Manager PIN</p>
+          <p className="text-[11px] text-text3 mb-2 text-center">Manager PIN</p>
           <div className="flex justify-center gap-3">
             {Array.from({ length: PIN_LEN }).map((_, i) => (
               <div
                 key={i}
                 className={`w-3.5 h-3.5 rounded-full border ${
                   i < pin.length
-                    ? "bg-[#E8A020] border-[#E8A020]"
+                    ? "bg-amber border-amber"
                     : "bg-transparent border-[#3A342B]"
                 }`}
               />
@@ -172,7 +172,7 @@ export function OrderItemEditPrompt({
           <button
             type="button"
             onClick={onCancel}
-            className="flex-1 h-11 rounded-full bg-[#252019] text-[#F4F1EC] text-[13px] font-bold"
+            className="flex-1 h-11 rounded-full bg-[#252019] text-surface text-[13px] font-bold"
           >
             Cancel
           </button>
@@ -180,7 +180,7 @@ export function OrderItemEditPrompt({
             type="button"
             onClick={submit}
             disabled={!canConfirm}
-            className="flex-1 h-11 rounded-full bg-[#E8A020] text-[#16130C] text-[13px] font-bold disabled:opacity-40"
+            className="flex-1 h-11 rounded-full bg-amber text-dark text-[13px] font-bold disabled:opacity-40"
           >
             Confirm
           </button>
@@ -201,7 +201,7 @@ function PinKey({ onClick, variant = "primary", children }: PinKeyProps) {
     "h-12 rounded-xl text-[20px] font-semibold transition-colors active:scale-[0.97] grid place-items-center";
   const cls =
     variant === "muted"
-      ? `${base} bg-[#2A2520] text-[#9C9485]`
+      ? `${base} bg-[#2A2520] text-text3`
       : `${base} bg-[#252019] text-white`;
   return (
     <button type="button" onClick={onClick} className={cls}>

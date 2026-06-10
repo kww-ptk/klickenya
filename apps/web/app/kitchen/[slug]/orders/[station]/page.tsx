@@ -62,15 +62,15 @@ export default async function PinSingleStationPage({ params }: PageProps) {
   const other = station === "kitchen" ? "bar" : "kitchen";
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#F4F1EC]">
+    <div className="min-h-screen flex flex-col bg-surface">
       <KitchenHeader slug={slug} menuName={menu.name}
         staffName={session.staff_name} role={session.role} />
-      <header className="bg-white border-b border-[#E2DDD5] px-4 py-3 flex items-center justify-between">
-        <p className="text-[12px] font-bold text-[#16130C] uppercase tracking-wide">
+      <header className="bg-white border-b border-border px-4 py-3 flex items-center justify-between">
+        <p className="text-[12px] font-bold text-dark uppercase tracking-wide">
           {station === "kitchen" ? "🍳 Kitchen" : "🍹 Bar"}
         </p>
         <Link href={`/kitchen/${slug}/orders/${other}`}
-          className="text-[11px] font-bold text-[#5E5848] border border-[#E2DDD5] rounded-full px-3 h-[28px] inline-flex items-center hover:bg-[#F4F1EC]">
+          className="text-[11px] font-bold text-text2 border border-border rounded-full px-3 h-[28px] inline-flex items-center hover:bg-surface">
           Switch to {other === "kitchen" ? "Kitchen" : "Bar"} →
         </Link>
       </header>

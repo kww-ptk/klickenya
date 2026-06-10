@@ -34,7 +34,7 @@ export function LocationFilterBar({ type, activeCity }: LocationFilterBarProps) 
           className={cn(
             "shrink-0 rounded-full px-4 py-1.5 text-sm font-semibold transition-colors whitespace-nowrap",
             !activeCity
-              ? "bg-[#16130C] text-white"
+              ? "bg-dark text-white"
               : "bg-surface text-text2 border border-border hover:bg-surface2"
           )}
         >
@@ -55,7 +55,7 @@ export function LocationFilterBar({ type, activeCity }: LocationFilterBarProps) 
               className={cn(
                 "shrink-0 rounded-full px-4 py-1.5 text-sm font-semibold transition-colors whitespace-nowrap",
                 isActive
-                  ? "bg-[#16130C] text-white"
+                  ? "bg-dark text-white"
                   : "bg-surface text-text2 border border-border hover:bg-surface2"
               )}
             >

@@ -44,17 +44,17 @@ const CARDS = [
 
 function WhoCanList() {
   return (
-    <section className="bg-[#FAFAF8] py-16 md:py-24 px-5 md:px-10">
+    <section className="bg-canvas py-16 md:py-24 px-5 md:px-10">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="text-center mb-12 md:mb-16">
           <span className="inline-block text-[11px] font-bold tracking-[0.14em] uppercase text-purple-500 bg-purple-50 px-4 py-1.5 rounded-full mb-5">
             List on Klickenya Property
           </span>
-          <h2 className="font-display text-[clamp(28px,4vw,40px)] font-bold text-[#16130C] tracking-[-0.03em] mb-4">
+          <h2 className="font-display text-[clamp(28px,4vw,40px)] font-bold text-dark tracking-[-0.03em] mb-4">
             For agents, owners &amp; developers
           </h2>
-          <p className="text-[16px] text-[#5E5848] max-w-lg mx-auto leading-[1.65]">
+          <p className="text-[16px] text-text2 max-w-lg mx-auto leading-[1.65]">
             Whether you&apos;re a registered agent, private seller, or developer
             — list your properties free and reach buyers across Kenya.
           </p>
@@ -88,12 +88,12 @@ function WhoCanList() {
               <div className="p-5 md:p-6">
                 <div className="flex items-center gap-2.5 mb-3">
                   <span className="text-[24px] leading-none">{card.icon}</span>
-                  <h3 className="text-[18px] font-bold text-[#16130C] tracking-[-0.01em]">
+                  <h3 className="text-[18px] font-bold text-dark tracking-[-0.01em]">
                     {card.title}
                   </h3>
                 </div>
 
-                <p className="text-[13.5px] text-[#5E5848] leading-[1.7] mb-5">
+                <p className="text-[13.5px] text-text2 leading-[1.7] mb-5">
                   {card.body}
                 </p>
 
@@ -120,7 +120,7 @@ function WhoCanList() {
 
         {/* Bottom link */}
         <div className="mt-12 text-center">
-          <p className="text-[14px] text-[#9C9485]">
+          <p className="text-[14px] text-text3">
             Already have properties?{" "}
             <Link
               href="/real-estate/list"

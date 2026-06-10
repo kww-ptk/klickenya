@@ -189,7 +189,7 @@ function StayDetail({
               onEntireBooking={hasPms ? () => setBookingRoomKey("__entire__") : undefined}
             />
             {checkingDates && (
-              <p className="text-[12px] text-[#9C9485] mt-2 animate-pulse">Checking availability...</p>
+              <p className="text-[12px] text-text3 mt-2 animate-pulse">Checking availability...</p>
             )}
 
             {/* Description */}
@@ -231,7 +231,7 @@ function StayDetail({
           {/* Right column — Booking sidebar */}
           {hasPms ? (
             <aside className="hidden lg:block w-[350px] shrink-0">
-              <div className="sticky top-[76px] border border-[#E2DDD5] rounded-[24px] shadow-lg p-5 bg-white max-h-[calc(100vh-92px)] overflow-y-auto scrollbar-none">
+              <div className="sticky top-[76px] border border-border rounded-[24px] shadow-lg p-5 bg-white max-h-[calc(100vh-92px)] overflow-y-auto scrollbar-none">
                 <StayBookingSidebar
                   listingSlug={listingSlug}
                   listingTitle={listing.title}

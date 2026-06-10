@@ -49,7 +49,7 @@ export function LocationHeading({ type, subLabel, activeCity, count }: LocationH
         <span className="text-dark">Find </span>
 
         {/* Category label in amber */}
-        <span className="text-[#E8A020]">{subLabel}</span>
+        <span className="text-amber">{subLabel}</span>
         {" "}
 
         {/* "in" */}
@@ -66,8 +66,8 @@ export function LocationHeading({ type, subLabel, activeCity, count }: LocationH
               "text-[clamp(28px,3.5vw,42px)] font-extrabold tracking-[-0.03em]",
               "px-3 py-0.5 border-2 border-dashed",
               open
-                ? "border-[#16130C] bg-[#16130C] text-white"
-                : "border-[#C8C3BA] text-[#16130C] hover:border-[#E8A020] hover:bg-[#FEF3DB]"
+                ? "border-dark bg-dark text-white"
+                : "border-[#C8C3BA] text-dark hover:border-amber hover:bg-[#FEF3DB]"
             )}
           >
             <span>{locationLabel}</span>
@@ -88,7 +88,7 @@ export function LocationHeading({ type, subLabel, activeCity, count }: LocationH
           {open && (
             <div className="absolute left-0 top-full mt-3 z-50 w-[220px] rounded-2xl border border-border bg-white shadow-2xl overflow-hidden">
               <div className="px-4 pt-3 pb-2">
-                <p className="text-[11px] font-bold uppercase tracking-widest text-[#9C9485]">
+                <p className="text-[11px] font-bold uppercase tracking-widest text-text3">
                   Choose a location
                 </p>
               </div>
@@ -98,14 +98,14 @@ export function LocationHeading({ type, subLabel, activeCity, count }: LocationH
                 onClick={() => navigate(null)}
                 className={cn(
                   "w-full flex items-center justify-between px-4 py-2.5 text-[14px] font-semibold transition-colors hover:bg-[#FEF3DB]",
-                  !activeCity ? "bg-[#FEF3DB] text-[#16130C]" : "text-text2"
+                  !activeCity ? "bg-[#FEF3DB] text-dark" : "text-text2"
                 )}
               >
                 <span className="flex items-center gap-2">
                   <span>🇰🇪</span> All Kenya
                 </span>
                 {!activeCity && (
-                  <span className="text-[10px] bg-[#E8A020] text-white rounded-full px-2 py-0.5">✓</span>
+                  <span className="text-[10px] bg-amber text-white rounded-full px-2 py-0.5">✓</span>
                 )}
               </button>
 
@@ -122,7 +122,7 @@ export function LocationHeading({ type, subLabel, activeCity, count }: LocationH
                     className={cn(
                       "w-full flex items-center justify-between px-4 py-2.5 text-[14px] transition-colors hover:bg-[#FEF3DB]",
                       isActive
-                        ? "bg-[#FEF3DB] font-bold text-[#16130C]"
+                        ? "bg-[#FEF3DB] font-bold text-dark"
                         : "font-medium text-text2"
                     )}
                   >
@@ -130,7 +130,7 @@ export function LocationHeading({ type, subLabel, activeCity, count }: LocationH
                     <span className={cn(
                       "text-[11px] rounded-full px-2 py-0.5 tabular-nums",
                       isActive
-                        ? "bg-[#E8A020] text-white"
+                        ? "bg-amber text-white"
                         : "bg-surface2 text-text2"
                     )}>
                       {cityCount}

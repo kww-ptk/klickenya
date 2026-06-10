@@ -40,9 +40,9 @@ export function OrderViewModeForm({ menuId, initialMode }: Props) {
 
   return (
     <fieldset className="max-w-xl space-y-3" disabled={saving}>
-      <legend className="text-[13px] font-bold text-[#16130C] mb-2">Order screen mode</legend>
+      <legend className="text-[13px] font-bold text-dark mb-2">Order screen mode</legend>
 
-      <label className="flex items-start gap-3 bg-white border border-[#E2DDD5] rounded-xl p-4 cursor-pointer">
+      <label className="flex items-start gap-3 bg-white border border-border rounded-xl p-4 cursor-pointer">
         <input
           type="radio"
           name="mode"
@@ -52,14 +52,14 @@ export function OrderViewModeForm({ menuId, initialMode }: Props) {
           className="mt-1"
         />
         <div>
-          <p className="font-semibold text-[#16130C]">Combined</p>
-          <p className="text-[12px] text-[#5E5848]">
+          <p className="font-semibold text-dark">Combined</p>
+          <p className="text-[12px] text-text2">
             One screen shows kitchen + bar tickets together. Default.
           </p>
         </div>
       </label>
 
-      <label className="flex items-start gap-3 bg-white border border-[#E2DDD5] rounded-xl p-4 cursor-pointer">
+      <label className="flex items-start gap-3 bg-white border border-border rounded-xl p-4 cursor-pointer">
         <input
           type="radio"
           name="mode"
@@ -69,8 +69,8 @@ export function OrderViewModeForm({ menuId, initialMode }: Props) {
           className="mt-1"
         />
         <div>
-          <p className="font-semibold text-[#16130C]">Split</p>
-          <p className="text-[12px] text-[#5E5848]">
+          <p className="font-semibold text-dark">Split</p>
+          <p className="text-[12px] text-text2">
             Each station gets its own URL — give the bar a tablet of its own.
           </p>
         </div>

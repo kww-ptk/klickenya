@@ -24,7 +24,7 @@ export function KitchenHeader({ slug, menuName, staffName, role }: KitchenHeader
     role === "bar" ? "Bar" :
     role === "manager" ? "Station" :
     "Kitchen";
-  const labelClass = role === "bar" ? "text-teal-400" : "text-[#E8A020]";
+  const labelClass = role === "bar" ? "text-teal-400" : "text-amber";
 
   const handleSwitch = async () => {
     setSigningOut(true);
@@ -42,11 +42,11 @@ export function KitchenHeader({ slug, menuName, staffName, role }: KitchenHeader
       <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-2">
         <div className="flex items-center gap-2 min-w-0 flex-1">
           <span className={`text-[10px] uppercase tracking-[0.18em] ${labelClass} font-bold`}>{stationLabel}</span>
-          <p className="text-[12px] text-[#9C9485] truncate">{menuName}</p>
+          <p className="text-[12px] text-text3 truncate">{menuName}</p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
           <span className="text-[14px] font-semibold text-white">{staffName}</span>
-          <span className="px-2 py-0.5 rounded-full text-[10px] uppercase tracking-wide bg-[#2A2520] text-[#9C9485]">
+          <span className="px-2 py-0.5 rounded-full text-[10px] uppercase tracking-wide bg-[#2A2520] text-text3">
             {role}
           </span>
         </div>
@@ -54,7 +54,7 @@ export function KitchenHeader({ slug, menuName, staffName, role }: KitchenHeader
           type="button"
           onClick={handleSwitch}
           disabled={signingOut}
-          className="shrink-0 h-10 px-3 rounded-full text-[12px] font-semibold bg-[#252019] text-[#F4F1EC] hover:bg-[#3A342B] disabled:opacity-50 flex items-center gap-1.5"
+          className="shrink-0 h-10 px-3 rounded-full text-[12px] font-semibold bg-[#252019] text-surface hover:bg-[#3A342B] disabled:opacity-50 flex items-center gap-1.5"
           aria-label="Switch staff"
         >
           <LogOut className="w-4 h-4" />

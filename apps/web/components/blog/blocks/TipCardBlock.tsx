@@ -18,7 +18,7 @@ export function TipCardBlock({ value }: { value: TipCardValue }) {
   // CTA variant — branded card with button
   if (variant === "cta" || (label && label.toLowerCase().includes("got an event"))) {
     return (
-      <div className="my-10 relative overflow-hidden rounded-[22px] border border-[#E8A020]/25 bg-gradient-to-br from-[#E8A020]/[0.06] to-[#6b2d8b]/[0.04]">
+      <div className="my-10 relative overflow-hidden rounded-[22px] border border-amber/25 bg-gradient-to-br from-amber/[0.06] to-purple/[0.04]">
         {/* Decorative swoosh */}
         <svg
           className="absolute -right-10 -top-10 w-[240px] h-[240px] opacity-[0.06] pointer-events-none"
@@ -30,16 +30,16 @@ export function TipCardBlock({ value }: { value: TipCardValue }) {
 
         <div className="relative p-6 md:p-8 flex flex-col md:flex-row md:items-center gap-5">
           <div className="flex-1">
-            <p className="text-[18px] font-bold text-[#16130C] mb-2">
+            <p className="text-[18px] font-bold text-dark mb-2">
               {label || "List your event on Klickenya"}
             </p>
-            <p className="text-[14px] text-[#5E5848] leading-[1.65]">
+            <p className="text-[14px] text-text2 leading-[1.65]">
               {text || "Reach thousands of visitors every month — for free."}
             </p>
           </div>
           <Link
             href={value.ctaLink || "/how-it-works"}
-            className="shrink-0 inline-flex items-center gap-2 bg-[#E8A020] text-[#16130C] font-bold text-[14px] px-6 py-3 rounded-full hover:bg-[#d4910e] transition-colors"
+            className="shrink-0 inline-flex items-center gap-2 bg-amber text-dark font-bold text-[14px] px-6 py-3 rounded-full hover:bg-[#d4910e] transition-colors"
           >
             List your space
             <span className="text-[16px]">→</span>
@@ -53,7 +53,7 @@ export function TipCardBlock({ value }: { value: TipCardValue }) {
     tip: {
       bg: "bg-[rgba(232,160,32,.11)]",
       border: "border-[rgba(232,160,32,.2)]",
-      label: "text-[#E8A020]",
+      label: "text-amber",
     },
     warning: {
       bg: "bg-[rgba(220,38,38,.06)]",
@@ -63,12 +63,12 @@ export function TipCardBlock({ value }: { value: TipCardValue }) {
     teal: {
       bg: "bg-[rgba(13,115,119,.08)]",
       border: "border-[rgba(13,115,119,.2)]",
-      label: "text-[#0D7377]",
+      label: "text-teal",
     },
     purple: {
       bg: "bg-[rgba(139,77,171,.10)]",
       border: "border-[rgba(139,77,171,.2)]",
-      label: "text-[#8B4DAB]",
+      label: "text-purple2",
     },
     amber: {
       bg: "bg-[rgba(232,160,32,.11)]",

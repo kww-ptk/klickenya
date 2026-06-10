@@ -59,7 +59,7 @@ export function UpgradeButton({ label, redirectTo }: UpgradeButtonProps) {
     <button
       onClick={handleClick}
       disabled={loading}
-      className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full bg-[#E8A020] text-white text-[14px] font-semibold hover:bg-[#d4911c] transition-colors disabled:opacity-60"
+      className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full bg-amber text-white text-[14px] font-semibold hover:bg-[#d4911c] transition-colors disabled:opacity-60"
     >
       {loading ? <Loader2 className="size-4 animate-spin" /> : null}
       {label}

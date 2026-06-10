@@ -4,9 +4,9 @@ interface CompareTableValue { columns?: CompareColumn[]; rows?: CompareRow[] }
 
 const colHeaderColor: Record<string, string> = { teal: 'text-[#7DD3B0]', blue: 'text-[#93C5FD]', purple: 'text-[#C4B5FD]', amber: 'text-[#FBBF24]', slate: 'text-white/70' }
 const winBadgeStyle: Record<string, string> = {
-  teal: 'bg-[rgba(13,115,119,.1)] text-[#0D7377]',
+  teal: 'bg-[rgba(13,115,119,.1)] text-teal',
   blue: 'bg-[rgba(37,99,235,.1)] text-[#2563EB]',
-  purple: 'bg-[rgba(139,77,171,.1)] text-[#8B4DAB]',
+  purple: 'bg-[rgba(139,77,171,.1)] text-purple2',
   amber: 'bg-[rgba(232,160,32,.1)] text-[#B8860B]',
 }
 

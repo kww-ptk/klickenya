@@ -42,7 +42,7 @@ export default async function AmbassadorDetailPage({
       <div className="flex items-center gap-4">
         <Link
           href="/admin/ambassadors"
-          className="flex items-center gap-1.5 text-[13px] text-[#9C9485] hover:text-[#16130C] transition-colors"
+          className="flex items-center gap-1.5 text-[13px] text-text3 hover:text-dark transition-colors"
         >
           <svg
             className="size-4"
@@ -63,10 +63,10 @@ export default async function AmbassadorDetailPage({
 
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-[22px] font-display font-bold text-[#16130C]">
+          <h1 className="text-[22px] font-display font-bold text-dark">
             Ambassador Application
           </h1>
-          <p className="text-[14px] text-[#9C9485] mt-1">
+          <p className="text-[14px] text-text3 mt-1">
             from {application.name || "Unknown"} &middot;{" "}
             {formatDate(application.created_at)}
           </p>
@@ -79,28 +79,28 @@ export default async function AmbassadorDetailPage({
         <div className="lg:col-span-2 space-y-6">
           {/* Application details card */}
           <div className="bg-white rounded-2xl border border-[#F0EDE8] p-6 space-y-5">
-            <h2 className="text-[18px] font-display font-bold text-[#16130C]">
+            <h2 className="text-[18px] font-display font-bold text-dark">
               Application Details
             </h2>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               <div>
-                <p className="text-[12px] text-[#9C9485] uppercase tracking-wider font-medium mb-1">
+                <p className="text-[12px] text-text3 uppercase tracking-wider font-medium mb-1">
                   Name
                 </p>
-                <p className="text-[14px] text-[#16130C] font-medium">
+                <p className="text-[14px] text-dark font-medium">
                   {application.name || "\u2014"}
                 </p>
               </div>
               <div>
-                <p className="text-[12px] text-[#9C9485] uppercase tracking-wider font-medium mb-1">
+                <p className="text-[12px] text-text3 uppercase tracking-wider font-medium mb-1">
                   Email
                 </p>
-                <p className="text-[14px] text-[#16130C]">
+                <p className="text-[14px] text-dark">
                   {application.email ? (
                     <a
                       href={`mailto:${application.email}`}
-                      className="text-[#E8A020] hover:underline"
+                      className="text-amber hover:underline"
                     >
                       {application.email}
                     </a>
@@ -110,33 +110,33 @@ export default async function AmbassadorDetailPage({
                 </p>
               </div>
               <div>
-                <p className="text-[12px] text-[#9C9485] uppercase tracking-wider font-medium mb-1">
+                <p className="text-[12px] text-text3 uppercase tracking-wider font-medium mb-1">
                   Role
                 </p>
-                <p className="text-[14px] text-[#16130C]">
+                <p className="text-[14px] text-dark">
                   {application.role || "\u2014"}
                 </p>
               </div>
               <div>
-                <p className="text-[12px] text-[#9C9485] uppercase tracking-wider font-medium mb-1">
+                <p className="text-[12px] text-text3 uppercase tracking-wider font-medium mb-1">
                   City
                 </p>
-                <p className="text-[14px] text-[#16130C]">
+                <p className="text-[14px] text-dark">
                   {application.city || "\u2014"}
                 </p>
               </div>
               <div>
-                <p className="text-[12px] text-[#9C9485] uppercase tracking-wider font-medium mb-1">
+                <p className="text-[12px] text-text3 uppercase tracking-wider font-medium mb-1">
                   Social Handle
                 </p>
-                <p className="text-[14px] text-[#16130C]">
+                <p className="text-[14px] text-dark">
                   {socialHandle ? (
                     socialLink ? (
                       <a
                         href={socialLink}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-[#E8A020] hover:underline"
+                        className="text-amber hover:underline"
                       >
                         {socialHandle}
                       </a>
@@ -149,16 +149,16 @@ export default async function AmbassadorDetailPage({
                 </p>
               </div>
               <div>
-                <p className="text-[12px] text-[#9C9485] uppercase tracking-wider font-medium mb-1">
+                <p className="text-[12px] text-text3 uppercase tracking-wider font-medium mb-1">
                   Status
                 </p>
                 <StatusBadge status={application.status || "new"} />
               </div>
               <div>
-                <p className="text-[12px] text-[#9C9485] uppercase tracking-wider font-medium mb-1">
+                <p className="text-[12px] text-text3 uppercase tracking-wider font-medium mb-1">
                   Submitted
                 </p>
-                <p className="text-[14px] text-[#16130C]">
+                <p className="text-[14px] text-dark">
                   {formatDate(application.created_at)}
                 </p>
               </div>
@@ -167,10 +167,10 @@ export default async function AmbassadorDetailPage({
             {/* Message */}
             {application.message && (
               <div>
-                <p className="text-[12px] text-[#9C9485] uppercase tracking-wider font-medium mb-2">
+                <p className="text-[12px] text-text3 uppercase tracking-wider font-medium mb-2">
                   Message
                 </p>
-                <div className="bg-[#F7F5F2] rounded-xl p-4 text-[14px] text-[#16130C] leading-relaxed whitespace-pre-wrap">
+                <div className="bg-[#F7F5F2] rounded-xl p-4 text-[14px] text-dark leading-relaxed whitespace-pre-wrap">
                   {application.message}
                 </div>
               </div>
@@ -179,10 +179,10 @@ export default async function AmbassadorDetailPage({
             {/* Notes */}
             {application.notes && (
               <div>
-                <p className="text-[12px] text-[#9C9485] uppercase tracking-wider font-medium mb-2">
+                <p className="text-[12px] text-text3 uppercase tracking-wider font-medium mb-2">
                   Notes
                 </p>
-                <div className="bg-[#F7F5F2] rounded-xl p-4 text-[14px] text-[#16130C] leading-relaxed whitespace-pre-wrap">
+                <div className="bg-[#F7F5F2] rounded-xl p-4 text-[14px] text-dark leading-relaxed whitespace-pre-wrap">
                   {application.notes}
                 </div>
               </div>
@@ -201,7 +201,7 @@ export default async function AmbassadorDetailPage({
         <div className="space-y-6">
           {/* Status card */}
           <div className="bg-white rounded-2xl border border-[#F0EDE8] p-6 space-y-4">
-            <h2 className="text-[18px] font-display font-bold text-[#16130C]">
+            <h2 className="text-[18px] font-display font-bold text-dark">
               Status
             </h2>
             <div className="flex items-center gap-2">
@@ -227,19 +227,19 @@ export default async function AmbassadorDetailPage({
                 </button>
               )}
             </div>
-            <p className="text-[11px] text-[#9C9485]">
+            <p className="text-[11px] text-text3">
               Use the actions panel below to update status.
             </p>
           </div>
 
           {/* Quick Actions */}
           <div className="bg-white rounded-2xl border border-[#F0EDE8] p-6 space-y-3">
-            <h2 className="text-[18px] font-display font-bold text-[#16130C]">
+            <h2 className="text-[18px] font-display font-bold text-dark">
               Quick Actions
             </h2>
             <Link
               href="/admin/ambassadors"
-              className="flex items-center gap-2 text-[13px] font-medium text-[#E8A020] hover:text-[#C78A1A] transition-colors"
+              className="flex items-center gap-2 text-[13px] font-medium text-amber hover:text-[#C78A1A] transition-colors"
             >
               <svg
                 className="size-4"
@@ -259,7 +259,7 @@ export default async function AmbassadorDetailPage({
             {application.email && (
               <a
                 href={`mailto:${application.email}`}
-                className="flex items-center gap-2 text-[13px] font-medium text-[#E8A020] hover:text-[#C78A1A] transition-colors"
+                className="flex items-center gap-2 text-[13px] font-medium text-amber hover:text-[#C78A1A] transition-colors"
               >
                 <svg
                   className="size-4"

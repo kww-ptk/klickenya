@@ -15,16 +15,16 @@ function formatDate(dateStr: string) {
 const BOOKING_STATUS_BADGE: Record<string, string> = {
   confirmed:   "bg-[#4F46E5]/15 text-[#4F46E5]",
   checked_in:  "bg-[#22C55E]/15 text-[#22C55E]",
-  checked_out: "bg-[#9C9485]/15 text-[#9C9485]",
+  checked_out: "bg-text3/15 text-text3",
   cancelled:   "bg-red-100 text-red-600",
   no_show:     "bg-red-100 text-red-600",
 };
 
 const ENQUIRY_STATUS_LABELS: Record<string, { label: string; className: string }> = {
-  pending:   { label: "Awaiting response", className: "bg-[#E8A020]/15 text-[#E8A020]" },
+  pending:   { label: "Awaiting response", className: "bg-amber/15 text-amber" },
   held:      { label: "On hold",           className: "bg-[#4F46E5]/15 text-[#4F46E5]" },
   converted: { label: "Booking confirmed", className: "bg-[#22C55E]/15 text-[#22C55E]" },
-  declined:  { label: "Declined",          className: "bg-[#9C9485]/15 text-[#9C9485]" },
+  declined:  { label: "Declined",          className: "bg-text3/15 text-text3" },
 };
 
 export default async function AdminGuestDetailPage({
@@ -70,7 +70,7 @@ export default async function AdminGuestDetailPage({
       {/* Back */}
       <Link
         href="/admin/guests"
-        className="inline-flex items-center gap-1.5 text-[13px] text-[#9C9485] hover:text-[#16130C] transition-colors"
+        className="inline-flex items-center gap-1.5 text-[13px] text-text3 hover:text-dark transition-colors"
       >
         <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
@@ -80,8 +80,8 @@ export default async function AdminGuestDetailPage({
 
       {/* Header */}
       <div>
-        <h1 className="text-[22px] font-display font-bold text-[#16130C]">{displayName}</h1>
-        <p className="text-[14px] text-[#9C9485] mt-1">{user.email}</p>
+        <h1 className="text-[22px] font-display font-bold text-dark">{displayName}</h1>
+        <p className="text-[14px] text-text3 mt-1">{user.email}</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -91,15 +91,15 @@ export default async function AdminGuestDetailPage({
           {/* Bookings */}
           <div className="bg-white rounded-2xl border border-[#F0EDE8] overflow-hidden">
             <div className="flex items-center justify-between px-6 py-4 border-b border-[#F0EDE8]">
-              <h2 className="text-[16px] font-display font-bold text-[#16130C]">
-                Bookings <span className="text-[#9C9485] font-normal text-[14px]">({bookings.length})</span>
+              <h2 className="text-[16px] font-display font-bold text-dark">
+                Bookings <span className="text-text3 font-normal text-[14px]">({bookings.length})</span>
               </h2>
-              <Link href={`/admin/bookings?q=${encodeURIComponent(user.email ?? "")}`} className="text-[12px] text-[#E8A020] hover:text-[#C78A1A]">
+              <Link href={`/admin/bookings?q=${encodeURIComponent(user.email ?? "")}`} className="text-[12px] text-amber hover:text-[#C78A1A]">
                 View in bookings →
               </Link>
             </div>
             {bookings.length === 0 ? (
-              <p className="px-6 py-8 text-[14px] text-[#9C9485] text-center">No bookings yet.</p>
+              <p className="px-6 py-8 text-[14px] text-text3 text-center">No bookings yet.</p>
             ) : (
               <div className="divide-y divide-[#F0EDE8]">
                 {bookings.map((b) => {
@@ -108,17 +108,17 @@ export default async function AdminGuestDetailPage({
                   return (
                     <div key={b.id} className="flex items-center justify-between gap-4 px-6 py-4">
                       <div className="min-w-0">
-                        <p className="text-[13px] font-medium text-[#16130C]">{prop?.name ?? "—"} · {room?.name ?? "—"}</p>
-                        <p className="text-[12px] text-[#9C9485] mt-0.5">
+                        <p className="text-[13px] font-medium text-dark">{prop?.name ?? "—"} · {room?.name ?? "—"}</p>
+                        <p className="text-[12px] text-text3 mt-0.5">
                           {formatDate(b.check_in_date)} → {formatDate(b.check_out_date)} · {b.nights}n
                         </p>
                       </div>
                       <div className="flex items-center gap-3 shrink-0">
-                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold ${BOOKING_STATUS_BADGE[b.status] || "bg-[#F0EDE8] text-[#9C9485]"}`}>
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold ${BOOKING_STATUS_BADGE[b.status] || "bg-[#F0EDE8] text-text3"}`}>
                           {b.status?.replace("_", " ") ?? "—"}
                         </span>
-                        <span className="text-[13px] font-semibold text-[#16130C] whitespace-nowrap">{fmt(b.total_kes)}</span>
-                        <Link href={`/admin/bookings/${b.id}`} className="text-[12px] text-[#E8A020] hover:text-[#C78A1A]">View</Link>
+                        <span className="text-[13px] font-semibold text-dark whitespace-nowrap">{fmt(b.total_kes)}</span>
+                        <Link href={`/admin/bookings/${b.id}`} className="text-[12px] text-amber hover:text-[#C78A1A]">View</Link>
                       </div>
                     </div>
                   );
@@ -130,12 +130,12 @@ export default async function AdminGuestDetailPage({
           {/* Enquiries */}
           <div className="bg-white rounded-2xl border border-[#F0EDE8] overflow-hidden">
             <div className="px-6 py-4 border-b border-[#F0EDE8]">
-              <h2 className="text-[16px] font-display font-bold text-[#16130C]">
-                Enquiries <span className="text-[#9C9485] font-normal text-[14px]">({enquiries.length})</span>
+              <h2 className="text-[16px] font-display font-bold text-dark">
+                Enquiries <span className="text-text3 font-normal text-[14px]">({enquiries.length})</span>
               </h2>
             </div>
             {enquiries.length === 0 ? (
-              <p className="px-6 py-8 text-[14px] text-[#9C9485] text-center">No enquiries.</p>
+              <p className="px-6 py-8 text-[14px] text-text3 text-center">No enquiries.</p>
             ) : (
               <div className="divide-y divide-[#F0EDE8]">
                 {enquiries.map((e) => {
@@ -143,8 +143,8 @@ export default async function AdminGuestDetailPage({
                   return (
                     <div key={e.id} className="flex items-center justify-between gap-4 px-6 py-4">
                       <div className="min-w-0">
-                        <p className="text-[13px] font-medium text-[#16130C] truncate">{e.listing_title ?? "Property enquiry"}</p>
-                        <p className="text-[12px] text-[#9C9485] mt-0.5">
+                        <p className="text-[13px] font-medium text-dark truncate">{e.listing_title ?? "Property enquiry"}</p>
+                        <p className="text-[12px] text-text3 mt-0.5">
                           {e.check_in && e.check_out ? `${formatDate(e.check_in)} → ${formatDate(e.check_out)}` : "No dates"}
                         </p>
                       </div>
@@ -163,54 +163,54 @@ export default async function AdminGuestDetailPage({
         <div className="space-y-6">
           {/* Profile */}
           <div className="bg-white rounded-2xl border border-[#F0EDE8] p-6 space-y-4">
-            <h2 className="text-[16px] font-display font-bold text-[#16130C]">Profile</h2>
+            <h2 className="text-[16px] font-display font-bold text-dark">Profile</h2>
             <div className="space-y-3 text-[13px]">
               <div>
-                <p className="text-[11px] text-[#9C9485] uppercase tracking-wider font-medium mb-1">Email</p>
-                <a href={`mailto:${user.email}`} className="text-[#E8A020] hover:underline">{user.email}</a>
+                <p className="text-[11px] text-text3 uppercase tracking-wider font-medium mb-1">Email</p>
+                <a href={`mailto:${user.email}`} className="text-amber hover:underline">{user.email}</a>
               </div>
               {meta.phone ? (
                 <div>
-                  <p className="text-[11px] text-[#9C9485] uppercase tracking-wider font-medium mb-1">Phone</p>
-                  <a href={`tel:${String(meta.phone)}`} className="text-[#E8A020] hover:underline">{String(meta.phone)}</a>
+                  <p className="text-[11px] text-text3 uppercase tracking-wider font-medium mb-1">Phone</p>
+                  <a href={`tel:${String(meta.phone)}`} className="text-amber hover:underline">{String(meta.phone)}</a>
                 </div>
               ) : null}
               <div>
-                <p className="text-[11px] text-[#9C9485] uppercase tracking-wider font-medium mb-1">Joined</p>
-                <p className="text-[#16130C]">
+                <p className="text-[11px] text-text3 uppercase tracking-wider font-medium mb-1">Joined</p>
+                <p className="text-dark">
                   {user.created_at ? new Date(user.created_at).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : "—"}
                 </p>
               </div>
               <div>
-                <p className="text-[11px] text-[#9C9485] uppercase tracking-wider font-medium mb-1">User ID</p>
-                <p className="font-mono text-[12px] text-[#9C9485] break-all">{user.id}</p>
+                <p className="text-[11px] text-text3 uppercase tracking-wider font-medium mb-1">User ID</p>
+                <p className="font-mono text-[12px] text-text3 break-all">{user.id}</p>
               </div>
             </div>
           </div>
 
           {/* Stats */}
           <div className="bg-white rounded-2xl border border-[#F0EDE8] p-6 space-y-4">
-            <h2 className="text-[16px] font-display font-bold text-[#16130C]">Stats</h2>
+            <h2 className="text-[16px] font-display font-bold text-dark">Stats</h2>
             <div className="space-y-3 text-[13px]">
               <div className="flex justify-between">
-                <span className="text-[#9C9485]">Bookings</span>
-                <span className="font-semibold text-[#16130C]">{bookings.length}</span>
+                <span className="text-text3">Bookings</span>
+                <span className="font-semibold text-dark">{bookings.length}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-[#9C9485]">Enquiries</span>
-                <span className="text-[#16130C]">{enquiries.length}</span>
+                <span className="text-text3">Enquiries</span>
+                <span className="text-dark">{enquiries.length}</span>
               </div>
               <div className="border-t border-[#F0EDE8] pt-3 flex justify-between">
-                <span className="text-[#9C9485]">Total billed</span>
-                <span className="font-semibold text-[#16130C]">{totalSpend > 0 ? fmt(totalSpend) : "—"}</span>
+                <span className="text-text3">Total billed</span>
+                <span className="font-semibold text-dark">{totalSpend > 0 ? fmt(totalSpend) : "—"}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-[#9C9485]">Total paid</span>
+                <span className="text-text3">Total paid</span>
                 <span className="font-semibold text-[#22C55E]">{totalPaid > 0 ? fmt(totalPaid) : "—"}</span>
               </div>
               {totalSpend > totalPaid && (
                 <div className="flex justify-between">
-                  <span className="text-[#9C9485]">Balance due</span>
+                  <span className="text-text3">Balance due</span>
                   <span className="font-semibold text-red-600">{fmt(totalSpend - totalPaid)}</span>
                 </div>
               )}

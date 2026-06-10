@@ -40,7 +40,7 @@ function fmtPerKg(unitKes: number, unit: string): string {
 }
 
 const inputCls =
-  "border border-[#E2DDD5] rounded-xl px-3 py-2.5 text-[14px] text-[#16130C] placeholder:text-[#9C9485] focus:outline-none focus:border-[#E8A020] focus:ring-1 focus:ring-[#E8A020]/30 bg-white";
+  "border border-border rounded-xl px-3 py-2.5 text-[14px] text-dark placeholder:text-text3 focus:outline-none focus:border-amber focus:ring-1 focus:ring-amber/30 bg-white";
 
 export function ReferencePricesClient({ initial }: { initial: PlatformPriceRow[] }) {
   const [search, setSearch] = useState("");
@@ -99,7 +99,7 @@ export function ReferencePricesClient({ initial }: { initial: PlatformPriceRow[]
           type="button"
           onClick={generate}
           disabled={generating}
-          className="bg-white border border-[#E8A020]/40 text-[#E8A020] font-bold text-[13px] px-5 h-[46px] rounded-full hover:bg-[#E8A020]/5 disabled:opacity-50 shrink-0"
+          className="bg-white border border-amber/40 text-amber font-bold text-[13px] px-5 h-[46px] rounded-full hover:bg-amber/5 disabled:opacity-50 shrink-0"
         >
           {generating ? "Asking AI…" : aiRows.length === 0 ? "✨ Suggest common prices" : "✨ Refresh AI suggestions"}
         </button>
@@ -113,11 +113,11 @@ export function ReferencePricesClient({ initial }: { initial: PlatformPriceRow[]
 
       {/* Empty state for platform aggregates */}
       {platformCount === 0 && aiRows.length === 0 && (
-        <div className="bg-white rounded-2xl border border-[#E2DDD5] p-6">
-          <p className="font-display text-[16px] font-bold text-[#16130C] mb-1">
+        <div className="bg-white rounded-2xl border border-border p-6">
+          <p className="font-display text-[16px] font-bold text-dark mb-1">
             No platform data yet
           </p>
-          <p className="text-[13px] text-[#5E5848] leading-snug">
+          <p className="text-[13px] text-text2 leading-snug">
             Cross-restaurant averages appear once at least <strong>3 different restaurants</strong> have logged purchases for the same ingredient (last 180 days). Until then, tap <span className="font-semibold">✨ Suggest common prices</span> to see AI estimates for typical Kenyan coastal kitchen ingredients.
           </p>
         </div>
@@ -125,17 +125,17 @@ export function ReferencePricesClient({ initial }: { initial: PlatformPriceRow[]
 
       {/* Source legend */}
       {(platformCount > 0 || aiRows.length > 0) && (
-        <div className="flex flex-wrap gap-3 text-[11px] text-[#9C9485]">
+        <div className="flex flex-wrap gap-3 text-[11px] text-text3">
           {platformCount > 0 && (
             <span>
               <span className="inline-block size-2 rounded-full bg-emerald-500 align-middle mr-1.5" />
-              <strong className="text-[#16130C]">{platformCount}</strong> from real purchases
+              <strong className="text-dark">{platformCount}</strong> from real purchases
             </span>
           )}
           {aiRows.length > 0 && (
             <span>
-              <span className="inline-block size-2 rounded-full bg-[#E8A020] align-middle mr-1.5" />
-              <strong className="text-[#16130C]">{aiRows.length}</strong> AI estimates
+              <span className="inline-block size-2 rounded-full bg-amber align-middle mr-1.5" />
+              <strong className="text-dark">{aiRows.length}</strong> AI estimates
             </span>
           )}
           <span className="ml-auto">k-anonymised at ≥ 3 buyers</span>
@@ -144,11 +144,11 @@ export function ReferencePricesClient({ initial }: { initial: PlatformPriceRow[]
 
       {/* Table */}
       {merged.length > 0 && (
-        <div className="bg-white rounded-2xl border border-[#E2DDD5] overflow-hidden">
+        <div className="bg-white rounded-2xl border border-border overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-[#FAFAF8] border-b border-[#E2DDD5]">
-                <tr className="text-left text-[11px] font-bold uppercase tracking-wide text-[#9C9485]">
+              <thead className="bg-canvas border-b border-border">
+                <tr className="text-left text-[11px] font-bold uppercase tracking-wide text-text3">
                   <th className="px-4 py-2.5">Ingredient</th>
                   <th className="px-4 py-2.5 text-right">Median</th>
                   <th className="px-4 py-2.5 text-right hidden md:table-cell">Range (p25–p75)</th>
@@ -156,23 +156,23 @@ export function ReferencePricesClient({ initial }: { initial: PlatformPriceRow[]
                   <th className="px-4 py-2.5 hidden sm:table-cell">Source</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#F4F1EC]">
+              <tbody className="divide-y divide-surface">
                 {merged.map((r) => (
                   <tr key={`${r.source}|${r.canonical_name}|${r.unit}`} className="text-[13px]">
                     <td className="px-4 py-3">
-                      <p className="font-semibold text-[#16130C]">
+                      <p className="font-semibold text-dark">
                         {r.canonical_name.replace(/\b\w/g, (c) => c.toUpperCase())}
                       </p>
-                      <p className="text-[11px] text-[#9C9485]">
+                      <p className="text-[11px] text-text3">
                         unit: {r.unit}
                         {r.source === "ai_estimate" && r.notes && <> · {r.notes}</>}
                       </p>
                     </td>
-                    <td className="px-4 py-3 text-right whitespace-nowrap font-bold text-[#16130C]">
+                    <td className="px-4 py-3 text-right whitespace-nowrap font-bold text-dark">
                       {fmtKES(r.median_kes)}
-                      <p className="text-[11px] font-normal text-[#9C9485]">/ {r.unit}</p>
+                      <p className="text-[11px] font-normal text-text3">/ {r.unit}</p>
                     </td>
-                    <td className="px-4 py-3 text-right whitespace-nowrap text-[#5E5848] hidden md:table-cell">
+                    <td className="px-4 py-3 text-right whitespace-nowrap text-text2 hidden md:table-cell">
                       {r.p25_kes != null && r.p75_kes != null ? (
                         <>
                           {fmtKES(r.p25_kes)} – {fmtKES(r.p75_kes)}
@@ -181,7 +181,7 @@ export function ReferencePricesClient({ initial }: { initial: PlatformPriceRow[]
                         "—"
                       )}
                     </td>
-                    <td className="px-4 py-3 text-right whitespace-nowrap text-[#5E5848] hidden lg:table-cell">
+                    <td className="px-4 py-3 text-right whitespace-nowrap text-text2 hidden lg:table-cell">
                       {fmtPerKg(Number(r.median_kes), r.unit)}
                     </td>
                     <td className="px-4 py-3 hidden sm:table-cell">
@@ -190,7 +190,7 @@ export function ReferencePricesClient({ initial }: { initial: PlatformPriceRow[]
                           {r.restaurant_count} buyers · n={r.sample_size}
                         </span>
                       ) : (
-                        <span className="inline-flex text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide bg-[#E8A020]/10 text-[#E8A020]">
+                        <span className="inline-flex text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide bg-amber/10 text-amber">
                           AI estimate
                         </span>
                       )}
@@ -203,7 +203,7 @@ export function ReferencePricesClient({ initial }: { initial: PlatformPriceRow[]
         </div>
       )}
 
-      <p className="text-[11px] text-[#9C9485] leading-relaxed">
+      <p className="text-[11px] text-text3 leading-relaxed">
         Platform medians come from real purchase orders and stock movements logged by Klickenya restaurants in the last 180 days. AI estimates are model-generated suggestions for common items and should be treated as ballparks — verify against your supplier.
       </p>
     </div>

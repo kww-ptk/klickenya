@@ -47,10 +47,10 @@ export function MarginClient({ menuId, rows }: { menuId: string; rows: MarginRow
 
   if (rows.length === 0) {
     return (
-      <div className="bg-white rounded-2xl border border-[#E2DDD5] p-8 text-center">
+      <div className="bg-white rounded-2xl border border-border p-8 text-center">
         <p className="text-[40px] mb-2">📊</p>
-        <p className="font-display text-[16px] font-bold text-[#16130C]">No margin data yet</p>
-        <p className="text-[13px] text-[#9C9485] mt-1">
+        <p className="font-display text-[16px] font-bold text-dark">No margin data yet</p>
+        <p className="text-[13px] text-text3 mt-1">
           Once orders move through &apos;preparing&apos; and stock auto-deducts, margins will appear here.
         </p>
       </div>
@@ -60,8 +60,8 @@ export function MarginClient({ menuId, rows }: { menuId: string; rows: MarginRow
   return (
     <div className="space-y-4">
       {/* Bar chart — pure CSS, no chart lib */}
-      <div className="bg-white rounded-2xl border border-[#E2DDD5] p-5">
-        <p className="text-[11px] font-bold text-[#9C9485] uppercase tracking-wide mb-3">
+      <div className="bg-white rounded-2xl border border-border p-5">
+        <p className="text-[11px] font-bold text-text3 uppercase tracking-wide mb-3">
           Top 10 dishes by margin (KES, last 30d)
         </p>
         <ul className="space-y-1.5">
@@ -72,19 +72,19 @@ export function MarginClient({ menuId, rows }: { menuId: string; rows: MarginRow
               <li key={r.menu_item_id} className="grid grid-cols-[1fr_120px] gap-3 items-center">
                 <Link
                   href={`/dashboard/menu/${menuId}/items/${r.menu_item_id}`}
-                  className="text-[13px] font-semibold text-[#16130C] truncate hover:text-[#E8A020]"
+                  className="text-[13px] font-semibold text-dark truncate hover:text-amber"
                   title={r.menu_item_name}
                 >
                   {r.menu_item_name}
                 </Link>
                 <div className="flex items-center gap-2">
-                  <div className="flex-1 h-5 bg-[#F4F1EC] rounded-full overflow-hidden">
+                  <div className="flex-1 h-5 bg-surface rounded-full overflow-hidden">
                     <div
-                      className={`h-full rounded-full ${isLoss ? "bg-rose-500" : "bg-[#E8A020]"}`}
+                      className={`h-full rounded-full ${isLoss ? "bg-rose-500" : "bg-amber"}`}
                       style={{ width: `${pct}%` }}
                     />
                   </div>
-                  <span className={`text-[11px] font-bold w-[68px] text-right ${isLoss ? "text-rose-700" : "text-[#16130C]"}`}>
+                  <span className={`text-[11px] font-bold w-[68px] text-right ${isLoss ? "text-rose-700" : "text-dark"}`}>
                     {fmtKES(Number(r.margin_kes))}
                   </span>
                 </div>
@@ -99,7 +99,7 @@ export function MarginClient({ menuId, rows }: { menuId: string; rows: MarginRow
         <select
           value={sort}
           onChange={(e) => setSort(e.target.value as SortKey)}
-          className="border border-[#E2DDD5] rounded-xl px-3 py-2.5 text-[14px] bg-white focus:outline-none focus:border-[#E8A020]"
+          className="border border-border rounded-xl px-3 py-2.5 text-[14px] bg-white focus:outline-none focus:border-amber"
         >
           <option value="margin_kes">Sort: margin KES</option>
           <option value="margin_pct">Sort: margin %</option>
@@ -107,18 +107,18 @@ export function MarginClient({ menuId, rows }: { menuId: string; rows: MarginRow
           <option value="portions">Sort: portions sold</option>
           <option value="name">Sort: name</option>
         </select>
-        <p className="text-[11px] text-[#9C9485]">
+        <p className="text-[11px] text-text3">
           {rows[0]?.refreshed_at
             ? `Refreshed ${new Date(rows[0].refreshed_at).toLocaleTimeString("en-KE", { hour: "2-digit", minute: "2-digit" })}`
             : ""}
         </p>
       </div>
 
-      <div className="bg-white rounded-2xl border border-[#E2DDD5] overflow-hidden">
+      <div className="bg-white rounded-2xl border border-border overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-[#FAFAF8] border-b border-[#E2DDD5]">
-              <tr className="text-left text-[11px] font-bold uppercase tracking-wide text-[#9C9485]">
+            <thead className="bg-canvas border-b border-border">
+              <tr className="text-left text-[11px] font-bold uppercase tracking-wide text-text3">
                 <th className="px-4 py-2.5">Dish</th>
                 <th className="px-4 py-2.5 text-right">Sold</th>
                 <th className="px-4 py-2.5 text-right hidden sm:table-cell">Revenue</th>
@@ -127,7 +127,7 @@ export function MarginClient({ menuId, rows }: { menuId: string; rows: MarginRow
                 <th className="px-4 py-2.5 text-right">FC %</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#F4F1EC]">
+            <tbody className="divide-y divide-surface">
               {sorted.map((r) => {
                 const fc = Number(r.food_cost_pct);
                 const fcHigh = fc > 35;
@@ -136,23 +136,23 @@ export function MarginClient({ menuId, rows }: { menuId: string; rows: MarginRow
                     <td className="px-4 py-3">
                       <Link
                         href={`/dashboard/menu/${menuId}/items/${r.menu_item_id}`}
-                        className="font-semibold text-[#16130C] hover:text-[#E8A020]"
+                        className="font-semibold text-dark hover:text-amber"
                       >
                         {r.menu_item_name}
                       </Link>
                     </td>
-                    <td className="px-4 py-3 text-right whitespace-nowrap text-[#5E5848]">
+                    <td className="px-4 py-3 text-right whitespace-nowrap text-text2">
                       {Number(r.portions_sold).toLocaleString("en-KE")}
                     </td>
-                    <td className="px-4 py-3 text-right whitespace-nowrap text-[#5E5848] hidden sm:table-cell">
+                    <td className="px-4 py-3 text-right whitespace-nowrap text-text2 hidden sm:table-cell">
                       {fmtKES(Number(r.revenue))}
                     </td>
-                    <td className="px-4 py-3 text-right whitespace-nowrap text-[#5E5848] hidden sm:table-cell">
+                    <td className="px-4 py-3 text-right whitespace-nowrap text-text2 hidden sm:table-cell">
                       {fmtKES(Number(r.cogs))}
                     </td>
-                    <td className="px-4 py-3 text-right whitespace-nowrap font-bold text-[#16130C]">
+                    <td className="px-4 py-3 text-right whitespace-nowrap font-bold text-dark">
                       {fmtKES(Number(r.margin_kes))}
-                      <p className="text-[11px] font-semibold text-[#9C9485]">
+                      <p className="text-[11px] font-semibold text-text3">
                         {Number(r.margin_pct).toFixed(0)}%
                       </p>
                     </td>

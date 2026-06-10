@@ -241,17 +241,17 @@ export default async function AdminLayout({
   return (
     <div className="flex min-h-screen">
       {/* Sidebar — hidden on mobile, visible on desktop */}
-      <aside className="hidden lg:flex fixed inset-y-0 left-0 z-40 w-[240px] bg-[#16130C] flex-col">
+      <aside className="hidden lg:flex fixed inset-y-0 left-0 z-40 w-[240px] bg-dark flex-col">
         {/* Logo area */}
         <div className="flex items-center gap-2.5 px-4 py-5 border-b border-white/10">
-          <div className="shrink-0 size-8 rounded-lg bg-[#6B2D8B] flex items-center justify-center">
+          <div className="shrink-0 size-8 rounded-lg bg-purple flex items-center justify-center">
             <span className="text-white font-bold text-[15px]">k</span>
           </div>
           <div className="flex items-center gap-2">
             <span className="font-display text-[18px] font-bold tracking-[-0.03em] text-white">
               klickenya
             </span>
-            <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-[#E8A020]/15 text-[#E8A020] text-[11px] font-semibold">
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-amber/15 text-amber text-[11px] font-semibold">
               Admin
             </span>
           </div>
@@ -364,7 +364,7 @@ export default async function AdminLayout({
         {/* User / Sign out */}
         <div className="border-t border-white/10 px-4 py-4 space-y-2">
           {user?.email && (
-            <p className="hidden lg:block text-[12px] text-[#9C9485] truncate">
+            <p className="hidden lg:block text-[12px] text-text3 truncate">
               {user.email}
             </p>
           )}
@@ -373,7 +373,7 @@ export default async function AdminLayout({
       </aside>
 
       {/* Main content */}
-      <main className="flex-1 lg:ml-[240px] min-h-screen bg-[#FAFAF8] min-w-0 overflow-x-hidden">
+      <main className="flex-1 lg:ml-[240px] min-h-screen bg-canvas min-w-0 overflow-x-hidden">
         <div className="p-5 pb-24 lg:p-8 lg:pb-8">{children}</div>
       </main>
 

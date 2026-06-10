@@ -83,10 +83,10 @@ export default async function PropertyListingsAdminPage({
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-[24px] font-bold text-[#16130C]">
+          <h1 className="text-[24px] font-bold text-dark">
             Property Listing Requests
           </h1>
-          <p className="text-[14px] text-[#9C9485] mt-1">
+          <p className="text-[14px] text-text3 mt-1">
             Submissions from /real-estate/list — agents, owners, and developers
           </p>
         </div>
@@ -101,7 +101,7 @@ export default async function PropertyListingsAdminPage({
             className={`px-4 py-2 rounded-full text-[13px] font-semibold transition-colors ${
               status === tab.value
                 ? "bg-purple-500 text-white"
-                : "bg-[#F4F1EC] text-[#5E5848] hover:bg-[#E2DDD5]"
+                : "bg-surface text-text2 hover:bg-border"
             }`}
           >
             {tab.label}
@@ -119,7 +119,7 @@ export default async function PropertyListingsAdminPage({
             name="q"
             defaultValue={q}
             placeholder="Search by name, email, or details..."
-            className="flex-1 px-4 py-2.5 rounded-xl border border-[#E2DDD5] text-[14px] focus:border-purple-500 outline-none"
+            className="flex-1 px-4 py-2.5 rounded-xl border border-border text-[14px] focus:border-purple-500 outline-none"
           />
           <input type="hidden" name="status" value={status} />
           <button
@@ -135,10 +135,10 @@ export default async function PropertyListingsAdminPage({
       {items.length === 0 ? (
         <div className="text-center py-16">
           <span className="text-[40px] block mb-3">🏠</span>
-          <p className="text-[16px] font-semibold text-[#16130C] mb-1">
+          <p className="text-[16px] font-semibold text-dark mb-1">
             No property listing requests yet
           </p>
-          <p className="text-[14px] text-[#9C9485]">
+          <p className="text-[14px] text-text3">
             They&apos;ll appear here when people submit via /real-estate/list
           </p>
         </div>
@@ -146,7 +146,7 @@ export default async function PropertyListingsAdminPage({
         <div className="overflow-x-auto">
           <table className="w-full text-[13.5px]">
             <thead>
-              <tr className="border-b border-[#E2DDD5] text-[11px] uppercase tracking-wider text-[#9C9485]">
+              <tr className="border-b border-border text-[11px] uppercase tracking-wider text-text3">
                 <th className="text-left py-3 px-3 font-semibold">Type</th>
                 <th className="text-left py-3 px-3 font-semibold">Name</th>
                 <th className="text-left py-3 px-3 font-semibold">Email</th>
@@ -176,7 +176,7 @@ export default async function PropertyListingsAdminPage({
                 return (
                   <tr
                     key={req.id as string}
-                    className="border-b border-[#F4F1EC] hover:bg-[#FAFAF8] transition-colors"
+                    className="border-b border-surface hover:bg-canvas transition-colors"
                   >
                     <td className="py-3 px-3">
                       <span
@@ -185,10 +185,10 @@ export default async function PropertyListingsAdminPage({
                         {listingType}
                       </span>
                     </td>
-                    <td className="py-3 px-3 font-semibold text-[#16130C]">
+                    <td className="py-3 px-3 font-semibold text-dark">
                       {(req.full_name as string) || "—"}
                     </td>
-                    <td className="py-3 px-3 text-[#5E5848]">
+                    <td className="py-3 px-3 text-text2">
                       <a
                         href={`mailto:${req.email as string}`}
                         className="hover:text-purple-600 transition-colors"
@@ -196,13 +196,13 @@ export default async function PropertyListingsAdminPage({
                         {req.email as string}
                       </a>
                     </td>
-                    <td className="py-3 px-3 text-[#9C9485] max-w-[200px] truncate">
+                    <td className="py-3 px-3 text-text3 max-w-[200px] truncate">
                       {city !== "—" ? city : "—"}
                     </td>
                     <td className="py-3 px-3">
                       <StatusBadge status={(req.status as string) || "new"} />
                     </td>
-                    <td className="py-3 px-3 text-[#9C9485] whitespace-nowrap">
+                    <td className="py-3 px-3 text-text3 whitespace-nowrap">
                       {formatDate(req.created_at as string)}
                     </td>
                     <td className="py-3 px-3">

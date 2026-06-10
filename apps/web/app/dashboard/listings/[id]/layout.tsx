@@ -179,20 +179,20 @@ export default async function ListingDashboardLayout({
       <div className="mb-5">
         <Link
           href="/dashboard/listings"
-          className="text-[13px] text-[#9C9485] hover:text-[#16130C] transition-colors"
+          className="text-[13px] text-text3 hover:text-dark transition-colors"
         >
           ← My Listings
         </Link>
         <div className="flex items-center gap-3 mt-2">
-          <h1 className="font-display text-[22px] lg:text-[28px] font-bold tracking-[-0.03em] text-[#16130C] flex-1 min-w-0 truncate">
+          <h1 className="font-display text-[22px] lg:text-[28px] font-bold tracking-[-0.03em] text-dark flex-1 min-w-0 truncate">
             {listing.title}
           </h1>
-          <span className="shrink-0 text-[11px] font-bold bg-[#E8A020]/10 text-[#E8A020] px-2.5 py-1 rounded-full">
+          <span className="shrink-0 text-[11px] font-bold bg-amber/10 text-amber px-2.5 py-1 rounded-full">
             {typeLabel}
           </span>
         </div>
         {listing.city && (
-          <p className="text-[13px] text-[#9C9485] mt-0.5">{listing.city}</p>
+          <p className="text-[13px] text-text3 mt-0.5">{listing.city}</p>
         )}
       </div>
 

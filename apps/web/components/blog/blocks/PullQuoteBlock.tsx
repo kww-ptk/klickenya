@@ -2,7 +2,7 @@ interface PullQuoteValue { text?: string; attribution?: string; accentColor?: 'a
 
 export function PullQuoteBlock({ value }: { value: PullQuoteValue }) {
   const { text, attribution, accentColor = 'amber' } = value
-  const quoteColor = accentColor === 'purple' ? 'text-[#8B4DAB]' : 'text-[#E8A020]'
+  const quoteColor = accentColor === 'purple' ? 'text-purple2' : 'text-amber'
   return (
     <div className="my-12 py-8 px-9 rounded-[30px] bg-[#F4F2EE] border border-[#E4E0D8] relative overflow-hidden">
       <span className={`absolute -top-5 left-6 font-[family-name:'Lora'] text-[140px] font-bold ${quoteColor} opacity-15 leading-none select-none`}>&ldquo;</span>

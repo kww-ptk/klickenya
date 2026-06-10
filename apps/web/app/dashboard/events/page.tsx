@@ -144,7 +144,7 @@ export default async function MyEventsPage() {
         </div>
         <Link
           href="/dashboard/events/new"
-          className="px-5 py-2.5 rounded-full bg-[#E8A020] text-white font-semibold text-[14px] hover:bg-[#d4911c] transition-colors shadow-sm"
+          className="px-5 py-2.5 rounded-full bg-amber text-white font-semibold text-[14px] hover:bg-[#d4911c] transition-colors shadow-sm"
         >
           Create event
         </Link>
@@ -152,8 +152,8 @@ export default async function MyEventsPage() {
 
       {/* Event list */}
       {eventRows.length === 0 ? (
-        <div className="rounded-[20px] border border-dashed border-[#E2DDD5] bg-white p-12 text-center">
-          <Calendar className="size-10 text-[#9C9485] mx-auto mb-3" />
+        <div className="rounded-[20px] border border-dashed border-border bg-white p-12 text-center">
+          <Calendar className="size-10 text-text3 mx-auto mb-3" />
           <p className="text-[16px] font-semibold text-text mb-1">
             You haven&apos;t created any events yet
           </p>
@@ -162,7 +162,7 @@ export default async function MyEventsPage() {
           </p>
           <Link
             href="/dashboard/events/new"
-            className="inline-flex px-6 py-3 rounded-full bg-[#E8A020] text-white font-semibold text-[14px] hover:bg-[#d4911c] transition-colors"
+            className="inline-flex px-6 py-3 rounded-full bg-amber text-white font-semibold text-[14px] hover:bg-[#d4911c] transition-colors"
           >
             Create your first event
           </Link>
@@ -179,7 +179,7 @@ export default async function MyEventsPage() {
             return (
               <div
                 key={event.id}
-                className="flex items-center gap-4 rounded-[16px] bg-white border border-[#E2DDD5] p-4 hover:shadow-sm transition-shadow"
+                className="flex items-center gap-4 rounded-[16px] bg-white border border-border p-4 hover:shadow-sm transition-shadow"
               >
                 {/* Image */}
                 <div className="shrink-0 size-16 md:w-28 md:h-20 rounded-xl overflow-hidden bg-surface relative">
@@ -216,7 +216,7 @@ export default async function MyEventsPage() {
                   {(event.status === "approved" || event.status === "published") && event.slug && (
                     <Link
                       href={`/events/${citySlug}/${event.slug}`}
-                      className="px-3.5 py-1.5 rounded-lg bg-[#E8A020]/10 text-[#E8A020] text-[12px] font-semibold hover:bg-[#E8A020]/20 transition-colors text-center"
+                      className="px-3.5 py-1.5 rounded-lg bg-amber/10 text-amber text-[12px] font-semibold hover:bg-amber/20 transition-colors text-center"
                     >
                       View
                     </Link>

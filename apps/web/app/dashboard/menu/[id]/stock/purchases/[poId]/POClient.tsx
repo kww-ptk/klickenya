@@ -43,7 +43,7 @@ function fmtDate(iso: string | null): string {
 }
 
 const STATUS_PILL: Record<POHeader["status"], string> = {
-  draft: "bg-[#F4F1EC] text-[#5E5848]",
+  draft: "bg-surface text-text2",
   sent: "bg-sky-100 text-sky-800",
   partial: "bg-amber-100 text-amber-800",
   received: "bg-emerald-100 text-emerald-700",
@@ -51,7 +51,7 @@ const STATUS_PILL: Record<POHeader["status"], string> = {
 };
 
 const inputCls =
-  "w-full border border-[#E2DDD5] rounded-xl px-3 py-3 text-[15px] text-[#16130C] placeholder:text-[#9C9485] focus:outline-none focus:border-[#E8A020] focus:ring-1 focus:ring-[#E8A020]/30 bg-white";
+  "w-full border border-border rounded-xl px-3 py-3 text-[15px] text-dark placeholder:text-text3 focus:outline-none focus:border-amber focus:ring-1 focus:ring-amber/30 bg-white";
 
 /* ── WhatsApp helpers ────────────────────────────────── */
 
@@ -124,9 +124,9 @@ export function POClient({
   return (
     <div className="space-y-5">
       {/* Header card */}
-      <div className="bg-white rounded-2xl border border-[#E2DDD5] p-4 sm:p-5">
+      <div className="bg-white rounded-2xl border border-border p-4 sm:p-5">
         <div className="flex items-center justify-between gap-3 flex-wrap">
-          <h1 className="font-display text-[22px] lg:text-[28px] font-bold tracking-[-0.03em] text-[#16130C]">
+          <h1 className="font-display text-[22px] lg:text-[28px] font-bold tracking-[-0.03em] text-dark">
             {header.po_number ?? "—"}
           </h1>
           <span
@@ -142,28 +142,28 @@ export function POClient({
           <Stat label="Received" value={fmtDate(header.received_at)} />
         </dl>
         {header.notes && (
-          <p className="text-[13px] text-[#5E5848] mt-3 p-3 rounded-xl bg-[#FAFAF8]">{header.notes}</p>
+          <p className="text-[13px] text-text2 mt-3 p-3 rounded-xl bg-canvas">{header.notes}</p>
         )}
       </div>
 
       {/* Lines */}
-      <div className="bg-white rounded-2xl border border-[#E2DDD5] overflow-hidden">
-        <div className="p-4 border-b border-[#F4F1EC] flex items-center justify-between">
-          <h2 className="font-display text-[16px] font-bold text-[#16130C]">Items</h2>
+      <div className="bg-white rounded-2xl border border-border overflow-hidden">
+        <div className="p-4 border-b border-surface flex items-center justify-between">
+          <h2 className="font-display text-[16px] font-bold text-dark">Items</h2>
         </div>
-        <ul className="divide-y divide-[#F4F1EC]">
+        <ul className="divide-y divide-surface">
           {lines.map((l) => {
             const fullyReceived = l.qty_received >= l.qty;
             return (
               <li key={l.id} className="p-4 flex flex-wrap items-center gap-3">
                 <div className="flex-1 min-w-[180px]">
-                  <p className="text-[14px] font-semibold text-[#16130C]">{l.ingredient_name}</p>
-                  <p className="text-[12px] text-[#9C9485]">
+                  <p className="text-[14px] font-semibold text-dark">{l.ingredient_name}</p>
+                  <p className="text-[12px] text-text3">
                     {l.qty} {l.ingredient_unit} · {fmtKES(l.unit_cost)} / {l.ingredient_unit}
                   </p>
                 </div>
                 <div className="text-right">
-                  <p className="text-[14px] font-bold text-[#16130C]">{fmtKES(l.total_cost)}</p>
+                  <p className="text-[14px] font-bold text-dark">{fmtKES(l.total_cost)}</p>
                   {l.qty_received > 0 && (
                     <p
                       className={`text-[11px] font-bold ${fullyReceived ? "text-emerald-700" : "text-amber-700"}`}
@@ -176,15 +176,15 @@ export function POClient({
             );
           })}
         </ul>
-        <div className="p-4 border-t border-[#F4F1EC] bg-[#FAFAF8] space-y-1">
+        <div className="p-4 border-t border-surface bg-canvas space-y-1">
           <div className="flex items-center justify-between">
-            <span className="text-[13px] text-[#5E5848]">Expected total</span>
-            <span className="text-[14px] font-semibold text-[#16130C]">{fmtKES(header.total_kes)}</span>
+            <span className="text-[13px] text-text2">Expected total</span>
+            <span className="text-[14px] font-semibold text-dark">{fmtKES(header.total_kes)}</span>
           </div>
           {header.received_total_kes > 0 && (
             <div className="flex items-center justify-between">
-              <span className="text-[13px] text-[#5E5848]">Received total</span>
-              <span className="text-[14px] font-bold text-[#16130C]">{fmtKES(header.received_total_kes)}</span>
+              <span className="text-[13px] text-text2">Received total</span>
+              <span className="text-[14px] font-bold text-dark">{fmtKES(header.received_total_kes)}</span>
             </div>
           )}
         </div>
@@ -196,7 +196,7 @@ export function POClient({
           <button
             type="button"
             onClick={() => setShowReceive(true)}
-            className="bg-[#E8A020] text-[#16130C] font-bold text-[15px] h-[56px] rounded-full hover:bg-[#d4911c] shadow-sm sm:col-span-2"
+            className="bg-amber text-dark font-bold text-[15px] h-[56px] rounded-full hover:bg-[#d4911c] shadow-sm sm:col-span-2"
           >
             Mark received
           </button>
@@ -205,7 +205,7 @@ export function POClient({
           <button
             type="button"
             onClick={send}
-            className="bg-[#16130C] text-white font-bold text-[14px] h-[48px] rounded-full hover:bg-[#2A2520]"
+            className="bg-dark text-white font-bold text-[14px] h-[48px] rounded-full hover:bg-[#2A2520]"
           >
             Send to supplier
           </button>
@@ -224,7 +224,7 @@ export function POClient({
           <button
             type="button"
             onClick={cancel}
-            className="bg-white border border-[#E2DDD5] text-[#5E5848] font-bold text-[14px] h-[48px] rounded-full hover:border-[#DC2626] hover:text-[#DC2626]"
+            className="bg-white border border-border text-text2 font-bold text-[14px] h-[48px] rounded-full hover:border-[#DC2626] hover:text-[#DC2626]"
           >
             Cancel PO
           </button>
@@ -232,7 +232,7 @@ export function POClient({
         <button
           type="button"
           onClick={() => router.push(`/dashboard/menu/${menuId}/stock/purchases`)}
-          className="bg-white border border-[#E2DDD5] text-[#5E5848] font-bold text-[14px] h-[48px] rounded-full hover:border-[#9C9485]"
+          className="bg-white border border-border text-text2 font-bold text-[14px] h-[48px] rounded-full hover:border-text3"
         >
           Done
         </button>
@@ -256,8 +256,8 @@ export function POClient({
 function Stat({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <dt className="text-[11px] font-bold text-[#9C9485] uppercase tracking-wide">{label}</dt>
-      <dd className="text-[14px] font-semibold text-[#16130C] mt-0.5">{value}</dd>
+      <dt className="text-[11px] font-bold text-text3 uppercase tracking-wide">{label}</dt>
+      <dd className="text-[14px] font-semibold text-dark mt-0.5">{value}</dd>
     </div>
   );
 }
@@ -404,18 +404,18 @@ function ReceiveModal({
     <div className="fixed inset-0 z-50 bg-black/40 flex items-end sm:items-center justify-center p-0 sm:p-4">
       <div className="bg-white w-full sm:max-w-[640px] sm:rounded-2xl rounded-t-2xl shadow-xl overflow-hidden flex flex-col max-h-[92vh]">
         {/* Header */}
-        <div className="p-4 sm:p-5 border-b border-[#F4F1EC] flex items-center justify-between sticky top-0 bg-white">
+        <div className="p-4 sm:p-5 border-b border-surface flex items-center justify-between sticky top-0 bg-white">
           <div>
-            <h2 className="font-display text-[18px] font-bold text-[#16130C]">
+            <h2 className="font-display text-[18px] font-bold text-dark">
               {step === "qty" ? "Mark received" : "Update prices?"}
             </h2>
-            <p className="text-[12px] text-[#9C9485]">{header.po_number}</p>
+            <p className="text-[12px] text-text3">{header.po_number}</p>
           </div>
           <button
             type="button"
             onClick={onClose}
             aria-label="Close"
-            className="size-11 rounded-full text-[#9C9485] hover:bg-[#F4F1EC] flex items-center justify-center text-[20px]"
+            className="size-11 rounded-full text-text3 hover:bg-surface flex items-center justify-center text-[20px]"
           >
             ×
           </button>
@@ -424,14 +424,14 @@ function ReceiveModal({
         {/* Body */}
         <div className="flex-1 overflow-y-auto">
           {step === "qty" ? (
-            <ul className="divide-y divide-[#F4F1EC]">
+            <ul className="divide-y divide-surface">
               {drafts.map((d, idx) => {
                 const remaining = Math.max(0, d.qty_ordered - (lines.find((l) => l.id === d.po_item_id)?.qty_received ?? 0));
                 return (
                   <li key={d.po_item_id} className="p-4 grid grid-cols-12 gap-3 items-center">
                     <div className="col-span-12 sm:col-span-6">
-                      <p className="text-[14px] font-semibold text-[#16130C]">{d.ingredient_name}</p>
-                      <p className="text-[12px] text-[#9C9485]">
+                      <p className="text-[14px] font-semibold text-dark">{d.ingredient_name}</p>
+                      <p className="text-[12px] text-text3">
                         Ordered {d.qty_ordered} {d.ingredient_unit} · {fmtKES(d.unit_cost)} / {d.ingredient_unit}
                       </p>
                       {remaining < d.qty_ordered && (
@@ -441,7 +441,7 @@ function ReceiveModal({
                       )}
                     </div>
                     <div className="col-span-8 sm:col-span-4">
-                      <label className="block text-[11px] font-bold text-[#9C9485] uppercase tracking-wide mb-1">
+                      <label className="block text-[11px] font-bold text-text3 uppercase tracking-wide mb-1">
                         Received now
                       </label>
                       <input
@@ -458,7 +458,7 @@ function ReceiveModal({
                       <button
                         type="button"
                         onClick={() => update(idx, { qty_received: "0" })}
-                        className="h-11 px-3 rounded-full text-[12px] font-bold text-[#9C9485] hover:text-[#16130C]"
+                        className="h-11 px-3 rounded-full text-[12px] font-bold text-text3 hover:text-dark"
                       >
                         Skip
                       </button>
@@ -477,7 +477,7 @@ function ReceiveModal({
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-[#F4F1EC] bg-[#FAFAF8] sticky bottom-0">
+        <div className="p-4 border-t border-surface bg-canvas sticky bottom-0">
           {err && (
             <div className="mb-2 rounded-xl border border-[#DC2626]/30 bg-[#DC2626]/5 p-2.5 text-[13px] text-[#DC2626]">
               {err}
@@ -490,7 +490,7 @@ function ReceiveModal({
                   type="button"
                   onClick={submit}
                   disabled={busy}
-                  className="bg-[#E8A020] text-[#16130C] font-bold text-[15px] h-[52px] rounded-full hover:bg-[#d4911c] disabled:opacity-50 flex-1 px-5"
+                  className="bg-amber text-dark font-bold text-[15px] h-[52px] rounded-full hover:bg-[#d4911c] disabled:opacity-50 flex-1 px-5"
                 >
                   {busy ? "Recording…" : updateCosts ? "Update prices & receive" : "Receive without updating"}
                 </button>
@@ -498,7 +498,7 @@ function ReceiveModal({
                   type="button"
                   onClick={() => setStep("qty")}
                   disabled={busy}
-                  className="bg-white border border-[#E2DDD5] text-[#5E5848] font-bold text-[14px] h-[52px] rounded-full hover:border-[#9C9485] px-5"
+                  className="bg-white border border-border text-text2 font-bold text-[14px] h-[52px] rounded-full hover:border-text3 px-5"
                 >
                   Back
                 </button>
@@ -509,7 +509,7 @@ function ReceiveModal({
                   type="button"
                   onClick={next}
                   disabled={busy}
-                  className="bg-[#E8A020] text-[#16130C] font-bold text-[15px] h-[52px] rounded-full hover:bg-[#d4911c] disabled:opacity-50 flex-1 px-5"
+                  className="bg-amber text-dark font-bold text-[15px] h-[52px] rounded-full hover:bg-[#d4911c] disabled:opacity-50 flex-1 px-5"
                 >
                   {priceChanges.length > 0 ? "Continue" : "Receive"}
                 </button>
@@ -517,7 +517,7 @@ function ReceiveModal({
                   type="button"
                   onClick={onClose}
                   disabled={busy}
-                  className="bg-white border border-[#E2DDD5] text-[#5E5848] font-bold text-[14px] h-[52px] rounded-full hover:border-[#9C9485] px-5"
+                  className="bg-white border border-border text-text2 font-bold text-[14px] h-[52px] rounded-full hover:border-text3 px-5"
                 >
                   Cancel
                 </button>
@@ -550,22 +550,22 @@ function PriceConfirm({
 }) {
   return (
     <div className="p-4 sm:p-5 space-y-4">
-      <p className="text-[13px] text-[#5E5848]">
+      <p className="text-[13px] text-text2">
         The unit prices on this delivery don&apos;t match the prices stored on{" "}
         {changes.length === 1 ? "this ingredient" : "these ingredients"}. Updating
         will change all <strong>future</strong> recipe cost calculations. Past
         recipes and stock movements are not affected.
       </p>
 
-      <ul className="rounded-2xl border border-[#E2DDD5] divide-y divide-[#F4F1EC] overflow-hidden">
+      <ul className="rounded-2xl border border-border divide-y divide-surface overflow-hidden">
         {changes.map((c) => {
           const isUp = c.new_cost > c.old_cost;
           return (
             <li key={c.po_item_id} className="p-3 flex items-center gap-3">
               <div className="flex-1 min-w-0">
-                <p className="text-[14px] font-semibold text-[#16130C] truncate">{c.ingredient_name}</p>
-                <p className="text-[12px] text-[#9C9485]">
-                  {fmtKES(c.old_cost)} → <span className="font-bold text-[#16130C]">{fmtKES(c.new_cost)}</span> / {c.ingredient_unit}
+                <p className="text-[14px] font-semibold text-dark truncate">{c.ingredient_name}</p>
+                <p className="text-[12px] text-text3">
+                  {fmtKES(c.old_cost)} → <span className="font-bold text-dark">{fmtKES(c.new_cost)}</span> / {c.ingredient_unit}
                 </p>
               </div>
               {c.delta_pct != null && (
@@ -583,28 +583,28 @@ function PriceConfirm({
         })}
       </ul>
 
-      <div className="rounded-2xl border border-[#E2DDD5] bg-white p-1">
+      <div className="rounded-2xl border border-border bg-white p-1">
         <button
           type="button"
           onClick={() => setUpdate(true)}
-          className={`w-full text-left p-3 rounded-xl transition-colors ${update ? "bg-[#E8A020]/10" : "hover:bg-[#FAFAF8]"}`}
+          className={`w-full text-left p-3 rounded-xl transition-colors ${update ? "bg-amber/10" : "hover:bg-canvas"}`}
         >
-          <p className="text-[14px] font-bold text-[#16130C]">
+          <p className="text-[14px] font-bold text-dark">
             {update ? "✓ " : ""}Update prices
           </p>
-          <p className="text-[12px] text-[#9C9485]">
+          <p className="text-[12px] text-text3">
             Roll the new prices into the pantry. Recommended if this is your new buying price.
           </p>
         </button>
         <button
           type="button"
           onClick={() => setUpdate(false)}
-          className={`w-full text-left p-3 rounded-xl transition-colors ${!update ? "bg-[#E8A020]/10" : "hover:bg-[#FAFAF8]"}`}
+          className={`w-full text-left p-3 rounded-xl transition-colors ${!update ? "bg-amber/10" : "hover:bg-canvas"}`}
         >
-          <p className="text-[14px] font-bold text-[#16130C]">
+          <p className="text-[14px] font-bold text-dark">
             {!update ? "✓ " : ""}Keep old prices
           </p>
-          <p className="text-[12px] text-[#9C9485]">
+          <p className="text-[12px] text-text3">
             Stock movement is recorded at the PO price, but recipes keep using the old cost.
           </p>
         </button>

@@ -188,12 +188,12 @@ export default async function BlogPostPage({
               {/* Left — text */}
               <div className="relative z-10 order-2 md:order-1">
                 {/* Breadcrumb */}
-                <nav className="flex items-center gap-1.5 text-[12px] text-[#9C9485] mb-4">
-                  <Link href="/journal" className="hover:text-[#E8A020] transition-colors">Journal</Link>
+                <nav className="flex items-center gap-1.5 text-[12px] text-text3 mb-4">
+                  <Link href="/journal" className="hover:text-amber transition-colors">Journal</Link>
                   {post.primaryCategory && (
                     <>
                       <span>›</span>
-                      <span className="text-[#5E5848]">
+                      <span className="text-text2">
                         {({
                           destination_guide: "Guides",
                           food_restaurants: "Food",
@@ -212,7 +212,7 @@ export default async function BlogPostPage({
                 {/* Tag + reading time */}
                 <div className="flex items-center gap-3 mb-5">
                   {(post.primaryCategory || post.tags?.[0]) && (
-                    <span className="text-[#E8A020] text-[11px] font-bold uppercase tracking-[0.12em]">
+                    <span className="text-amber text-[11px] font-bold uppercase tracking-[0.12em]">
                       {post.primaryCategory
                         ? ({
                             destination_guide: "Guide",
@@ -227,18 +227,18 @@ export default async function BlogPostPage({
                         : post.tags?.[0]}
                     </span>
                   )}
-                  <span className="w-px h-3 bg-[#E2DDD5]" />
-                  <span className="text-[12px] text-[#9C9485]">{post.readingTime || 5} min read</span>
+                  <span className="w-px h-3 bg-border" />
+                  <span className="text-[12px] text-text3">{post.readingTime || 5} min read</span>
                 </div>
 
                 {/* Title */}
-                <h1 className="font-display font-[800] text-[clamp(26px,4vw,44px)] leading-[1.1] tracking-[-0.03em] text-[#16130C] mb-5">
+                <h1 className="font-display font-[800] text-[clamp(26px,4vw,44px)] leading-[1.1] tracking-[-0.03em] text-dark mb-5">
                   {post.title}
                 </h1>
 
                 {/* Excerpt */}
                 {post.excerpt && (
-                  <p className="text-[15px] md:text-[16px] text-[#5E5848] max-w-[480px] leading-[1.65] mb-6">
+                  <p className="text-[15px] md:text-[16px] text-text2 max-w-[480px] leading-[1.65] mb-6">
                     {post.excerpt}
                   </p>
                 )}
@@ -253,19 +253,19 @@ export default async function BlogPostPage({
                           alt={post.author.name}
                           width={32}
                           height={32}
-                          className="rounded-full object-cover ring-2 ring-[#E8A020]/20"
+                          className="rounded-full object-cover ring-2 ring-amber/20"
                         />
                       ) : (
-                        <div className="size-8 rounded-full bg-[#E8A020]/10 flex items-center justify-center text-[#E8A020] font-semibold text-[12px] ring-2 ring-[#E8A020]/20">
+                        <div className="size-8 rounded-full bg-amber/10 flex items-center justify-center text-amber font-semibold text-[12px] ring-2 ring-amber/20">
                           {post.author.name?.[0] || "K"}
                         </div>
                       )}
                       <div className="flex flex-col">
-                        <span className="text-[#16130C] font-semibold text-[13px] leading-tight">
+                        <span className="text-dark font-semibold text-[13px] leading-tight">
                           {post.author.name}
                         </span>
                         {post.publishedAt && (
-                          <time dateTime={formatFullDate(post.publishedAt)} className="text-[#9C9485] text-[11px]">
+                          <time dateTime={formatFullDate(post.publishedAt)} className="text-text3 text-[11px]">
                             {formatDate(post.publishedAt)}
                           </time>
                         )}
@@ -290,13 +290,13 @@ export default async function BlogPostPage({
                   </div>
                 )}
                 {/* Decorative ring behind image */}
-                <div className="hidden md:block absolute -top-3 -right-3 -bottom-3 -left-3 rounded-[22px] border border-[#E8A020]/15 pointer-events-none" />
+                <div className="hidden md:block absolute -top-3 -right-3 -bottom-3 -left-3 rounded-[22px] border border-amber/15 pointer-events-none" />
               </div>
             </div>
           </div>
 
           {/* Bottom divider */}
-          <div className="h-px bg-[#E2DDD5]" />
+          <div className="h-px bg-border" />
         </section>
 
         {/* ── Article layout ───────────────────────────────────── */}
@@ -390,7 +390,7 @@ export default async function BlogPostPage({
                         href={`/journal/${sp.slug.current}`}
                         className="flex items-start gap-3 p-3 -mx-3 rounded-xl hover:bg-surface transition-colors"
                       >
-                        <span className="text-[#E8A020] text-lg mt-0.5">→</span>
+                        <span className="text-amber text-lg mt-0.5">→</span>
                         <div>
                           <p className="text-[15px] font-semibold text-text hover:text-amber transition-colors leading-snug">
                             {sp.title}

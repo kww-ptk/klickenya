@@ -74,14 +74,14 @@ export default async function OrdersPage({ params, searchParams }: PageProps) {
   })) as DashboardOrder[];
 
   return (
-    <div className="min-h-screen bg-[#F4F1EC]">
-      <header className="bg-white border-b border-[#E2DDD5] px-4 lg:px-6 py-4 flex items-center justify-between">
+    <div className="min-h-screen bg-surface">
+      <header className="bg-white border-b border-border px-4 lg:px-6 py-4 flex items-center justify-between">
         <div>
-          <p className="text-[11px] font-bold text-[#9C9485] uppercase tracking-widest">Orders</p>
-          <h1 className="font-display text-[22px] font-bold text-[#16130C]">{menu.name}</h1>
+          <p className="text-[11px] font-bold text-text3 uppercase tracking-widest">Orders</p>
+          <h1 className="font-display text-[22px] font-bold text-dark">{menu.name}</h1>
         </div>
         {backHref && (
-          <a href={backHref} className="text-[12px] font-bold text-[#5E5848] underline">Back</a>
+          <a href={backHref} className="text-[12px] font-bold text-text2 underline">Back</a>
         )}
       </header>
       <div className="p-4 lg:p-6">

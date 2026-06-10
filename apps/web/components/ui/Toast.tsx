@@ -41,7 +41,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
           <div
             key={t.id}
             className={`px-4 py-3 rounded-xl text-[13px] font-semibold text-white shadow-lg animate-in fade-in slide-in-from-bottom-2 ${
-              t.type === "success" ? "bg-[#16A34A]" : "bg-[#DC2626]"
+              t.type === "success" ? "bg-green" : "bg-[#DC2626]"
             }`}
           >
             {t.message}

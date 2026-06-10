@@ -281,23 +281,23 @@ export function PosSessionDetail({
         <div className="flex items-center gap-2 mb-3">
           <Link
             href={`/pos/${slug}/tables`}
-            className="w-12 h-12 rounded-full bg-[#252019] grid place-items-center text-[#F4F1EC]"
+            className="w-12 h-12 rounded-full bg-[#252019] grid place-items-center text-surface"
             aria-label="Back to tables"
           >
             <ArrowLeft className="w-5 h-5" />
           </Link>
           <div className="flex-1 min-w-0">
-            <p className="text-[11px] uppercase tracking-wide text-[#9C9485]">Table</p>
+            <p className="text-[11px] uppercase tracking-wide text-text3">Table</p>
             <h1 className="text-[20px] font-bold text-white truncate">Table {tableNumber}</h1>
           </div>
           {detail && (
             <span
               className={`text-[11px] uppercase tracking-wide font-bold px-3 py-1 rounded-full ${
                 detail.status === "open"
-                  ? "bg-[#231D12] text-[#E8A020]"
+                  ? "bg-[#231D12] text-amber"
                   : detail.status === "billed"
                     ? "bg-[#192034] text-[#5BA1FF]"
-                    : "bg-[#252019] text-[#9C9485]"
+                    : "bg-[#252019] text-text3"
               }`}
             >
               {detail.status}
@@ -307,17 +307,17 @@ export function PosSessionDetail({
 
         {loadingDetail ? (
           <div className="rounded-2xl border border-[#2A2520] bg-[#1A170F] p-8 text-center">
-            <div className="inline-block w-6 h-6 rounded-full border-2 border-[#3A342B] border-t-[#E8A020] animate-spin" />
-            <p className="text-[12px] text-[#9C9485] mt-3">Loading session…</p>
+            <div className="inline-block w-6 h-6 rounded-full border-2 border-[#3A342B] border-t-amber animate-spin" />
+            <p className="text-[12px] text-text3 mt-3">Loading session…</p>
           </div>
         ) : !sessionId || !detail ? (
           <div className="rounded-2xl border border-[#2A2520] bg-[#1A170F] p-8 text-center">
-            <p className="text-[14px] text-[#9C9485]">
+            <p className="text-[14px] text-text3">
               {error ?? "No open session for this table."}
             </p>
             <Link
               href={`/pos/${slug}/tables`}
-              className="mt-3 inline-block text-[12px] font-semibold text-[#E8A020]"
+              className="mt-3 inline-block text-[12px] font-semibold text-amber"
             >
               Back to tables
             </Link>
@@ -339,10 +339,10 @@ export function PosSessionDetail({
                     <p className="text-[13px] font-bold text-white">
                       Previous orders ({sortedOrders.length})
                     </p>
-                    <p className="text-[11px] text-[#9C9485]">Live · 8s</p>
+                    <p className="text-[11px] text-text3">Live · 8s</p>
                   </div>
                   {sortedOrders.length === 0 ? (
-                    <div className="px-4 py-6 text-center text-[12px] text-[#9C9485]">
+                    <div className="px-4 py-6 text-center text-[12px] text-text3">
                       No orders yet for this session.
                     </div>
                   ) : (
@@ -358,12 +358,12 @@ export function PosSessionDetail({
                           >
                             <div className="flex items-center gap-2 min-w-0">
                               {expanded ? (
-                                <ChevronDown className="w-4 h-4 text-[#9C9485] shrink-0" />
+                                <ChevronDown className="w-4 h-4 text-text3 shrink-0" />
                               ) : (
-                                <ChevronRight className="w-4 h-4 text-[#9C9485] shrink-0" />
+                                <ChevronRight className="w-4 h-4 text-text3 shrink-0" />
                               )}
                               <div className="min-w-0">
-                                <p className="text-[12px] text-[#9C9485]">
+                                <p className="text-[12px] text-text3">
                                   {new Date(order.created_at).toLocaleTimeString("en-KE", {
                                     hour:    "2-digit",
                                     minute:  "2-digit",
@@ -373,12 +373,12 @@ export function PosSessionDetail({
                                     {order.source}
                                   </span>
                                   {order.waiter_name ? (
-                                    <span className="ml-1 text-[#9C9485]">· {order.waiter_name}</span>
+                                    <span className="ml-1 text-text3">· {order.waiter_name}</span>
                                   ) : null}
                                 </p>
-                                <p className="text-[12px] text-[#F4F1EC] mt-0.5">
+                                <p className="text-[12px] text-surface mt-0.5">
                                   {itemCount} {itemCount === 1 ? "item" : "items"}
-                                  <span className="ml-2 uppercase tracking-wide font-semibold text-[#9C9485]">
+                                  <span className="ml-2 uppercase tracking-wide font-semibold text-text3">
                                     {order.status}
                                   </span>
                                 </p>
@@ -398,13 +398,13 @@ export function PosSessionDetail({
                                   <li
                                     key={it.id}
                                     className={`flex items-start gap-2 text-[12px] ${
-                                      it.is_voided ? "text-[#5E5848] line-through" : "text-[#F4F1EC]"
+                                      it.is_voided ? "text-text2 line-through" : "text-surface"
                                     }`}
                                   >
                                     <div className="flex-1 min-w-0">
-                                      <span className="text-[#9C9485]">{it.quantity}×</span> {it.name}
+                                      <span className="text-text3">{it.quantity}×</span> {it.name}
                                       {it.selected_options?.length ? (
-                                        <span className="text-[#9C9485]">
+                                        <span className="text-text3">
                                           {" — "}
                                           {it.selected_options.map((o) => o.choice).join(", ")}
                                         </span>
@@ -430,7 +430,7 @@ export function PosSessionDetail({
                                             quantity: it.quantity,
                                           })
                                         }
-                                        className="shrink-0 w-7 h-7 rounded-full bg-[#252019] text-[#9C9485] hover:bg-[#231D12] hover:text-[#E8A020] grid place-items-center transition-colors"
+                                        className="shrink-0 w-7 h-7 rounded-full bg-[#252019] text-text3 hover:bg-[#231D12] hover:text-amber grid place-items-center transition-colors"
                                         aria-label={`Edit ${it.name}`}
                                         title="Edit quantity or remove (manager required)"
                                       >
@@ -450,12 +450,12 @@ export function PosSessionDetail({
 
                 {/* Session meta */}
                 <div className="rounded-2xl border border-[#2A2520] bg-[#1A170F] p-4 space-y-2">
-                  <div className="flex items-center justify-between text-[12px] text-[#9C9485]">
+                  <div className="flex items-center justify-between text-[12px] text-text3">
                     <span>Covers</span>
                     <span className="text-white">×{detail.covers}</span>
                   </div>
                   {detail.opened_by_name && (
-                    <div className="flex items-center justify-between text-[12px] text-[#9C9485]">
+                    <div className="flex items-center justify-between text-[12px] text-text3">
                       <span>Opened by</span>
                       <span className="text-white truncate ml-2">{detail.opened_by_name}</span>
                     </div>
@@ -495,7 +495,7 @@ export function PosSessionDetail({
                         type="button"
                         onClick={() => transition("bill")}
                         disabled={busy !== null}
-                        className="h-12 rounded-full bg-[#E8A020] text-[#16130C] text-[13px] font-bold disabled:opacity-40"
+                        className="h-12 rounded-full bg-amber text-dark text-[13px] font-bold disabled:opacity-40"
                       >
                         {busy === "bill" ? "Marking…" : "Mark as billed"}
                       </button>
@@ -585,7 +585,7 @@ export function PosSessionDetail({
             onClick={(e) => e.stopPropagation()}
           >
             <p className="text-[14px] font-bold text-white">M-Pesa reference</p>
-            <p className="text-[12px] text-[#9C9485]">Optional: enter the M-Pesa transaction code from the SMS.</p>
+            <p className="text-[12px] text-text3">Optional: enter the M-Pesa transaction code from the SMS.</p>
             <input
               type="text"
               autoFocus
@@ -600,7 +600,7 @@ export function PosSessionDetail({
               <button
                 type="button"
                 onClick={() => setMpesaPromptOpen(false)}
-                className="flex-1 h-11 rounded-full bg-[#252019] text-[#F4F1EC] text-[13px] font-bold"
+                className="flex-1 h-11 rounded-full bg-[#252019] text-surface text-[13px] font-bold"
               >
                 Cancel
               </button>
@@ -633,8 +633,8 @@ export function PosSessionDetail({
             key={t.id}
             className={`pointer-events-auto px-4 py-2.5 rounded-full text-[13px] font-semibold shadow-2xl ${
               t.type === "success"
-                ? "bg-[#E8A020] text-[#16130C]"
-                : "bg-[#FF8A6B] text-[#16130C]"
+                ? "bg-amber text-dark"
+                : "bg-[#FF8A6B] text-dark"
             }`}
           >
             {t.msg}

@@ -49,16 +49,16 @@ interface Payment {
 
 const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
   confirmed: { label: "Confirmed", color: "text-[#4F46E5] bg-[#4F46E5]/10" },
-  checked_in: { label: "Checked In", color: "text-[#16A34A] bg-[#16A34A]/10" },
-  checked_out: { label: "Checked Out", color: "text-[#9C9485] bg-[#9C9485]/10" },
+  checked_in: { label: "Checked In", color: "text-green bg-green/10" },
+  checked_out: { label: "Checked Out", color: "text-text3 bg-text3/10" },
   cancelled: { label: "Cancelled", color: "text-red-600 bg-red-100" },
   no_show: { label: "No Show", color: "text-red-600 bg-red-100" },
 };
 
 const PAYMENT_CONFIG: Record<string, { label: string; color: string }> = {
-  pending: { label: "Pending", color: "text-[#E8A020] bg-[#E8A020]/10" },
-  partial: { label: "Partial", color: "text-[#E8A020] bg-[#E8A020]/10" },
-  paid: { label: "Paid", color: "text-[#16A34A] bg-[#16A34A]/10" },
+  pending: { label: "Pending", color: "text-amber bg-amber/10" },
+  partial: { label: "Partial", color: "text-amber bg-amber/10" },
+  paid: { label: "Paid", color: "text-green bg-green/10" },
   refunded: { label: "Refunded", color: "text-red-600 bg-red-100" },
 };
 
@@ -74,8 +74,8 @@ const SOURCE_COLORS: Record<string, string> = {
   direct: "text-[#4F46E5] bg-[#4F46E5]/10",
   airbnb: "text-[#FF5A5F] bg-[#FF5A5F]/10",
   booking_com: "text-[#003580] bg-[#003580]/10",
-  manual: "text-[#E8A020] bg-[#E8A020]/10",
-  walkin: "text-[#E8A020] bg-[#E8A020]/10",
+  manual: "text-amber bg-amber/10",
+  walkin: "text-amber bg-amber/10",
 };
 
 const METHOD_ICONS: Record<string, string> = {
@@ -229,10 +229,10 @@ export function BookingSidePanel({
 
       <div className="relative w-full max-w-[440px] bg-white h-full overflow-y-auto shadow-xl">
         {/* Header */}
-        <div className="sticky top-0 bg-white border-b border-[#E2DDD5] px-5 py-4 z-10">
+        <div className="sticky top-0 bg-white border-b border-border px-5 py-4 z-10">
           <div className="flex items-center justify-between">
             <div className="flex-1 min-w-0">
-              <h2 className="font-display text-[20px] font-bold text-[#16130C] truncate">
+              <h2 className="font-display text-[20px] font-bold text-dark truncate">
                 {booking.guest_name}
               </h2>
               <div className="flex items-center gap-2 mt-1">
@@ -246,9 +246,9 @@ export function BookingSidePanel({
             </div>
             <button
               onClick={onClose}
-              className="size-8 flex items-center justify-center rounded-lg hover:bg-[#F4F1EC] transition-colors shrink-0"
+              className="size-8 flex items-center justify-center rounded-lg hover:bg-surface transition-colors shrink-0"
             >
-              <svg className="size-5 text-[#5E5848]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <svg className="size-5 text-text2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
@@ -257,8 +257,8 @@ export function BookingSidePanel({
 
         <div className="p-5 space-y-5">
           {/* Booking summary */}
-          <div className="bg-[#FAFAF8] rounded-lg p-3">
-            <p className="text-[13px] text-[#16130C]">
+          <div className="bg-canvas rounded-lg p-3">
+            <p className="text-[13px] text-dark">
               <span className="font-semibold">
                 {new Date(booking.check_in_date + "T00:00:00").toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" })}
               </span>
@@ -267,7 +267,7 @@ export function BookingSidePanel({
                 {new Date(booking.check_out_date + "T00:00:00").toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" })}
               </span>
             </p>
-            <p className="text-[12px] text-[#9C9485] mt-0.5">
+            <p className="text-[12px] text-text3 mt-0.5">
               {booking.nights ?? "—"} night{(booking.nights ?? 0) !== 1 ? "s" : ""}
               {" · "}
               {booking.guest_count ?? 1} guest{(booking.guest_count ?? 1) !== 1 ? "s" : ""}
@@ -279,41 +279,41 @@ export function BookingSidePanel({
 
           {/* Financial summary */}
           <div>
-            <h3 className="text-[11px] font-bold text-[#9C9485] uppercase tracking-wider mb-2">
+            <h3 className="text-[11px] font-bold text-text3 uppercase tracking-wider mb-2">
               Financials
             </h3>
             <div className="space-y-1.5">
               <div className="flex justify-between text-[13px]">
-                <span className="text-[#9C9485]">Rate</span>
-                <span className="text-[#16130C]">{fmt(booking.rate_per_night)} / night</span>
+                <span className="text-text3">Rate</span>
+                <span className="text-dark">{fmt(booking.rate_per_night)} / night</span>
               </div>
               <div className="flex justify-between text-[13px]">
-                <span className="text-[#9C9485]">Subtotal</span>
-                <span className="text-[#16130C]">{fmt(booking.subtotal_kes)}</span>
+                <span className="text-text3">Subtotal</span>
+                <span className="text-dark">{fmt(booking.subtotal_kes)}</span>
               </div>
               {bookingFees.map((f) => (
                 <div key={f.id} className="flex justify-between text-[13px]">
-                  <span className="text-[#9C9485]">{f.name}</span>
-                  <span className="text-[#16130C]">{fmt(f.amount_kes)}</span>
+                  <span className="text-text3">{f.name}</span>
+                  <span className="text-dark">{fmt(f.amount_kes)}</span>
                 </div>
               ))}
               {(booking.discount_kes ?? 0) > 0 && (
                 <div className="flex justify-between text-[13px]">
-                  <span className="text-[#9C9485]">Discount</span>
-                  <span className="text-[#16A34A]">-{fmt(booking.discount_kes!)}</span>
+                  <span className="text-text3">Discount</span>
+                  <span className="text-green">-{fmt(booking.discount_kes!)}</span>
                 </div>
               )}
-              <div className="flex justify-between text-[13px] pt-1.5 border-t border-[#E2DDD5]">
-                <span className="font-semibold text-[#16130C]">Total</span>
-                <span className="font-bold text-[#16130C]">{fmt(booking.total_kes)}</span>
+              <div className="flex justify-between text-[13px] pt-1.5 border-t border-border">
+                <span className="font-semibold text-dark">Total</span>
+                <span className="font-bold text-dark">{fmt(booking.total_kes)}</span>
               </div>
               <div className="flex justify-between text-[13px]">
-                <span className="text-[#9C9485]">Paid</span>
-                <span className="font-medium text-[#16A34A]">{fmt(booking.amount_paid_kes ?? 0)}</span>
+                <span className="text-text3">Paid</span>
+                <span className="font-medium text-green">{fmt(booking.amount_paid_kes ?? 0)}</span>
               </div>
               <div className="flex justify-between text-[13px]">
-                <span className="text-[#9C9485]">Balance</span>
-                <span className={`font-semibold ${(booking.balance_kes ?? 0) > 0 ? "text-red-600" : "text-[#16A34A]"}`}>
+                <span className="text-text3">Balance</span>
+                <span className={`font-semibold ${(booking.balance_kes ?? 0) > 0 ? "text-red-600" : "text-green"}`}>
                   {(booking.balance_kes ?? 0) > 0 ? fmt(booking.balance_kes!) : "Paid in full"}
                 </span>
               </div>
@@ -328,7 +328,7 @@ export function BookingSidePanel({
           {/* Payment history */}
           <div>
             <div className="flex items-center justify-between mb-2">
-              <h3 className="text-[11px] font-bold text-[#9C9485] uppercase tracking-wider">
+              <h3 className="text-[11px] font-bold text-text3 uppercase tracking-wider">
                 Payment history
               </h3>
               {booking.status !== "cancelled" && (
@@ -343,32 +343,32 @@ export function BookingSidePanel({
 
             {loadingPayments ? (
               <div className="animate-pulse space-y-2">
-                <div className="h-8 bg-[#F4F1EC] rounded" />
-                <div className="h-8 bg-[#F4F1EC] rounded" />
+                <div className="h-8 bg-surface rounded" />
+                <div className="h-8 bg-surface rounded" />
               </div>
             ) : payments.length === 0 ? (
-              <p className="text-[12px] text-[#9C9485]">No payments recorded</p>
+              <p className="text-[12px] text-text3">No payments recorded</p>
             ) : (
               <div className="space-y-1.5">
                 {payments.map((p) => (
-                  <div key={p.id} className="flex items-center justify-between bg-[#FAFAF8] rounded-lg px-3 py-2">
+                  <div key={p.id} className="flex items-center justify-between bg-canvas rounded-lg px-3 py-2">
                     <div className="flex items-center gap-2 min-w-0">
                       <span className="text-[14px]">{METHOD_ICONS[p.method] ?? "💰"}</span>
                       <div className="min-w-0">
-                        <p className="text-[12px] font-semibold text-[#16130C]">
+                        <p className="text-[12px] font-semibold text-dark">
                           {fmt(p.amount_kes)}
-                          <span className="font-normal text-[#9C9485] ml-1 capitalize">
+                          <span className="font-normal text-text3 ml-1 capitalize">
                             {p.method === "bank_transfer" ? "Bank" : p.method === "mpesa" ? "M-Pesa" : p.method}
                           </span>
                         </p>
                         {p.reference && (
-                          <p className="text-[10px] text-[#9C9485] font-mono truncate">
+                          <p className="text-[10px] text-text3 font-mono truncate">
                             ref: {p.reference}
                           </p>
                         )}
                       </div>
                     </div>
-                    <span className="text-[10px] text-[#9C9485] shrink-0">
+                    <span className="text-[10px] text-text3 shrink-0">
                       {new Date(p.paid_at).toLocaleDateString("en-GB", {
                         day: "numeric",
                         month: "short",
@@ -398,13 +398,13 @@ export function BookingSidePanel({
 
           {/* Guest details */}
           <div>
-            <h3 className="text-[11px] font-bold text-[#9C9485] uppercase tracking-wider mb-2">
+            <h3 className="text-[11px] font-bold text-text3 uppercase tracking-wider mb-2">
               Guest details
             </h3>
             <div className="space-y-1.5">
               {booking.guest_phone && (
                 <div className="flex justify-between text-[13px]">
-                  <span className="text-[#9C9485]">Phone</span>
+                  <span className="text-text3">Phone</span>
                   <a
                     href={`tel:${booking.guest_phone}`}
                     className="font-medium text-[#4F46E5] hover:underline"
@@ -415,7 +415,7 @@ export function BookingSidePanel({
               )}
               {booking.guest_email && (
                 <div className="flex justify-between text-[13px]">
-                  <span className="text-[#9C9485]">Email</span>
+                  <span className="text-text3">Email</span>
                   <a
                     href={`mailto:${booking.guest_email}`}
                     className="font-medium text-[#4F46E5] hover:underline truncate ml-3"
@@ -426,8 +426,8 @@ export function BookingSidePanel({
               )}
               {booking.guest_notes && (
                 <div className="mt-2">
-                  <p className="text-[11px] text-[#9C9485] mb-0.5">Special requests</p>
-                  <p className="text-[13px] text-[#5E5848] bg-[#FAFAF8] rounded-lg p-2">
+                  <p className="text-[11px] text-text3 mb-0.5">Special requests</p>
+                  <p className="text-[13px] text-text2 bg-canvas rounded-lg p-2">
                     {booking.guest_notes}
                   </p>
                 </div>
@@ -437,16 +437,16 @@ export function BookingSidePanel({
 
           {/* Internal notes */}
           <div>
-            <h3 className="text-[11px] font-bold text-[#9C9485] uppercase tracking-wider mb-1">
+            <h3 className="text-[11px] font-bold text-text3 uppercase tracking-wider mb-1">
               Internal notes
             </h3>
-            <p className="text-[10px] text-[#9C9485] mb-1">Only you can see this</p>
+            <p className="text-[10px] text-text3 mb-1">Only you can see this</p>
             <textarea
               value={internalNotes}
               onChange={(e) => setInternalNotes(e.target.value)}
               onBlur={handleNotesBlur}
               rows={3}
-              className="w-full px-3 py-2 rounded-lg border border-[#E2DDD5] text-[13px] text-[#16130C] placeholder:text-[#9C9485] focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] outline-none transition-colors resize-none"
+              className="w-full px-3 py-2 rounded-lg border border-border text-[13px] text-dark placeholder:text-text3 focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] outline-none transition-colors resize-none"
               placeholder="Add private notes about this booking..."
             />
           </div>
@@ -454,7 +454,7 @@ export function BookingSidePanel({
           {/* Actions */}
           {booking.status !== "cancelled" && booking.status !== "checked_out" && (
             <div>
-              <h3 className="text-[11px] font-bold text-[#9C9485] uppercase tracking-wider mb-2">
+              <h3 className="text-[11px] font-bold text-text3 uppercase tracking-wider mb-2">
                 Actions
               </h3>
               <div className="flex flex-wrap gap-2">
@@ -462,7 +462,7 @@ export function BookingSidePanel({
                   <button
                     onClick={() => updateStatus("checked_in")}
                     disabled={saving}
-                    className="text-[13px] font-semibold text-white bg-[#16A34A] px-4 h-[36px] rounded-lg hover:bg-[#15803D] transition-colors disabled:opacity-50"
+                    className="text-[13px] font-semibold text-white bg-green px-4 h-[36px] rounded-lg hover:bg-[#15803D] transition-colors disabled:opacity-50"
                   >
                     Check in
                   </button>
@@ -471,7 +471,7 @@ export function BookingSidePanel({
                   <button
                     onClick={() => updateStatus("checked_out")}
                     disabled={saving}
-                    className="text-[13px] font-semibold text-white bg-[#5E5848] px-4 h-[36px] rounded-lg hover:bg-[#16130C] transition-colors disabled:opacity-50"
+                    className="text-[13px] font-semibold text-white bg-text2 px-4 h-[36px] rounded-lg hover:bg-dark transition-colors disabled:opacity-50"
                   >
                     Check out
                   </button>
@@ -489,7 +489,7 @@ export function BookingSidePanel({
                   <button
                     onClick={() => updateStatus("no_show")}
                     disabled={saving}
-                    className="text-[13px] font-semibold text-[#9C9485] bg-[#F4F1EC] px-4 h-[36px] rounded-lg hover:bg-[#E2DDD5] transition-colors disabled:opacity-50"
+                    className="text-[13px] font-semibold text-text3 bg-surface px-4 h-[36px] rounded-lg hover:bg-border transition-colors disabled:opacity-50"
                   >
                     No show
                   </button>
@@ -515,7 +515,7 @@ export function BookingSidePanel({
                     </button>
                     <button
                       onClick={() => setShowCancelConfirm(false)}
-                      className="text-[12px] font-semibold text-[#5E5848] bg-white px-3 h-[32px] rounded-lg border border-[#E2DDD5] hover:bg-[#F4F1EC] transition-colors"
+                      className="text-[12px] font-semibold text-text2 bg-white px-3 h-[32px] rounded-lg border border-border hover:bg-surface transition-colors"
                     >
                       Keep booking
                     </button>
@@ -535,8 +535,8 @@ export function BookingSidePanel({
           )}
 
           {/* Metadata */}
-          <div className="pt-3 border-t border-[#E2DDD5]">
-            <p className="text-[11px] text-[#9C9485]">
+          <div className="pt-3 border-t border-border">
+            <p className="text-[11px] text-text3">
               Booked{" "}
               {new Date(booking.created_at).toLocaleDateString("en-GB", {
                 day: "numeric",
@@ -547,7 +547,7 @@ export function BookingSidePanel({
               })}
             </p>
             {booking.external_id && (
-              <p className="text-[11px] text-[#9C9485] mt-0.5">
+              <p className="text-[11px] text-text3 mt-0.5">
                 External ID: <span className="font-mono">{booking.external_id}</span>
               </p>
             )}
@@ -621,21 +621,21 @@ function RecordPaymentForm({
 
       <div className="grid grid-cols-2 gap-2">
         <div>
-          <label className="block text-[11px] text-[#9C9485] mb-0.5">Amount (KSh) *</label>
+          <label className="block text-[11px] text-text3 mb-0.5">Amount (KSh) *</label>
           <input
             type="number"
             min={0}
             value={amount}
             onChange={(e) => setAmount(parseFloat(e.target.value) || 0)}
-            className="w-full h-[36px] px-2.5 rounded-lg border border-[#E2DDD5] text-[13px] text-[#16130C] focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] outline-none transition-colors"
+            className="w-full h-[36px] px-2.5 rounded-lg border border-border text-[13px] text-dark focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] outline-none transition-colors"
           />
         </div>
         <div>
-          <label className="block text-[11px] text-[#9C9485] mb-0.5">Method *</label>
+          <label className="block text-[11px] text-text3 mb-0.5">Method *</label>
           <select
             value={method}
             onChange={(e) => setMethod(e.target.value)}
-            className="w-full h-[36px] px-2.5 rounded-lg border border-[#E2DDD5] text-[13px] text-[#16130C] focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] outline-none transition-colors bg-white"
+            className="w-full h-[36px] px-2.5 rounded-lg border border-border text-[13px] text-dark focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] outline-none transition-colors bg-white"
           >
             <option value="cash">Cash</option>
             <option value="mpesa">M-Pesa</option>
@@ -645,23 +645,23 @@ function RecordPaymentForm({
       </div>
 
       <div>
-        <label className="block text-[11px] text-[#9C9485] mb-0.5">Reference</label>
+        <label className="block text-[11px] text-text3 mb-0.5">Reference</label>
         <input
           type="text"
           value={reference}
           onChange={(e) => setReference(e.target.value)}
-          className="w-full h-[36px] px-2.5 rounded-lg border border-[#E2DDD5] text-[13px] text-[#16130C] placeholder:text-[#9C9485] focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] outline-none transition-colors"
+          className="w-full h-[36px] px-2.5 rounded-lg border border-border text-[13px] text-dark placeholder:text-text3 focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] outline-none transition-colors"
           placeholder={method === "mpesa" ? "M-Pesa ref e.g. SH3F2K..." : "Optional reference"}
         />
       </div>
 
       <div>
-        <label className="block text-[11px] text-[#9C9485] mb-0.5">Notes</label>
+        <label className="block text-[11px] text-text3 mb-0.5">Notes</label>
         <input
           type="text"
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
-          className="w-full h-[36px] px-2.5 rounded-lg border border-[#E2DDD5] text-[13px] text-[#16130C] placeholder:text-[#9C9485] focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] outline-none transition-colors"
+          className="w-full h-[36px] px-2.5 rounded-lg border border-border text-[13px] text-dark placeholder:text-text3 focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] outline-none transition-colors"
           placeholder="Optional"
         />
       </div>

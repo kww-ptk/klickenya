@@ -39,7 +39,7 @@ const DIETARY_OPTIONS = [
 ];
 
 const inputCls =
-  "w-full border border-[#E2DDD5] rounded-xl px-3.5 py-3 text-[15px] text-[#16130C] placeholder:text-[#9C9485] focus:outline-none focus:border-[#E8A020] focus:ring-1 focus:ring-[#E8A020]/30 bg-white";
+  "w-full border border-border rounded-xl px-3.5 py-3 text-[15px] text-dark placeholder:text-text3 focus:outline-none focus:border-amber focus:ring-1 focus:ring-amber/30 bg-white";
 
 export function ItemEditorClient({
   menuId,
@@ -62,7 +62,7 @@ export function ItemEditorClient({
   return (
     <div>
       {/* Tabs — large, tablet-friendly */}
-      <div className="flex border-b border-[#E2DDD5] mb-5 -mx-2 sm:mx-0">
+      <div className="flex border-b border-border mb-5 -mx-2 sm:mx-0">
         <TabButton active={tab === "details"} onClick={() => setTab("details")}>
           Details
         </TabButton>
@@ -112,8 +112,8 @@ function TabButton({
       onClick={onClick}
       className={`px-5 sm:px-6 py-3 text-[15px] font-bold transition-colors min-h-[48px] -mb-px border-b-2 ${
         active
-          ? "border-[#E8A020] text-[#16130C]"
-          : "border-transparent text-[#9C9485] hover:text-[#16130C]"
+          ? "border-amber text-dark"
+          : "border-transparent text-text3 hover:text-dark"
       }`}
     >
       {children}
@@ -177,7 +177,7 @@ function DetailsTab({
     <form onSubmit={save} className="space-y-4 max-w-[680px]">
       <div className="grid grid-cols-1 sm:grid-cols-[1fr_160px] gap-3">
         <div>
-          <label className="block text-[12px] font-semibold text-[#16130C] mb-1.5">Name *</label>
+          <label className="block text-[12px] font-semibold text-dark mb-1.5">Name *</label>
           <input
             type="text"
             value={name}
@@ -187,7 +187,7 @@ function DetailsTab({
           />
         </div>
         <div>
-          <label className="block text-[12px] font-semibold text-[#16130C] mb-1.5">Price (KSh) *</label>
+          <label className="block text-[12px] font-semibold text-dark mb-1.5">Price (KSh) *</label>
           <input
             type="number"
             inputMode="decimal"
@@ -203,8 +203,8 @@ function DetailsTab({
 
       <div>
         <div className="flex items-center justify-between mb-1.5">
-          <label className="block text-[12px] font-semibold text-[#16130C]">Description</label>
-          <span className="text-[11px] text-[#9C9485]">{description.length}/200</span>
+          <label className="block text-[12px] font-semibold text-dark">Description</label>
+          <span className="text-[11px] text-text3">{description.length}/200</span>
         </div>
         <textarea
           value={description}
@@ -215,17 +215,17 @@ function DetailsTab({
         />
       </div>
 
-      <div className="flex items-center justify-between bg-white border border-[#E2DDD5] rounded-2xl p-4">
+      <div className="flex items-center justify-between bg-white border border-border rounded-2xl p-4">
         <div>
-          <p className="text-[14px] font-semibold text-[#16130C]">Available</p>
-          <p className="text-[12px] text-[#9C9485]">Customers can order this item right now</p>
+          <p className="text-[14px] font-semibold text-dark">Available</p>
+          <p className="text-[12px] text-text3">Customers can order this item right now</p>
         </div>
         <button
           type="button"
           onClick={() => setAvailable((v) => !v)}
           aria-pressed={available}
           className={`relative w-12 h-7 rounded-full transition-colors ${
-            available ? "bg-[#16A34A]" : "bg-[#E2DDD5]"
+            available ? "bg-green" : "bg-border"
           }`}
         >
           <span
@@ -237,7 +237,7 @@ function DetailsTab({
       </div>
 
       <div>
-        <label className="block text-[12px] font-semibold text-[#16130C] mb-2">Dietary tags</label>
+        <label className="block text-[12px] font-semibold text-dark mb-2">Dietary tags</label>
         <div className="flex flex-wrap gap-2">
           {DIETARY_OPTIONS.map((opt) => (
             <button
@@ -246,8 +246,8 @@ function DetailsTab({
               onClick={() => toggleTag(opt.tag)}
               className={`rounded-full px-4 h-10 text-[12px] font-bold transition-colors ${
                 tags.includes(opt.tag)
-                  ? "bg-[#E8A020] text-white"
-                  : "bg-[#F4F1EC] text-[#5E5848] hover:bg-[#E2DDD5]"
+                  ? "bg-amber text-white"
+                  : "bg-surface text-text2 hover:bg-border"
               }`}
               title={opt.label}
             >
@@ -267,14 +267,14 @@ function DetailsTab({
         <button
           type="submit"
           disabled={!valid || saving}
-          className="bg-[#E8A020] text-[#16130C] font-bold text-[14px] px-6 h-[48px] rounded-full hover:bg-[#d4911c] transition-colors disabled:opacity-50"
+          className="bg-amber text-dark font-bold text-[14px] px-6 h-[48px] rounded-full hover:bg-[#d4911c] transition-colors disabled:opacity-50"
         >
           {saving ? "Saving…" : "Save details"}
         </button>
         <button
           type="button"
           onClick={onCancel}
-          className="text-[14px] font-semibold text-[#9C9485] hover:text-[#16130C] transition-colors px-3 h-[48px]"
+          className="text-[14px] font-semibold text-text3 hover:text-dark transition-colors px-3 h-[48px]"
         >
           Cancel
         </button>

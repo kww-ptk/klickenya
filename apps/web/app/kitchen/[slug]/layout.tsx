@@ -35,7 +35,7 @@ export default async function KitchenLayout({ params, children }: LayoutProps) {
   if (!menu) notFound();
 
   return (
-    <div className="min-h-screen bg-[#0F0D08] text-[#F4F1EC] antialiased select-none">
+    <div className="min-h-screen bg-[#0F0D08] text-surface antialiased select-none">
       {children}
     </div>
   );

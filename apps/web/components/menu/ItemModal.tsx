@@ -468,7 +468,7 @@ export function ItemModal({ item, existingCartItem, onClose, onConfirm }: ItemMo
               <button
                 onClick={() => setQuantity((q) => Math.max(1, q - 1))}
                 disabled={quantity <= 1}
-                className="size-[36px] rounded-full bg-[#F4F1EC] text-dark text-[20px] font-bold flex items-center justify-center hover:bg-[#E2DDD5] transition-colors active:scale-95 disabled:opacity-30"
+                className="size-[36px] rounded-full bg-surface text-dark text-[20px] font-bold flex items-center justify-center hover:bg-border transition-colors active:scale-95 disabled:opacity-30"
                 aria-label="Decrease quantity"
               >
                 −

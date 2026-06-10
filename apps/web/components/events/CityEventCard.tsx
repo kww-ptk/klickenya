@@ -10,10 +10,10 @@ interface CityEventCardProps {
 }
 
 const CITY_GRADIENTS: Record<string, string> = {
-  watamu: "from-[#0D7377] to-[#1a9ca0]",
-  kilifi: "from-[#E8A020] to-[#f5c842]",
-  diani: "from-[#6B2D8B] to-[#8B4DAB]",
-  nairobi: "from-[#16130C] to-[#3d3830]",
+  watamu: "from-teal to-[#1a9ca0]",
+  kilifi: "from-amber to-amber2",
+  diani: "from-purple to-purple2",
+  nairobi: "from-dark to-[#3d3830]",
   lamu: "from-[#DC2626] to-[#ef4444]",
 };
 

@@ -114,13 +114,13 @@ export default async function ReportsHomePage({ params }: PageProps) {
   return (
     <div>
       <div className="mb-6">
-        <Link href={`/dashboard/menu/${menu.id}/stock`} className="text-[13px] text-[#9C9485] hover:text-[#16130C]">
+        <Link href={`/dashboard/menu/${menu.id}/stock`} className="text-[13px] text-text3 hover:text-dark">
           ← Back to Klickenya Kitchen
         </Link>
-        <h1 className="font-display text-[22px] lg:text-[28px] font-bold tracking-[-0.03em] text-[#16130C] mt-2">
+        <h1 className="font-display text-[22px] lg:text-[28px] font-bold tracking-[-0.03em] text-dark mt-2">
           Reports
         </h1>
-        <p className="text-[13px] text-[#9C9485] mt-1">
+        <p className="text-[13px] text-text3 mt-1">
           Where the money is — and where it&apos;s leaking.
         </p>
       </div>
@@ -212,16 +212,16 @@ function ReportTile({
         ? "text-amber-800"
         : tone === "ok"
           ? "text-emerald-700"
-          : "text-[#5E5848]";
+          : "text-text2";
   return (
     <Link
       href={href}
-      className="block bg-white rounded-2xl border border-[#E2DDD5] shadow-sm p-5 lg:p-6 hover:border-[#E8A020]/60 transition-colors"
+      className="block bg-white rounded-2xl border border-border shadow-sm p-5 lg:p-6 hover:border-amber/60 transition-colors"
     >
       <div className="flex items-center justify-between mb-3">
         <span className="text-[28px] leading-none">{icon}</span>
       </div>
-      <p className="font-display text-[16px] font-bold text-[#16130C] mb-1.5">{title}</p>
+      <p className="font-display text-[16px] font-bold text-dark mb-1.5">{title}</p>
       <p className={`text-[13px] font-semibold leading-[1.4] ${headlineCls}`}>{headline}</p>
     </Link>
   );

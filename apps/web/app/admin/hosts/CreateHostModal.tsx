@@ -45,7 +45,7 @@ export function CreateHostModal() {
     <>
       <button
         onClick={() => setOpen(true)}
-        className="px-4 py-2 text-[13px] font-semibold rounded-xl bg-[#E8A020] text-white hover:bg-[#d4911c] transition-colors"
+        className="px-4 py-2 text-[13px] font-semibold rounded-xl bg-amber text-white hover:bg-[#d4911c] transition-colors"
       >
         + Create Host
       </button>
@@ -53,36 +53,36 @@ export function CreateHostModal() {
       {open && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50" onClick={() => setOpen(false)}>
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-[440px] mx-4 p-6" onClick={(e) => e.stopPropagation()}>
-            <h2 className="font-display text-[20px] font-bold text-[#16130C] mb-4">Create New Host</h2>
+            <h2 className="font-display text-[20px] font-bold text-dark mb-4">Create New Host</h2>
 
             <div className="space-y-3">
               <div>
-                <label className="block text-[12px] font-semibold text-[#9C9485] uppercase tracking-wide mb-1">Name *</label>
+                <label className="block text-[12px] font-semibold text-text3 uppercase tracking-wide mb-1">Name *</label>
                 <input
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full px-4 py-2.5 text-[14px] rounded-xl border border-[#E2DDD5] bg-[#FAFAF8] text-[#16130C] outline-none focus:ring-2 focus:ring-[#E8A020]/30 focus:border-[#E8A020]"
+                  className="w-full px-4 py-2.5 text-[14px] rounded-xl border border-border bg-canvas text-dark outline-none focus:ring-2 focus:ring-amber/30 focus:border-amber"
                   placeholder="Full name"
                 />
               </div>
               <div>
-                <label className="block text-[12px] font-semibold text-[#9C9485] uppercase tracking-wide mb-1">Email *</label>
+                <label className="block text-[12px] font-semibold text-text3 uppercase tracking-wide mb-1">Email *</label>
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-4 py-2.5 text-[14px] rounded-xl border border-[#E2DDD5] bg-[#FAFAF8] text-[#16130C] outline-none focus:ring-2 focus:ring-[#E8A020]/30 focus:border-[#E8A020]"
+                  className="w-full px-4 py-2.5 text-[14px] rounded-xl border border-border bg-canvas text-dark outline-none focus:ring-2 focus:ring-amber/30 focus:border-amber"
                   placeholder="email@example.com"
                 />
               </div>
               <div>
-                <label className="block text-[12px] font-semibold text-[#9C9485] uppercase tracking-wide mb-1">Phone</label>
+                <label className="block text-[12px] font-semibold text-text3 uppercase tracking-wide mb-1">Phone</label>
                 <input
                   type="tel"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  className="w-full px-4 py-2.5 text-[14px] rounded-xl border border-[#E2DDD5] bg-[#FAFAF8] text-[#16130C] outline-none focus:ring-2 focus:ring-[#E8A020]/30 focus:border-[#E8A020]"
+                  className="w-full px-4 py-2.5 text-[14px] rounded-xl border border-border bg-canvas text-dark outline-none focus:ring-2 focus:ring-amber/30 focus:border-amber"
                   placeholder="+254..."
                 />
               </div>
@@ -95,13 +95,13 @@ export function CreateHostModal() {
               <button
                 onClick={handleSubmit}
                 disabled={!name.trim() || !email.trim() || loading}
-                className="px-5 py-2.5 text-[13px] font-semibold rounded-xl bg-[#E8A020] text-white hover:bg-[#d4911c] transition-colors disabled:opacity-50"
+                className="px-5 py-2.5 text-[13px] font-semibold rounded-xl bg-amber text-white hover:bg-[#d4911c] transition-colors disabled:opacity-50"
               >
                 {loading ? "Creating..." : "Create Host"}
               </button>
               <button
                 onClick={() => setOpen(false)}
-                className="px-4 py-2.5 text-[13px] font-medium rounded-xl border border-[#E2DDD5] text-[#9C9485] hover:bg-[#F5F3F0] transition-colors"
+                className="px-4 py-2.5 text-[13px] font-medium rounded-xl border border-border text-text3 hover:bg-[#F5F3F0] transition-colors"
               >
                 Cancel
               </button>

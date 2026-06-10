@@ -23,10 +23,10 @@ export default async function MenuSettingsPage({ params }: PageProps) {
 
   return (
     <ToastProvider>
-      <div className="min-h-screen bg-[#F4F1EC] p-6">
+      <div className="min-h-screen bg-surface p-6">
         <header className="mb-6">
-          <p className="text-[11px] font-bold text-[#9C9485] uppercase tracking-widest">{menu.name}</p>
-          <h1 className="font-display text-[22px] font-bold text-[#16130C]">Order screen</h1>
+          <p className="text-[11px] font-bold text-text3 uppercase tracking-widest">{menu.name}</p>
+          <h1 className="font-display text-[22px] font-bold text-dark">Order screen</h1>
         </header>
         <OrderViewModeForm
           menuId={menu.id}
