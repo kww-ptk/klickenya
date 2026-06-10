@@ -202,21 +202,46 @@ Concretely, the default marketplace GROQ filter is roughly
 inventory never leaks** onto klickenya.com. Bookings of cross-listed inventory
 remain attributed to the partner.
 
-## 7. Theming mechanism (nearly free)
+## 7. Theming mechanism (revised 2026-06-10 — corrects an inaccurate claim)
 
-`apps/web/app/globals.css` already defines the entire UI through CSS variables
-in an `@theme inline` block (colors, fonts, radii, shadows). Both surfaces
-inject a small `<style>` block derived from the partner doc that overrides
-those variables at `:root`. **No component changes are required to re-skin.**
+`apps/web/app/globals.css` defines the UI design tokens (colors, fonts, radii,
+shadows) in a Tailwind v4 `@theme` block, and components consume them almost
+entirely through Tailwind utility classes (`bg-amber`, `text-amber`, … — ~25×
+more than direct `var()` usage). The approach: inject a small `<style>` block,
+derived from the partner doc, that overrides those CSS custom properties at
+`:root`. Once injected, every utility re-skins.
 
-- **Storefront:** the partner app reads its own partner doc and injects the
-  theme in its root layout.
-- **Dashboard:** the Klickenya app resolves the partner by incoming domain (or
-  by the logged-in host's partner) and injects the same overrides on dashboard
-  routes; the wordmark/logo is replaced with the partner's.
-- **Fonts:** loaded via a CSS `@font-face` / Google Fonts `<link>` sourced from
-  the partner doc — **not** `next/font`, which is build-time only and cannot
-  take arbitrary per-tenant fonts at runtime.
+**Prerequisite discovered 2026-06-10 (the original "no component changes /
+nearly free" claim was wrong):** the tokens were declared with `@theme inline`,
+which **bakes literal values into the generated utilities**
+(`.bg-amber{background-color:#E8A020}`) instead of referencing
+`var(--color-amber)`. Verified against the compiled CSS: `var(--color-amber)`
+appears 0× in utilities; the literal `#e8a020` appears 169×. Under `inline`, a
+runtime `:root` override changes nothing. **Plan 2, Task 1 converts
+`@theme inline` → `@theme`** so every utility references the variable; the house
+brand renders identically (same values), and runtime overrides then re-skin the
+whole app. This is a one-line-but-global CSS change requiring a visual
+regression check on klickenya.com and the dashboard.
+
+- **Storefront** (new app — Plan 4): uses `@theme` (var-based) from the start;
+  reads its own partner doc (by slug/config) and injects the theme in its root
+  layout.
+- **Dashboard** (reused app — Plans 2/3): resolves the partner by incoming
+  domain and injects the same overrides on dashboard routes (the dashboard is
+  already dynamically rendered, so this adds no static-rendering cost); the
+  wordmark/logo swap is part of Plan 3. Depends on the Task 1 conversion.
+- **Marketplace (klickenya.com):** is house brand and statically rendered — it
+  is intentionally NOT given per-request partner resolution, to preserve static
+  generation. The theming core is applied only to dynamic surfaces (dashboard,
+  storefront).
+- **Token mapping (v1):** `colorPrimary→--color-amber`, `colorAccent→
+  --color-purple`, `colorDark→--color-dark`+`--color-text`, `fontDisplay→
+  --font-display`, `fontBody→--font-body`. Only fields the partner sets are
+  emitted; unset fields fall back to Klickenya defaults. Secondary shades
+  (`--color-amber2`, `--color-purple2`, dims) stay Klickenya's in v1.
+- **Fonts:** loaded via a Google-Fonts/`@font-face` `<link>` from the partner
+  doc (`fontUrl`) — **not** `next/font` (build-time only; can't take per-tenant
+  fonts at runtime).
 
 ## 8. Maintainability of "fresh copy per client"
 
