@@ -9,6 +9,8 @@ import { DashboardBottomNav } from "./_components/DashboardBottomNav";
 import { DashboardMobileHeader } from "./_components/DashboardMobileHeader";
 import { adminClient } from "@/lib/supabase/admin";
 import { getAuthUser, getUserProfile, getHostProfile } from "./_lib/auth";
+import { getPartnerByHost } from "@/lib/partner/resolve";
+import { PartnerTheme } from "@/components/partner/PartnerTheme";
 
 /* ---------- SVG Icons ---------- */
 
@@ -114,6 +116,8 @@ export default async function DashboardLayout({
     redirect("/login");
   }
 
+  const partner = await getPartnerByHost();
+
   // Parallel: fetch user profile + host profile together
   const [profile, hostProfile] = await Promise.all([
     getUserProfile(user.id),
@@ -176,6 +180,7 @@ export default async function DashboardLayout({
 
   return (
     <div className="flex min-h-screen">
+      <PartnerTheme partner={partner} />
       {/* Sidebar — hidden on mobile, visible on desktop */}
       <aside className="hidden lg:flex fixed inset-y-0 left-0 z-40 w-[240px] bg-dark flex-col">
         {/* Back to website */}
