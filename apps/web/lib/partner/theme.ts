@@ -1,8 +1,13 @@
 import type { Partner } from "@/lib/partner/types";
 
-/** Strip characters that could break out of a <style> block. */
+/**
+ * Strip characters that could break out of, or inject into, the <style> block:
+ * tag delimiters (<>), rule braces ({}), and declaration separators (:;).
+ * Partner theme values are admin-authored colours / font-family names that
+ * never legitimately contain these.
+ */
 function clean(value: string): string {
-  return value.replace(/[<>{}]/g, "").trim();
+  return value.replace(/[<>{}:;]/g, "").trim();
 }
 
 /**

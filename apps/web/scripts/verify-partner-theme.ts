@@ -23,8 +23,10 @@ if (partnerThemeCss(partial) !== ":root{--color-amber:#0055FF;}") {
   ok = false; console.error("FAIL partial: " + partnerThemeCss(partial));
 }
 const evil = { ...partial, colorPrimary: "red;}</style><script>x" };
-if (partnerThemeCss(evil).includes("<") || partnerThemeCss(evil).includes("}</")) {
-  ok = false; console.error("FAIL sanitize: " + partnerThemeCss(evil));
+const evilCss = partnerThemeCss(evil);
+// no breakout (< > }) and no injected ';' declaration separator survives
+if (evilCss !== ":root{--color-amber:red/stylescriptx;}") {
+  ok = false; console.error("FAIL sanitize: " + evilCss);
 }
 
 if (!ok) process.exit(1);
