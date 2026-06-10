@@ -17,8 +17,8 @@ This is **Plan 1 of 5**. Each subsequent plan is written only after the prior on
 1. **Plan 1 (this doc):** Partner data model + marketplace cross-listing. ← implement now
 2. **Plan 2:** Tenant resolution + theming core (resolve partner by request host; CSS-variable override helper). Shared by dashboard and storefront.
 3. **Plan 3:** Dashboard white-labeling + per-partner feature scoping (theme + nav/module gating on the existing dashboard; branded transactional email; auth on partner admin domain).
-4. **Plan 4:** Storefront starter template + shared package (lightweight per-client site: search, listing detail, availability, booking via Klickenya APIs).
-5. **Plan 5:** Onboard the holiday-rental agency as client #1 (partner doc, host account, listings, DNS/auth, deploy).
+4. **Plan 4:** Storefront + **template registry** (shared package; per-listing-type layouts — restaurant template built first: reserve-a-table + view-menu via Klickenya APIs). See spec §15.
+5. **Plan 5:** Onboard **client #1 — a restaurant / hospitality partner** (partner doc, host account, restaurant listing + linked menu, DNS/auth, deploy).
 
 **Spec:** `docs/superpowers/specs/2026-05-29-white-label-partner-platform-design.md`
 

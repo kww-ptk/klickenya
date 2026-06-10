@@ -1,13 +1,30 @@
 # Klickenya White-Label Partner Platform — Design
 
-**Date:** 2026-05-29
+**Date:** 2026-05-29 (revised 2026-06-10)
 **Status:** Approved design, pending implementation plan
 **Author:** Patrik Giuliana (with Claude)
+
+> **Revision 2026-06-10 — storefront templating + restaurant-first.** Four
+> refinements, detailed in §15. The foundation (§4–§7: partner record, theming,
+> dashboard reuse, BFF) is unchanged.
+> 1. The storefront is a **library of templates**, not one re-skinned layout.
+> 2. A template is chosen **per listing type** — one partner site can mix a stay
+>    template and a restaurant template under one brand/domain — mirroring the
+>    dashboard's existing per-type / per-capability branching.
+> 3. **Client #1 is now a restaurant / hospitality partner** (not the holiday
+>    rental agency), so `restaurant` is in `enabledModules` and the **restaurant
+>    template is the first one built**. The rental-agency profile in §4a is
+>    retained as a future partner example.
+> 4. The restaurant template is **reserve-a-table + view-menu**, reusing the
+>    already-public `POST /api/menu/reservations` and the `/m/[slug]` menu data
+>    path; the reservation notification email becomes **partner-aware**.
 
 ## 1. Purpose
 
 Reuse Klickenya's engine and backend to launch branded websites for partner
-businesses (first client: a short holiday rental agency). Each partner gets a
+businesses (first client: a restaurant / hospitality partner — see the
+2026-06-10 revision and §15; the engine is identical for the holiday-rental
+profile in §4a). Each partner gets a
 fully branded public storefront and a branded dashboard, while availability,
 pricing, and bookings are shared with Klickenya's existing backend — no data
 syncing. The model must scale to many partners and reinforce the Klickenya
@@ -99,11 +116,21 @@ The `enabledModules` set on the partner record gates three things:
 3. **Storefront surfaces** — the storefront only renders the categories/listing
    types the partner is enabled for (search filters, nav, listing pages).
 
-### First client (holiday rental agency)
+### Client #1 (revised 2026-06-10) — restaurant / hospitality
+- **Enabled modules:** `restaurant` (and `stays` if the venue also has rooms).
+- **Disabled in public:** the back-office restaurant pieces are never exposed on
+  the storefront — POS, kitchen, and stock stay dashboard/in-venue only. The
+  storefront shows only reservations + menu (see §15).
+- **Allowed listing types:** the dining listing type(s) (+ `stay` if the venue
+  has rooms). Restaurant identity is "a listing with a linked `menus` row,"
+  matching the dashboard's own resolution.
+
+### Future partner profile — holiday rental agency
 - **Enabled modules:** `stays`, `tours` only.
-- **Disabled:** events, and the entire restaurant suite (menu, POS, kitchen,
-  stock).
+- **Disabled:** events and the entire restaurant suite.
 - **Allowed listing types:** `stay` (and `rental` if needed), `experience`.
+- Retained as the second profile/template to build (stay template + enquiry
+  template); no longer client #1.
 
 ### Caveat — tours/experiences booking
 Klickenya's booking engine (`properties`/`rooms`/availability RPCs) is built for
@@ -230,12 +257,14 @@ A repeatable checklist, not a build:
    transactional email branding, plus per-partner module gating (nav + allowed
    listing types) via the extended `DEPLOYED_SEGMENTS`/`getActiveTabs`
    mechanism. All on the existing dashboard.
-3. **Storefront starter** — build the starter template app + shared package
-   (BFF → Klickenya availability/booking APIs + Sanity partner-filtered
-   content). Includes search, listing detail, availability calendar, booking.
-4. **Onboard client #1** — create partner doc, theme, host account, listings;
-   deploy storefront to their domain; dashboard at `admin.client.com`; set
-   cross-list toggles.
+3. **Storefront + template registry** — build the shared package with a
+   **template registry keyed per listing type** (§15) and a thin client shell.
+   The **first template built is `restaurant`** (reserve-a-table + view-menu),
+   reusing `POST /api/menu/reservations` + the `/m/[slug]` menu data path.
+   BFF → Klickenya APIs + Sanity partner-filtered content.
+4. **Onboard client #1 (restaurant / hospitality)** — create partner doc, theme,
+   host account, restaurant listing + linked menu; deploy storefront to their
+   domain; dashboard at `admin.client.com`; set cross-list toggles.
 5. **Polish** — per-storefront SEO (sitemap, robots, OG, favicon), "Powered by
    Klickenya" footer, booking attribution + analytics.
 
@@ -279,7 +308,9 @@ detail data, and UI components/logic (via the shared package).
 partner linkage in Supabase; per-domain theme/auth/email branding for the
 dashboard; **per-partner feature/module gating** (extending
 `DEPLOYED_SEGMENTS`/`getActiveTabs`); tenant-aware marketplace GROQ; the
-storefront starter template + shared package; per-storefront SEO.
+storefront **template registry** + shared package (per-listing-type layouts,
+restaurant template first — §15); **partner-aware reservation notification
+email**; per-storefront SEO.
 
 ## 14. Out of scope (for now)
 
@@ -288,3 +319,80 @@ storefront starter template + shared package; per-storefront SEO.
 - Reviews/ratings, iCal sync, and other Klickenya roadmap items unless a
   partner specifically requires them.
 - A bespoke per-partner dashboard (explicitly rejected in favor of theme-reuse).
+- **Public online ordering / pickup / delivery** on the restaurant storefront —
+  the restaurant template is reserve-a-table + view-menu only; POS/ordering stay
+  in-venue/staff-facing (revised 2026-06-10).
+- **Per-listing or fully bespoke storefront layouts** — templates attach per
+  listing *type*, not per individual listing.
+
+## 15. Storefront templating — per listing type (revision 2026-06-10)
+
+The storefront is a **library of templates**, not a single re-skinned layout.
+This refines §3 and §8 (the storefront surface). The foundation (§4–§7: the
+`partner` record, theming, dashboard reuse, and the BFF) is unchanged.
+
+### 15.1 Template scope — per listing type
+A template attaches to a **listing type**, not to a partner or an individual
+listing. One partner site, at one domain and one brand, can therefore render a
+**stay** listing with the stay template and a **restaurant** listing with the
+restaurant template. This mirrors a pattern Klickenya already has on the
+dashboard: `apps/web/app/dashboard/listings/[id]/layout.tsx` branches on
+`listing.type` (`stay`/`rental` → property PMS) and otherwise resolves a linked
+`menus` row (restaurant), then reads capability flags (`reservations_enabled`,
+`ordering_enabled`, …) off the menu. The storefront reuses the same resolution
+so there is **one source of truth** for "what kind of thing is this listing."
+
+### 15.2 Template registry (the architecture choice)
+Templates live in the **shared package** as a registry:
+
+```
+packages/storefront/templates/
+  stay/        → <ListingPage>, <BookingWidget>   (calendar + create_booking_with_payment)
+  restaurant/  → <ListingPage>, <BookingWidget>   (reservations + menu)
+  experience/  → <ListingPage>, <EnquiryWidget>   (enquiry-based)
+```
+
+Each template exports components against a **common interface**
+(`{ listing, partner, backend }`). The storefront's `[slug]` route calls
+`resolveTemplate(listing)` (the shared per-type/per-capability logic from 15.1)
+and renders `registry[key]`. **Adding a template = adding a folder**; client
+shells never change. A bespoke per-client page approach is rejected for the same
+reason §2/§14 reject a bespoke dashboard — it does not scale to many partners.
+
+### 15.3 Restaurant template (first one built)
+Scope: **reserve-a-table + view-menu**. Both halves reuse proven, already
+guest-callable backends — almost no new backend is required:
+
+- **View menu** — mirror the data path of the existing public QR page
+  `apps/web/app/m/[slug]/page.tsx`.
+- **Reserve a table** — `POST /api/menu/reservations`
+  (`apps/web/app/api/menu/reservations/route.ts`). The POST handler has **no
+  auth gate** and already accepts `source: "listing" | "direct"`; the storefront
+  posts server-to-server with `source: "direct"` (or a new `"partner"` value).
+  It already validates `reservations_enabled`, lead time, max party size, max
+  advance days, time windows, and area selection server-side.
+- **Resolution chain:** partner → Sanity restaurant listing (filtered by
+  `partner`) → `listing_slug` → `menus.id` (the `menu_id` the reservation POST
+  needs).
+- **Bookable slots:** the create path is public, but rendering *available* slots
+  needs the menu's reservation settings + `reservation_time_windows` readable
+  from the storefront. Confirm `/api/menu/settings` + `/api/menu/time-windows`
+  are guest-readable, or add a small public read endpoint (Plan 4).
+- **Explicitly NOT public:** POS / table ordering, kitchen, and stock stay
+  dashboard/in-venue only (see §14).
+
+### 15.4 Partner-aware reservation email (new task)
+The reservation notification email in `POST /api/menu/reservations`
+(`reservationNotificationHtml` + `sendHostNotification`) is currently
+hard-branded Klickenya: the wordmark, the amber `#E8A020` header, the
+`bookings@klickenya.com` from-address, the `© Klickenya` footer, and a
+`klickenya.com/dashboard/...` action link. For a white-label partner these must
+resolve from the `partner` record (logo/wordmark, primary colour, from-name, and
+an `admin.client.com/...` dashboard URL). This lands with the dashboard
+email-branding work in Phase 2 / Plan 3.
+
+### 15.5 Plan-time confirmations
+1. Guest-readable reservation settings / time-windows for slot rendering (15.3).
+2. The exact `listing.type` / subcategory a dining listing uses, so
+   `resolveTemplate()` keys correctly — though keying off "has a linked menu"
+   (as the dashboard does) is the safer default.
