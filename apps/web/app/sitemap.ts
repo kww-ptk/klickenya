@@ -10,7 +10,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     await Promise.all([
       sanityClient
         .fetch<{ slug: string; type: string; city: string }[]>(
-          groq`*[_type == "listing" && status == "published"]{
+          groq`*[_type == "listing" && status == "published" && (!defined(partner) || publishToMarketplace == true)]{
             "slug": slug.current, type, city
           }`
         )
