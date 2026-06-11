@@ -20,6 +20,8 @@ export interface ReservationRow {
   area_id: string | null;
   status: string;
   source: string;
+  source_origin: string | null;
+  source_ref: string | null;
   guest_message: string | null;
   owner_note: string | null;
   decline_reason: string | null;
@@ -44,6 +46,8 @@ const SELECT_FIELDS = [
   "area_id",
   "status",
   "source",
+  "source_origin",
+  "source_ref",
   "guest_message",
   "owner_note",
   "decline_reason",

@@ -6,6 +6,18 @@ export async function middleware(request: NextRequest) {
   const host = request.headers.get("host");
   const pathname = request.nextUrl.pathname;
 
+  // ── /embed/* — public, iframe-friendly, no auth, no Supabase session ─────
+  // Override Next.js's default X-Frame-Options: SAMEORIGIN so third-party
+  // sites (Squarespace, Wix, anything) can embed the reservation form.
+  // Posture matches Calendly / Resy. Per-menu allowlist deferred to V1.5.
+  // Checked BEFORE host-routing so embeds work on any host.
+  if (pathname.startsWith("/embed/")) {
+    const response = NextResponse.next({ request });
+    response.headers.set("Content-Security-Policy", "frame-ancestors *");
+    response.headers.delete("X-Frame-Options");
+    return response;
+  }
+
   // ── Partner storefront host: serve the /storefront route tree, no auth ──
   if (!isHouseHost(host)) {
     // Let API routes, Next internals, and already-rewritten paths pass through

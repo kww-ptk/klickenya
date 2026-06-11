@@ -400,10 +400,33 @@ export function StationDashboard({ menuId, station, initialOrders }: Props) {
     return () => clearInterval(i);
   }, []);
 
-  /* ── Advance every item on a card to the next station_status ── */
+  /* ── Advance every item on a card to the next station_status ──
+   *
+   * Optimistic: the items' station_status is updated locally as soon as the
+   * click happens, so the card moves to the next column immediately. PATCH
+   * calls run in the background; the next poll confirms (or, on failure, we
+   * roll back to the pre-click snapshot and surface a console warning).
+   * Without this, the card stayed put for up to 8s (the poll cadence) and
+   * felt broken — looked like "the order disappeared and came back".
+   */
   const handleAdvance = useCallback(
     async (items: OrderItem[], nextStatus: string) => {
       const cardKey = items.map((i) => i.id).join(",");
+      const itemIds = new Set(items.map((i) => i.id));
+      const snapshot = ordersRef.current;
+
+      // Optimistic: mutate the relevant items in local state right now.
+      const optimistic = snapshot.map((o) => ({
+        ...o,
+        order_items: (o.order_items ?? []).map((it) =>
+          itemIds.has(it.id)
+            ? { ...it, station_status: nextStatus as OrderItem["station_status"] }
+            : it,
+        ),
+      }));
+      ordersRef.current = optimistic;
+      setOrders(optimistic);
+
       setUpdatingKeys((p) => new Set(p).add(cardKey));
       try {
         const results = await Promise.all(
@@ -419,9 +442,15 @@ export function StationDashboard({ menuId, station, initialOrders }: Props) {
         );
         const errs = results.filter((r): r is string => r !== null);
         if (errs.length > 0) {
-          // Log; next poll will heal state.
-          console.warn("[StationDashboard] some advance updates failed:", errs);
+          // Rollback the optimistic update; surface the error.
+          console.warn("[StationDashboard] advance failed, rolling back:", errs);
+          ordersRef.current = snapshot;
+          setOrders(snapshot);
         }
+      } catch (e) {
+        console.warn("[StationDashboard] advance threw, rolling back:", e);
+        ordersRef.current = snapshot;
+        setOrders(snapshot);
       } finally {
         setUpdatingKeys((p) => {
           const n = new Set(p);

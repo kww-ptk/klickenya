@@ -140,7 +140,10 @@ export function ReservationInline({
   /* ── submission state ── */
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [step, setStep] = useState<"form" | "success">("form");
+  // Two-step booking flow: 'details' → 'contact' → 'success'.
+  // Mirrors the ReservationSheet split — fewer visible fields per screen
+  // reduces abandonment, especially in the narrow sidebar column.
+  const [step, setStep] = useState<"details" | "contact" | "success">("details");
   const [reservationId, setReservationId] = useState("");
 
   /* ── date pagination ── */
@@ -163,7 +166,8 @@ export function ReservationInline({
   const activeAreas = areas.filter((a) => a.is_active ?? true).sort((a, b) => a.display_order - b.display_order);
   const showAreaField = activeAreas.length >= 2;
   const emailValid = email.includes("@") && email.includes(".");
-  const canSubmit = !!date && !!time && name.trim().length >= 2 && phone.length >= 8 && emailValid;
+  const canContinueToContact = !!date && !!time && partySize >= 1;
+  const canSubmit = canContinueToContact && name.trim().length >= 2 && phone.length >= 8 && emailValid;
 
   /* ── submit ── */
   const handleSubmit = useCallback(async () => {
@@ -191,6 +195,11 @@ export function ReservationInline({
       setReservationId(data.reservation_id);
       setStep("success");
       onSuccess?.(data.reservation_id);
+      // Defensive: scroll the sidebar back to top so the success card is
+      // visible even if the user had scrolled the contact form mid-fill.
+      if (typeof window !== "undefined") {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
     } catch (err) {
       setSubmitError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
     } finally {
@@ -263,163 +272,213 @@ export function ReservationInline({
     );
   }
 
-  return (
-    <div className="space-y-5">
-      {/* ── Date row ──────────────────────────────────────────────────────── */}
-      <div>
-        <p className="text-[11px] font-bold text-text2 uppercase tracking-wide mb-2.5">Select a date</p>
-        <div className="flex items-center gap-1.5">
-          <button
-            type="button"
-            onClick={() => setDateScrollIdx((i) => Math.max(0, i - DATES_VISIBLE))}
-            disabled={!canScrollBack}
-            className="shrink-0 size-7 rounded-full border border-border flex items-center justify-center text-text3 hover:border-dark hover:text-dark transition-colors disabled:opacity-20"
-          >
-            <ChevronLeft className="size-3.5" />
-          </button>
+  /* ── Step 1: booking details (date / party / time / area) ──────────────── */
+  if (step === "details") {
+    return (
+      <div className="space-y-5">
+        {/* Step indicator */}
+        <p className="text-[10px] font-bold text-text3 uppercase tracking-wide">
+          Step 1 of 2 · Booking details
+        </p>
 
-          <div className="flex gap-1.5 flex-1">
-            {visibleDates.map((d) => {
-              const chip = formatDateChip(d);
-              const isSelected = d === date;
-              const isToday = d === today;
-              return (
-                <button
-                  key={d}
-                  type="button"
-                  onClick={() => { setDate(d); setTime(""); }}
-                  className={cn(
-                    "flex-1 min-w-0 flex flex-col items-center py-2.5 rounded-[14px] border transition-all text-center",
-                    isSelected
-                      ? "border-amber bg-amber/10"
-                      : "border-border hover:border-amber/40 hover:bg-surface/60",
-                  )}
-                >
-                  <span className={cn(
-                    "text-[10px] font-bold uppercase tracking-wide leading-none mb-1",
-                    isSelected ? "text-amber" : "text-text3",
-                  )}>
-                    {isToday ? "Today" : chip.weekday}
-                  </span>
-                  <span className={cn(
-                    "text-[18px] font-extrabold leading-none",
-                    isSelected ? "text-amber" : "text-dark",
-                  )}>
-                    {chip.day}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-
-          <button
-            type="button"
-            onClick={() => setDateScrollIdx((i) => i + DATES_VISIBLE)}
-            disabled={!canScrollFwd}
-            className="shrink-0 size-7 rounded-full border border-border flex items-center justify-center text-text3 hover:border-dark hover:text-dark transition-colors disabled:opacity-20"
-          >
-            <ChevronRight className="size-3.5" />
-          </button>
-        </div>
-      </div>
-
-      {/* ── Party size ──────────────────────────────────────────────────── */}
-      <div className="flex items-center justify-between border border-border rounded-[14px] px-4 py-3">
+        {/* ── Date row ──────────────────────────────────────────────────── */}
         <div>
-          <p className="text-[11px] font-bold text-text2 uppercase tracking-wide leading-none mb-0.5">Guests</p>
-          <p className="text-[14px] font-semibold text-dark">
-            {partySize} {partySize === 1 ? "guest" : "guests"}
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <button
-            type="button"
-            onClick={() => setPartySize((n) => Math.max(1, n - 1))}
-            disabled={partySize <= 1}
-            className="size-8 rounded-full border border-border flex items-center justify-center text-[16px] text-text2 hover:border-dark transition-colors disabled:opacity-30"
-          >
-            &minus;
-          </button>
-          <span className="text-[15px] font-bold w-4 text-center">{partySize}</span>
-          <button
-            type="button"
-            onClick={() => setPartySize((n) => Math.min(maxPartySize, n + 1))}
-            disabled={partySize >= maxPartySize}
-            className="size-8 rounded-full border border-border flex items-center justify-center text-[16px] text-text2 hover:border-dark transition-colors disabled:opacity-30"
-          >
-            +
-          </button>
-        </div>
-      </div>
-
-      {/* ── Time picker (appears after date selected) ───────────────────── */}
-      {date && (
-        <div>
-          <p className="text-[11px] font-bold text-text2 uppercase tracking-wide mb-2.5">Select a time</p>
-          {timeSlots.length === 0 ? (
-            <p className="text-[13px] text-text3">No slots available for this date.</p>
-          ) : (
-            <div className="grid grid-cols-3 gap-2">
-              {timeSlots.map((slot) => (
-                <button
-                  key={slot.value}
-                  type="button"
-                  disabled={slot.disabled}
-                  onClick={() => setTime(slot.value)}
-                  className={cn(
-                    "py-2 rounded-[11px] border text-[12px] font-semibold transition-colors",
-                    slot.disabled
-                      ? "border-border text-text3 opacity-30 cursor-not-allowed"
-                      : time === slot.value
-                      ? "border-amber bg-amber/10 text-amber"
-                      : "border-border hover:border-amber/40 text-text",
-                  )}
-                >
-                  {slot.label}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* ── Area preference ─────────────────────────────────────────────── */}
-      {showAreaField && (
-        <div>
-          <p className="text-[11px] font-bold text-text2 uppercase tracking-wide mb-2">Seating preference</p>
-          <div className="flex flex-wrap gap-2">
+          <p className="text-[11px] font-bold text-text2 uppercase tracking-wide mb-2.5">Select a date</p>
+          <div className="flex items-center gap-1.5">
             <button
               type="button"
-              onClick={() => setAreaId(null)}
-              className={cn(
-                "px-3.5 py-1.5 rounded-full border text-[12px] font-semibold transition-colors",
-                areaId === null
-                  ? "border-amber bg-amber/10 text-amber"
-                  : "border-border hover:border-amber/40 text-text2",
-              )}
+              onClick={() => setDateScrollIdx((i) => Math.max(0, i - DATES_VISIBLE))}
+              disabled={!canScrollBack}
+              className="shrink-0 size-7 rounded-full border border-border flex items-center justify-center text-text3 hover:border-dark hover:text-dark transition-colors disabled:opacity-20"
             >
-              No preference
+              <ChevronLeft className="size-3.5" />
             </button>
-            {activeAreas.map((a) => (
+
+            <div className="flex gap-1.5 flex-1">
+              {visibleDates.map((d) => {
+                const chip = formatDateChip(d);
+                const isSelected = d === date;
+                const isToday = d === today;
+                return (
+                  <button
+                    key={d}
+                    type="button"
+                    onClick={() => { setDate(d); setTime(""); }}
+                    className={cn(
+                      "flex-1 min-w-0 flex flex-col items-center py-2.5 rounded-[14px] border transition-all text-center",
+                      isSelected
+                        ? "border-amber bg-amber/10"
+                        : "border-border hover:border-amber/40 hover:bg-surface/60",
+                    )}
+                  >
+                    <span className={cn(
+                      "text-[10px] font-bold uppercase tracking-wide leading-none mb-1",
+                      isSelected ? "text-amber" : "text-text3",
+                    )}>
+                      {isToday ? "Today" : chip.weekday}
+                    </span>
+                    <span className={cn(
+                      "text-[18px] font-extrabold leading-none",
+                      isSelected ? "text-amber" : "text-dark",
+                    )}>
+                      {chip.day}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setDateScrollIdx((i) => i + DATES_VISIBLE)}
+              disabled={!canScrollFwd}
+              className="shrink-0 size-7 rounded-full border border-border flex items-center justify-center text-text3 hover:border-dark hover:text-dark transition-colors disabled:opacity-20"
+            >
+              <ChevronRight className="size-3.5" />
+            </button>
+          </div>
+        </div>
+
+        {/* ── Party size ───────────────────────────────────────────────── */}
+        <div className="flex items-center justify-between border border-border rounded-[14px] px-4 py-3">
+          <div>
+            <p className="text-[11px] font-bold text-text2 uppercase tracking-wide leading-none mb-0.5">Guests</p>
+            <p className="text-[14px] font-semibold text-dark">
+              {partySize} {partySize === 1 ? "guest" : "guests"}
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => setPartySize((n) => Math.max(1, n - 1))}
+              disabled={partySize <= 1}
+              className="size-8 rounded-full border border-border flex items-center justify-center text-[16px] text-text2 hover:border-dark transition-colors disabled:opacity-30"
+            >
+              &minus;
+            </button>
+            <span className="text-[15px] font-bold w-4 text-center">{partySize}</span>
+            <button
+              type="button"
+              onClick={() => setPartySize((n) => Math.min(maxPartySize, n + 1))}
+              disabled={partySize >= maxPartySize}
+              className="size-8 rounded-full border border-border flex items-center justify-center text-[16px] text-text2 hover:border-dark transition-colors disabled:opacity-30"
+            >
+              +
+            </button>
+          </div>
+        </div>
+
+        {/* ── Time picker (appears after date selected) ───────────────── */}
+        {date && (
+          <div>
+            <p className="text-[11px] font-bold text-text2 uppercase tracking-wide mb-2.5">Select a time</p>
+            {timeSlots.length === 0 ? (
+              <p className="text-[13px] text-text3">No slots available for this date.</p>
+            ) : (
+              <div className="grid grid-cols-3 gap-2">
+                {timeSlots.map((slot) => (
+                  <button
+                    key={slot.value}
+                    type="button"
+                    disabled={slot.disabled}
+                    onClick={() => setTime(slot.value)}
+                    className={cn(
+                      "py-2 rounded-[11px] border text-[12px] font-semibold transition-colors",
+                      slot.disabled
+                        ? "border-border text-text3 opacity-30 cursor-not-allowed"
+                        : time === slot.value
+                        ? "border-amber bg-amber/10 text-amber"
+                        : "border-border hover:border-amber/40 text-text",
+                    )}
+                  >
+                    {slot.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── Area preference ─────────────────────────────────────────── */}
+        {showAreaField && (
+          <div>
+            <p className="text-[11px] font-bold text-text2 uppercase tracking-wide mb-2">Seating preference</p>
+            <div className="flex flex-wrap gap-2">
               <button
-                key={a.id}
                 type="button"
-                onClick={() => setAreaId(a.id)}
+                onClick={() => setAreaId(null)}
                 className={cn(
                   "px-3.5 py-1.5 rounded-full border text-[12px] font-semibold transition-colors",
-                  areaId === a.id
+                  areaId === null
                     ? "border-amber bg-amber/10 text-amber"
                     : "border-border hover:border-amber/40 text-text2",
                 )}
               >
-                {a.name}
+                No preference
               </button>
-            ))}
+              {activeAreas.map((a) => (
+                <button
+                  key={a.id}
+                  type="button"
+                  onClick={() => setAreaId(a.id)}
+                  className={cn(
+                    "px-3.5 py-1.5 rounded-full border text-[12px] font-semibold transition-colors",
+                    areaId === a.id
+                      ? "border-amber bg-amber/10 text-amber"
+                      : "border-border hover:border-amber/40 text-text2",
+                  )}
+                >
+                  {a.name}
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* ── Contact details ─────────────────────────────────────────────── */}
+        {/* ── Continue → step 2 ───────────────────────────────────────── */}
+        <button
+          type="button"
+          onClick={() => setStep("contact")}
+          disabled={!canContinueToContact}
+          className="w-full h-[46px] rounded-full bg-gradient-to-r from-amber to-amber2 text-dark text-[14px] font-bold transition-opacity hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
+        >
+          Continue
+        </button>
+      </div>
+    );
+  }
+
+  /* ── Step 2: contact details ───────────────────────────────────────────── */
+  return (
+    <div className="space-y-5">
+      {/* Step indicator + summary of step-1 choices with Edit link */}
+      <div>
+        <p className="text-[10px] font-bold text-text3 uppercase tracking-wide">
+          Step 2 of 2 · Your details
+        </p>
+        <div className="mt-2 rounded-[14px] border border-border bg-surface/50 px-3 py-2 flex items-center justify-between gap-2">
+          <div className="text-[12px] text-text2 truncate">
+            <span className="font-semibold text-text">{formatConfirmation(date, time)}</span>
+            <span className="mx-1.5">·</span>
+            <span>{partySize} {partySize === 1 ? "guest" : "guests"}</span>
+            {areaId && activeAreas.find((a) => a.id === areaId) && (
+              <>
+                <span className="mx-1.5">·</span>
+                <span>{activeAreas.find((a) => a.id === areaId)?.name}</span>
+              </>
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={() => setStep("details")}
+            className="shrink-0 text-[12px] font-semibold text-amber hover:underline"
+          >
+            Edit
+          </button>
+        </div>
+      </div>
+
+      {/* ── Contact fields ──────────────────────────────────────────────── */}
       <div className="space-y-3">
         <div>
           <label className="block text-[11px] font-bold text-text2 uppercase tracking-wide mb-1">
@@ -430,6 +489,7 @@ export function ReservationInline({
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="Full name"
+            autoFocus
             className="w-full border border-border rounded-[12px] px-4 py-2.5 text-[14px] text-text placeholder:text-text3 outline-none focus:border-amber transition-colors bg-white"
           />
         </div>
@@ -476,15 +536,25 @@ export function ReservationInline({
         </div>
       )}
 
-      {/* ── Submit ──────────────────────────────────────────────────────── */}
-      <button
-        type="button"
-        onClick={handleSubmit}
-        disabled={!canSubmit || submitting}
-        className="w-full h-[46px] rounded-full bg-gradient-to-r from-amber to-amber2 text-dark text-[14px] font-bold transition-opacity hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
-      >
-        {submitting ? "Submitting…" : "Request reservation"}
-      </button>
+      {/* ── Back + Submit row ───────────────────────────────────────────── */}
+      <div className="flex gap-2">
+        <button
+          type="button"
+          onClick={() => setStep("details")}
+          disabled={submitting}
+          className="h-[46px] px-4 rounded-full bg-surface border border-border text-[13px] font-semibold text-text hover:border-dark transition-colors disabled:opacity-40"
+        >
+          Back
+        </button>
+        <button
+          type="button"
+          onClick={handleSubmit}
+          disabled={!canSubmit || submitting}
+          className="flex-1 h-[46px] rounded-full bg-gradient-to-r from-amber to-amber2 text-dark text-[14px] font-bold transition-opacity hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
+        >
+          {submitting ? "Submitting…" : "Request reservation"}
+        </button>
+      </div>
 
       <p className="text-[11px] text-text3 text-center leading-relaxed">
         Confirmed once the restaurant approves.

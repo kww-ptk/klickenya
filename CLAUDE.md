@@ -1,5 +1,5 @@
 # Klickenya — CLAUDE.md
-# Last updated: May 8, 2026 (from full codebase audit)
+# Last updated: May 23, 2026 (added station routing, bar staff role, schema-projection rule)
 # Read this at the start of every session before writing any code.
 
 ## What Klickenya is
@@ -57,7 +57,7 @@ NOT YET BUILT:
   Mobile-first. Test on iPhone Safari before declaring done.
 
 ## Database — Supabase
-  Next migration number: 068 (don't use 046, 047, or 050 — gaps on disk)
+  Next migration number: 073 (don't use 046, 047, or 050 — gaps on disk)
   RLS enabled on all tables. Check policies before querying from client.
   create_booking_with_payment() RPC handles bookings — don't INSERT directly.
   guest_user_id present on bookings (040) and contact_requests (042).
@@ -68,6 +68,32 @@ NOT YET BUILT:
   If a raw Postgres client (Drizzle, Prisma, pg) is ever added: use the Supavisor pooled URL
     (port 6543, ?pgbouncer=true&connection_limit=1) for runtime, and the direct URL (port 5432)
     for migrations only. Never import either into a client component.
+
+## When you add a column to an existing table — READ THIS
+  This rule has cost us three production bugs. Don't make it four.
+  Postgres errors on a missing column in a SELECT, but PostgREST returns 400
+  and our adminClient code reads `data` which silently becomes null. UI then
+  degrades to an empty state — "no features enabled", "no active orders",
+  features look disabled even though data is fine. Hours of debugging chasing
+  data corruption when the real problem is a stale SELECT projection.
+  After every `ALTER TABLE ADD COLUMN`, grep every `.from("TABLE")` call:
+    grep -rn '\.from("orders")' apps/web --include='*.ts' --include='*.tsx'
+  Update each .select() that should expose the new column. Drift hotspots:
+    - SSR page fetch              apps/web/app/.../page.tsx
+    - Polling / list API endpoint apps/web/app/api/.../route.ts
+    - Cached helpers              apps/web/lib/cache/menu.ts
+    - Types consumed by SSR       apps/web/components/.../*.tsx (interfaces)
+  Real failures from missed projections:
+    - menus.ordering_enabled missing on prod (028 drift, healed by 072)
+      → silent "no add-ons enabled" on Napul'è listing dashboard
+    - order_items.station/station_status missing from /api/menu/orders GET
+      after 070 → kitchen cards vanished 8s after click (fixed PR #20)
+    - menus.order_view_mode + station added (070) but Type union on
+      MenuSection wasn't updated → three other SELECTs that cast to MenuData
+      had to be widened too. Use grep, not hope.
+  Consider extracting the projection into a shared constant if a table is
+  read from 4+ places — order_items is now at that threshold. Worth doing
+  next time someone adds a column there.
 
 ## Sanity schema — listing.ts groups
   general · media · rooms · restaurant · experience · event · service · seo · verification · notifications

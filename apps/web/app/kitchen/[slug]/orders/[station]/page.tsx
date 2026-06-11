@@ -28,8 +28,22 @@ export default async function PinSingleStationPage({ params }: PageProps) {
   }
 
   const { data: staffRow } = await adminClient
-    .from("restaurant_staff").select("id, is_active").eq("id", session.staff_id).single();
+    .from("restaurant_staff").select("id, is_active, can_access_all_stations").eq("id", session.staff_id).single();
   if (!staffRow || !staffRow.is_active) redirect(`/kitchen/${slug}`);
+
+  // Lock kitchen/bar staff to their own station. They'd hit a 403 from the
+  // per-item PATCH if they tried to advance the other station's items
+  // anyway — better to redirect than to render a view of items they can't
+  // operate. Exception: staff with can_access_all_stations may see either.
+  const crossStation = staffRow.can_access_all_stations === true;
+  if (!crossStation) {
+    if (session.role === "kitchen" && station !== "kitchen") {
+      redirect(`/kitchen/${slug}/orders/kitchen`);
+    }
+    if (session.role === "bar" && station !== "bar") {
+      redirect(`/kitchen/${slug}/orders/bar`);
+    }
+  }
 
   const { data: orders } = await adminClient
     .from("orders")
@@ -60,6 +74,9 @@ export default async function PinSingleStationPage({ params }: PageProps) {
   })) as DashboardOrder[];
 
   const other = station === "kitchen" ? "bar" : "kitchen";
+  // Manager and opted-in cross-station staff see the "switch" affordance.
+  // Other kitchen/bar staff are locked to their primary station.
+  const showSwitchLink = session.role === "manager" || crossStation;
 
   return (
     <div className="min-h-screen flex flex-col bg-surface">
@@ -69,10 +86,12 @@ export default async function PinSingleStationPage({ params }: PageProps) {
         <p className="text-[12px] font-bold text-dark uppercase tracking-wide">
           {station === "kitchen" ? "🍳 Kitchen" : "🍹 Bar"}
         </p>
-        <Link href={`/kitchen/${slug}/orders/${other}`}
-          className="text-[11px] font-bold text-text2 border border-border rounded-full px-3 h-[28px] inline-flex items-center hover:bg-surface">
-          Switch to {other === "kitchen" ? "Kitchen" : "Bar"} →
-        </Link>
+        {showSwitchLink && (
+          <Link href={`/kitchen/${slug}/orders/${other}`}
+            className="text-[11px] font-bold text-text2 border border-border rounded-full px-3 h-[28px] inline-flex items-center hover:bg-surface">
+            Switch to {other === "kitchen" ? "Kitchen" : "Bar"} →
+          </Link>
+        )}
       </header>
       <div className="flex-1 p-4">
         <StationDashboard menuId={menu.id} station={station as "kitchen" | "bar"}

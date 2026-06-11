@@ -50,6 +50,7 @@ export default async function AdminReservationDetailPage({
     .select(
       `id, guest_name, guest_email, guest_phone, party_size,
        reserved_for, status, notes, decline_reason, internal_notes,
+       source, source_origin, source_ref,
        created_at, updated_at, approved_by, menu_id,
        menu:menus(id, display_name, slug, listing_slug, business_id)`,
     )
@@ -115,6 +116,14 @@ export default async function AdminReservationDetailPage({
               <Field label="Status" value={reservation.status?.replace("_", "-")} />
               <Field label="Restaurant" value={menu?.display_name ?? menu?.slug ?? "—"} />
               <Field label="Created" value={formatDatetime(reservation.created_at)} />
+              <Field
+                label="Booked via"
+                value={
+                  reservation.source === "embed"
+                    ? `Embed${reservation.source_origin ? ` — ${reservation.source_origin}` : ""}${reservation.source_ref ? ` · ${reservation.source_ref}` : ""}`
+                    : reservation.source ?? "—"
+                }
+              />
               {reservation.decline_reason && (
                 <div className="col-span-2">
                   <Field label="Decline Reason" value={reservation.decline_reason} />

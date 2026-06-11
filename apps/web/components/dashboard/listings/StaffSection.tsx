@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Toggle } from "@/components/ui/Toggle";
-import { Copy, Check } from "lucide-react";
+import { Copy, Check, Trash2 } from "lucide-react";
 
 /* ── Types ─────────────────────────────────────────────────────────────────── */
 
@@ -12,6 +12,7 @@ export interface StaffMember {
   role: "waiter" | "manager" | "cashier" | "kitchen" | "bar";
   is_active: boolean;
   created_at: string;
+  can_access_all_stations: boolean;
 }
 
 interface StaffSectionProps {
@@ -53,6 +54,7 @@ export function StaffSection({
   const [addName, setAddName] = useState("");
   const [addPin, setAddPin] = useState("");
   const [addRole, setAddRole] = useState<StaffMember["role"]>("waiter");
+  const [addCrossStation, setAddCrossStation] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
@@ -82,7 +84,14 @@ export function StaffSection({
       const res = await fetch("/api/menu/staff", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ menu_id: menuId, name: addName.trim(), pin: addPin, role: addRole }),
+        body: JSON.stringify({
+          menu_id: menuId,
+          name: addName.trim(),
+          pin: addPin,
+          role: addRole,
+          can_access_all_stations:
+            (addRole === "kitchen" || addRole === "bar") && addCrossStation,
+        }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed");
@@ -90,6 +99,7 @@ export function StaffSection({
       setAddName("");
       setAddPin("");
       setAddRole("waiter");
+      setAddCrossStation(false);
       setAdding(false);
       showToast("Staff member added.");
     } catch (e) {
@@ -120,7 +130,39 @@ export function StaffSection({
   };
 
   const handleToggleActive = async (s: StaffMember) => {
-    await handleUpdate(s.id, { is_active: !s.is_active });
+    const next = !s.is_active;
+    const ok = await handleUpdate(s.id, { is_active: next });
+    if (ok) {
+      showToast(
+        next
+          ? `${s.name} reactivated — they can sign in again`
+          : `${s.name} deactivated — their PIN no longer works`,
+      );
+    }
+  };
+
+  const handleDelete = async (s: StaffMember) => {
+    if (!window.confirm(`Remove ${s.name}? Their PIN stops working immediately. Order history is preserved.`)) {
+      return;
+    }
+    // Optimistic remove from the list — even if DELETE soft-deletes server-side,
+    // the user expects the row gone after pressing Delete.
+    const snapshot = staff;
+    setStaff((prev) => prev.filter((row) => row.id !== s.id));
+    try {
+      const res = await fetch(`/api/menu/staff?id=${s.id}&menu_id=${menuId}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Failed to delete");
+      }
+      showToast(`${s.name} removed`);
+    } catch (e) {
+      // Roll back the optimistic remove.
+      setStaff(snapshot);
+      showToast(e instanceof Error ? e.message : "Failed to delete staff", "error");
+    }
   };
 
   const copy = async () => {
@@ -181,6 +223,7 @@ export function StaffSection({
                 if (ok) setEditingId(null);
               }}
               onToggleActive={() => handleToggleActive(s)}
+              onDelete={() => handleDelete(s)}
             />
           ))}
         </div>
@@ -232,6 +275,17 @@ export function StaffSection({
                 <option value="cashier">Cashier</option>
               </select>
             </div>
+            {(addRole === "kitchen" || addRole === "bar") && (
+              <label className="flex items-center gap-2 text-[12px] text-text2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={addCrossStation}
+                  onChange={(e) => setAddCrossStation(e.target.checked)}
+                  className="size-4 accent-amber"
+                />
+                Can also see the other station&apos;s orders
+              </label>
+            )}
             <div className="flex gap-2">
               <button
                 type="button"
@@ -243,7 +297,7 @@ export function StaffSection({
               </button>
               <button
                 type="button"
-                onClick={() => { setAdding(false); setAddName(""); setAddPin(""); setAddRole("waiter"); }}
+                onClick={() => { setAdding(false); setAddName(""); setAddPin(""); setAddRole("waiter"); setAddCrossStation(false); }}
                 className="text-[12px] text-text3 hover:text-dark"
               >
                 Cancel
@@ -273,13 +327,15 @@ function StaffRow({
   onCancel,
   onSave,
   onToggleActive,
+  onDelete,
 }: {
   staff:    StaffMember;
   isEditing: boolean;
   onEdit:    () => void;
   onCancel:  () => void;
-  onSave:    (patch: { name?: string; role?: StaffMember["role"]; pin?: string }) => Promise<void>;
+  onSave:    (patch: { name?: string; role?: StaffMember["role"]; pin?: string; can_access_all_stations?: boolean }) => Promise<void>;
   onToggleActive: () => void;
+  onDelete:       () => void;
 }) {
   if (isEditing) {
     return <StaffRowEdit staff={staff} onCancel={onCancel} onSave={onSave} />;
@@ -288,14 +344,33 @@ function StaffRow({
     <div className={`flex items-center gap-3 px-4 py-3 border-b border-surface last:border-0 ${!staff.is_active ? "opacity-50" : ""}`}>
       <div className="flex-1 min-w-0">
         <p className="text-[13px] font-semibold text-dark truncate">{staff.name}</p>
-        <p className="text-[11px] text-text3 capitalize">{staff.role}</p>
+        <p className="text-[11px] text-text3 capitalize">
+          {staff.role}
+          {(staff.role === "kitchen" || staff.role === "bar") && staff.can_access_all_stations && (
+            <span className="inline-flex items-center text-[9px] font-bold text-amber bg-amber/10 px-1.5 py-0.5 rounded-full uppercase tracking-wide ml-1">
+              All stations
+            </span>
+          )}
+        </p>
       </div>
-      <Toggle checked={staff.is_active} onChange={onToggleActive} />
+      <Toggle
+        checked={staff.is_active}
+        onChange={onToggleActive}
+        label={staff.is_active ? "Deactivate" : "Reactivate"}
+      />
       <button
         onClick={onEdit}
         className="text-[12px] text-text3 hover:text-dark transition-colors px-1"
       >
         Edit
+      </button>
+      <button
+        onClick={onDelete}
+        title={`Remove ${staff.name}`}
+        aria-label={`Remove ${staff.name}`}
+        className="text-[#C5BFB5] hover:text-[#DC2626] transition-colors p-1"
+      >
+        <Trash2 className="w-4 h-4" />
       </button>
     </div>
   );
@@ -313,14 +388,26 @@ function StaffRowEdit({
   const [editName, setEditName] = useState(staff.name);
   const [editRole, setEditRole] = useState<StaffMember["role"]>(staff.role);
   const [editPin, setEditPin] = useState("");
+  const [editCrossStation, setEditCrossStation] = useState(staff.can_access_all_stations);
   const [saving, setSaving] = useState(false);
 
   const handleSave = async () => {
     setSaving(true);
-    const patch: { name?: string; role?: StaffMember["role"]; pin?: string } = {};
+    const patch: { name?: string; role?: StaffMember["role"]; pin?: string; can_access_all_stations?: boolean } = {};
     if (editName.trim() && editName.trim() !== staff.name) patch.name = editName.trim();
     if (editRole !== staff.role) patch.role = editRole;
     if (editPin && /^\d{4}$/.test(editPin)) patch.pin = editPin;
+    // Only persist the flag when the resulting role is a station role.
+    // For waiter/manager/cashier the column has no behavioural effect,
+    // but normalising to false avoids stale flags surviving a role change.
+    const effectiveRole = patch.role ?? staff.role;
+    if (effectiveRole === "kitchen" || effectiveRole === "bar") {
+      if (editCrossStation !== staff.can_access_all_stations) {
+        patch.can_access_all_stations = editCrossStation;
+      }
+    } else if (staff.can_access_all_stations) {
+      patch.can_access_all_stations = false;
+    }
     if (Object.keys(patch).length === 0) {
       onCancel();
       setSaving(false);
@@ -360,6 +447,17 @@ function StaffRowEdit({
           <option value="cashier">Cashier</option>
         </select>
       </div>
+      {(editRole === "kitchen" || editRole === "bar") && (
+        <label className="flex items-center gap-2 text-[12px] text-text2 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={editCrossStation}
+            onChange={(e) => setEditCrossStation(e.target.checked)}
+            className="size-4 accent-amber"
+          />
+          Can also see the other station&apos;s orders
+        </label>
+      )}
       <div className="flex gap-2">
         <button
           onClick={handleSave}
