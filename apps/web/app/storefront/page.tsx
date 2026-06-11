@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { getPartnerByHost } from "@/lib/partner/resolve";
-import { getRestaurant } from "@/lib/storefront/getRestaurant";
+import { getRestaurant, type StorefrontMenu } from "@/lib/storefront/getRestaurant";
 import { ReservationSheet } from "@/components/reservations/ReservationSheet";
 import { MenuWithFilters } from "@/components/menu/MenuWithFilters";
 import type { MenuSection } from "@/components/listings/detail/restaurant/MenuDisplay";
@@ -24,6 +24,33 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
+/* ── Helpers ────────────────────────────────────────────────────────────── */
+
+/**
+ * Mirrors the prepareSections() logic from /m/[slug]/page.tsx:
+ *   1. Drop sections that are hidden or have no items.
+ *   2. Sort sections by display_order.
+ *   3. Within each section sort items: available first, then by display_order.
+ *   4. Null-safe dietary_tags (M1 — MenuWithFilters calls .length/.map on it).
+ */
+function prepareSections(rawSections: StorefrontMenu["menu_sections"]): MenuSection[] {
+  return rawSections
+    .filter((s) => s.is_visible && s.menu_items.length > 0)
+    .sort((a, b) => a.display_order - b.display_order)
+    .map((s) => ({
+      ...s,
+      menu_items: [...s.menu_items]
+        .sort((a, b) => {
+          if (a.is_available !== b.is_available) return a.is_available ? -1 : 1;
+          return a.display_order - b.display_order;
+        })
+        .map((item) => ({
+          ...item,
+          dietary_tags: item.dietary_tags ?? [],
+        })),
+    })) as unknown as MenuSection[];
+}
+
 /* ── Page ───────────────────────────────────────────────────────────────── */
 
 export default async function StorefrontPage() {
@@ -43,12 +70,8 @@ export default async function StorefrontPage() {
   if (listing.city) metaParts.push(listing.city);
   if (listing.openingHours) metaParts.push(listing.openingHours);
 
-  // Cast menu_sections to the shape MenuWithFilters expects.
-  // The runtime data is structurally compatible — the only differences are
-  // narrower string literals (station, group_type) and an optional is_featured
-  // field. The cast is safe because no runtime behaviour depends on those widened
-  // types inside MenuWithFilters.
-  const sections = (menu?.menu_sections ?? []) as unknown as MenuSection[];
+  // Prepare sections: filter hidden/empty, sort, null-safe dietary_tags.
+  const sections = prepareSections(menu?.menu_sections ?? []);
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-8">

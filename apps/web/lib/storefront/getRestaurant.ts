@@ -153,7 +153,7 @@ export const getRestaurant = cache(
               .from("host_profiles")
               .select("phone")
               .eq("user_id", menu.business_id)
-              .single(),
+              .maybeSingle(),
           ).then(({ data }) => {
             restaurantPhone = (data as { phone: string | null } | null)?.phone ?? null;
           }),

@@ -1,4 +1,3 @@
-import { notFound } from "next/navigation";
 import { getPartnerByHost } from "@/lib/partner/resolve";
 import { PartnerTheme } from "@/components/partner/PartnerTheme";
 
@@ -8,7 +7,13 @@ export default async function StorefrontLayout({
   children: React.ReactNode;
 }) {
   const partner = await getPartnerByHost();
-  if (!partner) notFound();
+  if (!partner) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white px-4 text-center">
+        <p className="text-text2">This site isn&apos;t available.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-canvas text-text">
