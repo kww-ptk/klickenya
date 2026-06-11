@@ -35,3 +35,23 @@ export const PARTNER_BY_SLUG_QUERY = groq`
     ${PARTNER_PROJECTION}
   }
 `
+
+// The partner's primary restaurant listing (published). Display fields only;
+// booking data comes from the linked Supabase menu.
+export const PARTNER_RESTAURANT_LISTING_QUERY = groq`
+  *[_type == "listing" && status == "published" && partner._ref == $partnerId][0] {
+    _id,
+    title,
+    "slug": slug.current,
+    type,
+    city,
+    county,
+    address,
+    description,
+    openingHours,
+    cuisine,
+    priceRange,
+    atmosphere,
+    "photos": photos[]{ "url": asset->url, alt }
+  }
+`
