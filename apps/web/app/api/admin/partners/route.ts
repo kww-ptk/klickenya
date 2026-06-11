@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
     if (!enabledModules.length) return NextResponse.json({ error: "Pick at least one module" }, { status: 400 });
     if (!hostEmail) return NextResponse.json({ error: "Client email is required" }, { status: 400 });
 
-    const existing = await sanityClient.fetch<{ _id: string } | null>(
+    const existing = await sanityWriteClient.fetch<{ _id: string } | null>(
       `*[_type == "partner" && slug.current == $slug][0]{ _id }`, { slug }
     );
     if (existing) return NextResponse.json({ error: `A partner with slug "${slug}" already exists` }, { status: 409 });

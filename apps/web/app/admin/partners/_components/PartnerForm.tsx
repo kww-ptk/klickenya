@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import type { EnabledModule, PartnerListingType } from "@/lib/partner/types";
 
 const ALL_MODULES: { value: EnabledModule; label: string }[] = [
@@ -433,12 +434,12 @@ export function PartnerForm({ mode, partner, listings }: PartnerFormProps) {
             ? mode === "create" ? "Creating..." : "Saving..."
             : mode === "create" ? "Create Partner Site" : "Save Changes"}
         </button>
-        <a
+        <Link
           href="/admin/partners"
           className="px-4 py-2.5 text-[13px] font-medium rounded-xl border border-border text-text3 hover:bg-[#F5F3F0] transition-colors"
         >
           Cancel
-        </a>
+        </Link>
       </div>
     </form>
   );

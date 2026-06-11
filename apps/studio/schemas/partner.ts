@@ -33,7 +33,6 @@ export default defineType({
         'All hostnames that resolve to this partner (storefront + admin). No protocol, no trailing slash. e.g. "sunsetrentals.com", "admin.sunsetrentals.com".',
       type: 'array',
       of: [{ type: 'string' }],
-      validation: (rule) => rule.required().min(1),
       group: 'identity',
     }),
     defineField({
