@@ -1,7 +1,36 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { isHouseHost } from "@/lib/storefront/houseHost";
 
 export async function middleware(request: NextRequest) {
+  const host = request.headers.get("host");
+  const pathname = request.nextUrl.pathname;
+
+  // ── Partner storefront host: serve the /storefront route tree, no auth ──
+  if (!isHouseHost(host)) {
+    // Let API routes, Next internals, and already-rewritten paths pass through
+    // unchanged — only PAGE routes get rewritten into the /storefront segment.
+    // (Critical: the storefront's reservation POST hits /api/menu/reservations
+    // on the partner host; rewriting it to /storefront/api/... would 404.)
+    if (
+      pathname.startsWith("/storefront") ||
+      pathname.startsWith("/api") ||
+      pathname.startsWith("/_next")
+    ) {
+      return NextResponse.next();
+    }
+    const url = request.nextUrl.clone();
+    url.pathname = `/storefront${pathname === "/" ? "" : pathname}`;
+    return NextResponse.rewrite(url);
+  }
+
+  // ── House host: never expose the internal /storefront segment ──
+  if (pathname.startsWith("/storefront")) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/";
+    return NextResponse.redirect(url);
+  }
+
   let supabaseResponse = NextResponse.next({ request });
 
   const supabase = createServerClient(
@@ -29,8 +58,6 @@ export async function middleware(request: NextRequest) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-
-  const pathname = request.nextUrl.pathname;
 
   // Protected routes
   const isDashboard = pathname.startsWith("/dashboard");
