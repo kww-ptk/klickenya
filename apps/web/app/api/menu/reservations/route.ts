@@ -174,7 +174,7 @@ export async function POST(req: NextRequest) {
     if (!reserved_for || typeof reserved_for !== "string") {
       return NextResponse.json({ error: "reserved_for required" }, { status: 400 });
     }
-    if (source !== "qr_menu" && source !== "listing" && source !== "direct" && source !== "phone") {
+    if (source !== "qr_menu" && source !== "listing" && source !== "direct" && source !== "phone" && source !== "storefront") {
       return NextResponse.json({ error: "Invalid source" }, { status: 400 });
     }
 

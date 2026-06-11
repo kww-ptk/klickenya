@@ -21,7 +21,7 @@ export interface RestaurantArea {
 export interface ReservationSheetProps {
   menuId: string;
   menuName: string;
-  source: "qr_menu" | "listing";
+  source: "qr_menu" | "listing" | "storefront";
   defaultOpen?: boolean;
   onSuccess?: (reservationId: string) => void;
   timeWindows: Array<{ open_time: string; close_time: string; is_active?: boolean }>;
