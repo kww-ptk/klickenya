@@ -35,4 +35,5 @@ export interface Partner {
   contactPhone?: string | null
   footerText?: string | null
   defaultCity?: string | null
+  landingHtml?: string | null
 }

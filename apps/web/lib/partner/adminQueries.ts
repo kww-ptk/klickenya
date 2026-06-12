@@ -20,6 +20,7 @@ export const ADMIN_PARTNER_BY_ID_QUERY = groq`
     "logoUrl": logo.asset->url,
     colorPrimary, colorAccent, colorDark, fontDisplay, fontBody,
     enabledModules, allowedListingTypes,
+    contactEmail, contactPhone, footerText, defaultCity, landingHtml,
     "listingId": *[_type == "listing" && partner._ref == ^._id][0]._id
   }
 `;

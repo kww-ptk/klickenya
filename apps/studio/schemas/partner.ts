@@ -160,6 +160,15 @@ export default defineType({
       type: 'string',
       group: 'content',
     }),
+    defineField({
+      name: 'landingHtml',
+      title: 'Custom landing page HTML',
+      description:
+        'Optional. A complete HTML page served verbatim at the partner site. Use {{BOOKING}} for the booking form and {{MENU}} for the live menu. CSS only (no JS). Leave empty to use the default template.',
+      type: 'text',
+      rows: 20,
+      group: 'content',
+    }),
   ],
   preview: {
     select: { title: 'name', subtitle: 'slug.current', media: 'logo' },

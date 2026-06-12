@@ -19,7 +19,8 @@ export const PARTNER_PROJECTION = `
   contactEmail,
   contactPhone,
   footerText,
-  defaultCity
+  defaultCity,
+  landingHtml
 `
 
 // Resolve a partner by an incoming request hostname. $host must be the bare
