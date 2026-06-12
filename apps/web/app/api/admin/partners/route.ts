@@ -31,6 +31,7 @@ export async function POST(req: NextRequest) {
     const hostName = (form.get("hostName") as string)?.trim() || name;
     const hostPhone = (form.get("hostPhone") as string)?.trim() || null;
     const logo = form.get("logo") as File | null;
+    const landingHtml = (form.get("landingHtml") as string) || "";
 
     // 1. Validate
     if (!name || !slug) return NextResponse.json({ error: "Name and slug are required" }, { status: 400 });
@@ -75,6 +76,7 @@ export async function POST(req: NextRequest) {
       ...(fontBody ? { fontBody } : {}),
       enabledModules,
       allowedListingTypes,
+      ...(landingHtml ? { landingHtml } : {}),
     });
     steps.push("partner-created");
 

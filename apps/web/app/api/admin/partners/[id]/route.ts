@@ -23,6 +23,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     const domain = (form.get("domain") as string)?.trim().toLowerCase();
     if (domain) set.domains = [domain];
 
+    const lh = form.get("landingHtml");
+    if (typeof lh === "string") set.landingHtml = lh;
+
     const logo = form.get("logo") as File | null;
     if (logo && logo.size > 0) {
       const asset = await sanityWriteClient.assets.upload(

@@ -35,6 +35,7 @@ interface PartnerFormProps {
     allowedListingTypes?: string[];
     domains?: string[];
     listingId?: string;
+    landingHtml?: string;
   };
   listings: Array<{ _id: string; title: string; city?: string; type?: string }>;
 }
@@ -75,6 +76,7 @@ export function PartnerForm({ mode, partner, listings }: PartnerFormProps) {
   const [hostPhone, setHostPhone] = useState("");
   const [domain, setDomain] = useState(partner?.domains?.[0] ?? "");
   const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [landingHtml, setLandingHtml] = useState(partner?.landingHtml ?? "");
 
   // UI state
   const [loading, setLoading] = useState(false);
@@ -132,6 +134,7 @@ export function PartnerForm({ mode, partner, listings }: PartnerFormProps) {
 
       if (domain.trim()) fd.append("domain", domain.trim());
       if (logoFile) fd.append("logo", logoFile);
+      fd.append("landingHtml", landingHtml);
 
       const res = await fetch(
         mode === "create"
@@ -388,6 +391,24 @@ export function PartnerForm({ mode, partner, listings }: PartnerFormProps) {
             onChange={(e) => setLogoFile(e.target.files?.[0] ?? null)}
             className="block text-[16px] text-dark file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-[13px] file:font-semibold file:bg-amber file:text-white hover:file:bg-[#d4911c] file:cursor-pointer"
           />
+        </div>
+      </div>
+
+      {/* Custom Landing Page HTML */}
+      <div className="rounded-2xl bg-white shadow-sm p-6 space-y-4">
+        <h2 className="font-display text-[16px] font-bold text-dark">Custom Landing Page HTML (optional)</h2>
+        <div>
+          <label className={labelClass}>Landing HTML</label>
+          <textarea
+            value={landingHtml}
+            onChange={(e) => setLandingHtml(e.target.value)}
+            rows={12}
+            className="w-full px-4 py-2.5 text-[16px] font-mono rounded-xl border border-border bg-canvas text-dark outline-none focus:ring-2 focus:ring-amber/30 focus:border-amber resize-y"
+            placeholder="<!DOCTYPE html>..."
+          />
+          <p className="mt-1 text-[11px] text-text3">
+            {"Paste a full HTML page. Use {{BOOKING}} for the booking form and {{MENU}} for the live menu. CSS only (no JS). Empty = the default template."}
+          </p>
         </div>
       </div>
 
