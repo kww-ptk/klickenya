@@ -58,7 +58,7 @@ function HostBadge({ hostName, hostRef, isVerified, listingSlug }: HostBadgeProp
               </div>
             )}
             {isHostVerified && (
-              <span className="absolute -bottom-0.5 -right-0.5 size-5 rounded-full bg-[#16A34A] border-2 border-white flex items-center justify-center">
+              <span className="absolute -bottom-0.5 -right-0.5 size-5 rounded-full bg-green border-2 border-white flex items-center justify-center">
                 <Check className="size-3 text-white" strokeWidth={3} />
               </span>
             )}
@@ -75,7 +75,7 @@ function HostBadge({ hostName, hostRef, isVerified, listingSlug }: HostBadgeProp
                 </p>
               )}
               {isHostVerified && (
-                <span className="text-[11px] font-semibold text-[#16A34A]">Verified</span>
+                <span className="text-[11px] font-semibold text-green">Verified</span>
               )}
             </div>
             {/* Social links */}
@@ -126,19 +126,19 @@ function HostBadge({ hostName, hostRef, isVerified, listingSlug }: HostBadgeProp
             onMouseLeave={() => setShowTooltip(false)}
           >
             <span className="relative flex items-center justify-center size-2.5">
-              <span className="absolute size-2.5 rounded-full bg-[#E8A020] animate-ping opacity-30" />
-              <span className="relative size-2 rounded-full bg-gradient-to-br from-[#F5CE6E] to-[#E8A020]" />
+              <span className="absolute size-2.5 rounded-full bg-amber animate-ping opacity-30" />
+              <span className="relative size-2 rounded-full bg-gradient-to-br from-[#F5CE6E] to-amber" />
             </span>
             <Link
               href={`/claim/${encodeURIComponent(listingSlug)}`}
-              className="text-[12px] font-medium text-[#9C9485] hover:text-[#E8A020] transition-colors"
+              className="text-[12px] font-medium text-text3 hover:text-amber transition-colors"
             >
               Not verified · Are you the owner?
             </Link>
             {showTooltip && (
-              <div className="absolute right-0 top-full mt-2 z-50 w-[220px] bg-[#16130C] text-white text-[11px] leading-[1.5] rounded-lg px-3 py-2 shadow-lg pointer-events-none">
+              <div className="absolute right-0 top-full mt-2 z-50 w-[220px] bg-dark text-white text-[11px] leading-[1.5] rounded-lg px-3 py-2 shadow-lg pointer-events-none">
                 This listing has not been verified yet. Information may not be fully up to date.
-                <div className="absolute -top-1 right-6 size-2 bg-[#16130C] rotate-45" />
+                <div className="absolute -top-1 right-6 size-2 bg-dark rotate-45" />
               </div>
             )}
           </div>
@@ -149,11 +149,11 @@ function HostBadge({ hostName, hostRef, isVerified, listingSlug }: HostBadgeProp
       {!isHostVerified && listingSlug && (
         <Link
           href={`/claim/${encodeURIComponent(listingSlug)}`}
-          className="flex sm:hidden items-center gap-2 mt-3 ml-16 text-[12px] font-medium text-[#9C9485] active:text-[#E8A020]"
+          className="flex sm:hidden items-center gap-2 mt-3 ml-16 text-[12px] font-medium text-text3 active:text-amber"
         >
           <span className="relative flex items-center justify-center size-2">
-            <span className="absolute size-2 rounded-full bg-[#E8A020] animate-ping opacity-30" />
-            <span className="relative size-1.5 rounded-full bg-[#E8A020]" />
+            <span className="absolute size-2 rounded-full bg-amber animate-ping opacity-30" />
+            <span className="relative size-1.5 rounded-full bg-amber" />
           </span>
           Not verified · Are you the owner?
         </Link>

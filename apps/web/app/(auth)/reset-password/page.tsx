@@ -76,19 +76,19 @@ export default function ResetPasswordPage() {
       <div className="bg-white rounded-[22px] shadow-lg p-8 md:p-10">
         {/* Logo */}
         <div className="flex items-center justify-center gap-2 mb-8">
-          <div className="w-8 h-8 rounded-lg bg-[#6B2D8B] flex items-center justify-center">
+          <div className="w-8 h-8 rounded-lg bg-purple flex items-center justify-center">
             <span className="text-white font-bold text-[15px]">k</span>
           </div>
-          <span className="text-[20px] font-bold tracking-[-0.03em] text-[#16130C]">
+          <span className="text-[20px] font-bold tracking-[-0.03em] text-dark">
             klickenya
           </span>
         </div>
 
         {/* Heading */}
-        <h1 className="text-[26px] font-bold tracking-[-0.03em] text-center text-[#16130C] mb-1">
+        <h1 className="text-[26px] font-bold tracking-[-0.03em] text-center text-dark mb-1">
           Set your password
         </h1>
-        <p className="text-[14px] text-[#5E5848] text-center mb-8">
+        <p className="text-[14px] text-text2 text-center mb-8">
           Choose a new password for your account
         </p>
 
@@ -97,7 +97,7 @@ export default function ResetPasswordPage() {
           <div>
             <label
               htmlFor="password"
-              className="block text-[13px] font-medium text-[#16130C] mb-1.5"
+              className="block text-[13px] font-medium text-dark mb-1.5"
             >
               New password
             </label>
@@ -109,7 +109,7 @@ export default function ResetPasswordPage() {
               autoComplete="new-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full h-11 px-4 rounded-xl border border-[#E2DDD5] text-[14px] text-[#16130C] placeholder:text-[#9C9485] outline-none focus:border-[#6B2D8B] focus:ring-2 focus:ring-[#6B2D8B]/20 transition-all"
+              className="w-full h-11 px-4 rounded-xl border border-border text-[14px] text-dark placeholder:text-text3 outline-none focus:border-purple focus:ring-2 focus:ring-purple/20 transition-all"
               placeholder="At least 8 characters"
             />
           </div>
@@ -117,7 +117,7 @@ export default function ResetPasswordPage() {
           <div>
             <label
               htmlFor="confirm"
-              className="block text-[13px] font-medium text-[#16130C] mb-1.5"
+              className="block text-[13px] font-medium text-dark mb-1.5"
             >
               Confirm password
             </label>
@@ -129,7 +129,7 @@ export default function ResetPasswordPage() {
               autoComplete="new-password"
               value={confirm}
               onChange={(e) => setConfirm(e.target.value)}
-              className="w-full h-11 px-4 rounded-xl border border-[#E2DDD5] text-[14px] text-[#16130C] placeholder:text-[#9C9485] outline-none focus:border-[#6B2D8B] focus:ring-2 focus:ring-[#6B2D8B]/20 transition-all"
+              className="w-full h-11 px-4 rounded-xl border border-border text-[14px] text-dark placeholder:text-text3 outline-none focus:border-purple focus:ring-2 focus:ring-purple/20 transition-all"
               placeholder="Re-enter your password"
             />
           </div>
@@ -143,7 +143,7 @@ export default function ResetPasswordPage() {
           <button
             type="submit"
             disabled={isPending}
-            className="w-full h-11 rounded-full bg-[#6B2D8B] text-white text-[14px] font-semibold hover:bg-[#5a2575] transition-colors disabled:opacity-60 flex items-center justify-center"
+            className="w-full h-11 rounded-full bg-purple text-white text-[14px] font-semibold hover:bg-[#5a2575] transition-colors disabled:opacity-60 flex items-center justify-center"
           >
             {isPending ? (
               <svg

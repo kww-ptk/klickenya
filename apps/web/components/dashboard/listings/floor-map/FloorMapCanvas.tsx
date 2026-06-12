@@ -253,7 +253,7 @@ export function FloorMapCanvas({
           <button
             type="button"
             onClick={handleAutoArrange}
-            className="h-10 px-4 rounded-full border border-[#E2DDD5] text-[13px] font-bold text-[#5E5848] hover:border-[#E8A020] hover:text-[#E8A020]"
+            className="h-10 px-4 rounded-full border border-border text-[13px] font-bold text-text2 hover:border-amber hover:text-amber"
           >
             Auto-arrange
           </button>
@@ -265,7 +265,7 @@ export function FloorMapCanvas({
             type="button"
             onClick={handleSave}
             disabled={!dirty || saving}
-            className="h-10 px-5 rounded-full bg-[#E8A020] text-[#16130C] font-bold text-[13px] hover:bg-[#d4911c] disabled:opacity-40"
+            className="h-10 px-5 rounded-full bg-amber text-dark font-bold text-[13px] hover:bg-[#d4911c] disabled:opacity-40"
           >
             {saving ? "Saving…" : "Save layout"}
           </button>
@@ -279,7 +279,7 @@ export function FloorMapCanvas({
           "relative w-full rounded-2xl overflow-hidden touch-none border",
           theme === "dark"
             ? "bg-[#0F0D08] border-[#2A2520]"
-            : "bg-[#FAFAF8] border-[#E2DDD5]",
+            : "bg-canvas border-border",
         ].join(" ")}
         style={{
           // Fixed aspect ratio so percent positions render the same on every
@@ -296,7 +296,7 @@ export function FloorMapCanvas({
         }}
       >
         {visibleTables.length === 0 ? (
-          <div className="absolute inset-0 flex items-center justify-center text-[13px] text-[#9C9485] text-center px-6">
+          <div className="absolute inset-0 flex items-center justify-center text-[13px] text-text3 text-center px-6">
             No tables in this area yet. Add tables in the list below — they&apos;ll
             appear on the map.
           </div>
@@ -329,7 +329,7 @@ export function FloorMapCanvas({
 
       {/* Footer hint — touch UX, only in edit mode */}
       {mode === "edit" && (
-        <p className="text-[11px] text-[#9C9485]">
+        <p className="text-[11px] text-text3">
           On a tablet, hold a tile for a moment then drag. Positions snap to a 2 % grid.
         </p>
       )}

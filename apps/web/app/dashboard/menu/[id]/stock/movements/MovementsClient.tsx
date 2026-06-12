@@ -54,7 +54,7 @@ function fmtWhen(iso: string): string {
 }
 
 const inputCls =
-  "w-full border border-[#E2DDD5] rounded-xl px-3 py-2.5 text-[14px] text-[#16130C] placeholder:text-[#9C9485] focus:outline-none focus:border-[#E8A020] focus:ring-1 focus:ring-[#E8A020]/30 bg-white";
+  "w-full border border-border rounded-xl px-3 py-2.5 text-[14px] text-dark placeholder:text-text3 focus:outline-none focus:border-amber focus:ring-1 focus:ring-amber/30 bg-white";
 
 export function MovementsClient({
   initialMovements,
@@ -172,8 +172,8 @@ export function MovementsClient({
               onClick={() => setTypeFilter(f.key)}
               className={`h-9 px-3 rounded-full text-[12px] font-bold transition-colors ${
                 typeFilter === f.key
-                  ? "bg-[#16130C] text-white"
-                  : "bg-white border border-[#E2DDD5] text-[#5E5848] hover:border-[#9C9485]"
+                  ? "bg-dark text-white"
+                  : "bg-white border border-border text-text2 hover:border-text3"
               }`}
             >
               {f.label}
@@ -184,7 +184,7 @@ export function MovementsClient({
         <button
           type="button"
           onClick={() => setShowNew(true)}
-          className="bg-[#E8A020] text-[#16130C] font-bold text-[13px] px-5 h-[40px] rounded-full hover:bg-[#d4911c] transition-colors shadow-sm"
+          className="bg-amber text-dark font-bold text-[13px] px-5 h-[40px] rounded-full hover:bg-[#d4911c] transition-colors shadow-sm"
         >
           + New movement
         </button>
@@ -193,7 +193,7 @@ export function MovementsClient({
       {/* Secondary filters */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
         <div>
-          <label className="block text-[11px] font-semibold text-[#9C9485] mb-1">Ingredient</label>
+          <label className="block text-[11px] font-semibold text-text3 mb-1">Ingredient</label>
           <select
             value={ingredientFilter}
             onChange={(e) => setIngredientFilter(e.target.value)}
@@ -208,26 +208,26 @@ export function MovementsClient({
           </select>
         </div>
         <div>
-          <label className="block text-[11px] font-semibold text-[#9C9485] mb-1">From</label>
+          <label className="block text-[11px] font-semibold text-text3 mb-1">From</label>
           <input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className={inputCls} />
         </div>
         <div>
-          <label className="block text-[11px] font-semibold text-[#9C9485] mb-1">To</label>
+          <label className="block text-[11px] font-semibold text-text3 mb-1">To</label>
           <input type="date" value={to} onChange={(e) => setTo(e.target.value)} className={inputCls} />
         </div>
       </div>
 
       {/* Feed */}
-      <div className="bg-white rounded-2xl border border-[#E2DDD5] shadow-sm overflow-hidden">
+      <div className="bg-white rounded-2xl border border-border shadow-sm overflow-hidden">
         {filtered.length === 0 ? (
-          <div className="p-8 text-center text-[14px] text-[#9C9485]">
+          <div className="p-8 text-center text-[14px] text-text3">
             No movements match these filters.
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-[#FAFAF8] border-b border-[#E2DDD5]">
-                <tr className="text-left text-[11px] font-bold uppercase tracking-wide text-[#9C9485]">
+              <thead className="bg-canvas border-b border-border">
+                <tr className="text-left text-[11px] font-bold uppercase tracking-wide text-text3">
                   <th className="px-3 py-2.5">When</th>
                   <th className="px-3 py-2.5">Ingredient</th>
                   <th className="px-3 py-2.5">Type</th>
@@ -238,15 +238,15 @@ export function MovementsClient({
                   <th className="px-3 py-2.5 hidden lg:table-cell">Reason</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#F4F1EC]">
+              <tbody className="divide-y divide-surface">
                 {filtered.map((m) => {
                   const ing = ingById.get(m.ingredient_id);
                   const badge = TYPE_BADGE[m.type];
                   const positive = Number(m.qty) > 0;
                   return (
                     <tr key={m.id} className="text-[13px]">
-                      <td className="px-3 py-2.5 whitespace-nowrap text-[#5E5848]">{fmtWhen(m.created_at)}</td>
-                      <td className="px-3 py-2.5 font-semibold text-[#16130C]">
+                      <td className="px-3 py-2.5 whitespace-nowrap text-text2">{fmtWhen(m.created_at)}</td>
+                      <td className="px-3 py-2.5 font-semibold text-dark">
                         {ing?.name ?? "—"}
                       </td>
                       <td className="px-3 py-2.5">
@@ -257,14 +257,14 @@ export function MovementsClient({
                       <td className={`px-3 py-2.5 text-right whitespace-nowrap font-semibold ${positive ? "text-emerald-700" : "text-rose-700"}`}>
                         {positive ? "+" : ""}{Number(m.qty).toLocaleString("en-KE", { maximumFractionDigits: 2 })} {ing?.unit ?? ""}
                       </td>
-                      <td className="px-3 py-2.5 text-right whitespace-nowrap hidden md:table-cell text-[#5E5848]">
+                      <td className="px-3 py-2.5 text-right whitespace-nowrap hidden md:table-cell text-text2">
                         {fmtKES(m.unit_cost)}
                       </td>
-                      <td className="px-3 py-2.5 text-right whitespace-nowrap font-semibold text-[#16130C]">
+                      <td className="px-3 py-2.5 text-right whitespace-nowrap font-semibold text-dark">
                         {fmtKES(m.total_cost)}
                       </td>
-                      <td className="px-3 py-2.5 hidden md:table-cell text-[#9C9485]">{m.source ?? "—"}</td>
-                      <td className="px-3 py-2.5 hidden lg:table-cell text-[#9C9485] max-w-[260px] truncate">{m.reason ?? ""}</td>
+                      <td className="px-3 py-2.5 hidden md:table-cell text-text3">{m.source ?? "—"}</td>
+                      <td className="px-3 py-2.5 hidden lg:table-cell text-text3 max-w-[260px] truncate">{m.reason ?? ""}</td>
                     </tr>
                   );
                 })}
@@ -273,12 +273,12 @@ export function MovementsClient({
           </div>
         )}
         {filtered.length > 0 && olderCursor !== null && (
-          <div className="border-t border-[#F4F1EC] p-3 flex justify-center">
+          <div className="border-t border-surface p-3 flex justify-center">
             <button
               type="button"
               onClick={loadOlder}
               disabled={loadingMore}
-              className="h-10 px-5 rounded-full text-[13px] font-bold text-[#5E5848] hover:text-[#E8A020] disabled:opacity-50"
+              className="h-10 px-5 rounded-full text-[13px] font-bold text-text2 hover:text-amber disabled:opacity-50"
             >
               {loadingMore ? "Loading…" : "Load older"}
             </button>
@@ -355,13 +355,13 @@ function NewMovementModal({
   return (
     <div className="fixed inset-0 z-50 bg-black/40 flex items-end sm:items-center justify-center p-0 sm:p-4">
       <div className="bg-white w-full sm:max-w-[480px] sm:rounded-2xl rounded-t-2xl shadow-xl overflow-hidden">
-        <div className="p-5 border-b border-[#F4F1EC] flex items-center justify-between">
-          <h2 className="font-display text-[18px] font-bold text-[#16130C]">New movement</h2>
+        <div className="p-5 border-b border-surface flex items-center justify-between">
+          <h2 className="font-display text-[18px] font-bold text-dark">New movement</h2>
           <button
             type="button"
             onClick={onClose}
             aria-label="Close"
-            className="size-9 rounded-full text-[#9C9485] hover:bg-[#F4F1EC] flex items-center justify-center"
+            className="size-9 rounded-full text-text3 hover:bg-surface flex items-center justify-center"
           >
             ×
           </button>
@@ -370,7 +370,7 @@ function NewMovementModal({
         <form onSubmit={submit} className="p-5 space-y-4">
           {/* Type */}
           <div>
-            <label className="block text-[12px] font-semibold text-[#16130C] mb-1.5">Type</label>
+            <label className="block text-[12px] font-semibold text-dark mb-1.5">Type</label>
             <div className="grid grid-cols-3 gap-2">
               {(["purchase_in", "waste", "count_adjustment"] as const).map((t) => (
                 <button
@@ -379,8 +379,8 @@ function NewMovementModal({
                   onClick={() => setType(t)}
                   className={`h-12 rounded-xl text-[12px] font-bold transition-colors ${
                     type === t
-                      ? "bg-[#16130C] text-white"
-                      : "bg-[#F4F1EC] text-[#5E5848] hover:bg-[#E2DDD5]"
+                      ? "bg-dark text-white"
+                      : "bg-surface text-text2 hover:bg-border"
                   }`}
                 >
                   {t === "purchase_in" ? "Purchase" : t === "waste" ? "Waste" : "Count"}
@@ -391,7 +391,7 @@ function NewMovementModal({
 
           {/* Ingredient */}
           <div>
-            <label className="block text-[12px] font-semibold text-[#16130C] mb-1.5">Ingredient *</label>
+            <label className="block text-[12px] font-semibold text-dark mb-1.5">Ingredient *</label>
             <select
               value={ingredientId}
               onChange={(e) => setIngredientId(e.target.value)}
@@ -409,7 +409,7 @@ function NewMovementModal({
           {/* Qty */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-[12px] font-semibold text-[#16130C] mb-1.5">
+              <label className="block text-[12px] font-semibold text-dark mb-1.5">
                 Qty {ing ? `(${ing.unit})` : ""} *
               </label>
               <input
@@ -425,7 +425,7 @@ function NewMovementModal({
             </div>
             {type === "purchase_in" && (
               <div>
-                <label className="block text-[12px] font-semibold text-[#16130C] mb-1.5">
+                <label className="block text-[12px] font-semibold text-dark mb-1.5">
                   Unit cost (KES)
                 </label>
                 <input
@@ -444,8 +444,8 @@ function NewMovementModal({
 
           {/* Reason */}
           <div>
-            <label className="block text-[12px] font-semibold text-[#16130C] mb-1.5">
-              Note <span className="text-[#9C9485] font-normal">· optional</span>
+            <label className="block text-[12px] font-semibold text-dark mb-1.5">
+              Note <span className="text-text3 font-normal">· optional</span>
             </label>
             <input
               type="text"
@@ -473,14 +473,14 @@ function NewMovementModal({
             <button
               type="submit"
               disabled={!valid || busy}
-              className="bg-[#E8A020] text-[#16130C] font-bold text-[14px] px-5 h-[44px] rounded-full hover:bg-[#d4911c] transition-colors disabled:opacity-50 flex-1"
+              className="bg-amber text-dark font-bold text-[14px] px-5 h-[44px] rounded-full hover:bg-[#d4911c] transition-colors disabled:opacity-50 flex-1"
             >
               {busy ? "Saving…" : "Log movement"}
             </button>
             <button
               type="button"
               onClick={onClose}
-              className="text-[14px] font-semibold text-[#9C9485] hover:text-[#16130C] transition-colors px-4 h-[44px]"
+              className="text-[14px] font-semibold text-text3 hover:text-dark transition-colors px-4 h-[44px]"
             >
               Cancel
             </button>

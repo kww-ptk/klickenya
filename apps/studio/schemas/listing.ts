@@ -216,6 +216,25 @@ export default defineType({
       group: 'general',
     }),
     defineField({
+      name: 'partner',
+      title: 'Partner (white-label owner)',
+      description:
+        "Leave empty for Klickenya house listings. Set to a partner to make this listing belong to that partner’s branded site.",
+      type: 'reference',
+      to: [{ type: 'partner' }],
+      group: 'general',
+    }),
+    defineField({
+      name: 'publishToMarketplace',
+      title: 'Also publish on klickenya.com marketplace',
+      description:
+        'Only relevant for partner listings. When ON, this partner listing also appears on the Klickenya marketplace. House listings (no partner) always appear on the marketplace.',
+      type: 'boolean',
+      initialValue: false,
+      hidden: ({ document }: HiddenCtx) => !document?.partner,
+      group: 'general',
+    }),
+    defineField({
       name: 'city',
       title: 'City',
       type: 'string',

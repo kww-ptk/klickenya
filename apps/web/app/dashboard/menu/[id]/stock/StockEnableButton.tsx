@@ -35,7 +35,7 @@ export function StockEnableButton({ menuId }: { menuId: string }) {
         type="button"
         onClick={enable}
         disabled={busy}
-        className="bg-[#E8A020] text-[#16130C] font-bold text-[14px] px-6 h-[48px] rounded-full hover:bg-[#d4911c] transition-colors disabled:opacity-50 shadow-sm"
+        className="bg-amber text-dark font-bold text-[14px] px-6 h-[48px] rounded-full hover:bg-[#d4911c] transition-colors disabled:opacity-50 shadow-sm"
       >
         {busy ? "Enabling…" : "Enable Klickenya Kitchen"}
       </button>

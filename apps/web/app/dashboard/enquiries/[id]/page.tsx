@@ -114,10 +114,10 @@ export default async function EnquiryDetailPage({
   });
 
   const statusColors: Record<string, string> = {
-    new: "bg-[#E8A020]/10 text-[#E8A020]",
+    new: "bg-amber/10 text-amber",
     responded: "bg-[#22C55E]/10 text-[#22C55E]",
     converted: "bg-[#3B82F6]/10 text-[#3B82F6]",
-    closed: "bg-[#9C9485]/10 text-[#9C9485]",
+    closed: "bg-text3/10 text-text3",
   };
 
   // Build WhatsApp link
@@ -131,7 +131,7 @@ export default async function EnquiryDetailPage({
       {/* Back */}
       <Link
         href="/dashboard/enquiries"
-        className="inline-flex items-center gap-1.5 text-[13px] text-[#9C9485] hover:text-[#16130C] transition-colors mb-5"
+        className="inline-flex items-center gap-1.5 text-[13px] text-text3 hover:text-dark transition-colors mb-5"
       >
         <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
@@ -142,10 +142,10 @@ export default async function EnquiryDetailPage({
       {/* Header */}
       <div className="flex items-start justify-between mb-6">
         <div>
-          <h1 className="font-display text-[22px] lg:text-[28px] font-bold tracking-[-0.03em] text-[#16130C]">
+          <h1 className="font-display text-[22px] lg:text-[28px] font-bold tracking-[-0.03em] text-dark">
             {guestName}
           </h1>
-          <p className="text-[13px] text-[#9C9485] mt-0.5">{date} at {time}</p>
+          <p className="text-[13px] text-text3 mt-0.5">{date} at {time}</p>
         </div>
         <span className={`px-3 py-1 text-[11px] font-bold uppercase rounded-full ${statusColors[request.status] || statusColors.new}`}>
           {request.status}
@@ -156,29 +156,29 @@ export default async function EnquiryDetailPage({
         {/* Left column — details + actions */}
         <div className="lg:col-span-2 space-y-5">
           {/* Request details */}
-          <div className="bg-white rounded-xl border border-[#E2DDD5] p-5">
+          <div className="bg-white rounded-xl border border-border p-5">
             {(listingTitle || listingType) && (
-              <div className="mb-4 pb-4 border-b border-[#F4F1EC]">
-                <p className="text-[15px] font-semibold text-[#16130C]">{listingTitle}</p>
-                {listingType && <p className="text-[12px] text-[#9C9485] capitalize mt-0.5">{listingType}</p>}
+              <div className="mb-4 pb-4 border-b border-surface">
+                <p className="text-[15px] font-semibold text-dark">{listingTitle}</p>
+                {listingType && <p className="text-[12px] text-text3 capitalize mt-0.5">{listingType}</p>}
               </div>
             )}
 
             {request.message && (
               <div className="mb-4">
-                <p className="text-[11px] text-[#9C9485] uppercase tracking-wider font-medium mb-1">Message</p>
-                <p className="text-[14px] text-[#16130C] leading-relaxed whitespace-pre-wrap">{request.message}</p>
+                <p className="text-[11px] text-text3 uppercase tracking-wider font-medium mb-1">Message</p>
+                <p className="text-[14px] text-dark leading-relaxed whitespace-pre-wrap">{request.message}</p>
               </div>
             )}
 
             {enquiryLines.length > 0 && (
               <div>
-                <p className="text-[11px] text-[#9C9485] uppercase tracking-wider font-medium mb-2">Enquiry Details</p>
+                <p className="text-[11px] text-text3 uppercase tracking-wider font-medium mb-2">Enquiry Details</p>
                 <div className="space-y-1.5">
                   {enquiryLines.map(([key, value], i) => (
                     <div key={i} className="flex items-center gap-2 text-[13px]">
-                      <span className="text-[#9C9485] shrink-0">{key}</span>
-                      <span className="text-[#16130C] font-medium">{value}</span>
+                      <span className="text-text3 shrink-0">{key}</span>
+                      <span className="text-dark font-medium">{value}</span>
                     </div>
                   ))}
                 </div>
@@ -214,20 +214,20 @@ export default async function EnquiryDetailPage({
 
             const calBadge = request.calendar_status
               ? request.calendar_status === "pending"
-                ? { label: "Pending", cls: "bg-[#E8A020]/10 text-[#E8A020]" }
+                ? { label: "Pending", cls: "bg-amber/10 text-amber" }
                 : request.calendar_status === "converted"
-                  ? { label: "Converted", cls: "bg-[#16A34A]/10 text-[#16A34A]" }
+                  ? { label: "Converted", cls: "bg-green/10 text-green" }
                   : request.calendar_status === "declined"
-                    ? { label: "Declined", cls: "bg-[#F4F1EC] text-[#9C9485]" }
+                    ? { label: "Declined", cls: "bg-surface text-text3" }
                     : request.calendar_status === "held"
                       ? { label: "On hold", cls: "bg-[#EFF6FF] text-[#3B82F6]" }
                       : null
               : null;
 
             return (
-              <div className="bg-white rounded-xl border border-[#E2DDD5] p-5">
+              <div className="bg-white rounded-xl border border-border p-5">
                 <div className="flex items-center justify-between mb-3">
-                  <h2 className="text-[15px] font-bold text-[#16130C]">Booking Request</h2>
+                  <h2 className="text-[15px] font-bold text-dark">Booking Request</h2>
                   {calBadge && (
                     <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${calBadge.cls}`}>
                       {calBadge.label}
@@ -237,38 +237,38 @@ export default async function EnquiryDetailPage({
                 <div className="space-y-2 text-[13px]">
                   {roomName && (
                     <div className="flex justify-between">
-                      <span className="text-[#9C9485]">Room</span>
-                      <span className="text-[#16130C] font-medium">{roomName}</span>
+                      <span className="text-text3">Room</span>
+                      <span className="text-dark font-medium">{roomName}</span>
                     </div>
                   )}
                   {request.check_in && (
                     <div className="flex justify-between">
-                      <span className="text-[#9C9485]">Check-in</span>
-                      <span className="text-[#16130C] font-medium">{fmtD(request.check_in)}</span>
+                      <span className="text-text3">Check-in</span>
+                      <span className="text-dark font-medium">{fmtD(request.check_in)}</span>
                     </div>
                   )}
                   {request.check_out && (
                     <div className="flex justify-between">
-                      <span className="text-[#9C9485]">Check-out</span>
-                      <span className="text-[#16130C] font-medium">{fmtD(request.check_out)}</span>
+                      <span className="text-text3">Check-out</span>
+                      <span className="text-dark font-medium">{fmtD(request.check_out)}</span>
                     </div>
                   )}
                   {nights && (
                     <div className="flex justify-between">
-                      <span className="text-[#9C9485]">Nights</span>
-                      <span className="text-[#16130C] font-medium">{nights}</span>
+                      <span className="text-text3">Nights</span>
+                      <span className="text-dark font-medium">{nights}</span>
                     </div>
                   )}
                   {request.guests && (
                     <div className="flex justify-between">
-                      <span className="text-[#9C9485]">Guests</span>
-                      <span className="text-[#16130C] font-medium">{request.guests}</span>
+                      <span className="text-text3">Guests</span>
+                      <span className="text-dark font-medium">{request.guests}</span>
                     </div>
                   )}
                   {estimatedTotal && (
-                    <div className="flex justify-between border-t border-[#F4F1EC] pt-2 mt-2">
-                      <span className="text-[#9C9485]">Estimated total</span>
-                      <span className="font-bold text-[#E8A020]">KSh {estimatedTotal.toLocaleString()}</span>
+                    <div className="flex justify-between border-t border-surface pt-2 mt-2">
+                      <span className="text-text3">Estimated total</span>
+                      <span className="font-bold text-amber">KSh {estimatedTotal.toLocaleString()}</span>
                     </div>
                   )}
                 </div>
@@ -277,8 +277,8 @@ export default async function EnquiryDetailPage({
           })()}
 
           {/* Contact card */}
-          <div className="bg-white rounded-xl border border-[#E2DDD5] p-5">
-            <h2 className="text-[15px] font-bold text-[#16130C] mb-4">Quick Contact</h2>
+          <div className="bg-white rounded-xl border border-border p-5">
+            <h2 className="text-[15px] font-bold text-dark mb-4">Quick Contact</h2>
             <div className="space-y-2.5">
               <a
                 href={`tel:${request.phone}`}
@@ -291,7 +291,7 @@ export default async function EnquiryDetailPage({
               </a>
               <a
                 href={`mailto:${request.email}`}
-                className="flex items-center gap-3 w-full px-4 py-3 rounded-xl bg-[#E8A020]/10 text-[#E8A020] font-semibold text-[13px] hover:bg-[#E8A020]/20 transition-colors"
+                className="flex items-center gap-3 w-full px-4 py-3 rounded-xl bg-amber/10 text-amber font-semibold text-[13px] hover:bg-amber/20 transition-colors"
               >
                 <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
@@ -315,20 +315,20 @@ export default async function EnquiryDetailPage({
           </div>
 
           {/* Guest info */}
-          <div className="bg-white rounded-xl border border-[#E2DDD5] p-5">
-            <h2 className="text-[15px] font-bold text-[#16130C] mb-3">Guest Info</h2>
+          <div className="bg-white rounded-xl border border-border p-5">
+            <h2 className="text-[15px] font-bold text-dark mb-3">Guest Info</h2>
             <div className="space-y-2 text-[13px]">
               <div>
-                <p className="text-[#9C9485]">Name</p>
-                <p className="text-[#16130C] font-medium">{guestName}</p>
+                <p className="text-text3">Name</p>
+                <p className="text-dark font-medium">{guestName}</p>
               </div>
               <div>
-                <p className="text-[#9C9485]">Email</p>
-                <p className="text-[#16130C] font-medium">{request.email}</p>
+                <p className="text-text3">Email</p>
+                <p className="text-dark font-medium">{request.email}</p>
               </div>
               <div>
-                <p className="text-[#9C9485]">Phone</p>
-                <p className="text-[#16130C] font-medium">{request.phone}</p>
+                <p className="text-text3">Phone</p>
+                <p className="text-dark font-medium">{request.phone}</p>
               </div>
             </div>
           </div>

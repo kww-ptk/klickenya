@@ -16,10 +16,10 @@ export function DashboardMobileHeader({ enquiryCount = 0 }: { enquiryCount?: num
   }
 
   return (
-    <div className="lg:hidden sticky top-0 z-30 bg-[#16130C] border-b border-white/10">
+    <div className="lg:hidden sticky top-0 z-30 bg-dark border-b border-white/10">
       <div className="flex items-center justify-between px-4 h-[52px]">
         {/* Back to website */}
-        <Link href="/" className="text-[13px] text-[#9C9485] font-medium hover:text-white transition-colors">
+        <Link href="/" className="text-[13px] text-text3 font-medium hover:text-white transition-colors">
           ← Klickenya
         </Link>
 
@@ -46,7 +46,7 @@ export function DashboardMobileHeader({ enquiryCount = 0 }: { enquiryCount?: num
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 12.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 18.75a.75.75 0 110-1.5.75.75 0 010 1.5z" />
               </svg>
               {enquiryCount > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 rounded-full bg-[#E8A020] text-[#16130C] text-[9px] font-bold flex items-center justify-center">
+                <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 rounded-full bg-amber text-dark text-[9px] font-bold flex items-center justify-center">
                   {enquiryCount > 99 ? "99+" : enquiryCount}
                 </span>
               )}

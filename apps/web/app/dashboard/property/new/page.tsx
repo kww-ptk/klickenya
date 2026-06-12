@@ -386,9 +386,9 @@ export default function PropertySetupWizard() {
   if (loadingImport) {
     return (
       <div className="max-w-[560px] mx-auto animate-pulse">
-        <div className="h-7 w-48 bg-[#E2DDD5] rounded-lg mb-2" />
-        <div className="h-4 w-32 bg-[#F4F1EC] rounded mb-6" />
-        <div className="h-64 bg-[#F4F1EC] rounded-2xl" />
+        <div className="h-7 w-48 bg-border rounded-lg mb-2" />
+        <div className="h-4 w-32 bg-surface rounded mb-6" />
+        <div className="h-64 bg-surface rounded-2xl" />
       </div>
     );
   }
@@ -400,14 +400,14 @@ export default function PropertySetupWizard() {
     <div className="max-w-[560px] mx-auto">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="font-display text-[22px] lg:text-[28px] font-bold tracking-[-0.03em] text-[#16130C]">
+        <h1 className="font-display text-[22px] lg:text-[28px] font-bold tracking-[-0.03em] text-dark">
           {step === 0
             ? "Set up your property"
             : editPropertyId
               ? "Set up your property"
               : "Add a new property"}
         </h1>
-        <p className="text-[13px] text-[#9C9485] mt-0.5">
+        <p className="text-[13px] text-text3 mt-0.5">
           {step === 0
             ? "Import from your listing"
             : `Step ${displayStep} of ${totalSteps}`}
@@ -418,7 +418,7 @@ export default function PropertySetupWizard() {
               <div
                 key={s}
                 className={`h-1 flex-1 rounded-full transition-colors ${
-                  s <= step ? "bg-[#4F46E5]" : "bg-[#E2DDD5]"
+                  s <= step ? "bg-[#4F46E5]" : "bg-border"
                 }`}
               />
             ))}
@@ -432,7 +432,7 @@ export default function PropertySetupWizard() {
           {/* Listing preview */}
           <div className="bg-white rounded-2xl border border-[#4F46E5]/20 p-4 shadow-sm" style={{ borderLeft: "4px solid #4F46E5" }}>
             <div className="flex gap-3 items-center">
-              <div className="shrink-0 w-[72px] h-[72px] rounded-xl overflow-hidden bg-[#F4F1EC] relative">
+              <div className="shrink-0 w-[72px] h-[72px] rounded-xl overflow-hidden bg-surface relative">
                 {importListing.coverPhoto?.asset?.url ? (
                   <Image
                     src={`${importListing.coverPhoto.asset.url}?w=200&auto=format`}
@@ -451,11 +451,11 @@ export default function PropertySetupWizard() {
                 <p className="text-[11px] font-bold text-[#4F46E5] uppercase tracking-wider">
                   We found your listing
                 </p>
-                <p className="text-[15px] font-semibold text-[#16130C] truncate mt-0.5">
+                <p className="text-[15px] font-semibold text-dark truncate mt-0.5">
                   {importListing.title}
                 </p>
                 {importListing.city && (
-                  <p className="text-[12px] text-[#9C9485]">{importListing.city}</p>
+                  <p className="text-[12px] text-text3">{importListing.city}</p>
                 )}
               </div>
             </div>
@@ -464,7 +464,7 @@ export default function PropertySetupWizard() {
           {/* Rooms to import */}
           {importListing.rooms && importListing.rooms.length > 0 ? (
             <div>
-              <h2 className="text-[15px] font-semibold text-[#16130C] mb-3">
+              <h2 className="text-[15px] font-semibold text-dark mb-3">
                 Import rooms from your listing
               </h2>
               <div className="space-y-2">
@@ -476,7 +476,7 @@ export default function PropertySetupWizard() {
                       className={`flex items-center gap-3 p-3 rounded-xl border transition-all cursor-pointer ${
                         importChecked[room._key]
                           ? "border-[#4F46E5] bg-[#4F46E5]/5"
-                          : "border-[#E2DDD5] hover:border-[#9C9485]"
+                          : "border-border hover:border-text3"
                       }`}
                     >
                       <input
@@ -488,26 +488,26 @@ export default function PropertySetupWizard() {
                             [room._key]: e.target.checked,
                           }))
                         }
-                        className="size-4 rounded border-[#E2DDD5] text-[#4F46E5] focus:ring-[#4F46E5]"
+                        className="size-4 rounded border-border text-[#4F46E5] focus:ring-[#4F46E5]"
                       />
                       <div className="flex-1 min-w-0">
-                        <p className="text-[13px] font-semibold text-[#16130C]">
+                        <p className="text-[13px] font-semibold text-dark">
                           {room.roomName}
                           {qty > 1 && (
-                            <span className="text-[#9C9485] font-normal ml-1">
+                            <span className="text-text3 font-normal ml-1">
                               x {qty} units
                             </span>
                           )}
                         </p>
-                        <p className="text-[11px] text-[#9C9485]">
+                        <p className="text-[11px] text-text3">
                           {room.capacity} guests
                           {room.bedType ? ` · ${room.bedType}` : ""}
                           {room.roomSizeSqm ? ` · ${room.roomSizeSqm} sqm` : ""}
                         </p>
                       </div>
-                      <p className="text-[13px] font-semibold text-[#16130C] shrink-0">
+                      <p className="text-[13px] font-semibold text-dark shrink-0">
                         {fmt(room.pricePerNight)}
-                        <span className="text-[10px] text-[#9C9485] font-normal"> /night</span>
+                        <span className="text-[10px] text-text3 font-normal"> /night</span>
                       </p>
                     </label>
                   );
@@ -515,8 +515,8 @@ export default function PropertySetupWizard() {
               </div>
             </div>
           ) : (
-            <div className="bg-[#F4F1EC] rounded-xl p-4 text-center">
-              <p className="text-[13px] text-[#5E5848]">
+            <div className="bg-surface rounded-xl p-4 text-center">
+              <p className="text-[13px] text-text2">
                 This is an entire property listing. One room will be created automatically.
               </p>
             </div>
@@ -536,7 +536,7 @@ export default function PropertySetupWizard() {
             </button>
             <button
               onClick={() => setStep(1)}
-              className="w-full h-[44px] border border-[#E2DDD5] text-[14px] font-semibold text-[#5E5848] rounded-xl hover:bg-[#F4F1EC] transition-colors"
+              className="w-full h-[44px] border border-border text-[14px] font-semibold text-text2 rounded-xl hover:bg-surface transition-colors"
             >
               Start from scratch \u2192
             </button>
@@ -548,7 +548,7 @@ export default function PropertySetupWizard() {
       {step === 1 && (
         <div className="space-y-5">
           <div>
-            <h2 className="text-[15px] font-semibold text-[#16130C] mb-3">
+            <h2 className="text-[15px] font-semibold text-dark mb-3">
               What kind of property is this?
             </h2>
             <div className="grid grid-cols-2 gap-2">
@@ -559,11 +559,11 @@ export default function PropertySetupWizard() {
                   className={`p-3 rounded-xl border-2 text-left transition-all ${
                     propertyType === pt.value
                       ? "border-[#4F46E5] bg-[#4F46E5]/5"
-                      : "border-[#E2DDD5] hover:border-[#9C9485]"
+                      : "border-border hover:border-text3"
                   }`}
                 >
                   <span className="text-[20px]">{pt.icon}</span>
-                  <p className="text-[13px] font-semibold text-[#16130C] mt-1">
+                  <p className="text-[13px] font-semibold text-dark mt-1">
                     {pt.label}
                   </p>
                 </button>
@@ -572,7 +572,7 @@ export default function PropertySetupWizard() {
           </div>
 
           <div>
-            <h2 className="text-[15px] font-semibold text-[#16130C] mb-3">
+            <h2 className="text-[15px] font-semibold text-dark mb-3">
               Is this an entire property or individual rooms?
             </h2>
             <div className="flex gap-2">
@@ -581,22 +581,22 @@ export default function PropertySetupWizard() {
                 className={`flex-1 p-3 rounded-xl border-2 text-center transition-all ${
                   isEntireProperty
                     ? "border-[#4F46E5] bg-[#4F46E5]/5"
-                    : "border-[#E2DDD5] hover:border-[#9C9485]"
+                    : "border-border hover:border-text3"
                 }`}
               >
-                <p className="text-[13px] font-semibold text-[#16130C]">Entire property</p>
-                <p className="text-[11px] text-[#9C9485] mt-0.5">Guests book the whole place</p>
+                <p className="text-[13px] font-semibold text-dark">Entire property</p>
+                <p className="text-[11px] text-text3 mt-0.5">Guests book the whole place</p>
               </button>
               <button
                 onClick={() => setIsEntireProperty(false)}
                 className={`flex-1 p-3 rounded-xl border-2 text-center transition-all ${
                   !isEntireProperty
                     ? "border-[#4F46E5] bg-[#4F46E5]/5"
-                    : "border-[#E2DDD5] hover:border-[#9C9485]"
+                    : "border-border hover:border-text3"
                 }`}
               >
-                <p className="text-[13px] font-semibold text-[#16130C]">Individual rooms</p>
-                <p className="text-[11px] text-[#9C9485] mt-0.5">Guests book specific rooms</p>
+                <p className="text-[13px] font-semibold text-dark">Individual rooms</p>
+                <p className="text-[11px] text-text3 mt-0.5">Guests book specific rooms</p>
               </button>
             </div>
           </div>
@@ -609,33 +609,33 @@ export default function PropertySetupWizard() {
           </button>
 
           {/* Import from OTA — placeholder */}
-          <div className="border border-dashed border-[#E2DDD5] rounded-xl p-4 bg-[#FAFAF8] mt-2">
+          <div className="border border-dashed border-border rounded-xl p-4 bg-canvas mt-2">
             <div className="flex items-start gap-3">
               <span className="text-[24px] shrink-0 mt-0.5">🔗</span>
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-1">
-                  <p className="text-[13px] font-semibold text-[#16130C]">Import from another platform</p>
-                  <span className="text-[9px] font-bold text-[#E8A020] bg-[#E8A020]/10 px-2 py-0.5 rounded-full">Coming soon</span>
+                  <p className="text-[13px] font-semibold text-dark">Import from another platform</p>
+                  <span className="text-[9px] font-bold text-amber bg-amber/10 px-2 py-0.5 rounded-full">Coming soon</span>
                 </div>
-                <p className="text-[11px] text-[#9C9485] mb-3">
+                <p className="text-[11px] text-text3 mb-3">
                   Paste your Airbnb or Booking.com listing URL — we&apos;ll pre-fill your property details.
                 </p>
                 <div className="flex gap-2">
                   <input
                     type="url"
                     disabled
-                    className="flex-1 h-[36px] px-3 rounded-lg border border-[#E2DDD5] bg-white text-[12px] text-[#9C9485] placeholder:text-[#9C9485]/60 cursor-not-allowed"
+                    className="flex-1 h-[36px] px-3 rounded-lg border border-border bg-white text-[12px] text-text3 placeholder:text-text3/60 cursor-not-allowed"
                     placeholder="https://www.airbnb.com/rooms/... or booking.com/hotel/..."
                   />
                   <button
                     disabled
-                    className="h-[36px] px-4 bg-[#E2DDD5] text-[#9C9485] text-[12px] font-semibold rounded-lg cursor-not-allowed"
+                    className="h-[36px] px-4 bg-border text-text3 text-[12px] font-semibold rounded-lg cursor-not-allowed"
                     title="Coming soon — we're building this feature"
                   >
                     Import
                   </button>
                 </div>
-                <div className="flex items-center gap-3 mt-2 text-[10px] text-[#9C9485]">
+                <div className="flex items-center gap-3 mt-2 text-[10px] text-text3">
                   <span>Airbnb</span>
                   <span>·</span>
                   <span>Booking.com</span>
@@ -652,72 +652,72 @@ export default function PropertySetupWizard() {
       {step === 2 && (
         <div className="space-y-5">
           <div>
-            <label className="block text-[12px] font-semibold text-[#16130C] mb-1">
+            <label className="block text-[12px] font-semibold text-dark mb-1">
               Property name
             </label>
             <input
               type="text"
               value={propertyName}
               onChange={(e) => setPropertyName(e.target.value)}
-              className="w-full h-[44px] px-3 rounded-xl border border-[#E2DDD5] text-[14px] text-[#16130C] placeholder:text-[#9C9485] focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] outline-none transition-colors"
+              className="w-full h-[44px] px-3 rounded-xl border border-border text-[14px] text-dark placeholder:text-text3 focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] outline-none transition-colors"
               placeholder="e.g. Coral Cove Villa"
               autoFocus
             />
           </div>
 
           {isEntireProperty ? (
-            <div className="bg-white rounded-xl border border-[#E2DDD5] p-4 space-y-3">
-              <p className="text-[13px] font-semibold text-[#16130C]">Property details</p>
+            <div className="bg-white rounded-xl border border-border p-4 space-y-3">
+              <p className="text-[13px] font-semibold text-dark">Property details</p>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[12px] font-semibold text-[#16130C] mb-1">Max guests</label>
-                  <input type="number" min={1} max={50} value={rooms[0].max_guests} onChange={(e) => updateRoom(0, "max_guests", parseInt(e.target.value) || 2)} className="w-full h-[40px] px-3 rounded-lg border border-[#E2DDD5] text-[14px] text-[#16130C] focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] outline-none transition-colors" />
+                  <label className="block text-[12px] font-semibold text-dark mb-1">Max guests</label>
+                  <input type="number" min={1} max={50} value={rooms[0].max_guests} onChange={(e) => updateRoom(0, "max_guests", parseInt(e.target.value) || 2)} className="w-full h-[40px] px-3 rounded-lg border border-border text-[14px] text-dark focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] outline-none transition-colors" />
                 </div>
                 <div>
-                  <label className="block text-[12px] font-semibold text-[#16130C] mb-1">Price / night (KSh)</label>
-                  <input type="number" min={0} value={rooms[0].base_price_kes} onChange={(e) => updateRoom(0, "base_price_kes", parseFloat(e.target.value) || 0)} className="w-full h-[40px] px-3 rounded-lg border border-[#E2DDD5] text-[14px] text-[#16130C] focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] outline-none transition-colors" />
+                  <label className="block text-[12px] font-semibold text-dark mb-1">Price / night (KSh)</label>
+                  <input type="number" min={0} value={rooms[0].base_price_kes} onChange={(e) => updateRoom(0, "base_price_kes", parseFloat(e.target.value) || 0)} className="w-full h-[40px] px-3 rounded-lg border border-border text-[14px] text-dark focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] outline-none transition-colors" />
                 </div>
               </div>
             </div>
           ) : (
             <div className="space-y-3">
-              <p className="text-[13px] font-semibold text-[#16130C]">Add your rooms</p>
+              <p className="text-[13px] font-semibold text-dark">Add your rooms</p>
               {rooms.map((room, i) => (
-                <div key={i} className="bg-white rounded-xl border border-[#E2DDD5] p-3 space-y-2">
+                <div key={i} className="bg-white rounded-xl border border-border p-3 space-y-2">
                   <div className="flex items-center justify-between">
-                    <p className="text-[12px] font-bold text-[#9C9485]">Room {i + 1}</p>
+                    <p className="text-[12px] font-bold text-text3">Room {i + 1}</p>
                     {rooms.length > 1 && (
                       <button onClick={() => removeRoom(i)} className="text-[11px] text-red-500 hover:text-red-700 font-medium">Remove</button>
                     )}
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <label className="block text-[11px] text-[#9C9485] mb-0.5">Room name</label>
-                      <input type="text" value={room.name} onChange={(e) => updateRoom(i, "name", e.target.value)} className="w-full h-[36px] px-2.5 rounded-lg border border-[#E2DDD5] text-[13px] text-[#16130C] placeholder:text-[#9C9485] focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] outline-none transition-colors" placeholder="Deluxe Double" />
+                      <label className="block text-[11px] text-text3 mb-0.5">Room name</label>
+                      <input type="text" value={room.name} onChange={(e) => updateRoom(i, "name", e.target.value)} className="w-full h-[36px] px-2.5 rounded-lg border border-border text-[13px] text-dark placeholder:text-text3 focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] outline-none transition-colors" placeholder="Deluxe Double" />
                     </div>
                     <div>
-                      <label className="block text-[11px] text-[#9C9485] mb-0.5">Room #</label>
-                      <input type="text" value={room.room_number} onChange={(e) => updateRoom(i, "room_number", e.target.value)} className="w-full h-[36px] px-2.5 rounded-lg border border-[#E2DDD5] text-[13px] text-[#16130C] placeholder:text-[#9C9485] focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] outline-none transition-colors" placeholder="101" />
+                      <label className="block text-[11px] text-text3 mb-0.5">Room #</label>
+                      <input type="text" value={room.room_number} onChange={(e) => updateRoom(i, "room_number", e.target.value)} className="w-full h-[36px] px-2.5 rounded-lg border border-border text-[13px] text-dark placeholder:text-text3 focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] outline-none transition-colors" placeholder="101" />
                     </div>
                     <div>
-                      <label className="block text-[11px] text-[#9C9485] mb-0.5">Max guests</label>
-                      <input type="number" min={1} max={20} value={room.max_guests} onChange={(e) => updateRoom(i, "max_guests", parseInt(e.target.value) || 2)} className="w-full h-[36px] px-2.5 rounded-lg border border-[#E2DDD5] text-[13px] text-[#16130C] focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] outline-none transition-colors" />
+                      <label className="block text-[11px] text-text3 mb-0.5">Max guests</label>
+                      <input type="number" min={1} max={20} value={room.max_guests} onChange={(e) => updateRoom(i, "max_guests", parseInt(e.target.value) || 2)} className="w-full h-[36px] px-2.5 rounded-lg border border-border text-[13px] text-dark focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] outline-none transition-colors" />
                     </div>
                     <div>
-                      <label className="block text-[11px] text-[#9C9485] mb-0.5">KSh / night</label>
-                      <input type="number" min={0} value={room.base_price_kes} onChange={(e) => updateRoom(i, "base_price_kes", parseFloat(e.target.value) || 0)} className="w-full h-[36px] px-2.5 rounded-lg border border-[#E2DDD5] text-[13px] text-[#16130C] focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] outline-none transition-colors" />
+                      <label className="block text-[11px] text-text3 mb-0.5">KSh / night</label>
+                      <input type="number" min={0} value={room.base_price_kes} onChange={(e) => updateRoom(i, "base_price_kes", parseFloat(e.target.value) || 0)} className="w-full h-[36px] px-2.5 rounded-lg border border-border text-[13px] text-dark focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] outline-none transition-colors" />
                     </div>
                   </div>
                 </div>
               ))}
               {rooms.length < 50 && (
-                <button onClick={addRoom} className="w-full h-[40px] border-2 border-dashed border-[#E2DDD5] rounded-xl text-[13px] font-semibold text-[#9C9485] hover:border-[#4F46E5] hover:text-[#4F46E5] transition-colors">+ Add another room</button>
+                <button onClick={addRoom} className="w-full h-[40px] border-2 border-dashed border-border rounded-xl text-[13px] font-semibold text-text3 hover:border-[#4F46E5] hover:text-[#4F46E5] transition-colors">+ Add another room</button>
               )}
             </div>
           )}
 
           <div className="flex gap-2">
-            <button onClick={() => setStep(1)} className="h-[44px] px-5 border border-[#E2DDD5] text-[14px] font-semibold text-[#5E5848] rounded-xl hover:bg-[#F4F1EC] transition-colors">Back</button>
+            <button onClick={() => setStep(1)} className="h-[44px] px-5 border border-border text-[14px] font-semibold text-text2 rounded-xl hover:bg-surface transition-colors">Back</button>
             <button onClick={() => setStep(3)} className="flex-1 h-[44px] bg-[#4F46E5] text-white font-bold text-[14px] rounded-xl hover:bg-[#4338CA] transition-colors">Continue</button>
           </div>
         </div>
@@ -728,29 +728,29 @@ export default function PropertySetupWizard() {
         <div className="space-y-5">
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-[12px] font-semibold text-[#16130C] mb-1">Check-in time</label>
-              <input type="time" value={checkInTime} onChange={(e) => setCheckInTime(e.target.value)} className="w-full h-[44px] px-3 rounded-xl border border-[#E2DDD5] text-[14px] text-[#16130C] focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] outline-none transition-colors" />
+              <label className="block text-[12px] font-semibold text-dark mb-1">Check-in time</label>
+              <input type="time" value={checkInTime} onChange={(e) => setCheckInTime(e.target.value)} className="w-full h-[44px] px-3 rounded-xl border border-border text-[14px] text-dark focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] outline-none transition-colors" />
             </div>
             <div>
-              <label className="block text-[12px] font-semibold text-[#16130C] mb-1">Check-out time</label>
-              <input type="time" value={checkOutTime} onChange={(e) => setCheckOutTime(e.target.value)} className="w-full h-[44px] px-3 rounded-xl border border-[#E2DDD5] text-[14px] text-[#16130C] focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] outline-none transition-colors" />
+              <label className="block text-[12px] font-semibold text-dark mb-1">Check-out time</label>
+              <input type="time" value={checkOutTime} onChange={(e) => setCheckOutTime(e.target.value)} className="w-full h-[44px] px-3 rounded-xl border border-border text-[14px] text-dark focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] outline-none transition-colors" />
             </div>
           </div>
           <div>
-            <label className="block text-[12px] font-semibold text-[#16130C] mb-1">Minimum stay (nights)</label>
-            <input type="number" min={1} max={30} value={minStay} onChange={(e) => setMinStay(parseInt(e.target.value) || 1)} className="w-full h-[44px] px-3 rounded-xl border border-[#E2DDD5] text-[14px] text-[#16130C] focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] outline-none transition-colors" />
+            <label className="block text-[12px] font-semibold text-dark mb-1">Minimum stay (nights)</label>
+            <input type="number" min={1} max={30} value={minStay} onChange={(e) => setMinStay(parseInt(e.target.value) || 1)} className="w-full h-[44px] px-3 rounded-xl border border-border text-[14px] text-dark focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] outline-none transition-colors" />
           </div>
           <div>
-            <label className="block text-[12px] font-semibold text-[#16130C] mb-1">Address</label>
-            <input type="text" value={address} onChange={(e) => setAddress(e.target.value)} className="w-full h-[44px] px-3 rounded-xl border border-[#E2DDD5] text-[14px] text-[#16130C] placeholder:text-[#9C9485] focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] outline-none transition-colors" placeholder="Optional" />
+            <label className="block text-[12px] font-semibold text-dark mb-1">Address</label>
+            <input type="text" value={address} onChange={(e) => setAddress(e.target.value)} className="w-full h-[44px] px-3 rounded-xl border border-border text-[14px] text-dark placeholder:text-text3 focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] outline-none transition-colors" placeholder="Optional" />
           </div>
           <div>
-            <label className="block text-[12px] font-semibold text-[#16130C] mb-1">City</label>
-            <input type="text" value={city} onChange={(e) => setCity(e.target.value)} className="w-full h-[44px] px-3 rounded-xl border border-[#E2DDD5] text-[14px] text-[#16130C] placeholder:text-[#9C9485] focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] outline-none transition-colors" placeholder="e.g. Watamu" />
+            <label className="block text-[12px] font-semibold text-dark mb-1">City</label>
+            <input type="text" value={city} onChange={(e) => setCity(e.target.value)} className="w-full h-[44px] px-3 rounded-xl border border-border text-[14px] text-dark placeholder:text-text3 focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] outline-none transition-colors" placeholder="e.g. Watamu" />
           </div>
           {error && <p className="text-[13px] text-red-600 font-medium">{error}</p>}
           <div className="flex gap-2">
-            <button onClick={() => setStep(2)} className="h-[44px] px-5 border border-[#E2DDD5] text-[14px] font-semibold text-[#5E5848] rounded-xl hover:bg-[#F4F1EC] transition-colors">Back</button>
+            <button onClick={() => setStep(2)} className="h-[44px] px-5 border border-border text-[14px] font-semibold text-text2 rounded-xl hover:bg-surface transition-colors">Back</button>
             <button onClick={handleFinish} disabled={saving} className="flex-1 h-[44px] bg-[#4F46E5] text-white font-bold text-[14px] rounded-xl hover:bg-[#4338CA] transition-colors disabled:opacity-50">{saving ? "Setting up..." : "Finish setup"}</button>
           </div>
         </div>

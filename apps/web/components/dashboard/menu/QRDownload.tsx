@@ -134,34 +134,34 @@ export function QRDownload({ menu: initialMenu, backHref }: QRDownloadProps) {
       <div className="mb-5">
         <Link
           href={backHref ?? `/dashboard/menu/${menu.id}`}
-          className="text-[13px] text-[#9C9485] hover:text-[#16130C] transition-colors"
+          className="text-[13px] text-text3 hover:text-dark transition-colors"
         >
           {backHref ? "← Back to dashboard" : "← Back to menu builder"}
         </Link>
-        <h1 className="font-display text-[22px] lg:text-[28px] font-bold tracking-[-0.03em] text-[#16130C] mt-2">
+        <h1 className="font-display text-[22px] lg:text-[28px] font-bold tracking-[-0.03em] text-dark mt-2">
           QR Code — {menu.display_name ?? menu.slug}
         </h1>
-        <p className="text-[13px] text-[#9C9485] mt-0.5">
+        <p className="text-[13px] text-text3 mt-0.5">
           Print this and place it on your tables
         </p>
       </div>
 
       {/* Draft warning */}
       {!menu.is_published && (
-        <div className="mb-5 rounded-xl border border-[#E8A020]/30 bg-[#E8A020]/[0.06] p-4 flex items-start gap-3">
+        <div className="mb-5 rounded-xl border border-amber/30 bg-amber/[0.06] p-4 flex items-start gap-3">
           <span className="text-[18px] shrink-0 mt-0.5">⚠️</span>
           <div className="flex-1 min-w-0">
-            <p className="text-[13px] font-semibold text-[#16130C]">
+            <p className="text-[13px] font-semibold text-dark">
               Your menu is not published yet
             </p>
-            <p className="text-[12.5px] text-[#5E5848] mt-0.5">
+            <p className="text-[12.5px] text-text2 mt-0.5">
               Customers who scan this QR code will see a 404 page. Publish your menu first.
             </p>
           </div>
           <button
             onClick={publishMenu}
             disabled={publishing}
-            className="shrink-0 bg-[#E8A020] text-[#16130C] font-bold text-[12px] px-4 h-[32px] flex items-center rounded-full hover:bg-[#d4911c] transition-colors disabled:opacity-50 whitespace-nowrap"
+            className="shrink-0 bg-amber text-dark font-bold text-[12px] px-4 h-[32px] flex items-center rounded-full hover:bg-[#d4911c] transition-colors disabled:opacity-50 whitespace-nowrap"
           >
             {publishing ? "Publishing..." : "Publish menu →"}
           </button>
@@ -255,7 +255,7 @@ export function QRDownload({ menu: initialMenu, backHref }: QRDownloadProps) {
             <button
               onClick={downloadPng}
               disabled={generatingPng}
-              className="flex items-center gap-2 bg-[#16130C] text-white font-bold text-[13px] px-5 h-[44px] rounded-full hover:bg-[#2A2520] transition-colors disabled:opacity-50"
+              className="flex items-center gap-2 bg-dark text-white font-bold text-[13px] px-5 h-[44px] rounded-full hover:bg-[#2A2520] transition-colors disabled:opacity-50"
             >
               {generatingPng ? (
                 <>
@@ -272,7 +272,7 @@ export function QRDownload({ menu: initialMenu, backHref }: QRDownloadProps) {
             <button
               onClick={downloadPdf}
               disabled={generatingPdf}
-              className="flex items-center gap-2 border border-[#E2DDD5] text-[#16130C] font-bold text-[13px] px-5 h-[44px] rounded-full hover:border-[#9C9485] transition-colors disabled:opacity-50"
+              className="flex items-center gap-2 border border-border text-dark font-bold text-[13px] px-5 h-[44px] rounded-full hover:border-text3 transition-colors disabled:opacity-50"
             >
               {generatingPdf ? (
                 <>
@@ -291,8 +291,8 @@ export function QRDownload({ menu: initialMenu, backHref }: QRDownloadProps) {
 
         {/* Right: Instructions */}
         <div className="lg:w-[40%] shrink-0 space-y-4">
-          <div className="bg-white rounded-xl lg:rounded-2xl border border-[#E2DDD5] p-5 shadow-sm">
-            <h2 className="text-[15px] font-bold text-[#16130C] mb-4">
+          <div className="bg-white rounded-xl lg:rounded-2xl border border-border p-5 shadow-sm">
+            <h2 className="text-[15px] font-bold text-dark mb-4">
               How to use your QR code
             </h2>
 
@@ -300,8 +300,8 @@ export function QRDownload({ menu: initialMenu, backHref }: QRDownloadProps) {
               <div className="flex gap-3">
                 <span className="text-[20px] shrink-0">🖨️</span>
                 <div>
-                  <p className="text-[13px] font-semibold text-[#16130C]">Print</p>
-                  <p className="text-[12px] text-[#5E5848] mt-0.5 leading-relaxed">
+                  <p className="text-[13px] font-semibold text-dark">Print</p>
+                  <p className="text-[12px] text-text2 mt-0.5 leading-relaxed">
                     Download the PDF and print on card stock. A6 size (105×148mm) works best.
                   </p>
                 </div>
@@ -310,8 +310,8 @@ export function QRDownload({ menu: initialMenu, backHref }: QRDownloadProps) {
               <div className="flex gap-3">
                 <span className="text-[20px] shrink-0">✂️</span>
                 <div>
-                  <p className="text-[13px] font-semibold text-[#16130C]">Cut & laminate</p>
-                  <p className="text-[12px] text-[#5E5848] mt-0.5 leading-relaxed">
+                  <p className="text-[13px] font-semibold text-dark">Cut & laminate</p>
+                  <p className="text-[12px] text-text2 mt-0.5 leading-relaxed">
                     Laminate for durability — they live on tables and get handled constantly.
                   </p>
                 </div>
@@ -320,14 +320,14 @@ export function QRDownload({ menu: initialMenu, backHref }: QRDownloadProps) {
               <div className="flex gap-3">
                 <span className="text-[20px] shrink-0">📱</span>
                 <div>
-                  <p className="text-[13px] font-semibold text-[#16130C]">Test it</p>
-                  <p className="text-[12px] text-[#5E5848] mt-0.5 leading-relaxed">
+                  <p className="text-[13px] font-semibold text-dark">Test it</p>
+                  <p className="text-[12px] text-text2 mt-0.5 leading-relaxed">
                     Scan your own QR code to confirm it works before putting it on tables.
                   </p>
                   <Link
                     href={`/m/${menu.slug}`}
                     target="_blank"
-                    className="text-[12px] font-semibold text-[#E8A020] hover:underline mt-1 inline-block"
+                    className="text-[12px] font-semibold text-amber hover:underline mt-1 inline-block"
                   >
                     Test scan →
                   </Link>
@@ -337,8 +337,8 @@ export function QRDownload({ menu: initialMenu, backHref }: QRDownloadProps) {
               <div className="flex gap-3">
                 <span className="text-[20px] shrink-0">🔄</span>
                 <div>
-                  <p className="text-[13px] font-semibold text-[#16130C]">It updates automatically</p>
-                  <p className="text-[12px] text-[#5E5848] mt-0.5 leading-relaxed">
+                  <p className="text-[13px] font-semibold text-dark">It updates automatically</p>
+                  <p className="text-[12px] text-text2 mt-0.5 leading-relaxed">
                     When you update your menu, the QR code page updates too. No need to reprint.
                   </p>
                 </div>
@@ -350,30 +350,30 @@ export function QRDownload({ menu: initialMenu, backHref }: QRDownloadProps) {
           <div
             className={`rounded-xl border p-4 ${
               menu.is_published
-                ? "border-[#16A34A]/20 bg-[#16A34A]/[0.04]"
-                : "border-[#E8A020]/20 bg-[#E8A020]/[0.04]"
+                ? "border-green/20 bg-green/[0.04]"
+                : "border-amber/20 bg-amber/[0.04]"
             }`}
           >
-            <p className="text-[13px] font-semibold text-[#16130C]">
+            <p className="text-[13px] font-semibold text-dark">
               💡 Your menu is{" "}
               {menu.is_published ? (
-                <span className="text-[#16A34A]">Live</span>
+                <span className="text-green">Live</span>
               ) : (
-                <span className="text-[#E8A020]">Draft</span>
+                <span className="text-amber">Draft</span>
               )}
             </p>
             {menu.is_published ? (
-              <p className="text-[12px] text-[#5E5848] mt-1">
+              <p className="text-[12px] text-text2 mt-1">
                 Customers can scan this QR code right now.
               </p>
             ) : (
               <>
-                <p className="text-[12px] text-[#5E5848] mt-1">
+                <p className="text-[12px] text-text2 mt-1">
                   Publish your menu first so customers can see it when they scan.
                 </p>
                 <Link
                   href={`/dashboard/menu/${menu.id}`}
-                  className="text-[12px] font-semibold text-[#E8A020] hover:underline mt-1 inline-block"
+                  className="text-[12px] font-semibold text-amber hover:underline mt-1 inline-block"
                 >
                   Publish now →
                 </Link>
@@ -387,20 +387,20 @@ export function QRDownload({ menu: initialMenu, backHref }: QRDownloadProps) {
       {menu.table_ordering && (
         <div className="mt-10">
           <div className="mb-4">
-            <h2 className="text-[18px] font-bold text-[#16130C]">Table QR codes</h2>
-            <p className="text-[13px] text-[#9C9485] mt-0.5">
+            <h2 className="text-[18px] font-bold text-dark">Table QR codes</h2>
+            <p className="text-[13px] text-text3 mt-0.5">
               Each table gets a unique QR. When a guest scans it, their table is pre-filled — no manual entry needed.
             </p>
           </div>
 
           {tablesLoading ? (
-            <p className="text-[13px] text-[#9C9485]">Loading tables…</p>
+            <p className="text-[13px] text-text3">Loading tables…</p>
           ) : tables.length === 0 ? (
-            <div className="bg-white rounded-xl border border-[#E2DDD5] p-5 text-center">
-              <p className="text-[13px] text-[#9C9485]">No active tables yet.</p>
+            <div className="bg-white rounded-xl border border-border p-5 text-center">
+              <p className="text-[13px] text-text3">No active tables yet.</p>
               <Link
                 href={`/dashboard/menu/${menu.id}`}
-                className="text-[13px] font-semibold text-[#E8A020] hover:underline mt-1 inline-block"
+                className="text-[13px] font-semibold text-amber hover:underline mt-1 inline-block"
               >
                 Add tables in the menu builder →
               </Link>
@@ -412,7 +412,7 @@ export function QRDownload({ menu: initialMenu, backHref }: QRDownloadProps) {
                 return (
                   <div
                     key={table.id}
-                    className="bg-white rounded-xl border border-[#E2DDD5] p-4 flex flex-col items-center gap-3 shadow-sm"
+                    className="bg-white rounded-xl border border-border p-4 flex flex-col items-center gap-3 shadow-sm"
                   >
                     {/* Hidden canvas for PNG download */}
                     <QRCodeCanvas
@@ -439,17 +439,17 @@ export function QRDownload({ menu: initialMenu, backHref }: QRDownloadProps) {
 
                     {/* Table label */}
                     <div className="text-center">
-                      <p className="text-[15px] font-bold text-[#16130C]">Table {table.table_number}</p>
+                      <p className="text-[15px] font-bold text-dark">Table {table.table_number}</p>
                       {table.floor_section && (
-                        <p className="text-[11px] text-[#9C9485]">{table.floor_section}</p>
+                        <p className="text-[11px] text-text3">{table.floor_section}</p>
                       )}
-                      <p className="text-[10px] text-[#9C9485] mt-0.5">{table.capacity} guests</p>
+                      <p className="text-[10px] text-text3 mt-0.5">{table.capacity} guests</p>
                     </div>
 
                     {/* Download */}
                     <button
                       onClick={() => downloadTableQR(table.table_number, table.id)}
-                      className="w-full h-[30px] rounded-full bg-[#16130C] text-white text-[11px] font-bold hover:bg-[#2A2520] transition-colors"
+                      className="w-full h-[30px] rounded-full bg-dark text-white text-[11px] font-bold hover:bg-[#2A2520] transition-colors"
                     >
                       ⬇ Download PNG
                     </button>

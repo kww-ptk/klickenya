@@ -22,10 +22,10 @@ export default async function NewsletterSubscribersPage() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-[#16130C]">
+          <h1 className="text-2xl font-bold text-dark">
             Newsletter Subscribers
           </h1>
-          <p className="text-sm text-[#9C9485] mt-1">
+          <p className="text-sm text-text3 mt-1">
             {subs.length} subscriber{subs.length !== 1 ? "s" : ""}
           </p>
         </div>
@@ -38,24 +38,24 @@ export default async function NewsletterSubscribersPage() {
       )}
 
       {subs.length === 0 ? (
-        <div className="bg-white border border-[#E2DDD5] rounded-xl p-12 text-center">
-          <p className="text-[#9C9485] text-sm">No subscribers yet.</p>
+        <div className="bg-white border border-border rounded-xl p-12 text-center">
+          <p className="text-text3 text-sm">No subscribers yet.</p>
         </div>
       ) : (
-        <div className="bg-white border border-[#E2DDD5] rounded-xl overflow-hidden">
+        <div className="bg-white border border-border rounded-xl overflow-hidden">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-[#E2DDD5] bg-[#FAFAF8]">
-                <th className="text-left px-5 py-3 font-semibold text-[#5E5848] text-[12px] uppercase tracking-wider">
+              <tr className="border-b border-border bg-canvas">
+                <th className="text-left px-5 py-3 font-semibold text-text2 text-[12px] uppercase tracking-wider">
                   Email
                 </th>
-                <th className="text-left px-5 py-3 font-semibold text-[#5E5848] text-[12px] uppercase tracking-wider">
+                <th className="text-left px-5 py-3 font-semibold text-text2 text-[12px] uppercase tracking-wider">
                   Source
                 </th>
-                <th className="text-left px-5 py-3 font-semibold text-[#5E5848] text-[12px] uppercase tracking-wider">
+                <th className="text-left px-5 py-3 font-semibold text-text2 text-[12px] uppercase tracking-wider">
                   Date
                 </th>
-                <th className="text-right px-5 py-3 font-semibold text-[#5E5848] text-[12px] uppercase tracking-wider">
+                <th className="text-right px-5 py-3 font-semibold text-text2 text-[12px] uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
@@ -64,17 +64,17 @@ export default async function NewsletterSubscribersPage() {
               {subs.map((sub) => (
                 <tr
                   key={sub.id}
-                  className="border-b border-[#F4F1EC] last:border-0 hover:bg-[#FAFAF8] transition-colors"
+                  className="border-b border-surface last:border-0 hover:bg-canvas transition-colors"
                 >
-                  <td className="px-5 py-3.5 font-medium text-[#16130C]">
+                  <td className="px-5 py-3.5 font-medium text-dark">
                     {sub.email}
                   </td>
                   <td className="px-5 py-3.5">
-                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-[#F4F1EC] text-[#5E5848]">
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-surface text-text2">
                       {sub.source ?? "website"}
                     </span>
                   </td>
-                  <td className="px-5 py-3.5 text-[#9C9485]">
+                  <td className="px-5 py-3.5 text-text3">
                     {new Date(sub.created_at).toLocaleDateString("en-GB", {
                       day: "numeric",
                       month: "short",

@@ -36,7 +36,7 @@ export default async function PropertyEnquiryDetailPage({
       <div className="flex items-center gap-4">
         <Link
           href="/admin/property-enquiries"
-          className="flex items-center gap-1.5 text-[13px] text-[#9C9485] hover:text-[#16130C] transition-colors"
+          className="flex items-center gap-1.5 text-[13px] text-text3 hover:text-dark transition-colors"
         >
           <svg
             className="size-4"
@@ -57,10 +57,10 @@ export default async function PropertyEnquiryDetailPage({
 
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-[22px] font-display font-bold text-[#16130C]">
+          <h1 className="text-[22px] font-display font-bold text-dark">
             Property Enquiry
           </h1>
-          <p className="text-[14px] text-[#9C9485] mt-1">
+          <p className="text-[14px] text-text3 mt-1">
             from {enquiry.name || "Unknown"} &middot;{" "}
             {formatDate(enquiry.created_at)}
           </p>
@@ -73,9 +73,9 @@ export default async function PropertyEnquiryDetailPage({
         <div className="lg:col-span-2 space-y-6">
           {/* Mortgage interest banner */}
           {enquiry.mortgage_interest && (
-            <div className="bg-[#E8A020]/10 border border-[#E8A020]/30 rounded-2xl p-5 flex items-start gap-3">
+            <div className="bg-amber/10 border border-amber/30 rounded-2xl p-5 flex items-start gap-3">
               <svg
-                className="size-5 text-[#E8A020] shrink-0 mt-0.5"
+                className="size-5 text-amber shrink-0 mt-0.5"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -88,7 +88,7 @@ export default async function PropertyEnquiryDetailPage({
                 />
               </svg>
               <div>
-                <p className="text-[14px] font-semibold text-[#E8A020]">
+                <p className="text-[14px] font-semibold text-amber">
                   Interested in mortgage options
                 </p>
                 <p className="text-[13px] text-[#C78A1A] mt-0.5">
@@ -101,44 +101,44 @@ export default async function PropertyEnquiryDetailPage({
 
           {/* Enquiry details card */}
           <div className="bg-white rounded-2xl border border-[#F0EDE8] p-6 space-y-5">
-            <h2 className="text-[18px] font-display font-bold text-[#16130C]">
+            <h2 className="text-[18px] font-display font-bold text-dark">
               Enquiry Details
             </h2>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               <div>
-                <p className="text-[12px] text-[#9C9485] uppercase tracking-wider font-medium mb-1">
+                <p className="text-[12px] text-text3 uppercase tracking-wider font-medium mb-1">
                   Property
                 </p>
-                <p className="text-[14px] text-[#16130C]">
+                <p className="text-[14px] text-dark">
                   {enquiry.property_title || "\u2014"}
                 </p>
               </div>
               <div>
-                <p className="text-[12px] text-[#9C9485] uppercase tracking-wider font-medium mb-1">
+                <p className="text-[12px] text-text3 uppercase tracking-wider font-medium mb-1">
                   Property ID
                 </p>
-                <p className="text-[14px] text-[#16130C] font-mono text-[13px]">
+                <p className="text-[14px] text-dark font-mono text-[13px]">
                   {enquiry.property_id || "\u2014"}
                 </p>
               </div>
               <div>
-                <p className="text-[12px] text-[#9C9485] uppercase tracking-wider font-medium mb-1">
+                <p className="text-[12px] text-text3 uppercase tracking-wider font-medium mb-1">
                   Name
                 </p>
-                <p className="text-[14px] text-[#16130C] font-medium">
+                <p className="text-[14px] text-dark font-medium">
                   {enquiry.name || "\u2014"}
                 </p>
               </div>
               <div>
-                <p className="text-[12px] text-[#9C9485] uppercase tracking-wider font-medium mb-1">
+                <p className="text-[12px] text-text3 uppercase tracking-wider font-medium mb-1">
                   Email
                 </p>
-                <p className="text-[14px] text-[#16130C]">
+                <p className="text-[14px] text-dark">
                   {enquiry.email ? (
                     <a
                       href={`mailto:${enquiry.email}`}
-                      className="text-[#E8A020] hover:underline"
+                      className="text-amber hover:underline"
                     >
                       {enquiry.email}
                     </a>
@@ -148,14 +148,14 @@ export default async function PropertyEnquiryDetailPage({
                 </p>
               </div>
               <div>
-                <p className="text-[12px] text-[#9C9485] uppercase tracking-wider font-medium mb-1">
+                <p className="text-[12px] text-text3 uppercase tracking-wider font-medium mb-1">
                   Phone
                 </p>
-                <p className="text-[14px] text-[#16130C]">
+                <p className="text-[14px] text-dark">
                   {enquiry.phone ? (
                     <a
                       href={`tel:${enquiry.phone}`}
-                      className="text-[#E8A020] hover:underline"
+                      className="text-amber hover:underline"
                     >
                       {enquiry.phone}
                     </a>
@@ -165,36 +165,36 @@ export default async function PropertyEnquiryDetailPage({
                 </p>
               </div>
               <div>
-                <p className="text-[12px] text-[#9C9485] uppercase tracking-wider font-medium mb-1">
+                <p className="text-[12px] text-text3 uppercase tracking-wider font-medium mb-1">
                   Enquiry Type
                 </p>
-                <p className="text-[14px] text-[#16130C] capitalize">
+                <p className="text-[14px] text-dark capitalize">
                   {(enquiry.enquiry_type || "\u2014").replace(/_/g, " ")}
                 </p>
               </div>
               <div>
-                <p className="text-[12px] text-[#9C9485] uppercase tracking-wider font-medium mb-1">
+                <p className="text-[12px] text-text3 uppercase tracking-wider font-medium mb-1">
                   Mortgage Interest
                 </p>
                 {enquiry.mortgage_interest ? (
-                  <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-[12px] font-semibold bg-[#E8A020]/15 text-[#E8A020]">
+                  <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-[12px] font-semibold bg-amber/15 text-amber">
                     Yes
                   </span>
                 ) : (
-                  <p className="text-[14px] text-[#9C9485]">No</p>
+                  <p className="text-[14px] text-text3">No</p>
                 )}
               </div>
               <div>
-                <p className="text-[12px] text-[#9C9485] uppercase tracking-wider font-medium mb-1">
+                <p className="text-[12px] text-text3 uppercase tracking-wider font-medium mb-1">
                   Status
                 </p>
                 <StatusBadge status={enquiry.status || "new"} />
               </div>
               <div>
-                <p className="text-[12px] text-[#9C9485] uppercase tracking-wider font-medium mb-1">
+                <p className="text-[12px] text-text3 uppercase tracking-wider font-medium mb-1">
                   Submitted
                 </p>
-                <p className="text-[14px] text-[#16130C]">
+                <p className="text-[14px] text-dark">
                   {formatDate(enquiry.created_at)}
                 </p>
               </div>
@@ -203,10 +203,10 @@ export default async function PropertyEnquiryDetailPage({
             {/* Message */}
             {enquiry.message && (
               <div>
-                <p className="text-[12px] text-[#9C9485] uppercase tracking-wider font-medium mb-2">
+                <p className="text-[12px] text-text3 uppercase tracking-wider font-medium mb-2">
                   Message
                 </p>
-                <div className="bg-[#F7F5F2] rounded-xl p-4 text-[14px] text-[#16130C] leading-relaxed whitespace-pre-wrap">
+                <div className="bg-[#F7F5F2] rounded-xl p-4 text-[14px] text-dark leading-relaxed whitespace-pre-wrap">
                   {enquiry.message}
                 </div>
               </div>
@@ -215,10 +215,10 @@ export default async function PropertyEnquiryDetailPage({
             {/* Notes */}
             {enquiry.notes && (
               <div>
-                <p className="text-[12px] text-[#9C9485] uppercase tracking-wider font-medium mb-2">
+                <p className="text-[12px] text-text3 uppercase tracking-wider font-medium mb-2">
                   Notes
                 </p>
-                <div className="bg-[#F7F5F2] rounded-xl p-4 text-[14px] text-[#16130C] leading-relaxed whitespace-pre-wrap">
+                <div className="bg-[#F7F5F2] rounded-xl p-4 text-[14px] text-dark leading-relaxed whitespace-pre-wrap">
                   {enquiry.notes}
                 </div>
               </div>
@@ -237,7 +237,7 @@ export default async function PropertyEnquiryDetailPage({
         <div className="space-y-6">
           {/* Status card */}
           <div className="bg-white rounded-2xl border border-[#F0EDE8] p-6 space-y-4">
-            <h2 className="text-[18px] font-display font-bold text-[#16130C]">
+            <h2 className="text-[18px] font-display font-bold text-dark">
               Status
             </h2>
             <div className="flex items-center gap-2">
@@ -256,26 +256,26 @@ export default async function PropertyEnquiryDetailPage({
               {enquiry.status !== "closed" && (
                 <button
                   type="button"
-                  className="w-full px-4 py-2 text-[13px] font-medium rounded-lg bg-[#9C9485]/10 text-[#9C9485] hover:bg-[#9C9485]/20 transition-colors"
+                  className="w-full px-4 py-2 text-[13px] font-medium rounded-lg bg-text3/10 text-text3 hover:bg-text3/20 transition-colors"
                   disabled
                 >
                   Mark Closed
                 </button>
               )}
             </div>
-            <p className="text-[11px] text-[#9C9485]">
+            <p className="text-[11px] text-text3">
               Use the actions panel below to update status.
             </p>
           </div>
 
           {/* Quick Actions */}
           <div className="bg-white rounded-2xl border border-[#F0EDE8] p-6 space-y-3">
-            <h2 className="text-[18px] font-display font-bold text-[#16130C]">
+            <h2 className="text-[18px] font-display font-bold text-dark">
               Quick Actions
             </h2>
             <Link
               href="/admin/property-enquiries"
-              className="flex items-center gap-2 text-[13px] font-medium text-[#E8A020] hover:text-[#C78A1A] transition-colors"
+              className="flex items-center gap-2 text-[13px] font-medium text-amber hover:text-[#C78A1A] transition-colors"
             >
               <svg
                 className="size-4"
@@ -295,7 +295,7 @@ export default async function PropertyEnquiryDetailPage({
             {enquiry.email && (
               <a
                 href={`mailto:${enquiry.email}`}
-                className="flex items-center gap-2 text-[13px] font-medium text-[#E8A020] hover:text-[#C78A1A] transition-colors"
+                className="flex items-center gap-2 text-[13px] font-medium text-amber hover:text-[#C78A1A] transition-colors"
               >
                 <svg
                   className="size-4"
@@ -316,7 +316,7 @@ export default async function PropertyEnquiryDetailPage({
             {enquiry.phone && (
               <a
                 href={`tel:${enquiry.phone}`}
-                className="flex items-center gap-2 text-[13px] font-medium text-[#E8A020] hover:text-[#C78A1A] transition-colors"
+                className="flex items-center gap-2 text-[13px] font-medium text-amber hover:text-[#C78A1A] transition-colors"
               >
                 <svg
                   className="size-4"

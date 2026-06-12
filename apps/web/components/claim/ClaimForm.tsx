@@ -119,16 +119,16 @@ export function ClaimForm({
                 className={cn(
                   "w-3 h-3 rounded-full transition-all duration-200",
                   i < stepIndex
-                    ? "bg-[#E8A020]"
+                    ? "bg-amber"
                     : i === stepIndex
-                      ? "border-2 border-[#E8A020] bg-transparent"
-                      : "bg-[#E2DDD5]"
+                      ? "border-2 border-amber bg-transparent"
+                      : "bg-border"
                 )}
               />
               <span
                 className={cn(
                   "text-[10px] mt-1.5 whitespace-nowrap",
-                  i <= stepIndex ? "text-[#16130C] font-semibold" : "text-[#9C9485]"
+                  i <= stepIndex ? "text-dark font-semibold" : "text-text3"
                 )}
               >
                 {s.label}
@@ -138,7 +138,7 @@ export function ClaimForm({
               <div
                 className={cn(
                   "w-12 h-px mx-1 -mt-4",
-                  i < stepIndex ? "bg-[#E8A020]" : "bg-[#E2DDD5]"
+                  i < stepIndex ? "bg-amber" : "bg-border"
                 )}
               />
             )}
@@ -246,8 +246,8 @@ export function ClaimForm({
   }
 
   /* ── Input classes ── */
-  const inputCls = "w-full border border-[#E2DDD5] rounded-xl px-4 py-3 text-[15px] text-[#16130C] placeholder:text-[#9C9485] focus:outline-none focus:border-[#E8A020] focus:ring-1 focus:ring-[#E8A020]/30 transition-colors bg-white";
-  const labelCls = "block text-sm font-semibold text-[#16130C] mb-1.5";
+  const inputCls = "w-full border border-border rounded-xl px-4 py-3 text-[15px] text-dark placeholder:text-text3 focus:outline-none focus:border-amber focus:ring-1 focus:ring-amber/30 transition-colors bg-white";
+  const labelCls = "block text-sm font-semibold text-dark mb-1.5";
 
   /* ══════════════════════════════════════ */
   /* STEP 1 — Details                      */
@@ -293,15 +293,15 @@ export function ClaimForm({
               required
             />
           </div>
-          <p className="text-xs text-[#9C9485]">
+          <p className="text-xs text-text3">
             We&apos;ll send a 6-digit code to your email to verify your identity.
           </p>
         </div>
 
         {/* Consent box */}
-        <div className="border border-[#E2DDD5] rounded-xl p-4 mb-4 bg-[#F4F1EC]">
-          <p className="text-sm font-bold text-[#16130C] mb-2">Before you continue</p>
-          <div className="max-h-28 overflow-y-auto text-xs text-[#5E5848] leading-relaxed mb-3 whitespace-pre-line">
+        <div className="border border-border rounded-xl p-4 mb-4 bg-surface">
+          <p className="text-sm font-bold text-dark mb-2">Before you continue</p>
+          <div className="max-h-28 overflow-y-auto text-xs text-text2 leading-relaxed mb-3 whitespace-pre-line">
             {CONSENT_TEXT}
           </div>
           <label className="flex items-start gap-3 cursor-pointer group">
@@ -319,14 +319,14 @@ export function ClaimForm({
                 className={cn(
                   "w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all",
                   consentGiven
-                    ? "bg-[#E8A020] border-[#E8A020]"
-                    : "border-[#E2DDD5] bg-white group-hover:border-[#E8A020]/40"
+                    ? "bg-amber border-amber"
+                    : "border-border bg-white group-hover:border-amber/40"
                 )}
               >
                 {consentGiven && <Check className="size-3 text-white" strokeWidth={3} />}
               </div>
             </div>
-            <span className="text-xs text-[#5E5848] leading-relaxed">
+            <span className="text-xs text-text2 leading-relaxed">
               I confirm I have read and agree to the above terms. I am authorised to claim{" "}
               <strong>{listingTitle}</strong> on behalf of this business.
             </span>
@@ -346,8 +346,8 @@ export function ClaimForm({
           className={cn(
             "w-full rounded-full py-3 text-sm font-bold transition-all",
             detailsValid && consentGiven
-              ? "bg-[#E8A020] text-[#16130C] hover:bg-[#d4911c]"
-              : "bg-[#E2DDD5] text-[#9C9485] cursor-not-allowed"
+              ? "bg-amber text-dark hover:bg-[#d4911c]"
+              : "bg-border text-text3 cursor-not-allowed"
           )}
         >
           {detailsValid && consentGiven ? "Continue →" : "Accept terms to continue"}
@@ -364,13 +364,13 @@ export function ClaimForm({
       <div>
         <ProgressDots />
 
-        <h2 className="font-heading text-xl font-bold text-[#16130C] mb-1">
+        <h2 className="font-heading text-xl font-bold text-dark mb-1">
           Does everything look right?
         </h2>
-        <p className="text-sm text-[#5E5848] mb-6">Help us make your listing accurate.</p>
+        <p className="text-sm text-text2 mb-6">Help us make your listing accurate.</p>
 
         {/* Q1 — Correct? */}
-        <p className="text-sm font-semibold text-[#16130C] mb-3">
+        <p className="text-sm font-semibold text-dark mb-3">
           Is the information on your listing correct?
         </p>
         <div className="flex gap-2 mb-4">
@@ -379,8 +379,8 @@ export function ClaimForm({
             className={cn(
               "flex-1 rounded-xl py-3 text-sm transition-all",
               everythingCorrect === true
-                ? "bg-[#E8A020] text-[#16130C] font-bold"
-                : "border border-[#E2DDD5] text-[#5E5848] hover:border-[#E8A020]/40"
+                ? "bg-amber text-dark font-bold"
+                : "border border-border text-text2 hover:border-amber/40"
             )}
           >
             ✓ Yes, looks good
@@ -390,8 +390,8 @@ export function ClaimForm({
             className={cn(
               "flex-1 rounded-xl py-3 text-sm transition-all",
               everythingCorrect === false
-                ? "bg-[#E8A020] text-[#16130C] font-bold"
-                : "border border-[#E2DDD5] text-[#5E5848] hover:border-[#E8A020]/40"
+                ? "bg-amber text-dark font-bold"
+                : "border border-border text-text2 hover:border-amber/40"
             )}
           >
             ✗ Some things need fixing
@@ -418,14 +418,14 @@ export function ClaimForm({
                       className={cn(
                         "w-4 h-4 rounded border-2 flex items-center justify-center transition-all",
                         incorrectFields.includes(field)
-                          ? "bg-[#E8A020] border-[#E8A020]"
-                          : "border-[#E2DDD5] bg-white group-hover:border-[#E8A020]/40"
+                          ? "bg-amber border-amber"
+                          : "border-border bg-white group-hover:border-amber/40"
                       )}
                     >
                       {incorrectFields.includes(field) && <Check className="size-2.5 text-white" strokeWidth={3} />}
                     </div>
                   </div>
-                  <span className="text-xs text-[#5E5848]">{field}</span>
+                  <span className="text-xs text-text2">{field}</span>
                 </label>
               ))}
             </div>
@@ -443,12 +443,12 @@ export function ClaimForm({
         )}
 
         {/* Q2 — Online presence */}
-        <p className="text-sm font-semibold text-[#16130C] mb-2 mt-5">
-          Where can we find you online? <span className="font-normal text-[#9C9485]">(optional)</span>
+        <p className="text-sm font-semibold text-dark mb-2 mt-5">
+          Where can we find you online? <span className="font-normal text-text3">(optional)</span>
         </p>
         <div className="space-y-3 mb-5">
           <div>
-            <label className="text-xs text-[#5E5848] mb-1 block">Website</label>
+            <label className="text-xs text-text2 mb-1 block">Website</label>
             <input
               type="url"
               value={websiteUrl}
@@ -458,7 +458,7 @@ export function ClaimForm({
             />
           </div>
           <div>
-            <label className="text-xs text-[#5E5848] mb-1 block">Instagram / Facebook / TripAdvisor</label>
+            <label className="text-xs text-text2 mb-1 block">Instagram / Facebook / TripAdvisor</label>
             <input
               type="text"
               value={socialMediaUrl}
@@ -470,7 +470,7 @@ export function ClaimForm({
         </div>
 
         {/* Q3 — Photos */}
-        <p className="text-sm font-semibold text-[#16130C] mb-3 mt-5">Can we use your photos?</p>
+        <p className="text-sm font-semibold text-dark mb-3 mt-5">Can we use your photos?</p>
         <div className="space-y-2 mb-5">
           {([
             { value: "yes_all" as const, title: "✓ Yes — use all my photos", desc: "We'll use photos from your website and social media." },
@@ -484,13 +484,13 @@ export function ClaimForm({
               className={cn(
                 "w-full text-left border rounded-xl p-3 flex items-start gap-3 transition-all",
                 photoConsent === opt.value
-                  ? "border-[#E8A020] bg-[#E8A020]/5"
-                  : "border-[#E2DDD5] hover:border-[#E8A020]/40"
+                  ? "border-amber bg-amber/5"
+                  : "border-border hover:border-amber/40"
               )}
             >
               <div className="min-w-0">
-                <p className="text-sm font-semibold text-[#16130C]">{opt.title}</p>
-                <p className="text-xs text-[#5E5848] mt-0.5">{opt.desc}</p>
+                <p className="text-sm font-semibold text-dark">{opt.title}</p>
+                <p className="text-xs text-text2 mt-0.5">{opt.desc}</p>
               </div>
             </button>
           ))}
@@ -499,8 +499,8 @@ export function ClaimForm({
         {/* Q4 — Extra notes */}
         {!additionalNotes && (
           <div className="mb-6">
-            <p className="text-sm font-semibold text-[#16130C] mb-2 mt-5">
-              Anything else we should know? <span className="font-normal text-[#9C9485]">(optional)</span>
+            <p className="text-sm font-semibold text-dark mb-2 mt-5">
+              Anything else we should know? <span className="font-normal text-text3">(optional)</span>
             </p>
             <textarea
               value={extraNotes}
@@ -519,14 +519,14 @@ export function ClaimForm({
         <div className="flex gap-3">
           <button
             onClick={() => setStep("details")}
-            className="px-5 py-3 text-sm text-[#5E5848] hover:text-[#16130C] transition-colors"
+            className="px-5 py-3 text-sm text-text2 hover:text-dark transition-colors"
           >
             ← Back
           </button>
           <button
             onClick={handleSubmitClaim}
             disabled={isLoading}
-            className="flex-1 bg-[#E8A020] text-[#16130C] font-bold text-sm rounded-full py-3 hover:bg-[#d4911c] transition-all disabled:opacity-60 flex items-center justify-center gap-2"
+            className="flex-1 bg-amber text-dark font-bold text-sm rounded-full py-3 hover:bg-[#d4911c] transition-all disabled:opacity-60 flex items-center justify-center gap-2"
           >
             {isLoading && <Loader2 className="size-4 animate-spin" />}
             Send verification code →
@@ -545,8 +545,8 @@ export function ClaimForm({
         <ProgressDots />
 
         <div className="text-center mb-6">
-          <p className="text-sm text-[#5E5848]">We sent a 6-digit code to:</p>
-          <p className="font-semibold text-[#16130C] mt-1">{email}</p>
+          <p className="text-sm text-text2">We sent a 6-digit code to:</p>
+          <p className="font-semibold text-dark mt-1">{email}</p>
         </div>
 
         <input
@@ -557,7 +557,7 @@ export function ClaimForm({
           value={otpValue}
           onChange={(e) => setOtpValue(e.target.value.replace(/\D/g, "").slice(0, 6))}
           placeholder="000000"
-          className="w-full text-center text-3xl tracking-[0.5em] font-bold text-[#16130C] border-2 border-[#E2DDD5] focus:border-[#E8A020] rounded-xl py-4 outline-none transition-colors bg-white mb-4"
+          className="w-full text-center text-3xl tracking-[0.5em] font-bold text-dark border-2 border-border focus:border-amber rounded-xl py-4 outline-none transition-colors bg-white mb-4"
         />
 
         {error && (
@@ -567,7 +567,7 @@ export function ClaimForm({
         <button
           onClick={handleVerifyOtp}
           disabled={isLoading || otpValue.length !== 6}
-          className="w-full bg-[#E8A020] text-[#16130C] font-bold text-sm rounded-full py-3 hover:bg-[#d4911c] transition-all disabled:opacity-60 flex items-center justify-center gap-2 mb-3"
+          className="w-full bg-amber text-dark font-bold text-sm rounded-full py-3 hover:bg-[#d4911c] transition-all disabled:opacity-60 flex items-center justify-center gap-2 mb-3"
         >
           {isLoading && <Loader2 className="size-4 animate-spin" />}
           Verify &amp; claim →
@@ -575,18 +575,18 @@ export function ClaimForm({
 
         <button
           onClick={() => { setStep("details"); setOtpValue(""); setError(null); }}
-          className="w-full text-sm text-[#5E5848] underline underline-offset-2 hover:text-[#16130C] mb-4"
+          className="w-full text-sm text-text2 underline underline-offset-2 hover:text-dark mb-4"
         >
           Wrong email? Go back
         </button>
 
         <div className="text-center">
           {resendCountdown > 0 ? (
-            <p className="text-xs text-[#9C9485]">Resend code in {resendCountdown}s</p>
+            <p className="text-xs text-text3">Resend code in {resendCountdown}s</p>
           ) : (
             <button
               onClick={handleResend}
-              className="text-xs text-[#E8A020] font-semibold hover:underline"
+              className="text-xs text-amber font-semibold hover:underline"
             >
               Didn&apos;t receive it? Resend code →
             </button>
@@ -609,53 +609,53 @@ export function ClaimForm({
       <ProgressDots />
 
       <div className="text-center mb-8">
-        <div className="w-16 h-16 rounded-full bg-[#16A34A] flex items-center justify-center mx-auto">
+        <div className="w-16 h-16 rounded-full bg-green flex items-center justify-center mx-auto">
           <Check className="size-8 text-white" strokeWidth={3} />
         </div>
-        <h2 className="font-heading text-2xl font-bold text-[#16130C] mt-4 mb-2">
+        <h2 className="font-heading text-2xl font-bold text-dark mt-4 mb-2">
           🎉 {listingTitle} is now claimed!
         </h2>
-        <p className="text-sm text-[#5E5848]">
+        <p className="text-sm text-text2">
           Our team will review your listing within 24 hours. Once approved, your Verified badge will appear. Check your email for your confirmation.
         </p>
       </div>
 
       <div className="space-y-2 mb-6">
-        <div className="border border-[#E2DDD5] rounded-xl p-4 bg-white">
-          <p className="text-sm font-semibold text-[#16130C] mb-1">📸 Add photos</p>
-          <p className="text-xs text-[#5E5848]">
+        <div className="border border-border rounded-xl p-4 bg-white">
+          <p className="text-sm font-semibold text-dark mb-1">📸 Add photos</p>
+          <p className="text-xs text-text2">
             Email photos to hello@klickenya.com with subject: Photos for {listingTitle}
           </p>
         </div>
         <Link
           href={listingUrl}
           target="_blank"
-          className="block border border-[#E2DDD5] rounded-xl p-4 bg-white hover:border-[#E8A020]/40 transition-colors"
+          className="block border border-border rounded-xl p-4 bg-white hover:border-amber/40 transition-colors"
         >
-          <p className="text-sm font-semibold text-[#16130C] mb-1">👁 View your listing</p>
-          <p className="text-xs text-[#5E5848]">See how it looks on Klickenya</p>
+          <p className="text-sm font-semibold text-dark mb-1">👁 View your listing</p>
+          <p className="text-xs text-text2">See how it looks on Klickenya</p>
         </Link>
-        <div className="border border-[#E2DDD5] rounded-xl p-4 bg-white">
-          <p className="text-sm font-semibold text-[#16130C] mb-1">✉️ Questions?</p>
-          <p className="text-xs text-[#5E5848]">
+        <div className="border border-border rounded-xl p-4 bg-white">
+          <p className="text-sm font-semibold text-dark mb-1">✉️ Questions?</p>
+          <p className="text-xs text-text2">
             Reply to your confirmation email or contact hello@klickenya.com
           </p>
         </div>
         {isRestaurant && (
           <Link
             href="/dashboard/menus"
-            className="block border border-[#E2DDD5] rounded-xl p-4 bg-white hover:border-[#E8A020]/40 transition-colors"
+            className="block border border-border rounded-xl p-4 bg-white hover:border-amber/40 transition-colors"
           >
-            <p className="text-sm font-semibold text-[#16130C] mb-1">🍽️ Set up your free digital menu</p>
-            <p className="text-xs text-[#5E5848] mb-2">
+            <p className="text-sm font-semibold text-dark mb-1">🍽️ Set up your free digital menu</p>
+            <p className="text-xs text-text2 mb-2">
               Customers scan a QR code on your table to see your full menu. Takes 5 minutes to set up.
             </p>
-            <span className="text-xs font-bold text-[#E8A020]">Build your menu →</span>
+            <span className="text-xs font-bold text-amber">Build your menu →</span>
           </Link>
         )}
       </div>
 
-      <p className="text-xs text-[#9C9485] text-center">
+      <p className="text-xs text-text3 text-center">
         Thank you for joining Klickenya 🇰🇪
       </p>
     </div>

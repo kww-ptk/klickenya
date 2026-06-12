@@ -2,9 +2,9 @@ interface DeciderCard { label?: string; color?: string; title?: string; items?: 
 interface DeciderGridValue { cards?: DeciderCard[] }
 
 const cardStyles: Record<string, { bg: string; border: string; label: string }> = {
-  teal: { bg: 'bg-[rgba(13,115,119,.06)]', border: 'border-[rgba(13,115,119,.2)]', label: 'text-[#0D7377]' },
+  teal: { bg: 'bg-[rgba(13,115,119,.06)]', border: 'border-[rgba(13,115,119,.2)]', label: 'text-teal' },
   blue: { bg: 'bg-[rgba(37,99,235,.05)]', border: 'border-[rgba(37,99,235,.18)]', label: 'text-[#2563EB]' },
-  purple: { bg: 'bg-[rgba(139,77,171,.10)]', border: 'border-[rgba(139,77,171,.2)]', label: 'text-[#8B4DAB]' },
+  purple: { bg: 'bg-[rgba(139,77,171,.10)]', border: 'border-[rgba(139,77,171,.2)]', label: 'text-purple2' },
   amber: { bg: 'bg-[rgba(232,160,32,.08)]', border: 'border-[rgba(232,160,32,.2)]', label: 'text-[#B8860B]' },
 }
 

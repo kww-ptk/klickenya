@@ -92,7 +92,7 @@ export default async function ContactRequestDetailPage({
       <div className="flex items-center gap-4">
         <Link
           href="/admin/contact-requests"
-          className="flex items-center gap-1.5 text-[13px] text-[#9C9485] hover:text-[#16130C] transition-colors"
+          className="flex items-center gap-1.5 text-[13px] text-text3 hover:text-dark transition-colors"
         >
           <svg
             className="size-4"
@@ -113,10 +113,10 @@ export default async function ContactRequestDetailPage({
 
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-[22px] font-display font-bold text-[#16130C]">
+          <h1 className="text-[22px] font-display font-bold text-dark">
             Contact Request
           </h1>
-          <p className="text-[14px] text-[#9C9485] mt-1">
+          <p className="text-[14px] text-text3 mt-1">
             from {request.full_name || "Unknown"} &middot;{" "}
             {formatDate(request.created_at)}
           </p>
@@ -129,44 +129,44 @@ export default async function ContactRequestDetailPage({
         <div className="lg:col-span-2 space-y-6">
           {/* Request details card */}
           <div className="bg-white rounded-2xl border border-[#F0EDE8] p-6 space-y-5">
-            <h2 className="text-[18px] font-display font-bold text-[#16130C]">
+            <h2 className="text-[18px] font-display font-bold text-dark">
               Request Details
             </h2>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               <div>
-                <p className="text-[12px] text-[#9C9485] uppercase tracking-wider font-medium mb-1">
+                <p className="text-[12px] text-text3 uppercase tracking-wider font-medium mb-1">
                   Listing
                 </p>
-                <p className="text-[14px] text-[#16130C]">
+                <p className="text-[14px] text-dark">
                   {parsedListing || "\u2014"}
                 </p>
               </div>
               <div>
-                <p className="text-[12px] text-[#9C9485] uppercase tracking-wider font-medium mb-1">
+                <p className="text-[12px] text-text3 uppercase tracking-wider font-medium mb-1">
                   Listing Type
                 </p>
-                <p className="text-[14px] text-[#16130C] capitalize">
+                <p className="text-[14px] text-dark capitalize">
                   {parsedType || "\u2014"}
                 </p>
               </div>
               <div>
-                <p className="text-[12px] text-[#9C9485] uppercase tracking-wider font-medium mb-1">
+                <p className="text-[12px] text-text3 uppercase tracking-wider font-medium mb-1">
                   Name
                 </p>
-                <p className="text-[14px] text-[#16130C] font-medium">
+                <p className="text-[14px] text-dark font-medium">
                   {request.full_name || "\u2014"}
                 </p>
               </div>
               <div>
-                <p className="text-[12px] text-[#9C9485] uppercase tracking-wider font-medium mb-1">
+                <p className="text-[12px] text-text3 uppercase tracking-wider font-medium mb-1">
                   Email
                 </p>
-                <p className="text-[14px] text-[#16130C]">
+                <p className="text-[14px] text-dark">
                   {request.email ? (
                     <a
                       href={`mailto:${request.email}`}
-                      className="text-[#E8A020] hover:underline"
+                      className="text-amber hover:underline"
                     >
                       {request.email}
                     </a>
@@ -176,14 +176,14 @@ export default async function ContactRequestDetailPage({
                 </p>
               </div>
               <div>
-                <p className="text-[12px] text-[#9C9485] uppercase tracking-wider font-medium mb-1">
+                <p className="text-[12px] text-text3 uppercase tracking-wider font-medium mb-1">
                   Phone
                 </p>
-                <p className="text-[14px] text-[#16130C]">
+                <p className="text-[14px] text-dark">
                   {request.phone ? (
                     <a
                       href={`tel:${request.phone}`}
-                      className="text-[#E8A020] hover:underline"
+                      className="text-amber hover:underline"
                     >
                       {request.phone}
                     </a>
@@ -193,16 +193,16 @@ export default async function ContactRequestDetailPage({
                 </p>
               </div>
               <div>
-                <p className="text-[12px] text-[#9C9485] uppercase tracking-wider font-medium mb-1">
+                <p className="text-[12px] text-text3 uppercase tracking-wider font-medium mb-1">
                   Status
                 </p>
                 <StatusBadge status={request.status || "new"} />
               </div>
               <div>
-                <p className="text-[12px] text-[#9C9485] uppercase tracking-wider font-medium mb-1">
+                <p className="text-[12px] text-text3 uppercase tracking-wider font-medium mb-1">
                   Submitted
                 </p>
-                <p className="text-[14px] text-[#16130C]">
+                <p className="text-[14px] text-dark">
                   {formatDate(request.created_at)}
                 </p>
               </div>
@@ -211,10 +211,10 @@ export default async function ContactRequestDetailPage({
             {/* Message */}
             {request.message && (
               <div>
-                <p className="text-[12px] text-[#9C9485] uppercase tracking-wider font-medium mb-2">
+                <p className="text-[12px] text-text3 uppercase tracking-wider font-medium mb-2">
                   Message
                 </p>
-                <div className="bg-[#F7F5F2] rounded-xl p-4 text-[14px] text-[#16130C] leading-relaxed whitespace-pre-wrap">
+                <div className="bg-[#F7F5F2] rounded-xl p-4 text-[14px] text-dark leading-relaxed whitespace-pre-wrap">
                   {request.message}
                 </div>
               </div>
@@ -223,7 +223,7 @@ export default async function ContactRequestDetailPage({
             {/* Enquiry Details (parsed from notes) */}
             {enquiryLines.length > 0 && (
               <div>
-                <p className="text-[12px] text-[#9C9485] uppercase tracking-wider font-medium mb-2">
+                <p className="text-[12px] text-text3 uppercase tracking-wider font-medium mb-2">
                   Enquiry Details
                 </p>
                 <div className="bg-[#F7F5F2] rounded-xl p-4 space-y-2">
@@ -232,10 +232,10 @@ export default async function ContactRequestDetailPage({
                       key={key}
                       className="flex items-start gap-3 text-[14px]"
                     >
-                      <span className="text-[#9C9485] capitalize min-w-[120px] shrink-0">
+                      <span className="text-text3 capitalize min-w-[120px] shrink-0">
                         {key}
                       </span>
-                      <span className="text-[#16130C]">
+                      <span className="text-dark">
                         {value || "\u2014"}
                       </span>
                     </div>
@@ -247,10 +247,10 @@ export default async function ContactRequestDetailPage({
             {/* Notes */}
             {request.notes && (
               <div>
-                <p className="text-[12px] text-[#9C9485] uppercase tracking-wider font-medium mb-2">
+                <p className="text-[12px] text-text3 uppercase tracking-wider font-medium mb-2">
                   Notes
                 </p>
-                <div className="bg-[#F7F5F2] rounded-xl p-4 text-[14px] text-[#16130C] leading-relaxed whitespace-pre-wrap">
+                <div className="bg-[#F7F5F2] rounded-xl p-4 text-[14px] text-dark leading-relaxed whitespace-pre-wrap">
                   {request.notes}
                 </div>
               </div>
@@ -272,7 +272,7 @@ export default async function ContactRequestDetailPage({
         <div className="space-y-6">
           {/* Status card */}
           <div className="bg-white rounded-2xl border border-[#F0EDE8] p-6 space-y-4">
-            <h2 className="text-[18px] font-display font-bold text-[#16130C]">
+            <h2 className="text-[18px] font-display font-bold text-dark">
               Status
             </h2>
             <div className="flex items-center gap-2">
@@ -303,26 +303,26 @@ export default async function ContactRequestDetailPage({
               {request.status !== "closed" && (
                 <button
                   type="button"
-                  className="w-full px-4 py-2 text-[13px] font-medium rounded-lg bg-[#9C9485]/10 text-[#9C9485] hover:bg-[#9C9485]/20 transition-colors"
+                  className="w-full px-4 py-2 text-[13px] font-medium rounded-lg bg-text3/10 text-text3 hover:bg-text3/20 transition-colors"
                   disabled
                 >
                   Mark Closed
                 </button>
               )}
             </div>
-            <p className="text-[11px] text-[#9C9485]">
+            <p className="text-[11px] text-text3">
               Use the actions panel below to update status.
             </p>
           </div>
 
           {/* Quick Actions */}
           <div className="bg-white rounded-2xl border border-[#F0EDE8] p-6 space-y-3">
-            <h2 className="text-[18px] font-display font-bold text-[#16130C]">
+            <h2 className="text-[18px] font-display font-bold text-dark">
               Quick Actions
             </h2>
             <Link
               href="/admin/contact-requests"
-              className="flex items-center gap-2 text-[13px] font-medium text-[#E8A020] hover:text-[#C78A1A] transition-colors"
+              className="flex items-center gap-2 text-[13px] font-medium text-amber hover:text-[#C78A1A] transition-colors"
             >
               <svg
                 className="size-4"
@@ -342,7 +342,7 @@ export default async function ContactRequestDetailPage({
             {request.email && (
               <a
                 href={`mailto:${request.email}`}
-                className="flex items-center gap-2 text-[13px] font-medium text-[#E8A020] hover:text-[#C78A1A] transition-colors"
+                className="flex items-center gap-2 text-[13px] font-medium text-amber hover:text-[#C78A1A] transition-colors"
               >
                 <svg
                   className="size-4"
@@ -363,7 +363,7 @@ export default async function ContactRequestDetailPage({
             {request.phone && (
               <a
                 href={`tel:${request.phone}`}
-                className="flex items-center gap-2 text-[13px] font-medium text-[#E8A020] hover:text-[#C78A1A] transition-colors"
+                className="flex items-center gap-2 text-[13px] font-medium text-amber hover:text-[#C78A1A] transition-colors"
               >
                 <svg
                   className="size-4"

@@ -55,16 +55,16 @@ export default async function OwnerSingleStationPage({ params }: PageProps) {
   const other = station === "kitchen" ? "bar" : "kitchen";
 
   return (
-    <div className="min-h-screen bg-[#F4F1EC]">
-      <header className="bg-white border-b border-[#E2DDD5] px-4 lg:px-6 py-4 flex items-center justify-between">
+    <div className="min-h-screen bg-surface">
+      <header className="bg-white border-b border-border px-4 lg:px-6 py-4 flex items-center justify-between">
         <div>
-          <p className="text-[11px] font-bold text-[#9C9485] uppercase tracking-widest">
+          <p className="text-[11px] font-bold text-text3 uppercase tracking-widest">
             {station === "kitchen" ? "🍳 Kitchen" : "🍹 Bar"}
           </p>
-          <h1 className="font-display text-[22px] font-bold text-[#16130C]">{menu.name}</h1>
+          <h1 className="font-display text-[22px] font-bold text-dark">{menu.name}</h1>
         </div>
         <Link href={`/dashboard/menu/${menu.id}/orders/${other}`}
-          className="text-[12px] font-bold text-[#5E5848] border border-[#E2DDD5] rounded-full px-3 h-[32px] inline-flex items-center hover:bg-white">
+          className="text-[12px] font-bold text-text2 border border-border rounded-full px-3 h-[32px] inline-flex items-center hover:bg-white">
           Switch to {other === "kitchen" ? "Kitchen" : "Bar"} →
         </Link>
       </header>

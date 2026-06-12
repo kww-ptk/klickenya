@@ -160,15 +160,15 @@ export default async function ListingOverviewPage({
     <div className="space-y-5">
       {/* ── Welcome callout (shown when ≤1 add-on active) ── */}
       {showWelcomeCallout && (
-        <div className="rounded-xl lg:rounded-2xl border border-[#E8A020]/30 bg-[#E8A020]/[0.06] p-4 lg:p-5">
-          <p className="text-[13px] font-semibold text-[#16130C] mb-0.5">
+        <div className="rounded-xl lg:rounded-2xl border border-amber/30 bg-amber/[0.06] p-4 lg:p-5">
+          <p className="text-[13px] font-semibold text-dark mb-0.5">
             Your listing is live!
           </p>
-          <p className="text-[13px] text-[#5E5848]">
+          <p className="text-[13px] text-text2">
             You haven&apos;t enabled any add-ons yet.{" "}
             <Link
               href={`/dashboard/listings/${id}/features`}
-              className="text-[#E8A020] font-semibold hover:underline"
+              className="text-amber font-semibold hover:underline"
             >
               Visit the Features tab
             </Link>{" "}
@@ -181,33 +181,33 @@ export default async function ListingOverviewPage({
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 lg:gap-3">
         {/* Listing views this week */}
         <div
-          className="bg-white rounded-xl lg:rounded-2xl border border-[#E2DDD5] p-4 shadow-sm"
+          className="bg-white rounded-xl lg:rounded-2xl border border-border p-4 shadow-sm"
           title="Views tracked from your live listing page"
         >
-          <p className="text-[11px] font-semibold text-[#9C9485] uppercase tracking-wide mb-1">
+          <p className="text-[11px] font-semibold text-text3 uppercase tracking-wide mb-1">
             Views this week
           </p>
-          <p className="font-display text-[26px] font-bold tracking-[-0.02em] text-[#16130C] leading-none">
+          <p className="font-display text-[26px] font-bold tracking-[-0.02em] text-dark leading-none">
             {viewsThisWeek}
           </p>
           {/* TODO V2: link to per-listing analytics breakdown in /dashboard/stats */}
         </div>
 
         {/* Bookings this week */}
-        <div className="bg-white rounded-xl lg:rounded-2xl border border-[#E2DDD5] p-4 shadow-sm">
-          <p className="text-[11px] font-semibold text-[#9C9485] uppercase tracking-wide mb-1">
+        <div className="bg-white rounded-xl lg:rounded-2xl border border-border p-4 shadow-sm">
+          <p className="text-[11px] font-semibold text-text3 uppercase tracking-wide mb-1">
             Bookings this week
           </p>
           {reservationsActive ? (
-            <p className="font-display text-[26px] font-bold tracking-[-0.02em] text-[#16130C] leading-none">
+            <p className="font-display text-[26px] font-bold tracking-[-0.02em] text-dark leading-none">
               {bookingsThisWeek}
             </p>
           ) : (
             <>
-              <p className="font-display text-[26px] font-bold tracking-[-0.02em] text-[#9C9485] leading-none">
+              <p className="font-display text-[26px] font-bold tracking-[-0.02em] text-text3 leading-none">
                 —
               </p>
-              <p className="text-[11px] text-[#9C9485] mt-1 leading-snug">
+              <p className="text-[11px] text-text3 mt-1 leading-snug">
                 Enable reservations to track
               </p>
             </>
@@ -215,20 +215,20 @@ export default async function ListingOverviewPage({
         </div>
 
         {/* Active add-ons */}
-        <div className="bg-white rounded-xl lg:rounded-2xl border border-[#E2DDD5] p-4 shadow-sm">
-          <p className="text-[11px] font-semibold text-[#9C9485] uppercase tracking-wide mb-1">
+        <div className="bg-white rounded-xl lg:rounded-2xl border border-border p-4 shadow-sm">
+          <p className="text-[11px] font-semibold text-text3 uppercase tracking-wide mb-1">
             Active add-ons
           </p>
-          <p className="font-display text-[26px] font-bold tracking-[-0.02em] text-[#16130C] leading-none">
+          <p className="font-display text-[26px] font-bold tracking-[-0.02em] text-dark leading-none">
             {activeCount}
-            <span className="text-[16px] text-[#9C9485] font-semibold">
+            <span className="text-[16px] text-text3 font-semibold">
               /{totalCount}
             </span>
           </p>
           {/* Progress bar */}
-          <div className="mt-2 h-1.5 bg-[#F4F1EC] rounded-full overflow-hidden">
+          <div className="mt-2 h-1.5 bg-surface rounded-full overflow-hidden">
             <div
-              className="h-full bg-[#E8A020] rounded-full transition-all"
+              className="h-full bg-amber rounded-full transition-all"
               style={{ width: `${totalCount > 0 ? (activeCount / totalCount) * 100 : 0}%` }}
             />
           </div>
@@ -240,30 +240,30 @@ export default async function ListingOverviewPage({
             href={`/dashboard/listings/${id}/reservations`}
             className={`rounded-xl lg:rounded-2xl border p-4 shadow-sm transition-shadow hover:shadow-md ${
               pendingCount > 0
-                ? "bg-[#E8A020]/[0.06] border-[#E8A020]/30"
-                : "bg-white border-[#E2DDD5]"
+                ? "bg-amber/[0.06] border-amber/30"
+                : "bg-white border-border"
             }`}
           >
             <div className="flex items-center gap-1.5 mb-1">
-              <p className="text-[11px] font-semibold text-[#9C9485] uppercase tracking-wide">
+              <p className="text-[11px] font-semibold text-text3 uppercase tracking-wide">
                 Pending actions
               </p>
               {pendingCount > 0 && (
-                <span className="size-1.5 rounded-full bg-[#E8A020] animate-pulse" />
+                <span className="size-1.5 rounded-full bg-amber animate-pulse" />
               )}
             </div>
             <p className={`font-display text-[26px] font-bold tracking-[-0.02em] leading-none ${
-              pendingCount > 0 ? "text-[#E8A020]" : "text-[#16130C]"
+              pendingCount > 0 ? "text-amber" : "text-dark"
             }`}>
               {pendingCount}
             </p>
           </Link>
         ) : (
-          <div className="bg-white rounded-xl lg:rounded-2xl border border-[#E2DDD5] p-4 shadow-sm">
-            <p className="text-[11px] font-semibold text-[#9C9485] uppercase tracking-wide mb-1">
+          <div className="bg-white rounded-xl lg:rounded-2xl border border-border p-4 shadow-sm">
+            <p className="text-[11px] font-semibold text-text3 uppercase tracking-wide mb-1">
               Pending actions
             </p>
-            <p className="font-display text-[26px] font-bold tracking-[-0.02em] text-[#16130C] leading-none">
+            <p className="font-display text-[26px] font-bold tracking-[-0.02em] text-dark leading-none">
               0
             </p>
           </div>
@@ -279,7 +279,7 @@ export default async function ListingOverviewPage({
            disappears and the card becomes a link automatically.
       ─────────────────────────────────────────────────────────────────────── */}
       <div className="space-y-2">
-        <p className="text-[12px] font-semibold text-[#9C9485] uppercase tracking-wide">
+        <p className="text-[12px] font-semibold text-text3 uppercase tracking-wide">
           Quick access
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -294,14 +294,14 @@ export default async function ListingOverviewPage({
                 <Link
                   key={feature.id}
                   href={`/dashboard/menu/${featureCtx.menu.id}?${back}`}
-                  className="flex items-center gap-3 bg-white rounded-xl border border-[#E2DDD5] p-3.5 shadow-sm hover:shadow-md hover:border-[#E8A020]/40 transition-all"
+                  className="flex items-center gap-3 bg-white rounded-xl border border-border p-3.5 shadow-sm hover:shadow-md hover:border-amber/40 transition-all"
                 >
                   <span className="text-[22px] shrink-0">{featureIcon(feature.icon)}</span>
                   <div className="flex-1 min-w-0">
-                    <p className="text-[13px] font-semibold text-[#16130C]">{feature.label}</p>
-                    <p className="text-[11px] text-[#9C9485] truncate">{feature.shortDescription}</p>
+                    <p className="text-[13px] font-semibold text-dark">{feature.label}</p>
+                    <p className="text-[11px] text-text3 truncate">{feature.shortDescription}</p>
                   </div>
-                  <span className="text-[#9C9485] text-[16px] shrink-0">›</span>
+                  <span className="text-text3 text-[16px] shrink-0">›</span>
                 </Link>
               );
             }
@@ -315,14 +315,14 @@ export default async function ListingOverviewPage({
                 <Link
                   key={feature.id}
                   href={`/dashboard/menu/${featureCtx.menu.id}/stock?${back}`}
-                  className="flex items-center gap-3 bg-white rounded-xl border border-[#E2DDD5] p-3.5 shadow-sm hover:shadow-md hover:border-[#E8A020]/40 transition-all"
+                  className="flex items-center gap-3 bg-white rounded-xl border border-border p-3.5 shadow-sm hover:shadow-md hover:border-amber/40 transition-all"
                 >
                   <span className="text-[22px] shrink-0">{featureIcon(feature.icon)}</span>
                   <div className="flex-1 min-w-0">
-                    <p className="text-[13px] font-semibold text-[#16130C]">{feature.label}</p>
-                    <p className="text-[11px] text-[#9C9485] truncate">{feature.shortDescription}</p>
+                    <p className="text-[13px] font-semibold text-dark">{feature.label}</p>
+                    <p className="text-[11px] text-text3 truncate">{feature.shortDescription}</p>
                   </div>
-                  <span className="text-[#9C9485] text-[16px] shrink-0">›</span>
+                  <span className="text-text3 text-[16px] shrink-0">›</span>
                 </Link>
               );
             }
@@ -336,14 +336,14 @@ export default async function ListingOverviewPage({
                 <Link
                   key={feature.id}
                   href={`/dashboard/listings/${id}/orders`}
-                  className="flex items-center gap-3 bg-white rounded-xl border border-[#E2DDD5] p-3.5 shadow-sm hover:shadow-md hover:border-[#E8A020]/40 transition-all"
+                  className="flex items-center gap-3 bg-white rounded-xl border border-border p-3.5 shadow-sm hover:shadow-md hover:border-amber/40 transition-all"
                 >
                   <span className="text-[22px] shrink-0">{featureIcon(feature.icon)}</span>
                   <div className="flex-1 min-w-0">
-                    <p className="text-[13px] font-semibold text-[#16130C]">{feature.label}</p>
-                    <p className="text-[11px] text-[#9C9485] truncate">{feature.shortDescription}</p>
+                    <p className="text-[13px] font-semibold text-dark">{feature.label}</p>
+                    <p className="text-[11px] text-text3 truncate">{feature.shortDescription}</p>
                   </div>
-                  <span className="text-[#9C9485] text-[16px] shrink-0">›</span>
+                  <span className="text-text3 text-[16px] shrink-0">›</span>
                 </Link>
               );
             }
@@ -358,14 +358,14 @@ export default async function ListingOverviewPage({
                 <Link
                   key={feature.id}
                   href={`/dashboard/listings/${id}/${feature.tabSegment}`}
-                  className="flex items-center gap-3 bg-white rounded-xl border border-[#E2DDD5] p-3.5 shadow-sm hover:shadow-md hover:border-[#E8A020]/40 transition-all"
+                  className="flex items-center gap-3 bg-white rounded-xl border border-border p-3.5 shadow-sm hover:shadow-md hover:border-amber/40 transition-all"
                 >
                   <span className="text-[22px] shrink-0">{featureIcon(feature.icon)}</span>
                   <div className="flex-1 min-w-0">
-                    <p className="text-[13px] font-semibold text-[#16130C]">{feature.label}</p>
-                    <p className="text-[11px] text-[#9C9485] truncate">{feature.shortDescription}</p>
+                    <p className="text-[13px] font-semibold text-dark">{feature.label}</p>
+                    <p className="text-[11px] text-text3 truncate">{feature.shortDescription}</p>
                   </div>
-                  <span className="text-[#9C9485] text-[16px] shrink-0">›</span>
+                  <span className="text-text3 text-[16px] shrink-0">›</span>
                 </Link>
               );
             }
@@ -374,16 +374,16 @@ export default async function ListingOverviewPage({
             return (
               <div
                 key={feature.id}
-                className="relative flex items-center gap-3 bg-white rounded-xl border border-[#E2DDD5] p-3.5 shadow-sm opacity-70 cursor-default select-none"
+                className="relative flex items-center gap-3 bg-white rounded-xl border border-border p-3.5 shadow-sm opacity-70 cursor-default select-none"
               >
                 {/* Coming soon badge */}
-                <span className="absolute top-2.5 right-2.5 text-[9px] font-bold text-[#E8A020] bg-[#E8A020]/10 px-1.5 py-0.5 rounded-full uppercase tracking-wide">
+                <span className="absolute top-2.5 right-2.5 text-[9px] font-bold text-amber bg-amber/10 px-1.5 py-0.5 rounded-full uppercase tracking-wide">
                   Coming soon
                 </span>
                 <span className="text-[22px] shrink-0">{featureIcon(feature.icon)}</span>
                 <div className="flex-1 min-w-0 pr-16">
-                  <p className="text-[13px] font-semibold text-[#16130C]">{feature.label}</p>
-                  <p className="text-[11px] text-[#9C9485] truncate">{feature.shortDescription}</p>
+                  <p className="text-[13px] font-semibold text-dark">{feature.label}</p>
+                  <p className="text-[11px] text-text3 truncate">{feature.shortDescription}</p>
                 </div>
                 {/* No chevron — card is not clickable */}
               </div>
@@ -403,21 +403,21 @@ export default async function ListingOverviewPage({
       ─────────────────────────────────────────────────────────────────────── */}
       {featureCtx.menu && (
         <div className="space-y-2">
-          <p className="text-[12px] font-semibold text-[#9C9485] uppercase tracking-wide">
+          <p className="text-[12px] font-semibold text-text3 uppercase tracking-wide">
             Tools
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {featureCtx.menu.table_ordering && (
               <Link
                 href={`/dashboard/menu/${featureCtx.menu.id}/orders?${back}`}
-                className="flex items-center gap-3 bg-white rounded-xl border border-[#E2DDD5] p-3.5 shadow-sm hover:shadow-md hover:border-[#E8A020]/40 transition-all"
+                className="flex items-center gap-3 bg-white rounded-xl border border-border p-3.5 shadow-sm hover:shadow-md hover:border-amber/40 transition-all"
               >
                 <span className="text-[22px] shrink-0">🍳</span>
                 <div className="flex-1 min-w-0">
-                  <p className="text-[13px] font-semibold text-[#16130C]">Kitchen view</p>
-                  <p className="text-[11px] text-[#9C9485] truncate">Live order screen for the kitchen team</p>
+                  <p className="text-[13px] font-semibold text-dark">Kitchen view</p>
+                  <p className="text-[11px] text-text3 truncate">Live order screen for the kitchen team</p>
                 </div>
-                <span className="text-[#9C9485] text-[16px] shrink-0">›</span>
+                <span className="text-text3 text-[16px] shrink-0">›</span>
               </Link>
             )}
             {/* POS — landing on a management page (URL, staff PINs)
@@ -425,65 +425,65 @@ export default async function ListingOverviewPage({
             {menu?.slug && (
               <Link
                 href={`/dashboard/listings/${id}/pos`}
-                className="flex items-center gap-3 bg-white rounded-xl border border-[#E2DDD5] p-3.5 shadow-sm hover:shadow-md hover:border-[#E8A020]/40 transition-all"
+                className="flex items-center gap-3 bg-white rounded-xl border border-border p-3.5 shadow-sm hover:shadow-md hover:border-amber/40 transition-all"
               >
                 <span className="text-[22px] shrink-0">📱</span>
                 <div className="flex-1 min-w-0">
-                  <p className="text-[13px] font-semibold text-[#16130C]">POS &amp; staff</p>
-                  <p className="text-[11px] text-[#9C9485] truncate">Sign-in URL and 4-digit PIN management</p>
+                  <p className="text-[13px] font-semibold text-dark">POS &amp; staff</p>
+                  <p className="text-[11px] text-text3 truncate">Sign-in URL and 4-digit PIN management</p>
                 </div>
-                <span className="text-[#9C9485] text-[16px] shrink-0">›</span>
+                <span className="text-text3 text-[16px] shrink-0">›</span>
               </Link>
             )}
             {featureCtx.menu.table_ordering && (
               <Link
                 href={`/dashboard/menu/${featureCtx.menu.id}/audit?${back}`}
-                className="flex items-center gap-3 bg-white rounded-xl border border-[#E2DDD5] p-3.5 shadow-sm hover:shadow-md hover:border-[#E8A020]/40 transition-all"
+                className="flex items-center gap-3 bg-white rounded-xl border border-border p-3.5 shadow-sm hover:shadow-md hover:border-amber/40 transition-all"
               >
                 <span className="text-[22px] shrink-0">📋</span>
                 <div className="flex-1 min-w-0">
-                  <p className="text-[13px] font-semibold text-[#16130C]">Audit log</p>
-                  <p className="text-[11px] text-[#9C9485] truncate">Order edits, voids and manager overrides</p>
+                  <p className="text-[13px] font-semibold text-dark">Audit log</p>
+                  <p className="text-[11px] text-text3 truncate">Order edits, voids and manager overrides</p>
                 </div>
-                <span className="text-[#9C9485] text-[16px] shrink-0">›</span>
+                <span className="text-text3 text-[16px] shrink-0">›</span>
               </Link>
             )}
             <Link
               href={`/dashboard/menu/${featureCtx.menu.id}/qr?${back}`}
-              className="flex items-center gap-3 bg-white rounded-xl border border-[#E2DDD5] p-3.5 shadow-sm hover:shadow-md hover:border-[#E8A020]/40 transition-all"
+              className="flex items-center gap-3 bg-white rounded-xl border border-border p-3.5 shadow-sm hover:shadow-md hover:border-amber/40 transition-all"
             >
               <span className="text-[22px] shrink-0">🔳</span>
               <div className="flex-1 min-w-0">
-                <p className="text-[13px] font-semibold text-[#16130C]">QR code</p>
-                <p className="text-[11px] text-[#9C9485] truncate">Download printable QR codes for tables</p>
+                <p className="text-[13px] font-semibold text-dark">QR code</p>
+                <p className="text-[11px] text-text3 truncate">Download printable QR codes for tables</p>
               </div>
-              <span className="text-[#9C9485] text-[16px] shrink-0">›</span>
+              <span className="text-text3 text-[16px] shrink-0">›</span>
             </Link>
             {listing.slug && (
               <a
                 href={`/m/${listing.slug}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-3 bg-white rounded-xl border border-[#E2DDD5] p-3.5 shadow-sm hover:shadow-md hover:border-[#E8A020]/40 transition-all"
+                className="flex items-center gap-3 bg-white rounded-xl border border-border p-3.5 shadow-sm hover:shadow-md hover:border-amber/40 transition-all"
               >
                 <span className="text-[22px] shrink-0">🔗</span>
                 <div className="flex-1 min-w-0">
-                  <p className="text-[13px] font-semibold text-[#16130C]">View live menu</p>
-                  <p className="text-[11px] text-[#9C9485] truncate">Opens what guests see, in a new tab</p>
+                  <p className="text-[13px] font-semibold text-dark">View live menu</p>
+                  <p className="text-[11px] text-text3 truncate">Opens what guests see, in a new tab</p>
                 </div>
-                <span className="text-[#9C9485] text-[16px] shrink-0">↗</span>
+                <span className="text-text3 text-[16px] shrink-0">↗</span>
               </a>
             )}
             <Link
               href={`/dashboard/listings/${id}/features`}
-              className="flex items-center gap-3 bg-white rounded-xl border border-[#E2DDD5] p-3.5 shadow-sm hover:shadow-md hover:border-[#E8A020]/40 transition-all"
+              className="flex items-center gap-3 bg-white rounded-xl border border-border p-3.5 shadow-sm hover:shadow-md hover:border-amber/40 transition-all"
             >
               <span className="text-[22px] shrink-0">⚙️</span>
               <div className="flex-1 min-w-0">
-                <p className="text-[13px] font-semibold text-[#16130C]">Configure features</p>
-                <p className="text-[11px] text-[#9C9485] truncate">Turn on reservations, ordering, and more</p>
+                <p className="text-[13px] font-semibold text-dark">Configure features</p>
+                <p className="text-[11px] text-text3 truncate">Turn on reservations, ordering, and more</p>
               </div>
-              <span className="text-[#9C9485] text-[16px] shrink-0">›</span>
+              <span className="text-text3 text-[16px] shrink-0">›</span>
             </Link>
           </div>
         </div>

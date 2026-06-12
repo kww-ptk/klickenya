@@ -131,27 +131,27 @@ export default async function PropertyDashboardPage({
         <div className="mb-5">
           <Link
             href="/dashboard/property"
-            className="text-[13px] text-[#9C9485] hover:text-[#16130C] transition-colors"
+            className="text-[13px] text-text3 hover:text-dark transition-colors"
           >
             ← Property PMS
           </Link>
-          <h1 className="font-display text-[22px] lg:text-[28px] font-bold tracking-[-0.03em] text-[#16130C] mt-2">
+          <h1 className="font-display text-[22px] lg:text-[28px] font-bold tracking-[-0.03em] text-dark mt-2">
             {property.name}
           </h1>
-          <p className="text-[13px] text-[#9C9485] mt-0.5">
+          <p className="text-[13px] text-text3 mt-0.5">
             {typeLabels[property.property_type] ?? property.property_type}
             {property.city ? ` · ${property.city}` : ""}
           </p>
         </div>
 
-        <div className="bg-white rounded-2xl border border-[#E2DDD5] p-8 text-center shadow-sm">
+        <div className="bg-white rounded-2xl border border-border p-8 text-center shadow-sm">
           <div className="w-16 h-16 rounded-full bg-[#4F46E5]/10 flex items-center justify-center mx-auto mb-3">
             <span className="text-[28px]">🛏️</span>
           </div>
-          <p className="font-display text-[16px] font-bold text-[#16130C] mb-1">
+          <p className="font-display text-[16px] font-bold text-dark mb-1">
             No rooms set up yet
           </p>
-          <p className="text-[13px] text-[#9C9485] mb-4 max-w-[320px] mx-auto">
+          <p className="text-[13px] text-text3 mb-4 max-w-[320px] mx-auto">
             Add your rooms to start managing availability and bookings on the calendar.
           </p>
           <Link
@@ -171,27 +171,27 @@ export default async function PropertyDashboardPage({
       <div className="mb-5">
         <Link
           href="/dashboard/property"
-          className="text-[13px] text-[#9C9485] hover:text-[#16130C] transition-colors"
+          className="text-[13px] text-text3 hover:text-dark transition-colors"
         >
           ← Property PMS
         </Link>
         <div className="flex items-start justify-between mt-2 gap-3">
           <div>
-            <h1 className="font-display text-[22px] lg:text-[28px] font-bold tracking-[-0.03em] text-[#16130C]">
+            <h1 className="font-display text-[22px] lg:text-[28px] font-bold tracking-[-0.03em] text-dark">
               {property.name}
             </h1>
             <div className="flex items-center gap-2 mt-1 flex-wrap">
-              <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-[#F4F1EC] text-[11px] font-semibold text-[#5E5848]">
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-surface text-[11px] font-semibold text-text2">
                 {typeLabels[property.property_type] ?? property.property_type}
               </span>
               {property.city && (
-                <span className="text-[13px] text-[#9C9485]">{property.city}</span>
+                <span className="text-[13px] text-text3">{property.city}</span>
               )}
             </div>
           </div>
           <Link
             href={`/dashboard/property/${property.id}/settings`}
-            className="text-[12px] font-semibold text-[#5E5848] bg-white border border-[#E2DDD5] px-3 h-[34px] rounded-lg hover:border-[#9C9485] transition-colors flex items-center shrink-0 mt-1"
+            className="text-[12px] font-semibold text-text2 bg-white border border-border px-3 h-[34px] rounded-lg hover:border-text3 transition-colors flex items-center shrink-0 mt-1"
           >
             Settings
           </Link>
@@ -221,9 +221,9 @@ export default async function PropertyDashboardPage({
 
       {/* SECTION 3 — Linked listing */}
       {linkedListing ? (
-        <div className="mb-5 bg-white rounded-xl lg:rounded-2xl border border-[#E2DDD5] p-3 lg:p-4 shadow-sm">
+        <div className="mb-5 bg-white rounded-xl lg:rounded-2xl border border-border p-3 lg:p-4 shadow-sm">
           <div className="flex gap-3 items-center">
-            <div className="shrink-0 w-[72px] h-[72px] rounded-lg overflow-hidden bg-[#F4F1EC] relative">
+            <div className="shrink-0 w-[72px] h-[72px] rounded-lg overflow-hidden bg-surface relative">
               {linkedListing.coverPhoto ? (
                 <Image
                   src={`${linkedListing.coverPhoto}?w=200&auto=format`}
@@ -237,11 +237,11 @@ export default async function PropertyDashboardPage({
               )}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-[14px] font-semibold text-[#16130C] truncate">
+              <p className="text-[14px] font-semibold text-dark truncate">
                 {linkedListing.title}
               </p>
               {linkedListing.city && (
-                <p className="text-[13px] text-[#9C9485]">{linkedListing.city}</p>
+                <p className="text-[13px] text-text3">{linkedListing.city}</p>
               )}
               <div className="flex items-center gap-3 mt-1">
                 <a
@@ -264,16 +264,16 @@ export default async function PropertyDashboardPage({
                   View on Klickenya ↗
                 </a>
               </div>
-              <p className="text-[10px] text-[#9C9485] mt-0.5">
+              <p className="text-[10px] text-text3 mt-0.5">
                 Guests who enquire through your listing appear here automatically
               </p>
             </div>
           </div>
         </div>
       ) : (
-        <div className="mb-5 bg-[#F4F1EC] rounded-xl p-3">
+        <div className="mb-5 bg-surface rounded-xl p-3">
           <div className="flex items-center justify-between">
-            <p className="text-[12px] text-[#9C9485]">No listing linked</p>
+            <p className="text-[12px] text-text3">No listing linked</p>
             <Link
               href={`/dashboard/property/${property.id}/settings`}
               className="text-[11px] font-semibold text-[#4F46E5] hover:text-[#4338CA]"

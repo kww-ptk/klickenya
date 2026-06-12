@@ -196,7 +196,7 @@ function SourceBadge({
       return { icon: "📱", label: "QR menu", className: "bg-emerald-50 text-emerald-700" };
     }
     // listing + direct + anything else → main site
-    return { icon: "🌐", label: "Main site", className: "bg-[#F4F1EC] text-[#5E5848]" };
+    return { icon: "🌐", label: "Main site", className: "bg-surface text-text2" };
   })();
 
   return (
@@ -245,38 +245,38 @@ function BookingsBySourcePanel({
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-      <div className="bg-white rounded-xl border border-[#E2DDD5] p-4 shadow-sm">
-        <p className="text-[11px] font-semibold text-[#9C9485] uppercase tracking-wide mb-1">
+      <div className="bg-white rounded-xl border border-border p-4 shadow-sm">
+        <p className="text-[11px] font-semibold text-text3 uppercase tracking-wide mb-1">
           Main site
         </p>
-        <p className="font-display text-[26px] font-bold tracking-[-0.02em] text-[#16130C] leading-none">
+        <p className="font-display text-[26px] font-bold tracking-[-0.02em] text-dark leading-none">
           {mainCount}
         </p>
-        <p className="text-[11px] text-[#9C9485] mt-1">last 30 days</p>
+        <p className="text-[11px] text-text3 mt-1">last 30 days</p>
       </div>
-      <div className="bg-white rounded-xl border border-[#E2DDD5] p-4 shadow-sm">
-        <p className="text-[11px] font-semibold text-[#9C9485] uppercase tracking-wide mb-1">
+      <div className="bg-white rounded-xl border border-border p-4 shadow-sm">
+        <p className="text-[11px] font-semibold text-text3 uppercase tracking-wide mb-1">
           Embedded
         </p>
-        <p className="font-display text-[26px] font-bold tracking-[-0.02em] text-[#16130C] leading-none">
+        <p className="font-display text-[26px] font-bold tracking-[-0.02em] text-dark leading-none">
           {embedCount}
         </p>
-        <p className="text-[11px] text-[#9C9485] mt-1">last 30 days</p>
+        <p className="text-[11px] text-text3 mt-1">last 30 days</p>
       </div>
-      <div className="bg-white rounded-xl border border-[#E2DDD5] p-4 shadow-sm">
-        <p className="text-[11px] font-semibold text-[#9C9485] uppercase tracking-wide mb-1">
+      <div className="bg-white rounded-xl border border-border p-4 shadow-sm">
+        <p className="text-[11px] font-semibold text-text3 uppercase tracking-wide mb-1">
           Top sources
         </p>
         {topOrigins.length === 0 ? (
-          <p className="text-[12px] text-[#9C9485] mt-1">
+          <p className="text-[12px] text-text3 mt-1">
             No embed bookings yet.
           </p>
         ) : (
           <ul className="space-y-0.5 mt-1">
             {topOrigins.map(([origin, count]) => (
               <li key={origin} className="flex items-center justify-between text-[12px]">
-                <span className="text-[#16130C] truncate pr-2">{origin}</span>
-                <span className="text-[#9C9485] font-semibold">{count}</span>
+                <span className="text-dark truncate pr-2">{origin}</span>
+                <span className="text-text3 font-semibold">{count}</span>
               </li>
             ))}
           </ul>
@@ -354,7 +354,7 @@ function StatusPill({ status }: { status: string }) {
 
 function AreaChip({ name, colorHex }: { name: string | null; colorHex: string | null }) {
   if (!name) {
-    return <span className="text-[11px] text-[#9C9485] italic">No preference</span>;
+    return <span className="text-[11px] text-text3 italic">No preference</span>;
   }
   return (
     <span
@@ -399,8 +399,8 @@ function OwnerNoteField({
 
   return (
     <div>
-      <label className="block text-[11px] font-bold text-[#9C9485] uppercase tracking-wide mb-1">
-        Owner note <span className="text-[10px] font-normal normal-case text-[#9C9485]">(not sent to guest)</span>
+      <label className="block text-[11px] font-bold text-text3 uppercase tracking-wide mb-1">
+        Owner note <span className="text-[10px] font-normal normal-case text-text3">(not sent to guest)</span>
       </label>
       <textarea
         value={note}
@@ -408,13 +408,13 @@ function OwnerNoteField({
         onBlur={handleBlur}
         rows={2}
         placeholder="Internal notes about this reservation…"
-        className="w-full border border-[#E2DDD5] rounded-xl px-3 py-2 text-[13px] text-[#16130C] placeholder:text-[#9C9485] outline-none focus:border-[#E8A020] transition-colors resize-none bg-white"
+        className="w-full border border-border rounded-xl px-3 py-2 text-[13px] text-dark placeholder:text-text3 outline-none focus:border-amber transition-colors resize-none bg-white"
       />
       {saveState === "saving" && (
-        <p className="text-[11px] text-[#9C9485] mt-0.5">Saving…</p>
+        <p className="text-[11px] text-text3 mt-0.5">Saving…</p>
       )}
       {saveState === "saved" && (
-        <p className="text-[11px] text-[#16A34A] mt-0.5">Saved</p>
+        <p className="text-[11px] text-green mt-0.5">Saved</p>
       )}
     </div>
   );
@@ -447,15 +447,15 @@ function EmptyStateTutorial({
   return (
     <div className="space-y-5 py-4">
       <div className="text-center space-y-1">
-        <p className="text-[16px] font-bold text-[#16130C]">No reservations yet</p>
-        <p className="text-[13px] text-[#9C9485]">
+        <p className="text-[16px] font-bold text-dark">No reservations yet</p>
+        <p className="text-[13px] text-text3">
           Once guests start booking, they'll appear here for you to approve.
         </p>
       </div>
 
       {/* How it works */}
-      <div className="bg-white rounded-xl border border-[#E2DDD5] p-4 shadow-sm">
-        <p className="text-[12px] font-bold text-[#9C9485] uppercase tracking-wide mb-4">
+      <div className="bg-white rounded-xl border border-border p-4 shadow-sm">
+        <p className="text-[12px] font-bold text-text3 uppercase tracking-wide mb-4">
           How reservations work
         </p>
         <div className="space-y-4">
@@ -482,14 +482,14 @@ function EmptyStateTutorial({
             },
           ].map((step, i) => (
             <div key={i} className="flex gap-3">
-              <div className="shrink-0 size-7 rounded-full bg-[#E8A020]/10 flex items-center justify-center text-[14px]">
+              <div className="shrink-0 size-7 rounded-full bg-amber/10 flex items-center justify-center text-[14px]">
                 {step.icon}
               </div>
               <div>
-                <p className="text-[13px] font-semibold text-[#16130C]">
-                  <span className="text-[#9C9485] mr-1">{i + 1}.</span> {step.title}
+                <p className="text-[13px] font-semibold text-dark">
+                  <span className="text-text3 mr-1">{i + 1}.</span> {step.title}
                 </p>
-                <p className="text-[12px] text-[#9C9485] leading-snug">{step.desc}</p>
+                <p className="text-[12px] text-text3 leading-snug">{step.desc}</p>
               </div>
             </div>
           ))}
@@ -497,8 +497,8 @@ function EmptyStateTutorial({
       </div>
 
       {/* Share your booking links */}
-      <div className="bg-white rounded-xl border border-[#E2DDD5] p-4 shadow-sm">
-        <p className="text-[12px] font-bold text-[#9C9485] uppercase tracking-wide mb-3">
+      <div className="bg-white rounded-xl border border-border p-4 shadow-sm">
+        <p className="text-[12px] font-bold text-text3 uppercase tracking-wide mb-3">
           Share your booking links
         </p>
         <div className="space-y-2">
@@ -506,10 +506,10 @@ function EmptyStateTutorial({
             { label: "Menu page", url: menuUrl },
             { label: "Klickenya listing", url: listingUrl },
           ].map(({ label, url }) => (
-            <div key={url} className="flex items-center gap-2 bg-[#F4F1EC] rounded-lg px-3 py-2">
+            <div key={url} className="flex items-center gap-2 bg-surface rounded-lg px-3 py-2">
               <div className="flex-1 min-w-0">
-                <p className="text-[10px] font-bold text-[#9C9485] uppercase tracking-wide">{label}</p>
-                <p className="text-[12px] text-[#16130C] truncate">{url}</p>
+                <p className="text-[10px] font-bold text-text3 uppercase tracking-wide">{label}</p>
+                <p className="text-[12px] text-dark truncate">{url}</p>
               </div>
               <CopyButton text={url} />
             </div>
@@ -534,7 +534,7 @@ function CopyButton({ text }: { text: string }) {
   return (
     <button
       onClick={handleCopy}
-      className="shrink-0 text-[11px] font-semibold text-[#E8A020] hover:text-[#d4911c] transition-colors"
+      className="shrink-0 text-[11px] font-semibold text-amber hover:text-[#d4911c] transition-colors"
     >
       {copied ? "Copied!" : "Copy"}
     </button>
@@ -887,7 +887,7 @@ export function ReservationsDashboard({
 
     if (activeAreas.length === 0) {
       return (
-        <p className="text-[13px] text-[#9C9485] text-center py-6">
+        <p className="text-[13px] text-text3 text-center py-6">
           No seating areas configured yet. Add an area in Settings to start placing tables.
         </p>
       );
@@ -895,7 +895,7 @@ export function ReservationsDashboard({
 
     if (floorTablesLoading || floorTables === null) {
       return (
-        <div className="bg-white border border-[#E2DDD5] rounded-2xl p-6 text-center text-[13px] text-[#9C9485]">
+        <div className="bg-white border border-border rounded-2xl p-6 text-center text-[13px] text-text3">
           Loading floor map…
         </div>
       );
@@ -903,9 +903,9 @@ export function ReservationsDashboard({
 
     if (floorTables.length === 0) {
       return (
-        <div className="bg-white border border-[#E2DDD5] rounded-2xl p-6 text-center">
-          <p className="text-[14px] font-semibold text-[#16130C]">No tables yet</p>
-          <p className="text-[12px] text-[#9C9485] mt-1">
+        <div className="bg-white border border-border rounded-2xl p-6 text-center">
+          <p className="text-[14px] font-semibold text-dark">No tables yet</p>
+          <p className="text-[12px] text-text3 mt-1">
             Add tables under Table ordering, then arrange them on the floor map.
           </p>
         </div>
@@ -940,10 +940,10 @@ export function ReservationsDashboard({
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 lg:gap-3">
         {/* Pending approval */}
         <div className={`rounded-xl lg:rounded-2xl border p-4 shadow-sm ${
-          pendingCount > 0 ? "bg-amber-50 border-amber-200" : "bg-white border-[#E2DDD5]"
+          pendingCount > 0 ? "bg-amber-50 border-amber-200" : "bg-white border-border"
         }`}>
           <div className="flex items-center gap-1.5 mb-1">
-            <p className="text-[11px] font-semibold text-[#9C9485] uppercase tracking-wide">
+            <p className="text-[11px] font-semibold text-text3 uppercase tracking-wide">
               Pending approval
             </p>
             {pendingCount > 0 && (
@@ -951,42 +951,42 @@ export function ReservationsDashboard({
             )}
           </div>
           <p className={`font-display text-[26px] font-bold tracking-[-0.02em] leading-none ${
-            pendingCount > 0 ? "text-amber-600" : "text-[#16130C]"
+            pendingCount > 0 ? "text-amber-600" : "text-dark"
           }`}>
             {pendingCount}
           </p>
         </div>
 
         {/* Today's confirmed covers */}
-        <div className="bg-white rounded-xl lg:rounded-2xl border border-[#E2DDD5] p-4 shadow-sm">
-          <p className="text-[11px] font-semibold text-[#9C9485] uppercase tracking-wide mb-1">
+        <div className="bg-white rounded-xl lg:rounded-2xl border border-border p-4 shadow-sm">
+          <p className="text-[11px] font-semibold text-text3 uppercase tracking-wide mb-1">
             Today&apos;s covers
           </p>
-          <p className="font-display text-[26px] font-bold tracking-[-0.02em] text-[#16A34A] leading-none">
+          <p className="font-display text-[26px] font-bold tracking-[-0.02em] text-green leading-none">
             {todayConfirmedCovers}
           </p>
-          <p className="text-[10px] text-[#9C9485] mt-0.5">confirmed guests</p>
+          <p className="text-[10px] text-text3 mt-0.5">confirmed guests</p>
         </div>
 
         {/* This week */}
-        <div className="bg-white rounded-xl lg:rounded-2xl border border-[#E2DDD5] p-4 shadow-sm">
-          <p className="text-[11px] font-semibold text-[#9C9485] uppercase tracking-wide mb-1">
+        <div className="bg-white rounded-xl lg:rounded-2xl border border-border p-4 shadow-sm">
+          <p className="text-[11px] font-semibold text-text3 uppercase tracking-wide mb-1">
             This week
           </p>
-          <p className="font-display text-[26px] font-bold tracking-[-0.02em] text-[#16130C] leading-none">
+          <p className="font-display text-[26px] font-bold tracking-[-0.02em] text-dark leading-none">
             {thisWeekCount}
           </p>
-          <p className="text-[10px] text-[#9C9485] mt-0.5">reservations</p>
+          <p className="text-[10px] text-text3 mt-0.5">reservations</p>
         </div>
 
         {/* No-show rate — dormant, TODO V2 */}
         {/* TODO V2: No-show rate available after V2 check-in tracking */}
-        <div className="bg-white rounded-xl lg:rounded-2xl border border-[#E2DDD5] p-4 shadow-sm" title="Available after V2 check-in tracking">
-          <p className="text-[11px] font-semibold text-[#9C9485] uppercase tracking-wide mb-1">
+        <div className="bg-white rounded-xl lg:rounded-2xl border border-border p-4 shadow-sm" title="Available after V2 check-in tracking">
+          <p className="text-[11px] font-semibold text-text3 uppercase tracking-wide mb-1">
             No-show rate (30d)
           </p>
-          <p className="font-display text-[26px] font-bold tracking-[-0.02em] text-[#9C9485] leading-none">—</p>
-          <p className="text-[10px] text-[#9C9485] mt-0.5">coming in V2</p>
+          <p className="font-display text-[26px] font-bold tracking-[-0.02em] text-text3 leading-none">—</p>
+          <p className="text-[10px] text-text3 mt-0.5">coming in V2</p>
         </div>
       </div>
 
@@ -998,8 +998,8 @@ export function ReservationsDashboard({
             onClick={() => setActiveTab(tab)}
             className={`px-4 py-1.5 rounded-full text-[12px] font-semibold transition-colors ${
               activeTab === tab
-                ? "bg-[#16130C] text-white"
-                : "bg-white border border-[#E2DDD5] text-[#5E5848] hover:border-[#16130C]/40"
+                ? "bg-dark text-white"
+                : "bg-white border border-border text-text2 hover:border-dark/40"
             }`}
           >
             {tab.charAt(0).toUpperCase() + tab.slice(1)}
@@ -1021,8 +1021,8 @@ export function ReservationsDashboard({
                 onClick={() => setListFilter(f)}
                 className={`px-3 py-1 rounded-full text-[11px] font-semibold transition-colors ${
                   listFilter === f
-                    ? "bg-[#E8A020] text-[#16130C]"
-                    : "bg-white border border-[#E2DDD5] text-[#9C9485] hover:border-[#E8A020]/40"
+                    ? "bg-amber text-dark"
+                    : "bg-white border border-border text-text3 hover:border-amber/40"
                 }`}
               >
                 {f === "pending" ? `Pending${pendingCount > 0 ? ` (${pendingCount})` : ""}` :
@@ -1039,18 +1039,18 @@ export function ReservationsDashboard({
               listingCity={listingCity}
             />
           ) : filteredReservations.length === 0 ? (
-            <div className="text-center py-10 text-[13px] text-[#9C9485]">
+            <div className="text-center py-10 text-[13px] text-text3">
               No {listFilter !== "all" ? listFilter : ""} reservations to show.
             </div>
           ) : (
-            <div className="bg-white rounded-xl border border-[#E2DDD5] shadow-sm overflow-hidden">
+            <div className="bg-white rounded-xl border border-border shadow-sm overflow-hidden">
               {/* ── Column headers (desktop) ── */}
-              <div className="hidden sm:grid grid-cols-[72px_1fr_80px_72px_auto_28px] gap-x-3 px-3 py-2 border-b border-[#F4F1EC] bg-[#FAFAF8]">
-                <span className="text-[10px] font-bold text-[#9C9485] uppercase tracking-wide">Time</span>
-                <span className="text-[10px] font-bold text-[#9C9485] uppercase tracking-wide">Guest</span>
-                <span className="text-[10px] font-bold text-[#9C9485] uppercase tracking-wide">Size / Area</span>
-                <span className="text-[10px] font-bold text-[#9C9485] uppercase tracking-wide">Status</span>
-                <span className="text-[10px] font-bold text-[#9C9485] uppercase tracking-wide">Actions</span>
+              <div className="hidden sm:grid grid-cols-[72px_1fr_80px_72px_auto_28px] gap-x-3 px-3 py-2 border-b border-surface bg-canvas">
+                <span className="text-[10px] font-bold text-text3 uppercase tracking-wide">Time</span>
+                <span className="text-[10px] font-bold text-text3 uppercase tracking-wide">Guest</span>
+                <span className="text-[10px] font-bold text-text3 uppercase tracking-wide">Size / Area</span>
+                <span className="text-[10px] font-bold text-text3 uppercase tracking-wide">Status</span>
+                <span className="text-[10px] font-bold text-text3 uppercase tracking-wide">Actions</span>
                 <span />
               </div>
 
@@ -1060,18 +1060,18 @@ export function ReservationsDashboard({
                 const isLast = idx === filteredReservations.length - 1;
 
                 return (
-                  <div key={r.id} className={!isLast ? "border-b border-[#F4F1EC]" : ""}>
+                  <div key={r.id} className={!isLast ? "border-b border-surface" : ""}>
                     {/* ── Compact row ── */}
                     <div className="flex sm:grid sm:grid-cols-[72px_1fr_80px_72px_auto_28px] items-center gap-x-3 px-3 py-2.5 hover:bg-[#FAFAF9] transition-colors">
 
                       {/* Time + date */}
                       <div className="shrink-0 w-[68px] sm:w-auto">
-                        <p className="text-[13px] font-bold text-[#16130C] tabular-nums leading-tight">
+                        <p className="text-[13px] font-bold text-dark tabular-nums leading-tight">
                           {new Intl.DateTimeFormat("en-GB", {
                             hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "Africa/Nairobi",
                           }).format(new Date(r.reserved_for))}
                         </p>
-                        <p className="text-[10px] text-[#9C9485]">
+                        <p className="text-[10px] text-text3">
                           {new Intl.DateTimeFormat("en-KE", {
                             weekday: "short", month: "short", day: "numeric", timeZone: "Africa/Nairobi",
                           }).format(new Date(r.reserved_for))}
@@ -1081,7 +1081,7 @@ export function ReservationsDashboard({
                       {/* Name */}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
-                          <p className="text-[13px] font-semibold text-[#16130C] truncate">{r.guest_name}</p>
+                          <p className="text-[13px] font-semibold text-dark truncate">{r.guest_name}</p>
                           <SourceBadge
                             source={r.source}
                             origin={r.source_origin}
@@ -1089,7 +1089,7 @@ export function ReservationsDashboard({
                           />
                         </div>
                         {r.guest_message && (
-                          <p className="text-[10px] text-[#9C9485] truncate hidden sm:block">
+                          <p className="text-[10px] text-text3 truncate hidden sm:block">
                             &ldquo;{r.guest_message.slice(0, 50)}{r.guest_message.length > 50 ? "…" : ""}&rdquo;
                           </p>
                         )}
@@ -1097,7 +1097,7 @@ export function ReservationsDashboard({
 
                       {/* Size + area (desktop) */}
                       <div className="hidden sm:flex items-center gap-1.5">
-                        <span className="text-[12px] font-bold text-[#5E5848]">×{r.party_size}</span>
+                        <span className="text-[12px] font-bold text-text2">×{r.party_size}</span>
                         <AreaChip name={r.area_name} colorHex={r.area_color_hex} />
                       </div>
 
@@ -1114,7 +1114,7 @@ export function ReservationsDashboard({
                               onClick={() => handleApprove(r.id)}
                               disabled={updatingIds.has(r.id)}
                               title="Approve"
-                              className="h-7 px-2.5 rounded-full bg-[#16A34A] text-white text-[11px] font-bold hover:bg-[#15803D] transition-colors disabled:opacity-50 whitespace-nowrap"
+                              className="h-7 px-2.5 rounded-full bg-green text-white text-[11px] font-bold hover:bg-[#15803D] transition-colors disabled:opacity-50 whitespace-nowrap"
                             >
                               {updatingIds.has(r.id) ? "…" : "✓ Approve"}
                             </button>
@@ -1132,7 +1132,7 @@ export function ReservationsDashboard({
                           <button
                             onClick={() => handleCancel(r.id)}
                             disabled={updatingIds.has(r.id)}
-                            className="h-7 px-2.5 rounded-full border border-[#E2DDD5] text-[#9C9485] text-[11px] font-semibold hover:border-red-300 hover:text-[#DC2626] transition-colors disabled:opacity-50 whitespace-nowrap"
+                            className="h-7 px-2.5 rounded-full border border-border text-text3 text-[11px] font-semibold hover:border-red-300 hover:text-[#DC2626] transition-colors disabled:opacity-50 whitespace-nowrap"
                           >
                             Cancel
                           </button>
@@ -1142,7 +1142,7 @@ export function ReservationsDashboard({
                       {/* Expand toggle */}
                       <button
                         onClick={() => toggleExpand(r.id)}
-                        className={`shrink-0 size-7 flex items-center justify-center rounded-full hover:bg-[#F4F1EC] transition-colors text-[#9C9485] text-[15px] ${isExpanded ? "rotate-90" : ""}`}
+                        className={`shrink-0 size-7 flex items-center justify-center rounded-full hover:bg-surface transition-colors text-text3 text-[15px] ${isExpanded ? "rotate-90" : ""}`}
                       >
                         ›
                       </button>
@@ -1150,7 +1150,7 @@ export function ReservationsDashboard({
 
                     {/* ── Expanded detail panel ── */}
                     {isExpanded && (
-                      <div className="px-4 pb-4 pt-3 border-t border-[#F4F1EC] space-y-4 bg-[#FAFAF9]">
+                      <div className="px-4 pb-4 pt-3 border-t border-surface space-y-4 bg-[#FAFAF9]">
 
                         {/* Capacity warning (pending) */}
                         {r.status === "pending" && capacityWarning && (
@@ -1165,52 +1165,52 @@ export function ReservationsDashboard({
                         {/* Guest details grid */}
                         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-[12px]">
                           <div>
-                            <p className="text-[10px] font-bold text-[#9C9485] uppercase tracking-wide mb-0.5">Phone</p>
-                            <a href={`tel:${r.guest_phone}`} className="text-[#E8A020] font-semibold hover:underline">
+                            <p className="text-[10px] font-bold text-text3 uppercase tracking-wide mb-0.5">Phone</p>
+                            <a href={`tel:${r.guest_phone}`} className="text-amber font-semibold hover:underline">
                               {r.guest_phone}
                             </a>
                           </div>
                           <div>
-                            <p className="text-[10px] font-bold text-[#9C9485] uppercase tracking-wide mb-0.5">Email</p>
+                            <p className="text-[10px] font-bold text-text3 uppercase tracking-wide mb-0.5">Email</p>
                             {r.guest_email ? (
-                              <p className="text-[#16130C] font-semibold truncate">{r.guest_email}</p>
+                              <p className="text-dark font-semibold truncate">{r.guest_email}</p>
                             ) : (
                               <p className="text-amber-600 text-[11px]">⚠️ No email on file</p>
                             )}
                           </div>
                           <div>
-                            <p className="text-[10px] font-bold text-[#9C9485] uppercase tracking-wide mb-0.5">Party / Area</p>
+                            <p className="text-[10px] font-bold text-text3 uppercase tracking-wide mb-0.5">Party / Area</p>
                             <div className="flex items-center gap-1.5">
-                              <span className="font-semibold text-[#16130C]">×{r.party_size}</span>
+                              <span className="font-semibold text-dark">×{r.party_size}</span>
                               <AreaChip name={r.area_name} colorHex={r.area_color_hex} />
                             </div>
                           </div>
                           <div>
-                            <p className="text-[10px] font-bold text-[#9C9485] uppercase tracking-wide mb-0.5">Date &amp; time</p>
-                            <p className="text-[#16130C]">{formatFullNairobiDateTime(r.reserved_for)}</p>
-                            <p className="text-[10px] text-[#9C9485]">{r.duration_minutes} min hold</p>
+                            <p className="text-[10px] font-bold text-text3 uppercase tracking-wide mb-0.5">Date &amp; time</p>
+                            <p className="text-dark">{formatFullNairobiDateTime(r.reserved_for)}</p>
+                            <p className="text-[10px] text-text3">{r.duration_minutes} min hold</p>
                           </div>
                           <div>
-                            <p className="text-[10px] font-bold text-[#9C9485] uppercase tracking-wide mb-0.5">Source</p>
-                            <p className="text-[#16130C]">
+                            <p className="text-[10px] font-bold text-text3 uppercase tracking-wide mb-0.5">Source</p>
+                            <p className="text-dark">
                               {sourceLabel(r.source)}
                               {r.source === "embed" && r.source_origin && (
-                                <span className="text-[#9C9485]"> · {r.source_origin}</span>
+                                <span className="text-text3"> · {r.source_origin}</span>
                               )}
                             </p>
                             {r.source_ref && (
-                              <p className="text-[10px] text-[#9C9485] mt-0.5">tag: {r.source_ref}</p>
+                              <p className="text-[10px] text-text3 mt-0.5">tag: {r.source_ref}</p>
                             )}
                           </div>
                           <div>
-                            <p className="text-[10px] font-bold text-[#9C9485] uppercase tracking-wide mb-0.5">Submitted</p>
-                            <p className="text-[#16130C]">{relativeTime(r.created_at)}</p>
+                            <p className="text-[10px] font-bold text-text3 uppercase tracking-wide mb-0.5">Submitted</p>
+                            <p className="text-dark">{relativeTime(r.created_at)}</p>
                           </div>
                         </div>
 
                         {/* Guest message */}
                         {r.guest_message && (
-                          <blockquote className="border-l-2 border-[#E8A020] pl-3 text-[12px] text-[#5E5848] italic">
+                          <blockquote className="border-l-2 border-amber pl-3 text-[12px] text-text2 italic">
                             "{r.guest_message}"
                           </blockquote>
                         )}
@@ -1224,7 +1224,7 @@ export function ReservationsDashboard({
 
                         {/* Cancelled note */}
                         {r.status === "cancelled" && (
-                          <p className="text-[12px] text-[#9C9485] italic">This reservation was cancelled.</p>
+                          <p className="text-[12px] text-text3 italic">This reservation was cancelled.</p>
                         )}
 
                         {/* Owner note */}
@@ -1269,8 +1269,8 @@ export function ReservationsDashboard({
                 onClick={() => setCalendarMode(mode)}
                 className={`px-4 py-1.5 rounded-full text-[12px] font-semibold transition-colors ${
                   calendarMode === mode
-                    ? "bg-[#16130C] text-white"
-                    : "bg-white border border-[#E2DDD5] text-[#5E5848] hover:border-[#16130C]/40"
+                    ? "bg-dark text-white"
+                    : "bg-white border border-border text-text2 hover:border-dark/40"
                 }`}
               >
                 {mode.charAt(0).toUpperCase() + mode.slice(1)}
@@ -1278,7 +1278,7 @@ export function ReservationsDashboard({
             ))}
           </div>
 
-          <div className="bg-white rounded-xl border border-[#E2DDD5] p-4 shadow-sm">
+          <div className="bg-white rounded-xl border border-border p-4 shadow-sm">
             {calendarMode === "week" ? (
               <WeekView
                 reservations={calendarReservations}
@@ -1336,13 +1336,13 @@ export function ReservationsDashboard({
         <div className="space-y-4">
           {/* Reason dropdown */}
           <div>
-            <label className="block text-[11px] font-bold text-[#9C9485] uppercase tracking-wide mb-1">
+            <label className="block text-[11px] font-bold text-text3 uppercase tracking-wide mb-1">
               Reason <span className="text-red-500">*</span>
             </label>
             <select
               value={declineReason}
               onChange={e => setDeclineReason(e.target.value)}
-              className="w-full border border-[#E2DDD5] rounded-xl px-3 py-2.5 text-[13px] text-[#16130C] outline-none focus:border-[#E8A020] transition-colors bg-white"
+              className="w-full border border-border rounded-xl px-3 py-2.5 text-[13px] text-dark outline-none focus:border-amber transition-colors bg-white"
             >
               {["Fully booked", "Closed that day", "Party too large", "Other"].map(opt => (
                 <option key={opt} value={opt}>{opt}</option>
@@ -1353,7 +1353,7 @@ export function ReservationsDashboard({
           {/* Custom reason (when Other selected) */}
           {declineReason === "Other" && (
             <div>
-              <label className="block text-[11px] font-bold text-[#9C9485] uppercase tracking-wide mb-1">
+              <label className="block text-[11px] font-bold text-text3 uppercase tracking-wide mb-1">
                 Custom reason <span className="text-red-500">*</span>
               </label>
               <input
@@ -1361,16 +1361,16 @@ export function ReservationsDashboard({
                 value={declineCustomReason}
                 onChange={e => setDeclineCustomReason(e.target.value)}
                 placeholder="Please describe the reason…"
-                className="w-full border border-[#E2DDD5] rounded-xl px-3 py-2.5 text-[13px] text-[#16130C] placeholder:text-[#9C9485] outline-none focus:border-[#E8A020] transition-colors bg-white"
+                className="w-full border border-border rounded-xl px-3 py-2.5 text-[13px] text-dark placeholder:text-text3 outline-none focus:border-amber transition-colors bg-white"
               />
             </div>
           )}
 
           {/* Internal owner note */}
           <div>
-            <label className="block text-[11px] font-bold text-[#9C9485] uppercase tracking-wide mb-1">
+            <label className="block text-[11px] font-bold text-text3 uppercase tracking-wide mb-1">
               Internal note (optional)
-              <span className="text-[10px] font-normal normal-case ml-1 text-[#9C9485]">
+              <span className="text-[10px] font-normal normal-case ml-1 text-text3">
                 This won't be sent to the guest
               </span>
             </label>
@@ -1379,7 +1379,7 @@ export function ReservationsDashboard({
               onChange={e => setDeclineOwnerNote(e.target.value)}
               rows={2}
               placeholder="Internal notes…"
-              className="w-full border border-[#E2DDD5] rounded-xl px-3 py-2 text-[13px] text-[#16130C] placeholder:text-[#9C9485] outline-none focus:border-[#E8A020] transition-colors resize-none bg-white"
+              className="w-full border border-border rounded-xl px-3 py-2 text-[13px] text-dark placeholder:text-text3 outline-none focus:border-amber transition-colors resize-none bg-white"
             />
           </div>
 
@@ -1388,7 +1388,7 @@ export function ReservationsDashboard({
             <button
               onClick={() => setDeclineModalOpen(false)}
               disabled={declineSubmitting}
-              className="flex-1 h-10 rounded-full border border-[#E2DDD5] text-[#5E5848] text-[13px] font-semibold hover:border-[#16130C]/40 transition-colors disabled:opacity-50"
+              className="flex-1 h-10 rounded-full border border-border text-text2 text-[13px] font-semibold hover:border-dark/40 transition-colors disabled:opacity-50"
             >
               Cancel
             </button>

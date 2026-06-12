@@ -20,7 +20,7 @@ export function DayCardBlock({ value }: { value: DayCardValue }) {
           <div className="font-[family-name:'Bricolage_Grotesque'] text-[28px] font-extrabold text-white leading-none tracking-tight">{dayNumber}</div>
         </div>
         <div className="flex-1 py-[22px] px-6 text-left">
-          {location && <div className="text-[11px] font-extrabold tracking-[.08em] uppercase text-[#E8A020] mb-1">{location}</div>}
+          {location && <div className="text-[11px] font-extrabold tracking-[.08em] uppercase text-amber mb-1">{location}</div>}
           <div className="font-[family-name:'Bricolage_Grotesque'] text-[18px] font-bold text-[#18160F] tracking-tight">{title}</div>
           {meta && <div className="text-[13px] text-[#9B9589] mt-1">{meta}</div>}
         </div>
@@ -35,7 +35,7 @@ export function DayCardBlock({ value }: { value: DayCardValue }) {
         <div className="flex flex-col">
           {timeline.map((item, i) => (
             <div key={i} className="flex gap-4 py-3">
-              <div className="shrink-0 text-[12px] font-bold text-[#E8A020] min-w-[65px] pt-px">{item.time}</div>
+              <div className="shrink-0 text-[12px] font-bold text-amber min-w-[65px] pt-px">{item.time}</div>
               <div>
                 <div className="text-[14.5px] font-bold text-[#18160F] mb-0.5">{item.title}</div>
                 {item.description && <div className="text-[13.5px] text-[#5C574E] leading-[1.6]">{item.description}</div>}

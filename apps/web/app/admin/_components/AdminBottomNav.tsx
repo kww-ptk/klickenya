@@ -164,7 +164,7 @@ export function AdminBottomNav({
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 lg:hidden bg-[#16130C] border-t border-white/10 pb-[env(safe-area-inset-bottom)]">
+    <nav className="fixed bottom-0 left-0 right-0 z-40 lg:hidden bg-dark border-t border-white/10 pb-[env(safe-area-inset-bottom)]">
       <div className="flex items-center overflow-x-auto scrollbar-none px-2 py-1.5 gap-1">
         {tabs.map((tab) => (
           <Link
@@ -172,17 +172,17 @@ export function AdminBottomNav({
             href={tab.href}
             className={cn(
               "relative flex flex-col items-center gap-0.5 px-2.5 py-1.5 rounded-xl min-w-[52px] shrink-0 transition-colors",
-              tab.isActive && "bg-[#E8A020]/15"
+              tab.isActive && "bg-amber/15"
             )}
           >
-            <span className={cn("size-5", tab.isActive ? "text-[#E8A020]" : "text-white/50")}>
+            <span className={cn("size-5", tab.isActive ? "text-amber" : "text-white/50")}>
               {tab.icon}
             </span>
-            <span className={cn("text-[9px] font-semibold whitespace-nowrap", tab.isActive ? "text-[#E8A020]" : "text-white/50")}>
+            <span className={cn("text-[9px] font-semibold whitespace-nowrap", tab.isActive ? "text-amber" : "text-white/50")}>
               {tab.label}
             </span>
             {tab.badge > 0 && (
-              <span className="absolute top-0 right-0.5 min-w-[14px] h-[14px] px-1 rounded-full bg-[#E8A020] text-[#16130C] text-[8px] font-bold flex items-center justify-center">
+              <span className="absolute top-0 right-0.5 min-w-[14px] h-[14px] px-1 rounded-full bg-amber text-dark text-[8px] font-bold flex items-center justify-center">
                 {tab.badge > 99 ? "99" : tab.badge}
               </span>
             )}

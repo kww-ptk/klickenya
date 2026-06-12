@@ -111,19 +111,19 @@ function wordCount(text: string) {
 /* ---------- Shared input components ---------- */
 
 const inputCls =
-  "w-full border border-[#E2DDD5] rounded-xl px-3.5 py-2.5 text-[14px] text-[#16130C] placeholder-[#9C9485] focus:outline-none focus:ring-2 focus:ring-[#E8A020]/40 focus:border-[#E8A020] bg-white disabled:bg-[#F7F5F2] disabled:cursor-not-allowed";
+  "w-full border border-border rounded-xl px-3.5 py-2.5 text-[14px] text-dark placeholder-text3 focus:outline-none focus:ring-2 focus:ring-amber/40 focus:border-amber bg-white disabled:bg-[#F7F5F2] disabled:cursor-not-allowed";
 
 function Field({ label, hint, children, optional }: {
   label: string; hint?: string; children: React.ReactNode; optional?: boolean;
 }) {
   return (
     <div>
-      <label className="block text-[13px] font-semibold text-[#16130C] mb-1.5">
+      <label className="block text-[13px] font-semibold text-dark mb-1.5">
         {label}
-        {optional && <span className="ml-1 font-normal text-[#9C9485] text-[12px]">(optional)</span>}
+        {optional && <span className="ml-1 font-normal text-text3 text-[12px]">(optional)</span>}
       </label>
       {children}
-      {hint && <p className="mt-1 text-[12px] text-[#9C9485]">{hint}</p>}
+      {hint && <p className="mt-1 text-[12px] text-text3">{hint}</p>}
     </div>
   );
 }
@@ -154,7 +154,7 @@ function Select({ value, onChange, children, disabled }: {
 function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="bg-white rounded-2xl border border-[#F0EDE8] p-6 space-y-5">
-      <h2 className="text-[15px] font-bold text-[#16130C]">{title}</h2>
+      <h2 className="text-[15px] font-bold text-dark">{title}</h2>
       {children}
     </div>
   );
@@ -175,9 +175,9 @@ function Chips({ options, selected, onToggle, colorScheme = "amber" }: {
             className={`px-2.5 py-1 rounded-full text-[12px] font-medium border transition-all ${
               active
                 ? colorScheme === "amber"
-                  ? "bg-[#E8A020] text-white border-[#E8A020]"
-                  : "bg-[#16130C] text-white border-[#16130C]"
-                : "bg-white text-[#5E5848] border-[#E2DDD5] hover:border-[#E8A020]/60"
+                  ? "bg-amber text-white border-amber"
+                  : "bg-dark text-white border-dark"
+                : "bg-white text-text2 border-border hover:border-amber/60"
             }`}
           >
             {o}
@@ -279,7 +279,7 @@ export default function AdminNewListingPage() {
 
   /* Description quality */
   const wc = wordCount(form.description);
-  const wcColor = wc === 0 ? "text-[#9C9485]" : wc < 50 ? "text-red-500" : wc < 80 ? "text-amber-500" : "text-green-600";
+  const wcColor = wc === 0 ? "text-text3" : wc < 50 ? "text-red-500" : wc < 80 ? "text-amber-500" : "text-green-600";
   const wcLabel = wc === 0 ? "No description yet" : wc < 50 ? `${wc} words — too short` : wc < 80 ? `${wc} words — a bit short` : `${wc} words ✓`;
 
   /* AI Suggest */
@@ -428,9 +428,9 @@ export default function AdminNewListingPage() {
   function AiHighlight({ field, children }: { field: string; children: React.ReactNode }) {
     if (!aiFieldsApplied.has(field)) return <>{children}</>;
     return (
-      <div className="ring-2 ring-[#E8A020]/40 rounded-xl">
+      <div className="ring-2 ring-amber/40 rounded-xl">
         {children}
-        <p className="text-[11px] text-[#E8A020] mt-0.5 px-1">✨ AI filled</p>
+        <p className="text-[11px] text-amber mt-0.5 px-1">✨ AI filled</p>
       </div>
     );
   }
@@ -440,14 +440,14 @@ export default function AdminNewListingPage() {
       {/* Header */}
       <div>
         <Link href="/admin/listings"
-          className="flex items-center gap-1.5 text-[13px] text-[#9C9485] hover:text-[#16130C] transition-colors mb-4">
+          className="flex items-center gap-1.5 text-[13px] text-text3 hover:text-dark transition-colors mb-4">
           <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
           </svg>
           Back to listings
         </Link>
-        <h1 className="font-display text-[24px] font-bold text-[#16130C]">New Listing</h1>
-        <p className="mt-1 text-[14px] text-[#9C9485]">
+        <h1 className="font-display text-[24px] font-bold text-dark">New Listing</h1>
+        <p className="mt-1 text-[14px] text-text3">
           Creates a listing directly in Sanity. Edit all details in Sanity Studio afterwards.
         </p>
       </div>
@@ -458,19 +458,19 @@ export default function AdminNewListingPage() {
         <SectionCard title="Core details">
           {/* Type selector */}
           <div>
-            <p className="text-[13px] font-semibold text-[#16130C] mb-2">Type *</p>
+            <p className="text-[13px] font-semibold text-dark mb-2">Type *</p>
             <div className="grid grid-cols-5 gap-2">
               {LISTING_TYPES.map((t) => (
                 <button key={t.value} type="button"
                   onClick={() => set("type", t.value)}
                   className={`flex flex-col items-center gap-1 py-2.5 rounded-xl border-2 transition-all text-center ${
                     form.type === t.value
-                      ? "border-[#E8A020] bg-[#FDF8F0]"
-                      : "border-[#F0EDE8] hover:border-[#E2DDD5] bg-white"
+                      ? "border-amber bg-[#FDF8F0]"
+                      : "border-[#F0EDE8] hover:border-border bg-white"
                   }`}
                 >
                   <span className="text-lg">{t.icon}</span>
-                  <span className={`text-[11px] font-semibold ${form.type === t.value ? "text-[#E8A020]" : "text-[#5E5848]"}`}>
+                  <span className={`text-[11px] font-semibold ${form.type === t.value ? "text-amber" : "text-text2"}`}>
                     {t.label}
                   </span>
                 </button>
@@ -493,11 +493,11 @@ export default function AdminNewListingPage() {
                 }}
                 placeholder="watamu-beach-house" className="pr-16" />
               {!slugManuallyEdited && form.title && (
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[11px] text-[#9C9485] pointer-events-none">auto</span>
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[11px] text-text3 pointer-events-none">auto</span>
               )}
             </div>
             {form.slug && (
-              <p className="mt-1 text-[11px] text-[#9C9485] font-mono truncate">
+              <p className="mt-1 text-[11px] text-text3 font-mono truncate">
                 klickenya.com/listings/{form.type}/{form.slug}
               </p>
             )}
@@ -537,19 +537,19 @@ export default function AdminNewListingPage() {
           <Field label="Address" optional>
             <textarea value={form.address} onChange={(e) => set("address", e.target.value)}
               placeholder="e.g. Watamu Marine Park Road, Watamu" rows={2}
-              className="w-full border border-[#E2DDD5] rounded-xl px-3.5 py-2.5 text-[14px] text-[#16130C] placeholder-[#9C9485] focus:outline-none focus:ring-2 focus:ring-[#E8A020]/40 focus:border-[#E8A020] bg-white resize-none"
+              className="w-full border border-border rounded-xl px-3.5 py-2.5 text-[14px] text-dark placeholder-text3 focus:outline-none focus:ring-2 focus:ring-amber/40 focus:border-amber bg-white resize-none"
             />
           </Field>
         </SectionCard>
 
         {/* ── AI Assist ── */}
         <div className={`rounded-2xl border p-5 transition-all ${
-          aiReady ? "border-[#E8A020]/40 bg-[#FDF8F0]" : "border-[#F0EDE8] bg-[#FAFAF8]"
+          aiReady ? "border-amber/40 bg-[#FDF8F0]" : "border-[#F0EDE8] bg-canvas"
         }`}>
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0">
-              <p className="text-[14px] font-bold text-[#16130C]">✨ AI Content Assistant</p>
-              <p className="text-[12px] text-[#9C9485] mt-0.5">
+              <p className="text-[14px] font-bold text-dark">✨ AI Content Assistant</p>
+              <p className="text-[12px] text-text3 mt-0.5">
                 {aiReady
                   ? "Generate description, tags, and SEO from the title and type above."
                   : "Enter a title first to enable AI suggestions."}
@@ -559,7 +559,7 @@ export default function AdminNewListingPage() {
               type="button"
               onClick={handleAiSuggest}
               disabled={!aiReady || aiLoading}
-              className="shrink-0 flex items-center gap-2 bg-[#E8A020] hover:bg-[#D4901C] disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold text-[13px] px-4 py-2 rounded-xl transition-colors"
+              className="shrink-0 flex items-center gap-2 bg-amber hover:bg-[#D4901C] disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold text-[13px] px-4 py-2 rounded-xl transition-colors"
             >
               {aiLoading ? (
                 <>
@@ -583,7 +583,7 @@ export default function AdminNewListingPage() {
             <div className="mt-3 flex flex-wrap gap-2">
               {aiApplied.map((f) => (
                 <span key={f.label}
-                  className="inline-flex items-center gap-1 text-[11px] font-semibold bg-[#E8A020]/15 text-[#C47C10] rounded-full px-2.5 py-0.5">
+                  className="inline-flex items-center gap-1 text-[11px] font-semibold bg-amber/15 text-[#C47C10] rounded-full px-2.5 py-0.5">
                   ✓ {f.label}{f.value ? `: ${f.value}` : ""}
                 </span>
               ))}
@@ -598,7 +598,7 @@ export default function AdminNewListingPage() {
               onChange={(e) => set("description", e.target.value)}
               placeholder="Describe the listing in 80–300 words…"
               rows={7}
-              className="w-full border border-[#E2DDD5] rounded-xl px-3.5 py-2.5 text-[14px] text-[#16130C] placeholder-[#9C9485] focus:outline-none focus:ring-2 focus:ring-[#E8A020]/40 focus:border-[#E8A020] bg-white resize-none"
+              className="w-full border border-border rounded-xl px-3.5 py-2.5 text-[14px] text-dark placeholder-text3 focus:outline-none focus:ring-2 focus:ring-amber/40 focus:border-amber bg-white resize-none"
             />
           </AiHighlight>
           <p className={`text-[12px] ${wcColor}`}>{wcLabel}</p>
@@ -612,7 +612,7 @@ export default function AdminNewListingPage() {
                 <input type="number" min="0" value={form.price}
                   onChange={(e) => set("price", e.target.value)}
                   placeholder="0"
-                  className="w-28 border border-[#E2DDD5] rounded-xl px-3.5 py-2.5 text-[14px] text-[#16130C] focus:outline-none focus:ring-2 focus:ring-[#E8A020]/40 focus:border-[#E8A020] bg-white"
+                  className="w-28 border border-border rounded-xl px-3.5 py-2.5 text-[14px] text-dark focus:outline-none focus:ring-2 focus:ring-amber/40 focus:border-amber bg-white"
                 />
                 <Select value={form.priceUnit} onChange={(v) => set("priceUnit", v)}>
                   {PRICE_UNITS.map((u) => <option key={u.value} value={u.value}>{u.label}</option>)}
@@ -662,10 +662,10 @@ export default function AdminNewListingPage() {
 
         {/* ── Tags ── */}
         <SectionCard title="Tags">
-          <p className="text-[12px] text-[#9C9485] -mt-2">
+          <p className="text-[12px] text-text3 -mt-2">
             Showing {showAllTags ? "all" : `${relevantTags.length} ${form.type}`} tags.
             {form.tags.length > 0 && (
-              <span className="ml-1 font-semibold text-[#16130C]">{form.tags.length} selected.</span>
+              <span className="ml-1 font-semibold text-dark">{form.tags.length} selected.</span>
             )}
           </p>
           <AiHighlight field="tags">
@@ -675,13 +675,13 @@ export default function AdminNewListingPage() {
 
           {!showAllTags && otherTags.length > 0 && (
             <button type="button" onClick={() => setShowAllTags(true)}
-              className="text-[12px] text-[#9C9485] hover:text-[#16130C] underline underline-offset-2 transition-colors">
+              className="text-[12px] text-text3 hover:text-dark underline underline-offset-2 transition-colors">
               + Show all {TAG_SUGGESTIONS.length} tags ({otherTags.length} more)
             </button>
           )}
           {showAllTags && (
             <button type="button" onClick={() => setShowAllTags(false)}
-              className="text-[12px] text-[#9C9485] hover:text-[#16130C] underline underline-offset-2 transition-colors">
+              className="text-[12px] text-text3 hover:text-dark underline underline-offset-2 transition-colors">
               Show fewer tags
             </button>
           )}
@@ -738,14 +738,14 @@ export default function AdminNewListingPage() {
             <Field label="Opening hours" optional hint={'e.g. "Daily 8 AM – 10:30 PM"'}>
               <textarea value={form.openingHours} onChange={(e) => set("openingHours", e.target.value)}
                 rows={2} placeholder="Daily 8:00 AM – 10:30 PM"
-                className="w-full border border-[#E2DDD5] rounded-xl px-3.5 py-2.5 text-[14px] text-[#16130C] placeholder-[#9C9485] focus:outline-none focus:ring-2 focus:ring-[#E8A020]/40 focus:border-[#E8A020] bg-white resize-none"
+                className="w-full border border-border rounded-xl px-3.5 py-2.5 text-[14px] text-dark placeholder-text3 focus:outline-none focus:ring-2 focus:ring-amber/40 focus:border-amber bg-white resize-none"
               />
             </Field>
             <label className="flex items-center gap-2 cursor-pointer">
               <input type="checkbox" checked={form.reservationRequired}
                 onChange={(e) => set("reservationRequired", e.target.checked)}
-                className="w-4 h-4 accent-[#E8A020]" />
-              <span className="text-[13px] font-semibold text-[#16130C]">Reservation required</span>
+                className="w-4 h-4 accent-amber" />
+              <span className="text-[13px] font-semibold text-dark">Reservation required</span>
             </label>
           </SectionCard>
         )}
@@ -825,8 +825,8 @@ export default function AdminNewListingPage() {
             <label className="flex items-center gap-2 cursor-pointer">
               <input type="checkbox" checked={form.isFree}
                 onChange={(e) => set("isFree", e.target.checked)}
-                className="w-4 h-4 accent-[#E8A020]" />
-              <span className="text-[13px] font-semibold text-[#16130C]">Free event</span>
+                className="w-4 h-4 accent-amber" />
+              <span className="text-[13px] font-semibold text-dark">Free event</span>
             </label>
           </SectionCard>
         )}
@@ -846,7 +846,7 @@ export default function AdminNewListingPage() {
             <Field label="Provider info" optional hint="Background, qualifications, or certifications">
               <textarea value={form.providerInfo} onChange={(e) => set("providerInfo", e.target.value)}
                 rows={3} placeholder="Brief bio or credentials of the service provider…"
-                className="w-full border border-[#E2DDD5] rounded-xl px-3.5 py-2.5 text-[14px] text-[#16130C] placeholder-[#9C9485] focus:outline-none focus:ring-2 focus:ring-[#E8A020]/40 focus:border-[#E8A020] bg-white resize-none"
+                className="w-full border border-border rounded-xl px-3.5 py-2.5 text-[14px] text-dark placeholder-text3 focus:outline-none focus:ring-2 focus:ring-amber/40 focus:border-amber bg-white resize-none"
               />
             </Field>
           </SectionCard>
@@ -859,23 +859,23 @@ export default function AdminNewListingPage() {
               <Input value={form.seoTitle} onChange={(v) => set("seoTitle", v.slice(0, 60))}
                 placeholder="e.g. Watamu Beach House — Luxury Villa Kenya" />
             </AiHighlight>
-            <p className="mt-1 text-[12px] text-[#9C9485]">{form.seoTitle.length}/60</p>
+            <p className="mt-1 text-[12px] text-text3">{form.seoTitle.length}/60</p>
           </Field>
           <Field label="Meta description" optional hint="Shown in search results. Max 160 chars.">
             <AiHighlight field="seoDescription">
               <textarea value={form.seoDescription}
                 onChange={(e) => set("seoDescription", e.target.value.slice(0, 160))}
                 placeholder="Short description for search engines…" rows={3}
-                className="w-full border border-[#E2DDD5] rounded-xl px-3.5 py-2.5 text-[14px] text-[#16130C] placeholder-[#9C9485] focus:outline-none focus:ring-2 focus:ring-[#E8A020]/40 focus:border-[#E8A020] bg-white resize-none"
+                className="w-full border border-border rounded-xl px-3.5 py-2.5 text-[14px] text-dark placeholder-text3 focus:outline-none focus:ring-2 focus:ring-amber/40 focus:border-amber bg-white resize-none"
               />
             </AiHighlight>
-            <p className="mt-1 text-[12px] text-[#9C9485]">{form.seoDescription.length}/160</p>
+            <p className="mt-1 text-[12px] text-text3">{form.seoDescription.length}/160</p>
           </Field>
         </SectionCard>
 
         {/* ── Host assignment ── */}
         <SectionCard title="Host assignment">
-          <p className="text-[13px] text-[#9C9485] -mt-2">
+          <p className="text-[13px] text-text3 -mt-2">
             Optional. Links the listing to an existing host document in Sanity.
           </p>
           <Field label="Host email" optional>
@@ -890,11 +890,11 @@ export default function AdminNewListingPage() {
 
         <div className="flex items-center gap-3 pb-8">
           <button type="submit" disabled={!canSubmit || loading}
-            className="flex-1 sm:flex-none sm:px-8 py-3 bg-[#E8A020] hover:bg-[#D4901C] disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold text-[14px] rounded-xl transition-colors">
+            className="flex-1 sm:flex-none sm:px-8 py-3 bg-amber hover:bg-[#D4901C] disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold text-[14px] rounded-xl transition-colors">
             {loading ? "Creating…" : "Create listing"}
           </button>
           <Link href="/admin/listings"
-            className="px-6 py-3 text-[14px] font-semibold text-[#5E5848] hover:text-[#16130C] transition-colors">
+            className="px-6 py-3 text-[14px] font-semibold text-text2 hover:text-dark transition-colors">
             Cancel
           </Link>
         </div>

@@ -100,7 +100,7 @@ export default async function PurchaseOrderDetailPage({ params }: PageProps) {
       <div className="mb-5">
         <Link
           href={`/dashboard/menu/${menuId}/stock/purchases`}
-          className="text-[13px] text-[#9C9485] hover:text-[#16130C]"
+          className="text-[13px] text-text3 hover:text-dark"
         >
           ← Back to purchase orders
         </Link>

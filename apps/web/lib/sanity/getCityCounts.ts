@@ -9,7 +9,7 @@ export interface CityCount {
 }
 
 const CITY_LISTINGS_QUERY = groq`
-  *[_type == "listing" && status == "published" && defined(city) && city != ""]{ city }
+  *[_type == "listing" && status == "published" && defined(city) && city != "" && (!defined(partner) || publishToMarketplace == true)]{ city }
 `;
 
 const DESTINATION_IMAGES_QUERY = groq`

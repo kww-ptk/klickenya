@@ -303,17 +303,17 @@ function ContactForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       {preselectedRoom && (
-        <div className="flex items-center justify-between bg-[#E8A020]/10 border border-[#E8A020]/20 rounded-xl px-4 py-3 mb-4">
-          <span className="text-sm text-[#16130C]">
+        <div className="flex items-center justify-between bg-amber/10 border border-amber/20 rounded-xl px-4 py-3 mb-4">
+          <span className="text-sm text-dark">
             🛏 &nbsp;
-            <span className="font-semibold text-[#E8A020]">
+            <span className="font-semibold text-amber">
               {preselectedRoom}
             </span>
           </span>
           <button
             type="button"
             onClick={() => router.replace(pathname, { scroll: false })}
-            className="text-[#9C9485] hover:text-[#16130C] text-lg leading-none ml-3"
+            className="text-text3 hover:text-dark text-lg leading-none ml-3"
             aria-label="Clear room selection"
           >
             ×

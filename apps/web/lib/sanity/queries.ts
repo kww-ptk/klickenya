@@ -9,6 +9,11 @@ const IMAGE_FIELDS = `
   crop
 `
 
+// White-label: klickenya.com marketplace shows house listings (no partner)
+// OR partner listings explicitly cross-listed. Interpolate inside the [ ... ]
+// filter of every PUBLIC marketplace listing query.
+const MARKETPLACE_PARTNER_FILTER = `(!defined(partner) || publishToMarketplace == true)`
+
 const LISTING_CARD_FIELDS = `
   _id,
   title,
@@ -29,7 +34,9 @@ const LISTING_CARD_FIELDS = `
   isVerified,
   verificationStatus,
   "coverPhoto": photos[0]{ ${IMAGE_FIELDS} },
-  "hostRef": host->{ _id, name, "slug": slug.current, photo{ ${IMAGE_FIELDS} }, verified }
+  "hostRef": host->{ _id, name, "slug": slug.current, photo{ ${IMAGE_FIELDS} }, verified },
+  "partnerSlug": partner->slug.current,
+  publishToMarketplace
 `
 
 const PROPERTY_CARD_FIELDS = `
@@ -58,19 +65,19 @@ const PROPERTY_CARD_FIELDS = `
 // ── Listings ─────────────────────────────────────
 
 export const LISTINGS_QUERY = groq`
-  *[_type == "listing" && status == "published"] | order(_createdAt desc) {
+  *[_type == "listing" && status == "published" && ${MARKETPLACE_PARTNER_FILTER}] | order(_createdAt desc) {
     ${LISTING_CARD_FIELDS}
   }
 `
 
 export const LISTINGS_BY_TYPE_QUERY = groq`
-  *[_type == "listing" && status == "published" && type == $type] | order(_createdAt desc) {
+  *[_type == "listing" && status == "published" && type == $type && ${MARKETPLACE_PARTNER_FILTER}] | order(_createdAt desc) {
     ${LISTING_CARD_FIELDS}
   }
 `
 
 export const LISTINGS_FILTERED_QUERY = groq`
-  *[_type == "listing" && status == "published" && type == $type
+  *[_type == "listing" && status == "published" && type == $type && ${MARKETPLACE_PARTNER_FILTER}
     && select(
       $subcategory != "" => subcategory == $subcategory,
       true
@@ -85,19 +92,19 @@ export const LISTINGS_FILTERED_QUERY = groq`
 `
 
 export const SUBCATEGORY_COUNTS_QUERY = groq`
-  *[_type == "listing" && status == "published" && type == $type] {
+  *[_type == "listing" && status == "published" && type == $type && ${MARKETPLACE_PARTNER_FILTER}] {
     subcategory
   }
 `
 
 export const LISTINGS_BY_TYPE_CITY_QUERY = groq`
-  *[_type == "listing" && status == "published" && type == $type && lower(city) == lower($city)] | order(_createdAt desc) {
+  *[_type == "listing" && status == "published" && type == $type && lower(city) == lower($city) && ${MARKETPLACE_PARTNER_FILTER}] | order(_createdAt desc) {
     ${LISTING_CARD_FIELDS}
   }
 `
 
 export const LISTING_BY_SLUG_QUERY = groq`
-  *[_type == "listing" && slug.current == $slug][0] {
+  *[_type == "listing" && slug.current == $slug && ${MARKETPLACE_PARTNER_FILTER}][0] {
     _id,
     title,
     slug,
@@ -182,7 +189,7 @@ export const LISTING_BY_SLUG_QUERY = groq`
 `
 
 export const LISTING_SLUGS_QUERY = groq`
-  *[_type == "listing" && status == "published"] {
+  *[_type == "listing" && status == "published" && ${MARKETPLACE_PARTNER_FILTER}] {
     "slug": slug.current,
     type,
     subcategory,
@@ -204,12 +211,12 @@ export const HOST_BY_SLUG_QUERY = groq`
     verified,
     createdAt,
     "listings": listings[]->{ ${LISTING_CARD_FIELDS} },
-    "events": *[_type == "listing" && type == "event" && status == "published" && host._ref == ^._id]{ ${LISTING_CARD_FIELDS}, eventDate, eventEndDate, venue, isFree, priceFrom, isRecurring, recurrenceRule, schedule[]{ _key, day, startTime, endTime }, "coverPhotoUrl": photos[0].asset->url }
+    "events": *[_type == "listing" && type == "event" && status == "published" && host._ref == ^._id && ${MARKETPLACE_PARTNER_FILTER}]{ ${LISTING_CARD_FIELDS}, eventDate, eventEndDate, venue, isFree, priceFrom, isRecurring, recurrenceRule, schedule[]{ _key, day, startTime, endTime }, "coverPhotoUrl": photos[0].asset->url }
   }
 `
 
 export const SIMILAR_LISTINGS_QUERY = groq`
-  *[_type == "listing" && status == "published" && type == $type && lower(city) == lower($city) && slug.current != $slug] | order(_createdAt desc) [0...3] {
+  *[_type == "listing" && status == "published" && type == $type && lower(city) == lower($city) && slug.current != $slug && ${MARKETPLACE_PARTNER_FILTER}] | order(_createdAt desc) [0...3] {
     ${LISTING_CARD_FIELDS}
   }
 `
@@ -299,7 +306,7 @@ export const BLOG_POST_BY_SLUG_QUERY = groq`
             schedule[]{ _key, day, startTime, endTime },
             "coverPhotoUrl": coalesce(mainImage.asset->url, photos[0].asset->url) + "?w=400&h=300&fit=crop&auto=format&q=80"
           },
-          defined(filterCity) => *[_type == "listing" && type == "event" && status == "published" && lower(city) == lower(^.filterCity)] | order(eventDate asc, _createdAt desc) [0...6]{
+          defined(filterCity) => *[_type == "listing" && type == "event" && status == "published" && lower(city) == lower(^.filterCity) && ${MARKETPLACE_PARTNER_FILTER}] | order(eventDate asc, _createdAt desc) [0...6]{
             _id, title, slug, type, subcategory, city,
             isFree, priceFrom, isRecurring, recurrenceRule,
             hostName, eventDate, eventEndDate, venue,
@@ -551,7 +558,7 @@ export const DESTINATION_BY_SLUG_QUERY = groq`
     "relatedListings": relatedListings[]->{
       ${LISTING_CARD_FIELDS}
     },
-    "cityListings": *[_type == "listing" && status == "published" && lower(city) == lower(^.name)] | order(_createdAt desc) [0...12] {
+    "cityListings": *[_type == "listing" && status == "published" && lower(city) == lower(^.name) && ${MARKETPLACE_PARTNER_FILTER}] | order(_createdAt desc) [0...12] {
       ${LISTING_CARD_FIELDS}
     }
   }
@@ -597,7 +604,7 @@ export const NEIGHBOURHOOD_BY_SLUG_QUERY = groq`
 // ── Events ──────────────────────────────────────
 
 export const EVENTS_QUERY = groq`
-  *[_type == "listing" && type == "event" && status == "published"] | order(eventDate asc, _createdAt desc) [0...12] {
+  *[_type == "listing" && type == "event" && status == "published" && ${MARKETPLACE_PARTNER_FILTER}] | order(eventDate asc, _createdAt desc) [0...12] {
     ${LISTING_CARD_FIELDS},
     eventDate,
     eventEndDate,
@@ -612,7 +619,7 @@ export const EVENTS_QUERY = groq`
 `
 
 export const EVENT_BY_SLUG_QUERY = groq`
-  *[_type == "listing" && slug.current == $slug && type == "event"][0] {
+  *[_type == "listing" && slug.current == $slug && type == "event" && ${MARKETPLACE_PARTNER_FILTER}][0] {
     _id,
     title,
     slug,
@@ -666,7 +673,7 @@ export const EVENT_BY_SLUG_QUERY = groq`
 `
 
 export const UPCOMING_EVENTS_QUERY = groq`
-  *[_type == "listing" && type == "event" && status == "published" && (eventDate >= now() || !defined(eventDate) || isRecurring == true)] | order(eventDate asc) [0...$limit] {
+  *[_type == "listing" && type == "event" && status == "published" && (eventDate >= now() || !defined(eventDate) || isRecurring == true) && ${MARKETPLACE_PARTNER_FILTER}] | order(eventDate asc) [0...$limit] {
     ${LISTING_CARD_FIELDS},
     eventDate,
     eventEndDate,
@@ -681,7 +688,7 @@ export const UPCOMING_EVENTS_QUERY = groq`
 `
 
 export const THIS_WEEKEND_EVENTS_QUERY = groq`
-  *[_type == "listing" && type == "event" && status == "published" && eventDate >= $weekStart && eventDate <= $weekEnd] | order(eventDate asc) [0...3] {
+  *[_type == "listing" && type == "event" && status == "published" && eventDate >= $weekStart && eventDate <= $weekEnd && ${MARKETPLACE_PARTNER_FILTER}] | order(eventDate asc) [0...3] {
     ${LISTING_CARD_FIELDS},
     eventDate,
     eventEndDate,
@@ -694,20 +701,20 @@ export const THIS_WEEKEND_EVENTS_QUERY = groq`
 `
 
 export const EVENTS_BY_CITY_QUERY = groq`{
-  "watamu": count(*[_type == "listing" && type == "event" && status == "published" && lower(city) == "watamu" && (eventDate >= now() || !defined(eventDate) || isRecurring == true)]),
-  "kilifi": count(*[_type == "listing" && type == "event" && status == "published" && lower(city) == "kilifi" && (eventDate >= now() || !defined(eventDate) || isRecurring == true)]),
-  "diani": count(*[_type == "listing" && type == "event" && status == "published" && lower(city) == "diani" && (eventDate >= now() || !defined(eventDate) || isRecurring == true)]),
-  "nairobi": count(*[_type == "listing" && type == "event" && status == "published" && lower(city) == "nairobi" && (eventDate >= now() || !defined(eventDate) || isRecurring == true)]),
-  "lamu": count(*[_type == "listing" && type == "event" && status == "published" && lower(city) == "lamu" && (eventDate >= now() || !defined(eventDate) || isRecurring == true)]),
-  "watamuImage": *[_type == "listing" && type == "event" && status == "published" && lower(city) == "watamu" && isFeatured == true] | order(eventDate desc) [0] { "coverPhotoUrl": photos[0].asset->url }.coverPhotoUrl,
-  "kilifiImage": *[_type == "listing" && type == "event" && status == "published" && lower(city) == "kilifi" && isFeatured == true] | order(eventDate desc) [0] { "coverPhotoUrl": photos[0].asset->url }.coverPhotoUrl,
-  "dianiImage": *[_type == "listing" && type == "event" && status == "published" && lower(city) == "diani" && isFeatured == true] | order(eventDate desc) [0] { "coverPhotoUrl": photos[0].asset->url }.coverPhotoUrl,
-  "nairobiImage": *[_type == "listing" && type == "event" && status == "published" && lower(city) == "nairobi" && isFeatured == true] | order(eventDate desc) [0] { "coverPhotoUrl": photos[0].asset->url }.coverPhotoUrl,
-  "lamuImage": *[_type == "listing" && type == "event" && status == "published" && lower(city) == "lamu" && isFeatured == true] | order(eventDate desc) [0] { "coverPhotoUrl": photos[0].asset->url }.coverPhotoUrl
+  "watamu": count(*[_type == "listing" && type == "event" && status == "published" && lower(city) == "watamu" && (eventDate >= now() || !defined(eventDate) || isRecurring == true) && ${MARKETPLACE_PARTNER_FILTER}]),
+  "kilifi": count(*[_type == "listing" && type == "event" && status == "published" && lower(city) == "kilifi" && (eventDate >= now() || !defined(eventDate) || isRecurring == true) && ${MARKETPLACE_PARTNER_FILTER}]),
+  "diani": count(*[_type == "listing" && type == "event" && status == "published" && lower(city) == "diani" && (eventDate >= now() || !defined(eventDate) || isRecurring == true) && ${MARKETPLACE_PARTNER_FILTER}]),
+  "nairobi": count(*[_type == "listing" && type == "event" && status == "published" && lower(city) == "nairobi" && (eventDate >= now() || !defined(eventDate) || isRecurring == true) && ${MARKETPLACE_PARTNER_FILTER}]),
+  "lamu": count(*[_type == "listing" && type == "event" && status == "published" && lower(city) == "lamu" && (eventDate >= now() || !defined(eventDate) || isRecurring == true) && ${MARKETPLACE_PARTNER_FILTER}]),
+  "watamuImage": *[_type == "listing" && type == "event" && status == "published" && lower(city) == "watamu" && isFeatured == true && ${MARKETPLACE_PARTNER_FILTER}] | order(eventDate desc) [0] { "coverPhotoUrl": photos[0].asset->url }.coverPhotoUrl,
+  "kilifiImage": *[_type == "listing" && type == "event" && status == "published" && lower(city) == "kilifi" && isFeatured == true && ${MARKETPLACE_PARTNER_FILTER}] | order(eventDate desc) [0] { "coverPhotoUrl": photos[0].asset->url }.coverPhotoUrl,
+  "dianiImage": *[_type == "listing" && type == "event" && status == "published" && lower(city) == "diani" && isFeatured == true && ${MARKETPLACE_PARTNER_FILTER}] | order(eventDate desc) [0] { "coverPhotoUrl": photos[0].asset->url }.coverPhotoUrl,
+  "nairobiImage": *[_type == "listing" && type == "event" && status == "published" && lower(city) == "nairobi" && isFeatured == true && ${MARKETPLACE_PARTNER_FILTER}] | order(eventDate desc) [0] { "coverPhotoUrl": photos[0].asset->url }.coverPhotoUrl,
+  "lamuImage": *[_type == "listing" && type == "event" && status == "published" && lower(city) == "lamu" && isFeatured == true && ${MARKETPLACE_PARTNER_FILTER}] | order(eventDate desc) [0] { "coverPhotoUrl": photos[0].asset->url }.coverPhotoUrl
 }`
 
 export const FEATURED_EVENTS_QUERY = groq`
-  *[_type == "listing" && type == "event" && status == "published" && isFeatured == true && (eventDate >= now() || !defined(eventDate) || isRecurring == true)] | order(eventDate asc) [0...6] {
+  *[_type == "listing" && type == "event" && status == "published" && isFeatured == true && (eventDate >= now() || !defined(eventDate) || isRecurring == true) && ${MARKETPLACE_PARTNER_FILTER}] | order(eventDate asc) [0...6] {
     ${LISTING_CARD_FIELDS},
     eventDate,
     eventEndDate,
@@ -722,13 +729,13 @@ export const FEATURED_EVENTS_QUERY = groq`
 `
 
 export const EVENT_SUBCATEGORY_COUNTS_QUERY = groq`
-  *[_type == "listing" && type == "event" && status == "published" && (eventDate >= now() || !defined(eventDate) || isRecurring == true)] {
+  *[_type == "listing" && type == "event" && status == "published" && (eventDate >= now() || !defined(eventDate) || isRecurring == true) && ${MARKETPLACE_PARTNER_FILTER}] {
     subcategory
   }
 `
 
 export const EVENTS_FILTERED_QUERY = groq`
-  *[_type == "listing" && type == "event" && status == "published"
+  *[_type == "listing" && type == "event" && status == "published" && ${MARKETPLACE_PARTNER_FILTER}
     && (eventDate >= now() || !defined(eventDate) || isRecurring == true)
     && select(
       $subcategory != "" => subcategory == $subcategory,
@@ -753,7 +760,7 @@ export const EVENTS_FILTERED_QUERY = groq`
 // $q should be passed as "term*" from the caller for wildcard matching
 
 export const SEARCH_LISTINGS_QUERY = groq`
-  *[_type == "listing" && status == "published" && (
+  *[_type == "listing" && status == "published" && ${MARKETPLACE_PARTNER_FILTER} && (
     title match $q ||
     city match $q ||
     county match $q ||
@@ -780,7 +787,7 @@ export const SEARCH_LISTINGS_QUERY = groq`
 `
 
 export const SEARCH_LISTINGS_FALLBACK_QUERY = groq`
-  *[_type == "listing" && status == "published" && (
+  *[_type == "listing" && status == "published" && ${MARKETPLACE_PARTNER_FILTER} && (
     city match $q
   )
     && select($typeFilter != "" => type == $typeFilter, true)

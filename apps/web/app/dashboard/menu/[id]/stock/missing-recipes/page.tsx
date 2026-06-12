@@ -72,43 +72,43 @@ export default async function MissingRecipesPage({ params }: PageProps) {
       <div className="mb-5">
         <Link
           href={`/dashboard/menu/${menu.id}/stock`}
-          className="text-[13px] text-[#9C9485] hover:text-[#16130C]"
+          className="text-[13px] text-text3 hover:text-dark"
         >
           ← Back to Klickenya Kitchen
         </Link>
-        <h1 className="font-display text-[22px] lg:text-[28px] font-bold tracking-[-0.03em] text-[#16130C] mt-2">
+        <h1 className="font-display text-[22px] lg:text-[28px] font-bold tracking-[-0.03em] text-dark mt-2">
           Missing recipes
         </h1>
-        <p className="text-[13px] text-[#9C9485] mt-1">
+        <p className="text-[13px] text-text3 mt-1">
           These items are on your menu but don&apos;t deduct stock when ordered.
           Add a recipe to close the loop.
         </p>
       </div>
 
       {missing.length === 0 ? (
-        <div className="bg-white rounded-2xl border border-[#E2DDD5] p-8 text-center">
+        <div className="bg-white rounded-2xl border border-border p-8 text-center">
           <p className="text-[40px] mb-2">✅</p>
-          <p className="font-display text-[16px] font-bold text-[#16130C]">All items have recipes</p>
-          <p className="text-[13px] text-[#9C9485] mt-1">
+          <p className="font-display text-[16px] font-bold text-dark">All items have recipes</p>
+          <p className="text-[13px] text-text3 mt-1">
             Stock will deduct automatically when an order moves to your chosen status.
           </p>
         </div>
       ) : (
-        <ul className="bg-white rounded-2xl border border-[#E2DDD5] divide-y divide-[#F4F1EC] overflow-hidden">
+        <ul className="bg-white rounded-2xl border border-border divide-y divide-surface overflow-hidden">
           {missing.map((m) => (
             <li key={m.id}>
               <Link
                 href={`/dashboard/menu/${menu.id}/items/${m.id}`}
-                className="flex items-center gap-3 p-4 hover:bg-[#FAFAF8] active:bg-[#F4F1EC]"
+                className="flex items-center gap-3 p-4 hover:bg-canvas active:bg-surface"
               >
                 <div className="flex-1 min-w-0">
-                  <p className="text-[15px] font-semibold text-[#16130C]">{m.name}</p>
-                  <p className="text-[12px] text-[#9C9485]">
+                  <p className="text-[15px] font-semibold text-dark">{m.name}</p>
+                  <p className="text-[12px] text-text3">
                     {m.section_title} ·{" "}
                     {m.reason === "no_recipe" ? "No recipe yet" : "Recipe is empty"}
                   </p>
                 </div>
-                <span className="text-[#E8A020] font-bold text-[14px] shrink-0">Add recipe →</span>
+                <span className="text-amber font-bold text-[14px] shrink-0">Add recipe →</span>
               </Link>
             </li>
           ))}

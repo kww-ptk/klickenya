@@ -27,11 +27,11 @@ export default async function MenusPage() {
           <div>
             <Link
               href="/dashboard"
-              className="text-[13px] text-[#9C9485] hover:text-[#16130C] transition-colors"
+              className="text-[13px] text-text3 hover:text-dark transition-colors"
             >
               ← Back to dashboard
             </Link>
-            <h1 className="font-display text-[22px] lg:text-[28px] font-bold tracking-[-0.03em] text-[#16130C] mt-2">
+            <h1 className="font-display text-[22px] lg:text-[28px] font-bold tracking-[-0.03em] text-dark mt-2">
               My Menus
             </h1>
           </div>

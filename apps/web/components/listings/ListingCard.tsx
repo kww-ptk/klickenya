@@ -260,10 +260,10 @@ function ListingCard({
   const toastElement = toast
     ? createPortal(
         <div className="fixed top-5 left-1/2 -translate-x-1/2 z-[9999] pointer-events-auto">
-          <div className="flex items-center gap-2 rounded-full bg-[#16130C] px-4 py-2.5 shadow-lg border border-white/10">
+          <div className="flex items-center gap-2 rounded-full bg-dark px-4 py-2.5 shadow-lg border border-white/10">
             <Heart className="size-3.5 fill-amber text-amber shrink-0" />
             <span className="text-[13px] font-semibold text-white whitespace-nowrap">{toast}</span>
-            <a href="/profile?tab=saved" className="text-[12px] font-semibold text-[#E8A020] hover:underline ml-1 whitespace-nowrap">
+            <a href="/profile?tab=saved" className="text-[12px] font-semibold text-amber hover:underline ml-1 whitespace-nowrap">
               View saved
             </a>
           </div>
@@ -318,7 +318,7 @@ function ListingCard({
                     </div>
                   )}
                   {isVerified && (
-                    <span className="absolute -bottom-px -right-px size-2.5 rounded-full bg-[#16A34A] border border-white flex items-center justify-center">
+                    <span className="absolute -bottom-px -right-px size-2.5 rounded-full bg-green border border-white flex items-center justify-center">
                       <Check className="size-1.5 text-white" strokeWidth={4} />
                     </span>
                   )}
@@ -438,7 +438,7 @@ function ListingCard({
                     </div>
                   )}
                   {isVerified && (
-                    <span className="absolute -bottom-0.5 -right-0.5 size-3 rounded-full bg-[#16A34A] border-[1.5px] border-white flex items-center justify-center">
+                    <span className="absolute -bottom-0.5 -right-0.5 size-3 rounded-full bg-green border-[1.5px] border-white flex items-center justify-center">
                       <Check className="size-2 text-white" strokeWidth={4} />
                     </span>
                   )}

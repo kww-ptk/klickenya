@@ -5,7 +5,7 @@ export default function BookingWidgetLayout({
 }) {
   return (
     <html lang="en">
-      <body className="min-h-screen bg-[#FAFAF8]">
+      <body className="min-h-screen bg-canvas">
         {children}
       </body>
     </html>

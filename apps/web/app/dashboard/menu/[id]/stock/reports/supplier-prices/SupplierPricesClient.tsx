@@ -77,10 +77,10 @@ export function SupplierPricesClient({
 
   if (ingredients.length === 0) {
     return (
-      <div className="bg-white rounded-2xl border border-[#E2DDD5] p-8 text-center">
+      <div className="bg-white rounded-2xl border border-border p-8 text-center">
         <p className="text-[40px] mb-2">📦</p>
-        <p className="font-display text-[16px] font-bold text-[#16130C]">No purchase data yet</p>
-        <p className="text-[13px] text-[#9C9485] mt-1">
+        <p className="font-display text-[16px] font-bold text-dark">No purchase data yet</p>
+        <p className="text-[13px] text-text3 mt-1">
           Receive a purchase order to start tracking supplier prices over time.
         </p>
       </div>
@@ -95,7 +95,7 @@ export function SupplierPricesClient({
         </div>
       )}
 
-      <ul className="bg-white rounded-2xl border border-[#E2DDD5] divide-y divide-[#F4F1EC] overflow-hidden">
+      <ul className="bg-white rounded-2xl border border-border divide-y divide-surface overflow-hidden">
         {ingredients.map((ing) => {
           const open = openId === ing.ingredient_id;
           const last = ing.points[ing.points.length - 1];
@@ -110,11 +110,11 @@ export function SupplierPricesClient({
               <button
                 type="button"
                 onClick={() => setOpenId(open ? null : ing.ingredient_id)}
-                className="w-full flex items-center gap-4 p-4 hover:bg-[#FAFAF8] active:bg-[#F4F1EC] text-left"
+                className="w-full flex items-center gap-4 p-4 hover:bg-canvas active:bg-surface text-left"
               >
                 <div className="flex-1 min-w-0">
-                  <p className="text-[14px] font-semibold text-[#16130C]">{ing.ingredient_name}</p>
-                  <p className="text-[11px] text-[#9C9485]">
+                  <p className="text-[14px] font-semibold text-dark">{ing.ingredient_name}</p>
+                  <p className="text-[11px] text-text3">
                     {ing.points.length} purchase{ing.points.length === 1 ? "" : "s"} · current {fmtKES(Number(ing.current_cost))} / {ing.unit}
                   </p>
                 </div>
@@ -126,7 +126,7 @@ export function SupplierPricesClient({
                       {Math.round(alertPct)}% MoM
                     </span>
                   ) : change != null ? (
-                    <span className="text-[11px] font-semibold text-[#9C9485]">
+                    <span className="text-[11px] font-semibold text-text3">
                       {change > 0 ? "+" : ""}
                       {change.toFixed(0)}% all-time
                     </span>
@@ -137,7 +137,7 @@ export function SupplierPricesClient({
               {open && (
                 <div className="px-4 pb-4 -mt-2">
                   <table className="w-full text-[13px]">
-                    <thead className="text-left text-[11px] font-bold uppercase tracking-wide text-[#9C9485]">
+                    <thead className="text-left text-[11px] font-bold uppercase tracking-wide text-text3">
                       <tr>
                         <th className="py-1">When</th>
                         <th className="py-1">Supplier</th>
@@ -145,13 +145,13 @@ export function SupplierPricesClient({
                         <th className="py-1 text-right">Unit cost</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-[#F4F1EC]">
+                    <tbody className="divide-y divide-surface">
                       {ing.points.map((p, idx) => (
                         <tr key={idx}>
-                          <td className="py-1.5 text-[#5E5848]">{fmtDate(p.at)}</td>
-                          <td className="py-1.5 text-[#5E5848]">{p.supplier_name ?? "—"}</td>
-                          <td className="py-1.5 text-right text-[#5E5848]">{Number(p.qty).toLocaleString("en-KE")} {ing.unit}</td>
-                          <td className="py-1.5 text-right font-semibold text-[#16130C]">{fmtKES(Number(p.unit_cost))}</td>
+                          <td className="py-1.5 text-text2">{fmtDate(p.at)}</td>
+                          <td className="py-1.5 text-text2">{p.supplier_name ?? "—"}</td>
+                          <td className="py-1.5 text-right text-text2">{Number(p.qty).toLocaleString("en-KE")} {ing.unit}</td>
+                          <td className="py-1.5 text-right font-semibold text-dark">{fmtKES(Number(p.unit_cost))}</td>
                         </tr>
                       ))}
                     </tbody>

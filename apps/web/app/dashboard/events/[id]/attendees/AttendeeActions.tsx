@@ -100,7 +100,7 @@ export function AttendeeActions({ attendees, eventTitle, eventSanityId }: Attend
       {confirmed.length > 0 && (
         <button
           onClick={() => openEmailModal()}
-          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#E8A020]/10 text-[#E8A020] text-[13px] font-semibold hover:bg-[#E8A020]/20 transition-colors"
+          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-amber/10 text-amber text-[13px] font-semibold hover:bg-amber/20 transition-colors"
         >
           <Mail className="size-3.5" />
           Email All ({confirmed.length})
@@ -108,7 +108,7 @@ export function AttendeeActions({ attendees, eventTitle, eventSanityId }: Attend
       )}
 
       {/* Attendee table */}
-      <div className="rounded-xl border border-[#E2DDD5] overflow-hidden mt-6">
+      <div className="rounded-xl border border-border overflow-hidden mt-6">
         <table className="w-full text-left">
           <thead className="bg-surface text-[12px] font-semibold text-text2 uppercase tracking-wide">
             <tr>
@@ -120,7 +120,7 @@ export function AttendeeActions({ attendees, eventTitle, eventSanityId }: Attend
               <th className="px-4 py-3 text-right">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-[#E2DDD5]">
+          <tbody className="divide-y divide-border">
             {attendees.map((a) => (
               <tr key={a.id} className="hover:bg-surface/50 transition-colors">
                 <td className="px-4 py-3">
@@ -151,7 +151,7 @@ export function AttendeeActions({ attendees, eventTitle, eventSanityId }: Attend
                       <>
                         <button
                           onClick={() => openEmailModal(a.id, a.name)}
-                          className="flex size-8 items-center justify-center rounded-lg text-text2 hover:bg-[#E8A020]/10 hover:text-[#E8A020] transition-colors"
+                          className="flex size-8 items-center justify-center rounded-lg text-text2 hover:bg-amber/10 hover:text-amber transition-colors"
                           title={`Email ${a.name}`}
                         >
                           <Mail className="size-4" />
@@ -188,7 +188,7 @@ export function AttendeeActions({ attendees, eventTitle, eventSanityId }: Attend
               type="text"
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg border border-[#E2DDD5] text-[14px] text-text focus:outline-none focus:ring-2 focus:ring-[#E8A020]/30 mb-4"
+              className="w-full px-3 py-2 rounded-lg border border-border text-[14px] text-text focus:outline-none focus:ring-2 focus:ring-amber/30 mb-4"
             />
 
             <label className="block text-[13px] font-medium text-text mb-1.5">Message</label>
@@ -196,7 +196,7 @@ export function AttendeeActions({ attendees, eventTitle, eventSanityId }: Attend
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               rows={5}
-              className="w-full px-3 py-2 rounded-lg border border-[#E2DDD5] text-[14px] text-text focus:outline-none focus:ring-2 focus:ring-[#E8A020]/30 resize-none mb-4"
+              className="w-full px-3 py-2 rounded-lg border border-border text-[14px] text-text focus:outline-none focus:ring-2 focus:ring-amber/30 resize-none mb-4"
               placeholder="Write your message to attendees..."
             />
 
@@ -217,7 +217,7 @@ export function AttendeeActions({ attendees, eventTitle, eventSanityId }: Attend
               <button
                 onClick={handleSendEmail}
                 disabled={sending || !subject.trim() || !message.trim()}
-                className="inline-flex items-center gap-2 px-5 py-2 rounded-lg bg-[#E8A020] text-white text-[13px] font-semibold hover:bg-[#d4911c] transition-colors disabled:opacity-50"
+                className="inline-flex items-center gap-2 px-5 py-2 rounded-lg bg-amber text-white text-[13px] font-semibold hover:bg-[#d4911c] transition-colors disabled:opacity-50"
               >
                 {sending ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
                 {sending ? "Sending..." : "Send"}

@@ -126,20 +126,20 @@ function StepDots({ current }: { current: Step }) {
           <div
             className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${
               i < currentIdx
-                ? "bg-[#E8A020] text-white"
+                ? "bg-amber text-white"
                 : i === currentIdx
-                ? "bg-[#16130C] text-white"
-                : "bg-[#E2DDD5] text-[#9C9485]"
+                ? "bg-dark text-white"
+                : "bg-border text-text3"
             }`}
           >
             {i < currentIdx ? "✓" : i + 1}
           </div>
           {i < visible.length - 1 && (
-            <div className={`h-0.5 w-6 ${i < currentIdx ? "bg-[#E8A020]" : "bg-[#E2DDD5]"}`} />
+            <div className={`h-0.5 w-6 ${i < currentIdx ? "bg-amber" : "bg-border"}`} />
           )}
         </div>
       ))}
-      <span className="ml-2 text-sm text-[#5E5848]">{STEP_LABELS[current]}</span>
+      <span className="ml-2 text-sm text-text2">{STEP_LABELS[current]}</span>
     </div>
   );
 }
@@ -148,15 +148,15 @@ function StepDots({ current }: { current: Step }) {
 
 function Label({ children, optional }: { children: React.ReactNode; optional?: boolean }) {
   return (
-    <label className="block text-sm font-semibold text-[#16130C] mb-1.5">
+    <label className="block text-sm font-semibold text-dark mb-1.5">
       {children}
-      {optional && <span className="ml-1 font-normal text-[#9C9485]">(optional)</span>}
+      {optional && <span className="ml-1 font-normal text-text3">(optional)</span>}
     </label>
   );
 }
 
 const inputCls =
-  "w-full border border-[#D4CFC6] rounded-xl px-4 py-3 text-[16px] text-[#16130C] placeholder-[#9C9485] focus:outline-none focus:ring-2 focus:ring-[#E8A020] bg-white";
+  "w-full border border-[#D4CFC6] rounded-xl px-4 py-3 text-[16px] text-dark placeholder-text3 focus:outline-none focus:ring-2 focus:ring-amber bg-white";
 
 function Input({
   value,
@@ -200,7 +200,7 @@ function Textarea({
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
       rows={rows}
-      className="w-full border border-[#D4CFC6] rounded-xl px-4 py-3 text-[16px] text-[#16130C] placeholder-[#9C9485] focus:outline-none focus:ring-2 focus:ring-[#E8A020] bg-white resize-none"
+      className="w-full border border-[#D4CFC6] rounded-xl px-4 py-3 text-[16px] text-dark placeholder-text3 focus:outline-none focus:ring-2 focus:ring-amber bg-white resize-none"
     />
   );
 }
@@ -223,7 +223,7 @@ function PrimaryButton({
       type={type}
       onClick={onClick}
       disabled={disabled || loading}
-      className="w-full bg-[#E8A020] hover:bg-[#D4901C] disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold text-base py-3.5 rounded-xl transition-colors"
+      className="w-full bg-amber hover:bg-[#D4901C] disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold text-base py-3.5 rounded-xl transition-colors"
     >
       {loading ? "Please wait…" : children}
     </button>
@@ -432,16 +432,16 @@ export default function ListingForm() {
 
   if (step === "success") {
     return (
-      <div className="bg-white rounded-2xl border border-[#E2DDD5] p-8 text-center">
+      <div className="bg-white rounded-2xl border border-border p-8 text-center">
         <div className="text-5xl mb-4">🎉</div>
-        <h2 className="text-2xl font-extrabold text-[#16130C] mb-2">Submission received!</h2>
-        <p className="text-[#5E5848] mb-6 max-w-md mx-auto">
+        <h2 className="text-2xl font-extrabold text-dark mb-2">Submission received!</h2>
+        <p className="text-text2 mb-6 max-w-md mx-auto">
           We'll review your listing within 1–2 business days. You'll receive an email once it's
           live on Klickenya.
         </p>
         <a
           href="/"
-          className="inline-block bg-[#E8A020] text-white font-bold px-8 py-3 rounded-xl hover:bg-[#D4901C] transition-colors"
+          className="inline-block bg-amber text-white font-bold px-8 py-3 rounded-xl hover:bg-[#D4901C] transition-colors"
         >
           Back to home
         </a>
@@ -452,14 +452,14 @@ export default function ListingForm() {
   const subcats = SUBCATEGORIES_BY_TYPE[form.listingType] ?? [];
 
   return (
-    <div className="bg-white rounded-2xl border border-[#E2DDD5] p-6 sm:p-8">
+    <div className="bg-white rounded-2xl border border-border p-6 sm:p-8">
       <StepDots current={step} />
 
       {/* ---- Step 1: Choose type ---- */}
       {step === "type" && (
         <div>
-          <h2 className="text-xl font-extrabold text-[#16130C] mb-1">What type of listing?</h2>
-          <p className="text-sm text-[#5E5848] mb-6">Choose the category that best fits your business.</p>
+          <h2 className="text-xl font-extrabold text-dark mb-1">What type of listing?</h2>
+          <p className="text-sm text-text2 mb-6">Choose the category that best fits your business.</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-8">
             {LISTING_TYPES.map((t) => (
               <button
@@ -468,13 +468,13 @@ export default function ListingForm() {
                 onClick={() => handleTypeSelect(t.value)}
                 className={`text-left p-4 rounded-xl border-2 transition-all ${
                   form.listingType === t.value
-                    ? "border-[#E8A020] bg-[#FDF8F0]"
-                    : "border-[#E2DDD5] hover:border-[#D4CFC6] bg-white"
+                    ? "border-amber bg-[#FDF8F0]"
+                    : "border-border hover:border-[#D4CFC6] bg-white"
                 }`}
               >
                 <div className="text-2xl mb-1">{t.icon}</div>
-                <div className="font-bold text-[#16130C] text-sm">{t.label}</div>
-                <div className="text-xs text-[#5E5848] mt-0.5">{t.desc}</div>
+                <div className="font-bold text-dark text-sm">{t.label}</div>
+                <div className="text-xs text-text2 mt-0.5">{t.desc}</div>
               </button>
             ))}
           </div>
@@ -487,8 +487,8 @@ export default function ListingForm() {
       {/* ---- Step 2: AI Assist ---- */}
       {step === "ai" && (
         <div>
-          <h2 className="text-xl font-extrabold text-[#16130C] mb-1">Let AI draft your listing</h2>
-          <p className="text-sm text-[#5E5848] mb-6">
+          <h2 className="text-xl font-extrabold text-dark mb-1">Let AI draft your listing</h2>
+          <p className="text-sm text-text2 mb-6">
             Paste your website URL or Google Place ID and we'll auto-fill your listing. You can
             edit everything afterwards. Skip if you prefer to fill it in manually.
           </p>
@@ -505,8 +505,8 @@ export default function ListingForm() {
             <div>
               <Label optional>Google Place ID</Label>
               <Input value={form.googlePlaceId} onChange={(v) => set("googlePlaceId", v)} placeholder="ChIJ..." />
-              <p className="text-xs text-[#9C9485] mt-1">
-                Find it at <span className="text-[#E8A020]">google.com/maps</span> → share → copy link → extract the CID parameter.
+              <p className="text-xs text-text3 mt-1">
+                Find it at <span className="text-amber">google.com/maps</span> → share → copy link → extract the CID parameter.
               </p>
             </div>
           </div>
@@ -516,9 +516,9 @@ export default function ListingForm() {
           )}
 
           {aiAnalysis && (
-            <div className="bg-[#FDF8F0] border border-[#E8A020] rounded-xl p-4 mb-4">
+            <div className="bg-[#FDF8F0] border border-amber rounded-xl p-4 mb-4">
               <div className="flex items-center gap-2 mb-2">
-                <span className="text-sm font-bold text-[#16130C]">AI Quality Score</span>
+                <span className="text-sm font-bold text-dark">AI Quality Score</span>
                 <span
                   className={`text-xs font-bold px-2 py-0.5 rounded-full ${
                     aiAnalysis.score >= 80
@@ -531,7 +531,7 @@ export default function ListingForm() {
                   {aiAnalysis.score}/100
                 </span>
               </div>
-              <p className="text-sm text-[#5E5848]">{aiAnalysis.summary}</p>
+              <p className="text-sm text-text2">{aiAnalysis.summary}</p>
             </div>
           )}
 
@@ -546,14 +546,14 @@ export default function ListingForm() {
             <button
               type="button"
               onClick={() => setStep("details")}
-              className="w-full py-3 text-sm font-semibold text-[#5E5848] hover:text-[#16130C] transition-colors"
+              className="w-full py-3 text-sm font-semibold text-text2 hover:text-dark transition-colors"
             >
               Skip — fill in manually →
             </button>
             <button
               type="button"
               onClick={() => setStep("type")}
-              className="w-full py-2 text-sm text-[#9C9485] hover:text-[#5E5848] transition-colors"
+              className="w-full py-2 text-sm text-text3 hover:text-text2 transition-colors"
             >
               ← Back
             </button>
@@ -564,8 +564,8 @@ export default function ListingForm() {
       {/* ---- Step 3: Submitter details ---- */}
       {step === "details" && (
         <div>
-          <h2 className="text-xl font-extrabold text-[#16130C] mb-1">Your contact details</h2>
-          <p className="text-sm text-[#5E5848] mb-6">
+          <h2 className="text-xl font-extrabold text-dark mb-1">Your contact details</h2>
+          <p className="text-sm text-text2 mb-6">
             We'll use these to send your verification code and contact you about your listing.
           </p>
           <div className="space-y-4 mb-8">
@@ -603,7 +603,7 @@ export default function ListingForm() {
             <button
               type="button"
               onClick={() => setStep("ai")}
-              className="w-full py-3 text-sm font-semibold text-[#5E5848] hover:text-[#16130C] transition-colors"
+              className="w-full py-3 text-sm font-semibold text-text2 hover:text-dark transition-colors"
             >
               ← Back
             </button>
@@ -614,8 +614,8 @@ export default function ListingForm() {
       {/* ---- Step 4: Listing content ---- */}
       {step === "content" && (
         <div>
-          <h2 className="text-xl font-extrabold text-[#16130C] mb-1">About your listing</h2>
-          <p className="text-sm text-[#5E5848] mb-6">
+          <h2 className="text-xl font-extrabold text-dark mb-1">About your listing</h2>
+          <p className="text-sm text-text2 mb-6">
             {aiAnalysis
               ? "We've pre-filled these from your website. Edit anything that looks wrong."
               : "Tell us about your business. Our team will review and may edit before publishing."}
@@ -626,7 +626,7 @@ export default function ListingForm() {
             <div>
               <Label>Listing title *</Label>
               <Input value={form.title} onChange={(v) => set("title", v)} placeholder="e.g. Watamu Beach House" required />
-              <p className="text-xs text-[#9C9485] mt-1">3–8 words, e.g. the name of your business</p>
+              <p className="text-xs text-text3 mt-1">3–8 words, e.g. the name of your business</p>
             </div>
 
             {/* Description */}
@@ -638,7 +638,7 @@ export default function ListingForm() {
                 placeholder="Describe your business in 80–300 words. What makes it special? What can visitors expect?"
                 rows={6}
               />
-              <p className="text-xs text-[#9C9485] mt-1">
+              <p className="text-xs text-text3 mt-1">
                 {form.description.split(/\s+/).filter(Boolean).length} words (aim for 80–300)
               </p>
             </div>
@@ -694,7 +694,7 @@ export default function ListingForm() {
                     value={form.price}
                     onChange={(e) => set("price", e.target.value)}
                     placeholder="0"
-                    className="w-28 border border-[#D4CFC6] rounded-xl px-4 py-3 text-[16px] text-[#16130C] focus:outline-none focus:ring-2 focus:ring-[#E8A020] bg-white"
+                    className="w-28 border border-[#D4CFC6] rounded-xl px-4 py-3 text-[16px] text-dark focus:outline-none focus:ring-2 focus:ring-amber bg-white"
                   />
                   <select value={form.priceUnit} onChange={(e) => set("priceUnit", e.target.value)} className={`${inputCls} flex-1`}>
                     {PRICE_UNITS.map((u) => (
@@ -713,15 +713,15 @@ export default function ListingForm() {
                 onChange={(e) => set("address", e.target.value)}
                 placeholder="e.g. Watamu Marine Park Road, Watamu"
                 rows={2}
-                className="w-full border border-[#D4CFC6] rounded-xl px-4 py-3 text-[16px] text-[#16130C] placeholder-[#9C9485] focus:outline-none focus:ring-2 focus:ring-[#E8A020] bg-white resize-none"
+                className="w-full border border-[#D4CFC6] rounded-xl px-4 py-3 text-[16px] text-dark placeholder-text3 focus:outline-none focus:ring-2 focus:ring-amber bg-white resize-none"
               />
             </div>
 
             {/* Amenities */}
-            <details className="border border-[#E2DDD5] rounded-xl overflow-hidden">
-              <summary className="px-4 py-3 text-sm font-semibold text-[#16130C] cursor-pointer select-none hover:bg-[#FAFAF8] flex items-center justify-between">
-                <span>Amenities {form.amenities.length > 0 && <span className="ml-1 text-[#E8A020]">({form.amenities.length} selected)</span>}</span>
-                <span className="text-[#9C9485] font-normal text-xs">optional</span>
+            <details className="border border-border rounded-xl overflow-hidden">
+              <summary className="px-4 py-3 text-sm font-semibold text-dark cursor-pointer select-none hover:bg-canvas flex items-center justify-between">
+                <span>Amenities {form.amenities.length > 0 && <span className="ml-1 text-amber">({form.amenities.length} selected)</span>}</span>
+                <span className="text-text3 font-normal text-xs">optional</span>
               </summary>
               <div className="px-4 pb-4 pt-3">
                 <div className="flex flex-wrap gap-2">
@@ -732,8 +732,8 @@ export default function ListingForm() {
                       onClick={() => toggleAmenity(a)}
                       className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors ${
                         form.amenities.includes(a)
-                          ? "bg-[#E8A020] text-white border-[#E8A020]"
-                          : "bg-white text-[#5E5848] border-[#D4CFC6] hover:border-[#E8A020]/50"
+                          ? "bg-amber text-white border-amber"
+                          : "bg-white text-text2 border-[#D4CFC6] hover:border-amber/50"
                       }`}
                     >
                       {a}
@@ -744,13 +744,13 @@ export default function ListingForm() {
             </details>
 
             {/* Tags */}
-            <details className="border border-[#E2DDD5] rounded-xl overflow-hidden">
-              <summary className="px-4 py-3 text-sm font-semibold text-[#16130C] cursor-pointer select-none hover:bg-[#FAFAF8] flex items-center justify-between">
-                <span>Tags {form.tags.length > 0 && <span className="ml-1 text-[#E8A020]">({form.tags.length} selected)</span>}</span>
-                <span className="text-[#9C9485] font-normal text-xs">optional</span>
+            <details className="border border-border rounded-xl overflow-hidden">
+              <summary className="px-4 py-3 text-sm font-semibold text-dark cursor-pointer select-none hover:bg-canvas flex items-center justify-between">
+                <span>Tags {form.tags.length > 0 && <span className="ml-1 text-amber">({form.tags.length} selected)</span>}</span>
+                <span className="text-text3 font-normal text-xs">optional</span>
               </summary>
               <div className="px-4 pb-4 pt-3">
-                <p className="text-xs text-[#9C9485] mb-3">Select keywords that describe your listing to help guests find you.</p>
+                <p className="text-xs text-text3 mb-3">Select keywords that describe your listing to help guests find you.</p>
                 <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto">
                   {TAG_SUGGESTIONS.map((t) => (
                     <button
@@ -759,8 +759,8 @@ export default function ListingForm() {
                       onClick={() => toggleTag(t)}
                       className={`px-2.5 py-1 rounded-full text-xs font-medium border transition-colors ${
                         form.tags.includes(t)
-                          ? "bg-[#16130C] text-white border-[#16130C]"
-                          : "bg-white text-[#5E5848] border-[#D4CFC6] hover:border-[#16130C]/40"
+                          ? "bg-dark text-white border-dark"
+                          : "bg-white text-text2 border-[#D4CFC6] hover:border-dark/40"
                       }`}
                     >
                       {t}
@@ -771,9 +771,9 @@ export default function ListingForm() {
             </details>
 
             {/* Contact & social (optional expandable) */}
-            <details className="border border-[#E2DDD5] rounded-xl overflow-hidden">
-              <summary className="px-4 py-3 text-sm font-semibold text-[#16130C] cursor-pointer select-none hover:bg-[#FAFAF8]">
-                Website & social links <span className="font-normal text-[#9C9485] text-xs">(optional)</span>
+            <details className="border border-border rounded-xl overflow-hidden">
+              <summary className="px-4 py-3 text-sm font-semibold text-dark cursor-pointer select-none hover:bg-canvas">
+                Website & social links <span className="font-normal text-text3 text-xs">(optional)</span>
               </summary>
               <div className="px-4 pb-4 space-y-4 pt-2">
                 <div>
@@ -815,7 +815,7 @@ export default function ListingForm() {
             <button
               type="button"
               onClick={() => setStep("details")}
-              className="w-full py-3 text-sm font-semibold text-[#5E5848] hover:text-[#16130C] transition-colors"
+              className="w-full py-3 text-sm font-semibold text-text2 hover:text-dark transition-colors"
             >
               ← Back
             </button>
@@ -826,8 +826,8 @@ export default function ListingForm() {
       {/* ---- Step 5: Photos & Consent ---- */}
       {step === "consent" && (
         <div>
-          <h2 className="text-xl font-extrabold text-[#16130C] mb-1">Photos & consent</h2>
-          <p className="text-sm text-[#5E5848] mb-6">
+          <h2 className="text-xl font-extrabold text-dark mb-1">Photos & consent</h2>
+          <p className="text-sm text-text2 mb-6">
             Upload your best photos and review your submission before sending.
           </p>
 
@@ -844,7 +844,7 @@ export default function ListingForm() {
 
           {/* Photo consent */}
           <div className="mb-6">
-            <p className="text-sm font-semibold text-[#16130C] mb-3">Can we use your photos for marketing?</p>
+            <p className="text-sm font-semibold text-dark mb-3">Can we use your photos for marketing?</p>
             <div className="space-y-2">
               {PHOTO_CONSENT_OPTIONS.map((opt) => (
                 <button
@@ -853,20 +853,20 @@ export default function ListingForm() {
                   onClick={() => set("photoConsent", opt.value)}
                   className={`w-full text-left border rounded-xl p-3 flex items-start gap-3 transition-all ${
                     form.photoConsent === opt.value
-                      ? "border-[#E8A020] bg-[#FDF8F0]"
-                      : "border-[#E2DDD5] hover:border-[#E8A020]/40"
+                      ? "border-amber bg-[#FDF8F0]"
+                      : "border-border hover:border-amber/40"
                   }`}
                 >
                   <div className={`mt-0.5 w-4 h-4 rounded-full border-2 flex-shrink-0 flex items-center justify-center ${
-                    form.photoConsent === opt.value ? "border-[#E8A020] bg-[#E8A020]" : "border-[#D4CFC6]"
+                    form.photoConsent === opt.value ? "border-amber bg-amber" : "border-[#D4CFC6]"
                   }`}>
                     {form.photoConsent === opt.value && (
                       <div className="w-1.5 h-1.5 rounded-full bg-white" />
                     )}
                   </div>
                   <div className="min-w-0">
-                    <p className="text-sm font-semibold text-[#16130C]">{opt.title}</p>
-                    <p className="text-xs text-[#5E5848] mt-0.5">{opt.desc}</p>
+                    <p className="text-sm font-semibold text-dark">{opt.title}</p>
+                    <p className="text-xs text-text2 mt-0.5">{opt.desc}</p>
                   </div>
                 </button>
               ))}
@@ -874,41 +874,41 @@ export default function ListingForm() {
           </div>
 
           {/* Summary card */}
-          <div className="bg-[#FAFAF8] border border-[#E2DDD5] rounded-xl p-5 mb-6 space-y-2 text-sm">
-            <p className="font-bold text-[#16130C] mb-3">Submission summary</p>
+          <div className="bg-canvas border border-border rounded-xl p-5 mb-6 space-y-2 text-sm">
+            <p className="font-bold text-dark mb-3">Submission summary</p>
             <div className="flex justify-between">
-              <span className="text-[#9C9485]">Type</span>
-              <span className="font-semibold text-[#16130C] capitalize">{form.listingType.replace("_", " ")}</span>
+              <span className="text-text3">Type</span>
+              <span className="font-semibold text-dark capitalize">{form.listingType.replace("_", " ")}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-[#9C9485]">Business</span>
-              <span className="font-semibold text-[#16130C]">{form.businessName}</span>
+              <span className="text-text3">Business</span>
+              <span className="font-semibold text-dark">{form.businessName}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-[#9C9485]">Title</span>
-              <span className="font-semibold text-[#16130C]">{form.title}</span>
+              <span className="text-text3">Title</span>
+              <span className="font-semibold text-dark">{form.title}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-[#9C9485]">City</span>
-              <span className="font-semibold text-[#16130C]">{form.city}</span>
+              <span className="text-text3">City</span>
+              <span className="font-semibold text-dark">{form.city}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-[#9C9485]">Submitter</span>
-              <span className="font-semibold text-[#16130C]">{form.submitterName}</span>
+              <span className="text-text3">Submitter</span>
+              <span className="font-semibold text-dark">{form.submitterName}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-[#9C9485]">Email</span>
-              <span className="font-semibold text-[#16130C]">{form.submitterEmail}</span>
+              <span className="text-text3">Email</span>
+              <span className="font-semibold text-dark">{form.submitterEmail}</span>
             </div>
             {form.photos.length > 0 && (
               <div className="flex justify-between">
-                <span className="text-[#9C9485]">Photos</span>
-                <span className="font-semibold text-[#16130C]">{form.photos.length} uploaded</span>
+                <span className="text-text3">Photos</span>
+                <span className="font-semibold text-dark">{form.photos.length} uploaded</span>
               </div>
             )}
             {aiAnalysis && (
               <div className="flex justify-between">
-                <span className="text-[#9C9485]">AI Score</span>
+                <span className="text-text3">AI Score</span>
                 <span
                   className={`font-bold ${
                     aiAnalysis.score >= 80
@@ -930,9 +930,9 @@ export default function ListingForm() {
               type="checkbox"
               checked={form.consentGiven}
               onChange={(e) => set("consentGiven", e.target.checked)}
-              className="mt-1 w-5 h-5 rounded border-[#D4CFC6] accent-[#E8A020] flex-shrink-0"
+              className="mt-1 w-5 h-5 rounded border-[#D4CFC6] accent-amber flex-shrink-0"
             />
-            <span className="text-sm text-[#5E5848] leading-relaxed">{CONSENT_TEXT}</span>
+            <span className="text-sm text-text2 leading-relaxed">{CONSENT_TEXT}</span>
           </label>
 
           {submitError && (
@@ -950,7 +950,7 @@ export default function ListingForm() {
             <button
               type="button"
               onClick={() => setStep("content")}
-              className="w-full py-3 text-sm font-semibold text-[#5E5848] hover:text-[#16130C] transition-colors"
+              className="w-full py-3 text-sm font-semibold text-text2 hover:text-dark transition-colors"
             >
               ← Back
             </button>
@@ -961,10 +961,10 @@ export default function ListingForm() {
       {/* ---- Step 6: OTP ---- */}
       {step === "otp" && (
         <div>
-          <h2 className="text-xl font-extrabold text-[#16130C] mb-1">Verify your email</h2>
-          <p className="text-sm text-[#5E5848] mb-6">
+          <h2 className="text-xl font-extrabold text-dark mb-1">Verify your email</h2>
+          <p className="text-sm text-text2 mb-6">
             We've sent a 6-digit code to{" "}
-            <strong className="text-[#16130C]">{form.submitterEmail}</strong>. Enter it below to
+            <strong className="text-dark">{form.submitterEmail}</strong>. Enter it below to
             confirm your submission.
           </p>
           <div className="mb-6">
@@ -976,9 +976,9 @@ export default function ListingForm() {
               value={form.otpCode}
               onChange={(e) => set("otpCode", e.target.value.replace(/\D/g, "").slice(0, 6))}
               placeholder="000000"
-              className="w-full border border-[#D4CFC6] rounded-xl px-4 py-3 text-[16px] text-center tracking-[0.5em] font-bold text-[#16130C] placeholder-[#9C9485] focus:outline-none focus:ring-2 focus:ring-[#E8A020] bg-white"
+              className="w-full border border-[#D4CFC6] rounded-xl px-4 py-3 text-[16px] text-center tracking-[0.5em] font-bold text-dark placeholder-text3 focus:outline-none focus:ring-2 focus:ring-amber bg-white"
             />
-            <p className="text-xs text-[#9C9485] mt-1">Code expires in 15 minutes.</p>
+            <p className="text-xs text-text3 mt-1">Code expires in 15 minutes.</p>
           </div>
 
           {otpError && (

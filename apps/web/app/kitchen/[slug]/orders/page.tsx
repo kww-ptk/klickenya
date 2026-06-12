@@ -102,7 +102,7 @@ export default async function KitchenOrdersPage({ params, searchParams }: PagePr
   })) as DashboardOrder[];
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#F4F1EC]">
+    <div className="min-h-screen flex flex-col bg-surface">
       <KitchenHeader slug={slug} menuName={menu.name}
         staffName={session.staff_name} role={session.role} />
       <div className="flex-1 p-4">

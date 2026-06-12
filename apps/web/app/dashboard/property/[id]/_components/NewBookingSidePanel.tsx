@@ -417,15 +417,15 @@ export function NewBookingSidePanel({
 
       <div className="relative w-full max-w-[440px] bg-white h-full overflow-y-auto shadow-xl">
         {/* Header */}
-        <div className="sticky top-0 bg-white border-b border-[#E2DDD5] px-5 py-4 flex items-center justify-between z-10">
-          <h2 className="font-display text-[18px] font-bold text-[#16130C]">
+        <div className="sticky top-0 bg-white border-b border-border px-5 py-4 flex items-center justify-between z-10">
+          <h2 className="font-display text-[18px] font-bold text-dark">
             New Booking
           </h2>
           <button
             onClick={onClose}
-            className="size-8 flex items-center justify-center rounded-lg hover:bg-[#F4F1EC] transition-colors"
+            className="size-8 flex items-center justify-center rounded-lg hover:bg-surface transition-colors"
           >
-            <svg className="size-5 text-[#5E5848]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <svg className="size-5 text-text2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
@@ -453,14 +453,14 @@ export function NewBookingSidePanel({
 
           {/* Guest name */}
           <div>
-            <label className="block text-[12px] font-semibold text-[#16130C] mb-1">
+            <label className="block text-[12px] font-semibold text-dark mb-1">
               Guest name *
             </label>
             <input
               type="text"
               value={form.guest_name}
               onChange={(e) => setForm({ ...form, guest_name: e.target.value })}
-              className="w-full h-[40px] px-3 rounded-lg border border-[#E2DDD5] text-[14px] text-[#16130C] placeholder:text-[#9C9485] focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] outline-none transition-colors"
+              className="w-full h-[40px] px-3 rounded-lg border border-border text-[14px] text-dark placeholder:text-text3 focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] outline-none transition-colors"
               placeholder="John Doe"
               autoFocus
             />
@@ -468,14 +468,14 @@ export function NewBookingSidePanel({
 
           {/* Phone with country code */}
           <div>
-            <label className="block text-[12px] font-semibold text-[#16130C] mb-1">
+            <label className="block text-[12px] font-semibold text-dark mb-1">
               Phone *
             </label>
             <div className="flex gap-1.5">
               <select
                 value={form.country_code}
                 onChange={(e) => setForm({ ...form, country_code: e.target.value })}
-                className="w-[110px] shrink-0 h-[40px] px-2 rounded-lg border border-[#E2DDD5] text-[13px] text-[#16130C] focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] outline-none transition-colors bg-white"
+                className="w-[110px] shrink-0 h-[40px] px-2 rounded-lg border border-border text-[13px] text-dark focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] outline-none transition-colors bg-white"
               >
                 {COUNTRY_CODES.map((c) => (
                   <option key={c.code} value={c.code}>
@@ -487,18 +487,18 @@ export function NewBookingSidePanel({
                 type="tel"
                 value={form.guest_phone}
                 onChange={(e) => setForm({ ...form, guest_phone: e.target.value })}
-                className="flex-1 h-[40px] px-3 rounded-lg border border-[#E2DDD5] text-[14px] text-[#16130C] placeholder:text-[#9C9485] focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] outline-none transition-colors"
+                className="flex-1 h-[40px] px-3 rounded-lg border border-border text-[14px] text-dark placeholder:text-text3 focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] outline-none transition-colors"
                 placeholder="712 345 678"
               />
             </div>
             {fullPhone && (
-              <p className="text-[11px] text-[#9C9485] mt-0.5">{fullPhone}</p>
+              <p className="text-[11px] text-text3 mt-0.5">{fullPhone}</p>
             )}
           </div>
 
           {/* Email */}
           <div>
-            <label className="block text-[12px] font-semibold text-[#16130C] mb-1">
+            <label className="block text-[12px] font-semibold text-dark mb-1">
               Email
             </label>
             <input
@@ -506,7 +506,7 @@ export function NewBookingSidePanel({
               value={form.guest_email}
               onChange={(e) => { setForm({ ...form, guest_email: e.target.value }); setGuestUserId(null); }}
               onBlur={handleEmailBlur}
-              className="w-full h-[40px] px-3 rounded-lg border border-[#E2DDD5] text-[14px] text-[#16130C] placeholder:text-[#9C9485] focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] outline-none transition-colors"
+              className="w-full h-[40px] px-3 rounded-lg border border-border text-[14px] text-dark placeholder:text-text3 focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] outline-none transition-colors"
               placeholder="guest@email.com"
             />
             {form.guest_email.trim() && (
@@ -515,22 +515,22 @@ export function NewBookingSidePanel({
                   type="checkbox"
                   checked={sendConfirmation}
                   onChange={(e) => setSendConfirmation(e.target.checked)}
-                  className="w-4 h-4 rounded border-[#E2DDD5] accent-[#E8A020]"
+                  className="w-4 h-4 rounded border-border accent-amber"
                 />
-                <span className="text-[12px] text-[#5E5848]">Send booking confirmation email to guest</span>
+                <span className="text-[12px] text-text2">Send booking confirmation email to guest</span>
               </label>
             )}
           </div>
 
           {/* Room selector */}
           <div>
-            <label className="block text-[12px] font-semibold text-[#16130C] mb-1">
+            <label className="block text-[12px] font-semibold text-dark mb-1">
               Room *
             </label>
             <select
               value={form.room_id}
               onChange={(e) => setForm({ ...form, room_id: e.target.value })}
-              className="w-full h-[40px] px-3 rounded-lg border border-[#E2DDD5] text-[14px] text-[#16130C] focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] outline-none transition-colors bg-white"
+              className="w-full h-[40px] px-3 rounded-lg border border-border text-[14px] text-dark focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] outline-none transition-colors bg-white"
             >
               {activeRooms.length > 1 && (
                 <option value="__entire__">
@@ -554,25 +554,25 @@ export function NewBookingSidePanel({
           {/* Dates */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-[12px] font-semibold text-[#16130C] mb-1">
+              <label className="block text-[12px] font-semibold text-dark mb-1">
                 Check-in *
               </label>
               <input
                 type="date"
                 value={form.check_in_date}
                 onChange={(e) => setForm({ ...form, check_in_date: e.target.value })}
-                className="w-full h-[40px] px-3 rounded-lg border border-[#E2DDD5] text-[14px] text-[#16130C] focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] outline-none transition-colors"
+                className="w-full h-[40px] px-3 rounded-lg border border-border text-[14px] text-dark focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] outline-none transition-colors"
               />
             </div>
             <div>
-              <label className="block text-[12px] font-semibold text-[#16130C] mb-1">
+              <label className="block text-[12px] font-semibold text-dark mb-1">
                 Check-out *
               </label>
               <input
                 type="date"
                 value={form.check_out_date}
                 onChange={(e) => setForm({ ...form, check_out_date: e.target.value })}
-                className="w-full h-[40px] px-3 rounded-lg border border-[#E2DDD5] text-[14px] text-[#16130C] focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] outline-none transition-colors"
+                className="w-full h-[40px] px-3 rounded-lg border border-border text-[14px] text-dark focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] outline-none transition-colors"
               />
             </div>
           </div>
@@ -580,18 +580,18 @@ export function NewBookingSidePanel({
           {/* Nights + Guests */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-[12px] font-semibold text-[#16130C] mb-1">
+              <label className="block text-[12px] font-semibold text-dark mb-1">
                 Nights
               </label>
-              <div className="h-[40px] px-3 rounded-lg border border-[#E2DDD5] bg-[#FAFAF8] text-[14px] text-[#16130C] flex items-center">
+              <div className="h-[40px] px-3 rounded-lg border border-border bg-canvas text-[14px] text-dark flex items-center">
                 {nights}
                 {checkingAvail && (
-                  <span className="ml-2 text-[11px] text-[#9C9485]">checking...</span>
+                  <span className="ml-2 text-[11px] text-text3">checking...</span>
                 )}
               </div>
             </div>
             <div>
-              <label className="block text-[12px] font-semibold text-[#16130C] mb-1">
+              <label className="block text-[12px] font-semibold text-dark mb-1">
                 Guests
               </label>
               <input
@@ -602,14 +602,14 @@ export function NewBookingSidePanel({
                 onChange={(e) =>
                   setForm({ ...form, guest_count: parseInt(e.target.value) || 1 })
                 }
-                className="w-full h-[40px] px-3 rounded-lg border border-[#E2DDD5] text-[14px] text-[#16130C] focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] outline-none transition-colors"
+                className="w-full h-[40px] px-3 rounded-lg border border-border text-[14px] text-dark focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] outline-none transition-colors"
               />
             </div>
           </div>
 
           {/* Rate */}
           <div>
-            <label className="block text-[12px] font-semibold text-[#16130C] mb-1">
+            <label className="block text-[12px] font-semibold text-dark mb-1">
               Rate per night (KSh)
             </label>
             <input
@@ -620,7 +620,7 @@ export function NewBookingSidePanel({
                 setRateManuallyEdited(true);
                 setForm({ ...form, rate_per_night: parseFloat(e.target.value) || 0 });
               }}
-              className="w-full h-[40px] px-3 rounded-lg border border-[#E2DDD5] text-[14px] text-[#16130C] focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] outline-none transition-colors"
+              className="w-full h-[40px] px-3 rounded-lg border border-border text-[14px] text-dark focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] outline-none transition-colors"
             />
             {suggestedRate && !isEntireBooking && (
               <div className="mt-1 flex items-center gap-1.5">
@@ -638,13 +638,13 @@ export function NewBookingSidePanel({
                     )}
                   </p>
                 ) : suggestedRate.source === "weekend_multiplier" ? (
-                  <p className="text-[11px] text-[#E8A020]">
+                  <p className="text-[11px] text-amber">
                     Weekend rate — suggested {fmt(suggestedRate.rate)}/night
                     {rateManuallyEdited && suggestedRate.rate !== form.rate_per_night && (
                       <button
                         type="button"
                         onClick={() => { setForm((p) => ({ ...p, rate_per_night: suggestedRate.rate })); setRateManuallyEdited(false); }}
-                        className="ml-1.5 underline text-[#E8A020] hover:opacity-70"
+                        className="ml-1.5 underline text-amber hover:opacity-70"
                       >
                         Apply
                       </button>
@@ -656,13 +656,13 @@ export function NewBookingSidePanel({
           </div>
 
           {/* Financial card */}
-          <div className="rounded-xl border border-[#E2DDD5] overflow-hidden divide-y divide-[#E2DDD5]">
+          <div className="rounded-xl border border-border overflow-hidden divide-y divide-border">
             {/* Subtotal row */}
-            <div className="flex justify-between items-center px-3 py-2.5 bg-[#FAFAF8]">
-              <span className="text-[13px] text-[#5E5848]">
+            <div className="flex justify-between items-center px-3 py-2.5 bg-canvas">
+              <span className="text-[13px] text-text2">
                 {fmt(form.rate_per_night)} × {nights} night{nights !== 1 ? "s" : ""}
               </span>
-              <span className="text-[13px] font-semibold text-[#16130C]">{fmt(subtotal)}</span>
+              <span className="text-[13px] font-semibold text-dark">{fmt(subtotal)}</span>
             </div>
 
             {/* Mandatory fee rows — locked */}
@@ -671,15 +671,15 @@ export function NewBookingSidePanel({
               return (
                 <div key={t.id} className="flex items-center justify-between px-3 py-2.5 bg-white">
                   <div className="flex items-center gap-2 min-w-0">
-                    <span className="text-[13px] text-[#16130C]">{t.name}</span>
+                    <span className="text-[13px] text-dark">{t.name}</span>
                     <span className="shrink-0 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-green-100 text-green-700">Mandatory</span>
-                    <span className="text-[11px] text-[#9C9485] shrink-0">
+                    <span className="text-[11px] text-text3 shrink-0">
                       {t.fee_type === "per_night" && nights > 0 ? `× ${nights}n` :
                        t.fee_type === "per_guest" && form.guest_count > 0 ? `× ${form.guest_count}g` :
                        t.fee_type === "percentage" ? `${t.amount}%` : ""}
                     </span>
                   </div>
-                  <span className="text-[13px] font-semibold shrink-0 ml-2 text-[#16130C]">{fmt(calcAmt)}</span>
+                  <span className="text-[13px] font-semibold shrink-0 ml-2 text-dark">{fmt(calcAmt)}</span>
                 </div>
               );
             })}
@@ -689,37 +689,37 @@ export function NewBookingSidePanel({
               const selected = !!selectedFees.find((f) => f.id === t.id);
               const calcAmt = calcFeeAmount(t);
               return (
-                <label key={t.id} className={`flex items-center justify-between px-3 py-2.5 cursor-pointer transition-colors ${selected ? "bg-amber-50" : "bg-[#FAFAF8]"}`}>
+                <label key={t.id} className={`flex items-center justify-between px-3 py-2.5 cursor-pointer transition-colors ${selected ? "bg-amber-50" : "bg-canvas"}`}>
                   <div className="flex items-center gap-2 min-w-0">
                     <input
                       type="checkbox"
                       checked={selected}
                       onChange={() => toggleFee(t)}
-                      className="accent-[#E8A020] shrink-0"
+                      className="accent-amber shrink-0"
                     />
-                    <span className={`text-[13px] ${selected ? "text-[#16130C] font-medium" : "text-[#5E5848]"}`}>{t.name}</span>
+                    <span className={`text-[13px] ${selected ? "text-dark font-medium" : "text-text2"}`}>{t.name}</span>
                     <span className="shrink-0 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-100 text-amber-700">Add-on</span>
-                    <span className="text-[11px] text-[#9C9485] shrink-0">
+                    <span className="text-[11px] text-text3 shrink-0">
                       {t.fee_type === "per_night" && nights > 0 ? `× ${nights}n` :
                        t.fee_type === "per_guest" && form.guest_count > 0 ? `× ${form.guest_count}g` :
                        t.fee_type === "percentage" ? `${t.amount}%` : ""}
                     </span>
                   </div>
-                  <span className={`text-[13px] font-semibold shrink-0 ml-2 ${selected ? "text-[#E8A020]" : "text-[#9C9485]"}`}>{fmt(calcAmt)}</span>
+                  <span className={`text-[13px] font-semibold shrink-0 ml-2 ${selected ? "text-amber" : "text-text3"}`}>{fmt(calcAmt)}</span>
                 </label>
               );
             })}
 
             {/* Discount row (only when non-zero) */}
             {form.discount_kes > 0 && (
-              <div className="flex justify-between items-center px-3 py-2.5 bg-[#FAFAF8]">
-                <span className="text-[13px] text-[#16A34A]">Discount</span>
-                <span className="text-[13px] font-semibold text-[#16A34A]">−{fmt(form.discount_kes)}</span>
+              <div className="flex justify-between items-center px-3 py-2.5 bg-canvas">
+                <span className="text-[13px] text-green">Discount</span>
+                <span className="text-[13px] font-semibold text-green">−{fmt(form.discount_kes)}</span>
               </div>
             )}
 
             {/* Total row */}
-            <div className="flex justify-between items-center px-3 py-3 bg-[#16130C]">
+            <div className="flex justify-between items-center px-3 py-3 bg-dark">
               <span className="text-[13px] font-semibold text-white/70">Total</span>
               <span className="text-[16px] font-bold text-white">{fmt(finalTotal)}</span>
             </div>
@@ -727,7 +727,7 @@ export function NewBookingSidePanel({
 
           {/* Discount */}
           <div>
-            <label className="block text-[12px] font-semibold text-[#16130C] mb-1">
+            <label className="block text-[12px] font-semibold text-dark mb-1">
               Discount (KSh)
             </label>
             <input
@@ -738,20 +738,20 @@ export function NewBookingSidePanel({
               onChange={(e) =>
                 setForm({ ...form, discount_kes: parseFloat(e.target.value) || 0 })
               }
-              className="w-full h-[40px] px-3 rounded-lg border border-[#E2DDD5] text-[14px] text-[#16130C] focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] outline-none transition-colors"
+              className="w-full h-[40px] px-3 rounded-lg border border-border text-[14px] text-dark focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] outline-none transition-colors"
             />
           </div>
 
           {/* Payment method + amount */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-[12px] font-semibold text-[#16130C] mb-1">
+              <label className="block text-[12px] font-semibold text-dark mb-1">
                 Payment method
               </label>
               <select
                 value={form.payment_method}
                 onChange={(e) => setForm({ ...form, payment_method: e.target.value })}
-                className="w-full h-[40px] px-3 rounded-lg border border-[#E2DDD5] text-[14px] text-[#16130C] focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] outline-none transition-colors bg-white"
+                className="w-full h-[40px] px-3 rounded-lg border border-border text-[14px] text-dark focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] outline-none transition-colors bg-white"
               >
                 <option value="cash">Cash</option>
                 <option value="mpesa">M-Pesa (manual)</option>
@@ -760,7 +760,7 @@ export function NewBookingSidePanel({
               </select>
             </div>
             <div>
-              <label className="block text-[12px] font-semibold text-[#16130C] mb-1">
+              <label className="block text-[12px] font-semibold text-dark mb-1">
                 Amount paid now
               </label>
               <input
@@ -771,7 +771,7 @@ export function NewBookingSidePanel({
                 onChange={(e) =>
                   setForm({ ...form, amount_paid: parseFloat(e.target.value) || 0 })
                 }
-                className="w-full h-[40px] px-3 rounded-lg border border-[#E2DDD5] text-[14px] text-[#16130C] focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] outline-none transition-colors"
+                className="w-full h-[40px] px-3 rounded-lg border border-border text-[14px] text-dark focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] outline-none transition-colors"
               />
             </div>
           </div>
@@ -779,26 +779,26 @@ export function NewBookingSidePanel({
           {/* Balance */}
           {balance > 0 && (
             <div className="flex justify-between text-[13px] px-1">
-              <span className="text-[#9C9485]">Balance due</span>
-              <span className="font-semibold text-[#E8A020]">{fmt(balance)}</span>
+              <span className="text-text3">Balance due</span>
+              <span className="font-semibold text-amber">{fmt(balance)}</span>
             </div>
           )}
           {balance === 0 && finalTotal > 0 && (
             <div className="flex justify-between text-[13px] px-1">
-              <span className="text-[#9C9485]">Balance due</span>
-              <span className="font-semibold text-[#16A34A]">Paid in full</span>
+              <span className="text-text3">Balance due</span>
+              <span className="font-semibold text-green">Paid in full</span>
             </div>
           )}
 
           {/* Source */}
           <div>
-            <label className="block text-[12px] font-semibold text-[#16130C] mb-1">
+            <label className="block text-[12px] font-semibold text-dark mb-1">
               Source
             </label>
             <select
               value={form.source}
               onChange={(e) => setForm({ ...form, source: e.target.value })}
-              className="w-full h-[40px] px-3 rounded-lg border border-[#E2DDD5] text-[14px] text-[#16130C] focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] outline-none transition-colors bg-white"
+              className="w-full h-[40px] px-3 rounded-lg border border-border text-[14px] text-dark focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] outline-none transition-colors bg-white"
             >
               <option value="direct">Direct enquiry</option>
               <option value="airbnb">Airbnb</option>
@@ -810,29 +810,29 @@ export function NewBookingSidePanel({
 
           {/* Special requests */}
           <div>
-            <label className="block text-[12px] font-semibold text-[#16130C] mb-1">
+            <label className="block text-[12px] font-semibold text-dark mb-1">
               Special requests
             </label>
             <textarea
               value={form.guest_notes}
               onChange={(e) => setForm({ ...form, guest_notes: e.target.value })}
               rows={3}
-              className="w-full px-3 py-2 rounded-lg border border-[#E2DDD5] text-[14px] text-[#16130C] placeholder:text-[#9C9485] focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] outline-none transition-colors resize-none"
+              className="w-full px-3 py-2 rounded-lg border border-border text-[14px] text-dark placeholder:text-text3 focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] outline-none transition-colors resize-none"
               placeholder="Late arrival, dietary needs, transport from airport..."
             />
           </div>
 
           {/* Internal notes */}
           <div>
-            <label className="block text-[12px] font-semibold text-[#16130C] mb-1">
+            <label className="block text-[12px] font-semibold text-dark mb-1">
               Internal notes
             </label>
-            <p className="text-[10px] text-[#9C9485] mb-1">Only you can see this</p>
+            <p className="text-[10px] text-text3 mb-1">Only you can see this</p>
             <textarea
               value={form.internal_notes}
               onChange={(e) => setForm({ ...form, internal_notes: e.target.value })}
               rows={2}
-              className="w-full px-3 py-2 rounded-lg border border-[#E2DDD5] text-[14px] text-[#16130C] placeholder:text-[#9C9485] focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] outline-none transition-colors resize-none"
+              className="w-full px-3 py-2 rounded-lg border border-border text-[14px] text-dark placeholder:text-text3 focus:border-[#4F46E5] focus:ring-1 focus:ring-[#4F46E5] outline-none transition-colors resize-none"
               placeholder="Private notes..."
             />
           </div>

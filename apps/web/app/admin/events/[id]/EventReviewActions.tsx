@@ -75,12 +75,12 @@ export function EventReviewActions({ eventId, eventTitle }: EventReviewActionsPr
               value={rejectReason}
               onChange={(e) => setRejectReason(e.target.value)}
               placeholder="Reason for rejection…"
-              className="w-full rounded-xl border border-[#E2DDD5] px-4 py-3 text-[14px] text-text placeholder:text-text3 outline-none focus:ring-2 focus:ring-red-300 focus:border-red-400 transition-all resize-none mb-4"
+              className="w-full rounded-xl border border-border px-4 py-3 text-[14px] text-text placeholder:text-text3 outline-none focus:ring-2 focus:ring-red-300 focus:border-red-400 transition-all resize-none mb-4"
             />
             <div className="flex gap-3">
               <button
                 onClick={() => setShowRejectModal(false)}
-                className="flex-1 py-2.5 rounded-xl border border-[#E2DDD5] text-text font-semibold text-[14px] hover:bg-surface transition-colors"
+                className="flex-1 py-2.5 rounded-xl border border-border text-text font-semibold text-[14px] hover:bg-surface transition-colors"
               >
                 Cancel
               </button>

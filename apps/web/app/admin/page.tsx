@@ -281,7 +281,7 @@ export default async function AdminDashboardPage() {
   return (
     <div className="space-y-8">
       {/* Page heading */}
-      <h1 className="font-display text-[28px] font-bold text-[#16130C]">
+      <h1 className="font-display text-[28px] font-bold text-dark">
         Dashboard
       </h1>
 
@@ -289,48 +289,48 @@ export default async function AdminDashboardPage() {
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {/* Total Listings */}
         <div className="rounded-2xl bg-white p-6 shadow-sm">
-          <p className="font-display text-[32px] font-bold text-[#16130C]">
+          <p className="font-display text-[32px] font-bold text-dark">
             {totalListings}
           </p>
-          <p className="mt-1 text-[13px] text-[#9C9485]">Total Listings</p>
-          <p className="mt-1 text-[13px] text-[#9C9485]">
+          <p className="mt-1 text-[13px] text-text3">Total Listings</p>
+          <p className="mt-1 text-[13px] text-text3">
             {publishedListings} published / {draftListings} draft
           </p>
         </div>
 
         {/* Contact Requests This Week */}
         <div className="rounded-2xl bg-white p-6 shadow-sm">
-          <p className="font-display text-[32px] font-bold text-[#16130C]">
+          <p className="font-display text-[32px] font-bold text-dark">
             {contactRequestsThisWeek}
           </p>
-          <p className="mt-1 text-[13px] text-[#9C9485]">
+          <p className="mt-1 text-[13px] text-text3">
             Contact Requests This Week
           </p>
-          <p className="mt-1 text-[13px] text-[#9C9485]">
+          <p className="mt-1 text-[13px] text-text3">
             {respondedContactsThisWeek} responded / {pendingContacts} pending
           </p>
         </div>
 
         {/* Property Enquiries This Week */}
         <div className="rounded-2xl bg-white p-6 shadow-sm">
-          <p className="font-display text-[32px] font-bold text-[#16130C]">
+          <p className="font-display text-[32px] font-bold text-dark">
             {propertyEnquiriesThisWeek}
           </p>
-          <p className="mt-1 text-[13px] text-[#9C9485]">
+          <p className="mt-1 text-[13px] text-text3">
             Property Enquiries This Week
           </p>
-          <p className="mt-1 text-[13px] text-[#9C9485]">
+          <p className="mt-1 text-[13px] text-text3">
             {respondedEnquiriesThisWeek} responded / {pendingEnquiries} pending
           </p>
         </div>
 
         {/* Blog Posts */}
         <div className="rounded-2xl bg-white p-6 shadow-sm">
-          <p className="font-display text-[32px] font-bold text-[#16130C]">
+          <p className="font-display text-[32px] font-bold text-dark">
             {totalBlogPosts}
           </p>
-          <p className="mt-1 text-[13px] text-[#9C9485]">Blog Posts</p>
-          <p className="mt-1 text-[13px] text-[#9C9485]">
+          <p className="mt-1 text-[13px] text-text3">Blog Posts</p>
+          <p className="mt-1 text-[13px] text-text3">
             {publishedBlogPosts} published / {draftBlogPosts} draft
           </p>
         </div>
@@ -340,21 +340,21 @@ export default async function AdminDashboardPage() {
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
         {/* Listing Requests This Week */}
         <div className="rounded-2xl bg-white p-6 shadow-sm">
-          <p className="font-display text-[32px] font-bold text-[#16130C]">
+          <p className="font-display text-[32px] font-bold text-dark">
             {listingRequestsThisWeek}
           </p>
-          <p className="mt-1 text-[13px] text-[#9C9485]">
+          <p className="mt-1 text-[13px] text-text3">
             Listing Requests This Week
           </p>
           {submittedListingReqsCount > 0 ? (
             <Link
               href="/admin/listing-requests?status=submitted"
-              className="mt-1 inline-block text-[13px] font-semibold text-[#E8A020] hover:underline"
+              className="mt-1 inline-block text-[13px] font-semibold text-amber hover:underline"
             >
               {submittedListingReqsCount} awaiting review →
             </Link>
           ) : (
-            <p className="mt-1 text-[13px] text-[#9C9485]">
+            <p className="mt-1 text-[13px] text-text3">
               {respondedListingReqsThisWeek} responded
             </p>
           )}
@@ -362,23 +362,23 @@ export default async function AdminDashboardPage() {
 
         {/* General Contacts This Week */}
         <div className="rounded-2xl bg-white p-6 shadow-sm">
-          <p className="font-display text-[32px] font-bold text-[#16130C]">
+          <p className="font-display text-[32px] font-bold text-dark">
             {generalContactsThisWeek}
           </p>
-          <p className="mt-1 text-[13px] text-[#9C9485]">
+          <p className="mt-1 text-[13px] text-text3">
             General Contacts This Week
           </p>
         </div>
 
         {/* Ambassador Applications This Week */}
         <div className="rounded-2xl bg-white p-6 shadow-sm">
-          <p className="font-display text-[32px] font-bold text-[#16130C]">
+          <p className="font-display text-[32px] font-bold text-dark">
             {ambassadorAppsThisWeek}
           </p>
-          <p className="mt-1 text-[13px] text-[#9C9485]">
+          <p className="mt-1 text-[13px] text-text3">
             Ambassador Apps This Week
           </p>
-          <p className="mt-1 text-[13px] text-[#9C9485]">
+          <p className="mt-1 text-[13px] text-text3">
             {approvedAmbassadorsThisWeek} approved / {pendingAmbassadors}{" "}
             pending
           </p>
@@ -386,23 +386,23 @@ export default async function AdminDashboardPage() {
 
         {/* Newsletter Subscribers */}
         <div className="rounded-2xl bg-white p-6 shadow-sm">
-          <p className="font-display text-[32px] font-bold text-[#16130C]">
+          <p className="font-display text-[32px] font-bold text-dark">
             {totalNewsletterSubs}
           </p>
-          <p className="mt-1 text-[13px] text-[#9C9485]">
+          <p className="mt-1 text-[13px] text-text3">
             Newsletter Subscribers
           </p>
         </div>
 
         {/* Claim Requests */}
         <div className="rounded-2xl bg-white p-6 shadow-sm">
-          <p className="font-display text-[32px] font-bold text-[#16130C]">
+          <p className="font-display text-[32px] font-bold text-dark">
             {claimRequestsThisWeek}
           </p>
-          <p className="mt-1 text-[13px] text-[#9C9485]">
+          <p className="mt-1 text-[13px] text-text3">
             Claims This Week
           </p>
-          <p className="mt-1 text-[13px] text-[#9C9485]">
+          <p className="mt-1 text-[13px] text-text3">
             {pendingClaimsCount} pending review
           </p>
         </div>
@@ -413,18 +413,18 @@ export default async function AdminDashboardPage() {
         {/* Recent Contact Requests */}
         <div className="rounded-2xl bg-white shadow-sm">
           <div className="flex items-center justify-between border-b border-[#F0EDE8] px-6 py-4">
-            <h2 className="font-display text-[16px] font-bold text-[#16130C]">
+            <h2 className="font-display text-[16px] font-bold text-dark">
               Recent Contact Requests
             </h2>
             <Link
               href="/admin/contact-requests"
-              className="text-[12px] font-medium text-[#E8A020] hover:text-[#C78A1A]"
+              className="text-[12px] font-medium text-amber hover:text-[#C78A1A]"
             >
               View all
             </Link>
           </div>
           {recentContacts.length === 0 ? (
-            <p className="px-6 py-8 text-center text-[13px] text-[#9C9485]">
+            <p className="px-6 py-8 text-center text-[13px] text-text3">
               No contact requests yet.
             </p>
           ) : (
@@ -435,15 +435,15 @@ export default async function AdminDashboardPage() {
                   className="flex items-center justify-between px-6 py-3"
                 >
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-[13px] font-medium text-[#16130C]">
+                    <p className="truncate text-[13px] font-medium text-dark">
                       {req.notes?.match(/^Listing: (.+?)(?:\s*\(|$)/m)?.[1] ?? "General enquiry"}
                     </p>
-                    <p className="mt-0.5 text-[13px] text-[#9C9485]">
+                    <p className="mt-0.5 text-[13px] text-text3">
                       {req.full_name} &middot; {req.phone}
                     </p>
                   </div>
                   <div className="ml-4 flex shrink-0 items-center gap-3">
-                    <span className="text-[13px] text-[#9C9485]">
+                    <span className="text-[13px] text-text3">
                       {formatDate(req.created_at)}
                     </span>
                     <StatusBadge status={req.status} />
@@ -457,18 +457,18 @@ export default async function AdminDashboardPage() {
         {/* Recent Property Enquiries */}
         <div className="rounded-2xl bg-white shadow-sm">
           <div className="flex items-center justify-between border-b border-[#F0EDE8] px-6 py-4">
-            <h2 className="font-display text-[16px] font-bold text-[#16130C]">
+            <h2 className="font-display text-[16px] font-bold text-dark">
               Recent Property Enquiries
             </h2>
             <Link
               href="/admin/property-enquiries"
-              className="text-[12px] font-medium text-[#E8A020] hover:text-[#C78A1A]"
+              className="text-[12px] font-medium text-amber hover:text-[#C78A1A]"
             >
               View all
             </Link>
           </div>
           {recentEnquiries.length === 0 ? (
-            <p className="px-6 py-8 text-center text-[13px] text-[#9C9485]">
+            <p className="px-6 py-8 text-center text-[13px] text-text3">
               No property enquiries yet.
             </p>
           ) : (
@@ -479,15 +479,15 @@ export default async function AdminDashboardPage() {
                   className="flex items-center justify-between px-6 py-3"
                 >
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-[13px] font-medium text-[#16130C]">
+                    <p className="truncate text-[13px] font-medium text-dark">
                       {enq.property_title ?? "Property enquiry"}
                     </p>
-                    <p className="mt-0.5 text-[13px] text-[#9C9485]">
+                    <p className="mt-0.5 text-[13px] text-text3">
                       {enq.full_name} &middot; {enq.phone}
                     </p>
                   </div>
                   <div className="ml-4 flex shrink-0 items-center gap-3">
-                    <span className="text-[13px] text-[#9C9485]">
+                    <span className="text-[13px] text-text3">
                       {formatDate(enq.created_at)}
                     </span>
                     <StatusBadge status={enq.status} />
@@ -504,18 +504,18 @@ export default async function AdminDashboardPage() {
         {/* Recent Listing Requests */}
         <div className="rounded-2xl bg-white shadow-sm">
           <div className="flex items-center justify-between border-b border-[#F0EDE8] px-6 py-4">
-            <h2 className="font-display text-[16px] font-bold text-[#16130C]">
+            <h2 className="font-display text-[16px] font-bold text-dark">
               Listing Requests
             </h2>
             <Link
               href="/admin/listing-requests"
-              className="text-[12px] font-medium text-[#E8A020] hover:text-[#C78A1A]"
+              className="text-[12px] font-medium text-amber hover:text-[#C78A1A]"
             >
               View all
             </Link>
           </div>
           {recentListingRequests.length === 0 ? (
-            <p className="px-6 py-8 text-center text-[13px] text-[#9C9485]">
+            <p className="px-6 py-8 text-center text-[13px] text-text3">
               No listing requests yet.
             </p>
           ) : (
@@ -527,15 +527,15 @@ export default async function AdminDashboardPage() {
                   className="flex items-center justify-between px-6 py-3 hover:bg-[#F7F5F2] transition-colors"
                 >
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-[13px] font-medium text-[#16130C]">
+                    <p className="truncate text-[13px] font-medium text-dark">
                       {req.draft_title || req.business_name || req.name}
                     </p>
-                    <p className="mt-0.5 text-[13px] text-[#9C9485]">
+                    <p className="mt-0.5 text-[13px] text-text3">
                       {req.listing_type} &middot; {req.name}
                     </p>
                   </div>
                   <div className="ml-4 flex shrink-0 items-center gap-3">
-                    <span className="text-[13px] text-[#9C9485]">
+                    <span className="text-[13px] text-text3">
                       {formatDate(req.created_at)}
                     </span>
                     <StatusBadge status={req.status} />
@@ -549,18 +549,18 @@ export default async function AdminDashboardPage() {
         {/* Recent General Contacts */}
         <div className="rounded-2xl bg-white shadow-sm">
           <div className="flex items-center justify-between border-b border-[#F0EDE8] px-6 py-4">
-            <h2 className="font-display text-[16px] font-bold text-[#16130C]">
+            <h2 className="font-display text-[16px] font-bold text-dark">
               General Contacts
             </h2>
             <Link
               href="/admin/general-contacts"
-              className="text-[12px] font-medium text-[#E8A020] hover:text-[#C78A1A]"
+              className="text-[12px] font-medium text-amber hover:text-[#C78A1A]"
             >
               View all
             </Link>
           </div>
           {recentGeneralContacts.length === 0 ? (
-            <p className="px-6 py-8 text-center text-[13px] text-[#9C9485]">
+            <p className="px-6 py-8 text-center text-[13px] text-text3">
               No general contacts yet.
             </p>
           ) : (
@@ -572,15 +572,15 @@ export default async function AdminDashboardPage() {
                   className="flex items-center justify-between px-6 py-3 hover:bg-[#F7F5F2] transition-colors"
                 >
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-[13px] font-medium text-[#16130C]">
+                    <p className="truncate text-[13px] font-medium text-dark">
                       {c.subject}
                     </p>
-                    <p className="mt-0.5 text-[13px] text-[#9C9485]">
+                    <p className="mt-0.5 text-[13px] text-text3">
                       {c.name} &middot; {c.email}
                     </p>
                   </div>
                   <div className="ml-4 shrink-0">
-                    <span className="text-[13px] text-[#9C9485]">
+                    <span className="text-[13px] text-text3">
                       {formatDate(c.created_at)}
                     </span>
                   </div>
@@ -593,18 +593,18 @@ export default async function AdminDashboardPage() {
         {/* Recent Ambassador Applications */}
         <div className="rounded-2xl bg-white shadow-sm">
           <div className="flex items-center justify-between border-b border-[#F0EDE8] px-6 py-4">
-            <h2 className="font-display text-[16px] font-bold text-[#16130C]">
+            <h2 className="font-display text-[16px] font-bold text-dark">
               Ambassadors
             </h2>
             <Link
               href="/admin/ambassadors"
-              className="text-[12px] font-medium text-[#E8A020] hover:text-[#C78A1A]"
+              className="text-[12px] font-medium text-amber hover:text-[#C78A1A]"
             >
               View all
             </Link>
           </div>
           {recentAmbassadors.length === 0 ? (
-            <p className="px-6 py-8 text-center text-[13px] text-[#9C9485]">
+            <p className="px-6 py-8 text-center text-[13px] text-text3">
               No ambassador applications yet.
             </p>
           ) : (
@@ -616,16 +616,16 @@ export default async function AdminDashboardPage() {
                   className="flex items-center justify-between px-6 py-3 hover:bg-[#F7F5F2] transition-colors"
                 >
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-[13px] font-medium text-[#16130C]">
+                    <p className="truncate text-[13px] font-medium text-dark">
                       {a.name}
                     </p>
-                    <p className="mt-0.5 text-[13px] text-[#9C9485]">
+                    <p className="mt-0.5 text-[13px] text-text3">
                       {a.role}
                       {a.city ? ` \u00b7 ${a.city}` : ""}
                     </p>
                   </div>
                   <div className="ml-4 flex shrink-0 items-center gap-3">
-                    <span className="text-[13px] text-[#9C9485]">
+                    <span className="text-[13px] text-text3">
                       {formatDate(a.created_at)}
                     </span>
                     <StatusBadge status={a.status} />
@@ -640,18 +640,18 @@ export default async function AdminDashboardPage() {
       {/* Claim Requests */}
       <div className="rounded-2xl bg-white shadow-sm">
         <div className="flex items-center justify-between border-b border-[#F0EDE8] px-6 py-4">
-          <h2 className="font-display text-[16px] font-bold text-[#16130C]">
+          <h2 className="font-display text-[16px] font-bold text-dark">
             Claim Requests
           </h2>
           <Link
             href="/admin/claims"
-            className="text-[12px] font-medium text-[#E8A020] hover:text-[#C78A1A]"
+            className="text-[12px] font-medium text-amber hover:text-[#C78A1A]"
           >
             View all
           </Link>
         </div>
         {recentClaims.length === 0 ? (
-          <p className="px-6 py-8 text-center text-[13px] text-[#9C9485]">
+          <p className="px-6 py-8 text-center text-[13px] text-text3">
             No claim requests yet.
           </p>
         ) : (
@@ -663,15 +663,15 @@ export default async function AdminDashboardPage() {
                 className="flex items-center justify-between px-6 py-3 hover:bg-[#F7F5F2] transition-colors"
               >
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-[13px] font-medium text-[#16130C]">
+                  <p className="truncate text-[13px] font-medium text-dark">
                     {claim.listing_title}
                   </p>
-                  <p className="mt-0.5 text-[13px] text-[#9C9485]">
+                  <p className="mt-0.5 text-[13px] text-text3">
                     {claim.claimant_name} &middot; {claim.claimant_email}
                   </p>
                 </div>
                 <div className="ml-4 flex shrink-0 items-center gap-3">
-                  <span className="text-[13px] text-[#9C9485]">
+                  <span className="text-[13px] text-text3">
                     {formatDate(claim.created_at)}
                   </span>
                   <StatusBadge status={claim.status} />
@@ -685,15 +685,15 @@ export default async function AdminDashboardPage() {
       {/* Newsletter Subscribers */}
       <div className="rounded-2xl bg-white shadow-sm">
         <div className="flex items-center justify-between border-b border-[#F0EDE8] px-6 py-4">
-          <h2 className="font-display text-[16px] font-bold text-[#16130C]">
+          <h2 className="font-display text-[16px] font-bold text-dark">
             Newsletter Subscribers
           </h2>
-          <span className="text-[12px] text-[#9C9485]">
+          <span className="text-[12px] text-text3">
             {totalNewsletterSubs} total
           </span>
         </div>
         {recentNewsletterSubs.length === 0 ? (
-          <p className="px-6 py-8 text-center text-[13px] text-[#9C9485]">
+          <p className="px-6 py-8 text-center text-[13px] text-text3">
             No subscribers yet.
           </p>
         ) : (
@@ -704,7 +704,7 @@ export default async function AdminDashboardPage() {
                 className="flex items-center justify-between px-6 py-3"
               >
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-[13px] font-medium text-[#16130C]">
+                  <p className="truncate text-[13px] font-medium text-dark">
                     {sub.email}
                   </p>
                 </div>
@@ -718,7 +718,7 @@ export default async function AdminDashboardPage() {
                       {sub.source}
                     </span>
                   )}
-                  <span className="text-[13px] text-[#9C9485]">
+                  <span className="text-[13px] text-text3">
                     {formatDate(sub.created_at)}
                   </span>
                 </div>
@@ -740,37 +740,37 @@ export default async function AdminDashboardPage() {
         </a>
         <Link
           href="/admin/contact-requests"
-          className="inline-flex items-center rounded-xl border border-[#E2DDD5] bg-white px-4 py-2.5 text-[13px] font-semibold text-[#16130C] transition-colors hover:bg-[#F9F7F4]"
+          className="inline-flex items-center rounded-xl border border-border bg-white px-4 py-2.5 text-[13px] font-semibold text-dark transition-colors hover:bg-[#F9F7F4]"
         >
           Contact requests
         </Link>
         <Link
           href="/admin/claims"
-          className="inline-flex items-center rounded-xl border border-[#E2DDD5] bg-white px-4 py-2.5 text-[13px] font-semibold text-[#16130C] transition-colors hover:bg-[#F9F7F4]"
+          className="inline-flex items-center rounded-xl border border-border bg-white px-4 py-2.5 text-[13px] font-semibold text-dark transition-colors hover:bg-[#F9F7F4]"
         >
           Claim requests
         </Link>
         <Link
           href="/admin/listing-requests"
-          className="inline-flex items-center rounded-xl border border-[#E2DDD5] bg-white px-4 py-2.5 text-[13px] font-semibold text-[#16130C] transition-colors hover:bg-[#F9F7F4]"
+          className="inline-flex items-center rounded-xl border border-border bg-white px-4 py-2.5 text-[13px] font-semibold text-dark transition-colors hover:bg-[#F9F7F4]"
         >
           Listing requests
         </Link>
         <Link
           href="/admin/general-contacts"
-          className="inline-flex items-center rounded-xl border border-[#E2DDD5] bg-white px-4 py-2.5 text-[13px] font-semibold text-[#16130C] transition-colors hover:bg-[#F9F7F4]"
+          className="inline-flex items-center rounded-xl border border-border bg-white px-4 py-2.5 text-[13px] font-semibold text-dark transition-colors hover:bg-[#F9F7F4]"
         >
           General contacts
         </Link>
         <Link
           href="/admin/property-enquiries"
-          className="inline-flex items-center rounded-xl border border-[#E2DDD5] bg-white px-4 py-2.5 text-[13px] font-semibold text-[#16130C] transition-colors hover:bg-[#F9F7F4]"
+          className="inline-flex items-center rounded-xl border border-border bg-white px-4 py-2.5 text-[13px] font-semibold text-dark transition-colors hover:bg-[#F9F7F4]"
         >
           Property enquiries
         </Link>
         <Link
           href="/admin/ambassadors"
-          className="inline-flex items-center rounded-xl border border-[#E2DDD5] bg-white px-4 py-2.5 text-[13px] font-semibold text-[#16130C] transition-colors hover:bg-[#F9F7F4]"
+          className="inline-flex items-center rounded-xl border border-border bg-white px-4 py-2.5 text-[13px] font-semibold text-dark transition-colors hover:bg-[#F9F7F4]"
         >
           Ambassadors
         </Link>

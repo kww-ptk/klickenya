@@ -33,19 +33,19 @@ export function MenusOverview({ menus }: MenusOverviewProps) {
 
   if (menus.length === 0) {
     return (
-      <div className="bg-white rounded-2xl border border-[#E2DDD5] p-8 text-center shadow-sm">
-        <div className="w-16 h-16 rounded-full bg-[#E8A020]/10 flex items-center justify-center mx-auto mb-3">
+      <div className="bg-white rounded-2xl border border-border p-8 text-center shadow-sm">
+        <div className="w-16 h-16 rounded-full bg-amber/10 flex items-center justify-center mx-auto mb-3">
           <span className="text-[28px]">🍽️</span>
         </div>
-        <p className="font-display text-[16px] font-bold text-[#16130C] mb-1">
+        <p className="font-display text-[16px] font-bold text-dark mb-1">
           No menus yet
         </p>
-        <p className="text-[13px] text-[#9C9485] mb-4 max-w-[280px] mx-auto">
+        <p className="text-[13px] text-text3 mb-4 max-w-[280px] mx-auto">
           Claim a restaurant listing first, then come back here to build your menu
         </p>
         <Link
           href="/"
-          className="inline-block bg-[#E8A020] text-[#16130C] font-bold text-[13px] px-6 h-[40px] leading-[40px] rounded-full hover:bg-[#d4911c] transition-colors shadow-sm"
+          className="inline-block bg-amber text-dark font-bold text-[13px] px-6 h-[40px] leading-[40px] rounded-full hover:bg-[#d4911c] transition-colors shadow-sm"
         >
           Browse restaurants
         </Link>
@@ -127,52 +127,52 @@ function ListingMenuGroup({
     }
   }
 
-  const inputCls = "w-full border border-[#E2DDD5] rounded-xl px-3.5 py-2.5 text-[14px] text-[#16130C] placeholder:text-[#9C9485] focus:outline-none focus:border-[#E8A020] focus:ring-1 focus:ring-[#E8A020]/30 transition-colors bg-white";
+  const inputCls = "w-full border border-border rounded-xl px-3.5 py-2.5 text-[14px] text-dark placeholder:text-text3 focus:outline-none focus:border-amber focus:ring-1 focus:ring-amber/30 transition-colors bg-white";
 
   return (
-    <div className="bg-white rounded-xl lg:rounded-2xl border border-[#E2DDD5] shadow-sm overflow-hidden">
+    <div className="bg-white rounded-xl lg:rounded-2xl border border-border shadow-sm overflow-hidden">
       {/* Group header */}
-      <div className="px-4 py-3 bg-[#F4F1EC] border-b border-[#E2DDD5]">
-        <p className="text-[14px] font-bold text-[#16130C]">
+      <div className="px-4 py-3 bg-surface border-b border-border">
+        <p className="text-[14px] font-bold text-dark">
           {menus[0]?.display_name?.replace(/ Menu$/, "") ?? listingSlug}
         </p>
-        <p className="text-[11px] text-[#9C9485] mt-0.5 font-mono">
+        <p className="text-[11px] text-text3 mt-0.5 font-mono">
           {listingSlug}
         </p>
       </div>
 
       {/* Menu rows */}
-      <div className="divide-y divide-[#F4F1EC]">
+      <div className="divide-y divide-surface">
         {menus.map((m) => (
           <div key={m.id} className="flex items-center gap-3 px-4 py-3">
             <div className="flex-1 min-w-0">
-              <span className="text-[13px] font-semibold text-[#16130C]">
+              <span className="text-[13px] font-semibold text-dark">
                 {m.display_name ?? m.slug}
               </span>
             </div>
             <div className="flex items-center gap-2 shrink-0">
               {m.is_published ? (
-                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[#16A34A] bg-[#16A34A]/8 px-2 py-0.5 rounded-full">
+                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-green bg-green/8 px-2 py-0.5 rounded-full">
                   <svg className="w-2.5 h-2.5" viewBox="0 0 12 12" fill="none">
                     <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                   Live
                 </span>
               ) : (
-                <span className="text-[10px] font-bold text-[#9C9485] bg-[#F4F1EC] px-2 py-0.5 rounded-full">
+                <span className="text-[10px] font-bold text-text3 bg-surface px-2 py-0.5 rounded-full">
                   Draft
                 </span>
               )}
               <Link
                 href={`/dashboard/menu/${m.id}`}
-                className="text-[12px] font-semibold text-[#E8A020] hover:text-[#d4911c] transition-colors"
+                className="text-[12px] font-semibold text-amber hover:text-[#d4911c] transition-colors"
               >
                 Edit
               </Link>
               <Link
                 href={`/m/${m.slug}`}
                 target="_blank"
-                className="text-[12px] font-semibold text-[#9C9485] hover:text-[#16130C] transition-colors"
+                className="text-[12px] font-semibold text-text3 hover:text-dark transition-colors"
               >
                 View ↗
               </Link>
@@ -183,9 +183,9 @@ function ListingMenuGroup({
 
       {/* Add another menu */}
       {showAdd ? (
-        <div className="px-4 py-3 border-t border-[#E2DDD5] space-y-3">
+        <div className="px-4 py-3 border-t border-border space-y-3">
           <div>
-            <label className="block text-[12px] font-semibold text-[#16130C] mb-1">Menu name</label>
+            <label className="block text-[12px] font-semibold text-dark mb-1">Menu name</label>
             <input
               type="text"
               value={newName}
@@ -199,9 +199,9 @@ function ListingMenuGroup({
             />
           </div>
           <div>
-            <label className="block text-[12px] font-semibold text-[#16130C] mb-1">Public URL</label>
+            <label className="block text-[12px] font-semibold text-dark mb-1">Public URL</label>
             <div className="flex items-center gap-0">
-              <span className="text-[12px] text-[#9C9485] shrink-0">klickenya.com/m/</span>
+              <span className="text-[12px] text-text3 shrink-0">klickenya.com/m/</span>
               <input
                 type="text"
                 value={newSlug}
@@ -214,13 +214,13 @@ function ListingMenuGroup({
             <button
               onClick={handleCreate}
               disabled={!newName.trim() || !newSlug.trim() || creating}
-              className="bg-[#E8A020] text-[#16130C] font-bold text-[13px] px-5 h-[36px] rounded-full hover:bg-[#d4911c] transition-colors disabled:opacity-50"
+              className="bg-amber text-dark font-bold text-[13px] px-5 h-[36px] rounded-full hover:bg-[#d4911c] transition-colors disabled:opacity-50"
             >
               {creating ? "Creating..." : "Create menu"}
             </button>
             <button
               onClick={() => { setShowAdd(false); setNewName(""); setNewSlug(""); }}
-              className="text-[13px] text-[#9C9485] hover:text-[#16130C] transition-colors px-3"
+              className="text-[13px] text-text3 hover:text-dark transition-colors px-3"
             >
               Cancel
             </button>
@@ -229,7 +229,7 @@ function ListingMenuGroup({
       ) : (
         <button
           onClick={() => setShowAdd(true)}
-          className="w-full text-left px-4 py-2.5 text-[13px] font-semibold text-[#E8A020] hover:bg-[#E8A020]/5 transition-colors border-t border-[#F4F1EC]"
+          className="w-full text-left px-4 py-2.5 text-[13px] font-semibold text-amber hover:bg-amber/5 transition-colors border-t border-surface"
         >
           + Add another menu for this restaurant
         </button>

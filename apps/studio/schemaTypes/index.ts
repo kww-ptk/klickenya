@@ -8,6 +8,7 @@ import page from '../schemas/page'
 import siteSettings from '../schemas/siteSettings'
 import author from '../schemas/author'
 import agent from '../schemas/agent'
+import partner from '../schemas/partner'
 import homePage from '../schemas/homePage'
 import {
   quickFactsBlock,
@@ -42,6 +43,7 @@ export const schemaTypes = [
   siteSettings,
   author,
   agent,
+  partner,
   homePage,
   quickFactsBlock,
   tipCardBlock,

@@ -25,19 +25,19 @@ const ICON_MAP: Record<string, LucideIcon> = {
 const STATUS_STYLES: Record<FeatureStatus, { label: string; className: string }> = {
   active: {
     label: "Active",
-    className: "bg-[#16A34A]/10 text-[#16A34A]",
+    className: "bg-green/10 text-green",
   },
   inactive: {
     label: "Inactive",
-    className: "bg-[#F4F1EC] text-[#9C9485]",
+    className: "bg-surface text-text3",
   },
   coming_soon: {
     label: "Coming soon",
-    className: "bg-[#E8A020]/10 text-[#E8A020]",
+    className: "bg-amber/10 text-amber",
   },
   paid_coming_soon: {
     label: "Paid — coming soon",
-    className: "bg-[#6B2D8B]/10 text-[#6B2D8B]",
+    className: "bg-purple/10 text-purple",
   },
 };
 
@@ -108,23 +108,23 @@ export default async function FeaturesPage({
     <div className="space-y-5">
       {/* ── Header ── */}
       <div>
-        <h2 className="font-display text-[18px] lg:text-[20px] font-bold tracking-[-0.02em] text-[#16130C]">
+        <h2 className="font-display text-[18px] lg:text-[20px] font-bold tracking-[-0.02em] text-dark">
           Features &amp; add-ons
         </h2>
-        <p className="text-[13px] text-[#9C9485] mt-1">
+        <p className="text-[13px] text-text3 mt-1">
           Manage the tools available for your listing.
         </p>
       </div>
 
       {/* ── Coming-soon callout ── */}
-      <div className="rounded-xl border border-[#E2DDD5] bg-[#F4F1EC]/60 p-4 lg:p-5">
-        <p className="text-[13px] font-semibold text-[#16130C] mb-1">
+      <div className="rounded-xl border border-border bg-surface/60 p-4 lg:p-5">
+        <p className="text-[13px] font-semibold text-dark mb-1">
           Add-on management coming soon
         </p>
-        <p className="text-[13px] text-[#5E5848]">
+        <p className="text-[13px] text-text2">
           You&apos;ll configure all your listing features here — reservations, table
           ordering, delivery, and more. For now, use{" "}
-          <span className="font-semibold text-[#16130C]">Menu → Publish Panel</span>{" "}
+          <span className="font-semibold text-dark">Menu → Publish Panel</span>{" "}
           to toggle individual features.
         </p>
       </div>
@@ -146,26 +146,26 @@ export default async function FeaturesPage({
           // the toggle isn't built yet (those cards stay locked).
           const setupHref = setupHrefFor(feature.id, featureCtx);
           const cardCls =
-            "relative bg-white rounded-xl lg:rounded-2xl border border-[#E2DDD5] p-4 shadow-sm";
+            "relative bg-white rounded-xl lg:rounded-2xl border border-border p-4 shadow-sm";
           const inner = (
             <>
-              <div className="absolute top-3 right-3 text-[#E2DDD5]">
+              <div className="absolute top-3 right-3 text-border">
                 {setupHref ? <ChevronRight className="size-4" /> : <Lock className="size-3.5" />}
               </div>
 
               <div className="flex items-start gap-3">
-                <div className="shrink-0 size-9 rounded-xl bg-[#F4F1EC] flex items-center justify-center">
+                <div className="shrink-0 size-9 rounded-xl bg-surface flex items-center justify-center">
                   {Icon ? (
-                    <Icon className="size-4 text-[#5E5848]" />
+                    <Icon className="size-4 text-text2" />
                   ) : (
                     <span className="text-[16px]">⚡</span>
                   )}
                 </div>
                 <div className="flex-1 min-w-0 pr-5">
-                  <p className="text-[13px] font-semibold text-[#16130C]">
+                  <p className="text-[13px] font-semibold text-dark">
                     {feature.label}
                   </p>
-                  <p className="text-[12px] text-[#9C9485] mt-0.5 leading-snug">
+                  <p className="text-[12px] text-text3 mt-0.5 leading-snug">
                     {feature.shortDescription}
                   </p>
                 </div>
@@ -178,7 +178,7 @@ export default async function FeaturesPage({
                   {style.label}
                 </span>
                 {setupHref && status === "inactive" && (
-                  <span className="text-[11px] font-bold text-[#E8A020] uppercase tracking-wide">
+                  <span className="text-[11px] font-bold text-amber uppercase tracking-wide">
                     Set up →
                   </span>
                 )}
@@ -190,7 +190,7 @@ export default async function FeaturesPage({
             <Link
               key={feature.id}
               href={setupHref}
-              className={`${cardCls} hover:shadow-md hover:border-[#E8A020]/40 transition-all`}
+              className={`${cardCls} hover:shadow-md hover:border-amber/40 transition-all`}
             >
               {inner}
             </Link>

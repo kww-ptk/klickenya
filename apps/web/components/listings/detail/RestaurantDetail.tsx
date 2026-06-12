@@ -241,7 +241,7 @@ function RestaurantDetail({
                       href={`/m/${menuData.slug}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border text-[13px] font-medium transition-colors hover:bg-[#E8A020]/5"
+                      className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border text-[13px] font-medium transition-colors hover:bg-amber/5"
                       style={{ borderColor: "#E8A020", color: "#E8A020", borderWidth: "1.5px" }}
                     >
                       <span

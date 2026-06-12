@@ -100,12 +100,12 @@ export function PosLogin({ slug, menuId, menuName, redirectTo, contextLabel }: P
       >
         {/* Restaurant identity */}
         <div className="text-center mb-8">
-          <div className="mx-auto w-16 h-16 rounded-2xl bg-[#E8A020] text-[#16130C] grid place-items-center text-[22px] font-bold mb-3">
+          <div className="mx-auto w-16 h-16 rounded-2xl bg-amber text-dark grid place-items-center text-[22px] font-bold mb-3">
             {menuName.slice(0, 1).toUpperCase()}
           </div>
-          <p className="text-[12px] uppercase tracking-[0.18em] text-[#9C9485]">{label}</p>
+          <p className="text-[12px] uppercase tracking-[0.18em] text-text3">{label}</p>
           <h1 className="mt-1 text-[22px] font-bold text-white truncate">{menuName}</h1>
-          <p className="text-[12px] text-[#9C9485] mt-2">Enter your 4-digit staff PIN</p>
+          <p className="text-[12px] text-text3 mt-2">Enter your 4-digit staff PIN</p>
         </div>
 
         {/* PIN dots */}
@@ -115,7 +115,7 @@ export function PosLogin({ slug, menuId, menuName, redirectTo, contextLabel }: P
               key={i}
               className={`w-4 h-4 rounded-full border ${
                 i < pin.length
-                  ? "bg-[#E8A020] border-[#E8A020]"
+                  ? "bg-amber border-amber"
                   : "bg-transparent border-[#3A342B]"
               }`}
             />
@@ -127,7 +127,7 @@ export function PosLogin({ slug, menuId, menuName, redirectTo, contextLabel }: P
           {error ? (
             <span className="text-[#FF8A6B] font-semibold">{error}</span>
           ) : submitting ? (
-            <span className="text-[#9C9485]">Signing in…</span>
+            <span className="text-text3">Signing in…</span>
           ) : null}
         </div>
 
@@ -176,7 +176,7 @@ function PinKey({ onClick, disabled, variant = "primary", children }: PinKeyProp
     "h-[68px] rounded-2xl text-[26px] font-semibold transition-colors active:scale-[0.97] disabled:opacity-40 grid place-items-center";
   const cls =
     variant === "muted"
-      ? `${base} bg-[#2A2520] text-[#9C9485] hover:bg-[#3A342B]`
+      ? `${base} bg-[#2A2520] text-text3 hover:bg-[#3A342B]`
       : `${base} bg-[#252019] text-white hover:bg-[#3A342B]`;
   return (
     <button type="button" onClick={onClick} disabled={disabled} className={cls}>

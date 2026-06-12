@@ -66,10 +66,10 @@ export default async function EnquiriesPage({ searchParams }: { searchParams: Pr
     <div>
       <div className="flex items-center justify-between mb-5">
         <div>
-          <h1 className="font-display text-[22px] lg:text-[28px] font-bold tracking-[-0.03em] text-[#16130C]">
+          <h1 className="font-display text-[22px] lg:text-[28px] font-bold tracking-[-0.03em] text-dark">
             Enquiries
           </h1>
-          <p className="text-[13px] text-[#9C9485] mt-0.5">
+          <p className="text-[13px] text-text3 mt-0.5">
             {filterTitle
               ? <>{enquiries.length} enquir{enquiries.length === 1 ? "y" : "ies"} for {filterTitle}</>
               : <>{enquiries.length} enquir{enquiries.length === 1 ? "y" : "ies"} across your listings</>
@@ -79,7 +79,7 @@ export default async function EnquiriesPage({ searchParams }: { searchParams: Pr
         {filterListingId && (
           <Link
             href="/dashboard/enquiries"
-            className="text-[13px] font-medium text-[#E8A020] hover:underline"
+            className="text-[13px] font-medium text-amber hover:underline"
           >
             View all →
           </Link>
@@ -87,14 +87,14 @@ export default async function EnquiriesPage({ searchParams }: { searchParams: Pr
       </div>
 
       {enquiries.length === 0 ? (
-        <div className="bg-white rounded-2xl border border-[#E2DDD5] p-12 text-center shadow-sm">
-          <div className="w-20 h-20 rounded-full bg-[#E8A020]/10 flex items-center justify-center mx-auto mb-4">
+        <div className="bg-white rounded-2xl border border-border p-12 text-center shadow-sm">
+          <div className="w-20 h-20 rounded-full bg-amber/10 flex items-center justify-center mx-auto mb-4">
             <span className="text-[36px]">📬</span>
           </div>
-          <p className="font-display text-[18px] font-bold text-[#16130C] mb-1">
+          <p className="font-display text-[18px] font-bold text-dark mb-1">
             No enquiries yet
           </p>
-          <p className="text-[14px] text-[#9C9485] max-w-[280px] mx-auto">
+          <p className="text-[14px] text-text3 max-w-[280px] mx-auto">
             When guests contact you about your listings, their enquiries will show up here.
           </p>
         </div>
@@ -126,11 +126,11 @@ export default async function EnquiriesPage({ searchParams }: { searchParams: Pr
             // calendar_status badge
             const calBadge = e.calendar_status
               ? e.calendar_status === "pending"
-                ? { label: "Pending", cls: "bg-[#E8A020]/10 text-[#E8A020]" }
+                ? { label: "Pending", cls: "bg-amber/10 text-amber" }
                 : e.calendar_status === "converted"
-                  ? { label: "Converted", cls: "bg-[#16A34A]/10 text-[#16A34A]" }
+                  ? { label: "Converted", cls: "bg-green/10 text-green" }
                   : e.calendar_status === "declined"
-                    ? { label: "Declined", cls: "bg-[#F4F1EC] text-[#9C9485]" }
+                    ? { label: "Declined", cls: "bg-surface text-text3" }
                     : e.calendar_status === "held"
                       ? { label: "On hold", cls: "bg-[#EFF6FF] text-[#3B82F6]" }
                       : null
@@ -140,12 +140,12 @@ export default async function EnquiriesPage({ searchParams }: { searchParams: Pr
               <Link
                 key={e.id}
                 href={`/dashboard/enquiries/${e.id}`}
-                className="block bg-white rounded-xl lg:rounded-2xl border border-[#E2DDD5] p-4 lg:p-5 shadow-sm hover:shadow-md hover:border-[#E8A020]/30 transition-all"
+                className="block bg-white rounded-xl lg:rounded-2xl border border-border p-4 lg:p-5 shadow-sm hover:shadow-md hover:border-amber/30 transition-all"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <p className="text-[15px] font-semibold text-[#16130C] truncate">
+                      <p className="text-[15px] font-semibold text-dark truncate">
                         {e.full_name}
                       </p>
                       {calBadge && (
@@ -156,46 +156,46 @@ export default async function EnquiriesPage({ searchParams }: { searchParams: Pr
                       {!calBadge && (
                         <span className={`shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-full ${
                           e.status === "new"
-                            ? "bg-[#E8A020]/10 text-[#E8A020]"
+                            ? "bg-amber/10 text-amber"
                             : e.status === "replied"
-                              ? "bg-[#16A34A]/10 text-[#16A34A]"
-                              : "bg-[#F4F1EC] text-[#9C9485]"
+                              ? "bg-green/10 text-green"
+                              : "bg-surface text-text3"
                         }`}>
                           {e.status}
                         </span>
                       )}
                     </div>
                     {e.listing_title && (
-                      <p className="text-[12px] text-[#9C9485] mt-0.5">
+                      <p className="text-[12px] text-text3 mt-0.5">
                         {e.listing_type && <span className="capitalize">{e.listing_type} · </span>}
                         {e.listing_title}
                       </p>
                     )}
                     {/* Dates + guests */}
                     {e.check_in && e.check_out && (
-                      <p className="text-[12px] text-[#5E5848] mt-1.5 flex items-center gap-1">
+                      <p className="text-[12px] text-text2 mt-1.5 flex items-center gap-1">
                         <span>📅</span>
                         <span>{fmtD(e.check_in)} → {fmtD(e.check_out)} · {nights} night{nights !== 1 ? "s" : ""}{e.guests ? ` · ${e.guests} guest${e.guests !== 1 ? "s" : ""}` : ""}</span>
                         {estimatedTotal && (
-                          <span className="ml-2 font-semibold text-[#E8A020]">Est. KSh {estimatedTotal.toLocaleString()}</span>
+                          <span className="ml-2 font-semibold text-amber">Est. KSh {estimatedTotal.toLocaleString()}</span>
                         )}
                       </p>
                     )}
                     <div className="flex items-center gap-3 mt-1.5">
-                      <span className="text-[12px] text-[#E8A020] font-medium">
+                      <span className="text-[12px] text-amber font-medium">
                         {e.email}
                       </span>
-                      <span className="text-[12px] text-[#9C9485]">
+                      <span className="text-[12px] text-text3">
                         {e.phone}
                       </span>
                     </div>
                   </div>
                   <div className="flex items-center gap-3 shrink-0">
                     <div className="text-right">
-                      <p className="text-[11px] text-[#9C9485]">{date}</p>
-                      <p className="text-[11px] text-[#9C9485]">{time}</p>
+                      <p className="text-[11px] text-text3">{date}</p>
+                      <p className="text-[11px] text-text3">{time}</p>
                     </div>
-                    <svg className="size-4 text-[#9C9485]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <svg className="size-4 text-text3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
                     </svg>
                   </div>

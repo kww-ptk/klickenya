@@ -269,18 +269,18 @@ export function EnquiryActionPanel({
       {/* Panel */}
       <div className="fixed top-0 right-0 bottom-0 z-50 w-full max-w-[420px] bg-white shadow-2xl flex flex-col overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-[#E2DDD5] shrink-0">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-border shrink-0">
           <div className="flex items-center gap-3 min-w-0">
             <div className="size-9 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
               <span className="text-[16px]">📋</span>
             </div>
             <div className="min-w-0">
-              <p className="text-[15px] font-bold text-[#16130C] truncate">{firstName} · Enquiry</p>
+              <p className="text-[15px] font-bold text-dark truncate">{firstName} · Enquiry</p>
               <div className="flex items-center gap-2 mt-0.5">
                 <span className="text-[10px] font-semibold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full">
                   Pending
                 </span>
-                <span className="text-[10px] text-[#9C9485]">
+                <span className="text-[10px] text-text3">
                   Expires in {expiresInHours}h
                 </span>
               </div>
@@ -288,9 +288,9 @@ export function EnquiryActionPanel({
           </div>
           <button
             onClick={onClose}
-            className="size-8 flex items-center justify-center rounded-lg hover:bg-[#F4F1EC] transition-colors shrink-0 ml-2"
+            className="size-8 flex items-center justify-center rounded-lg hover:bg-surface transition-colors shrink-0 ml-2"
           >
-            <svg className="size-4 text-[#9C9485]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <svg className="size-4 text-text3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
@@ -300,10 +300,10 @@ export function EnquiryActionPanel({
         <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
 
           {/* Guest details */}
-          <div className="bg-[#FAFAF8] rounded-xl border border-[#E2DDD5] p-4 space-y-2">
-            <p className="text-[10px] font-bold text-[#9C9485] uppercase tracking-wider mb-2">Guest</p>
+          <div className="bg-canvas rounded-xl border border-border p-4 space-y-2">
+            <p className="text-[10px] font-bold text-text3 uppercase tracking-wider mb-2">Guest</p>
             <div className="flex items-center justify-between">
-              <span className="text-[13px] font-semibold text-[#16130C]">{enquiry.full_name}</span>
+              <span className="text-[13px] font-semibold text-dark">{enquiry.full_name}</span>
             </div>
             {enquiry.email && (
               <a href={`mailto:${enquiry.email}`} className="block text-[12px] text-[#4F46E5] hover:underline truncate">
@@ -311,42 +311,42 @@ export function EnquiryActionPanel({
               </a>
             )}
             {enquiry.phone && (
-              <a href={`tel:${enquiry.phone}`} className="block text-[12px] text-[#16130C] hover:text-[#4F46E5]">
+              <a href={`tel:${enquiry.phone}`} className="block text-[12px] text-dark hover:text-[#4F46E5]">
                 📱 {enquiry.phone}
               </a>
             )}
           </div>
 
           {/* Request summary */}
-          <div className="bg-[#FAFAF8] rounded-xl border border-[#E2DDD5] p-4">
-            <p className="text-[10px] font-bold text-[#9C9485] uppercase tracking-wider mb-3">Request</p>
+          <div className="bg-canvas rounded-xl border border-border p-4">
+            <p className="text-[10px] font-bold text-text3 uppercase tracking-wider mb-3">Request</p>
             <div className="space-y-1.5">
               <div className="flex justify-between text-[13px]">
-                <span className="text-[#9C9485]">Room</span>
-                <span className="font-medium text-[#16130C]">{currentRoom?.name ?? enquiry.room_id}</span>
+                <span className="text-text3">Room</span>
+                <span className="font-medium text-dark">{currentRoom?.name ?? enquiry.room_id}</span>
               </div>
               <div className="flex justify-between text-[13px]">
-                <span className="text-[#9C9485]">Check-in</span>
-                <span className="font-medium text-[#16130C]">{fmtDate(enquiry.check_in)}</span>
+                <span className="text-text3">Check-in</span>
+                <span className="font-medium text-dark">{fmtDate(enquiry.check_in)}</span>
               </div>
               <div className="flex justify-between text-[13px]">
-                <span className="text-[#9C9485]">Check-out</span>
-                <span className="font-medium text-[#16130C]">{fmtDate(enquiry.check_out)}</span>
+                <span className="text-text3">Check-out</span>
+                <span className="font-medium text-dark">{fmtDate(enquiry.check_out)}</span>
               </div>
               <div className="flex justify-between text-[13px]">
-                <span className="text-[#9C9485]">Nights</span>
-                <span className="font-medium text-[#16130C]">{nights}</span>
+                <span className="text-text3">Nights</span>
+                <span className="font-medium text-dark">{nights}</span>
               </div>
               {(enquiry.guests ?? parsedNotes["Guests"]) && (
                 <div className="flex justify-between text-[13px]">
-                  <span className="text-[#9C9485]">Guests</span>
-                  <span className="font-medium text-[#16130C]">{enquiry.guests ?? parsedNotes["Guests"]}</span>
+                  <span className="text-text3">Guests</span>
+                  <span className="font-medium text-dark">{enquiry.guests ?? parsedNotes["Guests"]}</span>
                 </div>
               )}
               {parsedNotes["Estimated total"] && (
-                <div className="flex justify-between text-[13px] pt-1 border-t border-[#E2DDD5] mt-1">
-                  <span className="text-[#9C9485]">Est. total quoted</span>
-                  <span className="font-bold text-[#E8A020]">{parsedNotes["Estimated total"]}</span>
+                <div className="flex justify-between text-[13px] pt-1 border-t border-border mt-1">
+                  <span className="text-text3">Est. total quoted</span>
+                  <span className="font-bold text-amber">{parsedNotes["Estimated total"]}</span>
                 </div>
               )}
             </div>
@@ -354,50 +354,50 @@ export function EnquiryActionPanel({
 
           {/* Quotation summary */}
           {quoteRate > 0 && (
-            <div className="bg-[#FAFAF8] rounded-xl border border-[#E2DDD5] p-4">
-              <p className="text-[10px] font-bold text-[#9C9485] uppercase tracking-wider mb-3">Quotation</p>
+            <div className="bg-canvas rounded-xl border border-border p-4">
+              <p className="text-[10px] font-bold text-text3 uppercase tracking-wider mb-3">Quotation</p>
               <div className="space-y-1.5">
 
                 {/* Room subtotal */}
                 <div className="flex justify-between text-[13px]">
-                  <span className="text-[#9C9485]">
+                  <span className="text-text3">
                     {fmt(quoteRate)} × {nights} night{nights !== 1 ? "s" : ""}
                   </span>
-                  <span className="font-medium text-[#16130C]">{fmt(roomSubtotal)}</span>
+                  <span className="font-medium text-dark">{fmt(roomSubtotal)}</span>
                 </div>
 
                 {/* Mandatory fees */}
                 {mandatoryFees.map((fee) => (
                   <div key={fee.id} className="flex justify-between text-[13px]">
-                    <span className="text-[#9C9485]">
+                    <span className="text-text3">
                       {fee.name}
                       {feeLabel(fee) && (
                         <span className="text-[10px] ml-1 text-[#C5BFB5]">({feeLabel(fee)})</span>
                       )}
                     </span>
-                    <span className="font-medium text-[#16130C]">{fmt(feeAmount(fee))}</span>
+                    <span className="font-medium text-dark">{fmt(feeAmount(fee))}</span>
                   </div>
                 ))}
 
                 {/* Total */}
-                <div className="flex justify-between text-[13px] pt-2 mt-1 border-t border-[#E2DDD5]">
-                  <span className="font-bold text-[#16130C]">Total</span>
-                  <span className="font-bold text-[#16130C]">{fmt(grandTotal)}</span>
+                <div className="flex justify-between text-[13px] pt-2 mt-1 border-t border-border">
+                  <span className="font-bold text-dark">Total</span>
+                  <span className="font-bold text-dark">{fmt(grandTotal)}</span>
                 </div>
 
                 {/* Optional fees */}
                 {optionalFees.length > 0 && (
-                  <div className="pt-2 mt-1 border-t border-[#E2DDD5] space-y-1.5">
-                    <p className="text-[10px] text-[#9C9485] font-medium">Optional add-ons</p>
+                  <div className="pt-2 mt-1 border-t border-border space-y-1.5">
+                    <p className="text-[10px] text-text3 font-medium">Optional add-ons</p>
                     {optionalFees.map((fee) => (
                       <div key={fee.id} className="flex justify-between text-[12px]">
-                        <span className="text-[#9C9485]">
+                        <span className="text-text3">
                           {fee.name}
                           {feeLabel(fee) && (
                             <span className="text-[10px] ml-1 text-[#C5BFB5]">({feeLabel(fee)})</span>
                           )}
                         </span>
-                        <span className="text-[#9C9485]">{fmt(feeAmount(fee))}</span>
+                        <span className="text-text3">{fmt(feeAmount(fee))}</span>
                       </div>
                     ))}
                   </div>
@@ -428,20 +428,20 @@ export function EnquiryActionPanel({
             <div className="bg-white rounded-xl border border-[#4F46E5]/30 p-4 space-y-3">
               <p className="text-[12px] font-bold text-[#4F46E5] uppercase tracking-wider">Confirm booking</p>
               <div>
-                <label className="block text-[11px] text-[#9C9485] mb-1">Rate per night (KSh)</label>
+                <label className="block text-[11px] text-text3 mb-1">Rate per night (KSh)</label>
                 <input
                   type="number"
                   value={ratePerNight}
                   onChange={(e) => setRatePerNight(e.target.value)}
-                  className="w-full border border-[#E2DDD5] rounded-lg px-3 py-2 text-[13px] text-[#16130C] outline-none focus:border-[#4F46E5]"
+                  className="w-full border border-border rounded-lg px-3 py-2 text-[13px] text-dark outline-none focus:border-[#4F46E5]"
                 />
               </div>
               <div>
-                <label className="block text-[11px] text-[#9C9485] mb-1">Payment method</label>
+                <label className="block text-[11px] text-text3 mb-1">Payment method</label>
                 <select
                   value={paymentMethod}
                   onChange={(e) => setPaymentMethod(e.target.value)}
-                  className="w-full border border-[#E2DDD5] rounded-lg px-3 py-2 text-[13px] text-[#16130C] outline-none focus:border-[#4F46E5]"
+                  className="w-full border border-border rounded-lg px-3 py-2 text-[13px] text-dark outline-none focus:border-[#4F46E5]"
                 >
                   <option value="cash">Cash</option>
                   <option value="mpesa">M-Pesa</option>
@@ -450,24 +450,24 @@ export function EnquiryActionPanel({
                 </select>
               </div>
               <div>
-                <label className="block text-[11px] text-[#9C9485] mb-1">Amount paid now (KSh)</label>
+                <label className="block text-[11px] text-text3 mb-1">Amount paid now (KSh)</label>
                 <input
                   type="number"
                   value={amountPaid}
                   onChange={(e) => setAmountPaid(e.target.value)}
-                  className="w-full border border-[#E2DDD5] rounded-lg px-3 py-2 text-[13px] text-[#16130C] outline-none focus:border-[#4F46E5]"
+                  className="w-full border border-border rounded-lg px-3 py-2 text-[13px] text-dark outline-none focus:border-[#4F46E5]"
                 />
               </div>
               {estimatedTotal !== null && (
-                <div className="flex justify-between items-center pt-1 border-t border-[#E2DDD5]">
-                  <span className="text-[12px] text-[#9C9485]">Total ({nights}n × {fmt(Number(ratePerNight))})</span>
-                  <span className="text-[14px] font-bold text-[#16130C]">{fmt(estimatedTotal)}</span>
+                <div className="flex justify-between items-center pt-1 border-t border-border">
+                  <span className="text-[12px] text-text3">Total ({nights}n × {fmt(Number(ratePerNight))})</span>
+                  <span className="text-[14px] font-bold text-dark">{fmt(estimatedTotal)}</span>
                 </div>
               )}
               <div className="flex gap-2 pt-1">
                 <button
                   onClick={() => setAction("idle")}
-                  className="flex-1 py-2 rounded-lg border border-[#E2DDD5] text-[13px] text-[#9C9485] hover:text-[#16130C] transition-colors"
+                  className="flex-1 py-2 rounded-lg border border-border text-[13px] text-text3 hover:text-dark transition-colors"
                 >
                   Cancel
                 </button>
@@ -491,12 +491,12 @@ export function EnquiryActionPanel({
                 value={declineReason}
                 onChange={(e) => setDeclineReason(e.target.value)}
                 rows={3}
-                className="w-full border border-[#E2DDD5] rounded-lg px-3 py-2 text-[13px] text-[#16130C] placeholder:text-[#9C9485] outline-none focus:border-red-400 resize-none"
+                className="w-full border border-border rounded-lg px-3 py-2 text-[13px] text-dark placeholder:text-text3 outline-none focus:border-red-400 resize-none"
               />
               <div className="flex gap-2">
                 <button
                   onClick={() => setAction("idle")}
-                  className="flex-1 py-2 rounded-lg border border-[#E2DDD5] text-[13px] text-[#9C9485] hover:text-[#16130C] transition-colors"
+                  className="flex-1 py-2 rounded-lg border border-border text-[13px] text-text3 hover:text-dark transition-colors"
                 >
                   Cancel
                 </button>
@@ -513,57 +513,57 @@ export function EnquiryActionPanel({
 
           {/* ── HOLD form ── */}
           {action === "hold" && (
-            <div className="bg-white rounded-xl border border-[#E8A020]/40 p-4 space-y-3">
-              <p className="text-[12px] font-bold text-[#E8A020] uppercase tracking-wider">Hold enquiry</p>
+            <div className="bg-white rounded-xl border border-amber/40 p-4 space-y-3">
+              <p className="text-[12px] font-bold text-amber uppercase tracking-wider">Hold enquiry</p>
               <div className="space-y-2">
                 {/* Soft hold */}
                 <button
                   onClick={() => setHoldType("soft")}
-                  className={`w-full text-left p-3 rounded-xl border-2 transition-colors ${holdType === "soft" ? "border-[#E8A020] bg-[#FFFBEB]" : "border-[#E2DDD5] hover:border-[#E8A020]/40"}`}
+                  className={`w-full text-left p-3 rounded-xl border-2 transition-colors ${holdType === "soft" ? "border-amber bg-[#FFFBEB]" : "border-border hover:border-amber/40"}`}
                 >
                   <div className="flex items-start gap-2.5">
                     <span className="text-[18px] shrink-0">🔒</span>
                     <div>
-                      <p className="text-[13px] font-semibold text-[#16130C]">Soft hold (24h)</p>
-                      <p className="text-[11px] text-[#9C9485] mt-0.5">Block this room for 24 hours while you confirm with the guest. Auto-releases if not converted.</p>
+                      <p className="text-[13px] font-semibold text-dark">Soft hold (24h)</p>
+                      <p className="text-[11px] text-text3 mt-0.5">Block this room for 24 hours while you confirm with the guest. Auto-releases if not converted.</p>
                     </div>
                   </div>
                 </button>
                 {/* Internal note */}
                 <button
                   onClick={() => setHoldType("internal")}
-                  className={`w-full text-left p-3 rounded-xl border-2 transition-colors ${holdType === "internal" ? "border-[#E8A020] bg-[#FFFBEB]" : "border-[#E2DDD5] hover:border-[#E8A020]/40"}`}
+                  className={`w-full text-left p-3 rounded-xl border-2 transition-colors ${holdType === "internal" ? "border-amber bg-[#FFFBEB]" : "border-border hover:border-amber/40"}`}
                 >
                   <div className="flex items-start gap-2.5">
                     <span className="text-[18px] shrink-0">📌</span>
                     <div>
-                      <p className="text-[13px] font-semibold text-[#16130C]">Internal note</p>
-                      <p className="text-[11px] text-[#9C9485] mt-0.5">Flag this enquiry for follow-up. Room stays available for other bookings.</p>
+                      <p className="text-[13px] font-semibold text-dark">Internal note</p>
+                      <p className="text-[11px] text-text3 mt-0.5">Flag this enquiry for follow-up. Room stays available for other bookings.</p>
                     </div>
                   </div>
                 </button>
                 {/* Awaiting deposit */}
                 <button
                   onClick={() => setHoldType("deposit")}
-                  className={`w-full text-left p-3 rounded-xl border-2 transition-colors ${holdType === "deposit" ? "border-[#E8A020] bg-[#FFFBEB]" : "border-[#E2DDD5] hover:border-[#E8A020]/40"}`}
+                  className={`w-full text-left p-3 rounded-xl border-2 transition-colors ${holdType === "deposit" ? "border-amber bg-[#FFFBEB]" : "border-border hover:border-amber/40"}`}
                 >
                   <div className="flex items-start gap-2.5">
                     <span className="text-[18px] shrink-0">💳</span>
                     <div>
-                      <p className="text-[13px] font-semibold text-[#16130C]">Awaiting deposit</p>
-                      <p className="text-[11px] text-[#9C9485] mt-0.5">Request a deposit from the guest before confirming.</p>
+                      <p className="text-[13px] font-semibold text-dark">Awaiting deposit</p>
+                      <p className="text-[11px] text-text3 mt-0.5">Request a deposit from the guest before confirming.</p>
                     </div>
                   </div>
                 </button>
                 {holdType === "deposit" && (
                   <div className="pt-1">
-                    <label className="block text-[11px] text-[#9C9485] mb-1">Deposit amount (KSh)</label>
+                    <label className="block text-[11px] text-text3 mb-1">Deposit amount (KSh)</label>
                     <input
                       type="number"
                       placeholder="e.g. 5000"
                       value={depositAmount}
                       onChange={(e) => setDepositAmount(e.target.value)}
-                      className="w-full border border-[#E2DDD5] rounded-lg px-3 py-2 text-[13px] text-[#16130C] outline-none focus:border-[#E8A020]"
+                      className="w-full border border-border rounded-lg px-3 py-2 text-[13px] text-dark outline-none focus:border-amber"
                     />
                   </div>
                 )}
@@ -571,14 +571,14 @@ export function EnquiryActionPanel({
               <div className="flex gap-2 pt-1">
                 <button
                   onClick={() => setAction("idle")}
-                  className="flex-1 py-2 rounded-lg border border-[#E2DDD5] text-[13px] text-[#9C9485] hover:text-[#16130C] transition-colors"
+                  className="flex-1 py-2 rounded-lg border border-border text-[13px] text-text3 hover:text-dark transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleHold}
                   disabled={holding || (holdType === "deposit" && !depositAmount)}
-                  className="flex-1 py-2 rounded-lg bg-[#E8A020] text-white text-[13px] font-bold hover:bg-[#d4911c] transition-colors disabled:opacity-50"
+                  className="flex-1 py-2 rounded-lg bg-amber text-white text-[13px] font-bold hover:bg-[#d4911c] transition-colors disabled:opacity-50"
                 >
                   {holding ? "Saving…" : holdType === "soft" ? "Set 24h hold" : holdType === "internal" ? "Flag for follow-up" : "Send deposit request"}
                 </button>
@@ -588,8 +588,8 @@ export function EnquiryActionPanel({
 
           {/* ── MOVE ROOM form ── */}
           {action === "move" && (
-            <div className="bg-white rounded-xl border border-[#E2DDD5] p-4 space-y-3">
-              <p className="text-[12px] font-bold text-[#9C9485] uppercase tracking-wider">Move to different room</p>
+            <div className="bg-white rounded-xl border border-border p-4 space-y-3">
+              <p className="text-[12px] font-bold text-text3 uppercase tracking-wider">Move to different room</p>
               <div className="space-y-2">
                 {rooms
                   .filter((r) => r.id !== enquiry.room_id)
@@ -608,10 +608,10 @@ export function EnquiryActionPanel({
                         className={`w-full flex items-center justify-between p-3 rounded-lg border text-left transition-colors ${
                           targetRoomId === r.id
                             ? "border-[#4F46E5] bg-[#4F46E5]/5"
-                            : "border-[#E2DDD5] hover:border-[#4F46E5]/50"
+                            : "border-border hover:border-[#4F46E5]/50"
                         }`}
                       >
-                        <span className="text-[13px] font-medium text-[#16130C]">{r.name}</span>
+                        <span className="text-[13px] font-medium text-dark">{r.name}</span>
                         {hasConflict ? (
                           <span className="text-[10px] text-red-600 font-semibold">Conflict</span>
                         ) : (
@@ -624,14 +624,14 @@ export function EnquiryActionPanel({
               <div className="flex gap-2 pt-1">
                 <button
                   onClick={() => setAction("idle")}
-                  className="flex-1 py-2 rounded-lg border border-[#E2DDD5] text-[13px] text-[#9C9485] hover:text-[#16130C] transition-colors"
+                  className="flex-1 py-2 rounded-lg border border-border text-[13px] text-text3 hover:text-dark transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleMoveRoom}
                   disabled={moving || !targetRoomId}
-                  className="flex-1 py-2 rounded-lg bg-[#16130C] text-white text-[13px] font-bold hover:bg-[#2A2416] transition-colors disabled:opacity-50"
+                  className="flex-1 py-2 rounded-lg bg-dark text-white text-[13px] font-bold hover:bg-[#2A2416] transition-colors disabled:opacity-50"
                 >
                   {moving ? "Moving…" : "Move room"}
                 </button>
@@ -642,7 +642,7 @@ export function EnquiryActionPanel({
 
         {/* Footer actions */}
         {action === "idle" && (
-          <div className="shrink-0 border-t border-[#E2DDD5] px-5 pt-3 pb-4 space-y-2">
+          <div className="shrink-0 border-t border-border px-5 pt-3 pb-4 space-y-2">
             <button
               onClick={() => setAction("accept")}
               disabled={!availability?.available}
@@ -652,14 +652,14 @@ export function EnquiryActionPanel({
             </button>
             <button
               onClick={() => setAction("hold")}
-              className="w-full py-2.5 rounded-xl border-2 border-[#E8A020]/50 text-[13px] font-semibold text-[#E8A020] hover:bg-[#FFFBEB] transition-colors"
+              className="w-full py-2.5 rounded-xl border-2 border-amber/50 text-[13px] font-semibold text-amber hover:bg-[#FFFBEB] transition-colors"
             >
               🔒 Hold
             </button>
             <div className="flex gap-2">
               <button
                 onClick={() => setAction("move")}
-                className="flex-1 py-2.5 rounded-xl border border-[#E2DDD5] text-[13px] font-semibold text-[#5E5848] hover:border-[#9C9485] transition-colors"
+                className="flex-1 py-2.5 rounded-xl border border-border text-[13px] font-semibold text-text2 hover:border-text3 transition-colors"
               >
                 Move room
               </button>

@@ -232,14 +232,14 @@ export function PosBillPanel({ session, initialEmail, showToast, onSaved }: Prop
       <div className="flex items-baseline justify-between">
         <p className="text-[13px] font-bold text-white">Bill</p>
         {readOnly ? (
-          <p className="text-[10px] uppercase tracking-wide text-[#9C9485]">Read-only</p>
+          <p className="text-[10px] uppercase tracking-wide text-text3">Read-only</p>
         ) : null}
       </div>
 
       {/* Discount controls */}
       <div className="grid grid-cols-2 gap-2">
         <label className="block">
-          <span className="block text-[11px] text-[#9C9485] mb-1">Discount %</span>
+          <span className="block text-[11px] text-text3 mb-1">Discount %</span>
           <div className="relative">
             <input
               type="number"
@@ -253,13 +253,13 @@ export function PosBillPanel({ session, initialEmail, showToast, onSaved }: Prop
               onBlur={saveDiscountPct}
               className="w-full h-10 rounded-lg bg-[#252019] border border-[#2A2520] text-white text-[13px] px-3 pr-8 disabled:opacity-50"
             />
-            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[12px] text-[#9C9485]">%</span>
+            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[12px] text-text3">%</span>
           </div>
         </label>
         <label className="block">
-          <span className="block text-[11px] text-[#9C9485] mb-1">Flat discount</span>
+          <span className="block text-[11px] text-text3 mb-1">Flat discount</span>
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[12px] text-[#9C9485]">KES</span>
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[12px] text-text3">KES</span>
             <input
               type="number"
               inputMode="decimal"
@@ -277,7 +277,7 @@ export function PosBillPanel({ session, initialEmail, showToast, onSaved }: Prop
 
       {/* Bill notes */}
       <label className="block">
-        <span className="block text-[11px] text-[#9C9485] mb-1">Bill notes</span>
+        <span className="block text-[11px] text-text3 mb-1">Bill notes</span>
         <input
           type="text"
           maxLength={500}
@@ -292,13 +292,13 @@ export function PosBillPanel({ session, initialEmail, showToast, onSaved }: Prop
 
       {/* Split */}
       <div className="flex items-center justify-between gap-3">
-        <span className="text-[12px] text-[#9C9485]">Split between</span>
+        <span className="text-[12px] text-text3">Split between</span>
         <div className="flex items-center gap-2">
           <button
             type="button"
             disabled={readOnly || splitCount <= 1}
             onClick={() => adjustSplit(splitCount - 1)}
-            className="w-9 h-9 rounded-full bg-[#252019] text-[#F4F1EC] text-[18px] font-bold disabled:opacity-30"
+            className="w-9 h-9 rounded-full bg-[#252019] text-surface text-[18px] font-bold disabled:opacity-30"
             aria-label="Decrease split"
           >−</button>
           <span className="min-w-[2ch] text-center text-[14px] font-bold text-white">{splitCount}</span>
@@ -306,10 +306,10 @@ export function PosBillPanel({ session, initialEmail, showToast, onSaved }: Prop
             type="button"
             disabled={readOnly || splitCount >= 20}
             onClick={() => adjustSplit(splitCount + 1)}
-            className="w-9 h-9 rounded-full bg-[#252019] text-[#F4F1EC] text-[18px] font-bold disabled:opacity-30"
+            className="w-9 h-9 rounded-full bg-[#252019] text-surface text-[18px] font-bold disabled:opacity-30"
             aria-label="Increase split"
           >+</button>
-          <span className="text-[12px] text-[#9C9485]">guests</span>
+          <span className="text-[12px] text-text3">guests</span>
         </div>
       </div>
 
@@ -336,7 +336,7 @@ export function PosBillPanel({ session, initialEmail, showToast, onSaved }: Prop
       </div>
 
       {savingField && (
-        <p className="text-[10px] text-[#9C9485]">Saving…</p>
+        <p className="text-[10px] text-text3">Saving…</p>
       )}
 
       {/* Share + print actions */}
@@ -344,21 +344,21 @@ export function PosBillPanel({ session, initialEmail, showToast, onSaved }: Prop
         <button
           type="button"
           onClick={printBill}
-          className="h-10 rounded-full bg-[#252019] text-[#F4F1EC] text-[12px] font-bold border border-[#3A342B]"
+          className="h-10 rounded-full bg-[#252019] text-surface text-[12px] font-bold border border-[#3A342B]"
         >
           Print bill
         </button>
         <button
           type="button"
           onClick={whatsappShare}
-          className="h-10 rounded-full bg-[#252019] text-[#F4F1EC] text-[12px] font-bold border border-[#3A342B]"
+          className="h-10 rounded-full bg-[#252019] text-surface text-[12px] font-bold border border-[#3A342B]"
         >
           Send via WhatsApp
         </button>
         <button
           type="button"
           onClick={downloadPdf}
-          className="h-10 rounded-full bg-[#252019] text-[#F4F1EC] text-[12px] font-bold border border-[#3A342B] col-span-2"
+          className="h-10 rounded-full bg-[#252019] text-surface text-[12px] font-bold border border-[#3A342B] col-span-2"
         >
           Download PDF
         </button>
@@ -366,7 +366,7 @@ export function PosBillPanel({ session, initialEmail, showToast, onSaved }: Prop
 
       {/* Email share */}
       <div className="space-y-2">
-        <span className="block text-[11px] text-[#9C9485]">Email bill to guest</span>
+        <span className="block text-[11px] text-text3">Email bill to guest</span>
         <div className="flex gap-2">
           <input
             type="email"
@@ -386,7 +386,7 @@ export function PosBillPanel({ session, initialEmail, showToast, onSaved }: Prop
           </button>
         </div>
         {session.receipt_sent_to && (
-          <p className="text-[10px] text-[#9C9485]">Last sent to {session.receipt_sent_to}</p>
+          <p className="text-[10px] text-text3">Last sent to {session.receipt_sent_to}</p>
         )}
       </div>
 
@@ -410,9 +410,9 @@ function Line({
 }) {
   const colour =
     highlight ? "text-white font-bold" :
-    accent    ? "text-[#E8A020] font-bold" :
-    muted     ? "text-[#9C9485]" :
-                "text-[#F4F1EC]";
+    accent    ? "text-amber font-bold" :
+    muted     ? "text-text3" :
+                "text-surface";
   return (
     <div className={`flex items-baseline justify-between ${colour}`}>
       <span>{label}</span>

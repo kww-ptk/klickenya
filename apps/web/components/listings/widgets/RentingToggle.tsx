@@ -112,14 +112,14 @@ function BothToggle({
   }, [mode, onModeChange]);
 
   const activeClass =
-    "bg-[#E8A020] text-[#16130C] font-bold rounded-full px-5 py-2.5 text-sm transition-all duration-200";
+    "bg-amber text-dark font-bold rounded-full px-5 py-2.5 text-sm transition-all duration-200";
   const inactiveClass =
-    "bg-transparent text-[#5E5848] font-medium border border-[#E2DDD5] rounded-full px-5 py-2.5 text-sm hover:bg-[#F4F1EC] transition-all duration-200";
+    "bg-transparent text-text2 font-medium border border-border rounded-full px-5 py-2.5 text-sm hover:bg-surface transition-all duration-200";
 
   return (
     <div>
       {/* Toggle header */}
-      <p className="text-sm text-[#5E5848] mb-3">How would you like to stay?</p>
+      <p className="text-sm text-text2 mb-3">How would you like to stay?</p>
       <div className="inline-flex gap-2">
         <button
           type="button"
@@ -139,16 +139,16 @@ function BothToggle({
 
       {/* Panels */}
       {mode === "entire" ? (
-        <div className={`border rounded-xl p-5 mt-4 ${entirePropertyAvailable === false ? "border-red-200 bg-red-50/30" : "border-[#E2DDD5]"}`}>
-          <p className="text-sm text-[#5E5848] mb-1">
+        <div className={`border rounded-xl p-5 mt-4 ${entirePropertyAvailable === false ? "border-red-200 bg-red-50/30" : "border-border"}`}>
+          <p className="text-sm text-text2 mb-1">
             Entire property · Private
           </p>
           <p
-            className="text-2xl font-bold text-[#E8A020] mb-1"
+            className="text-2xl font-bold text-amber mb-1"
             style={{ fontFamily: "var(--font-heading, inherit)" }}
           >
             {pricePerNight != null
-              ? <>KSh {pricePerNight.toLocaleString()} <span className="text-sm text-[#9C9485] font-normal">/ night</span></>
+              ? <>KSh {pricePerNight.toLocaleString()} <span className="text-sm text-text3 font-normal">/ night</span></>
               : "Price on request"}
           </p>
           {entirePropertyAvailable === false ? (
@@ -156,33 +156,33 @@ function BothToggle({
               <p className="text-sm text-red-600 font-medium mb-2">
                 Not available — one or more rooms are booked
               </p>
-              <p className="text-sm text-[#9C9485] mb-4">
+              <p className="text-sm text-text3 mb-4">
                 Try individual rooms below, or enquire for different dates
               </p>
               <button
                 type="button"
                 onClick={() => setMode("room")}
-                className="w-full bg-[#E2DDD5] text-[#5E5848] font-bold rounded-full py-2.5 text-sm transition-colors hover:bg-[#d4d0c8] mb-2"
+                className="w-full bg-border text-text2 font-bold rounded-full py-2.5 text-sm transition-colors hover:bg-[#d4d0c8] mb-2"
               >
                 View available rooms →
               </button>
               <button
                 type="button"
                 onClick={onEntireBooking ?? scrollToContactForm}
-                className="w-full border border-[#E2DDD5] text-[#5E5848] font-semibold rounded-full py-2.5 text-sm transition-colors hover:bg-[#F4F1EC]"
+                className="w-full border border-border text-text2 font-semibold rounded-full py-2.5 text-sm transition-colors hover:bg-surface"
               >
                 Enquire for different dates
               </button>
             </>
           ) : (
             <>
-              <p className="text-sm text-[#9C9485] mb-4">
+              <p className="text-sm text-text3 mb-4">
                 Book the entire place for your group
               </p>
               <button
                 type="button"
                 onClick={onEntireBooking ?? scrollToContactForm}
-                className="w-full bg-[#E8A020] text-[#16130C] font-bold rounded-full py-2.5 text-sm transition-colors hover:bg-[#d4911c]"
+                className="w-full bg-amber text-dark font-bold rounded-full py-2.5 text-sm transition-colors hover:bg-[#d4911c]"
               >
                 {onEntireBooking ? "Check availability" : "Enquire for the whole place →"}
               </button>
@@ -196,14 +196,14 @@ function BothToggle({
               <RoomsGrid rooms={rooms} listingTitle={listingTitle} roomAvailability={roomAvailability} roomPriceOverrides={roomPriceOverrides} listingSlug={listingSlug} onRoomBooking={onRoomBooking} />
             </div>
           ) : (
-            <div className="border border-[#E2DDD5] rounded-xl p-5 mt-4 text-center">
-              <p className="text-sm text-[#9C9485] mb-4">
+            <div className="border border-border rounded-xl p-5 mt-4 text-center">
+              <p className="text-sm text-text3 mb-4">
                 Room details coming soon — enquire below.
               </p>
               <button
                 type="button"
                 onClick={scrollToContactForm}
-                className="bg-[#E8A020] text-[#16130C] font-bold rounded-full px-6 py-2.5 text-sm transition-colors hover:bg-[#d4911c]"
+                className="bg-amber text-dark font-bold rounded-full px-6 py-2.5 text-sm transition-colors hover:bg-[#d4911c]"
               >
                 Enquire →
               </button>

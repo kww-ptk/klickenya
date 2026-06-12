@@ -114,16 +114,16 @@ export default async function AdminListingsPage({
       {/* Header */}
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div>
-          <h1 className="font-display text-[24px] font-bold text-[#16130C]">
+          <h1 className="font-display text-[24px] font-bold text-dark">
             Listings
           </h1>
-          <p className="mt-1 text-[14px] text-[#9C9485]">
+          <p className="mt-1 text-[14px] text-text3">
             {filtered.length} listing{filtered.length !== 1 ? "s" : ""}
           </p>
         </div>
         <Link
           href="/admin/listings/new"
-          className="inline-flex items-center gap-2 bg-[#E8A020] hover:bg-[#D4901C] text-white font-bold text-[13px] px-4 py-2.5 rounded-xl transition-colors"
+          className="inline-flex items-center gap-2 bg-amber hover:bg-[#D4901C] text-white font-bold text-[13px] px-4 py-2.5 rounded-xl transition-colors"
         >
           <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
@@ -148,7 +148,7 @@ export default async function AdminListingsPage({
       <div className="space-y-3">
         {/* Type filter */}
         <div className="flex flex-wrap items-center gap-1.5">
-          <span className="mr-1 text-[11px] font-semibold uppercase tracking-wide text-[#9C9485]">
+          <span className="mr-1 text-[11px] font-semibold uppercase tracking-wide text-text3">
             Type
           </span>
           {TYPE_TABS.map((tab) => (
@@ -157,8 +157,8 @@ export default async function AdminListingsPage({
               href={buildHref({ type: tab.value })}
               className={`rounded-lg px-3 py-1.5 text-[13px] font-medium transition-colors ${
                 filterType === tab.value
-                  ? "bg-[#16130C] text-white"
-                  : "bg-white text-[#16130C] hover:bg-[#F7F5F2]"
+                  ? "bg-dark text-white"
+                  : "bg-white text-dark hover:bg-[#F7F5F2]"
               }`}
             >
               {tab.label}
@@ -168,7 +168,7 @@ export default async function AdminListingsPage({
 
         {/* Status filter */}
         <div className="flex flex-wrap items-center gap-1.5">
-          <span className="mr-1 text-[11px] font-semibold uppercase tracking-wide text-[#9C9485]">
+          <span className="mr-1 text-[11px] font-semibold uppercase tracking-wide text-text3">
             Status
           </span>
           {STATUS_TABS.map((tab) => (
@@ -177,8 +177,8 @@ export default async function AdminListingsPage({
               href={buildHref({ status: tab.value })}
               className={`rounded-lg px-3 py-1.5 text-[13px] font-medium transition-colors ${
                 filterStatus === tab.value
-                  ? "bg-[#16130C] text-white"
-                  : "bg-white text-[#16130C] hover:bg-[#F7F5F2]"
+                  ? "bg-dark text-white"
+                  : "bg-white text-dark hover:bg-[#F7F5F2]"
               }`}
             >
               {tab.label}
@@ -188,7 +188,7 @@ export default async function AdminListingsPage({
       </div>
 
       {/* Results count */}
-      <p className="text-[13px] text-[#9C9485]">
+      <p className="text-[13px] text-text3">
         {filtered.length} listing{filtered.length !== 1 ? "s" : ""}
       </p>
 
@@ -198,31 +198,31 @@ export default async function AdminListingsPage({
           <table className="w-full min-w-[1000px]">
             <thead>
               <tr className="border-b border-[#F0EDE8]">
-                <th className="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-[#9C9485]">
+                <th className="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-text3">
                   Title
                 </th>
-                <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-[#9C9485]">
+                <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-text3">
                   Type
                 </th>
-                <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-[#9C9485]">
+                <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-text3">
                   City
                 </th>
-                <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-[#9C9485]">
+                <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-text3">
                   Status
                 </th>
-                <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-[#9C9485]">
+                <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-text3">
                   Price
                 </th>
-                <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-[#9C9485]">
+                <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-text3">
                   Enquiries
                 </th>
-                <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-[#9C9485]">
+                <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-text3">
                   Reservations
                 </th>
-                <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-[#9C9485]">
+                <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-text3">
                   Published
                 </th>
-                <th className="px-6 py-3 text-right text-[11px] font-semibold uppercase tracking-wide text-[#9C9485]">
+                <th className="px-6 py-3 text-right text-[11px] font-semibold uppercase tracking-wide text-text3">
                   Actions
                 </th>
               </tr>
@@ -232,7 +232,7 @@ export default async function AdminListingsPage({
                 <tr>
                   <td
                     colSpan={9}
-                    className="px-6 py-12 text-center text-[13px] text-[#9C9485]"
+                    className="px-6 py-12 text-center text-[13px] text-text3"
                   >
                     No listings found.
                   </td>
@@ -247,22 +247,22 @@ export default async function AdminListingsPage({
                       key={listing._id}
                       className="border-b border-[#F0EDE8] transition-colors hover:bg-[#F7F5F2]"
                     >
-                      <td className="max-w-[240px] truncate px-6 py-3 text-[13px] font-medium text-[#16130C]">
+                      <td className="max-w-[240px] truncate px-6 py-3 text-[13px] font-medium text-dark">
                         {listing.title}
                       </td>
-                      <td className="px-4 py-3 text-[13px] text-[#16130C]">
+                      <td className="px-4 py-3 text-[13px] text-dark">
                         {capitalize(listing.type)}
                       </td>
-                      <td className="px-4 py-3 text-[13px] text-[#16130C]">
+                      <td className="px-4 py-3 text-[13px] text-dark">
                         {listing.city}
                       </td>
                       <td className="px-4 py-3">
                         <StatusBadge status={listing.status} />
                       </td>
-                      <td className="whitespace-nowrap px-4 py-3 text-[13px] text-[#16130C]">
+                      <td className="whitespace-nowrap px-4 py-3 text-[13px] text-dark">
                         {formatPrice(listing.price, listing.priceUnit)}
                       </td>
-                      <td className="px-4 py-3 text-[13px] text-[#16130C]">
+                      <td className="px-4 py-3 text-[13px] text-dark">
                         {enquiryCount > 0 ? enquiryCount : "\u2014"}
                       </td>
                       <td className="px-4 py-3">
@@ -270,13 +270,13 @@ export default async function AdminListingsPage({
                           menuInfo?.reservations_enabled ? (
                             <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-[#7C3AED]/10 text-[#7C3AED]">On</span>
                           ) : (
-                            <span className="text-[13px] text-[#9C9485]">\u2014</span>
+                            <span className="text-[13px] text-text3">\u2014</span>
                           )
                         ) : (
                           <span className="text-[13px] text-[#F0EDE8]">\u2014</span>
                         )}
                       </td>
-                      <td className="whitespace-nowrap px-4 py-3 text-[13px] text-[#9C9485]">
+                      <td className="whitespace-nowrap px-4 py-3 text-[13px] text-text3">
                         {formatDate(listing._createdAt)}
                       </td>
                       <td className="whitespace-nowrap px-6 py-3 text-right">
@@ -299,7 +299,7 @@ export default async function AdminListingsPage({
                           </a>
                           <Link
                             href={`/listings/${listing.type}/${listing.slug.current}`}
-                            className="text-[13px] font-medium text-[#9C9485] underline-offset-2 hover:text-[#16130C] hover:underline"
+                            className="text-[13px] font-medium text-text3 underline-offset-2 hover:text-dark hover:underline"
                           >
                             View on site
                           </Link>

@@ -13,10 +13,10 @@ const STATUS_TABS = [
 const PER_PAGE = 50;
 
 const RESERVATION_STATUS_BADGE: Record<string, string> = {
-  pending:   "bg-[#E8A020]/15 text-[#E8A020]",
+  pending:   "bg-amber/15 text-amber",
   approved:  "bg-[#22C55E]/15 text-[#22C55E]",
   declined:  "bg-red-100 text-red-600",
-  cancelled: "bg-[#9C9485]/15 text-[#9C9485]",
+  cancelled: "bg-text3/15 text-text3",
   completed: "bg-[#4F46E5]/15 text-[#4F46E5]",
   no_show:   "bg-red-100 text-red-600",
 };
@@ -84,8 +84,8 @@ export default async function AdminReservationsPage({
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-[22px] font-display font-bold text-[#16130C]">All Reservations</h1>
-          <p className="text-[14px] text-[#9C9485] mt-1">
+          <h1 className="text-[22px] font-display font-bold text-dark">All Reservations</h1>
+          <p className="text-[14px] text-text3 mt-1">
             {totalCount} reservation{totalCount !== 1 ? "s" : ""} across all restaurants
           </p>
         </div>
@@ -104,8 +104,8 @@ export default async function AdminReservationsPage({
                   href={buildUrl({ status: tab.value, page: "1" })}
                   className={`px-3 py-2 text-[13px] font-medium transition-colors border-b-2 ${
                     isActive
-                      ? "text-[#E8A020] border-[#E8A020]"
-                      : "text-[#9C9485] border-transparent hover:text-[#16130C]"
+                      ? "text-amber border-amber"
+                      : "text-text3 border-transparent hover:text-dark"
                   }`}
                 >
                   {tab.label}
@@ -118,7 +118,7 @@ export default async function AdminReservationsPage({
           <form action="/admin/reservations" method="get" className="pb-4">
             {status !== "all" && <input type="hidden" name="status" value={status} />}
             <div className="relative max-w-xs">
-              <svg className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-[#9C9485]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <svg className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-text3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
               </svg>
               <input
@@ -126,7 +126,7 @@ export default async function AdminReservationsPage({
                 name="q"
                 defaultValue={q}
                 placeholder="Search guest name or email..."
-                className="w-full pl-10 pr-4 py-2 text-[13px] rounded-lg border border-[#F0EDE8] bg-[#F7F5F2] text-[#16130C] placeholder:text-[#9C9485] focus:outline-none focus:ring-2 focus:ring-[#E8A020]/30 focus:border-[#E8A020]"
+                className="w-full pl-10 pr-4 py-2 text-[13px] rounded-lg border border-[#F0EDE8] bg-[#F7F5F2] text-dark placeholder:text-text3 focus:outline-none focus:ring-2 focus:ring-amber/30 focus:border-amber"
               />
             </div>
           </form>
@@ -137,18 +137,18 @@ export default async function AdminReservationsPage({
           <table className="w-full text-[13px]">
             <thead>
               <tr className="border-b border-[#F0EDE8]">
-                <th className="text-left px-5 py-3 text-[11px] uppercase text-[#9C9485] tracking-wider font-medium whitespace-nowrap">Guest</th>
-                <th className="text-left px-5 py-3 text-[11px] uppercase text-[#9C9485] tracking-wider font-medium whitespace-nowrap">Restaurant</th>
-                <th className="text-left px-5 py-3 text-[11px] uppercase text-[#9C9485] tracking-wider font-medium whitespace-nowrap">Date / Time</th>
-                <th className="text-left px-5 py-3 text-[11px] uppercase text-[#9C9485] tracking-wider font-medium whitespace-nowrap">Party</th>
-                <th className="text-left px-5 py-3 text-[11px] uppercase text-[#9C9485] tracking-wider font-medium whitespace-nowrap">Status</th>
-                <th className="text-right px-5 py-3 text-[11px] uppercase text-[#9C9485] tracking-wider font-medium"></th>
+                <th className="text-left px-5 py-3 text-[11px] uppercase text-text3 tracking-wider font-medium whitespace-nowrap">Guest</th>
+                <th className="text-left px-5 py-3 text-[11px] uppercase text-text3 tracking-wider font-medium whitespace-nowrap">Restaurant</th>
+                <th className="text-left px-5 py-3 text-[11px] uppercase text-text3 tracking-wider font-medium whitespace-nowrap">Date / Time</th>
+                <th className="text-left px-5 py-3 text-[11px] uppercase text-text3 tracking-wider font-medium whitespace-nowrap">Party</th>
+                <th className="text-left px-5 py-3 text-[11px] uppercase text-text3 tracking-wider font-medium whitespace-nowrap">Status</th>
+                <th className="text-right px-5 py-3 text-[11px] uppercase text-text3 tracking-wider font-medium"></th>
               </tr>
             </thead>
             <tbody>
               {items.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-5 py-16 text-center text-[14px] text-[#9C9485]">
+                  <td colSpan={6} className="px-5 py-16 text-center text-[14px] text-text3">
                     No reservations found.
                   </td>
                 </tr>
@@ -159,30 +159,30 @@ export default async function AdminReservationsPage({
                   return (
                     <tr key={r.id as string} className="border-b border-[#F0EDE8] hover:bg-[#F7F5F2] transition-colors">
                       <td className="px-5 py-3.5">
-                        <p className="font-medium text-[#16130C]">{(r.guest_name as string) || "—"}</p>
+                        <p className="font-medium text-dark">{(r.guest_name as string) || "—"}</p>
                         {r.guest_email ? (
-                          <p className="text-[12px] text-[#9C9485] truncate max-w-[160px]">{r.guest_email as string}</p>
+                          <p className="text-[12px] text-text3 truncate max-w-[160px]">{r.guest_email as string}</p>
                         ) : null}
                       </td>
                       <td className="px-5 py-3.5">
-                        <p className="text-[#16130C]">{menu?.display_name ?? menu?.slug ?? "—"}</p>
+                        <p className="text-dark">{menu?.display_name ?? menu?.slug ?? "—"}</p>
                       </td>
                       <td className="px-5 py-3.5 whitespace-nowrap">
-                        <p className="text-[#16130C]">{date}</p>
-                        <p className="text-[12px] text-[#9C9485]">{time}</p>
+                        <p className="text-dark">{date}</p>
+                        <p className="text-[12px] text-text3">{time}</p>
                       </td>
-                      <td className="px-5 py-3.5 whitespace-nowrap text-[#16130C]">
+                      <td className="px-5 py-3.5 whitespace-nowrap text-dark">
                         {r.party_size as number} {(r.party_size as number) === 1 ? "person" : "people"}
                       </td>
                       <td className="px-5 py-3.5">
-                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold ${RESERVATION_STATUS_BADGE[r.status as string] ?? "bg-[#F0EDE8] text-[#9C9485]"}`}>
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold ${RESERVATION_STATUS_BADGE[r.status as string] ?? "bg-[#F0EDE8] text-text3"}`}>
                           {(r.status as string)?.replace("_", "-") ?? "—"}
                         </span>
                       </td>
                       <td className="px-5 py-3.5 text-right">
                         <Link
                           href={`/admin/reservations/${r.id}`}
-                          className="text-[13px] font-medium text-[#E8A020] hover:text-[#C78A1A] transition-colors"
+                          className="text-[13px] font-medium text-amber hover:text-[#C78A1A] transition-colors"
                         >
                           View
                         </Link>
@@ -198,23 +198,23 @@ export default async function AdminReservationsPage({
         {/* Pagination */}
         {totalCount > 0 && (
           <div className="flex items-center justify-between px-5 py-4 border-t border-[#F0EDE8]">
-            <p className="text-[13px] text-[#9C9485]">
+            <p className="text-[13px] text-text3">
               Showing {offset + 1}–{Math.min(offset + PER_PAGE, totalCount)} of {totalCount}
             </p>
             <div className="flex gap-2">
               {page > 1 ? (
-                <Link href={buildUrl({ page: String(page - 1) })} className="px-3 py-1.5 text-[13px] font-medium rounded-lg border border-[#F0EDE8] text-[#16130C] hover:bg-[#F7F5F2] transition-colors">
+                <Link href={buildUrl({ page: String(page - 1) })} className="px-3 py-1.5 text-[13px] font-medium rounded-lg border border-[#F0EDE8] text-dark hover:bg-[#F7F5F2] transition-colors">
                   Previous
                 </Link>
               ) : (
-                <span className="px-3 py-1.5 text-[13px] font-medium rounded-lg border border-[#F0EDE8] text-[#9C9485] opacity-50 cursor-not-allowed">Previous</span>
+                <span className="px-3 py-1.5 text-[13px] font-medium rounded-lg border border-[#F0EDE8] text-text3 opacity-50 cursor-not-allowed">Previous</span>
               )}
               {page < totalPages ? (
-                <Link href={buildUrl({ page: String(page + 1) })} className="px-3 py-1.5 text-[13px] font-medium rounded-lg border border-[#F0EDE8] text-[#16130C] hover:bg-[#F7F5F2] transition-colors">
+                <Link href={buildUrl({ page: String(page + 1) })} className="px-3 py-1.5 text-[13px] font-medium rounded-lg border border-[#F0EDE8] text-dark hover:bg-[#F7F5F2] transition-colors">
                   Next
                 </Link>
               ) : (
-                <span className="px-3 py-1.5 text-[13px] font-medium rounded-lg border border-[#F0EDE8] text-[#9C9485] opacity-50 cursor-not-allowed">Next</span>
+                <span className="px-3 py-1.5 text-[13px] font-medium rounded-lg border border-[#F0EDE8] text-text3 opacity-50 cursor-not-allowed">Next</span>
               )}
             </div>
           </div>

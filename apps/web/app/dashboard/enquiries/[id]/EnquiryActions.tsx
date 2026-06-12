@@ -87,7 +87,7 @@ export function EnquiryActions({
   const statuses = [
     { value: "responded", label: "Mark Responded", className: "bg-[#22C55E]/10 text-[#22C55E] hover:bg-[#22C55E]/20" },
     { value: "converted", label: "Mark Converted", className: "bg-[#3B82F6]/10 text-[#3B82F6] hover:bg-[#3B82F6]/20" },
-    { value: "closed", label: "Mark Closed", className: "bg-[#9C9485]/10 text-[#9C9485] hover:bg-[#9C9485]/20" },
+    { value: "closed", label: "Mark Closed", className: "bg-text3/10 text-text3 hover:bg-text3/20" },
   ];
 
   const responseTypes = [
@@ -108,8 +108,8 @@ export function EnquiryActions({
   return (
     <div className="space-y-5">
       {/* Status Update */}
-      <div className="bg-white rounded-xl border border-[#E2DDD5] p-5 space-y-3">
-        <h2 className="text-[15px] font-bold text-[#16130C]">Update Status</h2>
+      <div className="bg-white rounded-xl border border-border p-5 space-y-3">
+        <h2 className="text-[15px] font-bold text-dark">Update Status</h2>
         <div className="flex flex-wrap gap-2">
           {statuses
             .filter((s) => s.value !== currentStatus)
@@ -127,12 +127,12 @@ export function EnquiryActions({
       </div>
 
       {/* Reply to Guest */}
-      <div className="bg-white rounded-xl border border-[#E2DDD5] p-5 space-y-4">
-        <h2 className="text-[15px] font-bold text-[#16130C]">Reply to {guestName}</h2>
+      <div className="bg-white rounded-xl border border-border p-5 space-y-4">
+        <h2 className="text-[15px] font-bold text-dark">Reply to {guestName}</h2>
 
         {/* Response type */}
         <div>
-          <p className="text-[11px] text-[#9C9485] uppercase tracking-wider font-medium mb-2">Response type</p>
+          <p className="text-[11px] text-text3 uppercase tracking-wider font-medium mb-2">Response type</p>
           <div className="flex flex-wrap gap-2">
             {responseTypes.map((opt) => (
               <button
@@ -142,7 +142,7 @@ export function EnquiryActions({
                 className={`px-3 py-1.5 text-[12px] font-medium rounded-lg border transition-colors ${
                   replyStatus === opt.value
                     ? opt.cls + " ring-2 ring-offset-1 ring-current"
-                    : "bg-white text-[#9C9485] border-[#E2DDD5] hover:bg-[#F5F3F0]"
+                    : "bg-white text-text3 border-border hover:bg-[#F5F3F0]"
                 }`}
               >
                 {opt.label}
@@ -156,7 +156,7 @@ export function EnquiryActions({
           value={replySubject}
           onChange={(e) => setReplySubject(e.target.value)}
           placeholder="Subject line..."
-          className="w-full px-4 py-2.5 text-[13px] rounded-xl border border-[#E2DDD5] bg-[#FAFAF8] text-[#16130C] placeholder:text-[#9C9485] focus:outline-none focus:ring-2 focus:ring-[#E8A020]/30 focus:border-[#E8A020]"
+          className="w-full px-4 py-2.5 text-[13px] rounded-xl border border-border bg-canvas text-dark placeholder:text-text3 focus:outline-none focus:ring-2 focus:ring-amber/30 focus:border-amber"
         />
 
         <textarea
@@ -164,14 +164,14 @@ export function EnquiryActions({
           onChange={(e) => setReplyMessage(e.target.value)}
           placeholder="Write your reply to the guest..."
           rows={5}
-          className="w-full px-4 py-3 text-[13px] rounded-xl border border-[#E2DDD5] bg-[#FAFAF8] text-[#16130C] placeholder:text-[#9C9485] focus:outline-none focus:ring-2 focus:ring-[#E8A020]/30 focus:border-[#E8A020] resize-none"
+          className="w-full px-4 py-3 text-[13px] rounded-xl border border-border bg-canvas text-dark placeholder:text-text3 focus:outline-none focus:ring-2 focus:ring-amber/30 focus:border-amber resize-none"
         />
 
         <div className="flex items-center gap-3">
           <button
             onClick={handleSendReply}
             disabled={!replyMessage.trim() || replyLoading || isPending}
-            className="px-5 py-2.5 text-[13px] font-semibold rounded-xl bg-[#E8A020] text-white hover:bg-[#d4911c] transition-colors disabled:opacity-50"
+            className="px-5 py-2.5 text-[13px] font-semibold rounded-xl bg-amber text-white hover:bg-[#d4911c] transition-colors disabled:opacity-50"
           >
             {replyLoading ? "Sending..." : "Send Reply"}
           </button>
@@ -183,8 +183,8 @@ export function EnquiryActions({
 
       {/* Email History */}
       {replyHistory.length > 0 && (
-        <div className="bg-white rounded-xl border border-[#E2DDD5] p-5 space-y-3">
-          <h2 className="text-[15px] font-bold text-[#16130C]">Conversation History</h2>
+        <div className="bg-white rounded-xl border border-border p-5 space-y-3">
+          <h2 className="text-[15px] font-bold text-dark">Conversation History</h2>
           <div className="space-y-3">
             {replyHistory.map((entry, i) => {
               const cls = statusColors[entry.status] || statusColors.info;
@@ -194,7 +194,7 @@ export function EnquiryActions({
                   className={`border rounded-xl p-4 space-y-2 ${
                     entry.isUserReply
                       ? "border-[#8B5CF6]/30 bg-[#8B5CF6]/[0.02]"
-                      : "border-[#E2DDD5]"
+                      : "border-border"
                   }`}
                 >
                   <div className="flex items-center justify-between">
@@ -202,13 +202,13 @@ export function EnquiryActions({
                       <span className={`px-2 py-0.5 text-[10px] font-bold uppercase rounded-md ${cls}`}>
                         {entry.isUserReply ? "Guest reply" : entry.status}
                       </span>
-                      <span className="text-[11px] text-[#9C9485]">{entry.date}</span>
+                      <span className="text-[11px] text-text3">{entry.date}</span>
                     </div>
                   </div>
                   {entry.subject && (
-                    <p className="text-[13px] text-[#16130C] font-medium">{entry.subject}</p>
+                    <p className="text-[13px] text-dark font-medium">{entry.subject}</p>
                   )}
-                  <p className="text-[13px] text-[#9C9485] leading-relaxed whitespace-pre-wrap">{entry.message}</p>
+                  <p className="text-[13px] text-text3 leading-relaxed whitespace-pre-wrap">{entry.message}</p>
                 </div>
               );
             })}

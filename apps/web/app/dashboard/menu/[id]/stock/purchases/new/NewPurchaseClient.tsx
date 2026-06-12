@@ -30,7 +30,7 @@ function fmtKES(n: number): string {
 }
 
 const inputCls =
-  "w-full border border-[#E2DDD5] rounded-xl px-3 py-3 text-[15px] text-[#16130C] placeholder:text-[#9C9485] focus:outline-none focus:border-[#E8A020] focus:ring-1 focus:ring-[#E8A020]/30 bg-white";
+  "w-full border border-border rounded-xl px-3 py-3 text-[15px] text-dark placeholder:text-text3 focus:outline-none focus:border-amber focus:ring-1 focus:ring-amber/30 bg-white";
 
 export function NewPurchaseClient({
   menuId,
@@ -146,13 +146,13 @@ export function NewPurchaseClient({
 
   if (ingredients.length === 0) {
     return (
-      <div className="bg-white rounded-2xl border border-[#E2DDD5] p-6 text-center">
-        <p className="text-[14px] text-[#5E5848] mb-3">
+      <div className="bg-white rounded-2xl border border-border p-6 text-center">
+        <p className="text-[14px] text-text2 mb-3">
           You need at least one ingredient before you can create a purchase order.
         </p>
         <a
           href={`/dashboard/menu/${menuId}/stock/ingredients`}
-          className="inline-block bg-[#E8A020] text-[#16130C] font-bold text-[13px] px-5 h-[44px] leading-[44px] rounded-full hover:bg-[#d4911c]"
+          className="inline-block bg-amber text-dark font-bold text-[13px] px-5 h-[44px] leading-[44px] rounded-full hover:bg-[#d4911c]"
         >
           Add ingredients →
         </a>
@@ -163,9 +163,9 @@ export function NewPurchaseClient({
   return (
     <div className="space-y-5">
       {/* Header card */}
-      <div className="bg-white rounded-2xl border border-[#E2DDD5] p-4 sm:p-5 space-y-3">
+      <div className="bg-white rounded-2xl border border-border p-4 sm:p-5 space-y-3">
         <div>
-          <label className="block text-[12px] font-semibold text-[#16130C] mb-1.5">Supplier</label>
+          <label className="block text-[12px] font-semibold text-dark mb-1.5">Supplier</label>
           <div className="flex gap-2">
             <select
               value={supplierId ?? ""}
@@ -182,7 +182,7 @@ export function NewPurchaseClient({
             <button
               type="button"
               onClick={() => setShowAddSupplier((v) => !v)}
-              className="h-12 px-3 rounded-xl border border-[#E2DDD5] text-[13px] font-bold text-[#5E5848] hover:border-[#E8A020] hover:text-[#E8A020] whitespace-nowrap"
+              className="h-12 px-3 rounded-xl border border-border text-[13px] font-bold text-text2 hover:border-amber hover:text-amber whitespace-nowrap"
             >
               {showAddSupplier ? "Close" : "+ Add"}
             </button>
@@ -192,7 +192,7 @@ export function NewPurchaseClient({
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label className="block text-[12px] font-semibold text-[#16130C] mb-1.5">Expected delivery</label>
+            <label className="block text-[12px] font-semibold text-dark mb-1.5">Expected delivery</label>
             <input
               type="date"
               value={expectedAt}
@@ -201,7 +201,7 @@ export function NewPurchaseClient({
             />
           </div>
           <div>
-            <label className="block text-[12px] font-semibold text-[#16130C] mb-1.5">Notes</label>
+            <label className="block text-[12px] font-semibold text-dark mb-1.5">Notes</label>
             <input
               type="text"
               value={notes}
@@ -215,13 +215,13 @@ export function NewPurchaseClient({
       </div>
 
       {/* Line items */}
-      <div className="bg-white rounded-2xl border border-[#E2DDD5] overflow-hidden">
-        <div className="p-4 border-b border-[#F4F1EC] flex items-center justify-between">
-          <h2 className="font-display text-[16px] font-bold text-[#16130C]">Items</h2>
-          <span className="text-[12px] text-[#9C9485]">{lines.length} line{lines.length !== 1 ? "s" : ""}</span>
+      <div className="bg-white rounded-2xl border border-border overflow-hidden">
+        <div className="p-4 border-b border-surface flex items-center justify-between">
+          <h2 className="font-display text-[16px] font-bold text-dark">Items</h2>
+          <span className="text-[12px] text-text3">{lines.length} line{lines.length !== 1 ? "s" : ""}</span>
         </div>
 
-        <ul className="divide-y divide-[#F4F1EC]">
+        <ul className="divide-y divide-surface">
           {lines.map((l) => {
             const ing = l.ingredient_id ? ingredientById.get(l.ingredient_id) : null;
             const lineTotal = (Number(l.qty) || 0) * (Number(l.unit_cost) || 0);
@@ -229,7 +229,7 @@ export function NewPurchaseClient({
               <li key={l.key} className="p-3 sm:p-4">
                 <div className="grid grid-cols-12 gap-2 sm:gap-3 items-end">
                   <div className="col-span-12 sm:col-span-5">
-                    <label className="block text-[11px] font-semibold text-[#9C9485] mb-1">Ingredient</label>
+                    <label className="block text-[11px] font-semibold text-text3 mb-1">Ingredient</label>
                     <select
                       value={l.ingredient_id ?? ""}
                       onChange={(e) => pickIngredient(l.key, e.target.value)}
@@ -245,7 +245,7 @@ export function NewPurchaseClient({
                   </div>
 
                   <div className="col-span-5 sm:col-span-2">
-                    <label className="block text-[11px] font-semibold text-[#9C9485] mb-1">
+                    <label className="block text-[11px] font-semibold text-text3 mb-1">
                       Qty {ing ? `(${ing.unit})` : ""}
                     </label>
                     <input
@@ -261,7 +261,7 @@ export function NewPurchaseClient({
                   </div>
 
                   <div className="col-span-5 sm:col-span-3">
-                    <label className="block text-[11px] font-semibold text-[#9C9485] mb-1">Unit cost (KES)</label>
+                    <label className="block text-[11px] font-semibold text-text3 mb-1">Unit cost (KES)</label>
                     <input
                       type="number"
                       inputMode="decimal"
@@ -275,8 +275,8 @@ export function NewPurchaseClient({
                   </div>
 
                   <div className="col-span-2 sm:col-span-2 text-right">
-                    <p className="text-[11px] font-semibold text-[#9C9485] mb-1">Line</p>
-                    <p className="text-[14px] font-bold text-[#16130C]">{fmtKES(lineTotal)}</p>
+                    <p className="text-[11px] font-semibold text-text3 mb-1">Line</p>
+                    <p className="text-[14px] font-bold text-dark">{fmtKES(lineTotal)}</p>
                   </div>
 
                   {lines.length > 1 && (
@@ -284,7 +284,7 @@ export function NewPurchaseClient({
                       <button
                         type="button"
                         onClick={() => removeLine(l.key)}
-                        className="h-11 px-4 text-[12px] font-bold text-[#9C9485] hover:text-[#DC2626]"
+                        className="h-11 px-4 text-[12px] font-bold text-text3 hover:text-[#DC2626]"
                       >
                         Remove line
                       </button>
@@ -299,14 +299,14 @@ export function NewPurchaseClient({
         <button
           type="button"
           onClick={addLine}
-          className="w-full text-left px-4 py-3.5 text-[14px] font-semibold text-[#E8A020] hover:bg-[#E8A020]/5 border-t border-[#F4F1EC]"
+          className="w-full text-left px-4 py-3.5 text-[14px] font-semibold text-amber hover:bg-amber/5 border-t border-surface"
         >
           + Add line
         </button>
 
-        <div className="flex items-center justify-between p-4 border-t border-[#F4F1EC] bg-[#FAFAF8]">
-          <span className="text-[14px] font-semibold text-[#5E5848]">Expected total</span>
-          <span className="font-display text-[20px] font-bold text-[#16130C]">{fmtKES(total)}</span>
+        <div className="flex items-center justify-between p-4 border-t border-surface bg-canvas">
+          <span className="text-[14px] font-semibold text-text2">Expected total</span>
+          <span className="font-display text-[20px] font-bold text-dark">{fmtKES(total)}</span>
         </div>
       </div>
 
@@ -317,12 +317,12 @@ export function NewPurchaseClient({
       )}
 
       {/* Save actions — sticky on mobile */}
-      <div className="sticky bottom-0 sm:static bg-[#FAFAF8] sm:bg-transparent -mx-4 sm:mx-0 p-4 sm:p-0 border-t sm:border-0 border-[#E2DDD5] flex flex-col sm:flex-row gap-2">
+      <div className="sticky bottom-0 sm:static bg-canvas sm:bg-transparent -mx-4 sm:mx-0 p-4 sm:p-0 border-t sm:border-0 border-border flex flex-col sm:flex-row gap-2">
         <button
           type="button"
           onClick={() => save("sent")}
           disabled={!!busy}
-          className="bg-[#E8A020] text-[#16130C] font-bold text-[15px] h-[52px] rounded-full hover:bg-[#d4911c] disabled:opacity-50 flex-1 px-5"
+          className="bg-amber text-dark font-bold text-[15px] h-[52px] rounded-full hover:bg-[#d4911c] disabled:opacity-50 flex-1 px-5"
         >
           {busy === "sent" ? "Sending…" : "Send to supplier"}
         </button>
@@ -330,7 +330,7 @@ export function NewPurchaseClient({
           type="button"
           onClick={() => save("draft")}
           disabled={!!busy}
-          className="bg-white border border-[#E2DDD5] text-[#16130C] font-bold text-[15px] h-[52px] rounded-full hover:border-[#9C9485] disabled:opacity-50 flex-1 px-5"
+          className="bg-white border border-border text-dark font-bold text-[15px] h-[52px] rounded-full hover:border-text3 disabled:opacity-50 flex-1 px-5"
         >
           {busy === "draft" ? "Saving…" : "Save as draft"}
         </button>
@@ -346,7 +346,7 @@ function QuickSupplier({ onSubmit }: { onSubmit: (v: { name: string; phone: stri
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   return (
-    <div className="mt-3 p-3 rounded-xl border border-[#E2DDD5] bg-[#FAFAF8] space-y-2">
+    <div className="mt-3 p-3 rounded-xl border border-border bg-canvas space-y-2">
       <input className={inputCls} placeholder="Supplier name *" value={name} onChange={(e) => setName(e.target.value)} autoFocus />
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
         <input className={inputCls} type="tel" inputMode="tel" placeholder="Phone" value={phone} onChange={(e) => setPhone(e.target.value)} />
@@ -356,7 +356,7 @@ function QuickSupplier({ onSubmit }: { onSubmit: (v: { name: string; phone: stri
         type="button"
         onClick={() => name.trim() && onSubmit({ name: name.trim(), phone: phone.trim(), email: email.trim() })}
         disabled={!name.trim()}
-        className="bg-[#E8A020] text-[#16130C] font-bold text-[13px] px-5 h-[40px] rounded-full hover:bg-[#d4911c] disabled:opacity-50"
+        className="bg-amber text-dark font-bold text-[13px] px-5 h-[40px] rounded-full hover:bg-[#d4911c] disabled:opacity-50"
       >
         Add supplier
       </button>
