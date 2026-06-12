@@ -20,6 +20,11 @@ interface EditPartnerData {
   allowedListingTypes?: string[];
   domains?: string[];
   listingId?: string;
+  contactEmail?: string;
+  contactPhone?: string;
+  footerText?: string;
+  defaultCity?: string;
+  landingHtml?: string;
 }
 
 interface SanityListing {

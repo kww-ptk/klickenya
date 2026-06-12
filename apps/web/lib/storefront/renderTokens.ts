@@ -31,7 +31,7 @@ export function renderMenuHtml(sections: StorefrontMenu["menu_sections"] | null)
           (i) =>
             `<li class="kk-menu-item"><span class="kk-item-name">${esc(i.name)}</span>` +
             (i.description ? `<span class="kk-item-desc">${esc(i.description)}</span>` : "") +
-            `<span class="kk-item-price">KES ${i.price_kes}</span></li>`,
+            `<span class="kk-item-price">KSh ${i.price_kes.toLocaleString("en-KE")}</span></li>`,
         )
         .join("");
       return `<section class="kk-menu-section"><h3 class="kk-section-title">${esc(s.title)}</h3><ul class="kk-menu-list">${items}</ul></section>`;
