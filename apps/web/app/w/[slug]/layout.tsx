@@ -17,5 +17,8 @@ export default async function WStorefrontLayout({
       </div>
     );
   }
+  if (partner.landingHtml && partner.landingHtml.trim()) {
+    return <>{children}</>;
+  }
   return <StorefrontShell partner={partner}>{children}</StorefrontShell>;
 }

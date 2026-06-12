@@ -4,6 +4,7 @@ import { ReservationSheet } from "@/components/reservations/ReservationSheet";
 import { MenuWithFilters } from "@/components/menu/MenuWithFilters";
 import type { MenuSection } from "@/components/listings/detail/restaurant/MenuDisplay";
 import type { Partner } from "@/lib/partner/types";
+import { CustomLanding } from "@/components/storefront/CustomLanding";
 
 /* ── Helpers ────────────────────────────────────────────────────────────── */
 
@@ -40,6 +41,11 @@ function prepareSections(rawSections: StorefrontMenu["menu_sections"]): MenuSect
  */
 export async function RestaurantStorefront({ partner }: { partner: Partner }) {
   const restaurant = await getRestaurant(partner);
+
+  if (partner.landingHtml && partner.landingHtml.trim()) {
+    return <CustomLanding partner={partner} restaurant={restaurant} />;
+  }
+
   if (!restaurant) notFound();
 
   const { listing, menu, areas, timeWindows, restaurantPhone } = restaurant;
