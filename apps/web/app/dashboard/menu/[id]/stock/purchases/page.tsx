@@ -42,16 +42,16 @@ export default async function PurchasesPage({ params }: PageProps) {
   return (
     <div>
       <div className="mb-5">
-        <Link href={`/dashboard/menu/${menu.id}/stock`} className="text-[13px] text-[#9C9485] hover:text-[#16130C]">
+        <Link href={`/dashboard/menu/${menu.id}/stock`} className="text-[13px] text-text3 hover:text-dark">
           ← Back to Klickenya Kitchen
         </Link>
         <div className="flex items-center justify-between gap-3 mt-2 flex-wrap">
-          <h1 className="font-display text-[22px] lg:text-[28px] font-bold tracking-[-0.03em] text-[#16130C]">
+          <h1 className="font-display text-[22px] lg:text-[28px] font-bold tracking-[-0.03em] text-dark">
             Purchase orders
           </h1>
           <Link
             href={`/dashboard/menu/${menu.id}/stock/purchases/new`}
-            className="bg-[#E8A020] text-[#16130C] font-bold text-[13px] px-5 h-[44px] rounded-full hover:bg-[#d4911c] flex items-center shadow-sm"
+            className="bg-amber text-dark font-bold text-[13px] px-5 h-[44px] rounded-full hover:bg-[#d4911c] flex items-center shadow-sm"
           >
             + New PO
           </Link>

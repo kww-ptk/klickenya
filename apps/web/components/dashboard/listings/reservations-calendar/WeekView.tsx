@@ -176,7 +176,7 @@ export function WeekView({ reservations, menuName, onApprove, onDecline, onCance
     <div>
       {/* Week navigation header */}
       <div className="flex gap-1 mb-4 items-center">
-        <span className="text-[13px] font-semibold text-[#5E5848]">
+        <span className="text-[13px] font-semibold text-text2">
           Week of {new Intl.DateTimeFormat("en-KE", { month: "short", day: "numeric", timeZone: "Africa/Nairobi" }).format(new Date(`${mondayStr}T09:00:00Z`))}
         </span>
       </div>
@@ -191,11 +191,11 @@ export function WeekView({ reservations, menuName, onApprove, onDecline, onCance
               const isToday = d === todayStr;
               return (
                 <div key={d} className="flex-1 text-center pb-2">
-                  <span className={`text-[10px] font-bold uppercase tracking-wide ${isToday ? "text-[#E8A020]" : "text-[#9C9485]"}`}>
+                  <span className={`text-[10px] font-bold uppercase tracking-wide ${isToday ? "text-amber" : "text-text3"}`}>
                     {weekday}
                   </span>
                   <div className={`text-[15px] font-bold mx-auto w-7 h-7 flex items-center justify-center rounded-full ${
-                    isToday ? "bg-[#E8A020] text-white" : "text-[#16130C]"
+                    isToday ? "bg-amber text-white" : "text-dark"
                   }`}>
                     {day}
                   </div>
@@ -211,7 +211,7 @@ export function WeekView({ reservations, menuName, onApprove, onDecline, onCance
               {HOURS.map((h) => (
                 <div
                   key={h}
-                  className="absolute right-2 text-[11px] text-[#9C9485] tabular-nums"
+                  className="absolute right-2 text-[11px] text-text3 tabular-nums"
                   style={{ top: `${(h - START_HOUR) * ROW_HEIGHT - 6}px` }}
                 >
                   {h}
@@ -226,7 +226,7 @@ export function WeekView({ reservations, menuName, onApprove, onDecline, onCance
               return (
                 <div
                   key={d}
-                  className={`flex-1 relative border-l border-[#F4F1EC] ${isToday ? "bg-[#FFFBF4]" : "bg-white"}`}
+                  className={`flex-1 relative border-l border-surface ${isToday ? "bg-[#FFFBF4]" : "bg-white"}`}
                   style={{ height: `${gridHeight}px` }}
                 >
                   {/* Hour gridlines */}
@@ -234,12 +234,12 @@ export function WeekView({ reservations, menuName, onApprove, onDecline, onCance
                     <div key={h}>
                       {/* Full hour line */}
                       <div
-                        className="absolute left-0 right-0 border-t border-[#F4F1EC]"
+                        className="absolute left-0 right-0 border-t border-surface"
                         style={{ top: `${(h - START_HOUR) * ROW_HEIGHT}px` }}
                       />
                       {/* Half-hour line (dotted) */}
                       <div
-                        className="absolute left-0 right-0 border-t border-dashed border-[#F4F1EC]"
+                        className="absolute left-0 right-0 border-t border-dashed border-surface"
                         style={{ top: `${(h - START_HOUR) * ROW_HEIGHT + ROW_HEIGHT / 2}px` }}
                       />
                     </div>
@@ -300,19 +300,19 @@ export function WeekView({ reservations, menuName, onApprove, onDecline, onCance
       {popover && activeReservation && (
         <div
           onClick={(e) => e.stopPropagation()}
-          className="fixed z-50 w-[300px] bg-white rounded-xl border border-[#E2DDD5] shadow-xl"
+          className="fixed z-50 w-[300px] bg-white rounded-xl border border-border shadow-xl"
           style={{ top: `${Math.min(popover.top, window.innerHeight - 400)}px`, left: `${popover.left}px` }}
         >
           <div className="p-4 space-y-3">
             {/* Header */}
             <div className="flex items-start justify-between gap-2">
               <div>
-                <p className="text-[14px] font-bold text-[#16130C]">{activeReservation.guest_name}</p>
-                <p className="text-[11px] text-[#9C9485]">{formatPopoverTime(activeReservation.reserved_for)}</p>
+                <p className="text-[14px] font-bold text-dark">{activeReservation.guest_name}</p>
+                <p className="text-[11px] text-text3">{formatPopoverTime(activeReservation.reserved_for)}</p>
               </div>
               <button
                 onClick={() => setPopover(null)}
-                className="shrink-0 size-6 flex items-center justify-center rounded-full text-[#9C9485] hover:bg-[#F4F1EC] transition-colors"
+                className="shrink-0 size-6 flex items-center justify-center rounded-full text-text3 hover:bg-surface transition-colors"
               >
                 ×
               </button>
@@ -321,17 +321,17 @@ export function WeekView({ reservations, menuName, onApprove, onDecline, onCance
             {/* Details */}
             <div className="space-y-1.5 text-[12px]">
               <div className="flex justify-between">
-                <span className="text-[#9C9485]">Party size</span>
-                <span className="font-semibold text-[#16130C]">×{activeReservation.party_size}</span>
+                <span className="text-text3">Party size</span>
+                <span className="font-semibold text-dark">×{activeReservation.party_size}</span>
               </div>
               {activeReservation.area_name && (
                 <div className="flex justify-between">
-                  <span className="text-[#9C9485]">Area</span>
-                  <span className="font-semibold text-[#16130C]">{activeReservation.area_name}</span>
+                  <span className="text-text3">Area</span>
+                  <span className="font-semibold text-dark">{activeReservation.area_name}</span>
                 </div>
               )}
               <div className="flex justify-between">
-                <span className="text-[#9C9485]">Status</span>
+                <span className="text-text3">Status</span>
                 <span className={`font-bold uppercase text-[10px] px-2 py-0.5 rounded-full ${
                   activeReservation.status === "pending" ? "bg-amber-100 text-amber-700" :
                   activeReservation.status === "approved" ? "bg-green-100 text-green-700" :
@@ -339,21 +339,21 @@ export function WeekView({ reservations, menuName, onApprove, onDecline, onCance
                 }`}>{activeReservation.status}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-[#9C9485]">Phone</span>
-                <a href={`tel:${activeReservation.guest_phone}`} className="font-semibold text-[#E8A020] hover:underline">
+                <span className="text-text3">Phone</span>
+                <a href={`tel:${activeReservation.guest_phone}`} className="font-semibold text-amber hover:underline">
                   {activeReservation.guest_phone}
                 </a>
               </div>
               {activeReservation.guest_email && (
                 <div className="flex justify-between">
-                  <span className="text-[#9C9485]">Email</span>
-                  <span className="font-semibold text-[#16130C] truncate ml-2 text-right">{activeReservation.guest_email}</span>
+                  <span className="text-text3">Email</span>
+                  <span className="font-semibold text-dark truncate ml-2 text-right">{activeReservation.guest_email}</span>
                 </div>
               )}
             </div>
 
             {activeReservation.guest_message && (
-              <div className="bg-[#F4F1EC] rounded-lg p-2.5 text-[12px] text-[#5E5848] italic">
+              <div className="bg-surface rounded-lg p-2.5 text-[12px] text-text2 italic">
                 "{activeReservation.guest_message}"
               </div>
             )}
@@ -371,7 +371,7 @@ export function WeekView({ reservations, menuName, onApprove, onDecline, onCance
                 <button
                   onClick={() => { onApprove(activeReservation.id); setPopover(null); }}
                   disabled={updatingIds.has(activeReservation.id)}
-                  className="flex-1 h-8 rounded-full bg-[#16A34A] text-white text-[12px] font-bold hover:bg-[#15803D] transition-colors disabled:opacity-50"
+                  className="flex-1 h-8 rounded-full bg-green text-white text-[12px] font-bold hover:bg-[#15803D] transition-colors disabled:opacity-50"
                 >
                   Approve
                 </button>
@@ -389,14 +389,14 @@ export function WeekView({ reservations, menuName, onApprove, onDecline, onCance
                 <button
                   onClick={() => { onCancel(activeReservation.id); setPopover(null); }}
                   disabled={updatingIds.has(activeReservation.id)}
-                  className="w-full h-8 rounded-full border border-[#E2DDD5] text-[#9C9485] text-[12px] font-semibold hover:border-red-300 hover:text-[#DC2626] transition-colors disabled:opacity-50"
+                  className="w-full h-8 rounded-full border border-border text-text3 text-[12px] font-semibold hover:border-red-300 hover:text-[#DC2626] transition-colors disabled:opacity-50"
                 >
                   Cancel reservation
                 </button>
               </div>
             )}
             {activeReservation.status === "declined" && activeReservation.decline_reason && (
-              <div className="text-[11px] text-[#9C9485] bg-[#F4F1EC] rounded-lg p-2">
+              <div className="text-[11px] text-text3 bg-surface rounded-lg p-2">
                 Declined: {activeReservation.decline_reason}
               </div>
             )}
@@ -404,7 +404,7 @@ export function WeekView({ reservations, menuName, onApprove, onDecline, onCance
         </div>
       )}
 
-      <div className="mt-3 text-[11px] text-[#9C9485] flex gap-4">
+      <div className="mt-3 text-[11px] text-text3 flex gap-4">
         <span className="flex items-center gap-1.5"><span className="inline-block w-3 h-3 rounded-sm bg-amber-100 border border-amber-400" /> Pending</span>
         <span className="flex items-center gap-1.5"><span className="inline-block w-3 h-3 rounded-sm bg-green-100 border border-green-500" /> Approved</span>
         <span className="flex items-center gap-1.5"><span className="inline-block w-3 h-3 rounded-sm bg-gray-100 border border-gray-400 opacity-40" /> Other</span>

@@ -87,9 +87,9 @@ export function ImageUploader({
   return (
     <div>
       {label && (
-        <p className="text-sm font-semibold text-[#16130C] mb-2">{label}</p>
+        <p className="text-sm font-semibold text-dark mb-2">{label}</p>
       )}
-      {hint && <p className="text-xs text-[#9C9485] mb-3">{hint}</p>}
+      {hint && <p className="text-xs text-text3 mb-3">{hint}</p>}
 
       {/* Drop zone */}
       {canAddMore && (
@@ -103,27 +103,27 @@ export function ImageUploader({
           onDrop={handleDrop}
           className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-colors mb-3 ${
             dragging
-              ? "border-[#E8A020] bg-[#FDF8F0]"
-              : "border-[#D4CFC6] hover:border-[#E8A020]/60 bg-[#FAFAF8]"
+              ? "border-amber bg-[#FDF8F0]"
+              : "border-[#D4CFC6] hover:border-amber/60 bg-canvas"
           }`}
         >
           {uploading ? (
             <div className="flex flex-col items-center gap-2">
-              <svg className="size-6 animate-spin text-[#E8A020]" fill="none" viewBox="0 0 24 24">
+              <svg className="size-6 animate-spin text-amber" fill="none" viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
               </svg>
-              <p className="text-sm text-[#5E5848]">Uploading…</p>
+              <p className="text-sm text-text2">Uploading…</p>
             </div>
           ) : (
             <div className="flex flex-col items-center gap-2">
-              <svg className="size-8 text-[#9C9485]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <svg className="size-8 text-text3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
               </svg>
-              <p className="text-sm text-[#5E5848]">
-                <span className="font-semibold text-[#E8A020]">Click to upload</span> or drag & drop
+              <p className="text-sm text-text2">
+                <span className="font-semibold text-amber">Click to upload</span> or drag & drop
               </p>
-              <p className="text-xs text-[#9C9485]">
+              <p className="text-xs text-text3">
                 JPEG, PNG, WebP · max 10 MB · up to {maxImages} photos
               </p>
             </div>
@@ -148,7 +148,7 @@ export function ImageUploader({
       {value.length > 0 && (
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           {value.map((img) => (
-            <div key={img.assetId} className="relative group rounded-xl overflow-hidden border border-[#E2DDD5] bg-[#F7F5F2]">
+            <div key={img.assetId} className="relative group rounded-xl overflow-hidden border border-border bg-[#F7F5F2]">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={`${img.url}?w=300&h=200&fit=crop&auto=format`}
@@ -171,7 +171,7 @@ export function ImageUploader({
                   value={img.alt}
                   onChange={(e) => handleAltChange(img.assetId, e.target.value)}
                   placeholder="Caption (optional)"
-                  className="w-full text-xs border-0 border-b border-[#E2DDD5] bg-transparent text-[#16130C] placeholder-[#9C9485] focus:outline-none focus:border-[#E8A020] pb-0.5"
+                  className="w-full text-xs border-0 border-b border-border bg-transparent text-dark placeholder-text3 focus:outline-none focus:border-amber pb-0.5"
                 />
               </div>
             </div>

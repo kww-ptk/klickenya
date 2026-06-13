@@ -397,12 +397,12 @@ export default async function HomePage() {
               return (
                 <div
                   key={step.title}
-                  className="group relative rounded-2xl border border-white/[0.06] bg-white/[0.03] backdrop-blur-sm p-7 hover:bg-white/[0.06] hover:border-[#E8A020]/20 transition-all duration-300"
+                  className="group relative rounded-2xl border border-white/[0.06] bg-white/[0.03] backdrop-blur-sm p-7 hover:bg-white/[0.06] hover:border-amber/20 transition-all duration-300"
                 >
-                  <span className="inline-flex items-center justify-center size-[48px] rounded-[14px] bg-[#E8A020]/10 text-[#E8A020] text-[20px] font-bold mb-5">
+                  <span className="inline-flex items-center justify-center size-[48px] rounded-[14px] bg-amber/10 text-amber text-[20px] font-bold mb-5">
                     {String(i + 1).padStart(2, "0")}
                   </span>
-                  <div className="size-11 rounded-[14px] bg-[#E8A020]/10 flex items-center justify-center mb-4">
+                  <div className="size-11 rounded-[14px] bg-amber/10 flex items-center justify-center mb-4">
                     {step.icon}
                   </div>
                   <h3 className="text-[16px] font-semibold text-white mb-2">

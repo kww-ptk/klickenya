@@ -151,14 +151,14 @@ export default async function AdminAnalyticsPage({
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="font-display text-[28px] font-bold text-[#16130C]">Analytics</h1>
-        <div className="flex items-center gap-1 bg-white rounded-xl border border-[#E2DDD5] p-1">
+        <h1 className="font-display text-[28px] font-bold text-dark">Analytics</h1>
+        <div className="flex items-center gap-1 bg-white rounded-xl border border-border p-1">
           {[7, 30, 90].map((d) => (
             <Link
               key={d}
               href={`/admin/analytics?range=${d}`}
               className={`px-3 py-1.5 text-[12px] font-semibold rounded-lg transition-colors ${
-                days === d ? "bg-[#E8A020] text-white" : "text-[#9C9485] hover:bg-[#F5F3F0]"
+                days === d ? "bg-amber text-white" : "text-text3 hover:bg-[#F5F3F0]"
               }`}
             >
               {d}d
@@ -177,9 +177,9 @@ export default async function AdminAnalyticsPage({
           { label: "Most Viewed", value: mostViewed, small: true },
           { label: "Most Contacted", value: mostContactedTitle, small: true },
         ].map((s) => (
-          <div key={s.label} className="bg-white rounded-xl border border-[#E2DDD5] p-4">
-            <p className="text-[11px] text-[#9C9485] font-medium mb-1">{s.label}</p>
-            <p className={`font-display font-bold tracking-[-0.02em] text-[#16130C] ${s.small ? "text-[14px] truncate" : "text-[22px]"}`}>
+          <div key={s.label} className="bg-white rounded-xl border border-border p-4">
+            <p className="text-[11px] text-text3 font-medium mb-1">{s.label}</p>
+            <p className={`font-display font-bold tracking-[-0.02em] text-dark ${s.small ? "text-[14px] truncate" : "text-[22px]"}`}>
               {s.value}
             </p>
             {s.sub && (

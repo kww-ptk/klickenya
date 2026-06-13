@@ -98,7 +98,7 @@ export default async function HostProfilePage({ params }: PageProps) {
   const totalCount = verifiedListings.length + hostEvents.length;
 
   return (
-    <div className="min-h-screen bg-[#FAFAF8]">
+    <div className="min-h-screen bg-canvas">
       <ProfileHero
         name={host.name}
         photo={host.photo}
@@ -123,10 +123,10 @@ export default async function HostProfilePage({ params }: PageProps) {
         {eventCards.length > 0 && (
           <section className="mb-12">
             <div className="mb-5">
-              <h2 className="font-display text-[20px] font-bold text-[#16130C] tracking-[-0.02em]">
+              <h2 className="font-display text-[20px] font-bold text-dark tracking-[-0.02em]">
                 Events by {host.name}
               </h2>
-              <p className="text-[14px] text-[#9C9485] mt-1">
+              <p className="text-[14px] text-text3 mt-1">
                 Upcoming events, parties and experiences organised by {host.name}
               </p>
             </div>
@@ -141,18 +141,18 @@ export default async function HostProfilePage({ params }: PageProps) {
 
         {/* ── Listings section ── */}
         <section className="mb-12">
-          <h2 className="font-display text-[20px] font-bold text-[#16130C] tracking-[-0.02em] mb-5">
+          <h2 className="font-display text-[20px] font-bold text-dark tracking-[-0.02em] mb-5">
             Listings by {host.name}
           </h2>
 
           {cards.length > 0 ? (
             <ListingGrid listings={cards} />
           ) : (
-            <div className="bg-white rounded-2xl border border-[#E2DDD5] p-10 text-center shadow-sm">
-              <p className="text-[15px] font-semibold text-[#16130C] mb-1">
+            <div className="bg-white rounded-2xl border border-border p-10 text-center shadow-sm">
+              <p className="text-[15px] font-semibold text-dark mb-1">
                 No verified listings yet
               </p>
-              <p className="text-[13px] text-[#9C9485]">
+              <p className="text-[13px] text-text3">
                 Listings will appear here once verified.
               </p>
             </div>
@@ -161,11 +161,11 @@ export default async function HostProfilePage({ params }: PageProps) {
 
         {/* Reviews placeholder */}
         <section>
-          <h2 className="font-display text-[20px] font-bold text-[#16130C] tracking-[-0.02em] mb-4">
+          <h2 className="font-display text-[20px] font-bold text-dark tracking-[-0.02em] mb-4">
             Reviews
           </h2>
-          <div className="bg-white rounded-2xl border border-[#E2DDD5] p-8 text-center shadow-sm">
-            <p className="text-[14px] text-[#9C9485]">
+          <div className="bg-white rounded-2xl border border-border p-8 text-center shadow-sm">
+            <p className="text-[14px] text-text3">
               Reviews coming soon
             </p>
           </div>

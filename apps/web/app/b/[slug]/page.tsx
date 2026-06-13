@@ -71,15 +71,15 @@ export default async function BookingWidgetPage({ params }: PageProps) {
   }));
 
   return (
-    <div className="min-h-screen bg-[#FAFAF8] flex flex-col">
+    <div className="min-h-screen bg-canvas flex flex-col">
       {/* Header */}
-      <header className="bg-white border-b border-[#E2DDD5] px-5 py-4">
+      <header className="bg-white border-b border-border px-5 py-4">
         <div className="max-w-[520px] mx-auto">
-          <h1 className="font-display text-[20px] font-bold text-[#16130C] tracking-[-0.02em]">
+          <h1 className="font-display text-[20px] font-bold text-dark tracking-[-0.02em]">
             {property.name}
           </h1>
           {property.city && (
-            <p className="text-[13px] text-[#9C9485]">{property.city}</p>
+            <p className="text-[13px] text-text3">{property.city}</p>
           )}
         </div>
       </header>
@@ -100,12 +100,12 @@ export default async function BookingWidgetPage({ params }: PageProps) {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-[#E2DDD5] px-5 py-4 text-center">
+      <footer className="border-t border-border px-5 py-4 text-center">
         <Link
           href="https://klickenya.com"
-          className="text-[12px] text-[#9C9485] hover:text-[#16130C] transition-colors"
+          className="text-[12px] text-text3 hover:text-dark transition-colors"
         >
-          Powered by <span className="font-semibold text-[#E8A020]">Klickenya</span>
+          Powered by <span className="font-semibold text-amber">Klickenya</span>
         </Link>
       </footer>
     </div>

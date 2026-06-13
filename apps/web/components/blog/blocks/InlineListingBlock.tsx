@@ -32,7 +32,7 @@ export function InlineListingBlock({ value }: { value: InlineListingValue }) {
         )}
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-[10.5px] font-extrabold tracking-[.06em] uppercase text-[#E8A020] mb-0.5">{value.label || typeLabel}</p>
+        <p className="text-[10.5px] font-extrabold tracking-[.06em] uppercase text-amber mb-0.5">{value.label || typeLabel}</p>
         <p className="text-[14px] font-bold text-[#18160F] mb-0.5 truncate">{listing.title}</p>
         <p className="text-[12.5px] text-[#9B9589]">{listing.city}{listing.tags?.length ? ` · ${listing.tags[0]}` : ''}</p>
       </div>

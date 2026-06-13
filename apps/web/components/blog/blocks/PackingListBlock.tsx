@@ -42,12 +42,12 @@ export function PackingListBlock({ value, slug }: { value: PackingListValue; slu
             onClick={() => toggle(i)}
             className={`flex items-center gap-2.5 py-2.5 px-3.5 rounded-[16px] border text-[14px] text-left select-none cursor-pointer transition-colors ${
               checked[i]
-                ? 'bg-[rgba(13,115,119,.08)] border-[rgba(13,115,119,.2)] text-[#18160F] line-through decoration-[#0D7377]'
+                ? 'bg-[rgba(13,115,119,.08)] border-[rgba(13,115,119,.2)] text-[#18160F] line-through decoration-teal'
                 : 'bg-[#F4F2EE] border-[#E4E0D8] text-[#5C574E] hover:bg-[#EDEAE4]'
             }`}
           >
             <span className={`w-[18px] h-[18px] rounded-[5px] border-[1.5px] shrink-0 flex items-center justify-center transition-all ${
-              checked[i] ? 'bg-[#0D7377] border-[#0D7377]' : 'border-[#D5D0C7]'
+              checked[i] ? 'bg-teal border-teal' : 'border-[#D5D0C7]'
             }`}>
               {checked[i] && <svg width="10" height="10" fill="none" stroke="white" strokeWidth="2.5" viewBox="0 0 24 24"><path d="m5 13 4 4L19 7"/></svg>}
             </span>
@@ -57,7 +57,7 @@ export function PackingListBlock({ value, slug }: { value: PackingListValue; slu
         ))}
       </div>
       <div className="h-1 bg-[#E4E0D8] rounded-sm mt-3.5 overflow-hidden">
-        <div className="h-full bg-[#0D7377] rounded-sm transition-[width] duration-400 ease-out" style={{ width: `${pct}%` }} />
+        <div className="h-full bg-teal rounded-sm transition-[width] duration-400 ease-out" style={{ width: `${pct}%` }} />
       </div>
       <p className="text-[12.5px] text-[#9B9589] mt-1.5 font-medium">{count} of {items.length} packed</p>
     </div>

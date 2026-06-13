@@ -34,7 +34,7 @@ export function ExportCSVButton({ attendees, eventTitle }: ExportCSVButtonProps)
   return (
     <button
       onClick={handleExport}
-      className="flex items-center gap-1.5 px-4 py-2 rounded-lg border border-[#E2DDD5] text-[13px] font-semibold text-text hover:bg-surface transition-colors"
+      className="flex items-center gap-1.5 px-4 py-2 rounded-lg border border-border text-[13px] font-semibold text-text hover:bg-surface transition-colors"
     >
       <Download className="size-3.5" />
       Export CSV

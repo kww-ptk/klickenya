@@ -35,8 +35,8 @@ export function PosTabBar() {
               href={tab.href}
               className={`flex-1 max-w-[140px] flex flex-col items-center justify-center gap-0.5 rounded-xl mx-0.5 my-2 text-[11px] font-semibold transition-colors ${
                 active
-                  ? "bg-[#252019] text-[#E8A020]"
-                  : "text-[#9C9485] hover:text-white"
+                  ? "bg-[#252019] text-amber"
+                  : "text-text3 hover:text-white"
               }`}
             >
               <Icon className="w-5 h-5" />

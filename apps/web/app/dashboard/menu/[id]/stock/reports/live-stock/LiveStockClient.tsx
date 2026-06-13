@@ -41,7 +41,7 @@ function coverTone(days: number | null, qty: number, threshold: number | null): 
   if (threshold != null && qty <= threshold) {
     return { cls: "bg-rose-100 text-rose-700", label: "Below threshold" };
   }
-  if (days == null) return { cls: "bg-[#F4F1EC] text-[#5E5848]", label: "—" };
+  if (days == null) return { cls: "bg-surface text-text2", label: "—" };
   if (days < 3) return { cls: "bg-rose-100 text-rose-700", label: `${days.toFixed(1)}d` };
   if (days < 7) return { cls: "bg-amber-100 text-amber-800", label: `${days.toFixed(1)}d` };
   if (days > 90) return { cls: "bg-emerald-100 text-emerald-700", label: "90d+" };
@@ -84,12 +84,12 @@ export function LiveStockClient({ menuId, rows }: { menuId: string; rows: LiveSt
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search ingredients…"
-          className="flex-1 border border-[#E2DDD5] rounded-xl px-3 py-3 text-[14px] bg-white focus:outline-none focus:border-[#E8A020]"
+          className="flex-1 border border-border rounded-xl px-3 py-3 text-[14px] bg-white focus:outline-none focus:border-amber"
         />
         <select
           value={sort}
           onChange={(e) => setSort(e.target.value as SortKey)}
-          className="border border-[#E2DDD5] rounded-xl px-3 py-3 text-[14px] bg-white focus:outline-none focus:border-[#E8A020]"
+          className="border border-border rounded-xl px-3 py-3 text-[14px] bg-white focus:outline-none focus:border-amber"
         >
           <option value="cover">Sort: days of cover (low → high)</option>
           <option value="name">Sort: name</option>
@@ -98,14 +98,14 @@ export function LiveStockClient({ menuId, rows }: { menuId: string; rows: LiveSt
         </select>
       </div>
 
-      <div className="bg-white rounded-2xl border border-[#E2DDD5] overflow-hidden">
+      <div className="bg-white rounded-2xl border border-border overflow-hidden">
         {sorted.length === 0 ? (
-          <p className="p-6 text-center text-[14px] text-[#9C9485]">No ingredients to show.</p>
+          <p className="p-6 text-center text-[14px] text-text3">No ingredients to show.</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-[#FAFAF8] border-b border-[#E2DDD5]">
-                <tr className="text-left text-[11px] font-bold uppercase tracking-wide text-[#9C9485]">
+              <thead className="bg-canvas border-b border-border">
+                <tr className="text-left text-[11px] font-bold uppercase tracking-wide text-text3">
                   <th className="px-4 py-2.5">Ingredient</th>
                   <th className="px-4 py-2.5 text-right">On hand</th>
                   <th className="px-4 py-2.5 text-right hidden sm:table-cell">Value</th>
@@ -114,7 +114,7 @@ export function LiveStockClient({ menuId, rows }: { menuId: string; rows: LiveSt
                   <th className="px-4 py-2.5 hidden md:table-cell">Last movement</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#F4F1EC]">
+              <tbody className="divide-y divide-surface">
                 {sorted.map((r) => {
                   const tone = coverTone(
                     r.days_of_cover == null ? null : Number(r.days_of_cover),
@@ -126,18 +126,18 @@ export function LiveStockClient({ menuId, rows }: { menuId: string; rows: LiveSt
                       <td className="px-4 py-3">
                         <Link
                           href={`/dashboard/menu/${menuId}/stock/movements?ingredient_id=${r.ingredient_id}`}
-                          className="font-semibold text-[#16130C] hover:text-[#E8A020]"
+                          className="font-semibold text-dark hover:text-amber"
                         >
                           {r.ingredient_name}
                         </Link>
                       </td>
-                      <td className="px-4 py-3 text-right whitespace-nowrap text-[#16130C] font-semibold">
+                      <td className="px-4 py-3 text-right whitespace-nowrap text-dark font-semibold">
                         {fmt(Number(r.current_qty))} {r.unit}
                       </td>
-                      <td className="px-4 py-3 text-right whitespace-nowrap text-[#5E5848] hidden sm:table-cell">
+                      <td className="px-4 py-3 text-right whitespace-nowrap text-text2 hidden sm:table-cell">
                         {fmtKES(Number(r.current_value_kes))}
                       </td>
-                      <td className="px-4 py-3 text-right whitespace-nowrap text-[#9C9485] hidden md:table-cell">
+                      <td className="px-4 py-3 text-right whitespace-nowrap text-text3 hidden md:table-cell">
                         {fmt(Number(r.avg_daily_consumption_14d))} {r.unit}/d
                       </td>
                       <td className="px-4 py-3 text-right whitespace-nowrap">
@@ -145,7 +145,7 @@ export function LiveStockClient({ menuId, rows }: { menuId: string; rows: LiveSt
                           {tone.label}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-[#9C9485] hidden md:table-cell">
+                      <td className="px-4 py-3 text-text3 hidden md:table-cell">
                         {fmtRel(r.last_movement_at)}
                       </td>
                     </tr>

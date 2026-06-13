@@ -453,12 +453,12 @@ export function StayBookingSidebar({
   if (sent) {
     return (
       <div className="text-center py-6">
-        <div className="w-14 h-14 rounded-full bg-[#16A34A]/10 flex items-center justify-center mx-auto mb-3">
-          <svg className="size-7 text-[#16A34A]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+        <div className="w-14 h-14 rounded-full bg-green/10 flex items-center justify-center mx-auto mb-3">
+          <svg className="size-7 text-green" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
         </div>
-        <p className="font-display text-[18px] font-bold text-[#16130C] mb-1">Enquiry sent!</p>
-        <p className="text-[13px] text-[#9C9485]">The host will reply within 24 hours.</p>
-        <button onClick={() => { setSent(false); setSelectedRoom(null); setResults([]); }} className="mt-4 text-[13px] font-semibold text-[#E8A020]">Check different dates</button>
+        <p className="font-display text-[18px] font-bold text-dark mb-1">Enquiry sent!</p>
+        <p className="text-[13px] text-text3">The host will reply within 24 hours.</p>
+        <button onClick={() => { setSent(false); setSelectedRoom(null); setResults([]); }} className="mt-4 text-[13px] font-semibold text-amber">Check different dates</button>
       </div>
     );
   }
@@ -475,41 +475,41 @@ export function StayBookingSidebar({
           const displayPrice = lowestRoomPrice > 0 ? lowestRoomPrice : (price > 0 ? price : 0);
           return displayPrice > 0 ? (
             <div className="flex items-baseline gap-1.5 mb-1">
-              <span className="text-[13px] text-[#9C9485]">From</span>
-              <span className="font-display text-[24px] font-extrabold tracking-[-0.02em] text-[#16130C]">{fmt(displayPrice)}</span>
-              <span className="text-[14px] text-[#9C9485]">/ {priceUnit}</span>
+              <span className="text-[13px] text-text3">From</span>
+              <span className="font-display text-[24px] font-extrabold tracking-[-0.02em] text-dark">{fmt(displayPrice)}</span>
+              <span className="text-[14px] text-text3">/ {priceUnit}</span>
             </div>
           ) : (
             <div className="mb-1">
-              <p className="font-display text-[20px] font-extrabold tracking-[-0.02em] text-[#16130C]">Pick your dates</p>
-              <p className="text-[13px] text-[#9C9485]">Check availability and pricing</p>
+              <p className="font-display text-[20px] font-extrabold tracking-[-0.02em] text-dark">Pick your dates</p>
+              <p className="text-[13px] text-text3">Check availability and pricing</p>
             </div>
           );
         })()}
 
         {/* Direct booking indicator */}
-        <div className="flex items-center gap-2 px-3 py-2 bg-[#16A34A]/5 rounded-xl border border-[#16A34A]/15">
+        <div className="flex items-center gap-2 px-3 py-2 bg-green/5 rounded-xl border border-green/15">
           <span className="relative flex size-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#16A34A] opacity-75" />
-            <span className="relative inline-flex size-2 rounded-full bg-[#16A34A]" />
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green opacity-75" />
+            <span className="relative inline-flex size-2 rounded-full bg-green" />
           </span>
           <div>
-            <p className="text-[12px] font-semibold text-[#16A34A]">Direct booking available</p>
-            <p className="text-[10px] text-[#9C9485]">No OTA fees · Instant confirmation</p>
+            <p className="text-[12px] font-semibold text-green">Direct booking available</p>
+            <p className="text-[10px] text-text3">No OTA fees · Instant confirmation</p>
           </div>
         </div>
 
         {/* Date fields — click to expand calendar inline */}
-        <button type="button" onClick={() => setShowDatePicker(!showDatePicker)} className={cn("w-full grid grid-cols-2 border rounded-[14px] overflow-hidden text-left transition-colors", showDatePicker ? "border-[#E8A020]" : "border-[#E2DDD5] hover:border-[#9C9485]")}>
-          <div className="p-3 border-r border-[#E2DDD5]">
-            <p className="text-[10px] font-bold text-[#9C9485] uppercase tracking-wide">Check-in</p>
-            <p className={cn("text-[14px] font-semibold", checkIn ? "text-[#16130C]" : "text-[#9C9485]")}>
+        <button type="button" onClick={() => setShowDatePicker(!showDatePicker)} className={cn("w-full grid grid-cols-2 border rounded-[14px] overflow-hidden text-left transition-colors", showDatePicker ? "border-amber" : "border-border hover:border-text3")}>
+          <div className="p-3 border-r border-border">
+            <p className="text-[10px] font-bold text-text3 uppercase tracking-wide">Check-in</p>
+            <p className={cn("text-[14px] font-semibold", checkIn ? "text-dark" : "text-text3")}>
               {checkIn ? fmtDate(checkIn) : "Add date"}
             </p>
           </div>
           <div className="p-3">
-            <p className="text-[10px] font-bold text-[#9C9485] uppercase tracking-wide">Check-out</p>
-            <p className={cn("text-[14px] font-semibold", checkOut ? "text-[#16130C]" : "text-[#9C9485]")}>
+            <p className="text-[10px] font-bold text-text3 uppercase tracking-wide">Check-out</p>
+            <p className={cn("text-[14px] font-semibold", checkOut ? "text-dark" : "text-text3")}>
               {checkOut ? fmtDate(checkOut) : "Add date"}
             </p>
           </div>
@@ -517,7 +517,7 @@ export function StayBookingSidebar({
 
         {/* Inline calendar — expands below dates */}
         {showDatePicker && (
-          <div className="border border-[#E2DDD5] rounded-[14px] p-3 bg-[#FAFAF8]">
+          <div className="border border-border rounded-[14px] p-3 bg-canvas">
             <DateRangePicker
               checkIn={checkIn}
               checkOut={checkOut}
@@ -535,43 +535,43 @@ export function StayBookingSidebar({
           const cap = maxGuests > 0 ? maxGuests : 20;
           const total = guests + children;
           return (
-            <div className="border border-[#E2DDD5] rounded-[14px] p-3 space-y-2.5">
+            <div className="border border-border rounded-[14px] p-3 space-y-2.5">
               {/* Adults */}
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-[12px] font-semibold text-[#16130C]">Adults</p>
+                  <p className="text-[12px] font-semibold text-dark">Adults</p>
                 </div>
                 <div className="flex items-center gap-3">
-                  <button type="button" onClick={() => setGuests(guests - 1)} className="size-7 rounded-full border border-[#E2DDD5] flex items-center justify-center text-[#5E5848] hover:bg-[#F4F1EC] disabled:opacity-30 text-[13px]" disabled={guests <= 1}>-</button>
-                  <span className="text-[14px] font-semibold text-[#16130C] w-5 text-center">{guests}</span>
-                  <button type="button" onClick={() => setGuests(guests + 1)} className="size-7 rounded-full border border-[#E2DDD5] flex items-center justify-center text-[#5E5848] hover:bg-[#F4F1EC] disabled:opacity-30 text-[13px]" disabled={total >= cap}>+</button>
+                  <button type="button" onClick={() => setGuests(guests - 1)} className="size-7 rounded-full border border-border flex items-center justify-center text-text2 hover:bg-surface disabled:opacity-30 text-[13px]" disabled={guests <= 1}>-</button>
+                  <span className="text-[14px] font-semibold text-dark w-5 text-center">{guests}</span>
+                  <button type="button" onClick={() => setGuests(guests + 1)} className="size-7 rounded-full border border-border flex items-center justify-center text-text2 hover:bg-surface disabled:opacity-30 text-[13px]" disabled={total >= cap}>+</button>
                 </div>
               </div>
               {/* Children */}
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-[12px] font-semibold text-[#16130C]">Children</p>
-                  <p className="text-[10px] text-[#9C9485]">Under 12 years old</p>
+                  <p className="text-[12px] font-semibold text-dark">Children</p>
+                  <p className="text-[10px] text-text3">Under 12 years old</p>
                 </div>
                 <div className="flex items-center gap-3">
-                  <button type="button" onClick={() => setChildren(children - 1)} className="size-7 rounded-full border border-[#E2DDD5] flex items-center justify-center text-[#5E5848] hover:bg-[#F4F1EC] disabled:opacity-30 text-[13px]" disabled={children <= 0}>-</button>
-                  <span className="text-[14px] font-semibold text-[#16130C] w-5 text-center">{children}</span>
-                  <button type="button" onClick={() => setChildren(children + 1)} className="size-7 rounded-full border border-[#E2DDD5] flex items-center justify-center text-[#5E5848] hover:bg-[#F4F1EC] disabled:opacity-30 text-[13px]" disabled={total >= cap}>+</button>
+                  <button type="button" onClick={() => setChildren(children - 1)} className="size-7 rounded-full border border-border flex items-center justify-center text-text2 hover:bg-surface disabled:opacity-30 text-[13px]" disabled={children <= 0}>-</button>
+                  <span className="text-[14px] font-semibold text-dark w-5 text-center">{children}</span>
+                  <button type="button" onClick={() => setChildren(children + 1)} className="size-7 rounded-full border border-border flex items-center justify-center text-text2 hover:bg-surface disabled:opacity-30 text-[13px]" disabled={total >= cap}>+</button>
                 </div>
               </div>
             </div>
           );
         })()}
 
-        <button type="button" onClick={() => { setModalCheckIn(checkIn); setModalCheckOut(checkOut); setModalGuests(guests); setModalChildren(children); checkAvailability(); }} disabled={!checkIn || !checkOut || checkOut <= checkIn || checking} className={cn("w-full py-3.5 rounded-[18px] text-[15px] font-bold transition-all duration-200", "bg-gradient-to-r from-[#E8A020] to-[#d4911c] text-[#16130C]", "shadow-[0_4px_14px_rgba(232,160,32,0.35)]", "hover:shadow-[0_6px_20px_rgba(232,160,32,0.45)] hover:-translate-y-0.5", "disabled:opacity-50 disabled:pointer-events-none")}>
+        <button type="button" onClick={() => { setModalCheckIn(checkIn); setModalCheckOut(checkOut); setModalGuests(guests); setModalChildren(children); checkAvailability(); }} disabled={!checkIn || !checkOut || checkOut <= checkIn || checking} className={cn("w-full py-3.5 rounded-[18px] text-[15px] font-bold transition-all duration-200", "bg-gradient-to-r from-amber to-[#d4911c] text-dark", "shadow-[0_4px_14px_rgba(232,160,32,0.35)]", "hover:shadow-[0_6px_20px_rgba(232,160,32,0.45)] hover:-translate-y-0.5", "disabled:opacity-50 disabled:pointer-events-none")}>
           {checking ? "Checking..." : "Check availability"}
         </button>
 
         {error && !showModal && <p className="text-[13px] text-red-600 text-center">{error}</p>}
-        <p className="text-[12px] text-[#9C9485] text-center">You won&apos;t be charged yet</p>
+        <p className="text-[12px] text-text3 text-center">You won&apos;t be charged yet</p>
 
         {/* Trust badges */}
-        <div className="flex items-center justify-center gap-4 pt-2 border-t border-[#E2DDD5] text-[10px] text-[#9C9485]">
+        <div className="flex items-center justify-center gap-4 pt-2 border-t border-border text-[10px] text-text3">
           <span className="flex items-center gap-1">🔒 Secure</span>
           <span className="flex items-center gap-1">✓ Instant confirm</span>
           <span className="flex items-center gap-1">💬 Direct with host</span>
@@ -586,11 +586,11 @@ export function StayBookingSidebar({
           <div className={cn("relative w-full max-h-[94vh] lg:max-h-[88vh] bg-white rounded-t-3xl lg:rounded-2xl shadow-2xl overflow-hidden flex flex-col lg:flex-row", step === "dates" ? "lg:max-w-[1060px]" : "lg:max-w-[900px]")}>
 
             {/* ── LEFT: Room preview (desktop only) ── */}
-            <div className="hidden lg:flex lg:w-[400px] bg-[#F4F1EC] flex-col shrink-0 overflow-hidden">
+            <div className="hidden lg:flex lg:w-[400px] bg-surface flex-col shrink-0 overflow-hidden">
               {previewRoom ? (
                 <>
                   {/* Room gallery */}
-                  <div className="relative h-[260px] bg-[#E2DDD5]">
+                  <div className="relative h-[260px] bg-border">
                     {previewRoom.photo ? (
                       <Image src={previewRoom.photo} alt={previewRoom.name} fill className="object-cover" sizes="400px" unoptimized={!isOptimizableUrl(previewRoom.photo)} />
                     ) : (
@@ -598,15 +598,15 @@ export function StayBookingSidebar({
                     )}
                   </div>
                   <div className="flex-1 overflow-y-auto p-5">
-                    <h3 className="font-display text-[20px] font-bold text-[#16130C] mb-1">{previewRoom.name}</h3>
-                    <p className="text-[13px] text-[#9C9485] mb-3">
+                    <h3 className="font-display text-[20px] font-bold text-dark mb-1">{previewRoom.name}</h3>
+                    <p className="text-[13px] text-text3 mb-3">
                       Sleeps {previewRoom.capacity}{previewRoom.bedType ? ` · ${previewRoom.bedType} bed` : ""}
                     </p>
                     {previewRoom.amenities && previewRoom.amenities.length > 0 && (
                       <div className="flex flex-wrap gap-2 mb-4">
                         {previewRoom.amenities.map((a) => (
-                          <span key={a} className="inline-flex items-center gap-1 text-[12px] text-[#5E5848] bg-white rounded-full px-2.5 py-1">
-                            <svg className="size-3 text-[#E8A020]" fill="currentColor" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                          <span key={a} className="inline-flex items-center gap-1 text-[12px] text-text2 bg-white rounded-full px-2.5 py-1">
+                            <svg className="size-3 text-amber" fill="currentColor" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
                             {a}
                           </span>
                         ))}
@@ -616,15 +616,15 @@ export function StayBookingSidebar({
                     {previewRoom.photos && previewRoom.photos.length > 1 && (
                       <div className="grid grid-cols-2 gap-2">
                         {previewRoom.photos.slice(1, 5).map((url, i) => (
-                          <div key={i} className="relative aspect-[4/3] rounded-lg overflow-hidden bg-[#E2DDD5]">
+                          <div key={i} className="relative aspect-[4/3] rounded-lg overflow-hidden bg-border">
                             <Image src={url} alt="" fill className="object-cover" sizes="180px" unoptimized={!isOptimizableUrl(url)} />
                           </div>
                         ))}
                       </div>
                     )}
                     <div className="mt-4 flex items-baseline gap-1">
-                      <span className="text-[22px] font-bold text-[#E8A020]">{fmt(previewRoom.price)}</span>
-                      <span className="text-[13px] text-[#9C9485]">/ night</span>
+                      <span className="text-[22px] font-bold text-amber">{fmt(previewRoom.price)}</span>
+                      <span className="text-[13px] text-text3">/ night</span>
                     </div>
                   </div>
                 </>
@@ -635,7 +635,7 @@ export function StayBookingSidebar({
                     const roomPrices = (sanityRooms ?? []).map((r) => r.pricePerNight).filter((p) => p > 0);
                     const displayPrice = roomPrices.length > 0 ? Math.min(...roomPrices) : (price > 0 ? price : 0);
                     return listingPhoto ? (
-                      <div className="relative h-[220px] shrink-0 bg-[#E2DDD5]">
+                      <div className="relative h-[220px] shrink-0 bg-border">
                         <Image src={listingPhoto} alt={listingTitle} fill className="object-cover" sizes="400px" unoptimized={!isOptimizableUrl(listingPhoto)} />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
                         <div className="absolute bottom-4 left-4 right-4">
@@ -661,8 +661,8 @@ export function StayBookingSidebar({
                     ) : (
                       <div className="flex-1 flex flex-col items-center justify-center p-8 text-center gap-3">
                         <span className="text-[48px]">🏨</span>
-                        <p className="text-[15px] font-semibold text-[#16130C]">{listingTitle}</p>
-                        {displayPrice > 0 && <p className="text-[13px] text-[#9C9485]">From <span className="font-semibold text-[#E8A020]">{fmt(displayPrice)}</span> / {priceUnit}</p>}
+                        <p className="text-[15px] font-semibold text-dark">{listingTitle}</p>
+                        {displayPrice > 0 && <p className="text-[13px] text-text3">From <span className="font-semibold text-amber">{fmt(displayPrice)}</span> / {priceUnit}</p>}
                       </div>
                     );
                   })()}
@@ -673,16 +673,16 @@ export function StayBookingSidebar({
             {/* ── RIGHT: Booking flow ── */}
             <div className="flex-1 flex flex-col min-w-0 max-h-[94vh] lg:max-h-[88vh]">
               {/* Mobile drag handle */}
-              <div className="lg:hidden flex justify-center pt-2"><div className="w-10 h-1 rounded-full bg-[#E2DDD5]" /></div>
+              <div className="lg:hidden flex justify-center pt-2"><div className="w-10 h-1 rounded-full bg-border" /></div>
 
               {/* Header with steps */}
-              <div className="sticky top-0 bg-white/95 backdrop-blur-sm border-b border-[#E2DDD5] px-5 pt-3 pb-3 z-10 shrink-0">
+              <div className="sticky top-0 bg-white/95 backdrop-blur-sm border-b border-border px-5 pt-3 pb-3 z-10 shrink-0">
                 <div className="flex items-center justify-between mb-2.5">
-                  <h2 className="font-display text-[17px] font-bold text-[#16130C]">
+                  <h2 className="font-display text-[17px] font-bold text-dark">
                     {step === "dates" ? "Select dates" : step === "rooms" ? "Choose your room" : "Confirm details"}
                   </h2>
-                  <button onClick={() => { setShowModal(false); setStep("dates"); }} className="size-8 flex items-center justify-center rounded-full bg-[#F4F1EC] hover:bg-[#E2DDD5]">
-                    <svg className="size-4 text-[#5E5848]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                  <button onClick={() => { setShowModal(false); setStep("dates"); }} className="size-8 flex items-center justify-center rounded-full bg-surface hover:bg-border">
+                    <svg className="size-4 text-text2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
                   </button>
                 </div>
 
@@ -690,24 +690,24 @@ export function StayBookingSidebar({
                 <div className="flex items-center gap-1.5">
                   {/* Step 1: Dates */}
                   <button type="button" onClick={() => setStep("dates")} className="flex items-center gap-1 group">
-                    <span className={cn("size-5 rounded-full flex items-center justify-center transition-colors", step === "dates" ? "bg-[#E8A020]" : "bg-[#16A34A] group-hover:bg-[#15803D]")}>
+                    <span className={cn("size-5 rounded-full flex items-center justify-center transition-colors", step === "dates" ? "bg-amber" : "bg-green group-hover:bg-[#15803D]")}>
                       {step === "dates" ? (
                         <span className="text-[10px] font-bold text-white">1</span>
                       ) : (
                         <svg className="size-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
                       )}
                     </span>
-                    <span className={cn("text-[10px] font-semibold transition-colors", step === "dates" ? "text-[#E8A020]" : "text-[#16A34A] group-hover:underline")}>Dates</span>
+                    <span className={cn("text-[10px] font-semibold transition-colors", step === "dates" ? "text-amber" : "text-green group-hover:underline")}>Dates</span>
                   </button>
 
-                  <div className={cn("flex-1 h-0.5 rounded-full", step !== "dates" ? "bg-[#16A34A]" : "bg-[#E2DDD5]")} />
+                  <div className={cn("flex-1 h-0.5 rounded-full", step !== "dates" ? "bg-green" : "bg-border")} />
 
                   {/* Step 2: Room */}
                   <button type="button" onClick={() => { if (step === "enquiry") setStep("rooms"); }} disabled={step === "dates"} className="flex items-center gap-1 group disabled:cursor-default">
                     <span className={cn("size-5 rounded-full flex items-center justify-center transition-colors",
-                      step === "dates" ? "bg-[#E2DDD5]" :
-                      step === "rooms" ? (selectedRoom ? "bg-[#E8A020]" : "bg-[#E8A020]") :
-                      "bg-[#16A34A] group-hover:bg-[#15803D]"
+                      step === "dates" ? "bg-border" :
+                      step === "rooms" ? (selectedRoom ? "bg-amber" : "bg-amber") :
+                      "bg-green group-hover:bg-[#15803D]"
                     )}>
                       {step === "enquiry" ? (
                         <svg className="size-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
@@ -716,30 +716,30 @@ export function StayBookingSidebar({
                       )}
                     </span>
                     <span className={cn("text-[10px] font-semibold transition-colors",
-                      step === "dates" ? "text-[#9C9485]" :
-                      step === "rooms" ? "text-[#E8A020]" :
-                      "text-[#16A34A] group-hover:underline"
+                      step === "dates" ? "text-text3" :
+                      step === "rooms" ? "text-amber" :
+                      "text-green group-hover:underline"
                     )}>Room</span>
                   </button>
 
-                  <div className={cn("flex-1 h-0.5 rounded-full", step === "enquiry" ? "bg-[#E8A020] animate-pulse" : "bg-[#E2DDD5]")} />
+                  <div className={cn("flex-1 h-0.5 rounded-full", step === "enquiry" ? "bg-amber animate-pulse" : "bg-border")} />
 
                   {/* Step 3: Confirm */}
                   <div className="flex items-center gap-1">
-                    <span className={cn("size-5 rounded-full flex items-center justify-center", step === "enquiry" ? "bg-[#E8A020] animate-pulse" : "bg-[#E2DDD5]")}>
+                    <span className={cn("size-5 rounded-full flex items-center justify-center", step === "enquiry" ? "bg-amber animate-pulse" : "bg-border")}>
                       <span className="text-[10px] font-bold text-white">3</span>
                     </span>
-                    <span className={cn("text-[10px] font-semibold", step === "enquiry" ? "text-[#E8A020]" : "text-[#9C9485]")}>Confirm</span>
+                    <span className={cn("text-[10px] font-semibold", step === "enquiry" ? "text-amber" : "text-text3")}>Confirm</span>
                   </div>
                 </div>
 
                 {/* Date summary — show when past dates step */}
                 {step !== "dates" && checkIn && checkOut && (
                   <div className="flex items-center justify-between mt-2">
-                    <p className="text-[11px] text-[#9C9485]">
+                    <p className="text-[11px] text-text3">
                       {fmtDate(checkIn)} → {fmtDate(checkOut)} · {nights} night{nights !== 1 ? "s" : ""} · {guests} adult{guests !== 1 ? "s" : ""}{modalChildren > 0 ? `, ${modalChildren} child${modalChildren !== 1 ? "ren" : ""}` : ""}
                     </p>
-                    <button type="button" onClick={() => setStep("dates")} className="text-[11px] font-semibold text-[#E8A020] hover:text-[#d4911c] shrink-0 ml-2">
+                    <button type="button" onClick={() => setStep("dates")} className="text-[11px] font-semibold text-amber hover:text-[#d4911c] shrink-0 ml-2">
                       Change
                     </button>
                   </div>
@@ -747,19 +747,19 @@ export function StayBookingSidebar({
 
                 {/* Room pre-selection hint on dates step */}
                 {step === "dates" && pendingRoomKey && (
-                  <div className="flex items-center gap-2 mt-2 bg-[#E8A020]/5 rounded-lg px-2.5 py-1.5">
+                  <div className="flex items-center gap-2 mt-2 bg-amber/5 rounded-lg px-2.5 py-1.5">
                     <span className="text-[11px]">{pendingRoomKey === "__entire__" ? "🏠" : "🛏"}</span>
-                    <p className="text-[11px] text-[#5E5848]">Checking availability for <span className="font-semibold">{pendingRoomKey === "__entire__" ? "entire property" : previewRoom?.name}</span></p>
+                    <p className="text-[11px] text-text2">Checking availability for <span className="font-semibold">{pendingRoomKey === "__entire__" ? "entire property" : previewRoom?.name}</span></p>
                   </div>
                 )}
               </div>
 
               {/* Social proof */}
               {(avgRating || recentBookings || isVerified) && (
-                <div className="bg-[#FAFAF8] border-b border-[#E2DDD5] px-5 py-1.5 flex items-center gap-3 text-[10px] text-[#9C9485] shrink-0">
+                <div className="bg-canvas border-b border-border px-5 py-1.5 flex items-center gap-3 text-[10px] text-text3 shrink-0">
                   {avgRating != null && avgRating > 0 && (
                     <span className="inline-flex items-center gap-1">
-                      <svg className="size-2.5 text-[#E8A020]" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                      <svg className="size-2.5 text-amber" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
                       {avgRating.toFixed(1)}{reviewCount ? ` (${reviewCount})` : ""}
                     </span>
                   )}
@@ -775,7 +775,7 @@ export function StayBookingSidebar({
                     <div className="flex flex-col sm:flex-row gap-6">
                       {/* Left: Calendar — same width as sidebar */}
                       <div className="w-full sm:w-[320px] shrink-0">
-                        <p className="text-[13px] font-semibold text-[#16130C] mb-1.5">Select dates</p>
+                        <p className="text-[13px] font-semibold text-dark mb-1.5">Select dates</p>
                         <DateRangePicker
                           checkIn={modalCheckIn}
                           checkOut={modalCheckOut}
@@ -792,38 +792,38 @@ export function StayBookingSidebar({
                           return (
                             <>
                               {/* Adults */}
-                              <div className="border border-[#E2DDD5] rounded-[14px] p-3.5">
+                              <div className="border border-border rounded-[14px] p-3.5">
                                 <div className="flex items-center justify-between">
                                   <div>
-                                    <p className="text-[13px] font-semibold text-[#16130C]">Adults</p>
-                                    <p className="text-[11px] text-[#9C9485]">Age 13+</p>
+                                    <p className="text-[13px] font-semibold text-dark">Adults</p>
+                                    <p className="text-[11px] text-text3">Age 13+</p>
                                   </div>
                                   <div className="flex items-center gap-3">
-                                    <button type="button" onClick={() => setModalGuests(modalGuests - 1)} className="size-8 rounded-full border border-[#E2DDD5] flex items-center justify-center text-[#5E5848] hover:bg-[#F4F1EC] disabled:opacity-30 disabled:cursor-not-allowed" disabled={modalGuests <= 1}>-</button>
-                                    <span className="text-[14px] font-semibold text-[#16130C] w-6 text-center">{modalGuests}</span>
-                                    <button type="button" onClick={() => setModalGuests(modalGuests + 1)} className="size-8 rounded-full border border-[#E2DDD5] flex items-center justify-center text-[#5E5848] hover:bg-[#F4F1EC] disabled:opacity-30 disabled:cursor-not-allowed" disabled={totalGuests >= cap}>+</button>
+                                    <button type="button" onClick={() => setModalGuests(modalGuests - 1)} className="size-8 rounded-full border border-border flex items-center justify-center text-text2 hover:bg-surface disabled:opacity-30 disabled:cursor-not-allowed" disabled={modalGuests <= 1}>-</button>
+                                    <span className="text-[14px] font-semibold text-dark w-6 text-center">{modalGuests}</span>
+                                    <button type="button" onClick={() => setModalGuests(modalGuests + 1)} className="size-8 rounded-full border border-border flex items-center justify-center text-text2 hover:bg-surface disabled:opacity-30 disabled:cursor-not-allowed" disabled={totalGuests >= cap}>+</button>
                                   </div>
                                 </div>
                               </div>
 
                               {/* Children */}
-                              <div className="border border-[#E2DDD5] rounded-[14px] p-3.5">
+                              <div className="border border-border rounded-[14px] p-3.5">
                                 <div className="flex items-center justify-between">
                                   <div>
-                                    <p className="text-[13px] font-semibold text-[#16130C]">Children</p>
-                                    <p className="text-[11px] text-[#9C9485]">Age 0–12</p>
+                                    <p className="text-[13px] font-semibold text-dark">Children</p>
+                                    <p className="text-[11px] text-text3">Age 0–12</p>
                                   </div>
                                   <div className="flex items-center gap-3">
-                                    <button type="button" onClick={() => setModalChildren(modalChildren - 1)} className="size-8 rounded-full border border-[#E2DDD5] flex items-center justify-center text-[#5E5848] hover:bg-[#F4F1EC] disabled:opacity-30 disabled:cursor-not-allowed" disabled={modalChildren <= 0}>-</button>
-                                    <span className="text-[14px] font-semibold text-[#16130C] w-6 text-center">{modalChildren}</span>
-                                    <button type="button" onClick={() => setModalChildren(modalChildren + 1)} className="size-8 rounded-full border border-[#E2DDD5] flex items-center justify-center text-[#5E5848] hover:bg-[#F4F1EC] disabled:opacity-30 disabled:cursor-not-allowed" disabled={totalGuests >= cap}>+</button>
+                                    <button type="button" onClick={() => setModalChildren(modalChildren - 1)} className="size-8 rounded-full border border-border flex items-center justify-center text-text2 hover:bg-surface disabled:opacity-30 disabled:cursor-not-allowed" disabled={modalChildren <= 0}>-</button>
+                                    <span className="text-[14px] font-semibold text-dark w-6 text-center">{modalChildren}</span>
+                                    <button type="button" onClick={() => setModalChildren(modalChildren + 1)} className="size-8 rounded-full border border-border flex items-center justify-center text-text2 hover:bg-surface disabled:opacity-30 disabled:cursor-not-allowed" disabled={totalGuests >= cap}>+</button>
                                   </div>
                                 </div>
                               </div>
 
                               {/* Capacity hint */}
                               {totalGuests >= cap && (
-                                <p className="text-[10px] text-[#E8A020] font-medium">Maximum {cap} guests for this property</p>
+                                <p className="text-[10px] text-amber font-medium">Maximum {cap} guests for this property</p>
                               )}
                             </>
                           );
@@ -831,12 +831,12 @@ export function StayBookingSidebar({
 
                         {/* Trip summary */}
                         {modalCheckIn && modalCheckOut && modalCheckOut > modalCheckIn && (
-                          <div className="bg-[#FAFAF8] rounded-[14px] p-3.5 border border-[#E2DDD5]">
-                            <p className="text-[11px] font-semibold text-[#16130C] mb-1.5">Trip summary</p>
-                            <p className="text-[12px] text-[#9C9485]">
+                          <div className="bg-canvas rounded-[14px] p-3.5 border border-border">
+                            <p className="text-[11px] font-semibold text-dark mb-1.5">Trip summary</p>
+                            <p className="text-[12px] text-text3">
                               {fmtDate(modalCheckIn)} → {fmtDate(modalCheckOut)} · {nightsBetween(modalCheckIn, modalCheckOut)} night{nightsBetween(modalCheckIn, modalCheckOut) !== 1 ? "s" : ""}
                             </p>
-                            <p className="text-[12px] text-[#9C9485] mt-0.5">
+                            <p className="text-[12px] text-text3 mt-0.5">
                               {modalGuests} adult{modalGuests !== 1 ? "s" : ""}{modalChildren > 0 ? `, ${modalChildren} child${modalChildren !== 1 ? "ren" : ""}` : ""}
                             </p>
                           </div>
@@ -848,14 +848,14 @@ export function StayBookingSidebar({
                   </div>
 
                   {/* Footer */}
-                  <div className="sticky bottom-0 bg-white border-t border-[#E2DDD5] px-5 pt-3 pb-4 shrink-0">
+                  <div className="sticky bottom-0 bg-white border-t border-border px-5 pt-3 pb-4 shrink-0">
                     <button
                       type="button"
                       onClick={handleModalCheckAvailability}
                       disabled={!modalCheckIn || !modalCheckOut || modalCheckOut <= modalCheckIn || checking}
                       className={cn(
                         "w-full py-3.5 rounded-2xl text-[15px] font-bold transition-all duration-200",
-                        "bg-gradient-to-r from-[#E8A020] to-[#d4911c] text-[#16130C]",
+                        "bg-gradient-to-r from-amber to-[#d4911c] text-dark",
                         "shadow-[0_4px_14px_rgba(232,160,32,0.35)]",
                         "hover:shadow-[0_6px_20px_rgba(232,160,32,0.45)] hover:-translate-y-0.5",
                         "disabled:opacity-50 disabled:pointer-events-none"
@@ -863,7 +863,7 @@ export function StayBookingSidebar({
                     >
                       {checking ? "Checking..." : "Check availability"}
                     </button>
-                    <p className="text-[12px] text-[#9C9485] text-center mt-2">You won&apos;t be charged yet</p>
+                    <p className="text-[12px] text-text3 text-center mt-2">You won&apos;t be charged yet</p>
                   </div>
                 </>
               )}
@@ -913,7 +913,7 @@ export function StayBookingSidebar({
                             setEnquiryDespiteUnavailable(false);
                             setStep("dates");
                           }}
-                          className="w-full py-2.5 rounded-xl text-[13px] font-semibold text-[#5E5848] border border-[#E2DDD5] hover:bg-[#F4F1EC] transition-colors"
+                          className="w-full py-2.5 rounded-xl text-[13px] font-semibold text-text2 border border-border hover:bg-surface transition-colors"
                         >
                           Pick different dates
                         </button>
@@ -935,8 +935,8 @@ export function StayBookingSidebar({
                             className={cn(
                               "w-full text-left rounded-xl overflow-hidden transition-all border-2",
                               selectedRoom === "__entire__"
-                                ? "border-[#E8A020] ring-2 ring-[#E8A020]/30 ring-offset-1"
-                                : "border-[#E8A020]/40 hover:border-[#E8A020] hover:shadow-md"
+                                ? "border-amber ring-2 ring-amber/30 ring-offset-1"
+                                : "border-amber/40 hover:border-amber hover:shadow-md"
                             )}
                           >
                             <div className="bg-gradient-to-br from-[#FFFBEB] to-[#FEF3CD] p-4">
@@ -944,13 +944,13 @@ export function StayBookingSidebar({
                                 <span className="text-[28px] leading-none animate-bounce">🎉</span>
                                 <div className="flex-1 min-w-0">
                                   <div className="flex items-center gap-2 mb-0.5">
-                                    <p className="text-[14px] font-bold text-[#16130C]">Entire property available!</p>
+                                    <p className="text-[14px] font-bold text-dark">Entire property available!</p>
                                     {selectedRoom === "__entire__" && (
-                                      <svg className="size-4 text-[#E8A020] shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
+                                      <svg className="size-4 text-amber shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
                                     )}
                                   </div>
                                   <p className="text-[11px] text-[#78350F]">All {results.length} rooms · Exclusively yours · Private stay</p>
-                                  <p className="text-[19px] font-bold text-[#E8A020] mt-1.5">{fmt(totalEntirePrice)} <span className="text-[11px] text-[#9C9485] font-normal">/ night</span></p>
+                                  <p className="text-[19px] font-bold text-amber mt-1.5">{fmt(totalEntirePrice)} <span className="text-[11px] text-text3 font-normal">/ night</span></p>
                                 </div>
                               </div>
                             </div>
@@ -971,20 +971,20 @@ export function StayBookingSidebar({
                             }}
                             onMouseEnter={() => room.available && !selectedRoom && setPreviewRoom(room)}
                             onMouseLeave={() => !selectedRoom && setPreviewRoom(null)}
-                            className={cn("w-full text-left rounded-xl border overflow-hidden transition-all", !room.available ? "opacity-40 grayscale cursor-not-allowed border-[#E2DDD5]" : selectedRoom === room.key ? "ring-2 ring-[#E8A020] ring-offset-2 border-transparent shadow-md" : "border-[#E2DDD5] hover:shadow-md hover:border-[#E8A020]/30")}>
+                            className={cn("w-full text-left rounded-xl border overflow-hidden transition-all", !room.available ? "opacity-40 grayscale cursor-not-allowed border-border" : selectedRoom === room.key ? "ring-2 ring-amber ring-offset-2 border-transparent shadow-md" : "border-border hover:shadow-md hover:border-amber/30")}>
                             <div className="flex">
-                              <div className="relative w-[90px] sm:w-[110px] shrink-0 bg-[#F4F1EC]">
+                              <div className="relative w-[90px] sm:w-[110px] shrink-0 bg-surface">
                                 {room.photo ? <Image src={room.photo} alt={room.name} fill className="object-cover" sizes="110px" unoptimized={!isOptimizableUrl(room.photo)} /> : <div className="w-full h-full min-h-[80px] flex items-center justify-center text-[20px]">🛏</div>}
                                 {!room.available && <div className="absolute inset-0 bg-black/50 flex items-center justify-center"><span className="bg-white/90 text-[10px] font-bold px-2 py-0.5 rounded-full">Booked</span></div>}
-                                {room.available && selectedRoom === room.key && <div className="absolute top-1.5 right-1.5 size-5 bg-[#E8A020] rounded-full flex items-center justify-center"><svg className="size-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg></div>}
+                                {room.available && selectedRoom === room.key && <div className="absolute top-1.5 right-1.5 size-5 bg-amber rounded-full flex items-center justify-center"><svg className="size-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg></div>}
                               </div>
                               <div className="flex-1 p-3 min-w-0 flex flex-col justify-between">
                                 <div>
-                                  <p className="text-[13px] font-bold text-[#16130C] truncate">{room.name}</p>
-                                  <p className="text-[10px] text-[#9C9485]">Sleeps {room.capacity}{room.bedType ? ` · ${room.bedType}` : ""}</p>
-                                  {room.amenities && room.amenities.length > 0 && <p className="text-[9px] text-[#9C9485] mt-0.5 truncate">{room.amenities.slice(0, 3).join(" · ")}</p>}
+                                  <p className="text-[13px] font-bold text-dark truncate">{room.name}</p>
+                                  <p className="text-[10px] text-text3">Sleeps {room.capacity}{room.bedType ? ` · ${room.bedType}` : ""}</p>
+                                  {room.amenities && room.amenities.length > 0 && <p className="text-[9px] text-text3 mt-0.5 truncate">{room.amenities.slice(0, 3).join(" · ")}</p>}
                                 </div>
-                                <p className={cn("text-[15px] font-bold mt-1", room.available ? "text-[#E8A020]" : "text-[#9C9485]")}>{fmt(room.price)} <span className="text-[10px] text-[#9C9485] font-normal">/ night</span></p>
+                                <p className={cn("text-[15px] font-bold mt-1", room.available ? "text-amber" : "text-text3")}>{fmt(room.price)} <span className="text-[10px] text-text3 font-normal">/ night</span></p>
                               </div>
                             </div>
                           </button>
@@ -994,24 +994,24 @@ export function StayBookingSidebar({
                   </div>
 
                   {/* Footer */}
-                  <div className="sticky bottom-0 bg-white border-t border-[#E2DDD5] shrink-0">
+                  <div className="sticky bottom-0 bg-white border-t border-border shrink-0">
                     {selectedRoom ? (
                       <div className="px-5 pt-3 pb-4 space-y-2">
                         <div className="flex justify-between items-center">
-                          <span className="text-[12px] text-[#9C9485]">{fmt(selectedPrice)} x {nights} night{nights !== 1 ? "s" : ""}</span>
-                          <span className="text-[17px] font-bold text-[#16130C]">{fmt(selectedPrice * nights)}</span>
+                          <span className="text-[12px] text-text3">{fmt(selectedPrice)} x {nights} night{nights !== 1 ? "s" : ""}</span>
+                          <span className="text-[17px] font-bold text-dark">{fmt(selectedPrice * nights)}</span>
                         </div>
-                        <button type="button" onClick={() => setStep("enquiry")} className="w-full py-3.5 rounded-2xl text-[15px] font-bold bg-gradient-to-r from-[#E8A020] to-[#d4911c] text-[#16130C] shadow-[0_4px_14px_rgba(232,160,32,0.35)] hover:shadow-[0_6px_20px_rgba(232,160,32,0.45)] hover:-translate-y-0.5 transition-all">
+                        <button type="button" onClick={() => setStep("enquiry")} className="w-full py-3.5 rounded-2xl text-[15px] font-bold bg-gradient-to-r from-amber to-[#d4911c] text-dark shadow-[0_4px_14px_rgba(232,160,32,0.35)] hover:shadow-[0_6px_20px_rgba(232,160,32,0.45)] hover:-translate-y-0.5 transition-all">
                           Continue to enquiry
                         </button>
-                        <button type="button" onClick={() => setStep("dates")} className="w-full text-[12px] text-[#9C9485] hover:text-[#16130C] py-1">
+                        <button type="button" onClick={() => setStep("dates")} className="w-full text-[12px] text-text3 hover:text-dark py-1">
                           ← Change dates
                         </button>
                       </div>
                     ) : (
                       <div className="px-5 pt-3 pb-4 space-y-2">
-                        <p className="text-[12px] text-[#9C9485] text-center">Select a room to continue</p>
-                        <button type="button" onClick={() => setStep("dates")} className="w-full text-[12px] text-[#9C9485] hover:text-[#16130C] py-1">
+                        <p className="text-[12px] text-text3 text-center">Select a room to continue</p>
+                        <button type="button" onClick={() => setStep("dates")} className="w-full text-[12px] text-text3 hover:text-dark py-1">
                           ← Change dates
                         </button>
                       </div>
@@ -1025,8 +1025,8 @@ export function StayBookingSidebar({
                 <>
                   <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
                     <div className="text-center py-1">
-                      <p className="text-[15px] font-semibold text-[#16130C]">One step away from your dream stay</p>
-                      <p className="text-[12px] text-[#9C9485]">Fill in your details and the host will confirm</p>
+                      <p className="text-[15px] font-semibold text-dark">One step away from your dream stay</p>
+                      <p className="text-[12px] text-text3">Fill in your details and the host will confirm</p>
                     </div>
 
                     {/* Selection summary + fee breakdown */}
@@ -1071,14 +1071,14 @@ export function StayBookingSidebar({
                                           if (next.has(f.id)) next.delete(f.id); else next.add(f.id);
                                           return next;
                                         })}
-                                        className={`relative shrink-0 w-9 h-5 rounded-full transition-colors ${on ? "bg-violet-500" : "bg-[#E2DDD5]"}`}
+                                        className={`relative shrink-0 w-9 h-5 rounded-full transition-colors ${on ? "bg-violet-500" : "bg-border"}`}
                                         aria-label={on ? "Remove" : "Add"}
                                       >
                                         <span className={`absolute top-0.5 left-0.5 size-4 rounded-full bg-white shadow transition-transform ${on ? "translate-x-4" : "translate-x-0"}`} />
                                       </button>
                                       <div className="min-w-0">
-                                        <p className="text-[12px] font-semibold text-[#16130C]">{f.name}</p>
-                                        <p className="text-[10px] text-[#9C9485]">
+                                        <p className="text-[12px] font-semibold text-dark">{f.name}</p>
+                                        <p className="text-[10px] text-text3">
                                           {f.fee_type === "per_night" ? `${fmt(f.amount)}/night` :
                                            f.fee_type === "per_guest" ? `${fmt(f.amount)}/guest` :
                                            f.fee_type === "percentage" ? `${f.amount}% of subtotal` :
@@ -1086,7 +1086,7 @@ export function StayBookingSidebar({
                                         </p>
                                       </div>
                                     </div>
-                                    <span className={`text-[12px] font-semibold shrink-0 ml-2 ${on ? "text-violet-600" : "text-[#9C9485]"}`}>{fmt(calcFee(f))}</span>
+                                    <span className={`text-[12px] font-semibold shrink-0 ml-2 ${on ? "text-violet-600" : "text-text3"}`}>{fmt(calcFee(f))}</span>
                                   </div>
                                 );
                               })}
@@ -1094,27 +1094,27 @@ export function StayBookingSidebar({
                           )}
 
                           {/* Price breakdown */}
-                          <div className="rounded-lg border border-[#E2DDD5] overflow-hidden divide-y divide-[#E2DDD5]">
+                          <div className="rounded-lg border border-border overflow-hidden divide-y divide-border">
                             {/* Room header */}
                             <div className="bg-[#F9F8F6] px-3 py-2.5 flex items-center gap-2.5">
                               <span className="text-[15px]">{selectedRoom === "__entire__" ? "🏠" : "🛏"}</span>
                               <div className="min-w-0">
-                                <p className="text-[13px] font-bold text-[#16130C] truncate">
+                                <p className="text-[13px] font-bold text-dark truncate">
                                   {selectedRoom === "__entire__" ? "Entire property" : results.find((r) => r.key === selectedRoom)?.name}
                                 </p>
-                                <p className="text-[10px] text-[#9C9485]">{fmtDate(checkIn)} → {fmtDate(checkOut)} · {nights} night{nights !== 1 ? "s" : ""}</p>
+                                <p className="text-[10px] text-text3">{fmtDate(checkIn)} → {fmtDate(checkOut)} · {nights} night{nights !== 1 ? "s" : ""}</p>
                               </div>
                             </div>
                             {/* Subtotal row */}
                             <div className="flex justify-between items-center px-3 py-2 bg-white">
-                              <span className="text-[12px] text-[#9C9485]">{fmt(selectedPrice)} × {nights} night{nights !== 1 ? "s" : ""}</span>
-                              <span className="text-[12px] font-semibold text-[#16130C]">{fmt(subtotal)}</span>
+                              <span className="text-[12px] text-text3">{fmt(selectedPrice)} × {nights} night{nights !== 1 ? "s" : ""}</span>
+                              <span className="text-[12px] font-semibold text-dark">{fmt(subtotal)}</span>
                             </div>
                             {/* Mandatory fee rows */}
                             {mandatoryFees.map((f) => (
                               <div key={f.id} className="flex justify-between items-center px-3 py-2 bg-white">
-                                <span className="text-[12px] text-[#9C9485]">{f.name}{feeHint(f)}</span>
-                                <span className="text-[12px] font-semibold text-[#16130C]">{fmt(calcFee(f))}</span>
+                                <span className="text-[12px] text-text3">{f.name}{feeHint(f)}</span>
+                                <span className="text-[12px] font-semibold text-dark">{fmt(calcFee(f))}</span>
                               </div>
                             ))}
                             {/* Selected upsell rows */}
@@ -1125,9 +1125,9 @@ export function StayBookingSidebar({
                               </div>
                             ))}
                             {/* Total row — amber accent, no dark bg */}
-                            <div className="flex justify-between items-center px-3 py-2.5 bg-[#F9F8F6] border-t-2 border-[#E8A020]/40">
-                              <span className="text-[12px] font-semibold text-[#5E5848]">Estimated total</span>
-                              <span className="text-[15px] font-bold text-[#E8A020]">{fmt(total)}</span>
+                            <div className="flex justify-between items-center px-3 py-2.5 bg-[#F9F8F6] border-t-2 border-amber/40">
+                              <span className="text-[12px] font-semibold text-text2">Estimated total</span>
+                              <span className="text-[15px] font-bold text-amber">{fmt(total)}</span>
                             </div>
                           </div>
                         </>
@@ -1135,26 +1135,26 @@ export function StayBookingSidebar({
                     })()}
 
                     <div className="space-y-3">
-                      <input type="text" placeholder="Full name" value={formName} onChange={(e) => setFormName(e.target.value)} className="w-full border border-[#E2DDD5] rounded-[14px] px-4 py-3 text-[14px] text-[#16130C] placeholder:text-[#9C9485] outline-none focus:border-[#E8A020] transition-colors" />
-                      <input type="email" placeholder="Email address" value={formEmail} onChange={(e) => setFormEmail(e.target.value)} className="w-full border border-[#E2DDD5] rounded-[14px] px-4 py-3 text-[14px] text-[#16130C] placeholder:text-[#9C9485] outline-none focus:border-[#E8A020] transition-colors" />
-                      <PhoneInput value={formPhone} onChange={setFormPhone} required className="w-full border border-[#E2DDD5] rounded-[14px] px-4 py-3 text-[14px] text-[#16130C] placeholder:text-[#9C9485] outline-none focus:border-[#E8A020] transition-colors" />
-                      <textarea placeholder="Special requests (optional)" value={formMessage} onChange={(e) => setFormMessage(e.target.value)} rows={3} className="w-full border border-[#E2DDD5] rounded-[14px] px-4 py-3 text-[14px] text-[#16130C] placeholder:text-[#9C9485] outline-none focus:border-[#E8A020] transition-colors resize-none" />
+                      <input type="text" placeholder="Full name" value={formName} onChange={(e) => setFormName(e.target.value)} className="w-full border border-border rounded-[14px] px-4 py-3 text-[14px] text-dark placeholder:text-text3 outline-none focus:border-amber transition-colors" />
+                      <input type="email" placeholder="Email address" value={formEmail} onChange={(e) => setFormEmail(e.target.value)} className="w-full border border-border rounded-[14px] px-4 py-3 text-[14px] text-dark placeholder:text-text3 outline-none focus:border-amber transition-colors" />
+                      <PhoneInput value={formPhone} onChange={setFormPhone} required className="w-full border border-border rounded-[14px] px-4 py-3 text-[14px] text-dark placeholder:text-text3 outline-none focus:border-amber transition-colors" />
+                      <textarea placeholder="Special requests (optional)" value={formMessage} onChange={(e) => setFormMessage(e.target.value)} rows={3} className="w-full border border-border rounded-[14px] px-4 py-3 text-[14px] text-dark placeholder:text-text3 outline-none focus:border-amber transition-colors resize-none" />
                     </div>
 
                     {error && <p className="text-[13px] text-red-600 text-center">{error}</p>}
 
                     <div className="grid grid-cols-3 gap-2 pt-1">
-                      <div className="text-center p-2 rounded-lg bg-[#FAFAF8]"><span className="text-[14px]">🔒</span><p className="text-[9px] font-semibold text-[#9C9485] mt-0.5">Secure</p></div>
-                      <div className="text-center p-2 rounded-lg bg-[#FAFAF8]"><span className="text-[14px]">⚡</span><p className="text-[9px] font-semibold text-[#9C9485] mt-0.5">Reply in 2hrs</p></div>
-                      <div className="text-center p-2 rounded-lg bg-[#FAFAF8]"><span className="text-[14px]">💰</span><p className="text-[9px] font-semibold text-[#9C9485] mt-0.5">No payment yet</p></div>
+                      <div className="text-center p-2 rounded-lg bg-canvas"><span className="text-[14px]">🔒</span><p className="text-[9px] font-semibold text-text3 mt-0.5">Secure</p></div>
+                      <div className="text-center p-2 rounded-lg bg-canvas"><span className="text-[14px]">⚡</span><p className="text-[9px] font-semibold text-text3 mt-0.5">Reply in 2hrs</p></div>
+                      <div className="text-center p-2 rounded-lg bg-canvas"><span className="text-[14px]">💰</span><p className="text-[9px] font-semibold text-text3 mt-0.5">No payment yet</p></div>
                     </div>
                   </div>
 
-                  <div className="sticky bottom-0 bg-white border-t border-[#E2DDD5] px-5 pt-3 pb-4 shrink-0 space-y-2">
-                    <button type="button" onClick={handleEnquire} disabled={sending} className="w-full py-3.5 rounded-2xl text-[15px] font-bold bg-gradient-to-r from-[#E8A020] to-[#d4911c] text-[#16130C] shadow-[0_4px_14px_rgba(232,160,32,0.35)] hover:shadow-[0_6px_20px_rgba(232,160,32,0.45)] hover:-translate-y-0.5 transition-all disabled:opacity-50">
+                  <div className="sticky bottom-0 bg-white border-t border-border px-5 pt-3 pb-4 shrink-0 space-y-2">
+                    <button type="button" onClick={handleEnquire} disabled={sending} className="w-full py-3.5 rounded-2xl text-[15px] font-bold bg-gradient-to-r from-amber to-[#d4911c] text-dark shadow-[0_4px_14px_rgba(232,160,32,0.35)] hover:shadow-[0_6px_20px_rgba(232,160,32,0.45)] hover:-translate-y-0.5 transition-all disabled:opacity-50">
                       {sending ? "Sending..." : "Confirm & send enquiry"}
                     </button>
-                    <button type="button" onClick={() => setStep("rooms")} className="w-full text-[12px] text-[#9C9485] hover:text-[#16130C] py-1">
+                    <button type="button" onClick={() => setStep("rooms")} className="w-full text-[12px] text-text3 hover:text-dark py-1">
                       ← Back to rooms
                     </button>
                   </div>

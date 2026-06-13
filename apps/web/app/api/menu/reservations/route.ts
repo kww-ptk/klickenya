@@ -9,7 +9,7 @@ import { fetchReservations } from "./_lib/queries";
 const internationalPhone = /^\+\d{7,15}$/;
 
 /* ── Source tracking validation ──────────────────────────────────────────── */
-const VALID_SOURCES = ["qr_menu", "listing", "direct", "phone", "embed"] as const;
+const VALID_SOURCES = ["qr_menu", "listing", "direct", "phone", "embed", "storefront"] as const;
 type ValidSource = (typeof VALID_SOURCES)[number];
 
 // Hostname regex per spec: lowercase letters/digits/dots/hyphens, at least one

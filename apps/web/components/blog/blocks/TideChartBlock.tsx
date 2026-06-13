@@ -86,7 +86,7 @@ const ACTIVITIES = [
   {
     level: "Low tide",
     height: "0.0 – 1.2m",
-    color: "bg-[#E8A020]",
+    color: "bg-amber",
     text: "text-white",
     icon: "🐚",
     tips: ["Sandbanks emerge — the most dramatic beach scenery", "Walk out to the reef and explore rock pools", "Best for spotting starfish, sea urchins and marine life up close"],
@@ -98,8 +98,8 @@ export function TideChartBlock() {
     <div className="my-10 space-y-6">
 
       {/* ── Tide Curve ── */}
-      <div className="rounded-2xl border border-[#E2DDD5] overflow-hidden bg-white">
-        <div className="bg-[#16130C] px-5 py-4">
+      <div className="rounded-2xl border border-border overflow-hidden bg-white">
+        <div className="bg-dark px-5 py-4">
           <h3 className="text-[14px] font-bold text-white flex items-center gap-2">
             <span className="text-[18px]">🌊</span> Typical Daily Tide Pattern — Watamu
           </h3>
@@ -193,7 +193,7 @@ export function TideChartBlock() {
         </div>
 
         {/* Legend */}
-        <div className="px-5 pb-4 flex flex-wrap gap-4 text-[11px] text-[#9C9485]">
+        <div className="px-5 pb-4 flex flex-wrap gap-4 text-[11px] text-text3">
           <div className="flex items-center gap-2">
             <div className="w-6 h-1.5 rounded bg-[#0d9488]" />
             <span>Spring tide (full/new moon) — range ~3.2m</span>
@@ -206,8 +206,8 @@ export function TideChartBlock() {
       </div>
 
       {/* ── Monthly Range Strip ── */}
-      <div className="rounded-2xl border border-[#E2DDD5] overflow-hidden bg-white">
-        <div className="bg-[#16130C] px-5 py-4">
+      <div className="rounded-2xl border border-border overflow-hidden bg-white">
+        <div className="bg-dark px-5 py-4">
           <h3 className="text-[14px] font-bold text-white flex items-center gap-2">
             <span className="text-[18px]">📅</span> Spring Tide Range by Month
           </h3>
@@ -221,8 +221,8 @@ export function TideChartBlock() {
             const pct = (m.spring / 3.5) * 100;
             return (
               <div key={m.month} className="flex items-center gap-3">
-                <div className="w-8 text-[12px] font-bold text-[#16130C] shrink-0">{m.month}</div>
-                <div className="flex-1 h-6 bg-[#F4F1EC] rounded-full overflow-hidden">
+                <div className="w-8 text-[12px] font-bold text-dark shrink-0">{m.month}</div>
+                <div className="flex-1 h-6 bg-surface rounded-full overflow-hidden">
                   <div
                     className="h-full bg-teal-500 rounded-full flex items-center justify-end pr-2 transition-all duration-500"
                     style={{ width: `${pct}%` }}
@@ -230,7 +230,7 @@ export function TideChartBlock() {
                     <span className="text-[10px] font-bold text-white whitespace-nowrap">{m.spring}m</span>
                   </div>
                 </div>
-                <div className="w-16 text-[10px] text-[#9C9485] shrink-0 text-right">
+                <div className="w-16 text-[10px] text-text3 shrink-0 text-right">
                   neap {m.neap}m
                 </div>
               </div>
@@ -240,8 +240,8 @@ export function TideChartBlock() {
       </div>
 
       {/* ── Activity Guide ── */}
-      <div className="rounded-2xl border border-[#E2DDD5] overflow-hidden bg-white">
-        <div className="bg-[#16130C] px-5 py-4">
+      <div className="rounded-2xl border border-border overflow-hidden bg-white">
+        <div className="bg-dark px-5 py-4">
           <h3 className="text-[14px] font-bold text-white flex items-center gap-2">
             <span className="text-[18px]">🗺️</span> What to Do at Each Tide Level
           </h3>
@@ -250,7 +250,7 @@ export function TideChartBlock() {
           </p>
         </div>
 
-        <div className="divide-y divide-[#F4F1EC]">
+        <div className="divide-y divide-surface">
           {ACTIVITIES.map((a) => (
             <div key={a.level} className="px-5 py-4 flex gap-4 items-start">
               <div className={`shrink-0 rounded-xl px-3 py-1.5 text-center min-w-[72px] ${a.color} ${a.text}`}>
@@ -260,8 +260,8 @@ export function TideChartBlock() {
               </div>
               <ul className="space-y-1">
                 {a.tips.map((tip) => (
-                  <li key={tip} className="text-[13px] text-[#5E5848] flex gap-2">
-                    <span className="text-[#9C9485] mt-0.5">•</span>
+                  <li key={tip} className="text-[13px] text-text2 flex gap-2">
+                    <span className="text-text3 mt-0.5">•</span>
                     <span>{tip}</span>
                   </li>
                 ))}
@@ -271,7 +271,7 @@ export function TideChartBlock() {
         </div>
       </div>
 
-      <p className="text-[10px] text-[#9C9485] text-center">
+      <p className="text-[10px] text-text3 text-center">
         Tide times shift approximately 50 minutes later each day. Check exact times locally before planning boat trips or reef walks.
       </p>
 

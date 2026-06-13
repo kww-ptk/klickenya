@@ -128,15 +128,15 @@ export function PosReadyOrders({ staffId }: Props) {
       <main className="flex-1 max-w-screen-2xl mx-auto w-full px-3 sm:px-6 pt-3 pb-24">
         <div className="flex items-baseline justify-between mb-3">
           <div>
-            <p className="text-[11px] uppercase tracking-wide text-[#9C9485]">Ready for pickup</p>
+            <p className="text-[11px] uppercase tracking-wide text-text3">Ready for pickup</p>
             <h1 className="text-[20px] font-bold text-white">{sortedOrders.length} {sortedOrders.length === 1 ? "order" : "orders"}</h1>
           </div>
-          <p className="text-[11px] text-[#9C9485]">Live · 5s</p>
+          <p className="text-[11px] text-text3">Live · 5s</p>
         </div>
 
         {sortedOrders.length === 0 ? (
           <div className="rounded-2xl border border-[#2A2520] bg-[#1A170F] p-10 text-center">
-            <p className="text-[14px] text-[#9C9485]">Nothing ready yet.</p>
+            <p className="text-[14px] text-text3">Nothing ready yet.</p>
             <p className="text-[12px] text-[#6F6859] mt-1">When the kitchen marks an order ready, it will appear here.</p>
           </div>
         ) : (
@@ -159,18 +159,18 @@ export function PosReadyOrders({ staffId }: Props) {
                         Table {o.table_number ?? "—"}
                       </span>
                       {mine && (
-                        <span className="px-2 py-0.5 rounded-full text-[10px] uppercase tracking-wide font-bold bg-[#231D12] text-[#E8A020]">
+                        <span className="px-2 py-0.5 rounded-full text-[10px] uppercase tracking-wide font-bold bg-[#231D12] text-amber">
                           Yours
                         </span>
                       )}
-                      <span className="text-[11px] text-[#9C9485]">
+                      <span className="text-[11px] text-text3">
                         {ageMin === 0 ? "just now" : `${ageMin} min ago`}
                       </span>
                     </div>
                     <ul className="space-y-0.5">
                       {o.order_items.map((it) => (
-                        <li key={it.id} className="text-[12px] text-[#F4F1EC]">
-                          <span className="text-[#9C9485]">{it.quantity}×</span> {it.item_name}
+                        <li key={it.id} className="text-[12px] text-surface">
+                          <span className="text-text3">{it.quantity}×</span> {it.item_name}
                           {it.allergy_notes ? (
                             <span className="block text-[11px] text-[#FF8A6B] ml-5">
                               Note: {it.allergy_notes}
@@ -179,7 +179,7 @@ export function PosReadyOrders({ staffId }: Props) {
                         </li>
                       ))}
                     </ul>
-                    <p className="mt-1 text-[11px] text-[#9C9485]">
+                    <p className="mt-1 text-[11px] text-text3">
                       {itemTotal} {itemTotal === 1 ? "item" : "items"}
                       {o.waiter_name ? ` · ${o.waiter_name}` : ""}
                     </p>
@@ -209,8 +209,8 @@ export function PosReadyOrders({ staffId }: Props) {
             key={t.id}
             className={`pointer-events-auto px-4 py-2.5 rounded-full text-[13px] font-semibold shadow-2xl ${
               t.type === "success"
-                ? "bg-[#E8A020] text-[#16130C]"
-                : "bg-[#FF8A6B] text-[#16130C]"
+                ? "bg-amber text-dark"
+                : "bg-[#FF8A6B] text-dark"
             }`}
           >
             {t.msg}

@@ -36,14 +36,14 @@ export function StationTabs({
   if (allowedStations.length < 2) return null;
 
   return (
-    <div className="inline-flex rounded-full border border-[#E2DDD5] overflow-hidden text-[13px] font-bold mb-4">
+    <div className="inline-flex rounded-full border border-border overflow-hidden text-[13px] font-bold mb-4">
       {allowedStations.includes("kitchen") && (
         <Link
           href={`${baseHref}?station=kitchen`}
           className={`px-4 h-[36px] inline-flex items-center transition-colors ${
             activeStation === "kitchen"
-              ? "bg-[#E8A020] text-[#16130C]"
-              : "bg-white text-[#5E5848] hover:bg-[#FAF6EE]"
+              ? "bg-amber text-dark"
+              : "bg-white text-text2 hover:bg-[#FAF6EE]"
           }`}
         >
           🍳 Kitchen
@@ -55,7 +55,7 @@ export function StationTabs({
           className={`px-4 h-[36px] inline-flex items-center transition-colors ${
             activeStation === "bar"
               ? "bg-teal-500 text-white"
-              : "bg-white text-[#5E5848] hover:bg-[#EEF7F6]"
+              : "bg-white text-text2 hover:bg-[#EEF7F6]"
           }`}
         >
           🍹 Bar

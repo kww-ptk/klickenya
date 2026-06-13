@@ -46,7 +46,7 @@ const SOCIALS = [
 
 function Footer() {
   return (
-    <footer className="bg-[#16130C]">
+    <footer className="bg-dark">
       {/* ── Main section ──────────────────────── */}
       <div className="max-w-[1280px] mx-auto px-5 md:px-10 pt-14 md:pt-20 pb-10">
         <div className="grid grid-cols-2 md:grid-cols-6 gap-8 md:gap-6">
@@ -61,7 +61,7 @@ function Footer() {
                 className="size-9 rounded-[10px] object-cover"
               />
               <span className="text-[18px] font-bold text-white tracking-[-0.02em]">
-                Klic<span className="text-[#E8A020]">K</span>enya
+                Klic<span className="text-amber">K</span>enya
               </span>
             </Link>
             <p className="text-[13px] text-white/35 leading-[1.7] max-w-[260px] mb-6">
@@ -77,7 +77,7 @@ function Footer() {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={s.label}
-                  className="size-8 rounded-lg bg-white/[0.05] flex items-center justify-center text-[11px] text-white/30 hover:bg-[#E8A020]/15 hover:text-[#E8A020] transition-all duration-200"
+                  className="size-8 rounded-lg bg-white/[0.05] flex items-center justify-center text-[11px] text-white/30 hover:bg-amber/15 hover:text-amber transition-all duration-200"
                 >
                   {s.icon}
                 </a>
@@ -156,9 +156,9 @@ function Footer() {
           </div>
           <Link
             href="/become-a-host"
-            className="relative shrink-0 px-5 py-2.5 bg-[#E8A020] text-[#16130C] text-[13px] font-bold rounded-full hover:bg-[#d4910f] transition-all duration-200 hover:scale-105"
+            className="relative shrink-0 px-5 py-2.5 bg-amber text-dark text-[13px] font-bold rounded-full hover:bg-[#d4910f] transition-all duration-200 hover:scale-105"
           >
-            <span className="absolute inset-0 rounded-full bg-[#E8A020] animate-[glow-ping_2.5s_ease-in-out_infinite] opacity-0" />
+            <span className="absolute inset-0 rounded-full bg-amber animate-[glow-ping_2.5s_ease-in-out_infinite] opacity-0" />
             <span className="relative">Get started →</span>
           </Link>
         </div>

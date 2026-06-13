@@ -1,10 +1,10 @@
 interface VerdictCardValue { variant?: 'teal' | 'blue' | 'purple' | 'amber'; label?: string; title?: string; pros?: string[]; cons?: string[] }
 
 const variantStyles = {
-  teal: { bg: 'bg-[rgba(13,115,119,.06)]', border: 'border-[rgba(13,115,119,.2)]', label: 'text-[#0D7377]' },
+  teal: { bg: 'bg-[rgba(13,115,119,.06)]', border: 'border-[rgba(13,115,119,.2)]', label: 'text-teal' },
   blue: { bg: 'bg-[rgba(37,99,235,.05)]', border: 'border-[rgba(37,99,235,.18)]', label: 'text-[#2563EB]' },
-  purple: { bg: 'bg-[rgba(139,77,171,.10)]', border: 'border-[rgba(139,77,171,.2)]', label: 'text-[#8B4DAB]' },
-  amber: { bg: 'bg-[rgba(232,160,32,.08)]', border: 'border-[rgba(232,160,32,.2)]', label: 'text-[#E8A020]' },
+  purple: { bg: 'bg-[rgba(139,77,171,.10)]', border: 'border-[rgba(139,77,171,.2)]', label: 'text-purple2' },
+  amber: { bg: 'bg-[rgba(232,160,32,.08)]', border: 'border-[rgba(232,160,32,.2)]', label: 'text-amber' },
 }
 
 export function VerdictCardBlock({ value }: { value: VerdictCardValue }) {
@@ -20,7 +20,7 @@ export function VerdictCardBlock({ value }: { value: VerdictCardValue }) {
           <ul className="flex flex-col gap-[7px]">
             {pros.map((p, i) => (
               <li key={i} className="text-[13.5px] text-[#5C574E] flex gap-2 items-start leading-[1.5]">
-                <span className="text-[#0D7377] font-extrabold shrink-0">✓</span>{p}
+                <span className="text-teal font-extrabold shrink-0">✓</span>{p}
               </li>
             ))}
           </ul>

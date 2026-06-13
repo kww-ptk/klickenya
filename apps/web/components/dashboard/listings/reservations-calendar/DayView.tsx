@@ -134,10 +134,10 @@ export function DayView({ reservations, menuName, onApprove, onDecline, onCancel
               onClick={() => { setSelectedDate(d); setPopover(null); }}
               className={`shrink-0 px-3 py-1.5 rounded-full text-[12px] font-semibold transition-colors ${
                 isSelected
-                  ? "bg-[#E8A020] text-white"
+                  ? "bg-amber text-white"
                   : isToday
-                  ? "bg-[#E8A020]/10 text-[#E8A020] border border-[#E8A020]/30"
-                  : "bg-white border border-[#E2DDD5] text-[#5E5848] hover:border-[#E8A020]/40"
+                  ? "bg-amber/10 text-amber border border-amber/30"
+                  : "bg-white border border-border text-text2 hover:border-amber/40"
               }`}
             >
               {label}
@@ -146,14 +146,14 @@ export function DayView({ reservations, menuName, onApprove, onDecline, onCancel
         })}
       </div>
 
-      <p className="text-[13px] font-semibold text-[#16130C] mb-3">{formatDayTitle(selectedDate)}</p>
+      <p className="text-[13px] font-semibold text-dark mb-3">{formatDayTitle(selectedDate)}</p>
 
       <div className="flex overflow-x-auto">
         <div className="shrink-0 w-11 relative" style={{ height: `${gridHeight}px` }}>
           {HOURS.map((h) => (
             <div
               key={h}
-              className="absolute right-2 text-[11px] text-[#9C9485] tabular-nums"
+              className="absolute right-2 text-[11px] text-text3 tabular-nums"
               style={{ top: `${(h - START_HOUR) * ROW_HEIGHT - 6}px` }}
             >
               {h}
@@ -163,13 +163,13 @@ export function DayView({ reservations, menuName, onApprove, onDecline, onCancel
 
         {/* Single day column */}
         <div
-          className="flex-1 relative border-l border-[#F4F1EC]"
+          className="flex-1 relative border-l border-surface"
           style={{ height: `${gridHeight}px`, minWidth: "280px" }}
         >
           {HOURS.map((h) => (
             <div key={h}>
-              <div className="absolute left-0 right-0 border-t border-[#F4F1EC]" style={{ top: `${(h - START_HOUR) * ROW_HEIGHT}px` }} />
-              <div className="absolute left-0 right-0 border-t border-dashed border-[#F4F1EC]" style={{ top: `${(h - START_HOUR) * ROW_HEIGHT + ROW_HEIGHT / 2}px` }} />
+              <div className="absolute left-0 right-0 border-t border-surface" style={{ top: `${(h - START_HOUR) * ROW_HEIGHT}px` }} />
+              <div className="absolute left-0 right-0 border-t border-dashed border-surface" style={{ top: `${(h - START_HOUR) * ROW_HEIGHT + ROW_HEIGHT / 2}px` }} />
             </div>
           ))}
 
@@ -218,7 +218,7 @@ export function DayView({ reservations, menuName, onApprove, onDecline, onCancel
           })}
 
           {dayReservations.length === 0 && (
-            <div className="absolute inset-0 flex items-center justify-center text-[13px] text-[#9C9485]">
+            <div className="absolute inset-0 flex items-center justify-center text-[13px] text-text3">
               No reservations this day
             </div>
           )}
@@ -229,47 +229,47 @@ export function DayView({ reservations, menuName, onApprove, onDecline, onCancel
       {popover && activeReservation && (
         <div
           onClick={(e) => e.stopPropagation()}
-          className="fixed z-50 w-[300px] bg-white rounded-xl border border-[#E2DDD5] shadow-xl"
+          className="fixed z-50 w-[300px] bg-white rounded-xl border border-border shadow-xl"
           style={{ top: `${Math.min(popover.top, window.innerHeight - 400)}px`, left: `${Math.min(popover.left, window.innerWidth - 320)}px` }}
         >
           <div className="p-4 space-y-3">
             <div className="flex items-start justify-between gap-2">
               <div>
-                <p className="text-[14px] font-bold text-[#16130C]">{activeReservation.guest_name}</p>
-                <p className="text-[11px] text-[#9C9485]">{formatPopoverTime(activeReservation.reserved_for)}</p>
+                <p className="text-[14px] font-bold text-dark">{activeReservation.guest_name}</p>
+                <p className="text-[11px] text-text3">{formatPopoverTime(activeReservation.reserved_for)}</p>
               </div>
-              <button onClick={() => setPopover(null)} className="shrink-0 size-6 flex items-center justify-center rounded-full text-[#9C9485] hover:bg-[#F4F1EC]">
+              <button onClick={() => setPopover(null)} className="shrink-0 size-6 flex items-center justify-center rounded-full text-text3 hover:bg-surface">
                 ×
               </button>
             </div>
 
             <div className="space-y-1.5 text-[12px]">
               <div className="flex justify-between">
-                <span className="text-[#9C9485]">Party size</span>
-                <span className="font-semibold text-[#16130C]">×{activeReservation.party_size}</span>
+                <span className="text-text3">Party size</span>
+                <span className="font-semibold text-dark">×{activeReservation.party_size}</span>
               </div>
               {activeReservation.area_name && (
                 <div className="flex justify-between">
-                  <span className="text-[#9C9485]">Area</span>
-                  <span className="font-semibold text-[#16130C]">{activeReservation.area_name}</span>
+                  <span className="text-text3">Area</span>
+                  <span className="font-semibold text-dark">{activeReservation.area_name}</span>
                 </div>
               )}
               <div className="flex justify-between">
-                <span className="text-[#9C9485]">Phone</span>
-                <a href={`tel:${activeReservation.guest_phone}`} className="font-semibold text-[#E8A020] hover:underline">
+                <span className="text-text3">Phone</span>
+                <a href={`tel:${activeReservation.guest_phone}`} className="font-semibold text-amber hover:underline">
                   {activeReservation.guest_phone}
                 </a>
               </div>
               {activeReservation.guest_email && (
                 <div className="flex justify-between">
-                  <span className="text-[#9C9485]">Email</span>
-                  <span className="font-semibold text-[#16130C] truncate ml-2 text-right">{activeReservation.guest_email}</span>
+                  <span className="text-text3">Email</span>
+                  <span className="font-semibold text-dark truncate ml-2 text-right">{activeReservation.guest_email}</span>
                 </div>
               )}
             </div>
 
             {activeReservation.guest_message && (
-              <div className="bg-[#F4F1EC] rounded-lg p-2.5 text-[12px] text-[#5E5848] italic">
+              <div className="bg-surface rounded-lg p-2.5 text-[12px] text-text2 italic">
                 "{activeReservation.guest_message}"
               </div>
             )}
@@ -283,7 +283,7 @@ export function DayView({ reservations, menuName, onApprove, onDecline, onCancel
                 <button
                   onClick={() => { onApprove(activeReservation.id); setPopover(null); }}
                   disabled={updatingIds.has(activeReservation.id)}
-                  className="flex-1 h-8 rounded-full bg-[#16A34A] text-white text-[12px] font-bold hover:bg-[#15803D] transition-colors disabled:opacity-50"
+                  className="flex-1 h-8 rounded-full bg-green text-white text-[12px] font-bold hover:bg-[#15803D] transition-colors disabled:opacity-50"
                 >
                   Approve
                 </button>
@@ -300,13 +300,13 @@ export function DayView({ reservations, menuName, onApprove, onDecline, onCancel
               <button
                 onClick={() => { onCancel(activeReservation.id); setPopover(null); }}
                 disabled={updatingIds.has(activeReservation.id)}
-                className="w-full h-8 rounded-full border border-[#E2DDD5] text-[#9C9485] text-[12px] font-semibold hover:border-red-300 hover:text-[#DC2626] transition-colors disabled:opacity-50"
+                className="w-full h-8 rounded-full border border-border text-text3 text-[12px] font-semibold hover:border-red-300 hover:text-[#DC2626] transition-colors disabled:opacity-50"
               >
                 Cancel reservation
               </button>
             )}
             {activeReservation.status === "declined" && activeReservation.decline_reason && (
-              <div className="text-[11px] text-[#9C9485] bg-[#F4F1EC] rounded-lg p-2">
+              <div className="text-[11px] text-text3 bg-surface rounded-lg p-2">
                 Declined: {activeReservation.decline_reason}
               </div>
             )}
@@ -314,7 +314,7 @@ export function DayView({ reservations, menuName, onApprove, onDecline, onCancel
         </div>
       )}
 
-      <div className="mt-3 text-[11px] text-[#9C9485] flex gap-4">
+      <div className="mt-3 text-[11px] text-text3 flex gap-4">
         <span className="flex items-center gap-1.5"><span className="inline-block w-3 h-3 rounded-sm bg-amber-100 border border-amber-400" /> Pending</span>
         <span className="flex items-center gap-1.5"><span className="inline-block w-3 h-3 rounded-sm bg-green-100 border border-green-500" /> Approved</span>
         <span className="flex items-center gap-1.5"><span className="inline-block w-3 h-3 rounded-sm bg-gray-100 border border-gray-400 opacity-40" /> Other</span>

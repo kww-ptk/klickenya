@@ -11,17 +11,17 @@
  */
 export default function PosLoading() {
   return (
-    <div className="min-h-screen bg-[#0F0D08] text-[#F4F1EC] flex flex-col items-center justify-center px-6 py-10">
+    <div className="min-h-screen bg-[#0F0D08] text-surface flex flex-col items-center justify-center px-6 py-10">
       {/* Spinner */}
       <div className="relative mb-5">
         <div className="w-14 h-14 rounded-full border-4 border-[#252019]" />
-        <div className="absolute inset-0 w-14 h-14 rounded-full border-4 border-transparent border-t-[#E8A020] animate-spin" />
+        <div className="absolute inset-0 w-14 h-14 rounded-full border-4 border-transparent border-t-amber animate-spin" />
       </div>
 
       <p className="font-display text-[18px] font-bold text-white tracking-tight">
         Loading POS
       </p>
-      <p className="mt-2 text-[13px] text-[#9C9485] text-center max-w-[280px] leading-snug">
+      <p className="mt-2 text-[13px] text-text3 text-center max-w-[280px] leading-snug">
         Don&apos;t worry, it&apos;s only the first time
         <span aria-hidden="true"> :)</span>
       </p>

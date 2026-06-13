@@ -43,9 +43,9 @@ export function RoomsGrid({ rooms, listingTitle, roomAvailability, roomPriceOver
     const form = document.getElementById("contact-form");
     if (form) {
       form.scrollIntoView({ behavior: "smooth" });
-      form.classList.add("ring-2", "ring-[#E8A020]", "ring-offset-2");
+      form.classList.add("ring-2", "ring-amber", "ring-offset-2");
       setTimeout(() => {
-        form.classList.remove("ring-2", "ring-[#E8A020]", "ring-offset-2");
+        form.classList.remove("ring-2", "ring-amber", "ring-offset-2");
       }, 1000);
     }
   };

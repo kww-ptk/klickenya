@@ -58,7 +58,7 @@ export default async function AdminEventsPage() {
       {rows.length === 0 ? (
         <p className="text-text2 text-[15px]">No event submissions yet.</p>
       ) : (
-        <div className="rounded-xl border border-[#E2DDD5] overflow-hidden">
+        <div className="rounded-xl border border-border overflow-hidden">
           <table className="w-full text-left">
             <thead className="bg-surface text-[12px] font-semibold text-text2 uppercase tracking-wide">
               <tr>
@@ -70,7 +70,7 @@ export default async function AdminEventsPage() {
                 <th className="px-4 py-3" />
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#E2DDD5]">
+            <tbody className="divide-y divide-border">
               {rows.map((row) => {
                 const st = STATUS_STYLES[row.status] ?? STATUS_STYLES.pending;
                 return (
@@ -98,7 +98,7 @@ export default async function AdminEventsPage() {
                     <td className="px-4 py-3">
                       <Link
                         href={`/admin/events/${row.id}`}
-                        className="text-[13px] font-semibold text-[#E8A020] hover:underline"
+                        className="text-[13px] font-semibold text-amber hover:underline"
                       >
                         View →
                       </Link>

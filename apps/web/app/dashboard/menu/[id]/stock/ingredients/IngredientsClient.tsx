@@ -19,7 +19,7 @@ const UNIT_HINTS = ["g", "kg", "ml", "l", "pcs", "ea", "tbsp", "tsp"];
 const CATEGORY_HINTS = ["Produce", "Meat", "Dairy", "Dry", "Bev", "Other"];
 
 const inputCls =
-  "w-full border border-[#E2DDD5] rounded-xl px-3 py-2.5 text-[14px] text-[#16130C] placeholder:text-[#9C9485] focus:outline-none focus:border-[#E8A020] focus:ring-1 focus:ring-[#E8A020]/30 bg-white";
+  "w-full border border-border rounded-xl px-3 py-2.5 text-[14px] text-dark placeholder:text-text3 focus:outline-none focus:border-amber focus:ring-1 focus:ring-amber/30 bg-white";
 
 function fmtKES(n: number): string {
   return `KSh ${Number(n).toLocaleString("en-KE", { maximumFractionDigits: 2 })}`;
@@ -106,7 +106,7 @@ export function IngredientsClient({
             setShowAdd((s) => !s);
             setEditingId(null);
           }}
-          className="bg-[#E8A020] text-[#16130C] font-bold text-[14px] px-5 h-[46px] rounded-full hover:bg-[#d4911c] transition-colors shadow-sm shrink-0"
+          className="bg-amber text-dark font-bold text-[14px] px-5 h-[46px] rounded-full hover:bg-[#d4911c] transition-colors shadow-sm shrink-0"
         >
           {showAdd ? "Cancel" : "+ New ingredient"}
         </button>
@@ -130,17 +130,17 @@ export function IngredientsClient({
       )}
 
       {/* Table / list */}
-      <div className="bg-white rounded-2xl border border-[#E2DDD5] shadow-sm overflow-hidden">
+      <div className="bg-white rounded-2xl border border-border shadow-sm overflow-hidden">
         {filtered.length === 0 ? (
           <div className="p-8 text-center">
-            <p className="text-[14px] text-[#9C9485]">
+            <p className="text-[14px] text-text3">
               {rows.length === 0
                 ? 'No ingredients yet. Tap "+ New ingredient" to add your first.'
                 : "No matches for that search."}
             </p>
           </div>
         ) : (
-          <ul className="divide-y divide-[#F4F1EC]">
+          <ul className="divide-y divide-surface">
             {filtered.map((r) =>
               editingId === r.id ? (
                 <li key={r.id} className="p-4">
@@ -159,14 +159,14 @@ export function IngredientsClient({
                   className="px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-1"
                 >
                   <div className="flex-1 min-w-[180px]">
-                    <p className="text-[14px] font-semibold text-[#16130C]">{r.name}</p>
-                    <p className="text-[12px] text-[#9C9485]">
+                    <p className="text-[14px] font-semibold text-dark">{r.name}</p>
+                    <p className="text-[12px] text-text3">
                       {r.category ?? "Uncategorised"} · {fmtKES(r.cost_per_unit)} / {r.unit} · yield {Math.round(r.default_yield * 100)}%
                     </p>
                   </div>
                   <div className="text-right shrink-0 hidden sm:block">
-                    <p className="text-[12px] text-[#9C9485]">On hand</p>
-                    <p className="text-[14px] font-semibold text-[#16130C]">
+                    <p className="text-[12px] text-text3">On hand</p>
+                    <p className="text-[14px] font-semibold text-dark">
                       {Number(r.on_hand).toLocaleString("en-KE", { maximumFractionDigits: 2 })} {r.unit}
                     </p>
                   </div>
@@ -176,13 +176,13 @@ export function IngredientsClient({
                         setEditingId(r.id);
                         setShowAdd(false);
                       }}
-                      className="h-9 px-3 rounded-full text-[12px] font-semibold border border-[#E2DDD5] text-[#5E5848] hover:border-[#E8A020] hover:text-[#E8A020] transition-colors"
+                      className="h-9 px-3 rounded-full text-[12px] font-semibold border border-border text-text2 hover:border-amber hover:text-amber transition-colors"
                     >
                       Edit
                     </button>
                     <button
                       onClick={() => archiveIngredient(r.id)}
-                      className="h-9 px-3 rounded-full text-[12px] font-semibold border border-[#E2DDD5] text-[#5E5848] hover:border-[#DC2626] hover:text-[#DC2626] transition-colors"
+                      className="h-9 px-3 rounded-full text-[12px] font-semibold border border-border text-text2 hover:border-[#DC2626] hover:text-[#DC2626] transition-colors"
                     >
                       Archive
                     </button>
@@ -248,11 +248,11 @@ function IngredientForm({
   return (
     <form
       onSubmit={submit}
-      className="border border-[#E2DDD5] rounded-2xl p-4 bg-[#FAFAF8] space-y-3"
+      className="border border-border rounded-2xl p-4 bg-canvas space-y-3"
     >
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
-          <label className="block text-[12px] font-semibold text-[#16130C] mb-1">Name *</label>
+          <label className="block text-[12px] font-semibold text-dark mb-1">Name *</label>
           <input
             type="text"
             value={name}
@@ -264,7 +264,7 @@ function IngredientForm({
           />
         </div>
         <div>
-          <label className="block text-[12px] font-semibold text-[#16130C] mb-1">Category</label>
+          <label className="block text-[12px] font-semibold text-dark mb-1">Category</label>
           <input
             type="text"
             list="ingredient-category-hints"
@@ -283,7 +283,7 @@ function IngredientForm({
 
       <div className="grid grid-cols-3 gap-3">
         <div>
-          <label className="block text-[12px] font-semibold text-[#16130C] mb-1">Unit *</label>
+          <label className="block text-[12px] font-semibold text-dark mb-1">Unit *</label>
           <input
             type="text"
             list="ingredient-unit-hints"
@@ -299,7 +299,7 @@ function IngredientForm({
           </datalist>
         </div>
         <div>
-          <label className="block text-[12px] font-semibold text-[#16130C] mb-1">Cost / unit (KES)</label>
+          <label className="block text-[12px] font-semibold text-dark mb-1">Cost / unit (KES)</label>
           <input
             type="number"
             inputMode="decimal"
@@ -311,7 +311,7 @@ function IngredientForm({
           />
         </div>
         <div>
-          <label className="block text-[12px] font-semibold text-[#16130C] mb-1">
+          <label className="block text-[12px] font-semibold text-dark mb-1">
             Default yield %
           </label>
           <input
@@ -329,9 +329,9 @@ function IngredientForm({
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
-          <label className="block text-[12px] font-semibold text-[#16130C] mb-1">
+          <label className="block text-[12px] font-semibold text-dark mb-1">
             Low-stock threshold
-            <span className="text-[#9C9485] font-normal"> · optional</span>
+            <span className="text-text3 font-normal"> · optional</span>
           </label>
           <input
             type="number"
@@ -350,14 +350,14 @@ function IngredientForm({
         <button
           type="submit"
           disabled={!valid || busy}
-          className="bg-[#E8A020] text-[#16130C] font-bold text-[13px] px-5 h-[40px] rounded-full hover:bg-[#d4911c] transition-colors disabled:opacity-50"
+          className="bg-amber text-dark font-bold text-[13px] px-5 h-[40px] rounded-full hover:bg-[#d4911c] transition-colors disabled:opacity-50"
         >
           {busy ? "Saving…" : initial?.id ? "Save changes" : "Add ingredient"}
         </button>
         <button
           type="button"
           onClick={onCancel}
-          className="text-[13px] font-semibold text-[#9C9485] hover:text-[#16130C] transition-colors px-3"
+          className="text-[13px] font-semibold text-text3 hover:text-dark transition-colors px-3"
         >
           Cancel
         </button>

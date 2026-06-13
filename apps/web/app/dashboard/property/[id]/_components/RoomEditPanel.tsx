@@ -83,7 +83,7 @@ async function compressImage(file: File, maxDim = 1200, quality = 0.8): Promise<
 }
 
 const inputCls =
-  "w-full rounded-xl border border-[#E2DDD5] bg-white px-3 py-2.5 text-[13px] text-[#16130C] placeholder-[#C5BFB5] focus:outline-none focus:ring-2 focus:ring-[#4F46E5]/30 focus:border-[#4F46E5]";
+  "w-full rounded-xl border border-border bg-white px-3 py-2.5 text-[13px] text-dark placeholder-[#C5BFB5] focus:outline-none focus:ring-2 focus:ring-[#4F46E5]/30 focus:border-[#4F46E5]";
 
 export function RoomEditPanel({
   room,
@@ -243,15 +243,15 @@ export function RoomEditPanel({
       {/* Panel */}
       <div className="fixed inset-y-0 right-0 z-50 w-full max-w-[480px] bg-white shadow-2xl flex flex-col overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-[#E2DDD5] shrink-0">
-          <h2 className="font-display text-[17px] font-bold text-[#16130C] tracking-[-0.02em]">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-border shrink-0">
+          <h2 className="font-display text-[17px] font-bold text-dark tracking-[-0.02em]">
             {isNew ? "Add room" : "Edit room"}
           </h2>
           <button
             onClick={onClose}
-            className="size-8 rounded-full bg-[#F4F1EC] flex items-center justify-center hover:bg-[#E2DDD5] transition-colors"
+            className="size-8 rounded-full bg-surface flex items-center justify-center hover:bg-border transition-colors"
           >
-            <svg className="size-4 text-[#5E5848]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <svg className="size-4 text-text2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
@@ -263,7 +263,7 @@ export function RoomEditPanel({
           {/* Name + number */}
           <div className="grid grid-cols-[1fr_auto] gap-3">
             <div>
-              <label className="block text-[11px] font-semibold text-[#9C9485] uppercase tracking-wider mb-1.5">
+              <label className="block text-[11px] font-semibold text-text3 uppercase tracking-wider mb-1.5">
                 Room name *
               </label>
               <input
@@ -275,7 +275,7 @@ export function RoomEditPanel({
               />
             </div>
             <div className="w-[80px]">
-              <label className="block text-[11px] font-semibold text-[#9C9485] uppercase tracking-wider mb-1.5">
+              <label className="block text-[11px] font-semibold text-text3 uppercase tracking-wider mb-1.5">
                 Room #
               </label>
               <input
@@ -291,7 +291,7 @@ export function RoomEditPanel({
           {/* Type + bed */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-[11px] font-semibold text-[#9C9485] uppercase tracking-wider mb-1.5">
+              <label className="block text-[11px] font-semibold text-text3 uppercase tracking-wider mb-1.5">
                 Room type
               </label>
               <select value={roomType} onChange={(e) => setRoomType(e.target.value)} className={inputCls + " bg-white"}>
@@ -301,7 +301,7 @@ export function RoomEditPanel({
               </select>
             </div>
             <div>
-              <label className="block text-[11px] font-semibold text-[#9C9485] uppercase tracking-wider mb-1.5">
+              <label className="block text-[11px] font-semibold text-text3 uppercase tracking-wider mb-1.5">
                 Bed type
               </label>
               <select value={bedType} onChange={(e) => setBedType(e.target.value)} className={inputCls + " bg-white"}>
@@ -316,7 +316,7 @@ export function RoomEditPanel({
           {/* Guests + size + price */}
           <div className="grid grid-cols-3 gap-3">
             <div>
-              <label className="block text-[11px] font-semibold text-[#9C9485] uppercase tracking-wider mb-1.5">
+              <label className="block text-[11px] font-semibold text-text3 uppercase tracking-wider mb-1.5">
                 Max guests
               </label>
               <input
@@ -329,7 +329,7 @@ export function RoomEditPanel({
               />
             </div>
             <div>
-              <label className="block text-[11px] font-semibold text-[#9C9485] uppercase tracking-wider mb-1.5">
+              <label className="block text-[11px] font-semibold text-text3 uppercase tracking-wider mb-1.5">
                 Size (m²)
               </label>
               <input
@@ -342,7 +342,7 @@ export function RoomEditPanel({
               />
             </div>
             <div>
-              <label className="block text-[11px] font-semibold text-[#9C9485] uppercase tracking-wider mb-1.5">
+              <label className="block text-[11px] font-semibold text-text3 uppercase tracking-wider mb-1.5">
                 Price / night *
               </label>
               <input
@@ -358,7 +358,7 @@ export function RoomEditPanel({
 
           {/* Description */}
           <div>
-            <label className="block text-[11px] font-semibold text-[#9C9485] uppercase tracking-wider mb-1.5">
+            <label className="block text-[11px] font-semibold text-text3 uppercase tracking-wider mb-1.5">
               Description
             </label>
             <textarea
@@ -372,7 +372,7 @@ export function RoomEditPanel({
 
           {/* Amenities */}
           <div>
-            <label className="block text-[11px] font-semibold text-[#9C9485] uppercase tracking-wider mb-2">
+            <label className="block text-[11px] font-semibold text-text3 uppercase tracking-wider mb-2">
               Amenities
             </label>
             <div className="flex flex-wrap gap-1.5">
@@ -386,7 +386,7 @@ export function RoomEditPanel({
                     className={`px-3 py-1 rounded-full text-[12px] font-medium border transition-colors ${
                       on
                         ? "bg-[#4F46E5] border-[#4F46E5] text-white"
-                        : "bg-white border-[#E2DDD5] text-[#5E5848] hover:border-[#9C9485]"
+                        : "bg-white border-border text-text2 hover:border-text3"
                     }`}
                   >
                     {a}
@@ -398,14 +398,14 @@ export function RoomEditPanel({
 
           {/* Photos */}
           <div>
-            <label className="block text-[11px] font-semibold text-[#9C9485] uppercase tracking-wider mb-2">
+            <label className="block text-[11px] font-semibold text-text3 uppercase tracking-wider mb-2">
               Photos
             </label>
 
             {photos.length > 0 && (
               <div className="grid grid-cols-3 gap-2 mb-3">
                 {photos.map((url, i) => (
-                  <div key={url} className="relative aspect-[4/3] rounded-xl overflow-hidden bg-[#F4F1EC] group">
+                  <div key={url} className="relative aspect-[4/3] rounded-xl overflow-hidden bg-surface group">
                     <Image
                       src={url}
                       alt={`Room photo ${i + 1}`}
@@ -444,7 +444,7 @@ export function RoomEditPanel({
               type="button"
               onClick={() => fileInputRef.current?.click()}
               disabled={uploadingPhoto}
-              className="w-full py-2.5 rounded-xl border-2 border-dashed border-[#E2DDD5] text-[13px] text-[#9C9485] hover:border-[#4F46E5] hover:text-[#4F46E5] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full py-2.5 rounded-xl border-2 border-dashed border-border text-[13px] text-text3 hover:border-[#4F46E5] hover:text-[#4F46E5] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {uploadingPhoto ? "Uploading…" : "+ Add photos"}
             </button>
@@ -464,10 +464,10 @@ export function RoomEditPanel({
               {/* Disable / Enable */}
               <div className="flex items-start justify-between gap-3 pb-3 border-b border-red-50">
                 <div>
-                  <p className="text-[12px] font-semibold text-[#16130C]">
+                  <p className="text-[12px] font-semibold text-dark">
                     {isActive ? "Disable room" : "Room is disabled"}
                   </p>
-                  <p className="text-[11px] text-[#9C9485] mt-0.5">
+                  <p className="text-[11px] text-text3 mt-0.5">
                     {isActive ? "Hides this room from bookings." : "Room is hidden — click to re-enable."}
                   </p>
                 </div>
@@ -478,7 +478,7 @@ export function RoomEditPanel({
                   className={`shrink-0 text-[11px] font-semibold px-2.5 h-[28px] rounded-lg border transition-colors disabled:opacity-50 ${
                     isActive
                       ? "border-red-200 text-red-600 hover:bg-red-50"
-                      : "border-[#16A34A]/30 text-[#16A34A] hover:bg-[#16A34A]/5"
+                      : "border-green/30 text-green hover:bg-green/5"
                   }`}
                 >
                   {togglingActive ? "…" : isActive ? "Disable" : "Enable"}
@@ -490,8 +490,8 @@ export function RoomEditPanel({
                 {!deleteConfirm ? (
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <p className="text-[12px] font-semibold text-[#16130C]">Delete room</p>
-                      <p className="text-[11px] text-[#9C9485] mt-0.5">Permanently removes this room. Cannot be undone.</p>
+                      <p className="text-[12px] font-semibold text-dark">Delete room</p>
+                      <p className="text-[11px] text-text3 mt-0.5">Permanently removes this room. Cannot be undone.</p>
                     </div>
                     <button
                       type="button"
@@ -509,7 +509,7 @@ export function RoomEditPanel({
                       <button
                         type="button"
                         onClick={() => setDeleteConfirm(false)}
-                        className="flex-1 h-[32px] text-[11px] font-semibold rounded-lg border border-[#E2DDD5] text-[#5E5848] hover:bg-[#F4F1EC] bg-white"
+                        className="flex-1 h-[32px] text-[11px] font-semibold rounded-lg border border-border text-text2 hover:bg-surface bg-white"
                       >
                         Cancel
                       </button>
@@ -530,7 +530,7 @@ export function RoomEditPanel({
         </div>
 
         {/* Footer */}
-        <div className="px-5 py-4 border-t border-[#E2DDD5] shrink-0">
+        <div className="px-5 py-4 border-t border-border shrink-0">
           <button
             onClick={handleSave}
             disabled={saving || uploadingPhoto}

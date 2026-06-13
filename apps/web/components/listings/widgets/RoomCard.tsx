@@ -94,18 +94,18 @@ export function RoomCard({ room, onEnquire, realAvailability, priceOverride, lis
           {/* Info */}
           <div className="flex-1 min-w-0 py-0.5 flex flex-col justify-between">
             <div>
-              <p className="text-[14.5px] font-semibold text-[#16130C] leading-[1.3] line-clamp-1">
+              <p className="text-[14.5px] font-semibold text-dark leading-[1.3] line-clamp-1">
                 {room.roomName}
               </p>
-              <p className="mt-0.5 text-[12px] text-[#9C9485] line-clamp-1">
+              <p className="mt-0.5 text-[12px] text-text3 line-clamp-1">
                 {meta.join(" · ")}
               </p>
               {/* Top amenities with tick */}
               {amenities.length > 0 && (
-                <div className="mt-1 flex items-center gap-2 text-[11px] text-[#9C9485] line-clamp-1">
+                <div className="mt-1 flex items-center gap-2 text-[11px] text-text3 line-clamp-1">
                   {amenities.slice(0, 3).map((a: string) => (
                     <span key={a} className="inline-flex items-center gap-0.5">
-                      <Check className="size-2.5 text-[#E8A020]" strokeWidth={3} />
+                      <Check className="size-2.5 text-amber" strokeWidth={3} />
                       {a}
                     </span>
                   ))}
@@ -113,14 +113,14 @@ export function RoomCard({ room, onEnquire, realAvailability, priceOverride, lis
               )}
             </div>
             <div className="flex items-center justify-between gap-2">
-              <p className="text-[13.5px] font-semibold text-[#E8A020]">
+              <p className="text-[13.5px] font-semibold text-amber">
                 KSh {displayPrice.toLocaleString()}
-                <span className="text-[11px] font-normal text-[#9C9485]"> /night</span>
+                <span className="text-[11px] font-normal text-text3"> /night</span>
               </p>
               <button
                 type="button"
                 onClick={() => onRoomBooking ? onRoomBooking(room._key) : onEnquire(room.roomName)}
-                className="shrink-0 bg-[#E8A020] text-[#16130C] font-bold text-[10px] rounded-full px-3 py-1.5 transition-colors hover:bg-[#d4911c]"
+                className="shrink-0 bg-amber text-dark font-bold text-[10px] rounded-full px-3 py-1.5 transition-colors hover:bg-[#d4911c]"
               >
                 {onRoomBooking ? "Check availability" : "Enquire"}
               </button>
@@ -130,7 +130,7 @@ export function RoomCard({ room, onEnquire, realAvailability, priceOverride, lis
       </div>
 
       {/* ── DESKTOP: vertical card ── */}
-      <div className="hidden sm:block bg-white rounded-xl border border-[#E2DDD5] overflow-hidden transition-shadow duration-200 hover:shadow-md group">
+      <div className="hidden sm:block bg-white rounded-xl border border-border overflow-hidden transition-shadow duration-200 hover:shadow-md group">
         {/* Photo slider */}
         <div className="relative aspect-[4/3] overflow-hidden">
           {currentSlideUrl ? (
@@ -174,12 +174,12 @@ export function RoomCard({ room, onEnquire, realAvailability, priceOverride, lis
 
         {/* Body */}
         <div className="p-4">
-          <h3 className="font-display text-[16px] font-bold text-[#16130C] leading-[1.3] mb-1.5">
+          <h3 className="font-display text-[16px] font-bold text-dark leading-[1.3] mb-1.5">
             {room.roomName}
           </h3>
 
           {/* Meta row */}
-          <p className="text-[12.5px] text-[#9C9485] mb-3">
+          <p className="text-[12.5px] text-text3 mb-3">
             {meta.join(" · ")}
             {room.quantity != null && room.quantity > 1 && ` · ${room.quantity} available`}
           </p>
@@ -190,9 +190,9 @@ export function RoomCard({ room, onEnquire, realAvailability, priceOverride, lis
               {amenities.map((a: string) => (
                 <span
                   key={a}
-                  className="inline-flex items-center gap-1.5 text-[12px] text-[#5E5848]"
+                  className="inline-flex items-center gap-1.5 text-[12px] text-text2"
                 >
-                  <Check className="size-3 text-[#E8A020] shrink-0" strokeWidth={3} />
+                  <Check className="size-3 text-amber shrink-0" strokeWidth={3} />
                   {a}
                 </span>
               ))}
@@ -200,17 +200,17 @@ export function RoomCard({ room, onEnquire, realAvailability, priceOverride, lis
           )}
 
           {/* Price + CTA */}
-          <div className="flex items-center justify-between pt-3 border-t border-[#E2DDD5]">
+          <div className="flex items-center justify-between pt-3 border-t border-border">
             <div>
-              <span className="text-[18px] font-bold text-[#E8A020]">
+              <span className="text-[18px] font-bold text-amber">
                 KSh {displayPrice.toLocaleString()}
               </span>
-              <span className="text-[12px] text-[#9C9485]"> / night</span>
+              <span className="text-[12px] text-text3"> / night</span>
             </div>
             <button
               type="button"
               onClick={() => onRoomBooking ? onRoomBooking(room._key) : onEnquire(room.roomName)}
-              className="bg-[#E8A020] text-[#16130C] font-bold text-[12px] rounded-full px-4 py-2 transition-colors hover:bg-[#d4911c]"
+              className="bg-amber text-dark font-bold text-[12px] rounded-full px-4 py-2 transition-colors hover:bg-[#d4911c]"
             >
               {onRoomBooking ? "Check availability" : "Enquire"}
             </button>

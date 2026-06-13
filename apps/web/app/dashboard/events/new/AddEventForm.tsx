@@ -37,8 +37,8 @@ type Step = (typeof STEPS)[number]["key"];
 /* ── Styles ─────────────────────────────────────────── */
 
 const inputCls =
-  "w-full rounded-xl border border-[#E2DDD5] bg-white px-4 py-3 text-[14px] text-text placeholder:text-text3 outline-none focus:ring-2 focus:ring-[#E8A020]/40 focus:border-[#E8A020] transition-all";
-const labelCls = "block text-[14px] font-bold text-[#16130C] mb-1.5";
+  "w-full rounded-xl border border-border bg-white px-4 py-3 text-[14px] text-text placeholder:text-text3 outline-none focus:ring-2 focus:ring-amber/40 focus:border-amber transition-all";
+const labelCls = "block text-[14px] font-bold text-dark mb-1.5";
 const selectCls = cn(inputCls, "appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%239C9485%22%20stroke-width%3D%222%22%3E%3Cpath%20d%3D%22m6%209%206%206%206-6%22%2F%3E%3C%2Fsvg%3E')] bg-[length:16px] bg-[right_12px_center] bg-no-repeat pr-10");
 
 /* ── Ticket type ────────────────────────────────────── */
@@ -90,7 +90,7 @@ function ProgressDots({ currentIndex }: { currentIndex: number }) {
             <div
               className={cn(
                 "w-8 h-[2px] mx-1",
-                i <= currentIndex ? "bg-[#E8A020]" : "bg-[#E2DDD5]"
+                i <= currentIndex ? "bg-amber" : "bg-border"
               )}
             />
           )}
@@ -99,10 +99,10 @@ function ProgressDots({ currentIndex }: { currentIndex: number }) {
               className={cn(
                 "size-8 rounded-full flex items-center justify-center text-[13px] font-bold transition-all",
                 i < currentIndex
-                  ? "bg-[#E8A020] text-white"
+                  ? "bg-amber text-white"
                   : i === currentIndex
-                    ? "border-2 border-[#E8A020] text-[#E8A020] bg-white"
-                    : "border-2 border-[#E2DDD5] text-[#9C9485] bg-white"
+                    ? "border-2 border-amber text-amber bg-white"
+                    : "border-2 border-border text-text3 bg-white"
               )}
             >
               {i + 1}
@@ -110,7 +110,7 @@ function ProgressDots({ currentIndex }: { currentIndex: number }) {
             <span
               className={cn(
                 "text-[10px] font-semibold whitespace-nowrap",
-                i <= currentIndex ? "text-[#E8A020]" : "text-[#9C9485]"
+                i <= currentIndex ? "text-amber" : "text-text3"
               )}
             >
               {s.label}
@@ -310,7 +310,7 @@ export function AddEventForm({ hostDisplayName, sanityHostId }: AddEventFormProp
         {success.isLive && (
           <button
             onClick={() => router.push(`/events/${citySlug}/${success.slug}`)}
-            className="px-6 py-3 rounded-full bg-[#E8A020] text-white font-semibold text-[14px] hover:bg-[#d4911c] transition-colors"
+            className="px-6 py-3 rounded-full bg-amber text-white font-semibold text-[14px] hover:bg-[#d4911c] transition-colors"
           >
             View your event
           </button>
@@ -390,7 +390,7 @@ export function AddEventForm({ hostDisplayName, sanityHostId }: AddEventFormProp
           <div>
             <label className={labelCls}>Cover photo *</label>
             {coverPreview ? (
-              <div className="relative rounded-xl overflow-hidden border border-[#E2DDD5]">
+              <div className="relative rounded-xl overflow-hidden border border-border">
                 <Image src={coverPreview} alt="Cover preview" width={640} height={360} className="w-full h-[200px] object-cover" />
                 <button
                   onClick={() => { setCoverPhoto(null); setCoverPreview(null); }}
@@ -402,7 +402,7 @@ export function AddEventForm({ hostDisplayName, sanityHostId }: AddEventFormProp
             ) : (
               <button
                 onClick={() => coverInputRef.current?.click()}
-                className="w-full h-[160px] rounded-xl border-2 border-dashed border-[#E2DDD5] bg-surface/50 flex flex-col items-center justify-center gap-2 text-text3 hover:border-[#E8A020] hover:text-[#E8A020] transition-colors"
+                className="w-full h-[160px] rounded-xl border-2 border-dashed border-border bg-surface/50 flex flex-col items-center justify-center gap-2 text-text3 hover:border-amber hover:text-amber transition-colors"
               >
                 <Upload className="size-6" />
                 <span className="text-[13px] font-medium">Upload cover image</span>
@@ -416,7 +416,7 @@ export function AddEventForm({ hostDisplayName, sanityHostId }: AddEventFormProp
             <label className={labelCls}>Additional photos <span className="font-normal text-text3">(up to 5)</span></label>
             <div className="flex gap-3 flex-wrap">
               {additionalPreviews.map((src, i) => (
-                <div key={i} className="relative size-20 rounded-lg overflow-hidden border border-[#E2DDD5]">
+                <div key={i} className="relative size-20 rounded-lg overflow-hidden border border-border">
                   <Image src={src} alt={`Photo ${i + 1}`} fill className="object-cover" />
                   <button
                     onClick={() => removeAdditionalPhoto(i)}
@@ -429,7 +429,7 @@ export function AddEventForm({ hostDisplayName, sanityHostId }: AddEventFormProp
               {additionalPhotos.length < 5 && (
                 <button
                   onClick={() => additionalInputRef.current?.click()}
-                  className="size-20 rounded-lg border-2 border-dashed border-[#E2DDD5] flex items-center justify-center text-text3 hover:border-[#E8A020] hover:text-[#E8A020] transition-colors"
+                  className="size-20 rounded-lg border-2 border-dashed border-border flex items-center justify-center text-text3 hover:border-amber hover:text-amber transition-colors"
                 >
                   <Plus className="size-5" />
                 </button>
@@ -441,7 +441,7 @@ export function AddEventForm({ hostDisplayName, sanityHostId }: AddEventFormProp
           <button
             disabled={!step1Valid}
             onClick={() => setStep("datetime")}
-            className="w-full py-3 rounded-xl bg-[#E8A020] text-white font-semibold text-[14px] disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[#d4911c] transition-colors"
+            className="w-full py-3 rounded-xl bg-amber text-white font-semibold text-[14px] disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[#d4911c] transition-colors"
           >
             Continue
           </button>
@@ -483,7 +483,7 @@ export function AddEventForm({ hostDisplayName, sanityHostId }: AddEventFormProp
               onClick={() => setIsRecurring(!isRecurring)}
               className={cn(
                 "relative w-11 h-6 rounded-full transition-colors",
-                isRecurring ? "bg-[#E8A020]" : "bg-[#E2DDD5]"
+                isRecurring ? "bg-amber" : "bg-border"
               )}
             >
               <span className={cn(
@@ -523,7 +523,7 @@ export function AddEventForm({ hostDisplayName, sanityHostId }: AddEventFormProp
                   ))}
                 </div>
                 {schedule.length < 7 && (
-                  <button onClick={addScheduleRow} className="mt-2 flex items-center gap-1.5 text-[13px] font-semibold text-[#E8A020] hover:text-[#d4911c] transition-colors">
+                  <button onClick={addScheduleRow} className="mt-2 flex items-center gap-1.5 text-[13px] font-semibold text-amber hover:text-[#d4911c] transition-colors">
                     <Plus className="size-4" /> Add another day
                   </button>
                 )}
@@ -532,13 +532,13 @@ export function AddEventForm({ hostDisplayName, sanityHostId }: AddEventFormProp
           )}
 
           <div className="flex gap-3">
-            <button onClick={() => setStep("basic")} className="flex-1 py-3 rounded-xl border border-[#E2DDD5] text-text font-semibold text-[14px] hover:bg-surface transition-colors">
+            <button onClick={() => setStep("basic")} className="flex-1 py-3 rounded-xl border border-border text-text font-semibold text-[14px] hover:bg-surface transition-colors">
               Back
             </button>
             <button
               disabled={!step2Valid}
               onClick={() => setStep("tickets")}
-              className="flex-1 py-3 rounded-xl bg-[#E8A020] text-white font-semibold text-[14px] disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[#d4911c] transition-colors"
+              className="flex-1 py-3 rounded-xl bg-amber text-white font-semibold text-[14px] disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[#d4911c] transition-colors"
             >
               Continue
             </button>
@@ -555,7 +555,7 @@ export function AddEventForm({ hostDisplayName, sanityHostId }: AddEventFormProp
               onClick={() => setIsFree(!isFree)}
               className={cn(
                 "relative w-11 h-6 rounded-full transition-colors",
-                isFree ? "bg-[#E8A020]" : "bg-[#E2DDD5]"
+                isFree ? "bg-amber" : "bg-border"
               )}
             >
               <span className={cn(
@@ -572,7 +572,7 @@ export function AddEventForm({ hostDisplayName, sanityHostId }: AddEventFormProp
                 <label className={labelCls}>Ticket types</label>
                 <div className="space-y-3">
                   {tickets.map((ticket, i) => (
-                    <div key={i} className="rounded-xl border border-[#E2DDD5] p-4 space-y-3">
+                    <div key={i} className="rounded-xl border border-border p-4 space-y-3">
                       <div className="flex items-center justify-between">
                         <span className="text-[13px] font-semibold text-text">Ticket {i + 1}</span>
                         {tickets.length > 1 && (
@@ -591,7 +591,7 @@ export function AddEventForm({ hostDisplayName, sanityHostId }: AddEventFormProp
                   ))}
                 </div>
                 {tickets.length < 5 && (
-                  <button onClick={addTicket} className="mt-3 flex items-center gap-1.5 text-[13px] font-semibold text-[#E8A020] hover:text-[#d4911c] transition-colors">
+                  <button onClick={addTicket} className="mt-3 flex items-center gap-1.5 text-[13px] font-semibold text-amber hover:text-[#d4911c] transition-colors">
                     <Plus className="size-4" /> Add another ticket type
                   </button>
                 )}
@@ -619,13 +619,13 @@ export function AddEventForm({ hostDisplayName, sanityHostId }: AddEventFormProp
           </div>
 
           <div className="flex gap-3">
-            <button onClick={() => setStep("datetime")} className="flex-1 py-3 rounded-xl border border-[#E2DDD5] text-text font-semibold text-[14px] hover:bg-surface transition-colors">
+            <button onClick={() => setStep("datetime")} className="flex-1 py-3 rounded-xl border border-border text-text font-semibold text-[14px] hover:bg-surface transition-colors">
               Back
             </button>
             <button
               disabled={!step3Valid}
               onClick={() => setStep("review")}
-              className="flex-1 py-3 rounded-xl bg-[#E8A020] text-white font-semibold text-[14px] disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[#d4911c] transition-colors"
+              className="flex-1 py-3 rounded-xl bg-amber text-white font-semibold text-[14px] disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[#d4911c] transition-colors"
             >
               Continue
             </button>
@@ -637,7 +637,7 @@ export function AddEventForm({ hostDisplayName, sanityHostId }: AddEventFormProp
       {step === "review" && (
         <div className="space-y-6">
           {/* Summary cards */}
-          <div className="rounded-xl border border-[#E2DDD5] divide-y divide-[#E2DDD5]">
+          <div className="rounded-xl border border-border divide-y divide-border">
             <SummaryRow label="Title" value={title} />
             <SummaryRow label="Category" value={SUBCATEGORIES.find((s) => s.value === subcategory)?.label ?? subcategory} />
             <SummaryRow label="City" value={city} />
@@ -659,13 +659,13 @@ export function AddEventForm({ hostDisplayName, sanityHostId }: AddEventFormProp
           </div>
 
           <div className="flex gap-3">
-            <button onClick={() => setStep("tickets")} className="flex-1 py-3 rounded-xl border border-[#E2DDD5] text-text font-semibold text-[14px] hover:bg-surface transition-colors">
+            <button onClick={() => setStep("tickets")} className="flex-1 py-3 rounded-xl border border-border text-text font-semibold text-[14px] hover:bg-surface transition-colors">
               Back
             </button>
             <button
               disabled={submitting}
               onClick={handleSubmit}
-              className="flex-1 py-3 rounded-xl bg-[#E8A020] text-white font-semibold text-[14px] disabled:opacity-60 hover:bg-[#d4911c] transition-colors flex items-center justify-center gap-2"
+              className="flex-1 py-3 rounded-xl bg-amber text-white font-semibold text-[14px] disabled:opacity-60 hover:bg-[#d4911c] transition-colors flex items-center justify-center gap-2"
             >
               {submitting && <Loader2 className="size-4 animate-spin" />}
               {submitting ? "Submitting…" : "Submit event"}

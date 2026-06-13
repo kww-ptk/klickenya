@@ -228,10 +228,10 @@ export default async function DashboardPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-5">
         <div>
-          <h1 className="font-display text-[22px] lg:text-[28px] font-bold tracking-[-0.03em] text-[#16130C]">
+          <h1 className="font-display text-[22px] lg:text-[28px] font-bold tracking-[-0.03em] text-dark">
             {greeting}, {firstName}
           </h1>
-          <p className="text-[13px] text-[#9C9485] mt-0.5">
+          <p className="text-[13px] text-text3 mt-0.5">
             Here&apos;s an overview of your dashboard
           </p>
         </div>
@@ -239,14 +239,14 @@ export default async function DashboardPage() {
           {hostSlug && (
             <Link
               href={`/hosts/${hostSlug}`}
-              className="text-[13px] font-medium text-[#9C9485] hover:text-[#16130C] transition-colors hidden sm:flex items-center"
+              className="text-[13px] font-medium text-text3 hover:text-dark transition-colors hidden sm:flex items-center"
             >
               View profile
             </Link>
           )}
           <Link
             href="/dashboard/profile/edit"
-            className="text-[13px] font-semibold text-[#6B2D8B] bg-[#6B2D8B]/8 px-4 h-[40px] flex items-center rounded-xl hover:bg-[#6B2D8B]/15 transition-colors"
+            className="text-[13px] font-semibold text-purple bg-purple/8 px-4 h-[40px] flex items-center rounded-xl hover:bg-purple/15 transition-colors"
           >
             Edit Profile
           </Link>
@@ -256,19 +256,19 @@ export default async function DashboardPage() {
       {/* Stats */}
       <div className="grid grid-cols-4 gap-2 lg:gap-3 mb-5">
         {[
-          { label: "Events", value: events.length, color: "text-[#E8A020]" },
-          { label: "Attendees", value: totalAttendees, color: "text-[#6B2D8B]" },
-          { label: "Listings", value: listings.length, color: "text-[#16130C]" },
-          { label: "Enquiries", value: totalEnquiries, color: "text-[#0D7377]" },
+          { label: "Events", value: events.length, color: "text-amber" },
+          { label: "Attendees", value: totalAttendees, color: "text-purple" },
+          { label: "Listings", value: listings.length, color: "text-dark" },
+          { label: "Enquiries", value: totalEnquiries, color: "text-teal" },
         ].map((stat) => (
           <div
             key={stat.label}
-            className="bg-white rounded-xl lg:rounded-2xl border border-[#E2DDD5] py-3 px-2 lg:p-4 text-center shadow-sm"
+            className="bg-white rounded-xl lg:rounded-2xl border border-border py-3 px-2 lg:p-4 text-center shadow-sm"
           >
             <p className={`font-display text-[20px] lg:text-[24px] font-bold tracking-[-0.02em] leading-none ${stat.color}`}>
               {stat.value}
             </p>
-            <p className="text-[10px] lg:text-[11px] text-[#9C9485] font-medium mt-1">
+            <p className="text-[10px] lg:text-[11px] text-text3 font-medium mt-1">
               {stat.label}
             </p>
           </div>
@@ -277,20 +277,20 @@ export default async function DashboardPage() {
 
       {/* Menu banner for restaurant owners */}
       {unpublishedMenuSlug && (
-        <div className="mb-5 rounded-xl lg:rounded-2xl border border-[#E8A020]/20 bg-[#E8A020]/[0.06] p-4 shadow-sm" style={{ borderLeft: "4px solid #E8A020" }}>
+        <div className="mb-5 rounded-xl lg:rounded-2xl border border-amber/20 bg-amber/[0.06] p-4 shadow-sm" style={{ borderLeft: "4px solid #E8A020" }}>
           <div className="flex items-center gap-3">
             <span className="text-[24px] shrink-0">🍽️</span>
             <div className="flex-1 min-w-0">
-              <p className="text-[13px] font-bold text-[#16130C]">
+              <p className="text-[13px] font-bold text-dark">
                 Your digital menu isn&apos;t live yet
               </p>
-              <p className="text-[12.5px] text-[#5E5848] mt-0.5">
+              <p className="text-[12.5px] text-text2 mt-0.5">
                 Add your menu and print a QR code for your tables.
               </p>
             </div>
             <Link
               href="/dashboard/menus"
-              className="shrink-0 bg-[#E8A020] text-[#16130C] font-bold text-[12px] px-4 h-[36px] flex items-center rounded-full hover:bg-[#d4911c] transition-colors whitespace-nowrap"
+              className="shrink-0 bg-amber text-dark font-bold text-[12px] px-4 h-[36px] flex items-center rounded-full hover:bg-[#d4911c] transition-colors whitespace-nowrap"
             >
               Set up your digital menu →
             </Link>
@@ -326,31 +326,31 @@ export default async function DashboardPage() {
       {/* Events Section — shown first */}
       <div className="mb-5">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="font-display text-[17px] lg:text-[20px] font-bold text-[#16130C] tracking-[-0.02em]">
+          <h2 className="font-display text-[17px] lg:text-[20px] font-bold text-dark tracking-[-0.02em]">
             My Events
           </h2>
           <Link
             href="/dashboard/events/new"
-            className="text-[13px] font-semibold text-[#E8A020] hover:text-[#d4911c] transition-colors"
+            className="text-[13px] font-semibold text-amber hover:text-[#d4911c] transition-colors"
           >
             Create event
           </Link>
         </div>
 
         {events.length === 0 ? (
-          <div className="bg-white rounded-2xl border border-[#E2DDD5] p-8 text-center shadow-sm">
-            <div className="w-16 h-16 rounded-full bg-[#E8A020]/10 flex items-center justify-center mx-auto mb-3">
+          <div className="bg-white rounded-2xl border border-border p-8 text-center shadow-sm">
+            <div className="w-16 h-16 rounded-full bg-amber/10 flex items-center justify-center mx-auto mb-3">
               <span className="text-[28px]">🎟️</span>
             </div>
-            <p className="font-display text-[16px] font-bold text-[#16130C] mb-1">
+            <p className="font-display text-[16px] font-bold text-dark mb-1">
               No events yet
             </p>
-            <p className="text-[13px] text-[#9C9485] mb-4 max-w-[280px] mx-auto">
+            <p className="text-[13px] text-text3 mb-4 max-w-[280px] mx-auto">
               Create your first event and start getting attendees
             </p>
             <Link
               href="/dashboard/events/new"
-              className="inline-block bg-[#E8A020] text-white font-bold text-[13px] px-6 h-[40px] leading-[40px] rounded-full hover:bg-[#d4911c] transition-colors shadow-sm"
+              className="inline-block bg-amber text-white font-bold text-[13px] px-6 h-[40px] leading-[40px] rounded-full hover:bg-[#d4911c] transition-colors shadow-sm"
             >
               Create event
             </Link>
@@ -367,11 +367,11 @@ export default async function DashboardPage() {
                 <Link
                   key={event._id}
                   href={`/dashboard/events/${event._id}/attendees`}
-                  className="block bg-white rounded-xl lg:rounded-2xl border border-[#E2DDD5] p-3 lg:p-4 shadow-sm hover:shadow-md hover:border-[#E8A020]/30 transition-all"
+                  className="block bg-white rounded-xl lg:rounded-2xl border border-border p-3 lg:p-4 shadow-sm hover:shadow-md hover:border-amber/30 transition-all"
                 >
                   <div className="flex gap-3 items-center">
                     {/* Photo */}
-                    <div className="shrink-0 w-[56px] h-[56px] lg:w-[80px] lg:h-[64px] rounded-lg lg:rounded-xl overflow-hidden bg-[#F4F1EC] relative">
+                    <div className="shrink-0 w-[56px] h-[56px] lg:w-[80px] lg:h-[64px] rounded-lg lg:rounded-xl overflow-hidden bg-surface relative">
                       {event.imageUrl ? (
                         <Image
                           src={event.imageUrl}
@@ -381,7 +381,7 @@ export default async function DashboardPage() {
                           className="object-cover"
                         />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center text-[24px] bg-gradient-to-br from-[#E8A020]/10 to-[#E8A020]/5">
+                        <div className="w-full h-full flex items-center justify-center text-[24px] bg-gradient-to-br from-amber/10 to-amber/5">
                           🎟️
                         </div>
                       )}
@@ -389,13 +389,13 @@ export default async function DashboardPage() {
 
                     {/* Info */}
                     <div className="flex-1 min-w-0">
-                      <h3 className="text-[14px] lg:text-[15px] font-semibold text-[#16130C] truncate leading-tight">
+                      <h3 className="text-[14px] lg:text-[15px] font-semibold text-dark truncate leading-tight">
                         {event.title}
                       </h3>
                       <div className="flex items-center gap-1.5 mt-0.5">
-                        {eventDate && <span className="text-[11px] text-[#9C9485]">{eventDate}</span>}
-                        {eventDate && event.city && <span className="text-[#E2DDD5]">·</span>}
-                        {event.city && <span className="text-[11px] text-[#9C9485]">{event.city}</span>}
+                        {eventDate && <span className="text-[11px] text-text3">{eventDate}</span>}
+                        {eventDate && event.city && <span className="text-border">·</span>}
+                        {event.city && <span className="text-[11px] text-text3">{event.city}</span>}
                       </div>
                       <div className="mt-1.5">
                         {isLive ? (
@@ -412,7 +412,7 @@ export default async function DashboardPage() {
 
                     {/* Attendee count */}
                     <div className="shrink-0 text-right">
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#6B2D8B]/8 text-[#6B2D8B] text-[12px] font-semibold">
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-purple/8 text-purple text-[12px] font-semibold">
                         <svg className="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
                         </svg>
@@ -429,24 +429,24 @@ export default async function DashboardPage() {
 
       {/* Listings Section — shown second */}
       <div className="mb-5">
-        <h2 className="font-display text-[17px] lg:text-[20px] font-bold text-[#16130C] tracking-[-0.02em] mb-3">
+        <h2 className="font-display text-[17px] lg:text-[20px] font-bold text-dark tracking-[-0.02em] mb-3">
           My Listings
         </h2>
 
         {listings.length === 0 ? (
-          <div className="bg-white rounded-2xl border border-[#E2DDD5] p-8 text-center shadow-sm">
-            <div className="w-16 h-16 rounded-full bg-[#E8A020]/10 flex items-center justify-center mx-auto mb-3">
+          <div className="bg-white rounded-2xl border border-border p-8 text-center shadow-sm">
+            <div className="w-16 h-16 rounded-full bg-amber/10 flex items-center justify-center mx-auto mb-3">
               <span className="text-[28px]">🏡</span>
             </div>
-            <p className="font-display text-[16px] font-bold text-[#16130C] mb-1">
+            <p className="font-display text-[16px] font-bold text-dark mb-1">
               No listings yet
             </p>
-            <p className="text-[13px] text-[#9C9485] mb-4 max-w-[280px] mx-auto">
+            <p className="text-[13px] text-text3 mb-4 max-w-[280px] mx-auto">
               Claim your first listing on Klickenya and start managing it from here
             </p>
             <Link
               href="/"
-              className="inline-block bg-[#E8A020] text-[#16130C] font-bold text-[13px] px-6 h-[40px] leading-[40px] rounded-full hover:bg-[#d4911c] transition-colors shadow-sm"
+              className="inline-block bg-amber text-dark font-bold text-[13px] px-6 h-[40px] leading-[40px] rounded-full hover:bg-[#d4911c] transition-colors shadow-sm"
             >
               Claim a listing
             </Link>
@@ -465,11 +465,11 @@ export default async function DashboardPage() {
               return (
                 <div
                   key={listing._id}
-                  className="bg-white rounded-xl lg:rounded-2xl border border-[#E2DDD5] p-3 lg:p-4 shadow-sm hover:shadow-md transition-shadow"
+                  className="bg-white rounded-xl lg:rounded-2xl border border-border p-3 lg:p-4 shadow-sm hover:shadow-md transition-shadow"
                 >
                   <div className="flex gap-3">
                     {/* Photo */}
-                    <div className="shrink-0 w-[56px] h-[56px] lg:w-[80px] lg:h-[64px] rounded-lg lg:rounded-xl overflow-hidden bg-[#F4F1EC] relative">
+                    <div className="shrink-0 w-[56px] h-[56px] lg:w-[80px] lg:h-[64px] rounded-lg lg:rounded-xl overflow-hidden bg-surface relative">
                       {listing.imageUrl ? (
                         <Image
                           src={listing.imageUrl}
@@ -479,7 +479,7 @@ export default async function DashboardPage() {
                           className="object-cover"
                         />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center text-[24px] bg-gradient-to-br from-[#F4F1EC] to-[#E2DDD5]">
+                        <div className="w-full h-full flex items-center justify-center text-[24px] bg-gradient-to-br from-surface to-border">
                           🏠
                         </div>
                       )}
@@ -487,36 +487,36 @@ export default async function DashboardPage() {
 
                     {/* Info */}
                     <div className="flex-1 min-w-0">
-                      <h3 className="text-[14px] lg:text-[15px] font-semibold text-[#16130C] truncate leading-tight">
+                      <h3 className="text-[14px] lg:text-[15px] font-semibold text-dark truncate leading-tight">
                         {listing.title}
                       </h3>
                       <div className="flex items-center gap-1.5 mt-0.5">
-                        <span className="text-[11px] text-[#9C9485] capitalize">{listing.type}</span>
+                        <span className="text-[11px] text-text3 capitalize">{listing.type}</span>
                         {listing.city && (
                           <>
-                            <span className="text-[#E2DDD5]">·</span>
-                            <span className="text-[11px] text-[#9C9485]">{listing.city}</span>
+                            <span className="text-border">·</span>
+                            <span className="text-[11px] text-text3">{listing.city}</span>
                           </>
                         )}
                       </div>
                       <div className="flex items-center gap-2 mt-1.5">
                         {listing.isVerified ? (
-                          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[#16A34A] bg-[#16A34A]/8 px-2 py-0.5 rounded-full">
+                          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-green bg-green/8 px-2 py-0.5 rounded-full">
                             <svg className="w-2.5 h-2.5" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
                             Verified
                           </span>
                         ) : (
-                          <span className="text-[10px] font-bold text-[#E8A020] bg-[#E8A020]/8 px-2 py-0.5 rounded-full">
+                          <span className="text-[10px] font-bold text-amber bg-amber/8 px-2 py-0.5 rounded-full">
                             Pending
                           </span>
                         )}
                         {listingEnquiries > 0 && (
-                          <Link href={`/dashboard/enquiries?listing=${listing._id}`} className="text-[11px] text-[#6B2D8B] font-medium hover:underline">
+                          <Link href={`/dashboard/enquiries?listing=${listing._id}`} className="text-[11px] text-purple font-medium hover:underline">
                             {listingEnquiries} enquir{listingEnquiries === 1 ? "y" : "ies"}
                           </Link>
                         )}
                         {isStay && propStatus && propStatus.is_active && propStatus.room_count > 0 && (
-                          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[#16A34A] bg-[#16A34A]/8 px-2 py-0.5 rounded-full">
+                          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-green bg-green/8 px-2 py-0.5 rounded-full">
                             Calendar active
                           </span>
                         )}
@@ -532,14 +532,14 @@ export default async function DashboardPage() {
                     <div className="shrink-0 flex flex-col items-end gap-1.5">
                       <Link
                         href={href}
-                        className="text-[12px] font-semibold text-[#9C9485] hover:text-[#16130C] transition-colors"
+                        className="text-[12px] font-semibold text-text3 hover:text-dark transition-colors"
                       >
                         View
                       </Link>
                       {isRestaurantListing && (
                         <Link
                           href={`/dashboard/listings/${listing._id}`}
-                          className="text-[11px] font-semibold text-[#E8A020] hover:text-[#d4911c] transition-colors"
+                          className="text-[11px] font-semibold text-amber hover:text-[#d4911c] transition-colors"
                         >
                           Open dashboard →
                         </Link>
@@ -555,7 +555,7 @@ export default async function DashboardPage() {
                       {isStay && propStatus && (!propStatus.is_active || propStatus.room_count === 0) && (
                         <Link
                           href={`/dashboard/property/new?edit=${propStatus.id}`}
-                          className="text-[11px] font-semibold text-[#E8A020] hover:text-[#d4911c] transition-colors"
+                          className="text-[11px] font-semibold text-amber hover:text-[#d4911c] transition-colors"
                         >
                           Complete setup →
                         </Link>
@@ -563,7 +563,7 @@ export default async function DashboardPage() {
                       {isStay && !propStatus && (
                         <Link
                           href={`/dashboard/property/new?listing_slug=${listing.slug}`}
-                          className="text-[11px] font-semibold text-[#9C9485] hover:text-[#16130C] transition-colors"
+                          className="text-[11px] font-semibold text-text3 hover:text-dark transition-colors"
                         >
                           Set up calendar →
                         </Link>
@@ -578,7 +578,7 @@ export default async function DashboardPage() {
       </div>
 
       {/* Claim more CTA */}
-      <div className="bg-gradient-to-br from-[#16130C] to-[#2A2520] rounded-xl lg:rounded-2xl p-5 lg:p-8 text-center shadow-sm">
+      <div className="bg-gradient-to-br from-dark to-[#2A2520] rounded-xl lg:rounded-2xl p-5 lg:p-8 text-center shadow-sm">
         <p className="font-display text-[16px] lg:text-[20px] font-bold text-white tracking-[-0.02em] mb-1.5">
           Have more listings on Klickenya?
         </p>
@@ -587,7 +587,7 @@ export default async function DashboardPage() {
         </p>
         <Link
           href="/"
-          className="inline-block bg-[#E8A020] text-[#16130C] font-bold text-[13px] lg:text-[14px] px-6 h-[44px] leading-[44px] rounded-full hover:bg-[#d4911c] transition-colors shadow-sm"
+          className="inline-block bg-amber text-dark font-bold text-[13px] lg:text-[14px] px-6 h-[44px] leading-[44px] rounded-full hover:bg-[#d4911c] transition-colors shadow-sm"
         >
           Claim another listing
         </Link>

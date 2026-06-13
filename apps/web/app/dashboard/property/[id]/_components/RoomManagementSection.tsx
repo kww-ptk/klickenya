@@ -115,7 +115,7 @@ export function RoomManagementSection({
     <>
       <div>
         <div className="flex items-center justify-between mb-3">
-          <h2 className="font-display text-[16px] font-bold text-[#16130C] tracking-[-0.02em]">
+          <h2 className="font-display text-[16px] font-bold text-dark tracking-[-0.02em]">
             Rooms
           </h2>
           <button
@@ -130,8 +130,8 @@ export function RoomManagementSection({
         </div>
 
         {rooms.length === 0 ? (
-          <div className="bg-[#F4F1EC] rounded-xl px-4 py-6 text-center">
-            <p className="text-[13px] text-[#9C9485]">No rooms yet. Add your first room above.</p>
+          <div className="bg-surface rounded-xl px-4 py-6 text-center">
+            <p className="text-[13px] text-text3">No rooms yet. Add your first room above.</p>
           </div>
         ) : (
           <div className="space-y-2">
@@ -146,19 +146,19 @@ export function RoomManagementSection({
                 className={`bg-white rounded-xl border transition-all ${
                   dragOverIndex === index
                     ? "border-[#4F46E5] shadow-md scale-[1.01]"
-                    : "border-[#E2DDD5] shadow-sm"
+                    : "border-border shadow-sm"
                 } ${!room.is_active ? "opacity-60" : ""}`}
               >
                 <div className="flex items-center gap-3 p-3">
                   {/* Drag handle */}
-                  <div className="shrink-0 cursor-grab active:cursor-grabbing touch-none text-[#C5BFB5] hover:text-[#9C9485]">
+                  <div className="shrink-0 cursor-grab active:cursor-grabbing touch-none text-[#C5BFB5] hover:text-text3">
                     <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 9h16.5m-16.5 6.75h16.5" />
                     </svg>
                   </div>
 
                   {/* Photo thumb */}
-                  <div className="shrink-0 w-[52px] h-[52px] rounded-lg overflow-hidden bg-[#F4F1EC] relative">
+                  <div className="shrink-0 w-[52px] h-[52px] rounded-lg overflow-hidden bg-surface relative">
                     {room.photos?.[0] ? (
                       <Image
                         src={room.photos[0]}
@@ -175,38 +175,38 @@ export function RoomManagementSection({
                   {/* Info */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5">
-                      <p className="text-[13px] font-semibold text-[#16130C] truncate">
+                      <p className="text-[13px] font-semibold text-dark truncate">
                         {room.name}
                       </p>
                       {room.room_number && (
-                        <span className="shrink-0 text-[10px] text-[#9C9485] font-mono">
+                        <span className="shrink-0 text-[10px] text-text3 font-mono">
                           #{room.room_number}
                         </span>
                       )}
                     </div>
                     <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                      <span className="text-[11px] text-[#9C9485]">
+                      <span className="text-[11px] text-text3">
                         {ROOM_TYPE_LABELS[room.room_type] ?? room.room_type}
                       </span>
                       <span className="text-[#C5BFB5]">·</span>
-                      <span className="text-[11px] text-[#9C9485]">
+                      <span className="text-[11px] text-text3">
                         {room.max_guests} guests
                       </span>
                       <span className="text-[#C5BFB5]">·</span>
-                      <span className="text-[11px] font-semibold text-[#16130C]">
+                      <span className="text-[11px] font-semibold text-dark">
                         {fmt(room.base_price_kes)}/night
                       </span>
                     </div>
                     <div className="flex items-center gap-2 mt-0.5">
                       {room.amenities?.length > 0 && (
-                        <span className="text-[10px] text-[#9C9485]">
+                        <span className="text-[10px] text-text3">
                           {room.amenities.length} amenities
                         </span>
                       )}
                       {room.photos?.length > 0 && (
                         <>
                           {room.amenities?.length > 0 && <span className="text-[#C5BFB5]">·</span>}
-                          <span className="text-[10px] text-[#9C9485]">
+                          <span className="text-[10px] text-text3">
                             {room.photos.length} photos
                           </span>
                         </>
@@ -222,7 +222,7 @@ export function RoomManagementSection({
                       disabled={togglingId === room.id}
                       onClick={() => toggleActive(room)}
                       className={`relative w-9 h-5 rounded-full transition-colors duration-200 disabled:opacity-50 ${
-                        room.is_active ? "bg-[#16A34A]" : "bg-[#E2DDD5]"
+                        room.is_active ? "bg-green" : "bg-border"
                       }`}
                       title={room.is_active ? "Active — click to deactivate" : "Inactive — click to activate"}
                     >
@@ -236,10 +236,10 @@ export function RoomManagementSection({
                     {/* Edit */}
                     <button
                       onClick={() => setEditingRoom(room)}
-                      className="size-8 rounded-full bg-[#F4F1EC] flex items-center justify-center hover:bg-[#E2DDD5] transition-colors"
+                      className="size-8 rounded-full bg-surface flex items-center justify-center hover:bg-border transition-colors"
                       title="Edit room"
                     >
-                      <svg className="size-3.5 text-[#5E5848]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <svg className="size-3.5 text-text2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125" />
                       </svg>
                     </button>

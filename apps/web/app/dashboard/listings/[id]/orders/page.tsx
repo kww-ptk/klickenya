@@ -58,19 +58,19 @@ export default async function TableOrderingSetupPage({ params }: PageProps) {
       <div>
         <Link
           href={`/dashboard/listings/${id}`}
-          className="text-[13px] text-[#9C9485] hover:text-[#16130C]"
+          className="text-[13px] text-text3 hover:text-dark"
         >
           ← Back to dashboard
         </Link>
-        <h1 className="font-display text-[22px] lg:text-[28px] font-bold tracking-[-0.03em] text-[#16130C] mt-2">
+        <h1 className="font-display text-[22px] lg:text-[28px] font-bold tracking-[-0.03em] text-dark mt-2">
           Table ordering
         </h1>
-        <p className="text-[13px] text-[#9C9485] mt-1 mb-5">
+        <p className="text-[13px] text-text3 mt-1 mb-5">
           Set up your menu first before turning on table ordering.
         </p>
         <Link
           href={`/dashboard/listings/${id}`}
-          className="inline-block bg-[#E8A020] text-[#16130C] font-bold text-[13px] px-5 h-[44px] leading-[44px] rounded-full hover:bg-[#d4911c]"
+          className="inline-block bg-amber text-dark font-bold text-[13px] px-5 h-[44px] leading-[44px] rounded-full hover:bg-[#d4911c]"
         >
           Set up menu →
         </Link>
@@ -107,6 +107,10 @@ export default async function TableOrderingSetupPage({ params }: PageProps) {
       initialTableOrdering={menu.table_ordering ?? false}
       areas={(areasRaw ?? []) as AreaOption[]}
       initialTables={(tablesRaw ?? []) as InitialTable[]}
+      // ordering-only mode routes back-links + back= params through the
+      // /dashboard tree, surfaces a "Next: POS terminal" hint at the bottom.
+      mode="ordering-only"
+      featureBaseHref={`/dashboard/listings/${id}`}
     />
   );
 }

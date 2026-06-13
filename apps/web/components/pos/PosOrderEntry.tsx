@@ -321,18 +321,18 @@ export function PosOrderEntry({
         <div className="rounded-2xl border border-[#2A2520] bg-[#1A170F] overflow-hidden">
           {/* Search */}
           <div className="px-3 py-2 border-b border-[#2A2520] flex items-center gap-2">
-            <Search className="w-4 h-4 text-[#9C9485] shrink-0" />
+            <Search className="w-4 h-4 text-text3 shrink-0" />
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search menu…"
-              className="flex-1 bg-transparent outline-none text-[14px] text-white placeholder:text-[#5E5848]"
+              className="flex-1 bg-transparent outline-none text-[14px] text-white placeholder:text-text2"
             />
             {search && (
               <button
                 type="button"
                 onClick={() => setSearch("")}
-                className="text-[#9C9485] hover:text-white"
+                className="text-text3 hover:text-white"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -349,8 +349,8 @@ export function PosOrderEntry({
                   onClick={() => setActiveSectionId(s.id)}
                   className={`shrink-0 h-12 px-4 rounded-full text-[13px] font-semibold transition-colors ${
                     s.id === activeSectionId
-                      ? "bg-[#E8A020] text-[#16130C]"
-                      : "bg-[#252019] text-[#F4F1EC] hover:bg-[#3A342B]"
+                      ? "bg-amber text-dark"
+                      : "bg-[#252019] text-surface hover:bg-[#3A342B]"
                   }`}
                 >
                   {s.title}
@@ -362,7 +362,7 @@ export function PosOrderEntry({
           {/* Item grid */}
           <div className="p-2 grid grid-cols-2 lg:grid-cols-3 gap-2 max-h-[64vh] md:max-h-[68vh] overflow-y-auto">
             {visibleItems.length === 0 ? (
-              <p className="col-span-full text-center text-[12px] text-[#9C9485] py-8">
+              <p className="col-span-full text-center text-[12px] text-text3 py-8">
                 {search ? "No items match." : "No items in this section."}
               </p>
             ) : (
@@ -404,7 +404,7 @@ export function PosOrderEntry({
         <button
           type="button"
           onClick={() => setDraftOpen(true)}
-          className="md:hidden fixed bottom-20 left-3 right-3 z-30 h-14 rounded-full bg-[#E8A020] text-[#16130C] text-[14px] font-bold shadow-2xl flex items-center justify-between px-5"
+          className="md:hidden fixed bottom-20 left-3 right-3 z-30 h-14 rounded-full bg-amber text-dark text-[14px] font-bold shadow-2xl flex items-center justify-between px-5"
         >
           <span>View order · {draftItemCount} {draftItemCount === 1 ? "item" : "items"}</span>
           <span>{formatKes(subtotal)}</span>
@@ -420,7 +420,7 @@ export function PosOrderEntry({
           >
             <div className="px-4 py-3 border-b border-[#2A2520] flex items-center justify-between">
               <p className="text-[14px] font-bold text-white">Current order</p>
-              <button onClick={() => setDraftOpen(false)} className="text-[#9C9485]">
+              <button onClick={() => setDraftOpen(false)} className="text-text3">
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -495,7 +495,7 @@ function MenuItemCard({
         item.is_available
           ? "border-[#3A342B] bg-[#252019]"
           : "border-[#2A2520] bg-[#1A170F] opacity-50"
-      } ${inDraftQty > 0 ? "ring-2 ring-[#E8A020]/60" : ""}`}
+      } ${inDraftQty > 0 ? "ring-2 ring-amber/60" : ""}`}
     >
       <button
         type="button"
@@ -509,7 +509,7 @@ function MenuItemCard({
       </button>
 
       <div className="flex items-center justify-between gap-2 mt-1.5">
-        <span className="text-[13px] font-bold text-[#E8A020]">
+        <span className="text-[13px] font-bold text-amber">
           {formatKes(item.price_kes)}
         </span>
 
@@ -520,7 +520,7 @@ function MenuItemCard({
             <button
               type="button"
               onClick={onQuickRemove}
-              className="w-9 h-9 rounded-full bg-[#0F0D08] text-[#F4F1EC] grid place-items-center active:scale-95"
+              className="w-9 h-9 rounded-full bg-[#0F0D08] text-surface grid place-items-center active:scale-95"
               aria-label="Remove one"
             >
               <Minus className="w-3.5 h-3.5" />
@@ -531,7 +531,7 @@ function MenuItemCard({
             <button
               type="button"
               onClick={onTap}
-              className="w-9 h-9 rounded-full bg-[#E8A020] text-[#16130C] grid place-items-center active:scale-95"
+              className="w-9 h-9 rounded-full bg-amber text-dark grid place-items-center active:scale-95"
               aria-label="Add one more"
             >
               <Plus className="w-3.5 h-3.5" />
@@ -539,13 +539,13 @@ function MenuItemCard({
           </div>
         ) : showBadgePlus ? (
           <div className="flex items-center gap-1.5">
-            <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-[#0F0D08] text-[#E8A020]">
+            <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-[#0F0D08] text-amber">
               ×{inDraftQty}
             </span>
             <button
               type="button"
               onClick={onTap}
-              className="w-9 h-9 rounded-full bg-[#E8A020] text-[#16130C] grid place-items-center active:scale-95"
+              className="w-9 h-9 rounded-full bg-amber text-dark grid place-items-center active:scale-95"
               aria-label="Add another with options"
             >
               <Plus className="w-3.5 h-3.5" />
@@ -555,7 +555,7 @@ function MenuItemCard({
           <button
             type="button"
             onClick={onTap}
-            className="px-3 h-9 rounded-full bg-[#E8A020] text-[#16130C] text-[12px] font-bold active:scale-95 flex items-center gap-1"
+            className="px-3 h-9 rounded-full bg-amber text-dark text-[12px] font-bold active:scale-95 flex items-center gap-1"
             aria-label={customisable ? "Configure and add" : "Add to order"}
           >
             <Plus className="w-3.5 h-3.5" />
@@ -612,7 +612,7 @@ function DraftPanel({
             <button
               type="button"
               onClick={onClear}
-              className="text-[11px] text-[#9C9485] hover:text-[#FF8A6B]"
+              className="text-[11px] text-text3 hover:text-[#FF8A6B]"
             >
               Clear
             </button>
@@ -620,7 +620,7 @@ function DraftPanel({
         </div>
       )}
       {draft.length === 0 ? (
-        <div className="px-4 py-10 text-center text-[12px] text-[#9C9485]">
+        <div className="px-4 py-10 text-center text-[12px] text-text3">
           Tap items on the left to start a new order.
         </div>
       ) : (
@@ -640,7 +640,7 @@ function DraftPanel({
 
       <div className="px-4 py-3 border-t border-[#2A2520] bg-[#1A170F] sticky bottom-0">
         <div className="flex items-baseline justify-between mb-2">
-          <span className="text-[12px] text-[#9C9485]">Subtotal</span>
+          <span className="text-[12px] text-text3">Subtotal</span>
           <span className="text-[16px] font-bold text-white">{formatKes(subtotal)}</span>
         </div>
         {onContinue ? (
@@ -649,7 +649,7 @@ function DraftPanel({
               type="button"
               onClick={onContinue}
               disabled={submitting}
-              className="h-14 rounded-full bg-[#252019] text-[#F4F1EC] text-[13px] font-semibold disabled:opacity-40"
+              className="h-14 rounded-full bg-[#252019] text-surface text-[13px] font-semibold disabled:opacity-40"
             >
               Add to order
             </button>
@@ -657,7 +657,7 @@ function DraftPanel({
               type="button"
               onClick={onSend}
               disabled={submitting || draft.length === 0 || !sessionOpen}
-              className="h-14 rounded-full bg-[#E8A020] text-[#16130C] text-[13px] font-bold disabled:opacity-40"
+              className="h-14 rounded-full bg-amber text-dark text-[13px] font-bold disabled:opacity-40"
             >
               {submitting ? "Sending…" : !sessionOpen ? "Session not open" : "Send to kitchen"}
             </button>
@@ -667,7 +667,7 @@ function DraftPanel({
             type="button"
             onClick={onSend}
             disabled={submitting || draft.length === 0 || !sessionOpen}
-            className="w-full h-14 rounded-full bg-[#E8A020] text-[#16130C] text-[14px] font-bold disabled:opacity-40"
+            className="w-full h-14 rounded-full bg-amber text-dark text-[14px] font-bold disabled:opacity-40"
           >
             {submitting ? "Sending…" : !sessionOpen ? "Session not open" : "Send to kitchen"}
           </button>
@@ -719,7 +719,7 @@ function DraftLineRow({
             <button
               type="button"
               onClick={() => onUpdateQty(line.cart_id, 1)}
-              className="w-9 h-9 rounded-full bg-[#E8A020] text-[#16130C] grid place-items-center active:scale-95"
+              className="w-9 h-9 rounded-full bg-amber text-dark grid place-items-center active:scale-95"
               aria-label="Increase"
             >
               <Plus className="w-3.5 h-3.5" />
@@ -730,7 +730,7 @@ function DraftLineRow({
           <div className="flex-1 min-w-0">
             <p className="text-[13px] font-semibold text-white truncate">{line.item_name}</p>
             {line.selected_options.length > 0 && (
-              <p className="text-[11px] text-[#9C9485] truncate">
+              <p className="text-[11px] text-text3 truncate">
                 {line.selected_options.map((o) => o.choice).join(", ")}
               </p>
             )}
@@ -745,7 +745,7 @@ function DraftLineRow({
               type="button"
               onClick={() => onRemoveLine(line.cart_id)}
               aria-label="Remove line"
-              className="w-7 h-7 rounded-full bg-[#252019] text-[#9C9485] hover:text-[#FF8A6B] grid place-items-center"
+              className="w-7 h-7 rounded-full bg-[#252019] text-text3 hover:text-[#FF8A6B] grid place-items-center"
             >
               <X className="w-3.5 h-3.5" />
             </button>
@@ -760,13 +760,13 @@ function DraftLineRow({
             placeholder="Special requests"
             autoFocus={!line.notes}
             onBlur={() => { if (!line.notes) setNoteOpen(false); }}
-            className="mt-2 ml-[88px] w-[calc(100%-88px)] bg-[#0F0D08] border border-[#2A2520] rounded-lg px-2 py-1.5 text-[12px] text-[#F4F1EC] placeholder:text-[#5E5848] outline-none focus:border-[#E8A020]"
+            className="mt-2 ml-[88px] w-[calc(100%-88px)] bg-[#0F0D08] border border-[#2A2520] rounded-lg px-2 py-1.5 text-[12px] text-surface placeholder:text-text2 outline-none focus:border-amber"
           />
         ) : (
           <button
             type="button"
             onClick={() => setNoteOpen(true)}
-            className="ml-[88px] mt-1 text-[11px] text-[#9C9485] hover:text-[#E8A020]"
+            className="ml-[88px] mt-1 text-[11px] text-text3 hover:text-amber"
           >
             + Add note
           </button>
@@ -782,7 +782,7 @@ function DraftLineRow({
         <div className="flex-1 min-w-0">
           <p className="text-[13px] font-semibold text-white truncate">{line.item_name}</p>
           {line.selected_options.length > 0 && (
-            <p className="text-[11px] text-[#9C9485] mt-0.5 line-clamp-2">
+            <p className="text-[11px] text-text3 mt-0.5 line-clamp-2">
               {line.selected_options.map((o) => o.choice).join(", ")}
             </p>
           )}
@@ -791,7 +791,7 @@ function DraftLineRow({
           type="button"
           onClick={() => onRemoveLine(line.cart_id)}
           aria-label="Remove"
-          className="w-7 h-7 rounded-full bg-[#252019] text-[#9C9485] hover:text-[#FF8A6B] grid place-items-center"
+          className="w-7 h-7 rounded-full bg-[#252019] text-text3 hover:text-[#FF8A6B] grid place-items-center"
         >
           <X className="w-3.5 h-3.5" />
         </button>
@@ -801,7 +801,7 @@ function DraftLineRow({
         value={line.notes}
         onChange={(e) => onUpdateNotes(line.cart_id, e.target.value)}
         placeholder="Special requests"
-        className="mt-2 w-full bg-[#0F0D08] border border-[#2A2520] rounded-lg px-2 py-1.5 text-[12px] text-[#F4F1EC] placeholder:text-[#5E5848] outline-none focus:border-[#E8A020]"
+        className="mt-2 w-full bg-[#0F0D08] border border-[#2A2520] rounded-lg px-2 py-1.5 text-[12px] text-surface placeholder:text-text2 outline-none focus:border-amber"
       />
 
       <div className="mt-2 flex items-center justify-between">
@@ -820,7 +820,7 @@ function DraftLineRow({
           <button
             type="button"
             onClick={() => onUpdateQty(line.cart_id, 1)}
-            className="w-12 h-12 rounded-full bg-[#E8A020] text-[#16130C] grid place-items-center"
+            className="w-12 h-12 rounded-full bg-amber text-dark grid place-items-center"
             aria-label="Increase quantity"
           >
             <Plus className="w-4 h-4" />

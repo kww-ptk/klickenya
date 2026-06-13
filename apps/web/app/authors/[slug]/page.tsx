@@ -34,7 +34,7 @@ export default async function AuthorProfilePage({ params }: PageProps) {
   const photoForHero = author.avatar ?? author.photo ?? null;
 
   return (
-    <div className="min-h-screen bg-[#FAFAF8]">
+    <div className="min-h-screen bg-canvas">
       <ProfileHero
         name={author.name}
         photo={photoForHero}
@@ -54,7 +54,7 @@ export default async function AuthorProfilePage({ params }: PageProps) {
 
       {/* ── Content ── */}
       <div className="max-w-5xl mx-auto px-5 py-8">
-        <h2 className="font-display text-[20px] font-bold text-[#16130C] tracking-[-0.02em] mb-5">
+        <h2 className="font-display text-[20px] font-bold text-dark tracking-[-0.02em] mb-5">
           Articles by {author.name}
         </h2>
 
@@ -76,11 +76,11 @@ export default async function AuthorProfilePage({ params }: PageProps) {
             ))}
           </div>
         ) : (
-          <div className="bg-white rounded-2xl border border-[#E2DDD5] p-10 text-center shadow-sm">
-            <p className="text-[15px] font-semibold text-[#16130C] mb-1">
+          <div className="bg-white rounded-2xl border border-border p-10 text-center shadow-sm">
+            <p className="text-[15px] font-semibold text-dark mb-1">
               No articles yet
             </p>
-            <p className="text-[13px] text-[#9C9485]">
+            <p className="text-[13px] text-text3">
               Articles by {author.name} will appear here.
             </p>
           </div>

@@ -59,27 +59,27 @@ export default async function DashboardListingsPage() {
     <div>
       <div className="flex items-center justify-between mb-5">
         <div>
-          <h1 className="font-display text-[22px] lg:text-[28px] font-bold tracking-[-0.03em] text-[#16130C]">
+          <h1 className="font-display text-[22px] lg:text-[28px] font-bold tracking-[-0.03em] text-dark">
             My Listings
           </h1>
-          <p className="text-[13px] text-[#9C9485] mt-0.5">
+          <p className="text-[13px] text-text3 mt-0.5">
             {listings.length} listing{listings.length !== 1 ? "s" : ""} · {verifiedCount} verified · {pendingCount} pending
           </p>
         </div>
       </div>
 
       {listings.length === 0 ? (
-        <div className="bg-white rounded-2xl border border-[#E2DDD5] p-12 text-center shadow-sm">
-          <div className="w-20 h-20 rounded-full bg-[#E8A020]/10 flex items-center justify-center mx-auto mb-4">
+        <div className="bg-white rounded-2xl border border-border p-12 text-center shadow-sm">
+          <div className="w-20 h-20 rounded-full bg-amber/10 flex items-center justify-center mx-auto mb-4">
             <span className="text-[36px]">🏡</span>
           </div>
-          <p className="font-display text-[18px] font-bold text-[#16130C] mb-1">No listings yet</p>
-          <p className="text-[14px] text-[#9C9485] mb-6 max-w-[280px] mx-auto">
+          <p className="font-display text-[18px] font-bold text-dark mb-1">No listings yet</p>
+          <p className="text-[14px] text-text3 mb-6 max-w-[280px] mx-auto">
             Claim your first listing on Klickenya and start managing it from here.
           </p>
           <Link
             href="/"
-            className="inline-block bg-[#E8A020] text-[#16130C] font-bold text-[14px] px-7 h-[48px] leading-[48px] rounded-full hover:bg-[#d4911c] transition-colors shadow-sm"
+            className="inline-block bg-amber text-dark font-bold text-[14px] px-7 h-[48px] leading-[48px] rounded-full hover:bg-[#d4911c] transition-colors shadow-sm"
           >
             Claim a listing →
           </Link>
@@ -94,10 +94,10 @@ export default async function DashboardListingsPage() {
             return (
               <div
                 key={listing._id}
-                className="bg-white rounded-xl lg:rounded-2xl border border-[#E2DDD5] p-3 lg:p-4 shadow-sm hover:shadow-md transition-shadow"
+                className="bg-white rounded-xl lg:rounded-2xl border border-border p-3 lg:p-4 shadow-sm hover:shadow-md transition-shadow"
               >
                 <div className="flex gap-3">
-                  <div className="shrink-0 w-[72px] h-[72px] lg:w-[120px] lg:h-[88px] rounded-lg lg:rounded-xl overflow-hidden bg-[#F4F1EC] relative">
+                  <div className="shrink-0 w-[72px] h-[72px] lg:w-[120px] lg:h-[88px] rounded-lg lg:rounded-xl overflow-hidden bg-surface relative">
                     {listing.imageUrl ? (
                       <Image
                         src={listing.imageUrl}
@@ -107,49 +107,49 @@ export default async function DashboardListingsPage() {
                         className="object-cover"
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center text-[24px] bg-gradient-to-br from-[#F4F1EC] to-[#E2DDD5]">
+                      <div className="w-full h-full flex items-center justify-center text-[24px] bg-gradient-to-br from-surface to-border">
                         🏠
                       </div>
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-[15px] lg:text-[16px] font-semibold text-[#16130C] truncate leading-tight">
+                    <h3 className="text-[15px] lg:text-[16px] font-semibold text-dark truncate leading-tight">
                       {listing.title}
                     </h3>
                     <div className="flex items-center gap-1.5 mt-0.5">
-                      <span className="text-[12px] text-[#9C9485] capitalize">{listing.type}</span>
+                      <span className="text-[12px] text-text3 capitalize">{listing.type}</span>
                       {listing.city && (
                         <>
-                          <span className="text-[#E2DDD5]">·</span>
-                          <span className="text-[12px] text-[#9C9485]">{listing.city}</span>
+                          <span className="text-border">·</span>
+                          <span className="text-[12px] text-text3">{listing.city}</span>
                         </>
                       )}
                     </div>
                     <div className="mt-1.5">
                       {listing.isVerified ? (
-                        <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[#16A34A] bg-[#16A34A]/8 px-2 py-0.5 rounded-full">
+                        <span className="inline-flex items-center gap-1 text-[10px] font-bold text-green bg-green/8 px-2 py-0.5 rounded-full">
                           <svg className="w-2.5 h-2.5" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
                           Verified
                         </span>
                       ) : (
-                        <span className="text-[10px] font-bold text-[#E8A020] bg-[#E8A020]/8 px-2 py-0.5 rounded-full">Pending</span>
+                        <span className="text-[10px] font-bold text-amber bg-amber/8 px-2 py-0.5 rounded-full">Pending</span>
                       )}
                     </div>
                   </div>
                 </div>
-                <div className="flex gap-2 mt-2.5 pt-2.5 border-t border-[#F4F1EC]">
+                <div className="flex gap-2 mt-2.5 pt-2.5 border-t border-surface">
                   {/* "Open dashboard" for restaurant listings only */}
                   {(listing.type === "restaurant" || listing.subcategory === "restaurants") && (
                     <Link
                       href={`/dashboard/listings/${listing._id}`}
-                      className="flex-1 h-[40px] lg:h-[44px] flex items-center justify-center text-[13px] lg:text-[14px] font-semibold text-[#E8A020] bg-[#E8A020]/8 rounded-lg lg:rounded-xl hover:bg-[#E8A020]/15 transition-colors"
+                      className="flex-1 h-[40px] lg:h-[44px] flex items-center justify-center text-[13px] lg:text-[14px] font-semibold text-amber bg-amber/8 rounded-lg lg:rounded-xl hover:bg-amber/15 transition-colors"
                     >
                       Open dashboard →
                     </Link>
                   )}
                   <Link
                     href={href}
-                    className="flex-1 h-[40px] lg:h-[44px] flex items-center justify-center text-[13px] lg:text-[14px] font-semibold text-[#6B2D8B] bg-[#6B2D8B]/8 rounded-lg lg:rounded-xl hover:bg-[#6B2D8B]/15 transition-colors"
+                    className="flex-1 h-[40px] lg:h-[44px] flex items-center justify-center text-[13px] lg:text-[14px] font-semibold text-purple bg-purple/8 rounded-lg lg:rounded-xl hover:bg-purple/15 transition-colors"
                   >
                     View listing →
                   </Link>

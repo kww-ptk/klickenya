@@ -160,15 +160,15 @@ export function BookingWidget({
 
   if (sent) {
     return (
-      <div className="bg-white rounded-2xl border border-[#E2DDD5] p-8 text-center shadow-sm">
-        <div className="w-14 h-14 rounded-full bg-[#16A34A]/10 flex items-center justify-center mx-auto mb-3">
-          <svg className="size-7 text-[#16A34A]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <div className="bg-white rounded-2xl border border-border p-8 text-center shadow-sm">
+        <div className="w-14 h-14 rounded-full bg-green/10 flex items-center justify-center mx-auto mb-3">
+          <svg className="size-7 text-green" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
           </svg>
         </div>
-        <p className="font-display text-[20px] font-bold text-[#16130C] mb-1">Enquiry sent!</p>
-        <p className="text-[14px] text-[#9C9485] mb-4">The host will get back to you within 24 hours.</p>
-        <button onClick={() => { setSent(false); setResults(null); setSelectedRoom(null); }} className="text-[14px] font-semibold text-[#E8A020]">
+        <p className="font-display text-[20px] font-bold text-dark mb-1">Enquiry sent!</p>
+        <p className="text-[14px] text-text3 mb-4">The host will get back to you within 24 hours.</p>
+        <button onClick={() => { setSent(false); setResults(null); setSelectedRoom(null); }} className="text-[14px] font-semibold text-amber">
           Check different dates
         </button>
       </div>
@@ -178,16 +178,16 @@ export function BookingWidget({
   return (
     <div className="space-y-5">
       {/* Date picker */}
-      <div className="bg-white rounded-2xl border border-[#E2DDD5] p-5 shadow-sm">
-        <h2 className="font-display text-[16px] font-bold text-[#16130C] mb-3">Select your dates</h2>
+      <div className="bg-white rounded-2xl border border-border p-5 shadow-sm">
+        <h2 className="font-display text-[16px] font-bold text-dark mb-3">Select your dates</h2>
         <DateRangePicker checkIn={checkIn} checkOut={checkOut} onCheckInChange={setCheckIn} onCheckOutChange={setCheckOut} />
 
-        <div className="border border-[#E2DDD5] rounded-xl p-3 flex items-center justify-between mt-3">
-          <span className="text-[12px] font-semibold text-[#9C9485] uppercase tracking-wide">Guests</span>
+        <div className="border border-border rounded-xl p-3 flex items-center justify-between mt-3">
+          <span className="text-[12px] font-semibold text-text3 uppercase tracking-wide">Guests</span>
           <div className="flex items-center gap-3">
-            <button type="button" onClick={() => setGuests(Math.max(1, guests - 1))} className="size-8 rounded-full border border-[#E2DDD5] flex items-center justify-center text-[#5E5848] hover:bg-[#F4F1EC] disabled:opacity-30" disabled={guests <= 1}>-</button>
-            <span className="text-[14px] font-semibold text-[#16130C] w-4 text-center">{guests}</span>
-            <button type="button" onClick={() => setGuests(Math.min(maxGuests, guests + 1))} className="size-8 rounded-full border border-[#E2DDD5] flex items-center justify-center text-[#5E5848] hover:bg-[#F4F1EC] disabled:opacity-30" disabled={guests >= maxGuests}>+</button>
+            <button type="button" onClick={() => setGuests(Math.max(1, guests - 1))} className="size-8 rounded-full border border-border flex items-center justify-center text-text2 hover:bg-surface disabled:opacity-30" disabled={guests <= 1}>-</button>
+            <span className="text-[14px] font-semibold text-dark w-4 text-center">{guests}</span>
+            <button type="button" onClick={() => setGuests(Math.min(maxGuests, guests + 1))} className="size-8 rounded-full border border-border flex items-center justify-center text-text2 hover:bg-surface disabled:opacity-30" disabled={guests >= maxGuests}>+</button>
           </div>
         </div>
 
@@ -197,7 +197,7 @@ export function BookingWidget({
           disabled={!checkIn || !checkOut || checkOut <= checkIn || checking}
           className={cn(
             "w-full py-3.5 rounded-2xl text-[15px] font-bold transition-all duration-200 mt-4",
-            "bg-gradient-to-r from-[#E8A020] to-[#d4911c] text-[#16130C]",
+            "bg-gradient-to-r from-amber to-[#d4911c] text-dark",
             "shadow-[0_4px_14px_rgba(232,160,32,0.35)]",
             "hover:shadow-[0_6px_20px_rgba(232,160,32,0.45)] hover:-translate-y-0.5",
             "disabled:opacity-50 disabled:pointer-events-none"
@@ -209,12 +209,12 @@ export function BookingWidget({
 
       {/* Results */}
       {results && (
-        <div className="bg-white rounded-2xl border border-[#E2DDD5] p-5 shadow-sm">
+        <div className="bg-white rounded-2xl border border-border p-5 shadow-sm">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="font-display text-[16px] font-bold text-[#16130C]">
+            <h2 className="font-display text-[16px] font-bold text-dark">
               {results.filter((r) => r.available).length > 0 ? "Available rooms" : "No availability"}
             </h2>
-            <p className="text-[12px] text-[#9C9485]">{nights} night{nights !== 1 ? "s" : ""}</p>
+            <p className="text-[12px] text-text3">{nights} night{nights !== 1 ? "s" : ""}</p>
           </div>
 
           <div className="space-y-2.5">
@@ -225,13 +225,13 @@ export function BookingWidget({
                 onClick={() => setSelectedRoom(selectedRoom === "__entire__" ? null : "__entire__")}
                 className={cn(
                   "w-full text-left rounded-xl overflow-hidden transition-all",
-                  selectedRoom === "__entire__" ? "ring-2 ring-[#E8A020] ring-offset-2" : "border border-[#E2DDD5] hover:shadow-md"
+                  selectedRoom === "__entire__" ? "ring-2 ring-amber ring-offset-2" : "border border-border hover:shadow-md"
                 )}
               >
-                <div className="bg-gradient-to-br from-[#16130C] to-[#2A2520] p-4">
+                <div className="bg-gradient-to-br from-dark to-[#2A2520] p-4">
                   <p className="text-[14px] font-bold text-white">Entire property</p>
                   <p className="text-[11px] text-white/50">All {rooms.length} rooms</p>
-                  <p className="text-[18px] font-bold text-[#E8A020] mt-1">{fmt(entirePlacePrice ?? rooms.reduce((s, r) => s + r.pricePerNight, 0))} <span className="text-[11px] text-white/40 font-normal">/ night</span></p>
+                  <p className="text-[18px] font-bold text-amber mt-1">{fmt(entirePlacePrice ?? rooms.reduce((s, r) => s + r.pricePerNight, 0))} <span className="text-[11px] text-white/40 font-normal">/ night</span></p>
                 </div>
               </button>
             )}
@@ -245,12 +245,12 @@ export function BookingWidget({
                 onClick={() => setSelectedRoom(selectedRoom === room.id ? null : room.id)}
                 className={cn(
                   "w-full text-left rounded-xl border overflow-hidden transition-all",
-                  !room.available ? "opacity-40 grayscale cursor-not-allowed border-[#E2DDD5]"
-                    : selectedRoom === room.id ? "ring-2 ring-[#E8A020] ring-offset-2 border-transparent" : "border-[#E2DDD5] hover:shadow-md"
+                  !room.available ? "opacity-40 grayscale cursor-not-allowed border-border"
+                    : selectedRoom === room.id ? "ring-2 ring-amber ring-offset-2 border-transparent" : "border-border hover:shadow-md"
                 )}
               >
                 <div className="flex">
-                  <div className="relative w-[100px] h-[80px] shrink-0 bg-[#F4F1EC]">
+                  <div className="relative w-[100px] h-[80px] shrink-0 bg-surface">
                     {room.photos[0] ? (
                       <Image src={room.photos[0]} alt={room.name} fill className="object-cover" sizes="100px" unoptimized={!isOptimizableUrl(room.photos[0])} />
                     ) : (
@@ -263,12 +263,12 @@ export function BookingWidget({
                     )}
                   </div>
                   <div className="flex-1 p-3 min-w-0">
-                    <p className="text-[13px] font-bold text-[#16130C] truncate">{room.name}</p>
-                    <p className="text-[11px] text-[#9C9485]">
+                    <p className="text-[13px] font-bold text-dark truncate">{room.name}</p>
+                    <p className="text-[11px] text-text3">
                       Sleeps {room.maxGuests}{room.bedType ? ` · ${room.bedType}` : ""}
                     </p>
-                    <p className={cn("text-[15px] font-bold mt-1", room.available ? "text-[#E8A020]" : "text-[#9C9485]")}>
-                      {fmt(room.pricePerNight)} <span className="text-[10px] text-[#9C9485] font-normal">/ night</span>
+                    <p className={cn("text-[15px] font-bold mt-1", room.available ? "text-amber" : "text-text3")}>
+                      {fmt(room.pricePerNight)} <span className="text-[10px] text-text3 font-normal">/ night</span>
                     </p>
                   </div>
                 </div>
@@ -278,27 +278,27 @@ export function BookingWidget({
 
           {/* CTA */}
           {selectedRoom && (
-            <div className="mt-4 pt-4 border-t border-[#E2DDD5]">
+            <div className="mt-4 pt-4 border-t border-border">
               <div className="flex justify-between text-[13px] mb-3">
-                <span className="text-[#9C9485]">{fmt(selectedPrice)} x {nights} night{nights !== 1 ? "s" : ""}</span>
-                <span className="text-[17px] font-bold text-[#16130C]">{fmt(selectedPrice * nights)}</span>
+                <span className="text-text3">{fmt(selectedPrice)} x {nights} night{nights !== 1 ? "s" : ""}</span>
+                <span className="text-[17px] font-bold text-dark">{fmt(selectedPrice * nights)}</span>
               </div>
               <button
                 type="button"
                 onClick={() => setShowEnquiry(true)}
                 className={cn(
                   "w-full py-3.5 rounded-2xl text-[15px] font-bold transition-all",
-                  "bg-gradient-to-r from-[#E8A020] to-[#d4911c] text-[#16130C]",
+                  "bg-gradient-to-r from-amber to-[#d4911c] text-dark",
                   "shadow-[0_4px_14px_rgba(232,160,32,0.35)]"
                 )}
               >
                 Enquire now
               </button>
-              <div className="flex items-center justify-center gap-2.5 text-[11px] text-[#9C9485] mt-2">
+              <div className="flex items-center justify-center gap-2.5 text-[11px] text-text3 mt-2">
                 <span>🔒 Secure</span>
-                <span className="text-[#E2DDD5]">·</span>
+                <span className="text-border">·</span>
                 <span>No payment now</span>
-                <span className="text-[#E2DDD5]">·</span>
+                <span className="text-border">·</span>
                 <span>Reply in 2hrs</span>
               </div>
             </div>
@@ -313,29 +313,29 @@ export function BookingWidget({
         <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px]" onClick={() => setShowEnquiry(false)} />
           <div className="relative w-full sm:max-w-[440px] max-h-[92vh] bg-white rounded-t-3xl sm:rounded-2xl shadow-2xl overflow-hidden flex flex-col">
-            <div className="sticky top-0 bg-white border-b border-[#E2DDD5] px-5 py-4 flex items-center justify-between z-10 shrink-0">
-              <h2 className="font-display text-[18px] font-bold text-[#16130C]">Complete your enquiry</h2>
-              <button onClick={() => setShowEnquiry(false)} className="size-8 flex items-center justify-center rounded-full bg-[#F4F1EC] hover:bg-[#E2DDD5]">
-                <svg className="size-4 text-[#5E5848]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+            <div className="sticky top-0 bg-white border-b border-border px-5 py-4 flex items-center justify-between z-10 shrink-0">
+              <h2 className="font-display text-[18px] font-bold text-dark">Complete your enquiry</h2>
+              <button onClick={() => setShowEnquiry(false)} className="size-8 flex items-center justify-center rounded-full bg-surface hover:bg-border">
+                <svg className="size-4 text-text2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </div>
             <div className="flex-1 overflow-y-auto p-5 space-y-4">
-              <div className="bg-[#E8A020]/5 border border-[#E8A020]/20 rounded-xl p-3">
-                <p className="text-[13px] font-bold text-[#16130C]">
+              <div className="bg-amber/5 border border-amber/20 rounded-xl p-3">
+                <p className="text-[13px] font-bold text-dark">
                   {selectedRoom === "__entire__" ? "Entire property" : results?.find((r) => r.id === selectedRoom)?.name}
                 </p>
-                <p className="text-[11px] text-[#9C9485]">{nights} nights · {fmt(selectedPrice * nights)}</p>
+                <p className="text-[11px] text-text3">{nights} nights · {fmt(selectedPrice * nights)}</p>
               </div>
-              <input type="text" placeholder="Full name" value={name} onChange={(e) => setName(e.target.value)} className="w-full border border-[#E2DDD5] rounded-[14px] px-4 py-3 text-[14px] outline-none focus:border-[#E8A020]" />
-              <input type="email" placeholder="Email address" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full border border-[#E2DDD5] rounded-[14px] px-4 py-3 text-[14px] outline-none focus:border-[#E8A020]" />
-              <PhoneInput value={phone} onChange={setPhone} className="w-full border border-[#E2DDD5] rounded-[14px] px-4 py-3 text-[14px] outline-none focus:border-[#E8A020]" />
-              <textarea placeholder="Special requests (optional)" value={message} onChange={(e) => setMessage(e.target.value)} rows={3} className="w-full border border-[#E2DDD5] rounded-[14px] px-4 py-3 text-[14px] outline-none focus:border-[#E8A020] resize-none" />
+              <input type="text" placeholder="Full name" value={name} onChange={(e) => setName(e.target.value)} className="w-full border border-border rounded-[14px] px-4 py-3 text-[14px] outline-none focus:border-amber" />
+              <input type="email" placeholder="Email address" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full border border-border rounded-[14px] px-4 py-3 text-[14px] outline-none focus:border-amber" />
+              <PhoneInput value={phone} onChange={setPhone} className="w-full border border-border rounded-[14px] px-4 py-3 text-[14px] outline-none focus:border-amber" />
+              <textarea placeholder="Special requests (optional)" value={message} onChange={(e) => setMessage(e.target.value)} rows={3} className="w-full border border-border rounded-[14px] px-4 py-3 text-[14px] outline-none focus:border-amber resize-none" />
               {error && <p className="text-[13px] text-red-600 text-center">{error}</p>}
             </div>
-            <div className="sticky bottom-0 bg-white border-t border-[#E2DDD5] px-5 py-4 shrink-0">
-              <button type="button" onClick={handleEnquire} disabled={sending} className={cn("w-full py-3.5 rounded-2xl text-[15px] font-bold bg-gradient-to-r from-[#E8A020] to-[#d4911c] text-[#16130C] disabled:opacity-50")}>
+            <div className="sticky bottom-0 bg-white border-t border-border px-5 py-4 shrink-0">
+              <button type="button" onClick={handleEnquire} disabled={sending} className={cn("w-full py-3.5 rounded-2xl text-[15px] font-bold bg-gradient-to-r from-amber to-[#d4911c] text-dark disabled:opacity-50")}>
                 {sending ? "Sending..." : "Confirm & send enquiry"}
               </button>
             </div>

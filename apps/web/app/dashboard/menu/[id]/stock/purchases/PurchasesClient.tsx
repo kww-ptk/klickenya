@@ -30,7 +30,7 @@ const TABS: Array<{ key: PORow["status"] | "all"; label: string }> = [
 ];
 
 const STATUS_PILL: Record<PORow["status"], string> = {
-  draft: "bg-[#F4F1EC] text-[#5E5848]",
+  draft: "bg-surface text-text2",
   sent: "bg-sky-100 text-sky-800",
   partial: "bg-amber-100 text-amber-800",
   received: "bg-emerald-100 text-emerald-700",
@@ -46,7 +46,7 @@ function fmtDate(iso: string | null): string {
 }
 
 const inputCls =
-  "border border-[#E2DDD5] rounded-xl px-3 py-3 text-[14px] text-[#16130C] placeholder:text-[#9C9485] focus:outline-none focus:border-[#E8A020] focus:ring-1 focus:ring-[#E8A020]/30 bg-white";
+  "border border-border rounded-xl px-3 py-3 text-[14px] text-dark placeholder:text-text3 focus:outline-none focus:border-amber focus:ring-1 focus:ring-amber/30 bg-white";
 
 export function PurchasesClient({
   menuId,
@@ -94,13 +94,13 @@ export function PurchasesClient({
               onClick={() => setTab(t.key)}
               className={`h-11 px-4 rounded-full text-[13px] font-bold transition-colors whitespace-nowrap ${
                 tab === t.key
-                  ? "bg-[#16130C] text-white"
-                  : "bg-white border border-[#E2DDD5] text-[#5E5848]"
+                  ? "bg-dark text-white"
+                  : "bg-white border border-border text-text2"
               }`}
             >
               {t.label}
               {counts[t.key] != null && (
-                <span className={`ml-1.5 text-[11px] ${tab === t.key ? "opacity-70" : "text-[#9C9485]"}`}>
+                <span className={`ml-1.5 text-[11px] ${tab === t.key ? "opacity-70" : "text-text3"}`}>
                   {counts[t.key]}
                 </span>
               )}
@@ -130,7 +130,7 @@ export function PurchasesClient({
 
       {/* Empty / list */}
       {filtered.length === 0 ? (
-        <div className="bg-white rounded-2xl border border-[#E2DDD5] p-8 text-center text-[14px] text-[#9C9485]">
+        <div className="bg-white rounded-2xl border border-border p-8 text-center text-[14px] text-text3">
           No purchase orders match.
         </div>
       ) : (
@@ -141,18 +141,18 @@ export function PurchasesClient({
               <li key={o.id}>
                 <Link
                   href={`/dashboard/menu/${menuId}/stock/purchases/${o.id}`}
-                  className="block bg-white rounded-2xl border border-[#E2DDD5] p-4 active:bg-[#FAFAF8]"
+                  className="block bg-white rounded-2xl border border-border p-4 active:bg-canvas"
                 >
                   <div className="flex items-center justify-between gap-3 mb-2">
-                    <p className="text-[15px] font-bold text-[#16130C]">{o.po_number ?? "—"}</p>
+                    <p className="text-[15px] font-bold text-dark">{o.po_number ?? "—"}</p>
                     <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide ${STATUS_PILL[o.status]}`}>
                       {o.status}
                     </span>
                   </div>
-                  <p className="text-[13px] text-[#5E5848]">{supplierName(o.supplier_id)}</p>
+                  <p className="text-[13px] text-text2">{supplierName(o.supplier_id)}</p>
                   <div className="flex items-center justify-between mt-2">
-                    <p className="text-[12px] text-[#9C9485]">Due {fmtDate(o.expected_at)}</p>
-                    <p className="text-[14px] font-bold text-[#16130C]">{fmtKES(o.total_kes)}</p>
+                    <p className="text-[12px] text-text3">Due {fmtDate(o.expected_at)}</p>
+                    <p className="text-[14px] font-bold text-dark">{fmtKES(o.total_kes)}</p>
                   </div>
                 </Link>
               </li>
@@ -160,10 +160,10 @@ export function PurchasesClient({
           </ul>
 
           {/* Desktop table (≥ md) */}
-          <div className="hidden md:block bg-white rounded-2xl border border-[#E2DDD5] overflow-hidden">
+          <div className="hidden md:block bg-white rounded-2xl border border-border overflow-hidden">
             <table className="w-full">
-              <thead className="bg-[#FAFAF8] border-b border-[#E2DDD5]">
-                <tr className="text-left text-[11px] font-bold uppercase tracking-wide text-[#9C9485]">
+              <thead className="bg-canvas border-b border-border">
+                <tr className="text-left text-[11px] font-bold uppercase tracking-wide text-text3">
                   <th className="px-4 py-2.5">PO #</th>
                   <th className="px-4 py-2.5">Supplier</th>
                   <th className="px-4 py-2.5">Expected</th>
@@ -171,17 +171,17 @@ export function PurchasesClient({
                   <th className="px-4 py-2.5">Status</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#F4F1EC]">
+              <tbody className="divide-y divide-surface">
                 {filtered.map((o) => (
-                  <tr key={o.id} className="text-[13px] hover:bg-[#FAFAF8]">
-                    <td className="px-4 py-3 font-bold text-[#16130C]">
-                      <Link href={`/dashboard/menu/${menuId}/stock/purchases/${o.id}`} className="hover:text-[#E8A020]">
+                  <tr key={o.id} className="text-[13px] hover:bg-canvas">
+                    <td className="px-4 py-3 font-bold text-dark">
+                      <Link href={`/dashboard/menu/${menuId}/stock/purchases/${o.id}`} className="hover:text-amber">
                         {o.po_number ?? "—"}
                       </Link>
                     </td>
-                    <td className="px-4 py-3 text-[#5E5848]">{supplierName(o.supplier_id)}</td>
-                    <td className="px-4 py-3 text-[#5E5848]">{fmtDate(o.expected_at)}</td>
-                    <td className="px-4 py-3 text-right font-semibold text-[#16130C]">{fmtKES(o.total_kes)}</td>
+                    <td className="px-4 py-3 text-text2">{supplierName(o.supplier_id)}</td>
+                    <td className="px-4 py-3 text-text2">{fmtDate(o.expected_at)}</td>
+                    <td className="px-4 py-3 text-right font-semibold text-dark">{fmtKES(o.total_kes)}</td>
                     <td className="px-4 py-3">
                       <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide ${STATUS_PILL[o.status]}`}>
                         {o.status}

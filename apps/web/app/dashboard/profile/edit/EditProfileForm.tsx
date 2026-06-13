@@ -90,8 +90,8 @@ export function EditProfileForm({
   }
 
   const inputCls =
-    "w-full h-[48px] px-4 rounded-xl border border-[#E2DDD5] text-[16px] text-[#16130C] placeholder:text-[#9C9485] outline-none focus:border-[#E8A020] focus:ring-1 focus:ring-[#E8A020]/30 transition-colors bg-white";
-  const labelCls = "block text-[14px] font-semibold text-[#16130C] mb-1.5";
+    "w-full h-[48px] px-4 rounded-xl border border-border text-[16px] text-dark placeholder:text-text3 outline-none focus:border-amber focus:ring-1 focus:ring-amber/30 transition-colors bg-white";
+  const labelCls = "block text-[14px] font-semibold text-dark mb-1.5";
 
   return (
     <div>
@@ -99,21 +99,21 @@ export function EditProfileForm({
       <div className="flex items-center gap-3 mb-6">
         <Link
           href="/dashboard"
-          className="size-10 flex items-center justify-center rounded-xl border border-[#E2DDD5] text-[#9C9485] hover:border-[#16130C] hover:text-[#16130C] transition-colors"
+          className="size-10 flex items-center justify-center rounded-xl border border-border text-text3 hover:border-dark hover:text-dark transition-colors"
         >
           ←
         </Link>
-        <h1 className="font-display text-[22px] lg:text-[28px] font-bold tracking-[-0.03em] text-[#16130C]">
+        <h1 className="font-display text-[22px] lg:text-[28px] font-bold tracking-[-0.03em] text-dark">
           Edit Profile
         </h1>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-5 max-w-lg">
         {/* Photo */}
-        <div className="bg-white rounded-2xl border border-[#E2DDD5] p-5 shadow-sm">
+        <div className="bg-white rounded-2xl border border-border p-5 shadow-sm">
           <p className={labelCls}>Profile photo</p>
           <div className="flex items-center gap-4">
-            <div className="shrink-0 w-20 h-20 rounded-full overflow-hidden bg-gradient-to-br from-[#E8A020] to-[#6B2D8B]">
+            <div className="shrink-0 w-20 h-20 rounded-full overflow-hidden bg-gradient-to-br from-amber to-purple">
               {photoPreview ? (
                 <Image
                   src={photoPreview}
@@ -132,11 +132,11 @@ export function EditProfileForm({
               <button
                 type="button"
                 onClick={() => fileRef.current?.click()}
-                className="text-[14px] font-semibold text-[#6B2D8B] bg-[#6B2D8B]/8 px-4 h-[40px] rounded-xl hover:bg-[#6B2D8B]/15 transition-colors"
+                className="text-[14px] font-semibold text-purple bg-purple/8 px-4 h-[40px] rounded-xl hover:bg-purple/15 transition-colors"
               >
                 Change photo
               </button>
-              <p className="text-[12px] text-[#9C9485] mt-1">JPG or PNG, max 5MB</p>
+              <p className="text-[12px] text-text3 mt-1">JPG or PNG, max 5MB</p>
             </div>
             <input
               ref={fileRef}
@@ -149,7 +149,7 @@ export function EditProfileForm({
         </div>
 
         {/* Name */}
-        <div className="bg-white rounded-2xl border border-[#E2DDD5] p-5 shadow-sm">
+        <div className="bg-white rounded-2xl border border-border p-5 shadow-sm">
           <label className={labelCls}>Display name</label>
           <input
             type="text"
@@ -162,22 +162,22 @@ export function EditProfileForm({
         </div>
 
         {/* Bio */}
-        <div className="bg-white rounded-2xl border border-[#E2DDD5] p-5 shadow-sm">
+        <div className="bg-white rounded-2xl border border-border p-5 shadow-sm">
           <label className={labelCls}>Bio</label>
           <textarea
             value={bio}
             onChange={(e) => setBio(e.target.value)}
             placeholder="Tell guests about yourself or your business..."
             rows={3}
-            className="w-full px-4 py-3 rounded-xl border border-[#E2DDD5] text-[16px] text-[#16130C] placeholder:text-[#9C9485] outline-none focus:border-[#E8A020] focus:ring-1 focus:ring-[#E8A020]/30 transition-colors bg-white resize-none"
+            className="w-full px-4 py-3 rounded-xl border border-border text-[16px] text-dark placeholder:text-text3 outline-none focus:border-amber focus:ring-1 focus:ring-amber/30 transition-colors bg-white resize-none"
           />
         </div>
 
         {/* Online presence */}
-        <div className="bg-white rounded-2xl border border-[#E2DDD5] p-5 shadow-sm space-y-4">
-          <p className="text-[14px] font-semibold text-[#16130C]">Online presence</p>
+        <div className="bg-white rounded-2xl border border-border p-5 shadow-sm space-y-4">
+          <p className="text-[14px] font-semibold text-dark">Online presence</p>
           <div>
-            <label className="text-[13px] text-[#5E5848] mb-1 block">Website</label>
+            <label className="text-[13px] text-text2 mb-1 block">Website</label>
             <input
               type="url"
               value={website}
@@ -187,7 +187,7 @@ export function EditProfileForm({
             />
           </div>
           <div>
-            <label className="text-[13px] text-[#5E5848] mb-1 block">Instagram</label>
+            <label className="text-[13px] text-text2 mb-1 block">Instagram</label>
             <input
               type="text"
               value={instagram}
@@ -197,7 +197,7 @@ export function EditProfileForm({
             />
           </div>
           <div>
-            <label className="text-[13px] text-[#5E5848] mb-1 block">Facebook</label>
+            <label className="text-[13px] text-text2 mb-1 block">Facebook</label>
             <input
               type="text"
               value={facebook}
@@ -209,7 +209,7 @@ export function EditProfileForm({
         </div>
 
         {/* Phone */}
-        <div className="bg-white rounded-2xl border border-[#E2DDD5] p-5 shadow-sm">
+        <div className="bg-white rounded-2xl border border-border p-5 shadow-sm">
           <label className={labelCls}>Phone number</label>
           <input
             type="tel"
@@ -218,7 +218,7 @@ export function EditProfileForm({
             placeholder="+254 700 000 000"
             className={inputCls}
           />
-          <p className="text-[12px] text-[#9C9485] mt-1.5">Not shown publicly</p>
+          <p className="text-[12px] text-text3 mt-1.5">Not shown publicly</p>
         </div>
 
         {/* Error */}
@@ -232,7 +232,7 @@ export function EditProfileForm({
         <button
           type="submit"
           disabled={isLoading || !name.trim()}
-          className="w-full h-[48px] bg-[#E8A020] text-[#16130C] font-bold text-[15px] rounded-full hover:bg-[#d4911c] transition-colors disabled:opacity-60 flex items-center justify-center"
+          className="w-full h-[48px] bg-amber text-dark font-bold text-[15px] rounded-full hover:bg-[#d4911c] transition-colors disabled:opacity-60 flex items-center justify-center"
         >
           {isLoading ? (
             <svg className="animate-spin size-5" viewBox="0 0 24 24" fill="none">

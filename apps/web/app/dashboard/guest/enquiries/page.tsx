@@ -23,10 +23,10 @@ function nights(checkIn: string, checkOut: string) {
 }
 
 const STATUS_LABELS: Record<string, { label: string; className: string }> = {
-  pending:   { label: "Awaiting response", className: "bg-[#E8A020]/15 text-[#E8A020]" },
+  pending:   { label: "Awaiting response", className: "bg-amber/15 text-amber" },
   held:      { label: "On hold",           className: "bg-[#4F46E5]/15 text-[#4F46E5]" },
   converted: { label: "Booking confirmed", className: "bg-[#22C55E]/15 text-[#22C55E]" },
-  declined:  { label: "Declined",          className: "bg-[#9C9485]/15 text-[#9C9485]" },
+  declined:  { label: "Declined",          className: "bg-text3/15 text-text3" },
 };
 
 export default async function GuestEnquiriesPage() {
@@ -46,21 +46,21 @@ export default async function GuestEnquiriesPage() {
     <div className="space-y-6 max-w-3xl">
       {/* Header */}
       <div>
-        <h1 className="text-[22px] font-display font-bold text-[#16130C]">My Enquiries</h1>
-        <p className="text-[14px] text-[#9C9485] mt-1">
+        <h1 className="text-[22px] font-display font-bold text-dark">My Enquiries</h1>
+        <p className="text-[14px] text-text3 mt-1">
           {items.length} enquir{items.length !== 1 ? "ies" : "y"} submitted
         </p>
       </div>
 
       {items.length === 0 ? (
         <div className="bg-white rounded-2xl border border-[#F0EDE8] p-12 text-center">
-          <p className="text-[15px] font-semibold text-[#16130C]">No enquiries yet</p>
-          <p className="text-[13px] text-[#9C9485] mt-1 mb-6">
+          <p className="text-[15px] font-semibold text-dark">No enquiries yet</p>
+          <p className="text-[13px] text-text3 mt-1 mb-6">
             Find a stay and send your first enquiry
           </p>
           <Link
             href="/stays"
-            className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#E8A020] text-white text-[13px] font-semibold rounded-xl hover:bg-[#C78A1A] transition-colors"
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-amber text-white text-[13px] font-semibold rounded-xl hover:bg-[#C78A1A] transition-colors"
           >
             Browse stays
           </Link>
@@ -80,10 +80,10 @@ export default async function GuestEnquiriesPage() {
                 {/* Title row */}
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="text-[15px] font-semibold text-[#16130C] truncate">
+                    <p className="text-[15px] font-semibold text-dark truncate">
                       {enq.listing_title ?? "Property enquiry"}
                     </p>
-                    <p className="text-[12px] text-[#9C9485] mt-0.5">
+                    <p className="text-[12px] text-text3 mt-0.5">
                       Submitted {daysAgo(enq.created_at)}
                     </p>
                   </div>
@@ -94,22 +94,22 @@ export default async function GuestEnquiriesPage() {
 
                 {/* Dates row */}
                 {enq.check_in && enq.check_out && (
-                  <div className="flex flex-wrap gap-x-5 gap-y-1 text-[13px] text-[#16130C]">
+                  <div className="flex flex-wrap gap-x-5 gap-y-1 text-[13px] text-dark">
                     <span>
-                      <span className="text-[#9C9485]">Check-in:</span>{" "}
+                      <span className="text-text3">Check-in:</span>{" "}
                       {formatDate(enq.check_in)}
                     </span>
                     <span>
-                      <span className="text-[#9C9485]">Check-out:</span>{" "}
+                      <span className="text-text3">Check-out:</span>{" "}
                       {formatDate(enq.check_out)}
                     </span>
                     {n && (
-                      <span className="text-[#9C9485]">
+                      <span className="text-text3">
                         {n} night{n !== 1 ? "s" : ""}
                       </span>
                     )}
                     {enq.guests && (
-                      <span className="text-[#9C9485]">
+                      <span className="text-text3">
                         {enq.guests} guest{enq.guests !== 1 ? "s" : ""}
                       </span>
                     )}
@@ -121,14 +121,14 @@ export default async function GuestEnquiriesPage() {
                   {status === "converted" ? (
                     <Link
                       href="/dashboard/guest/bookings"
-                      className="text-[13px] font-medium text-[#22C55E] hover:text-[#16A34A] transition-colors"
+                      className="text-[13px] font-medium text-[#22C55E] hover:text-green transition-colors"
                     >
                       View booking →
                     </Link>
                   ) : status === "pending" && enq.listing_sanity_id ? (
                     <Link
                       href={`/stays/${enq.listing_sanity_id}`}
-                      className="text-[13px] font-medium text-[#E8A020] hover:text-[#C78A1A] transition-colors"
+                      className="text-[13px] font-medium text-amber hover:text-[#C78A1A] transition-colors"
                     >
                       View listing →
                     </Link>

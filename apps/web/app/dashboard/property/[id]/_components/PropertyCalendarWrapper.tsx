@@ -79,7 +79,7 @@ export function PropertyCalendarWrapper({
   return (
     <ToastProvider>
       <div className="flex items-center justify-between mb-3">
-        <h2 className="font-display text-[17px] lg:text-[20px] font-bold text-[#16130C] tracking-[-0.02em]">
+        <h2 className="font-display text-[17px] lg:text-[20px] font-bold text-dark tracking-[-0.02em]">
           Availability Calendar
         </h2>
         <button

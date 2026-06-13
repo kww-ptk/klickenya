@@ -23,61 +23,61 @@ export default async function SettingsPage() {
   return (
     <div>
       <div className="mb-6">
-        <h1 className="font-display text-[22px] lg:text-[28px] font-bold tracking-[-0.03em] text-[#16130C]">
+        <h1 className="font-display text-[22px] lg:text-[28px] font-bold tracking-[-0.03em] text-dark">
           Settings
         </h1>
-        <p className="text-[13px] text-[#9C9485] mt-0.5">
+        <p className="text-[13px] text-text3 mt-0.5">
           Manage your account and preferences
         </p>
       </div>
 
       <div className="space-y-5 max-w-[600px]">
         {/* Account info */}
-        <div className="bg-white rounded-xl border border-[#E2DDD5] p-5">
-          <h2 className="text-[15px] font-bold text-[#16130C] mb-4">Account</h2>
+        <div className="bg-white rounded-xl border border-border p-5">
+          <h2 className="text-[15px] font-bold text-dark mb-4">Account</h2>
           <div className="space-y-3 text-[13px]">
-            <div className="flex items-center justify-between py-2 border-b border-[#F4F1EC]">
-              <span className="text-[#9C9485]">Email</span>
-              <span className="text-[#16130C] font-medium">{profile?.email ?? user.email}</span>
+            <div className="flex items-center justify-between py-2 border-b border-surface">
+              <span className="text-text3">Email</span>
+              <span className="text-dark font-medium">{profile?.email ?? user.email}</span>
             </div>
-            <div className="flex items-center justify-between py-2 border-b border-[#F4F1EC]">
-              <span className="text-[#9C9485]">Name</span>
-              <span className="text-[#16130C] font-medium">{hostProfile?.display_name ?? profile?.full_name ?? "—"}</span>
+            <div className="flex items-center justify-between py-2 border-b border-surface">
+              <span className="text-text3">Name</span>
+              <span className="text-dark font-medium">{hostProfile?.display_name ?? profile?.full_name ?? "—"}</span>
             </div>
-            <div className="flex items-center justify-between py-2 border-b border-[#F4F1EC]">
-              <span className="text-[#9C9485]">Role</span>
-              <span className="text-[#16130C] font-medium capitalize">{profile?.role ?? "guest"}</span>
+            <div className="flex items-center justify-between py-2 border-b border-surface">
+              <span className="text-text3">Role</span>
+              <span className="text-dark font-medium capitalize">{profile?.role ?? "guest"}</span>
             </div>
             <div className="flex items-center justify-between py-2">
-              <span className="text-[#9C9485]">Phone</span>
-              <span className="text-[#16130C] font-medium">{hostProfile?.phone ?? "—"}</span>
+              <span className="text-text3">Phone</span>
+              <span className="text-dark font-medium">{hostProfile?.phone ?? "—"}</span>
             </div>
           </div>
         </div>
 
         {/* Password */}
-        <div className="bg-white rounded-xl border border-[#E2DDD5] p-5">
-          <h2 className="text-[15px] font-bold text-[#16130C] mb-2">Password</h2>
+        <div className="bg-white rounded-xl border border-border p-5">
+          <h2 className="text-[15px] font-bold text-dark mb-2">Password</h2>
           {hostProfile?.password_changed === false ? (
             <div>
-              <p className="text-[13px] text-[#9C9485] mb-3">
+              <p className="text-[13px] text-text3 mb-3">
                 You signed up via a claim link. Set a password to secure your account.
               </p>
               <Link
                 href="/reset-password"
-                className="inline-flex items-center px-4 py-2.5 rounded-xl bg-[#E8A020] text-white text-[13px] font-semibold hover:bg-[#d4911c] transition-colors"
+                className="inline-flex items-center px-4 py-2.5 rounded-xl bg-amber text-white text-[13px] font-semibold hover:bg-[#d4911c] transition-colors"
               >
                 Set password
               </Link>
             </div>
           ) : (
             <div>
-              <p className="text-[13px] text-[#9C9485] mb-3">
+              <p className="text-[13px] text-text3 mb-3">
                 Change your account password.
               </p>
               <Link
                 href="/reset-password"
-                className="inline-flex items-center px-4 py-2.5 rounded-xl bg-[#16130C] text-white text-[13px] font-semibold hover:bg-[#2A2520] transition-colors"
+                className="inline-flex items-center px-4 py-2.5 rounded-xl bg-dark text-white text-[13px] font-semibold hover:bg-[#2A2520] transition-colors"
               >
                 Change password
               </Link>
@@ -91,7 +91,7 @@ export default async function SettingsPage() {
         {/* Danger zone */}
         <div className="bg-white rounded-xl border border-red-200 p-5">
           <h2 className="text-[15px] font-bold text-red-600 mb-2">Danger Zone</h2>
-          <p className="text-[13px] text-[#9C9485] mb-3">
+          <p className="text-[13px] text-text3 mb-3">
             Contact support to delete your account and all associated data.
           </p>
           <a

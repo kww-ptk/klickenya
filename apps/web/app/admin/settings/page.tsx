@@ -46,28 +46,28 @@ export default function AdminSettingsPage() {
   return (
     <div className="space-y-8">
       {/* Page heading */}
-      <h1 className="font-display text-[24px] font-bold text-[#16130C]">
+      <h1 className="font-display text-[24px] font-bold text-dark">
         Settings
       </h1>
 
       {/* Admin Email */}
       <div className="rounded-2xl bg-white p-6 shadow-sm">
-        <h2 className="font-display text-[18px] font-bold text-[#16130C]">
+        <h2 className="font-display text-[18px] font-bold text-dark">
           Admin Email
         </h2>
         <div className="mt-4 flex items-center gap-3">
-          <span className="rounded-xl border border-[#E2DDD5] bg-[#F9F7F4] px-4 py-2.5 text-[14px] text-[#16130C]">
+          <span className="rounded-xl border border-border bg-[#F9F7F4] px-4 py-2.5 text-[14px] text-dark">
             {adminEmail}
           </span>
         </div>
-        <p className="mt-2 text-[13px] text-[#9C9485]">
+        <p className="mt-2 text-[13px] text-text3">
           Change in Vercel environment variables
         </p>
       </div>
 
       {/* Service Status */}
       <div className="rounded-2xl bg-white p-6 shadow-sm">
-        <h2 className="font-display text-[18px] font-bold text-[#16130C]">
+        <h2 className="font-display text-[18px] font-bold text-dark">
           Service Status
         </h2>
         <div className="mt-4 space-y-3">
@@ -79,7 +79,7 @@ export default function AdminSettingsPage() {
                 }`}
                 aria-hidden="true"
               />
-              <span className="text-[14px] font-medium text-[#16130C]">
+              <span className="text-[14px] font-medium text-dark">
                 {service.name}
               </span>
               <span
@@ -96,19 +96,19 @@ export default function AdminSettingsPage() {
 
       {/* GHL Webhook URL */}
       <div className="rounded-2xl bg-white p-6 shadow-sm">
-        <h2 className="font-display text-[18px] font-bold text-[#16130C]">
+        <h2 className="font-display text-[18px] font-bold text-dark">
           GHL Webhook URL
         </h2>
         <div className="mt-4">
           {maskedGhlUrl ? (
-            <span className="rounded-xl border border-[#E2DDD5] bg-[#F9F7F4] px-4 py-2.5 text-[14px] font-mono text-[#16130C]">
+            <span className="rounded-xl border border-border bg-[#F9F7F4] px-4 py-2.5 text-[14px] font-mono text-dark">
               {maskedGhlUrl}
             </span>
           ) : (
             <span className="text-[14px] text-[#DC2626]">Not configured</span>
           )}
         </div>
-        <p className="mt-2 text-[13px] text-[#9C9485]">
+        <p className="mt-2 text-[13px] text-text3">
           Change in Vercel environment variables
         </p>
       </div>

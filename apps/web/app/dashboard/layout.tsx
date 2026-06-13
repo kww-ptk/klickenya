@@ -9,6 +9,8 @@ import { DashboardBottomNav } from "./_components/DashboardBottomNav";
 import { DashboardMobileHeader } from "./_components/DashboardMobileHeader";
 import { adminClient } from "@/lib/supabase/admin";
 import { getAuthUser, getUserProfile, getHostProfile } from "./_lib/auth";
+import { getPartnerByHost } from "@/lib/partner/resolve";
+import { PartnerTheme } from "@/components/partner/PartnerTheme";
 
 /* ---------- SVG Icons ---------- */
 
@@ -114,6 +116,8 @@ export default async function DashboardLayout({
     redirect("/login");
   }
 
+  const partner = await getPartnerByHost();
+
   // Parallel: fetch user profile + host profile together
   const [profile, hostProfile] = await Promise.all([
     getUserProfile(user.id),
@@ -169,19 +173,20 @@ export default async function DashboardLayout({
 
   const planColor =
     planTier === "pro" || planTier === "agency"
-      ? "bg-[#6B2D8B]/15 text-[#6B2D8B]"
+      ? "bg-purple/15 text-purple"
       : planTier === "grow"
-        ? "bg-[#0D7377]/15 text-[#0D7377]"
-        : "bg-[#E8A020]/15 text-[#E8A020]";
+        ? "bg-teal/15 text-teal"
+        : "bg-amber/15 text-amber";
 
   return (
     <div className="flex min-h-screen">
+      <PartnerTheme partner={partner} />
       {/* Sidebar — hidden on mobile, visible on desktop */}
-      <aside className="hidden lg:flex fixed inset-y-0 left-0 z-40 w-[240px] bg-[#16130C] flex-col">
+      <aside className="hidden lg:flex fixed inset-y-0 left-0 z-40 w-[240px] bg-dark flex-col">
         {/* Back to website */}
         <Link
           href="/"
-          className="flex items-center gap-2.5 px-4 py-3 border-b border-white/10 text-[#9C9485] hover:text-white transition-colors"
+          className="flex items-center gap-2.5 px-4 py-3 border-b border-white/10 text-text3 hover:text-white transition-colors"
         >
           <span className="shrink-0 size-5">
             <GlobeIcon />
@@ -193,7 +198,7 @@ export default async function DashboardLayout({
 
         {/* Host profile */}
         <div className="flex items-center gap-3 px-4 py-5 border-b border-white/10">
-          <div className="shrink-0 size-10 rounded-full bg-gradient-to-br from-[#E8A020] to-[#6B2D8B] flex items-center justify-center text-white text-[14px] font-bold overflow-hidden">
+          <div className="shrink-0 size-10 rounded-full bg-gradient-to-br from-amber to-purple flex items-center justify-center text-white text-[14px] font-bold overflow-hidden">
             {photoUrl ? (
               <Image
                 src={photoUrl}
@@ -270,7 +275,7 @@ export default async function DashboardLayout({
         <div className="border-t border-white/10 px-4 py-4 space-y-3">
           <Link
             href="/profile"
-            className="flex items-center gap-2 text-[12px] text-[#9C9485] hover:text-white transition-colors"
+            className="flex items-center gap-2 text-[12px] text-text3 hover:text-white transition-colors"
           >
             <span className="shrink-0 size-4">
               <UserIcon />
@@ -280,7 +285,7 @@ export default async function DashboardLayout({
           {showPasswordBanner && (
             <Link
               href="/reset-password"
-              className="flex items-center gap-2 text-[12px] text-[#E8A020] hover:text-[#F5C842] transition-colors"
+              className="flex items-center gap-2 text-[12px] text-amber hover:text-amber2 transition-colors"
             >
               <span className="shrink-0 size-4">
                 <LockIcon />
@@ -289,7 +294,7 @@ export default async function DashboardLayout({
             </Link>
           )}
           {profile?.email && (
-            <p className="hidden lg:block text-[12px] text-[#9C9485] truncate">
+            <p className="hidden lg:block text-[12px] text-text3 truncate">
               {profile.email}
             </p>
           )}
@@ -298,7 +303,7 @@ export default async function DashboardLayout({
       </aside>
 
       {/* Main content */}
-      <main className="flex-1 lg:ml-[240px] min-h-screen bg-[#FAFAF8] min-w-0 overflow-x-hidden">
+      <main className="flex-1 lg:ml-[240px] min-h-screen bg-canvas min-w-0 overflow-x-hidden">
         <DashboardMobileHeader enquiryCount={enquiryCount} />
         <div className="p-5 pb-24 lg:p-8 lg:pb-8">{children}</div>
       </main>

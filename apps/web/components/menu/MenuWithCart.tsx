@@ -136,7 +136,7 @@ function CartItemCard({ item, totalQty, onAdd, onRemove }: CartItemCardProps) {
             <div className="shrink-0 flex items-center gap-2">
               <button
                 onClick={onRemove}
-                className="size-[28px] rounded-full bg-[#F4F1EC] text-dark text-[17px] font-bold flex items-center justify-center hover:bg-[#E2DDD5] transition-colors active:scale-95"
+                className="size-[28px] rounded-full bg-surface text-dark text-[17px] font-bold flex items-center justify-center hover:bg-border transition-colors active:scale-95"
                 aria-label="Remove one"
               >
                 −
@@ -290,7 +290,7 @@ function CartPanel({ cart, menuId, initialTable, tables, onBack, onConfirmed, on
                     {entry.selected_options.map((o, i) => (
                       <span
                         key={i}
-                        className="inline-block rounded-full bg-[#F4F1EC] px-2 py-0.5 text-[11px] text-text2 font-medium"
+                        className="inline-block rounded-full bg-surface px-2 py-0.5 text-[11px] text-text2 font-medium"
                       >
                         {o.choice}
                         {o.price_add > 0 ? ` +${formatPrice(o.price_add)}` : ""}
@@ -316,7 +316,7 @@ function CartPanel({ cart, menuId, initialTable, tables, onBack, onConfirmed, on
                 <div className="flex items-center gap-1.5">
                   <button
                     onClick={() => onUpdateQty(entry.cart_id, -1)}
-                    className="size-[26px] rounded-full bg-[#F4F1EC] text-dark text-[15px] font-bold flex items-center justify-center hover:bg-[#E2DDD5] transition-colors active:scale-95"
+                    className="size-[26px] rounded-full bg-surface text-dark text-[15px] font-bold flex items-center justify-center hover:bg-border transition-colors active:scale-95"
                     aria-label="Remove one"
                   >
                     −
@@ -350,12 +350,12 @@ function CartPanel({ cart, menuId, initialTable, tables, onBack, onConfirmed, on
               Table number <span className="text-red-500">*</span>
             </label>
             {initialTable ? (
-              <div className="flex items-center gap-2 w-full border border-[#16A34A]/40 rounded-xl px-3.5 py-3 bg-[#F0FDF4]">
-                <svg className="size-4 text-[#16A34A] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <div className="flex items-center gap-2 w-full border border-green/40 rounded-xl px-3.5 py-3 bg-[#F0FDF4]">
+                <svg className="size-4 text-green shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                 </svg>
                 <span className="text-[15px] font-semibold text-dark flex-1">{tableNumber}</span>
-                <span className="text-[11px] text-[#16A34A] font-medium">From QR</span>
+                <span className="text-[11px] text-green font-medium">From QR</span>
               </div>
             ) : tables.length > 0 ? (
               // Dropdown of the restaurant's active tables. Grouped by
@@ -498,7 +498,7 @@ function ConfirmationScreen({ data, onDone }: { data: ConfirmData; onDone: () =>
           </div>
 
           {/* Total */}
-          <div className="px-5 py-3 bg-[#FAFAF8] border-t border-border flex items-center justify-between">
+          <div className="px-5 py-3 bg-canvas border-t border-border flex items-center justify-between">
             <span className="text-[14px] font-bold text-dark">Total</span>
             <span className="text-[16px] font-extrabold text-dark tabular-nums">
               {formatPrice(data.orderTotal)}

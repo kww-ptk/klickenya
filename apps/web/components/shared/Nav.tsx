@@ -254,7 +254,7 @@ function Nav({ transparent = false }: NavProps) {
                 <Mail className="size-4 text-text2" /> Enquiries
               </span>
               {enquiryCount > 0 && (
-                <span className="min-w-[18px] h-[18px] px-1 rounded-full bg-[#E8A020] text-white text-[10px] font-bold flex items-center justify-center">
+                <span className="min-w-[18px] h-[18px] px-1 rounded-full bg-amber text-white text-[10px] font-bold flex items-center justify-center">
                   {enquiryCount}
                 </span>
               )}
@@ -443,7 +443,7 @@ function Nav({ transparent = false }: NavProps) {
                   Account
                   <ChevronDown className={cn("size-3 ml-1 transition-transform", accountOpen && "rotate-180")} />
                   {enquiryCount > 0 && (
-                    <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 rounded-full bg-[#E8A020] text-white text-[10px] font-bold flex items-center justify-center">
+                    <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 rounded-full bg-amber text-white text-[10px] font-bold flex items-center justify-center">
                       {enquiryCount > 99 ? "99+" : enquiryCount}
                     </span>
                   )}
@@ -477,7 +477,7 @@ function Nav({ transparent = false }: NavProps) {
               className={cn(
                 "md:hidden relative flex size-9 items-center justify-center rounded-full",
                 solid || mobileOpen
-                  ? "bg-[#E8A020]/15 text-[#E8A020]"
+                  ? "bg-amber/15 text-amber"
                   : "bg-white/15 text-white"
               )}
             >
@@ -485,7 +485,7 @@ function Nav({ transparent = false }: NavProps) {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
               </svg>
               {enquiryCount > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 rounded-full bg-[#E8A020] text-white text-[9px] font-bold flex items-center justify-center">
+                <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 rounded-full bg-amber text-white text-[9px] font-bold flex items-center justify-center">
                   {enquiryCount > 99 ? "99+" : enquiryCount}
                 </span>
               )}
@@ -496,7 +496,7 @@ function Nav({ transparent = false }: NavProps) {
               className={cn(
                 "md:hidden flex size-9 items-center justify-center rounded-full",
                 solid || mobileOpen
-                  ? "bg-[#E8A020]/15 text-[#E8A020]"
+                  ? "bg-amber/15 text-amber"
                   : "bg-white/15 text-white"
               )}
             >

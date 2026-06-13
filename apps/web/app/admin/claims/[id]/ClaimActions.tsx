@@ -49,7 +49,7 @@ export function ClaimActions({ claimId, currentStatus }: ClaimActionsProps) {
 
   return (
     <div className="rounded-2xl bg-white shadow-sm p-6">
-      <h2 className="font-display text-[16px] font-bold text-[#16130C] mb-4">Admin Actions</h2>
+      <h2 className="font-display text-[16px] font-bold text-dark mb-4">Admin Actions</h2>
 
       {error && (
         <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl px-4 py-2 mb-4">{error}</p>
@@ -59,7 +59,7 @@ export function ClaimActions({ claimId, currentStatus }: ClaimActionsProps) {
         <button
           onClick={() => handleAction("approve")}
           disabled={isLoading !== null}
-          className="flex-1 bg-[#16A34A] text-white font-bold text-sm rounded-full py-3 hover:bg-[#15803d] transition-all disabled:opacity-60 flex items-center justify-center gap-2"
+          className="flex-1 bg-green text-white font-bold text-sm rounded-full py-3 hover:bg-[#15803d] transition-all disabled:opacity-60 flex items-center justify-center gap-2"
         >
           {isLoading === "approve" && <Loader2 className="size-4 animate-spin" />}
           ✓ Approve & Verify
@@ -74,7 +74,7 @@ export function ClaimActions({ claimId, currentStatus }: ClaimActionsProps) {
         </button>
       </div>
 
-      <p className="text-xs text-[#9C9485] mt-3 text-center">
+      <p className="text-xs text-text3 mt-3 text-center">
         Approving sets isVerified = true in Sanity and sends a verification email to the owner.
       </p>
     </div>

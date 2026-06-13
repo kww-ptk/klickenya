@@ -154,12 +154,12 @@ export function DateRangePicker({
             compact ? "px-2 py-1.5" : "px-2.5 py-2",
             selecting === "check-in"
               ? "border-[color:var(--accent)] bg-[color:var(--accent)]/5"
-              : "border-[#E2DDD5]"
+              : "border-border"
           )}
           style={{ "--accent": accentColor } as React.CSSProperties}
         >
-          <p className={cn("font-bold text-[#9C9485] uppercase tracking-wide", compact ? "text-[8px]" : "text-[9px]")}>Check-in</p>
-          <p className={cn("font-semibold", compact ? "text-[12px]" : "text-[13px]", startD ? "text-[#16130C]" : "text-[#9C9485]")}>
+          <p className={cn("font-bold text-text3 uppercase tracking-wide", compact ? "text-[8px]" : "text-[9px]")}>Check-in</p>
+          <p className={cn("font-semibold", compact ? "text-[12px]" : "text-[13px]", startD ? "text-dark" : "text-text3")}>
             {startD
               ? startD.toLocaleDateString("en-GB", { day: "numeric", month: "short" })
               : "Add date"}
@@ -173,13 +173,13 @@ export function DateRangePicker({
             compact ? "px-2 py-1.5" : "px-2.5 py-2",
             selecting === "check-out"
               ? "border-[color:var(--accent)] bg-[color:var(--accent)]/5"
-              : "border-[#E2DDD5]",
+              : "border-border",
             !startD && "opacity-50 cursor-not-allowed"
           )}
           style={{ "--accent": accentColor } as React.CSSProperties}
         >
-          <p className={cn("font-bold text-[#9C9485] uppercase tracking-wide", compact ? "text-[8px]" : "text-[9px]")}>Check-out</p>
-          <p className={cn("font-semibold", compact ? "text-[12px]" : "text-[13px]", endD ? "text-[#16130C]" : "text-[#9C9485]")}>
+          <p className={cn("font-bold text-text3 uppercase tracking-wide", compact ? "text-[8px]" : "text-[9px]")}>Check-out</p>
+          <p className={cn("font-semibold", compact ? "text-[12px]" : "text-[13px]", endD ? "text-dark" : "text-text3")}>
             {endD
               ? endD.toLocaleDateString("en-GB", { day: "numeric", month: "short" })
               : "Add date"}
@@ -193,21 +193,21 @@ export function DateRangePicker({
           type="button"
           onClick={prevMonth}
           disabled={!canGoPrev}
-          className="size-7 flex items-center justify-center rounded-full hover:bg-[#F4F1EC] transition-colors disabled:opacity-20 disabled:cursor-not-allowed"
+          className="size-7 flex items-center justify-center rounded-full hover:bg-surface transition-colors disabled:opacity-20 disabled:cursor-not-allowed"
         >
-          <svg className="size-3.5 text-[#16130C]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+          <svg className="size-3.5 text-dark" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
           </svg>
         </button>
-        <p className={cn("font-bold text-[#16130C] tracking-[-0.01em]", compact ? "text-[12px]" : "text-[13px]")}>
+        <p className={cn("font-bold text-dark tracking-[-0.01em]", compact ? "text-[12px]" : "text-[13px]")}>
           {MONTHS[month]} {year}
         </p>
         <button
           type="button"
           onClick={nextMonth}
-          className="size-7 flex items-center justify-center rounded-full hover:bg-[#F4F1EC] transition-colors"
+          className="size-7 flex items-center justify-center rounded-full hover:bg-surface transition-colors"
         >
-          <svg className="size-3.5 text-[#16130C]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+          <svg className="size-3.5 text-dark" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
           </svg>
         </button>
@@ -216,7 +216,7 @@ export function DateRangePicker({
       {/* Weekday headers */}
       <div className="grid grid-cols-7 mb-0.5">
         {WEEKDAYS.map((d) => (
-          <div key={d} className={cn("text-center font-semibold text-[#9C9485]", compact ? "text-[9px] py-0" : "text-[10px] py-0.5")}>
+          <div key={d} className={cn("text-center font-semibold text-text3", compact ? "text-[9px] py-0" : "text-[10px] py-0.5")}>
             {d}
           </div>
         ))}
@@ -257,11 +257,11 @@ export function DateRangePicker({
                 className={cn(
                   "relative z-10 flex items-center justify-center rounded-full transition-colors duration-100",
                   compact ? "size-6 text-[11px]" : "size-7 sm:size-8 text-[12px]",
-                  !isPast && !isStart && !isEnd && "text-[#16130C] hover:bg-[#F4F1EC]",
-                  isPast && "text-[#E2DDD5] cursor-not-allowed",
+                  !isPast && !isStart && !isEnd && "text-dark hover:bg-surface",
+                  isPast && "text-border cursor-not-allowed",
                   isToday && !isStart && !isEnd && "font-bold",
                   (isStart || isEnd) && "text-white font-bold",
-                  isInRange && !isStart && !isEnd && "text-[#16130C] font-medium",
+                  isInRange && !isStart && !isEnd && "text-dark font-medium",
                 )}
                 style={
                   isStart || isEnd
