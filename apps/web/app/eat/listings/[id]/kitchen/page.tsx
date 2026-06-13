@@ -1,34 +1,34 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ChefHat, Package, ScrollText, Truck, FileBarChart, ArrowUpRight } from "lucide-react";
-import { getAuthUser, getHostProfile, getIsAdmin } from "../../../_lib/auth";
+import { getAuthUser, getHostProfile, getIsAdmin } from "../../../../dashboard/_lib/auth";
 import { adminClient } from "@/lib/supabase/admin";
 import { sanityClient } from "@/lib/sanity/client";
-import { StockEnableButton } from "../../../menu/[id]/stock/StockEnableButton";
+import { StockEnableButton } from "../../../../dashboard/menu/[id]/stock/StockEnableButton";
 
 interface PageProps {
   params: Promise<{ id: string }>;
 }
 
 /**
- * /dashboard/listings/[id]/kitchen — Klickenya Kitchen landing.
+ * /eat/listings/[id]/kitchen — Klickenya Kitchen landing inside the /eat shell.
  *
- * Promoted from the /eat prototype. Replaces the legacy page which was just a
- * redirect to /dashboard/menu/<id>/stock — that dumped the user out of the
- * listing dashboard. This page keeps them in context:
+ * The full Kitchen workspace (ingredients, recipes, purchases, suppliers,
+ * reports) lives at /dashboard/menu/<menuId>/stock — a large set of pages
+ * that haven't been migrated under /eat yet. Rather than redirect there and
+ * lose the eat sidebar, this page shows a landing:
  *   - off  → enable button + value-prop explainer
  *   - on   → key metrics + a single primary "Open kitchen workspace" CTA that
- *            opens the full toolset in the legacy stock pages, with a back=
- *            param so the return link comes here.
+ *            opens the full toolset in the legacy route (with back link
+ *            returning to /eat).
  *
- * The deep workspace pages (ingredients, recipes, purchases, suppliers,
- * reports) still live under /dashboard/menu/<id>/stock/* — they'll move under
- * /dashboard/listings/<id>/kitchen/* in a future pass.
+ * The deep workspace pages still live at /dashboard/menu/<id>/stock/* — they
+ * will move under /eat in a future pass once IA is settled.
  */
-export default async function ListingKitchenPage({ params }: PageProps) {
+export default async function EatKitchenPage({ params }: PageProps) {
   const { id } = await params;
   const { user } = await getAuthUser();
-  if (!user) redirect(`/login?returnTo=/dashboard/listings/${id}/kitchen`);
+  if (!user) redirect(`/login?returnTo=/eat/listings/${id}/kitchen`);
 
   const isAdmin = await getIsAdmin(user.id);
   const hostProfile = await getHostProfile(user.id);
@@ -44,7 +44,7 @@ export default async function ListingKitchenPage({ params }: PageProps) {
         }`,
     { id, userId: user.id, sanityHostId: hostProfile?.sanity_host_id ?? "" },
   );
-  if (!listing?.slug) redirect("/dashboard/listings");
+  if (!listing?.slug) redirect("/eat/listings");
 
   let menuQuery = adminClient
     .from("menus")
@@ -58,7 +58,7 @@ export default async function ListingKitchenPage({ params }: PageProps) {
       <div className="space-y-5">
         <div>
           <Link
-            href={`/dashboard/listings/${id}`}
+            href={`/eat/listings/${id}`}
             className="text-[13px] text-[#9C9485] hover:text-[#16130C]"
           >
             ← Back to overview
@@ -72,7 +72,7 @@ export default async function ListingKitchenPage({ params }: PageProps) {
           </p>
         </div>
         <Link
-          href={`/dashboard/listings/${id}/menu`}
+          href={`/eat/listings/${id}/menu`}
           className="inline-block bg-[#E8A020] text-[#16130C] font-bold text-[13px] px-5 h-[44px] leading-[44px] rounded-full hover:bg-[#d4911c]"
         >
           Set up menu →
@@ -81,11 +81,12 @@ export default async function ListingKitchenPage({ params }: PageProps) {
     );
   }
 
+  // Metrics only matter when stock is enabled. Off → show value prop + CTA.
   const stockEnabled = menu.stock_enabled ?? false;
-  // back= ensures the legacy stock pages return to this listing-scoped kitchen
-  // page instead of the menu-scoped one.
-  const backToListing = `back=${encodeURIComponent(`/dashboard/listings/${id}/kitchen`)}`;
-  const workspaceHref = `/dashboard/menu/${menu.id}/stock?${backToListing}`;
+
+  // Build back= URL so the legacy stock pages know to return to /eat.
+  const backToEat = `back=${encodeURIComponent(`/eat/listings/${id}/kitchen`)}`;
+  const workspaceHref = `/dashboard/menu/${menu.id}/stock?${backToEat}`;
 
   /* ── OFF state ── */
   if (!stockEnabled) {
@@ -93,7 +94,7 @@ export default async function ListingKitchenPage({ params }: PageProps) {
       <div className="space-y-5">
         <div>
           <Link
-            href={`/dashboard/listings/${id}`}
+            href={`/eat/listings/${id}`}
             className="text-[13px] text-[#9C9485] hover:text-[#16130C]"
           >
             ← Back to overview
@@ -107,6 +108,7 @@ export default async function ListingKitchenPage({ params }: PageProps) {
           </p>
         </div>
 
+        {/* Value prop */}
         <div className="bg-white rounded-2xl border border-[#E2DDD5] shadow-sm p-5 space-y-3">
           <p className="text-[14px] font-semibold text-[#16130C]">What you get</p>
           <ul className="space-y-2 text-[13px] text-[#5E5848]">
@@ -163,7 +165,7 @@ export default async function ListingKitchenPage({ params }: PageProps) {
     <div className="space-y-5">
       <div>
         <Link
-          href={`/dashboard/listings/${id}`}
+          href={`/eat/listings/${id}`}
           className="text-[13px] text-[#9C9485] hover:text-[#16130C]"
         >
           ← Back to overview
@@ -177,13 +179,34 @@ export default async function ListingKitchenPage({ params }: PageProps) {
         </p>
       </div>
 
+      {/* KPI strip */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 lg:gap-3">
-        <MetricCard icon={Package}       label="Ingredients" value={ingredientCount ?? 0} />
-        <MetricCard icon={ScrollText}    label="Recipes"     value={recipeCount ?? 0} />
-        <MetricCard icon={Truck}         label="Suppliers"   value={supplierCount ?? 0} />
-        <MetricCard icon={FileBarChart}  label="Open POs"    value={openPoCount ?? 0} highlight={(openPoCount ?? 0) > 0} />
+        <MetricCard
+          icon={Package}
+          label="Ingredients"
+          value={ingredientCount ?? 0}
+        />
+        <MetricCard
+          icon={ScrollText}
+          label="Recipes"
+          value={recipeCount ?? 0}
+        />
+        <MetricCard
+          icon={Truck}
+          label="Suppliers"
+          value={supplierCount ?? 0}
+        />
+        <MetricCard
+          icon={FileBarChart}
+          label="Open POs"
+          value={openPoCount ?? 0}
+          highlight={(openPoCount ?? 0) > 0}
+        />
       </div>
 
+      {/* Primary CTA — open the full workspace. The deep tools (recipes,
+          purchases, stock movements, reports) still live in the legacy
+          stock route; back= ensures the return link comes here. */}
       <a
         href={workspaceHref}
         className="group flex items-center gap-3 bg-[#16130C] text-white rounded-2xl p-4 lg:p-5 hover:bg-[#2A2520] transition-colors"
@@ -198,6 +221,7 @@ export default async function ListingKitchenPage({ params }: PageProps) {
         <ArrowUpRight className="size-5 text-white/50 group-hover:text-white shrink-0" />
       </a>
 
+      {/* Setup-complete note — Kitchen is the last feature in the chain. */}
       <div className="bg-white rounded-xl border border-[#E2DDD5] shadow-sm p-4 flex items-start gap-3">
         <span className="shrink-0 text-[22px] leading-none">🎉</span>
         <div className="flex-1 min-w-0">
@@ -207,7 +231,7 @@ export default async function ListingKitchenPage({ params }: PageProps) {
           </p>
         </div>
         <Link
-          href={`/dashboard/listings/${id}/features`}
+          href={`/eat/listings/${id}/features`}
           className="shrink-0 text-[12px] font-semibold text-[#E8A020] hover:underline self-center"
         >
           Manage →

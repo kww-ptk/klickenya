@@ -74,5 +74,16 @@ export default async function PosPage({ params }: PageProps) {
     );
   }
 
-  return <PosPageClient listingId={id} menuId={menu.id} menuName={menu.name} menuSlug={menu.slug} />;
+  return (
+    <PosPageClient
+      listingId={id}
+      menuId={menu.id}
+      menuName={menu.name}
+      menuSlug={menu.slug}
+      // pos-only mode routes back-link to the dashboard overview and
+      // surfaces a "Next: Kitchen costing" hint at the bottom.
+      mode="pos-only"
+      featureBaseHref={`/dashboard/listings/${id}`}
+    />
+  );
 }

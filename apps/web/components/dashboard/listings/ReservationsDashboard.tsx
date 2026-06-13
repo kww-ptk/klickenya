@@ -8,7 +8,8 @@ import { DayView } from "./reservations-calendar/DayView";
 import type { CalendarReservation } from "./reservations-calendar/WeekView";
 import { ReservationsSettings } from "./ReservationsSettings";
 import type { RestaurantArea as SettingsArea, TimeWindow } from "./ReservationsSettings";
-import { FloorMapCanvas } from "./floor-map/FloorMapCanvas";
+import { TablesSection } from "./TablesSection";
+import type { AreaOption, InitialTable } from "./TablesSection";
 
 /* ── Capacity warning threshold (tunable after pilot) ─────────────────────── */
 // TODO V2: Capacity enforcement moves server-side via reservation_slots table in V2.
@@ -73,6 +74,13 @@ interface ReservationsDashboardProps {
   initialFetchedAt: string;
   tableOrdering: boolean;
   menuSettings: MenuSettings;
+  /**
+   * Forwarded to ReservationsSettings. See ReservationsSettings.mode for
+   * the semantics. Default "full" preserves the legacy dashboard layout.
+   */
+  mode?: "full" | "reservation-only";
+  /** Forwarded to ReservationsSettings. Required when mode === "reservation-only". */
+  featureBaseHref?: string;
 }
 
 /* ── Audio beep (Web Audio API — no external file needed) ────────────────── */
@@ -555,6 +563,8 @@ export function ReservationsDashboard({
   initialFetchedAt,
   tableOrdering,
   menuSettings,
+  mode = "full",
+  featureBaseHref,
 }: ReservationsDashboardProps) {
   const { showToast } = useToast();
   const [reservations, setReservations] = useState<Reservation[]>(initialReservations);
@@ -866,72 +876,60 @@ export function ReservationsDashboard({
   }));
 
   /* ── Floor view ─────────────────────────────────────────────────────────── */
-  // V1: live floor map (read-only). Canvas reuses the editor component in
-  // mode="live"; tables loaded lazily on first open.
+  // Floor tab JSX is rendered inline below (see `floorTabContent`) instead
+  // of via an inner `function FloorView()` — defining a component inside the
+  // parent created a fresh function identity on every render, so when the
+  // 8s reservations polling fired and the parent re-rendered, React saw a
+  // new component type and unmounted+remounted the whole TablesSection
+  // subtree. That blew away the "Add table" form state every 8 seconds.
+  //
   // V2: drag-to-assign reservations onto specific tables (binds
-  //     reservations.table_id) — deferred per V1 plan.
+  //     reservations.table_id) — deferred per V1 plan. The TablesSection
+  //     handles editing; the assignment overlay is the missing piece.
 
-  function FloorView() {
-    const activeAreas = areas.filter(a => a.is_active);
+  // Lazy fetch tables on first Floor-tab open. Lifted out of the previous
+  // inner-component useEffect so it runs once at the top level rather than
+  // re-arming whenever the parent re-renders.
+  useEffect(() => {
+    if (activeTab !== "floor") return;
+    if (floorTables !== null || floorTablesLoading) return;
+    setFloorTablesLoading(true);
+    fetch(`/api/menu/tables?menu_id=${menuId}`)
+      .then((r) => r.json())
+      .then((d) => setFloorTables(d.tables ?? []))
+      .catch(() => showToast("Failed to load tables for floor map", "error"))
+      .finally(() => setFloorTablesLoading(false));
+  }, [activeTab, menuId, floorTables, floorTablesLoading, showToast]);
 
-    // Lazy fetch — first time the Floor tab opens.
-    useEffect(() => {
-      if (floorTables !== null || floorTablesLoading) return;
-      setFloorTablesLoading(true);
-      fetch(`/api/menu/tables?menu_id=${menuId}`)
-        .then((r) => r.json())
-        .then((d) => setFloorTables(d.tables ?? []))
-        .catch(() => showToast("Failed to load tables for floor map", "error"))
-        .finally(() => setFloorTablesLoading(false));
-    }, []);
+  // Inline JSX for the Floor tab. Computed every render but the resulting
+  // <TablesSection> element keeps a stable type (the imported component)
+  // so React reconciles it in place instead of unmounting.
+  const activeAreas = areas.filter((a) => a.is_active);
+  const sectionAreas: AreaOption[] = activeAreas.map((a) => ({
+    id:        a.id,
+    name:      a.name,
+    color_hex: a.color_hex ?? null,
+  }));
 
-    if (activeAreas.length === 0) {
-      return (
-        <p className="text-[13px] text-text3 text-center py-6">
-          No seating areas configured yet. Add an area in Settings to start placing tables.
-        </p>
-      );
-    }
-
-    if (floorTablesLoading || floorTables === null) {
-      return (
-        <div className="bg-white border border-border rounded-2xl p-6 text-center text-[13px] text-text3">
-          Loading floor map…
-        </div>
-      );
-    }
-
-    if (floorTables.length === 0) {
-      return (
-        <div className="bg-white border border-border rounded-2xl p-6 text-center">
-          <p className="text-[14px] font-semibold text-dark">No tables yet</p>
-          <p className="text-[12px] text-text3 mt-1">
-            Add tables under Table ordering, then arrange them on the floor map.
-          </p>
-        </div>
-      );
-    }
-
-    return (
-      <FloorMapCanvas
-        mode="live"
-        areas={activeAreas.map((a) => ({
-          id: a.id,
-          name: a.name,
-          color_hex: a.color_hex ?? null,
-        }))}
-        tables={floorTables}
-        // V1 reservations side has no table_id binding yet, so every tile
-        // shows "available". State coloring lights up in V2 once
-        // reservations.table_id is wired.
-        getState={() => "available"}
-        onTileTap={() => {
-          // V2: open a "Assign reservation" sheet here.
-          showToast("Drag-to-assign reservations lands in V2.");
-        }}
+  const floorTabContent =
+    activeAreas.length === 0 ? (
+      <p className="text-[13px] text-[#9C9485] text-center py-6">
+        No seating areas configured yet. Add an area in Settings to start placing tables.
+      </p>
+    ) : floorTablesLoading || floorTables === null ? (
+      <div className="bg-white border border-[#E2DDD5] rounded-2xl p-6 text-center text-[13px] text-[#9C9485]">
+        Loading tables…
+      </div>
+    ) : (
+      <TablesSection
+        menuId={menuId}
+        areas={sectionAreas}
+        initialTables={floorTables as InitialTable[]}
+        showToast={showToast}
+        heading="Floor & tables"
+        listSubtitle="Tables are shared with Table ordering. Add a row per physical table — they become QR-scannable destinations AND show up on the floor map so you can drag-arrange them."
       />
     );
-  }
 
   /* ── Render ─────────────────────────────────────────────────────────────── */
   return (
@@ -1303,14 +1301,17 @@ export function ReservationsDashboard({
       )}
 
       {/* ── Floor view ── */}
-      {activeTab === "floor" && <FloorView />}
+      {activeTab === "floor" && floorTabContent}
 
       {/* ── Settings tab ── */}
       {activeTab === "settings" && (
         <ReservationsSettings
           menuId={menuId}
+          menuSlug={menuSlug}
           listingId={listingId}
           listingCity={listingCity}
+          mode={mode}
+          featureBaseHref={featureBaseHref}
           initialReservationsEnabled={menuSettings.reservationsEnabled}
           initialDuration={menuSettings.duration}
           initialLeadTime={menuSettings.leadTime}

@@ -1,12 +1,22 @@
 import { redirect } from "next/navigation";
-import { getAuthUser, getHostProfile, getIsAdmin } from "../../../_lib/auth";
+import { getAuthUser, getHostProfile, getIsAdmin } from "../../../../dashboard/_lib/auth";
 import { adminClient } from "@/lib/supabase/admin";
 import { sanityClient } from "@/lib/sanity/client";
 import { fetchReservations } from "@/app/api/menu/reservations/_lib/queries";
 import { ReservationsDashboard } from "@/components/dashboard/listings/ReservationsDashboard";
 import { ToastProvider } from "@/components/ui/Toast";
 
-export default async function ReservationsPage({
+/**
+ * /eat/listings/[id]/reservations
+ *
+ * Forks the legacy /dashboard/listings/[id]/reservations page so it can pass
+ * mode="reservation-only" + featureBaseHref="/eat/listings/<id>" into the
+ * dashboard. Same data fetching as legacy — only the chrome changes.
+ *
+ * The shared ReservationsDashboard component handles both modes; this page
+ * exists purely to set the props that select the eat experience.
+ */
+export default async function EatReservationsPage({
   params,
 }: {
   params: Promise<{ id: string }>;
@@ -14,30 +24,34 @@ export default async function ReservationsPage({
   const { id } = await params;
 
   const { user } = await getAuthUser();
-  if (!user) redirect("/login");
+  if (!user) redirect(`/login?returnTo=/eat/listings/${id}/reservations`);
 
   const isAdmin = await getIsAdmin(user.id);
-
   const hostProfile = await getHostProfile(user.id);
-  // Admin users may not have a host_profile — only redirect non-admins
   if (!hostProfile && !isAdmin) redirect("/dashboard");
 
-  // Fetch listing — admin bypasses ownership filter
+  // Same restaurant-only listing fetch as elsewhere in /eat (dual type/subcategory check).
   const listing = await sanityClient.fetch<{
     slug: string;
     city: string | null;
   } | null>(
     isAdmin
-      ? `*[_id == $id][0]{ "slug": slug.current, city }`
-      : `*[_id == $id && (hostId == $userId || host._ref == $sanityHostId)][0]{
+      ? `*[_id == $id && _type == "listing" && (type == "restaurant" || subcategory == "restaurants")][0]{
+          "slug": slug.current, city
+        }`
+      : `*[_id == $id && _type == "listing" && (type == "restaurant" || subcategory == "restaurants") && (hostId == $userId || host._ref == $sanityHostId)][0]{
           "slug": slug.current, city
         }`,
-    { id, userId: user.id, sanityHostId: hostProfile?.sanity_host_id ?? "" },
+    {
+      id,
+      userId: user.id,
+      sanityHostId: hostProfile?.sanity_host_id ?? "",
+    },
   );
 
-  if (!listing) redirect("/dashboard/listings");
+  if (!listing) redirect("/eat/listings");
 
-  // Fetch linked menu — admin bypasses business_id ownership filter
+  // Fetch linked menu — restaurant-only.
   let menuQuery = adminClient
     .from("menus")
     .select(
@@ -50,12 +64,12 @@ export default async function ReservationsPage({
     ? await menuQuery.maybeSingle()
     : { data: null };
 
-  // Guard: reservations not enabled → redirect to overview
   if (!menu || !menu.reservations_enabled) {
-    redirect(`/dashboard/listings/${id}`);
+    // Send user back to the overview when reservations aren't enabled —
+    // overview's Features section will offer the toggle.
+    redirect(`/eat/listings/${id}`);
   }
 
-  // Parallel fetch: initial reservations + all areas (active + inactive for floor view) + time windows
   const [initialReservations, areasResult, windowsResult] = await Promise.all([
     fetchReservations(menu.id).catch(() => []),
     adminClient
@@ -97,11 +111,10 @@ export default async function ReservationsPage({
           listingCity: listing.city ?? null,
           timeWindows,
         }}
-        // Reservation-only mode strips Ordering tables / POS settings / POS
-        // staff cards out of the Settings tab (each moved to its own dedicated
-        // tab) and surfaces a "Next: Table ordering" hint at the bottom.
+        // eat-specific: strip POS/ordering cards from Settings, surface the
+        // next-step hint pointing into the /eat tree.
         mode="reservation-only"
-        featureBaseHref={`/dashboard/listings/${id}`}
+        featureBaseHref={`/eat/listings/${id}`}
       />
     </ToastProvider>
   );

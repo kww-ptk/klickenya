@@ -1,26 +1,28 @@
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
 import { ChefHat, CalendarCheck, UtensilsCrossed, ShoppingCart, Settings as SettingsIcon, ExternalLink, QrCode } from "lucide-react";
-import { getAuthUser, getHostProfile, getIsAdmin } from "../../_lib/auth";
+import { getAuthUser, getHostProfile, getIsAdmin } from "../../../dashboard/_lib/auth";
 import { adminClient } from "@/lib/supabase/admin";
 import { sanityClient } from "@/lib/sanity/client";
 import {
   LISTING_FEATURES,
   type FeatureContext,
-} from "./_lib/features.config";
+} from "../../../dashboard/listings/[id]/_lib/features.config";
 
 /**
- * /dashboard/listings/[id] — restaurant overview.
+ * /eat/listings/[id] — restaurant overview.
  *
- * Lean three-section layout (promoted from the /eat prototype):
+ * Three sections, no fluff:
  *   1. KPI strip — pending reservations · scans this week · active features
  *   2. Active features grid — clickable cards into each tab
- *   3. Quick links — view live menu, QR, manage features
+ *   3. Quick links — view live menu, QR, view on klickenya.com
  *
- * Replaces the legacy overview which had "coming soon" tiles + duplicated
- * tools sections. Page targets the question: "what needs my attention today?"
+ * This page is intentionally lean. The legacy /dashboard/listings/[id] page
+ * shows quite a few "coming soon" tiles + duplicated Tools links — those don't
+ * help the day-to-day operator. Eat overview targets the question: "what
+ * needs my attention today?"
  */
-export default async function ListingOverviewPage({
+export default async function EatOverviewPage({
   params,
 }: {
   params: Promise<{ id: string }>;
@@ -28,15 +30,13 @@ export default async function ListingOverviewPage({
   const { id } = await params;
 
   const { user } = await getAuthUser();
-  if (!user) redirect(`/login?returnTo=/dashboard/listings/${id}`);
+  if (!user) redirect(`/login?returnTo=/eat/listings/${id}`);
 
   const isAdmin = await getIsAdmin(user.id);
   const hostProfile = await getHostProfile(user.id);
   if (!hostProfile && !isAdmin) redirect("/dashboard");
 
-  // Dual restaurant check (type OR subcategory) so legacy Napule-style
-  // listings are recognised. Layout already enforces this; we re-check here
-  // because page params are independent of the layout.
+  // Dual restaurant check — see /eat/listings/[id]/layout.tsx for the rationale.
   const listing = await sanityClient.fetch<{
     slug: string;
     city: string | null;
@@ -77,7 +77,8 @@ export default async function ListingOverviewPage({
   const menuRes = await menuQuery.maybeSingle();
   menu = menuRes.data;
 
-  // KPI window — "scans this week" = last 7 days.
+  // KPIs — every query is conditional on menu existing.
+  // RSC: per-request "now" is intended; disable purity check on the impure call.
   // eslint-disable-next-line react-hooks/purity
   const nowMs = Date.now();
   const sevenDaysAgo = new Date(nowMs - 7 * 24 * 60 * 60 * 1000).toISOString();
@@ -131,7 +132,7 @@ export default async function ListingOverviewPage({
     f.appliesTo.includes("restaurant"),
   ).length;
 
-  // Icon map — features.config.icon names map to lucide imports.
+  // Icon map — same names as features.config.icon strings.
   const ICONS: Record<string, typeof ChefHat> = {
     UtensilsCrossed,
     ShoppingCart,
@@ -139,9 +140,9 @@ export default async function ListingOverviewPage({
     ChefHat,
   };
 
-  const baseHref = `/dashboard/listings/${id}`;
+  const baseHref = `/eat/listings/${id}`;
 
-  // Where each feature's primary tab lives.
+  // Where does each feature's primary tab live?
   const featureHref: Record<string, string> = {
     menu: `${baseHref}/menu`,
     reservations: `${baseHref}/reservations`,
@@ -258,7 +259,7 @@ export default async function ListingOverviewPage({
       {/* ── Tools ── */}
       {menu && (
         <div className="space-y-2">
-          <p className="text-[12px] font-semibold text-text3 uppercase tracking-wide">
+          <p className="text-[12px] font-semibold text-[#9C9485] uppercase tracking-wide">
             Tools
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">

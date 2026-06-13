@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { TableSetup } from "@/components/dashboard/menu/TableSetup";
+import { ReservationsEmbedPanel } from "@/components/dashboard/menu/ReservationsEmbedPanel";
 import { Toggle } from "@/components/ui/Toggle";
 
 /* ── Types ─────────────────────────────────────────────────────────────────── */
@@ -27,9 +28,27 @@ export interface TimeWindow {
 
 interface ReservationsSettingsProps {
   menuId: string;
+  /** Menu slug — needed by the embed snippet generator. */
+  menuSlug: string;
   /** Listing id, so we can deep-link to the new POS staff management page. */
   listingId: string;
   listingCity: string | null;
+  /**
+   * "full"             — legacy behaviour: includes "Ordering tables"
+   *                       editor + POS service-charge + POS staff link-out.
+   *                       All three belong to Table Ordering / POS conceptually
+   *                       but historically lived here.
+   * "reservation-only" — strips those out and adds a "Next: Table ordering"
+   *                       hint card at the bottom. Use this on the /eat tree
+   *                       where each feature owns its own dedicated tab.
+   */
+  mode?: "full" | "reservation-only";
+  /**
+   * URL prefix for the "Next feature" hint card link in reservation-only mode.
+   * Example: "/eat/listings/<sanityId>" → hint links to ".../orders".
+   * Required when mode === "reservation-only".
+   */
+  featureBaseHref?: string;
   initialReservationsEnabled: boolean;
   initialDuration: number;
   initialLeadTime: number;
@@ -642,8 +661,11 @@ function AddTimeWindowForm({ menuId, disabled, onAdd, showToast }: AddTimeWindow
 
 export function ReservationsSettings({
   menuId,
+  menuSlug,
   listingId,
   listingCity,
+  mode = "full",
+  featureBaseHref,
   initialReservationsEnabled,
   initialDuration,
   initialLeadTime,
@@ -922,73 +944,142 @@ export function ReservationsSettings({
         </div>
       </div>
 
-      {/* ── Ordering tables ── */}
-      {tableOrdering && (
-        <div className="bg-white rounded-xl border border-border shadow-sm overflow-hidden">
-          <div className="p-4 border-b border-surface">
-            <SectionHeader
-              title="Ordering tables"
-              subtitle="Physical table numbers for QR-code ordering. Each table gets its own scan URL."
-            />
-          </div>
-          <div className="p-4">
-            <TableSetup
-              menuId={menuId}
-              showToast={showToast}
-              areas={areas.filter(a => a.is_active).map(a => ({ id: a.id, name: a.name }))}
-            />
-          </div>
-        </div>
-      )}
-
-      {/* ── POS settings ── */}
-      <div className="bg-white rounded-xl border border-border shadow-sm overflow-hidden">
-        <div className="p-4 border-b border-surface">
-          <SectionHeader
-            title="POS settings"
-            subtitle="Defaults applied when staff open a new table session on the POS terminal."
-          />
-        </div>
-        <div className="p-4 space-y-1">
-          <div className="grid grid-cols-2 gap-x-3 gap-y-3">
-            <div>
-              <label className="block text-[11px] font-semibold text-text2 mb-1">
-                Default service charge
-              </label>
-              <div className="flex items-center gap-1.5">
-                <input
-                  type="number" min={0} max={100} step={0.5}
-                  value={serviceChargePct}
-                  disabled={savingRule === "default_service_charge_pct"}
-                  onChange={(e) => setServiceChargePct(Math.max(0, Math.min(100, Number(e.target.value))))}
-                  onBlur={() => patchSetting("default_service_charge_pct", serviceChargePct)}
-                  className={inputCls}
+      {/* ───────────────────────────────────────────────────────────────────
+          Non-reservation cards below — only shown in "full" mode (legacy
+          /dashboard/listings/<id>/reservations). In "reservation-only" mode
+          (the /eat tree), Ordering tables / POS settings / POS staff each
+          live on their own dedicated tab and are surfaced via the Next
+          Feature hint at the bottom.
+      ─────────────────────────────────────────────────────────────────── */}
+      {mode === "full" && (
+        <>
+          {/* ── Ordering tables ── */}
+          {tableOrdering && (
+            <div className="bg-white rounded-xl border border-[#E2DDD5] shadow-sm overflow-hidden">
+              <div className="p-4 border-b border-[#F4F1EC]">
+                <SectionHeader
+                  title="Ordering tables"
+                  subtitle="Physical table numbers for QR-code ordering. Each table gets its own scan URL."
                 />
-                <span className="text-[11px] text-text3 shrink-0">%</span>
               </div>
-              <p className="text-[10px] text-text3 mt-1">Applied to every new table session. Staff can adjust per-session.</p>
+              <div className="p-4">
+                <TableSetup
+                  menuId={menuId}
+                  showToast={showToast}
+                  areas={areas.filter(a => a.is_active).map(a => ({ id: a.id, name: a.name }))}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* ── POS settings ── */}
+          <div className="bg-white rounded-xl border border-[#E2DDD5] shadow-sm overflow-hidden">
+            <div className="p-4 border-b border-[#F4F1EC]">
+              <SectionHeader
+                title="POS settings"
+                subtitle="Defaults applied when staff open a new table session on the POS terminal."
+              />
+            </div>
+            <div className="p-4 space-y-1">
+              <div className="grid grid-cols-2 gap-x-3 gap-y-3">
+                <div>
+                  <label className="block text-[11px] font-semibold text-[#5E5848] mb-1">
+                    Default service charge
+                  </label>
+                  <div className="flex items-center gap-1.5">
+                    <input
+                      type="number" min={0} max={100} step={0.5}
+                      value={serviceChargePct}
+                      disabled={savingRule === "default_service_charge_pct"}
+                      onChange={(e) => setServiceChargePct(Math.max(0, Math.min(100, Number(e.target.value))))}
+                      onBlur={() => patchSetting("default_service_charge_pct", serviceChargePct)}
+                      className={inputCls}
+                    />
+                    <span className="text-[11px] text-[#9C9485] shrink-0">%</span>
+                  </div>
+                  <p className="text-[10px] text-[#9C9485] mt-1">Applied to every new table session. Staff can adjust per-session.</p>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-      </div>
 
-      {/* ── POS staff (link-out) ──────────────────────────────────────────
-           Staff management used to live inline here. It belongs to the POS
-           surface, not reservations — moved to /dashboard/listings/[id]/pos.
+          {/* ── POS staff (link-out) ────────────────────────────────────── */}
+          <a
+            href={`/dashboard/listings/${listingId}/pos`}
+            className="block bg-white rounded-xl border border-[#E2DDD5] shadow-sm hover:shadow-md hover:border-[#E8A020]/40 transition-all p-4 flex items-center gap-3"
+          >
+            <span className="text-[22px] shrink-0">📱</span>
+            <div className="flex-1 min-w-0">
+              <p className="text-[13px] font-semibold text-[#16130C]">POS &amp; staff</p>
+              <p className="text-[12px] text-[#9C9485] truncate">
+                Manage staff PINs and the POS terminal URL
+              </p>
+            </div>
+            <span className="text-[#9C9485] text-[16px] shrink-0">›</span>
+          </a>
+        </>
+      )}
+
+      {/* ── Embed on owner's website ────────────────────────────────────────
+           Moved here from the MenuBuilder Publish Panel — this is the right
+           home (reservations setting, not menu editing). Shown in both modes
+           because it IS a reservations setting.
       ────────────────────────────────────────────────────────────────────── */}
-      <a
-        href={`/dashboard/listings/${listingId}/pos`}
-        className="block bg-white rounded-xl border border-border shadow-sm hover:shadow-md hover:border-amber/40 transition-all p-4 flex items-center gap-3"
-      >
-        <span className="text-[22px] shrink-0">📱</span>
-        <div className="flex-1 min-w-0">
-          <p className="text-[13px] font-semibold text-dark">POS &amp; staff</p>
-          <p className="text-[12px] text-text3 truncate">
-            Manage staff PINs and the POS terminal URL
-          </p>
-        </div>
-        <span className="text-text3 text-[16px] shrink-0">›</span>
-      </a>
+      {enabled && (
+        <ReservationsEmbedPanel
+          menuSlug={menuSlug}
+          reservationsEnabled={enabled}
+        />
+      )}
+
+      {/* ── Next feature hint (reservation-only mode) ─────────────────────── */}
+      {mode === "reservation-only" && featureBaseHref && (
+        <NextFeatureHint
+          icon="🛒"
+          title="Next: Table ordering"
+          blurb="Guests order from their table via QR code; kitchen and bar see live tickets."
+          tooltip="Tablet POS for staff, QR ordering for guests, real-time kitchen + bar tickets. Includes split bills, table sessions, and an audit log. Tables, POS service-charge defaults, and staff PINs all live on the Table Ordering tab — that's why they were removed from here."
+          href={`${featureBaseHref}/orders`}
+        />
+      )}
     </div>
+  );
+}
+
+/* ── NextFeatureHint ───────────────────────────────────────────────────
+ * Bottom-of-tab "where to next" card. Sits at the end of the Settings tab
+ * to nudge owners toward the next logical feature in the setup chain.
+ * Same visual pattern as the OtherFeaturesHintCard rows in MenuBuilder.
+ * ────────────────────────────────────────────────────────────────────── */
+function NextFeatureHint({
+  icon,
+  title,
+  blurb,
+  tooltip,
+  href,
+}: {
+  icon: string;
+  title: string;
+  blurb: string;
+  tooltip: string;
+  href: string;
+}) {
+  return (
+    <a
+      href={href}
+      title={tooltip}
+      className="group flex items-start gap-3 bg-white rounded-xl border border-[#E2DDD5] shadow-sm hover:shadow-md hover:border-[#E8A020]/40 transition-all p-4"
+    >
+      <span className="shrink-0 text-[22px] leading-none mt-0.5">{icon}</span>
+      <div className="flex-1 min-w-0">
+        <p className="text-[13px] font-semibold text-[#16130C] group-hover:text-[#E8A020] transition-colors">
+          {title}
+        </p>
+        <p className="text-[12px] text-[#9C9485] mt-0.5 leading-snug">{blurb}</p>
+      </div>
+      <span className="shrink-0 text-[#C5BFB5] text-[16px] mt-1 group-hover:text-[#E8A020] transition-colors">
+        →
+      </span>
+    </a>
   );
 }
