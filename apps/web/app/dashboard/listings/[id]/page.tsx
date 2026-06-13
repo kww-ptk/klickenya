@@ -258,7 +258,7 @@ export default async function ListingOverviewPage({
       {/* ── Tools ── */}
       {menu && (
         <div className="space-y-2">
-          <p className="text-[12px] font-semibold text-[#9C9485] uppercase tracking-wide">
+          <p className="text-[12px] font-semibold text-text3 uppercase tracking-wide">
             Tools
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">

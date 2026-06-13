@@ -132,7 +132,7 @@ export function AmbassadorActions({
     <div className="space-y-6">
       {/* Status Update */}
       <div className="bg-white rounded-2xl border border-[#F0EDE8] p-6 space-y-4">
-        <h2 className="text-[18px] font-display font-bold text-[#16130C]">
+        <h2 className="text-[18px] font-display font-bold text-dark">
           Update Status
         </h2>
         <div className="flex flex-wrap gap-2">
@@ -178,7 +178,7 @@ export function AmbassadorActions({
 
       {/* Add Note */}
       <div className="bg-white rounded-2xl border border-[#F0EDE8] p-6 space-y-4">
-        <h2 className="text-[18px] font-display font-bold text-[#16130C]">
+        <h2 className="text-[18px] font-display font-bold text-dark">
           Add Note
         </h2>
         <textarea
@@ -186,12 +186,12 @@ export function AmbassadorActions({
           onChange={(e) => setNote(e.target.value)}
           placeholder="Add an internal note..."
           rows={3}
-          className="w-full px-4 py-3 text-[14px] rounded-xl border border-[#F0EDE8] bg-[#F7F5F2] text-[#16130C] placeholder:text-[#9C9485] focus:outline-none focus:ring-2 focus:ring-[#E8A020]/30 focus:border-[#E8A020] resize-none"
+          className="w-full px-4 py-3 text-[14px] rounded-xl border border-[#F0EDE8] bg-[#F7F5F2] text-dark placeholder:text-text3 focus:outline-none focus:ring-2 focus:ring-amber/30 focus:border-amber resize-none"
         />
         <button
           onClick={handleAddNote}
           disabled={!note.trim() || noteLoading || isPending}
-          className="px-4 py-2 text-[13px] font-medium rounded-lg bg-[#16130C] text-white hover:bg-[#2A2520] transition-colors disabled:opacity-50"
+          className="px-4 py-2 text-[13px] font-medium rounded-lg bg-dark text-white hover:bg-[#2A2520] transition-colors disabled:opacity-50"
         >
           {noteLoading ? "Saving..." : "Save Note"}
         </button>
@@ -200,13 +200,13 @@ export function AmbassadorActions({
       {/* Reply */}
       <div className="bg-white rounded-2xl border border-[#F0EDE8] p-6 space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-[18px] font-display font-bold text-[#16130C]">
+          <h2 className="text-[18px] font-display font-bold text-dark">
             Reply
           </h2>
           <button
             onClick={handleDraftReply}
             disabled={draftLoading}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium rounded-lg bg-[#E8A020]/10 text-[#E8A020] hover:bg-[#E8A020]/20 transition-colors disabled:opacity-50"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium rounded-lg bg-amber/10 text-amber hover:bg-amber/20 transition-colors disabled:opacity-50"
           >
             {draftLoading ? (
               <>
@@ -257,7 +257,7 @@ export function AmbassadorActions({
           value={replySubject}
           onChange={(e) => setReplySubject(e.target.value)}
           placeholder="Subject line..."
-          className="w-full px-4 py-2.5 text-[14px] rounded-xl border border-[#F0EDE8] bg-[#F7F5F2] text-[#16130C] placeholder:text-[#9C9485] focus:outline-none focus:ring-2 focus:ring-[#E8A020]/30 focus:border-[#E8A020]"
+          className="w-full px-4 py-2.5 text-[14px] rounded-xl border border-[#F0EDE8] bg-[#F7F5F2] text-dark placeholder:text-text3 focus:outline-none focus:ring-2 focus:ring-amber/30 focus:border-amber"
         />
 
         <textarea
@@ -265,14 +265,14 @@ export function AmbassadorActions({
           onChange={(e) => setReplyMessage(e.target.value)}
           placeholder="Write your reply..."
           rows={6}
-          className="w-full px-4 py-3 text-[14px] rounded-xl border border-[#F0EDE8] bg-[#F7F5F2] text-[#16130C] placeholder:text-[#9C9485] focus:outline-none focus:ring-2 focus:ring-[#E8A020]/30 focus:border-[#E8A020] resize-none"
+          className="w-full px-4 py-3 text-[14px] rounded-xl border border-[#F0EDE8] bg-[#F7F5F2] text-dark placeholder:text-text3 focus:outline-none focus:ring-2 focus:ring-amber/30 focus:border-amber resize-none"
         />
 
         <div className="flex items-center gap-3">
           <button
             onClick={handleSendReply}
             disabled={!replyMessage.trim() || replyLoading || isPending}
-            className="px-5 py-2 text-[13px] font-medium rounded-lg bg-[#E8A020] text-white hover:bg-[#C78A1A] transition-colors disabled:opacity-50"
+            className="px-5 py-2 text-[13px] font-medium rounded-lg bg-amber text-white hover:bg-[#C78A1A] transition-colors disabled:opacity-50"
           >
             {replyLoading ? "Sending..." : "Send Reply"}
           </button>

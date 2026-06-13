@@ -17,7 +17,7 @@ export function PosStatusChip() {
 
   const dot =
     status.level === "green" ? "bg-emerald-400" :
-    status.level === "amber" ? "bg-[#E8A020]"   :
+    status.level === "amber" ? "bg-amber"   :
                                "bg-[#FF6B6B]";
   const label =
     status.level === "green" ? "Online" :
@@ -36,7 +36,7 @@ export function PosStatusChip() {
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="h-9 px-3 rounded-full bg-[#252019] hover:bg-[#3A342B] flex items-center gap-1.5 text-[11px] font-semibold text-[#F4F1EC]"
+        className="h-9 px-3 rounded-full bg-[#252019] hover:bg-[#3A342B] flex items-center gap-1.5 text-[11px] font-semibold text-surface"
         aria-label={`Connection status: ${label}`}
         aria-expanded={open}
       >
@@ -69,7 +69,7 @@ export function PosStatusChip() {
 function Row({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-center justify-between gap-3">
-      <span className="text-[11px] text-[#9C9485]">{label}</span>
+      <span className="text-[11px] text-text3">{label}</span>
       <span className="text-[11px] font-semibold text-white">{value}</span>
     </div>
   );

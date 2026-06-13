@@ -113,10 +113,10 @@ export default async function AdminRealEstatePage({
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="font-display text-[24px] font-bold text-[#16130C]">
+        <h1 className="font-display text-[24px] font-bold text-dark">
           Real Estate
         </h1>
-        <p className="mt-1 text-[14px] text-[#9C9485]">
+        <p className="mt-1 text-[14px] text-text3">
           Manage properties in Sanity Studio. This view is read-only.
         </p>
       </div>
@@ -125,7 +125,7 @@ export default async function AdminRealEstatePage({
       <div className="space-y-3">
         {/* Category filter */}
         <div className="flex flex-wrap items-center gap-1.5">
-          <span className="mr-1 text-[11px] font-semibold uppercase tracking-wide text-[#9C9485]">
+          <span className="mr-1 text-[11px] font-semibold uppercase tracking-wide text-text3">
             Category
           </span>
           {CATEGORY_TABS.map((tab) => (
@@ -134,8 +134,8 @@ export default async function AdminRealEstatePage({
               href={buildHref({ category: tab.value })}
               className={`rounded-lg px-3 py-1.5 text-[13px] font-medium transition-colors ${
                 filterCategory === tab.value
-                  ? "bg-[#16130C] text-white"
-                  : "bg-white text-[#16130C] hover:bg-[#F7F5F2]"
+                  ? "bg-dark text-white"
+                  : "bg-white text-dark hover:bg-[#F7F5F2]"
               }`}
             >
               {tab.label}
@@ -145,7 +145,7 @@ export default async function AdminRealEstatePage({
 
         {/* Status filter */}
         <div className="flex flex-wrap items-center gap-1.5">
-          <span className="mr-1 text-[11px] font-semibold uppercase tracking-wide text-[#9C9485]">
+          <span className="mr-1 text-[11px] font-semibold uppercase tracking-wide text-text3">
             Status
           </span>
           {STATUS_TABS.map((tab) => (
@@ -154,8 +154,8 @@ export default async function AdminRealEstatePage({
               href={buildHref({ status: tab.value })}
               className={`rounded-lg px-3 py-1.5 text-[13px] font-medium transition-colors ${
                 filterStatus === tab.value
-                  ? "bg-[#16130C] text-white"
-                  : "bg-white text-[#16130C] hover:bg-[#F7F5F2]"
+                  ? "bg-dark text-white"
+                  : "bg-white text-dark hover:bg-[#F7F5F2]"
               }`}
             >
               {tab.label}
@@ -165,7 +165,7 @@ export default async function AdminRealEstatePage({
       </div>
 
       {/* Results count */}
-      <p className="text-[13px] text-[#9C9485]">
+      <p className="text-[13px] text-text3">
         {filtered.length} propert{filtered.length !== 1 ? "ies" : "y"}
       </p>
 
@@ -175,31 +175,31 @@ export default async function AdminRealEstatePage({
           <table className="w-full min-w-[1050px]">
             <thead>
               <tr className="border-b border-[#F0EDE8]">
-                <th className="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-[#9C9485]">
+                <th className="px-6 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-text3">
                   Title
                 </th>
-                <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-[#9C9485]">
+                <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-text3">
                   Category
                 </th>
-                <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-[#9C9485]">
+                <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-text3">
                   City
                 </th>
-                <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-[#9C9485]">
+                <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-text3">
                   Status
                 </th>
-                <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-[#9C9485]">
+                <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-text3">
                   Price
                 </th>
-                <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-[#9C9485]">
+                <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-text3">
                   Enquiries
                 </th>
-                <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-[#9C9485]">
+                <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-text3">
                   Agent
                 </th>
-                <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-[#9C9485]">
+                <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-text3">
                   Published
                 </th>
-                <th className="px-6 py-3 text-right text-[11px] font-semibold uppercase tracking-wide text-[#9C9485]">
+                <th className="px-6 py-3 text-right text-[11px] font-semibold uppercase tracking-wide text-text3">
                   Actions
                 </th>
               </tr>
@@ -209,7 +209,7 @@ export default async function AdminRealEstatePage({
                 <tr>
                   <td
                     colSpan={9}
-                    className="px-6 py-12 text-center text-[13px] text-[#9C9485]"
+                    className="px-6 py-12 text-center text-[13px] text-text3"
                   >
                     No properties found.
                   </td>
@@ -222,28 +222,28 @@ export default async function AdminRealEstatePage({
                       key={property._id}
                       className="border-b border-[#F0EDE8] transition-colors hover:bg-[#F7F5F2]"
                     >
-                      <td className="max-w-[220px] truncate px-6 py-3 text-[13px] font-medium text-[#16130C]">
+                      <td className="max-w-[220px] truncate px-6 py-3 text-[13px] font-medium text-dark">
                         {property.title}
                       </td>
-                      <td className="whitespace-nowrap px-4 py-3 text-[13px] text-[#16130C]">
+                      <td className="whitespace-nowrap px-4 py-3 text-[13px] text-dark">
                         {formatCategory(property.listingCategory)}
                       </td>
-                      <td className="px-4 py-3 text-[13px] text-[#16130C]">
+                      <td className="px-4 py-3 text-[13px] text-dark">
                         {property.city}
                       </td>
                       <td className="px-4 py-3">
                         <StatusBadge status={property.status} />
                       </td>
-                      <td className="whitespace-nowrap px-4 py-3 text-[13px] text-[#16130C]">
+                      <td className="whitespace-nowrap px-4 py-3 text-[13px] text-dark">
                         {formatPrice(property.price, property.priceType)}
                       </td>
-                      <td className="px-4 py-3 text-[13px] text-[#16130C]">
+                      <td className="px-4 py-3 text-[13px] text-dark">
                         {enquiryCount > 0 ? enquiryCount : "\u2014"}
                       </td>
-                      <td className="px-4 py-3 text-[13px] text-[#9C9485]">
+                      <td className="px-4 py-3 text-[13px] text-text3">
                         {property.agent?.displayName ?? "\u2014"}
                       </td>
-                      <td className="whitespace-nowrap px-4 py-3 text-[13px] text-[#9C9485]">
+                      <td className="whitespace-nowrap px-4 py-3 text-[13px] text-text3">
                         {formatDate(property._createdAt)}
                       </td>
                       <td className="whitespace-nowrap px-6 py-3 text-right">
@@ -258,7 +258,7 @@ export default async function AdminRealEstatePage({
                           </a>
                           <Link
                             href={`/real-estate/${property.slug.current}`}
-                            className="text-[13px] font-medium text-[#9C9485] underline-offset-2 hover:text-[#16130C] hover:underline"
+                            className="text-[13px] font-medium text-text3 underline-offset-2 hover:text-dark hover:underline"
                           >
                             View on site
                           </Link>

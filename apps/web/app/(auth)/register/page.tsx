@@ -37,17 +37,17 @@ export default function RegisterPage() {
       <div className="w-full max-w-[420px] mx-4">
         <div className="bg-white rounded-[22px] shadow-lg p-8 md:p-10 text-center">
           <div className="flex items-center justify-center gap-2 mb-8">
-            <div className="w-8 h-8 rounded-lg bg-[#6B2D8B] flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-purple flex items-center justify-center">
               <span className="text-white font-bold text-[15px]">k</span>
             </div>
-            <span className="text-[20px] font-bold tracking-[-0.03em] text-[#16130C]">
+            <span className="text-[20px] font-bold tracking-[-0.03em] text-dark">
               klickenya
             </span>
           </div>
-          <h1 className="text-[26px] font-bold tracking-[-0.03em] text-[#16130C] mb-2">
+          <h1 className="text-[26px] font-bold tracking-[-0.03em] text-dark mb-2">
             {roleParam === "host" ? "Create your host account" : "Create an account"}
           </h1>
-          <p className="text-[14px] text-[#5E5848] mb-6">
+          <p className="text-[14px] text-text2 mb-6">
             {roleParam === "host"
               ? "Sign in with Google to get started as a host on Klickenya"
               : "Sign in with Google to join Klickenya"}
@@ -57,7 +57,7 @@ export default function RegisterPage() {
           <button
             onClick={handleGoogleSignIn}
             type="button"
-            className="w-full h-11 rounded-full border border-[#E2DDD5] text-[14px] font-semibold text-[#16130C] hover:border-[#9C9485] transition-colors flex items-center justify-center gap-2.5 mb-6"
+            className="w-full h-11 rounded-full border border-border text-[14px] font-semibold text-dark hover:border-text3 transition-colors flex items-center justify-center gap-2.5 mb-6"
           >
             <svg className="size-[18px]" viewBox="0 0 24 24">
               <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4" />
@@ -68,9 +68,9 @@ export default function RegisterPage() {
             Continue with Google
           </button>
 
-          <p className="text-center text-[13px] text-[#5E5848]">
+          <p className="text-center text-[13px] text-text2">
             Already have an account?{" "}
-            <Link href="/login" className="text-[#6B2D8B] font-semibold hover:underline">
+            <Link href="/login" className="text-purple font-semibold hover:underline">
               Sign in
             </Link>
           </p>
@@ -84,23 +84,23 @@ export default function RegisterPage() {
       <div className="w-full max-w-[420px] mx-4">
         <div className="bg-white rounded-[22px] shadow-lg p-8 md:p-10 text-center">
           <div className="flex items-center justify-center gap-2 mb-8">
-            <div className="w-8 h-8 rounded-lg bg-[#6B2D8B] flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-purple flex items-center justify-center">
               <span className="text-white font-bold text-[15px]">k</span>
             </div>
-            <span className="text-[20px] font-bold tracking-[-0.03em] text-[#16130C]">
+            <span className="text-[20px] font-bold tracking-[-0.03em] text-dark">
               klickenya
             </span>
           </div>
-          <h1 className="text-[26px] font-bold tracking-[-0.03em] text-[#16130C] mb-2">
+          <h1 className="text-[26px] font-bold tracking-[-0.03em] text-dark mb-2">
             Check your email
           </h1>
-          <p className="text-[14px] text-[#5E5848] mb-6">
+          <p className="text-[14px] text-text2 mb-6">
             We&apos;ve sent a confirmation link to your email. Click it to
             activate your account.
           </p>
           <Link
             href="/login"
-            className="text-[13px] text-[#6B2D8B] font-semibold hover:underline"
+            className="text-[13px] text-purple font-semibold hover:underline"
           >
             Back to sign in
           </Link>
@@ -126,19 +126,19 @@ export default function RegisterPage() {
       <div className="bg-white rounded-[22px] shadow-lg p-8 md:p-10">
         {/* Logo */}
         <div className="flex items-center justify-center gap-2 mb-8">
-          <div className="w-8 h-8 rounded-lg bg-[#6B2D8B] flex items-center justify-center">
+          <div className="w-8 h-8 rounded-lg bg-purple flex items-center justify-center">
             <span className="text-white font-bold text-[15px]">k</span>
           </div>
-          <span className="text-[20px] font-bold tracking-[-0.03em] text-[#16130C]">
+          <span className="text-[20px] font-bold tracking-[-0.03em] text-dark">
             klickenya
           </span>
         </div>
 
         {/* Heading */}
-        <h1 className="text-[26px] font-bold tracking-[-0.03em] text-center text-[#16130C] mb-1">
+        <h1 className="text-[26px] font-bold tracking-[-0.03em] text-center text-dark mb-1">
           Create an account
         </h1>
-        <p className="text-[14px] text-[#5E5848] text-center mb-8">
+        <p className="text-[14px] text-text2 text-center mb-8">
           Sign up to start using Klickenya
         </p>
 
@@ -147,7 +147,7 @@ export default function RegisterPage() {
           <div>
             <label
               htmlFor="name"
-              className="block text-[13px] font-medium text-[#16130C] mb-1.5"
+              className="block text-[13px] font-medium text-dark mb-1.5"
             >
               Full name
             </label>
@@ -157,7 +157,7 @@ export default function RegisterPage() {
               type="text"
               required
               autoComplete="name"
-              className="w-full h-11 px-4 rounded-xl border border-[#E2DDD5] text-[14px] text-[#16130C] placeholder:text-[#9C9485] outline-none focus:border-[#6B2D8B] focus:ring-2 focus:ring-[#6B2D8B]/20 transition-all"
+              className="w-full h-11 px-4 rounded-xl border border-border text-[14px] text-dark placeholder:text-text3 outline-none focus:border-purple focus:ring-2 focus:ring-purple/20 transition-all"
               placeholder="Jane Doe"
             />
           </div>
@@ -165,7 +165,7 @@ export default function RegisterPage() {
           <div>
             <label
               htmlFor="email"
-              className="block text-[13px] font-medium text-[#16130C] mb-1.5"
+              className="block text-[13px] font-medium text-dark mb-1.5"
             >
               Email
             </label>
@@ -175,7 +175,7 @@ export default function RegisterPage() {
               type="email"
               required
               autoComplete="email"
-              className="w-full h-11 px-4 rounded-xl border border-[#E2DDD5] text-[14px] text-[#16130C] placeholder:text-[#9C9485] outline-none focus:border-[#6B2D8B] focus:ring-2 focus:ring-[#6B2D8B]/20 transition-all"
+              className="w-full h-11 px-4 rounded-xl border border-border text-[14px] text-dark placeholder:text-text3 outline-none focus:border-purple focus:ring-2 focus:ring-purple/20 transition-all"
               placeholder="you@example.com"
             />
           </div>
@@ -183,7 +183,7 @@ export default function RegisterPage() {
           <div>
             <label
               htmlFor="password"
-              className="block text-[13px] font-medium text-[#16130C] mb-1.5"
+              className="block text-[13px] font-medium text-dark mb-1.5"
             >
               Password
             </label>
@@ -194,7 +194,7 @@ export default function RegisterPage() {
               required
               minLength={8}
               autoComplete="new-password"
-              className="w-full h-11 px-4 rounded-xl border border-[#E2DDD5] text-[14px] text-[#16130C] placeholder:text-[#9C9485] outline-none focus:border-[#6B2D8B] focus:ring-2 focus:ring-[#6B2D8B]/20 transition-all"
+              className="w-full h-11 px-4 rounded-xl border border-border text-[14px] text-dark placeholder:text-text3 outline-none focus:border-purple focus:ring-2 focus:ring-purple/20 transition-all"
               placeholder="At least 8 characters"
             />
           </div>
@@ -208,7 +208,7 @@ export default function RegisterPage() {
           <button
             type="submit"
             disabled={isPending}
-            className="w-full h-11 rounded-full bg-[#6B2D8B] text-white text-[14px] font-semibold hover:bg-[#5a2575] transition-colors disabled:opacity-60 flex items-center justify-center"
+            className="w-full h-11 rounded-full bg-purple text-white text-[14px] font-semibold hover:bg-[#5a2575] transition-colors disabled:opacity-60 flex items-center justify-center"
           >
             {isPending ? (
               <svg
@@ -238,16 +238,16 @@ export default function RegisterPage() {
 
         {/* Divider */}
         <div className="flex items-center gap-4 my-6">
-          <div className="flex-1 h-px bg-[#E2DDD5]" />
-          <span className="text-[12px] text-[#9C9485]">or</span>
-          <div className="flex-1 h-px bg-[#E2DDD5]" />
+          <div className="flex-1 h-px bg-border" />
+          <span className="text-[12px] text-text3">or</span>
+          <div className="flex-1 h-px bg-border" />
         </div>
 
         {/* Google sign-in */}
         <button
           onClick={handleGoogleSignIn}
           type="button"
-          className="w-full h-11 rounded-full border border-[#E2DDD5] text-[14px] font-semibold text-[#16130C] hover:border-[#9C9485] transition-colors flex items-center justify-center gap-2.5"
+          className="w-full h-11 rounded-full border border-border text-[14px] font-semibold text-dark hover:border-text3 transition-colors flex items-center justify-center gap-2.5"
         >
           <svg className="size-[18px]" viewBox="0 0 24 24">
             <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4" />
@@ -259,11 +259,11 @@ export default function RegisterPage() {
         </button>
 
         {/* Sign in link */}
-        <p className="text-center text-[13px] text-[#5E5848] mt-6">
+        <p className="text-center text-[13px] text-text2 mt-6">
           Already have an account?{" "}
           <Link
             href="/login"
-            className="text-[#6B2D8B] font-semibold hover:underline"
+            className="text-purple font-semibold hover:underline"
           >
             Sign in
           </Link>

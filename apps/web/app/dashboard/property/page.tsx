@@ -34,18 +34,18 @@ export default async function PropertyPMSPage() {
       <div>
         <div className="flex items-center justify-between mb-5">
           <div>
-            <h1 className="font-display text-[22px] lg:text-[28px] font-bold tracking-[-0.03em] text-[#16130C]">
+            <h1 className="font-display text-[22px] lg:text-[28px] font-bold tracking-[-0.03em] text-dark">
               Property PMS
             </h1>
-            <p className="text-[13px] text-[#9C9485] mt-0.5">Manage your properties</p>
+            <p className="text-[13px] text-text3 mt-0.5">Manage your properties</p>
           </div>
         </div>
-        <div className="bg-white rounded-2xl border border-[#E2DDD5] p-8 text-center shadow-sm">
+        <div className="bg-white rounded-2xl border border-border p-8 text-center shadow-sm">
           <div className="w-16 h-16 rounded-full bg-[#4F46E5]/10 flex items-center justify-center mx-auto mb-3">
             <span className="text-[28px]">🏠</span>
           </div>
-          <p className="font-display text-[16px] font-bold text-[#16130C] mb-1">No properties yet</p>
-          <p className="text-[13px] text-[#9C9485] mb-4 max-w-[280px] mx-auto">
+          <p className="font-display text-[16px] font-bold text-dark mb-1">No properties yet</p>
+          <p className="text-[13px] text-text3 mb-4 max-w-[280px] mx-auto">
             Set up your first property to start managing bookings and availability.
           </p>
           <Link
@@ -132,10 +132,10 @@ export default async function PropertyPMSPage() {
       {/* Page header */}
       <div className="flex items-center justify-between mb-5">
         <div>
-          <h1 className="font-display text-[22px] lg:text-[28px] font-bold tracking-[-0.03em] text-[#16130C]">
+          <h1 className="font-display text-[22px] lg:text-[28px] font-bold tracking-[-0.03em] text-dark">
             Property PMS
           </h1>
-          <p className="text-[13px] text-[#9C9485] mt-0.5">
+          <p className="text-[13px] text-text3 mt-0.5">
             {properties.length} {properties.length === 1 ? "property" : "properties"} · {rooms.length} {rooms.length === 1 ? "room" : "rooms"}
           </p>
         </div>
@@ -163,7 +163,7 @@ export default async function PropertyPMSPage() {
       {/* My Properties */}
       <div>
         <div className="flex items-center justify-between mb-3">
-          <h2 className="font-display text-[17px] lg:text-[20px] font-bold text-[#16130C] tracking-[-0.02em]">
+          <h2 className="font-display text-[17px] lg:text-[20px] font-bold text-dark tracking-[-0.02em]">
             My Properties
           </h2>
           <Link
@@ -189,10 +189,10 @@ export default async function PropertyPMSPage() {
             return (
               <div
                 key={prop.id}
-                className="flex items-center gap-3 bg-white rounded-xl lg:rounded-2xl border border-[#E2DDD5] p-3 shadow-sm hover:shadow-md hover:border-[#4F46E5]/30 transition-all"
+                className="flex items-center gap-3 bg-white rounded-xl lg:rounded-2xl border border-border p-3 shadow-sm hover:shadow-md hover:border-[#4F46E5]/30 transition-all"
               >
                 {/* Cover photo — links to property */}
-                <Link href={`/dashboard/property/${prop.id}`} className="shrink-0 w-[52px] h-[52px] rounded-lg overflow-hidden bg-[#F4F1EC] relative">
+                <Link href={`/dashboard/property/${prop.id}`} className="shrink-0 w-[52px] h-[52px] rounded-lg overflow-hidden bg-surface relative">
                   {coverPhoto ? (
                     <Image
                       src={`${coverPhoto}?w=104&auto=format`}
@@ -210,21 +210,21 @@ export default async function PropertyPMSPage() {
 
                 {/* Info — links to property */}
                 <Link href={`/dashboard/property/${prop.id}`} className="flex-1 min-w-0 block">
-                  <p className="text-[14px] font-semibold text-[#16130C] truncate">{prop.name}</p>
+                  <p className="text-[14px] font-semibold text-dark truncate">{prop.name}</p>
                   <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-                    <span className="text-[10px] font-medium text-[#5E5848] bg-[#F4F1EC] px-1.5 py-0.5 rounded-full">
+                    <span className="text-[10px] font-medium text-text2 bg-surface px-1.5 py-0.5 rounded-full">
                       {TYPE_LABELS[prop.property_type] ?? prop.property_type}
                     </span>
                     {prop.city && (
-                      <span className="text-[11px] text-[#9C9485]">{prop.city}</span>
+                      <span className="text-[11px] text-text3">{prop.city}</span>
                     )}
                   </div>
                   <div className="flex items-center gap-2 mt-0.5">
-                    <span className="text-[11px] text-[#9C9485]">
+                    <span className="text-[11px] text-text3">
                       {roomCount} {roomCount === 1 ? "room" : "rooms"} · {occupancyPct}% occupied
                     </span>
                     {pendingCount > 0 && (
-                      <span className="text-[10px] font-semibold text-[#E8A020] bg-[#E8A020]/10 px-1.5 py-0.5 rounded-full">
+                      <span className="text-[10px] font-semibold text-amber bg-amber/10 px-1.5 py-0.5 rounded-full">
                         {pendingCount} pending
                       </span>
                     )}
@@ -235,7 +235,7 @@ export default async function PropertyPMSPage() {
                 <div className="flex items-center gap-1.5 shrink-0">
                   <Link
                     href={`/dashboard/property/${prop.id}/settings`}
-                    className="text-[11px] font-semibold text-[#5E5848] bg-[#F4F1EC] px-2.5 h-[28px] rounded-lg hover:bg-[#E8E4DC] transition-colors flex items-center"
+                    className="text-[11px] font-semibold text-text2 bg-surface px-2.5 h-[28px] rounded-lg hover:bg-[#E8E4DC] transition-colors flex items-center"
                   >
                     Settings
                   </Link>
@@ -253,7 +253,7 @@ export default async function PropertyPMSPage() {
           {/* + Add property card */}
           <Link
             href="/dashboard/property/new"
-            className="flex items-center justify-center gap-2 bg-white rounded-xl lg:rounded-2xl border-2 border-dashed border-[#E2DDD5] p-5 text-[#9C9485] hover:border-[#4F46E5]/40 hover:text-[#4F46E5] transition-colors"
+            className="flex items-center justify-center gap-2 bg-white rounded-xl lg:rounded-2xl border-2 border-dashed border-border p-5 text-text3 hover:border-[#4F46E5]/40 hover:text-[#4F46E5] transition-colors"
           >
             <svg className="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />

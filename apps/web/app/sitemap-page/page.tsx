@@ -56,7 +56,7 @@ const SITEMAP_POSTS = groq`
 `;
 
 const SITEMAP_LISTINGS = groq`
-  *[_type == "listing" && status == "published"] | order(type asc, title asc) {
+  *[_type == "listing" && status == "published" && (!defined(partner) || publishToMarketplace == true)] | order(type asc, title asc) {
     _id, title, slug, type, city
   }
 `;

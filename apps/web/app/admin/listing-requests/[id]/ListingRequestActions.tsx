@@ -170,7 +170,7 @@ export function ListingRequestActions({
   const statuses = [
     { value: "responded", label: "Mark Responded", className: "bg-[#22C55E]/10 text-[#22C55E] hover:bg-[#22C55E]/20" },
     { value: "converted", label: "Mark Converted", className: "bg-[#3B82F6]/10 text-[#3B82F6] hover:bg-[#3B82F6]/20" },
-    { value: "closed", label: "Mark Closed", className: "bg-[#9C9485]/10 text-[#9C9485] hover:bg-[#9C9485]/20" },
+    { value: "closed", label: "Mark Closed", className: "bg-text3/10 text-text3 hover:bg-text3/20" },
   ];
 
   return (
@@ -179,8 +179,8 @@ export function ListingRequestActions({
       {/* Approve / Reject */}
       {(canApprove || canReject) && (
         <div className="bg-white rounded-2xl border border-[#F0EDE8] p-6 space-y-4">
-          <h2 className="text-[18px] font-display font-bold text-[#16130C]">Decision</h2>
-          <p className="text-[13px] text-[#5E5848]">
+          <h2 className="text-[18px] font-display font-bold text-dark">Decision</h2>
+          <p className="text-[13px] text-text2">
             Approving will create the listing in Sanity and send credentials to{" "}
             <strong>{submitterEmail}</strong>.
           </p>
@@ -197,7 +197,7 @@ export function ListingRequestActions({
               <button
                 onClick={handleApprove}
                 disabled={approveLoading || rejectLoading || isPending}
-                className="flex-1 py-2.5 text-[13px] font-bold rounded-xl bg-[#22C55E] text-white hover:bg-[#16A34A] transition-colors disabled:opacity-50"
+                className="flex-1 py-2.5 text-[13px] font-bold rounded-xl bg-[#22C55E] text-white hover:bg-green transition-colors disabled:opacity-50"
               >
                 {approveLoading ? "Approving…" : "✓ Approve"}
               </button>
@@ -217,7 +217,7 @@ export function ListingRequestActions({
 
       {/* Status Update */}
       <div className="bg-white rounded-2xl border border-[#F0EDE8] p-6 space-y-4">
-        <h2 className="text-[18px] font-display font-bold text-[#16130C]">Update Status</h2>
+        <h2 className="text-[18px] font-display font-bold text-dark">Update Status</h2>
         <div className="flex flex-wrap gap-2">
           {statuses
             .filter((s) => s.value !== currentStatus)
@@ -236,18 +236,18 @@ export function ListingRequestActions({
 
       {/* Add Note */}
       <div className="bg-white rounded-2xl border border-[#F0EDE8] p-6 space-y-4">
-        <h2 className="text-[18px] font-display font-bold text-[#16130C]">Add Note</h2>
+        <h2 className="text-[18px] font-display font-bold text-dark">Add Note</h2>
         <textarea
           value={note}
           onChange={(e) => setNote(e.target.value)}
           placeholder="Add an internal note..."
           rows={3}
-          className="w-full px-4 py-3 text-[14px] rounded-xl border border-[#F0EDE8] bg-[#F7F5F2] text-[#16130C] placeholder:text-[#9C9485] focus:outline-none focus:ring-2 focus:ring-[#E8A020]/30 focus:border-[#E8A020] resize-none"
+          className="w-full px-4 py-3 text-[14px] rounded-xl border border-[#F0EDE8] bg-[#F7F5F2] text-dark placeholder:text-text3 focus:outline-none focus:ring-2 focus:ring-amber/30 focus:border-amber resize-none"
         />
         <button
           onClick={handleAddNote}
           disabled={!note.trim() || noteLoading || isPending}
-          className="px-4 py-2 text-[13px] font-medium rounded-lg bg-[#16130C] text-white hover:bg-[#2A2520] transition-colors disabled:opacity-50"
+          className="px-4 py-2 text-[13px] font-medium rounded-lg bg-dark text-white hover:bg-[#2A2520] transition-colors disabled:opacity-50"
         >
           {noteLoading ? "Saving…" : "Save Note"}
         </button>
@@ -256,11 +256,11 @@ export function ListingRequestActions({
       {/* Reply */}
       <div className="bg-white rounded-2xl border border-[#F0EDE8] p-6 space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-[18px] font-display font-bold text-[#16130C]">Reply</h2>
+          <h2 className="text-[18px] font-display font-bold text-dark">Reply</h2>
           <button
             onClick={handleDraftReply}
             disabled={draftLoading}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium rounded-lg bg-[#E8A020]/10 text-[#E8A020] hover:bg-[#E8A020]/20 transition-colors disabled:opacity-50"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium rounded-lg bg-amber/10 text-amber hover:bg-amber/20 transition-colors disabled:opacity-50"
           >
             {draftLoading ? "Drafting…" : "✨ Draft with AI"}
           </button>
@@ -270,20 +270,20 @@ export function ListingRequestActions({
           value={replySubject}
           onChange={(e) => setReplySubject(e.target.value)}
           placeholder="Subject line..."
-          className="w-full px-4 py-2.5 text-[14px] rounded-xl border border-[#F0EDE8] bg-[#F7F5F2] text-[#16130C] placeholder:text-[#9C9485] focus:outline-none focus:ring-2 focus:ring-[#E8A020]/30 focus:border-[#E8A020]"
+          className="w-full px-4 py-2.5 text-[14px] rounded-xl border border-[#F0EDE8] bg-[#F7F5F2] text-dark placeholder:text-text3 focus:outline-none focus:ring-2 focus:ring-amber/30 focus:border-amber"
         />
         <textarea
           value={replyMessage}
           onChange={(e) => setReplyMessage(e.target.value)}
           placeholder="Write your reply..."
           rows={5}
-          className="w-full px-4 py-3 text-[14px] rounded-xl border border-[#F0EDE8] bg-[#F7F5F2] text-[#16130C] placeholder:text-[#9C9485] focus:outline-none focus:ring-2 focus:ring-[#E8A020]/30 focus:border-[#E8A020] resize-none"
+          className="w-full px-4 py-3 text-[14px] rounded-xl border border-[#F0EDE8] bg-[#F7F5F2] text-dark placeholder:text-text3 focus:outline-none focus:ring-2 focus:ring-amber/30 focus:border-amber resize-none"
         />
         <div className="flex items-center gap-3">
           <button
             onClick={handleSendReply}
             disabled={!replyMessage.trim() || replyLoading || isPending}
-            className="px-5 py-2 text-[13px] font-medium rounded-lg bg-[#E8A020] text-white hover:bg-[#C78A1A] transition-colors disabled:opacity-50"
+            className="px-5 py-2 text-[13px] font-medium rounded-lg bg-amber text-white hover:bg-[#C78A1A] transition-colors disabled:opacity-50"
           >
             {replyLoading ? "Sending…" : "Send Reply"}
           </button>

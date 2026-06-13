@@ -176,7 +176,7 @@ export default async function DestinationsPage() {
             style={{ fontSize: "clamp(40px, 6vw, 72px)" }}
           >
             Explore Kenya&apos;s best{" "}
-            <span className="text-[#E8A020]">destinations</span>
+            <span className="text-amber">destinations</span>
           </h1>
 
           <p

@@ -81,7 +81,7 @@ function UnassignButton({ hostId, sanityId, listingTitle, isVerified }: Unassign
         <button
           onClick={handleVerify}
           disabled={verifying}
-          className="text-[12px] font-medium text-[#16A34A] hover:underline disabled:opacity-50"
+          className="text-[12px] font-medium text-green hover:underline disabled:opacity-50"
         >
           {verifying ? "..." : "Verify"}
         </button>
@@ -156,7 +156,7 @@ function AssignSearch({ hostId, hostName }: SearchProps) {
         value={query}
         onChange={(e) => handleSearch(e.target.value)}
         placeholder="Search listings by title (min 2 characters)..."
-        className="w-full px-4 py-2.5 text-[14px] rounded-xl border border-[#E2DDD5] bg-[#FAFAF8] text-[#16130C] placeholder:text-[#9C9485] outline-none focus:ring-2 focus:ring-[#E8A020]/30 focus:border-[#E8A020]"
+        className="w-full px-4 py-2.5 text-[14px] rounded-xl border border-border bg-canvas text-dark placeholder:text-text3 outline-none focus:ring-2 focus:ring-amber/30 focus:border-amber"
       />
 
       {success && (
@@ -165,23 +165,23 @@ function AssignSearch({ hostId, hostName }: SearchProps) {
         </p>
       )}
 
-      {searching && <p className="mt-3 text-[13px] text-[#9C9485]">Searching...</p>}
+      {searching && <p className="mt-3 text-[13px] text-text3">Searching...</p>}
 
       {results.length > 0 && (
         <div className="mt-3 space-y-2">
           {results.map((listing) => (
             <div key={listing._id} className="flex items-center justify-between gap-3 p-3 rounded-xl border border-[#F0EDE8]">
               <div className="min-w-0">
-                <p className="text-[13px] font-medium text-[#16130C] truncate">{listing.title}</p>
-                <p className="text-[11px] text-[#9C9485]">
+                <p className="text-[13px] font-medium text-dark truncate">{listing.title}</p>
+                <p className="text-[11px] text-text3">
                   {listing.type} · {listing.city ?? "—"}
-                  {listing.isVerified && <span className="ml-2 text-[#16A34A]">✓ Verified</span>}
+                  {listing.isVerified && <span className="ml-2 text-green">✓ Verified</span>}
                 </p>
               </div>
               <button
                 onClick={() => handleAssign(listing)}
                 disabled={assigning === listing._id}
-                className="shrink-0 px-3 py-1.5 text-[12px] font-semibold rounded-lg bg-[#E8A020] text-white hover:bg-[#d4911c] transition-colors disabled:opacity-50"
+                className="shrink-0 px-3 py-1.5 text-[12px] font-semibold rounded-lg bg-amber text-white hover:bg-[#d4911c] transition-colors disabled:opacity-50"
               >
                 {assigning === listing._id ? "Assigning..." : `Assign to ${hostName}`}
               </button>
@@ -191,7 +191,7 @@ function AssignSearch({ hostId, hostName }: SearchProps) {
       )}
 
       {query.length >= 2 && !searching && results.length === 0 && (
-        <p className="mt-3 text-[13px] text-[#9C9485]">No unassigned listings found for "{query}"</p>
+        <p className="mt-3 text-[13px] text-text3">No unassigned listings found for "{query}"</p>
       )}
     </div>
   );
@@ -225,11 +225,11 @@ export function SyncListingsButton({ hostId }: { hostId: string }) {
       <button
         onClick={handleSync}
         disabled={loading}
-        className="text-[12px] font-medium text-[#0D7377] hover:underline disabled:opacity-50"
+        className="text-[12px] font-medium text-teal hover:underline disabled:opacity-50"
       >
         {loading ? "Syncing..." : "Sync to profile"}
       </button>
-      {result && <span className="text-[11px] text-[#9C9485]">{result}</span>}
+      {result && <span className="text-[11px] text-text3">{result}</span>}
     </div>
   );
 }

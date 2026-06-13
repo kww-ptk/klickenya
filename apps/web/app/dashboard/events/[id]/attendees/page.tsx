@@ -97,8 +97,8 @@ export default async function AttendeesPage({ params }: PageProps) {
 
       {/* Attendee list with actions */}
       {rows.length === 0 ? (
-        <div className="rounded-[20px] border border-dashed border-[#E2DDD5] bg-white p-12 text-center mt-6">
-          <Users className="size-10 text-[#9C9485] mx-auto mb-3" />
+        <div className="rounded-[20px] border border-dashed border-border bg-white p-12 text-center mt-6">
+          <Users className="size-10 text-text3 mx-auto mb-3" />
           <p className="text-[16px] font-semibold text-text mb-1">
             No attendees yet
           </p>

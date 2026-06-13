@@ -27,8 +27,8 @@ interface StaffSectionProps {
 function SectionHeader({ title, subtitle }: { title: string; subtitle?: string }) {
   return (
     <div className="mb-3">
-      <p className="text-[14px] font-bold text-[#16130C]">{title}</p>
-      {subtitle && <p className="text-[12px] text-[#9C9485] mt-0.5">{subtitle}</p>}
+      <p className="text-[14px] font-bold text-dark">{title}</p>
+      {subtitle && <p className="text-[12px] text-text3 mt-0.5">{subtitle}</p>}
     </div>
   );
 }
@@ -176,26 +176,26 @@ export function StaffSection({
   };
 
   return (
-    <div className="bg-white rounded-xl border border-[#E2DDD5] shadow-sm overflow-hidden">
-      <div className="p-4 border-b border-[#F4F1EC]">
+    <div className="bg-white rounded-xl border border-border shadow-sm overflow-hidden">
+      <div className="p-4 border-b border-surface">
         <SectionHeader
           title="Staff"
           subtitle="Add waiters, managers, and cashiers. Each one logs into the POS terminal with their own 4-digit PIN."
         />
         {showPosUrl && (
           <>
-            <div className="mt-3 flex items-center gap-2 bg-[#FDFCFB] border border-[#E2DDD5] rounded-lg px-3 py-2">
-              <code className="flex-1 text-[12px] text-[#16130C] truncate">{posUrl}</code>
+            <div className="mt-3 flex items-center gap-2 bg-[#FDFCFB] border border-border rounded-lg px-3 py-2">
+              <code className="flex-1 text-[12px] text-dark truncate">{posUrl}</code>
               <button
                 type="button"
                 onClick={copy}
-                className="shrink-0 inline-flex items-center gap-1 text-[11px] font-semibold text-[#16130C] hover:text-[#E8A020]"
+                className="shrink-0 inline-flex items-center gap-1 text-[11px] font-semibold text-dark hover:text-amber"
               >
                 {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                 {copied ? "Copied" : "Copy"}
               </button>
             </div>
-            <p className="text-[11px] text-[#9C9485] mt-2">
+            <p className="text-[11px] text-text3 mt-2">
               Each PIN must be unique within your restaurant. Staff don&apos;t sign in with email — just their PIN.
             </p>
           </>
@@ -204,9 +204,9 @@ export function StaffSection({
 
       {/* List */}
       {loading ? (
-        <div className="px-4 py-6 text-center text-[12px] text-[#9C9485]">Loading staff…</div>
+        <div className="px-4 py-6 text-center text-[12px] text-text3">Loading staff…</div>
       ) : visibleStaff.length === 0 ? (
-        <div className="px-4 py-5 text-center text-[12px] text-[#9C9485]">
+        <div className="px-4 py-5 text-center text-[12px] text-text3">
           {showInactive ? "No staff yet." : "No active staff yet. Add one below."}
         </div>
       ) : (
@@ -232,11 +232,11 @@ export function StaffSection({
       <div className="p-4 space-y-3">
         {/* Toggle inactive */}
         <div className="flex items-center justify-between text-[11px]">
-          <span className="text-[#9C9485]">{staff.filter((s) => !s.is_active).length} inactive</span>
+          <span className="text-text3">{staff.filter((s) => !s.is_active).length} inactive</span>
           <button
             type="button"
             onClick={() => setShowInactive((v) => !v)}
-            className="text-[#9C9485] hover:text-[#16130C] underline"
+            className="text-text3 hover:text-dark underline"
           >
             {showInactive ? "Hide inactive" : "Show inactive"}
           </button>
@@ -244,15 +244,15 @@ export function StaffSection({
 
         {/* Add form */}
         {adding ? (
-          <div className="border border-[#E2DDD5] rounded-xl p-3 space-y-2 bg-[#FDFCFB]">
-            <p className="text-[12px] font-bold text-[#16130C]">Add staff</p>
+          <div className="border border-border rounded-xl p-3 space-y-2 bg-[#FDFCFB]">
+            <p className="text-[12px] font-bold text-dark">Add staff</p>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
               <input
                 value={addName}
                 onChange={(e) => setAddName(e.target.value)}
                 placeholder="Name"
                 autoFocus
-                className="border border-[#E2DDD5] rounded-lg px-3 py-1.5 text-[13px] text-[#16130C] focus:outline-none focus:border-[#E8A020] bg-white"
+                className="border border-border rounded-lg px-3 py-1.5 text-[13px] text-dark focus:outline-none focus:border-amber bg-white"
               />
               <input
                 value={addPin}
@@ -261,12 +261,12 @@ export function StaffSection({
                 maxLength={4}
                 onChange={(e) => setAddPin(e.target.value.replace(/\D/g, "").slice(0, 4))}
                 placeholder="4-digit PIN"
-                className="border border-[#E2DDD5] rounded-lg px-3 py-1.5 text-[13px] text-[#16130C] focus:outline-none focus:border-[#E8A020] bg-white"
+                className="border border-border rounded-lg px-3 py-1.5 text-[13px] text-dark focus:outline-none focus:border-amber bg-white"
               />
               <select
                 value={addRole}
                 onChange={(e) => setAddRole(e.target.value as StaffMember["role"])}
-                className="border border-[#E2DDD5] rounded-lg px-3 py-1.5 text-[13px] text-[#16130C] focus:outline-none focus:border-[#E8A020] bg-white"
+                className="border border-border rounded-lg px-3 py-1.5 text-[13px] text-dark focus:outline-none focus:border-amber bg-white"
               >
                 <option value="waiter">Waiter</option>
                 <option value="kitchen">Kitchen</option>
@@ -276,12 +276,12 @@ export function StaffSection({
               </select>
             </div>
             {(addRole === "kitchen" || addRole === "bar") && (
-              <label className="flex items-center gap-2 text-[12px] text-[#5E5848] cursor-pointer">
+              <label className="flex items-center gap-2 text-[12px] text-text2 cursor-pointer">
                 <input
                   type="checkbox"
                   checked={addCrossStation}
                   onChange={(e) => setAddCrossStation(e.target.checked)}
-                  className="size-4 accent-[#E8A020]"
+                  className="size-4 accent-amber"
                 />
                 Can also see the other station&apos;s orders
               </label>
@@ -291,14 +291,14 @@ export function StaffSection({
                 type="button"
                 onClick={handleAdd}
                 disabled={submitting || !addName.trim() || addPin.length !== 4}
-                className="text-[12px] font-bold text-white bg-[#E8A020] px-4 h-[30px] rounded-full hover:bg-[#d4911c] transition-colors disabled:opacity-50"
+                className="text-[12px] font-bold text-white bg-amber px-4 h-[30px] rounded-full hover:bg-[#d4911c] transition-colors disabled:opacity-50"
               >
                 {submitting ? "Adding…" : "Add staff"}
               </button>
               <button
                 type="button"
                 onClick={() => { setAdding(false); setAddName(""); setAddPin(""); setAddRole("waiter"); setAddCrossStation(false); }}
-                className="text-[12px] text-[#9C9485] hover:text-[#16130C]"
+                className="text-[12px] text-text3 hover:text-dark"
               >
                 Cancel
               </button>
@@ -308,7 +308,7 @@ export function StaffSection({
           <button
             type="button"
             onClick={() => setAdding(true)}
-            className="w-full h-[36px] rounded-full border border-dashed border-[#E2DDD5] text-[12px] font-semibold text-[#9C9485] hover:border-[#E8A020]/50 hover:text-[#E8A020] transition-colors"
+            className="w-full h-[36px] rounded-full border border-dashed border-border text-[12px] font-semibold text-text3 hover:border-amber/50 hover:text-amber transition-colors"
           >
             + Add staff
           </button>
@@ -341,13 +341,13 @@ function StaffRow({
     return <StaffRowEdit staff={staff} onCancel={onCancel} onSave={onSave} />;
   }
   return (
-    <div className={`flex items-center gap-3 px-4 py-3 border-b border-[#F4F1EC] last:border-0 ${!staff.is_active ? "opacity-50" : ""}`}>
+    <div className={`flex items-center gap-3 px-4 py-3 border-b border-surface last:border-0 ${!staff.is_active ? "opacity-50" : ""}`}>
       <div className="flex-1 min-w-0">
-        <p className="text-[13px] font-semibold text-[#16130C] truncate">{staff.name}</p>
-        <p className="text-[11px] text-[#9C9485] capitalize">
+        <p className="text-[13px] font-semibold text-dark truncate">{staff.name}</p>
+        <p className="text-[11px] text-text3 capitalize">
           {staff.role}
           {(staff.role === "kitchen" || staff.role === "bar") && staff.can_access_all_stations && (
-            <span className="inline-flex items-center text-[9px] font-bold text-[#E8A020] bg-[#E8A020]/10 px-1.5 py-0.5 rounded-full uppercase tracking-wide ml-1">
+            <span className="inline-flex items-center text-[9px] font-bold text-amber bg-amber/10 px-1.5 py-0.5 rounded-full uppercase tracking-wide ml-1">
               All stations
             </span>
           )}
@@ -360,7 +360,7 @@ function StaffRow({
       />
       <button
         onClick={onEdit}
-        className="text-[12px] text-[#9C9485] hover:text-[#16130C] transition-colors px-1"
+        className="text-[12px] text-text3 hover:text-dark transition-colors px-1"
       >
         Edit
       </button>
@@ -418,13 +418,13 @@ function StaffRowEdit({
   };
 
   return (
-    <div className="px-4 py-3 bg-[#FDFCFB] border-b border-[#F4F1EC] space-y-2">
+    <div className="px-4 py-3 bg-[#FDFCFB] border-b border-surface space-y-2">
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
         <input
           value={editName}
           onChange={(e) => setEditName(e.target.value)}
           placeholder="Name"
-          className="border border-[#E2DDD5] rounded-lg px-3 py-1.5 text-[13px] text-[#16130C] focus:outline-none focus:border-[#E8A020] bg-white"
+          className="border border-border rounded-lg px-3 py-1.5 text-[13px] text-dark focus:outline-none focus:border-amber bg-white"
         />
         <input
           value={editPin}
@@ -433,12 +433,12 @@ function StaffRowEdit({
           maxLength={4}
           onChange={(e) => setEditPin(e.target.value.replace(/\D/g, "").slice(0, 4))}
           placeholder="New PIN (leave blank to keep)"
-          className="border border-[#E2DDD5] rounded-lg px-3 py-1.5 text-[13px] text-[#16130C] focus:outline-none focus:border-[#E8A020] bg-white"
+          className="border border-border rounded-lg px-3 py-1.5 text-[13px] text-dark focus:outline-none focus:border-amber bg-white"
         />
         <select
           value={editRole}
           onChange={(e) => setEditRole(e.target.value as StaffMember["role"])}
-          className="border border-[#E2DDD5] rounded-lg px-3 py-1.5 text-[13px] text-[#16130C] focus:outline-none focus:border-[#E8A020] bg-white"
+          className="border border-border rounded-lg px-3 py-1.5 text-[13px] text-dark focus:outline-none focus:border-amber bg-white"
         >
           <option value="waiter">Waiter</option>
           <option value="kitchen">Kitchen</option>
@@ -448,12 +448,12 @@ function StaffRowEdit({
         </select>
       </div>
       {(editRole === "kitchen" || editRole === "bar") && (
-        <label className="flex items-center gap-2 text-[12px] text-[#5E5848] cursor-pointer">
+        <label className="flex items-center gap-2 text-[12px] text-text2 cursor-pointer">
           <input
             type="checkbox"
             checked={editCrossStation}
             onChange={(e) => setEditCrossStation(e.target.checked)}
-            className="size-4 accent-[#E8A020]"
+            className="size-4 accent-amber"
           />
           Can also see the other station&apos;s orders
         </label>
@@ -462,13 +462,13 @@ function StaffRowEdit({
         <button
           onClick={handleSave}
           disabled={saving || !editName.trim() || (editPin !== "" && !/^\d{4}$/.test(editPin))}
-          className="text-[12px] font-bold text-white bg-[#16130C] px-3 h-[28px] rounded-full hover:bg-[#2A2520] transition-colors disabled:opacity-50"
+          className="text-[12px] font-bold text-white bg-dark px-3 h-[28px] rounded-full hover:bg-[#2A2520] transition-colors disabled:opacity-50"
         >
           {saving ? "Saving…" : "Save"}
         </button>
         <button
           onClick={onCancel}
-          className="text-[12px] text-[#9C9485] hover:text-[#16130C]"
+          className="text-[12px] text-text3 hover:text-dark"
         >
           Cancel
         </button>

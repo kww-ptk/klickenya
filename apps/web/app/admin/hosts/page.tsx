@@ -52,25 +52,25 @@ export default async function AdminHostsPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="font-display text-[28px] font-bold text-[#16130C]">
+        <h1 className="font-display text-[28px] font-bold text-dark">
           Hosts
         </h1>
         <div className="flex items-center gap-3">
-          <span className="text-sm text-[#9C9485]">{allHosts.length} total</span>
+          <span className="text-sm text-text3">{allHosts.length} total</span>
           <CreateHostModal />
         </div>
       </div>
 
       <div className="rounded-2xl bg-white shadow-sm overflow-hidden">
         {allHosts.length === 0 ? (
-          <p className="px-6 py-12 text-center text-[13px] text-[#9C9485]">
+          <p className="px-6 py-12 text-center text-[13px] text-text3">
             No hosts yet.
           </p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-[13px]">
               <thead>
-                <tr className="border-b border-[#F0EDE8] text-[#9C9485]">
+                <tr className="border-b border-[#F0EDE8] text-text3">
                   <th className="px-6 py-3 font-medium">Host</th>
                   <th className="px-6 py-3 font-medium">Email</th>
                   <th className="px-6 py-3 font-medium">Phone</th>
@@ -101,23 +101,23 @@ export default async function AdminHostsPage() {
                               className="size-8 rounded-full object-cover"
                             />
                           ) : (
-                            <div className="size-8 rounded-full bg-gradient-to-br from-[#E8A020] to-[#6B2D8B] flex items-center justify-center text-white text-[10px] font-bold">
+                            <div className="size-8 rounded-full bg-gradient-to-br from-amber to-purple flex items-center justify-center text-white text-[10px] font-bold">
                               {initials}
                             </div>
                           )}
-                          <span className="font-medium text-[#16130C]">{host.display_name ?? "—"}</span>
+                          <span className="font-medium text-dark">{host.display_name ?? "—"}</span>
                         </div>
                       </td>
-                      <td className="px-6 py-3 text-[#9C9485]">{host.email ?? "—"}</td>
-                      <td className="px-6 py-3 text-[#9C9485]">{host.phone ?? "—"}</td>
+                      <td className="px-6 py-3 text-text3">{host.email ?? "—"}</td>
+                      <td className="px-6 py-3 text-text3">{host.phone ?? "—"}</td>
                       <td className="px-6 py-3">
-                        <span className="font-semibold text-[#16130C]">{listingCount}</span>
+                        <span className="font-semibold text-dark">{listingCount}</span>
                       </td>
-                      <td className="px-6 py-3 text-[#9C9485]">
+                      <td className="px-6 py-3 text-text3">
                         {new Date(host.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
                       </td>
                       <td className="px-6 py-3">
-                        <Link href={`/admin/hosts/${host.id}`} className="text-[#E8A020] font-medium hover:underline">
+                        <Link href={`/admin/hosts/${host.id}`} className="text-amber font-medium hover:underline">
                           View →
                         </Link>
                       </td>

@@ -350,13 +350,13 @@ export function CalendarGrid({
 
   return (
     <>
-      <div className="bg-white rounded-xl lg:rounded-2xl border border-[#E2DDD5] shadow-sm overflow-hidden">
+      <div className="bg-white rounded-xl lg:rounded-2xl border border-border shadow-sm overflow-hidden">
         {/* Navigation */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-[#E2DDD5]">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-border">
           <div className="flex items-center gap-2">
             <button
               onClick={goBack}
-              className="size-8 flex items-center justify-center rounded-lg hover:bg-[#F4F1EC] transition-colors text-[#5E5848]"
+              className="size-8 flex items-center justify-center rounded-lg hover:bg-surface transition-colors text-text2"
             >
               <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
@@ -370,14 +370,14 @@ export function CalendarGrid({
             </button>
             <button
               onClick={goForward}
-              className="size-8 flex items-center justify-center rounded-lg hover:bg-[#F4F1EC] transition-colors text-[#5E5848]"
+              className="size-8 flex items-center justify-center rounded-lg hover:bg-surface transition-colors text-text2"
             >
               <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
               </svg>
             </button>
           </div>
-          <p className="text-[13px] font-semibold text-[#16130C]">{monthLabel}</p>
+          <p className="text-[13px] font-semibold text-dark">{monthLabel}</p>
         </div>
 
         {/* Calendar grid */}
@@ -391,7 +391,7 @@ export function CalendarGrid({
             }}
           >
             {/* Header row */}
-            <div className="sticky left-0 z-10 bg-[#FAFAF8] border-b border-r border-[#E2DDD5] px-3 py-2 text-[10px] font-bold text-[#9C9485] uppercase tracking-wider">
+            <div className="sticky left-0 z-10 bg-canvas border-b border-r border-border px-3 py-2 text-[10px] font-bold text-text3 uppercase tracking-wider">
               Room
             </div>
             {days.map((day) => {
@@ -400,14 +400,14 @@ export function CalendarGrid({
               return (
                 <div
                   key={dateStr(day)}
-                  className={`border-b border-r border-[#E2DDD5] px-1 py-1.5 text-center ${
-                    isToday ? "bg-[#4F46E5]/8" : isWeekend ? "bg-[#F4F1EC]/60" : "bg-[#FAFAF8]"
+                  className={`border-b border-r border-border px-1 py-1.5 text-center ${
+                    isToday ? "bg-[#4F46E5]/8" : isWeekend ? "bg-surface/60" : "bg-canvas"
                   }`}
                 >
-                  <p className="text-[9px] text-[#9C9485] leading-none">
+                  <p className="text-[9px] text-text3 leading-none">
                     {day.toLocaleDateString("en-GB", { weekday: "short" })}
                   </p>
-                  <p className={`text-[12px] font-semibold leading-tight mt-0.5 ${isToday ? "text-[#4F46E5]" : "text-[#16130C]"}`}>
+                  <p className={`text-[12px] font-semibold leading-tight mt-0.5 ${isToday ? "text-[#4F46E5]" : "text-dark"}`}>
                     {day.getDate()}
                   </p>
                 </div>
@@ -454,7 +454,7 @@ export function CalendarGrid({
         </div>
 
         {/* Legend */}
-        <div className="flex items-center gap-4 px-4 py-2.5 border-t border-[#E2DDD5] flex-wrap">
+        <div className="flex items-center gap-4 px-4 py-2.5 border-t border-border flex-wrap">
           {[
             { label: "Direct", color: "#4F46E5" },
             { label: "Airbnb", color: "#FF5A5F" },
@@ -465,24 +465,24 @@ export function CalendarGrid({
           ].map((item) => (
             <div key={item.label} className="flex items-center gap-1.5">
               <div className="size-2.5 rounded-sm" style={{ backgroundColor: item.color }} />
-              <span className="text-[10px] text-[#9C9485]">{item.label}</span>
+              <span className="text-[10px] text-text3">{item.label}</span>
             </div>
           ))}
           <div className="flex items-center gap-1.5">
             <div
-              className="size-2.5 rounded-sm bg-[#9C9485] opacity-40"
+              className="size-2.5 rounded-sm bg-text3 opacity-40"
               style={{
                 backgroundImage: "repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(0,0,0,0.15) 2px, rgba(0,0,0,0.15) 4px)",
               }}
             />
-            <span className="text-[10px] text-[#9C9485]">Blocked</span>
+            <span className="text-[10px] text-text3">Blocked</span>
           </div>
           <div className="flex items-center gap-1.5">
             <div
               className="size-2.5 rounded-sm border border-dashed border-[#EAB308]"
               style={{ backgroundColor: "#FEF9C3" }}
             />
-            <span className="text-[10px] text-[#9C9485]">Enquiry</span>
+            <span className="text-[10px] text-text3">Enquiry</span>
           </div>
         </div>
       </div>
@@ -541,8 +541,8 @@ export function CalendarGrid({
 
       {/* Rate toast */}
       {rateToast && (
-        <div className="fixed top-4 right-4 z-[60] bg-[#16130C] text-white text-[13px] font-semibold px-4 py-3 rounded-xl shadow-xl flex items-center gap-2 pointer-events-none">
-          <svg className="size-4 text-[#16A34A] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+        <div className="fixed top-4 right-4 z-[60] bg-dark text-white text-[13px] font-semibold px-4 py-3 rounded-xl shadow-xl flex items-center gap-2 pointer-events-none">
+          <svg className="size-4 text-green shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
           {rateToast}
         </div>
       )}
@@ -601,17 +601,17 @@ export function CalendarGrid({
             <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
               <div className="bg-white rounded-2xl shadow-2xl w-full max-w-[360px] overflow-hidden pointer-events-auto" role="dialog">
                 {/* Header */}
-                <div className="px-5 py-4 border-b border-[#E2DDD5]">
+                <div className="px-5 py-4 border-b border-border">
                   <div className="flex items-start justify-between">
                     <div>
-                      <p className="text-[14px] font-bold text-[#16130C]">
+                      <p className="text-[14px] font-bold text-dark">
                         {chooserRoom?.name ?? "Room"}
                       </p>
-                      <p className="text-[12px] text-[#9C9485] mt-0.5">
+                      <p className="text-[12px] text-text3 mt-0.5">
                         {fmtD(dragChooser.checkIn)} → {fmtD(dragChooser.checkOut)} · {nights} night{nights !== 1 ? "s" : ""}
                       </p>
                     </div>
-                    <button onClick={closeDragChooser} className="size-7 flex items-center justify-center rounded-lg hover:bg-[#F4F1EC] text-[#9C9485]">
+                    <button onClick={closeDragChooser} className="size-7 flex items-center justify-center rounded-lg hover:bg-surface text-text3">
                       <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
                     </button>
                   </div>
@@ -622,32 +622,32 @@ export function CalendarGrid({
                     <>
                       <button
                         onClick={() => { setNewBookingTarget(dragChooser); setDragChooser(null); }}
-                        className="w-full flex items-start gap-3 p-3.5 rounded-xl border-2 border-[#E2DDD5] hover:border-[#4F46E5]/50 hover:bg-[#4F46E5]/5 transition-colors text-left"
+                        className="w-full flex items-start gap-3 p-3.5 rounded-xl border-2 border-border hover:border-[#4F46E5]/50 hover:bg-[#4F46E5]/5 transition-colors text-left"
                       >
                         <span className="text-[20px] shrink-0">📅</span>
                         <div>
-                          <p className="text-[13px] font-semibold text-[#16130C]">Add booking</p>
-                          <p className="text-[11px] text-[#9C9485]">Create a manual booking for these dates</p>
+                          <p className="text-[13px] font-semibold text-dark">Add booking</p>
+                          <p className="text-[11px] text-text3">Create a manual booking for these dates</p>
                         </div>
                       </button>
                       <button
                         onClick={() => setDragChooserMode("block")}
-                        className="w-full flex items-start gap-3 p-3.5 rounded-xl border-2 border-[#E2DDD5] hover:border-[#9C9485]/50 hover:bg-[#F4F1EC] transition-colors text-left"
+                        className="w-full flex items-start gap-3 p-3.5 rounded-xl border-2 border-border hover:border-text3/50 hover:bg-surface transition-colors text-left"
                       >
                         <span className="text-[20px] shrink-0">🚫</span>
                         <div>
-                          <p className="text-[13px] font-semibold text-[#16130C]">Block dates</p>
-                          <p className="text-[11px] text-[#9C9485]">Block this room for maintenance or personal use</p>
+                          <p className="text-[13px] font-semibold text-dark">Block dates</p>
+                          <p className="text-[11px] text-text3">Block this room for maintenance or personal use</p>
                         </div>
                       </button>
                       <button
                         onClick={() => { setNewRate(String(chooserRoom?.base_price_kes ?? "")); setDragChooserMode("rate"); }}
-                        className="w-full flex items-start gap-3 p-3.5 rounded-xl border-2 border-[#E2DDD5] hover:border-[#E8A020]/50 hover:bg-[#FFFBEB] transition-colors text-left"
+                        className="w-full flex items-start gap-3 p-3.5 rounded-xl border-2 border-border hover:border-amber/50 hover:bg-[#FFFBEB] transition-colors text-left"
                       >
                         <span className="text-[20px] shrink-0">💰</span>
                         <div>
-                          <p className="text-[13px] font-semibold text-[#16130C]">Change rate</p>
-                          <p className="text-[11px] text-[#9C9485]">Set a custom nightly rate for these specific dates</p>
+                          <p className="text-[13px] font-semibold text-dark">Change rate</p>
+                          <p className="text-[11px] text-text3">Set a custom nightly rate for these specific dates</p>
                         </div>
                       </button>
                     </>
@@ -660,11 +660,11 @@ export function CalendarGrid({
                         placeholder="Reason (optional) — e.g. Maintenance, Personal use"
                         value={blockReason}
                         onChange={(e) => setBlockReason(e.target.value)}
-                        className="w-full border border-[#E2DDD5] rounded-xl px-3 py-2.5 text-[13px] text-[#16130C] placeholder:text-[#9C9485] outline-none focus:border-[#9C9485]"
+                        className="w-full border border-border rounded-xl px-3 py-2.5 text-[13px] text-dark placeholder:text-text3 outline-none focus:border-text3"
                       />
                       <div className="flex gap-2">
-                        <button onClick={() => setDragChooserMode("choose")} className="flex-1 py-2.5 rounded-xl border border-[#E2DDD5] text-[13px] text-[#9C9485] hover:text-[#16130C] transition-colors">← Back</button>
-                        <button onClick={handleBlock} disabled={blocking} className="flex-1 py-2.5 rounded-xl bg-[#16130C] text-white text-[13px] font-bold hover:bg-[#2A2416] disabled:opacity-50 transition-colors">
+                        <button onClick={() => setDragChooserMode("choose")} className="flex-1 py-2.5 rounded-xl border border-border text-[13px] text-text3 hover:text-dark transition-colors">← Back</button>
+                        <button onClick={handleBlock} disabled={blocking} className="flex-1 py-2.5 rounded-xl bg-dark text-white text-[13px] font-bold hover:bg-[#2A2416] disabled:opacity-50 transition-colors">
                           {blocking ? "Blocking…" : "Block dates"}
                         </button>
                       </div>
@@ -674,17 +674,17 @@ export function CalendarGrid({
                   {dragChooserMode === "rate" && (
                     <div className="space-y-3">
                       <div>
-                        <label className="block text-[11px] text-[#9C9485] mb-1">Rate per night (KSh)</label>
+                        <label className="block text-[11px] text-text3 mb-1">Rate per night (KSh)</label>
                         <input
                           type="number"
                           value={newRate}
                           onChange={(e) => setNewRate(e.target.value)}
-                          className="w-full border border-[#E2DDD5] rounded-xl px-3 py-2.5 text-[13px] text-[#16130C] outline-none focus:border-[#E8A020]"
+                          className="w-full border border-border rounded-xl px-3 py-2.5 text-[13px] text-dark outline-none focus:border-amber"
                         />
                       </div>
                       <div className="flex gap-2">
-                        <button onClick={() => setDragChooserMode("choose")} className="flex-1 py-2.5 rounded-xl border border-[#E2DDD5] text-[13px] text-[#9C9485] hover:text-[#16130C] transition-colors">← Back</button>
-                        <button onClick={handleSetRate} disabled={settingRate || !newRate} className="flex-1 py-2.5 rounded-xl bg-[#E8A020] text-white text-[13px] font-bold hover:bg-[#d4911c] disabled:opacity-50 transition-colors">
+                        <button onClick={() => setDragChooserMode("choose")} className="flex-1 py-2.5 rounded-xl border border-border text-[13px] text-text3 hover:text-dark transition-colors">← Back</button>
+                        <button onClick={handleSetRate} disabled={settingRate || !newRate} className="flex-1 py-2.5 rounded-xl bg-amber text-white text-[13px] font-bold hover:bg-[#d4911c] disabled:opacity-50 transition-colors">
                           {settingRate ? "Saving…" : "Set rate"}
                         </button>
                       </div>
@@ -753,15 +753,15 @@ export function RoomRow({
   return (
     <>
       {/* ── Main row label (sticky left) ── */}
-      <div className="sticky left-0 z-10 bg-white border-b border-r border-[#E2DDD5] flex items-center min-h-[48px] px-3 py-2 gap-1">
+      <div className="sticky left-0 z-10 bg-white border-b border-r border-border flex items-center min-h-[48px] px-3 py-2 gap-1">
         {hasEnquiries && (
           <button
             onClick={toggleCollapsed}
-            className="shrink-0 size-5 flex items-center justify-center rounded hover:bg-[#F4F1EC] transition-colors"
+            className="shrink-0 size-5 flex items-center justify-center rounded hover:bg-surface transition-colors"
             title={collapsed ? "Show enquiries" : "Hide enquiries"}
           >
             <svg
-              className={`size-3 text-[#9C9485] transition-transform duration-150 ${collapsed ? "-rotate-90" : ""}`}
+              className={`size-3 text-text3 transition-transform duration-150 ${collapsed ? "-rotate-90" : ""}`}
               fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}
             >
               <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
@@ -769,9 +769,9 @@ export function RoomRow({
           </button>
         )}
         <div className="min-w-0">
-          <p className="text-[12px] font-semibold text-[#16130C] truncate">{room.name}</p>
+          <p className="text-[12px] font-semibold text-dark truncate">{room.name}</p>
           {room.room_number && (
-            <p className="text-[10px] text-[#9C9485]">#{room.room_number}</p>
+            <p className="text-[10px] text-text3">#{room.room_number}</p>
           )}
         </div>
       </div>
@@ -820,10 +820,10 @@ export function RoomRow({
                 touchDragging.current = false;
               }}
               className={[
-                "border-b border-r border-[#E2DDD5] min-h-[48px] transition-colors",
+                "border-b border-r border-border min-h-[48px] transition-colors",
                 isInDragRange ? "bg-[#4F46E5]/30"
                   : isToday ? "bg-[#4F46E5]/[0.03] hover:bg-[#4F46E5]/10"
-                  : isWeekend ? "bg-[#F4F1EC]/30 hover:bg-[#4F46E5]/5"
+                  : isWeekend ? "bg-surface/30 hover:bg-[#4F46E5]/5"
                   : "hover:bg-[#4F46E5]/5",
                 isShaking ? "animate-cal-shake" : "",
               ].filter(Boolean).join(" ")}
@@ -838,7 +838,7 @@ export function RoomRow({
               key={ds}
               data-date={ds}
               data-room-id={room.id}
-              className={`border-b border-r border-[#E2DDD5] min-h-[48px]${isShaking ? " animate-cal-shake" : ""}`}
+              className={`border-b border-r border-border min-h-[48px]${isShaking ? " animate-cal-shake" : ""}`}
               style={{
                 backgroundColor: "#F4F1EC",
                 backgroundImage: "repeating-linear-gradient(45deg, transparent, transparent 3px, rgba(156,148,133,0.2) 3px, rgba(156,148,133,0.2) 5px)",
@@ -875,7 +875,7 @@ export function RoomRow({
           <button
             key={ds}
             onClick={() => onClickBooking(booking)}
-            className="border-b border-r border-[#E2DDD5] min-h-[48px] relative cursor-pointer group"
+            className="border-b border-r border-border min-h-[48px] relative cursor-pointer group"
             title={`${booking.guest_name} (${booking.source})`}
           >
             <div
@@ -910,10 +910,10 @@ export function RoomRow({
         <>
           {/* Sub-row label */}
           <div
-            className="sticky left-0 z-10 border-b border-r border-[#E2DDD5] px-3 flex items-center h-[24px]"
+            className="sticky left-0 z-10 border-b border-r border-border px-3 flex items-center h-[24px]"
             style={{ backgroundColor: "#F0EDE8" }}
           >
-            <span className="text-[11px] text-[#9C9485]">↳ enquiries</span>
+            <span className="text-[11px] text-text3">↳ enquiries</span>
           </div>
 
           {/* Sub-row cells */}
@@ -942,7 +942,7 @@ export function RoomRow({
               return (
                 <div
                   key={ds}
-                  className="border-b border-r border-[#E2DDD5] h-[24px]"
+                  className="border-b border-r border-border h-[24px]"
                   style={{ backgroundColor: "#F0EDE8" }}
                 />
               );
@@ -962,7 +962,7 @@ export function RoomRow({
               <button
                 key={ds}
                 onClick={() => onClickEnquiry?.(firstEnquiry!)}
-                className="border-b border-r border-[#E2DDD5] h-[24px] relative overflow-hidden"
+                className="border-b border-r border-border h-[24px] relative overflow-hidden"
                 style={{ backgroundColor: "#F0EDE8" }}
                 title={`Enquiry: ${firstEnquiry?.full_name}`}
               >

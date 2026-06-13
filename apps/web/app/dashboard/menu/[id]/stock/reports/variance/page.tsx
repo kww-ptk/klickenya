@@ -25,13 +25,13 @@ export default async function VariancePage({ params }: PageProps) {
   return (
     <div>
       <div className="mb-5">
-        <Link href={`/dashboard/menu/${menu.id}/stock/reports`} className="text-[13px] text-[#9C9485] hover:text-[#16130C]">
+        <Link href={`/dashboard/menu/${menu.id}/stock/reports`} className="text-[13px] text-text3 hover:text-dark">
           ← Back to reports
         </Link>
-        <h1 className="font-display text-[22px] lg:text-[28px] font-bold tracking-[-0.03em] text-[#16130C] mt-2">
+        <h1 className="font-display text-[22px] lg:text-[28px] font-bold tracking-[-0.03em] text-dark mt-2">
           Theoretical vs Actual
         </h1>
-        <p className="text-[13px] text-[#9C9485] mt-1">
+        <p className="text-[13px] text-text3 mt-1">
           What stock should be there vs what&apos;s actually there. The gap is where money goes.
         </p>
       </div>

@@ -79,10 +79,10 @@ export default async function ContactRequestsPage({
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-[22px] font-display font-bold text-[#16130C]">
+          <h1 className="text-[22px] font-display font-bold text-dark">
             Contact Requests
           </h1>
-          <p className="text-[14px] text-[#9C9485] mt-1">
+          <p className="text-[14px] text-text3 mt-1">
             {totalCount} total request{totalCount !== 1 ? "s" : ""}
           </p>
         </div>
@@ -105,8 +105,8 @@ export default async function ContactRequestsPage({
                   })}
                   className={`px-3 py-2 text-[13px] font-medium transition-colors border-b-2 ${
                     isActive
-                      ? "text-[#E8A020] border-[#E8A020]"
-                      : "text-[#9C9485] border-transparent hover:text-[#16130C]"
+                      ? "text-amber border-amber"
+                      : "text-text3 border-transparent hover:text-dark"
                   }`}
                 >
                   {tab.label}
@@ -125,7 +125,7 @@ export default async function ContactRequestsPage({
               <input type="hidden" name="status" value={status} />
             )}
             <svg
-              className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-[#9C9485]"
+              className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-text3"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -142,7 +142,7 @@ export default async function ContactRequestsPage({
               name="q"
               defaultValue={q}
               placeholder="Search name or email..."
-              className="w-full sm:w-[260px] pl-10 pr-4 py-2 text-[13px] rounded-lg border border-[#F0EDE8] bg-[#F7F5F2] text-[#16130C] placeholder:text-[#9C9485] focus:outline-none focus:ring-2 focus:ring-[#E8A020]/30 focus:border-[#E8A020]"
+              className="w-full sm:w-[260px] pl-10 pr-4 py-2 text-[13px] rounded-lg border border-[#F0EDE8] bg-[#F7F5F2] text-dark placeholder:text-text3 focus:outline-none focus:ring-2 focus:ring-amber/30 focus:border-amber"
             />
           </form>
         </div>
@@ -152,25 +152,25 @@ export default async function ContactRequestsPage({
           <table className="w-full text-[13px]">
             <thead>
               <tr className="border-b border-[#F0EDE8]">
-                <th className="text-left px-6 py-3 text-[11px] uppercase text-[#9C9485] tracking-wider font-medium">
+                <th className="text-left px-6 py-3 text-[11px] uppercase text-text3 tracking-wider font-medium">
                   Date
                 </th>
-                <th className="text-left px-6 py-3 text-[11px] uppercase text-[#9C9485] tracking-wider font-medium">
+                <th className="text-left px-6 py-3 text-[11px] uppercase text-text3 tracking-wider font-medium">
                   Listing
                 </th>
-                <th className="text-left px-6 py-3 text-[11px] uppercase text-[#9C9485] tracking-wider font-medium">
+                <th className="text-left px-6 py-3 text-[11px] uppercase text-text3 tracking-wider font-medium">
                   Guest Name
                 </th>
-                <th className="text-left px-6 py-3 text-[11px] uppercase text-[#9C9485] tracking-wider font-medium">
+                <th className="text-left px-6 py-3 text-[11px] uppercase text-text3 tracking-wider font-medium">
                   Phone
                 </th>
-                <th className="text-left px-6 py-3 text-[11px] uppercase text-[#9C9485] tracking-wider font-medium">
+                <th className="text-left px-6 py-3 text-[11px] uppercase text-text3 tracking-wider font-medium">
                   Email
                 </th>
-                <th className="text-left px-6 py-3 text-[11px] uppercase text-[#9C9485] tracking-wider font-medium">
+                <th className="text-left px-6 py-3 text-[11px] uppercase text-text3 tracking-wider font-medium">
                   Status
                 </th>
-                <th className="text-right px-6 py-3 text-[11px] uppercase text-[#9C9485] tracking-wider font-medium">
+                <th className="text-right px-6 py-3 text-[11px] uppercase text-text3 tracking-wider font-medium">
                   Actions
                 </th>
               </tr>
@@ -180,7 +180,7 @@ export default async function ContactRequestsPage({
                 <tr>
                   <td
                     colSpan={7}
-                    className="px-6 py-16 text-center text-[14px] text-[#9C9485]"
+                    className="px-6 py-16 text-center text-[14px] text-text3"
                   >
                     No contact requests found.
                   </td>
@@ -191,31 +191,31 @@ export default async function ContactRequestsPage({
                     key={req.id as string}
                     className="border-b border-[#F0EDE8] hover:bg-[#F7F5F2] transition-colors"
                   >
-                    <td className="px-6 py-3.5 text-[#16130C] whitespace-nowrap">
+                    <td className="px-6 py-3.5 text-dark whitespace-nowrap">
                       {formatDate(req.created_at as string)}
                     </td>
-                    <td className="px-6 py-3.5 text-[#16130C]">
+                    <td className="px-6 py-3.5 text-dark">
                       {truncate(
                         ((req.notes as string) || "").match(/^Listing: (.+?)(?:\s*\(|$)/m)?.[1] ?? null,
                         30
                       )}
                     </td>
-                    <td className="px-6 py-3.5 text-[#16130C] font-medium">
+                    <td className="px-6 py-3.5 text-dark font-medium">
                       {(req.full_name as string) || "\u2014"}
                     </td>
                     <td className="px-6 py-3.5 whitespace-nowrap">
                       {req.phone ? (
                         <a
                           href={`tel:${req.phone}`}
-                          className="text-[#E8A020] hover:underline"
+                          className="text-amber hover:underline"
                         >
                           {req.phone as string}
                         </a>
                       ) : (
-                        <span className="text-[#9C9485]">&mdash;</span>
+                        <span className="text-text3">&mdash;</span>
                       )}
                     </td>
-                    <td className="px-6 py-3.5 text-[#16130C]">
+                    <td className="px-6 py-3.5 text-dark">
                       {(req.email as string) || "\u2014"}
                     </td>
                     <td className="px-6 py-3.5">
@@ -225,7 +225,7 @@ export default async function ContactRequestsPage({
                       <div className="flex items-center justify-end gap-3">
                         <Link
                           href={`/admin/contact-requests/${req.id}`}
-                          className="text-[13px] font-medium text-[#E8A020] hover:text-[#C78A1A] transition-colors"
+                          className="text-[13px] font-medium text-amber hover:text-[#C78A1A] transition-colors"
                         >
                           View
                         </Link>
@@ -242,7 +242,7 @@ export default async function ContactRequestsPage({
         {/* Pagination */}
         {totalCount > 0 && (
           <div className="flex items-center justify-between px-6 py-4 border-t border-[#F0EDE8]">
-            <p className="text-[13px] text-[#9C9485]">
+            <p className="text-[13px] text-text3">
               Showing {offset + 1}&ndash;
               {Math.min(offset + PER_PAGE, totalCount)} of {totalCount}
             </p>
@@ -250,24 +250,24 @@ export default async function ContactRequestsPage({
               {page > 1 ? (
                 <Link
                   href={buildUrl({ page: String(page - 1) })}
-                  className="px-3 py-1.5 text-[13px] font-medium rounded-lg border border-[#F0EDE8] text-[#16130C] hover:bg-[#F7F5F2] transition-colors"
+                  className="px-3 py-1.5 text-[13px] font-medium rounded-lg border border-[#F0EDE8] text-dark hover:bg-[#F7F5F2] transition-colors"
                 >
                   Previous
                 </Link>
               ) : (
-                <span className="px-3 py-1.5 text-[13px] font-medium rounded-lg border border-[#F0EDE8] text-[#9C9485] opacity-50 cursor-not-allowed">
+                <span className="px-3 py-1.5 text-[13px] font-medium rounded-lg border border-[#F0EDE8] text-text3 opacity-50 cursor-not-allowed">
                   Previous
                 </span>
               )}
               {page < totalPages ? (
                 <Link
                   href={buildUrl({ page: String(page + 1) })}
-                  className="px-3 py-1.5 text-[13px] font-medium rounded-lg border border-[#F0EDE8] text-[#16130C] hover:bg-[#F7F5F2] transition-colors"
+                  className="px-3 py-1.5 text-[13px] font-medium rounded-lg border border-[#F0EDE8] text-dark hover:bg-[#F7F5F2] transition-colors"
                 >
                   Next
                 </Link>
               ) : (
-                <span className="px-3 py-1.5 text-[13px] font-medium rounded-lg border border-[#F0EDE8] text-[#9C9485] opacity-50 cursor-not-allowed">
+                <span className="px-3 py-1.5 text-[13px] font-medium rounded-lg border border-[#F0EDE8] text-text3 opacity-50 cursor-not-allowed">
                   Next
                 </span>
               )}

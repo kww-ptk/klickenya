@@ -52,7 +52,7 @@ function PostCard({
           {category}
         </Badge>
         {location && (
-          <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#5E5848] bg-[#F4F1EC] px-2.5 py-1 rounded-full">
+          <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-text2 bg-surface px-2.5 py-1 rounded-full">
             📍 {location}
           </span>
         )}

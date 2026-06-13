@@ -55,8 +55,8 @@ export function FloorMapPicker({ areas, selectedId, onSelect, theme = "light" }:
                 active
                   ? "text-white"
                   : theme === "dark"
-                    ? "bg-[#1A170F] text-[#9C9485] border-[#2A2520] hover:border-[#3A342B] hover:text-white"
-                    : "bg-white text-[#5E5848] border-[#E2DDD5] hover:border-[#9C9485]",
+                    ? "bg-[#1A170F] text-text3 border-[#2A2520] hover:border-[#3A342B] hover:text-white"
+                    : "bg-white text-text2 border-border hover:border-text3",
               ].join(" ")}
               style={
                 active
@@ -71,8 +71,8 @@ export function FloorMapPicker({ areas, selectedId, onSelect, theme = "light" }:
                     active
                       ? "opacity-80"
                       : theme === "dark"
-                        ? "text-[#5E5848]"
-                        : "text-[#9C9485]"
+                        ? "text-text2"
+                        : "text-text3"
                   }`}
                 >
                   {a.badge}

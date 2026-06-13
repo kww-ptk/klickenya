@@ -71,12 +71,12 @@ export default async function StockHomePage({ params, searchParams }: PageProps)
       <div className="mb-6">
         <Link
           href={backHref ?? `/dashboard/menu/${menu.id}`}
-          className="text-[13px] text-[#9C9485] hover:text-[#16130C] transition-colors"
+          className="text-[13px] text-text3 hover:text-dark transition-colors"
         >
           {backHref ? "← Back to dashboard" : "← Back to menu"}
         </Link>
         <div className="flex items-center gap-3 mt-2">
-          <h1 className="font-display text-[22px] lg:text-[28px] font-bold tracking-[-0.03em] text-[#16130C] flex-1">
+          <h1 className="font-display text-[22px] lg:text-[28px] font-bold tracking-[-0.03em] text-dark flex-1">
             Klickenya Kitchen
           </h1>
           {menu.stock_enabled && (
@@ -85,52 +85,52 @@ export default async function StockHomePage({ params, searchParams }: PageProps)
             </span>
           )}
         </div>
-        <p className="text-[13px] text-[#9C9485] mt-1">
-          Stock & recipe costing for <span className="font-semibold text-[#5E5848]">{menu.name}</span>
+        <p className="text-[13px] text-text3 mt-1">
+          Stock & recipe costing for <span className="font-semibold text-text2">{menu.name}</span>
         </p>
       </div>
 
       {!menu.stock_enabled ? (
         /* ─── CTA: Enable ─────────────────────────────────────── */
-        <div className="bg-white rounded-2xl border border-[#E2DDD5] shadow-sm overflow-hidden">
-          <div className="bg-gradient-to-br from-[#E8A020]/10 to-[#E8A020]/0 px-6 py-8 lg:px-10 lg:py-12">
+        <div className="bg-white rounded-2xl border border-border shadow-sm overflow-hidden">
+          <div className="bg-gradient-to-br from-amber/10 to-amber/0 px-6 py-8 lg:px-10 lg:py-12">
             <div className="max-w-[640px]">
-              <div className="size-12 rounded-full bg-[#E8A020] flex items-center justify-center mb-4">
+              <div className="size-12 rounded-full bg-amber flex items-center justify-center mb-4">
                 <span className="text-[22px]">🍳</span>
               </div>
-              <h2 className="font-display text-[22px] lg:text-[28px] font-bold text-[#16130C] tracking-[-0.02em] mb-3">
+              <h2 className="font-display text-[22px] lg:text-[28px] font-bold text-dark tracking-[-0.02em] mb-3">
                 Turn your menu into a kitchen
               </h2>
-              <p className="text-[14px] lg:text-[15px] leading-[1.6] text-[#5E5848] mb-6">
+              <p className="text-[14px] lg:text-[15px] leading-[1.6] text-text2 mb-6">
                 Klickenya Kitchen tracks the cost and stock of every dish you serve.
                 Build recipes for your menu items, log purchases and waste, and the
                 food-cost percentage on every plate becomes a number you can read at
                 a glance — not a feeling.
               </p>
 
-              <ul className="text-[13px] text-[#5E5848] space-y-2 mb-6">
+              <ul className="text-[13px] text-text2 space-y-2 mb-6">
                 <li className="flex gap-2">
-                  <span className="text-[#E8A020] font-bold">•</span>
+                  <span className="text-amber font-bold">•</span>
                   Build recipes inside the menu builder — cost per portion live as you type
                 </li>
                 <li className="flex gap-2">
-                  <span className="text-[#E8A020] font-bold">•</span>
+                  <span className="text-amber font-bold">•</span>
                   Log purchases, waste and counts; activity feed updates in real time
                 </li>
                 <li className="flex gap-2">
-                  <span className="text-[#E8A020] font-bold">•</span>
+                  <span className="text-amber font-bold">•</span>
                   Suggested sale price based on your target food-cost %
                 </li>
                 <li className="flex gap-2">
-                  <span className="text-[#9C9485] font-bold">•</span>
-                  <span className="text-[#9C9485]">
+                  <span className="text-text3 font-bold">•</span>
+                  <span className="text-text3">
                     Coming soon: purchase orders, auto-deduction on order fire, monthly reports
                   </span>
                 </li>
               </ul>
 
               <StockEnableButton menuId={menu.id} />
-              <p className="text-[12px] text-[#9C9485] mt-3">
+              <p className="text-[12px] text-text3 mt-3">
                 You can disable it any time. Your recipes and movements are kept.
               </p>
             </div>
@@ -235,25 +235,25 @@ function Tile({
 }) {
   const inner = (
     <div
-      className={`bg-white rounded-2xl border border-[#E2DDD5] shadow-sm p-5 lg:p-6 h-full flex flex-col gap-2 transition-colors ${
-        href ? "hover:border-[#E8A020]/60 cursor-pointer" : "opacity-70"
+      className={`bg-white rounded-2xl border border-border shadow-sm p-5 lg:p-6 h-full flex flex-col gap-2 transition-colors ${
+        href ? "hover:border-amber/60 cursor-pointer" : "opacity-70"
       }`}
     >
       <div className="flex items-center justify-between">
         <span className="text-[28px] leading-none">{icon}</span>
         {badge ? (
-          <span className="text-[10px] font-bold text-[#9C9485] bg-[#F4F1EC] px-2.5 py-0.5 rounded-full uppercase tracking-wide">
+          <span className="text-[10px] font-bold text-text3 bg-surface px-2.5 py-0.5 rounded-full uppercase tracking-wide">
             {badge}
           </span>
         ) : count != null ? (
-          <span className="text-[12px] font-semibold text-[#9C9485]">
-            <span className="text-[18px] font-bold text-[#16130C]">{count}</span>
+          <span className="text-[12px] font-semibold text-text3">
+            <span className="text-[18px] font-bold text-dark">{count}</span>
             {countLabel ? <span className="ml-1">{countLabel}</span> : null}
           </span>
         ) : null}
       </div>
-      <p className="font-display text-[18px] font-bold text-[#16130C] mt-2">{title}</p>
-      <p className="text-[13px] text-[#9C9485] leading-[1.5]">{description}</p>
+      <p className="font-display text-[18px] font-bold text-dark mt-2">{title}</p>
+      <p className="text-[13px] text-text3 leading-[1.5]">{description}</p>
     </div>
   );
 

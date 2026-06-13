@@ -246,7 +246,7 @@ export function PosTablesGrid({ initialTables, initialAreas = [] }: PosTablesGri
         <div className="flex items-center justify-between mb-3 gap-2">
           <h1 className="text-[20px] font-bold text-white">Tables</h1>
           <div className="flex items-center gap-3">
-            <p className="text-[11px] text-[#9C9485] hidden sm:block">
+            <p className="text-[11px] text-text3 hidden sm:block">
               Live · {sessions.length} occupied
             </p>
             {/* List / Floor toggle. Stays even with no tables so a fresh
@@ -258,7 +258,7 @@ export function PosTablesGrid({ initialTables, initialAreas = [] }: PosTablesGri
                 type="button"
                 onClick={() => persistView("list")}
                 className={`h-9 px-4 text-[12px] font-bold transition-colors ${
-                  view === "list" ? "bg-[#E8A020] text-[#16130C]" : "text-[#9C9485] hover:text-white"
+                  view === "list" ? "bg-amber text-dark" : "text-text3 hover:text-white"
                 }`}
               >
                 List
@@ -267,7 +267,7 @@ export function PosTablesGrid({ initialTables, initialAreas = [] }: PosTablesGri
                 type="button"
                 onClick={() => persistView("map")}
                 className={`h-9 px-4 text-[12px] font-bold transition-colors ${
-                  view === "map" ? "bg-[#E8A020] text-[#16130C]" : "text-[#9C9485] hover:text-white"
+                  view === "map" ? "bg-amber text-dark" : "text-text3 hover:text-white"
                 }`}
               >
                 Floor map
@@ -280,18 +280,18 @@ export function PosTablesGrid({ initialTables, initialAreas = [] }: PosTablesGri
         {view === "list" && initialTables.length > 0 && (
           <div className="mb-3 space-y-2">
             <div className="flex items-center gap-2 rounded-2xl border border-[#2A2520] bg-[#1A170F] px-3 py-2">
-              <Search className="w-4 h-4 text-[#9C9485] shrink-0" />
+              <Search className="w-4 h-4 text-text3 shrink-0" />
               <input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search by table number…"
-                className="flex-1 bg-transparent outline-none text-[14px] text-white placeholder:text-[#5E5848]"
+                className="flex-1 bg-transparent outline-none text-[14px] text-white placeholder:text-text2"
               />
               {search && (
                 <button
                   type="button"
                   onClick={() => setSearch("")}
-                  className="text-[#9C9485] hover:text-white"
+                  className="text-text3 hover:text-white"
                   aria-label="Clear search"
                 >
                   <X className="w-4 h-4" />
@@ -312,8 +312,8 @@ export function PosTablesGrid({ initialTables, initialAreas = [] }: PosTablesGri
                     onClick={() => setStatusFilter(f)}
                     className={`shrink-0 h-9 px-3 rounded-full text-[12px] font-semibold transition-colors capitalize ${
                       statusFilter === f
-                        ? "bg-[#E8A020] text-[#16130C]"
-                        : "bg-[#252019] text-[#F4F1EC] hover:bg-[#3A342B]"
+                        ? "bg-amber text-dark"
+                        : "bg-[#252019] text-surface hover:bg-[#3A342B]"
                     }`}
                   >
                     {f} <span className="opacity-60">{count}</span>
@@ -326,7 +326,7 @@ export function PosTablesGrid({ initialTables, initialAreas = [] }: PosTablesGri
 
         {initialTables.length === 0 ? (
           <div className="rounded-2xl border border-[#2A2520] bg-[#1A170F] p-8 text-center">
-            <p className="text-[14px] text-[#9C9485]">
+            <p className="text-[14px] text-text3">
               No tables registered yet. Ask the owner to add tables in the dashboard.
             </p>
           </div>
@@ -346,7 +346,7 @@ export function PosTablesGrid({ initialTables, initialAreas = [] }: PosTablesGri
           />
         ) : filteredTables.length === 0 ? (
           <div className="rounded-2xl border border-[#2A2520] bg-[#1A170F] p-8 text-center">
-            <p className="text-[14px] text-[#9C9485]">No tables match the current filter.</p>
+            <p className="text-[14px] text-text3">No tables match the current filter.</p>
           </div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
@@ -412,7 +412,7 @@ function TableCard({
   const status = session?.status ?? "available";
 
   const borderCls =
-    status === "open"     ? "border-[#E8A020]" :
+    status === "open"     ? "border-amber" :
     status === "billed"   ? "border-[#5BA1FF]" :
                             "border-[#3A342B]";
   const bgCls =
@@ -420,9 +420,9 @@ function TableCard({
     status === "billed"   ? "bg-[#192034]" :
                             "bg-[#1A170F]";
   const labelCls =
-    status === "open"     ? "text-[#E8A020]" :
+    status === "open"     ? "text-amber" :
     status === "billed"   ? "text-[#5BA1FF]" :
-                            "text-[#9C9485]";
+                            "text-text3";
   const label =
     status === "open"     ? "Occupied" :
     status === "billed"   ? "Billed" :
@@ -451,24 +451,24 @@ function TableCard({
 
         {session ? (
           <div className="space-y-1 mt-2 flex-1">
-            <div className="flex items-center gap-2 text-[12px] text-[#F4F1EC]">
-              <Users className="w-3.5 h-3.5 text-[#9C9485]" />
+            <div className="flex items-center gap-2 text-[12px] text-surface">
+              <Users className="w-3.5 h-3.5 text-text3" />
               <span>×{session.covers}</span>
-              <span className="text-[#9C9485]">·</span>
-              <Clock className="w-3.5 h-3.5 text-[#9C9485]" />
+              <span className="text-text3">·</span>
+              <Clock className="w-3.5 h-3.5 text-text3" />
               <span>{formatMins(session.open_duration_minutes)}</span>
             </div>
             <p className="text-[15px] font-bold text-white">
               {formatKes(session.total_kes || session.subtotal_kes)}
             </p>
             {session.opened_by_staff && (
-              <p className="text-[11px] text-[#9C9485] truncate">
+              <p className="text-[11px] text-text3 truncate">
                 {session.opened_by_staff.name}
               </p>
             )}
           </div>
         ) : (
-          <div className="mt-2 text-[12px] text-[#5E5848]">
+          <div className="mt-2 text-[12px] text-text2">
             Cap. {table.capacity}
           </div>
         )}
@@ -515,11 +515,11 @@ function OpenTableModal({
   return (
     <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-4">
       <div className="w-full max-w-[380px] rounded-3xl bg-[#1A170F] border border-[#2A2520] p-5">
-        <p className="text-[12px] uppercase tracking-wide text-[#9C9485]">Open table</p>
+        <p className="text-[12px] uppercase tracking-wide text-text3">Open table</p>
         <h2 className="mt-1 text-[26px] font-bold text-white">Table {table.table_number}</h2>
 
         <div className="mt-5">
-          <p className="text-[12px] uppercase tracking-wide text-[#9C9485] mb-2">Covers</p>
+          <p className="text-[12px] uppercase tracking-wide text-text3 mb-2">Covers</p>
           <div className="flex items-center gap-3">
             <button
               type="button"
@@ -546,7 +546,7 @@ function OpenTableModal({
             type="button"
             onClick={onCancel}
             disabled={submitting}
-            className="h-12 rounded-full bg-[#252019] text-[#F4F1EC] text-[13px] font-semibold disabled:opacity-40"
+            className="h-12 rounded-full bg-[#252019] text-surface text-[13px] font-semibold disabled:opacity-40"
           >
             Cancel
           </button>
@@ -554,7 +554,7 @@ function OpenTableModal({
             type="button"
             onClick={() => onConfirm(covers)}
             disabled={submitting}
-            className="h-12 rounded-full bg-[#E8A020] text-[#16130C] text-[13px] font-bold disabled:opacity-40"
+            className="h-12 rounded-full bg-amber text-dark text-[13px] font-bold disabled:opacity-40"
           >
             {submitting ? "Opening…" : "Open table"}
           </button>

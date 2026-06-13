@@ -100,7 +100,7 @@ export default async function PosLayout({ params, children }: LayoutProps) {
   const version = sections ? computeMenuVersion(sections) : null;
 
   return (
-    <div className="min-h-screen bg-[#0F0D08] text-[#F4F1EC] antialiased select-none">
+    <div className="min-h-screen bg-[#0F0D08] text-surface antialiased select-none">
       <PosShellProvider
         menu={{ id: menu.id, slug: menu.slug, name: menu.name }}
         staff={staff}

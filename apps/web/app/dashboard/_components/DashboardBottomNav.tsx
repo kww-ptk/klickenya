@@ -62,7 +62,7 @@ export function DashboardBottomNav({ enquiryCount = 0 }: { enquiryCount?: number
   const pathname = usePathname();
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 lg:hidden bg-[#16130C] border-t border-white/10 pb-[env(safe-area-inset-bottom)]">
+    <nav className="fixed bottom-0 left-0 right-0 z-40 lg:hidden bg-dark border-t border-white/10 pb-[env(safe-area-inset-bottom)]">
       <div className="flex items-center justify-around px-2 py-1.5">
         {TABS.map((tab) => {
           const isActive = tab.href === "/dashboard"
@@ -75,17 +75,17 @@ export function DashboardBottomNav({ enquiryCount = 0 }: { enquiryCount?: number
               href={tab.href}
               className={cn(
                 "relative flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl min-w-[56px] transition-colors",
-                isActive && "bg-[#E8A020]/15"
+                isActive && "bg-amber/15"
               )}
             >
-              <span className={cn("size-5", isActive ? "text-[#E8A020]" : "text-white/50")}>
+              <span className={cn("size-5", isActive ? "text-amber" : "text-white/50")}>
                 {tab.icon}
               </span>
-              <span className={cn("text-[10px] font-semibold", isActive ? "text-[#E8A020]" : "text-white/50")}>
+              <span className={cn("text-[10px] font-semibold", isActive ? "text-amber" : "text-white/50")}>
                 {tab.label}
               </span>
               {tab.href === "/dashboard/enquiries" && enquiryCount > 0 && (
-                <span className="absolute top-0.5 right-1 min-w-[16px] h-4 px-1 rounded-full bg-[#E8A020] text-[#16130C] text-[9px] font-bold flex items-center justify-center">
+                <span className="absolute top-0.5 right-1 min-w-[16px] h-4 px-1 rounded-full bg-amber text-dark text-[9px] font-bold flex items-center justify-center">
                   {enquiryCount > 99 ? "99+" : enquiryCount}
                 </span>
               )}

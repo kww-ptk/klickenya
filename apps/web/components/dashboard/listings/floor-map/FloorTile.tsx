@@ -42,16 +42,16 @@ function tileSizePx(capacity: number): number {
 //            look consistent.
 
 const STATE_CLS_LIGHT: Record<TileState, string> = {
-  available:     "border-[#E2DDD5] bg-white text-[#5E5848]",
-  reserved_soon: "border-[#E8A020] bg-white text-[#16130C]",
-  occupied:      "border-[#E8A020] bg-[#FCF4E5] text-[#16130C]",
+  available:     "border-border bg-white text-text2",
+  reserved_soon: "border-amber bg-white text-dark",
+  occupied:      "border-amber bg-[#FCF4E5] text-dark",
   billed:        "border-sky-400 bg-sky-50 text-sky-900",
 };
 
 const STATE_CLS_DARK: Record<TileState, string> = {
-  available:     "border-[#3A342B] bg-[#1A170F] text-[#9C9485]",
-  reserved_soon: "border-[#E8A020] bg-[#1A170F] text-[#E8A020]",
-  occupied:      "border-[#E8A020] bg-[#231D12] text-[#E8A020]",
+  available:     "border-[#3A342B] bg-[#1A170F] text-text3",
+  reserved_soon: "border-amber bg-[#1A170F] text-amber",
+  occupied:      "border-amber bg-[#231D12] text-amber",
   billed:        "border-[#5BA1FF] bg-[#192034] text-sky-300",
 };
 
@@ -110,7 +110,7 @@ export function FloorTile({ table, canvasRef, mode, theme = "light", onMove, onC
         // Mode polish: in edit mode add a subtle reposition cursor; in live
         // mode show the click affordance.
         mode === "edit"
-          ? "cursor-grab active:cursor-grabbing hover:shadow-md hover:border-[#E8A020]/60"
+          ? "cursor-grab active:cursor-grabbing hover:shadow-md hover:border-amber/60"
           : "cursor-pointer hover:shadow-md hover:scale-[1.03] transition-transform",
       ].join(" ")}
       style={{

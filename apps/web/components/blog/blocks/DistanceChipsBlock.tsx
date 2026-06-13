@@ -2,13 +2,13 @@ interface DistChip { icon?: 'pin' | 'clock'; text?: string }
 interface DistanceChipsValue { chips?: DistChip[] }
 
 const PinIcon = () => (
-  <svg className="w-[13px] h-[13px] shrink-0 text-[#8B4DAB]" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2">
+  <svg className="w-[13px] h-[13px] shrink-0 text-purple2" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2">
     <path d="M8 1.5A4.5 4.5 0 003.5 6c0 3 4.5 8.5 4.5 8.5S12.5 9 12.5 6A4.5 4.5 0 008 1.5z"/>
     <circle cx="8" cy="6" r="1.5"/>
   </svg>
 )
 const ClockIcon = () => (
-  <svg className="w-[13px] h-[13px] shrink-0 text-[#8B4DAB]" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2">
+  <svg className="w-[13px] h-[13px] shrink-0 text-purple2" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2">
     <circle cx="8" cy="8" r="6"/><path d="M8 5v3l2 2"/>
   </svg>
 )

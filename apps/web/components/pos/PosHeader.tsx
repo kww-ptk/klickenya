@@ -33,11 +33,11 @@ export function PosHeader() {
   return (
     <header className="sticky top-0 z-30 bg-[#0F0D08]/95 backdrop-blur border-b border-[#2A2520]">
       <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-2">
-        <p className="text-[12px] text-[#9C9485] truncate flex-1 min-w-0">{menu.name}</p>
+        <p className="text-[12px] text-text3 truncate flex-1 min-w-0">{menu.name}</p>
         {staff && (
           <div className="flex items-center gap-2 shrink-0">
             <span className="text-[14px] font-semibold text-white">{staff.name}</span>
-            <span className="px-2 py-0.5 rounded-full text-[10px] uppercase tracking-wide bg-[#2A2520] text-[#9C9485]">
+            <span className="px-2 py-0.5 rounded-full text-[10px] uppercase tracking-wide bg-[#2A2520] text-text3">
               {staff.role}
             </span>
           </div>
@@ -48,7 +48,7 @@ export function PosHeader() {
             type="button"
             onClick={handleSwitch}
             disabled={signingOut}
-            className="shrink-0 h-10 px-3 rounded-full text-[12px] font-semibold bg-[#252019] text-[#F4F1EC] hover:bg-[#3A342B] disabled:opacity-50 flex items-center gap-1.5"
+            className="shrink-0 h-10 px-3 rounded-full text-[12px] font-semibold bg-[#252019] text-surface hover:bg-[#3A342B] disabled:opacity-50 flex items-center gap-1.5"
             aria-label="Switch staff"
           >
             <LogOut className="w-4 h-4" />

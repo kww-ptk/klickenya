@@ -49,7 +49,7 @@ export function DeleteButton({ table, id, label, size = "sm" }: DeleteButtonProp
         </button>
         <button
           onClick={() => setConfirming(false)}
-          className="px-2.5 py-1 text-[11px] font-semibold text-[#5E5848] bg-[#F4F1EC] rounded-md hover:bg-[#E2DDD5] transition-colors"
+          className="px-2.5 py-1 text-[11px] font-semibold text-text2 bg-surface rounded-md hover:bg-border transition-colors"
         >
           Cancel
         </button>
@@ -60,7 +60,7 @@ export function DeleteButton({ table, id, label, size = "sm" }: DeleteButtonProp
   return (
     <button
       onClick={() => setConfirming(true)}
-      className={`inline-flex items-center gap-1 text-[#9C9485] hover:text-red-500 transition-colors ${
+      className={`inline-flex items-center gap-1 text-text3 hover:text-red-500 transition-colors ${
         size === "sm" ? "text-[11px]" : "text-[13px]"
       }`}
       title={label ?? "Delete"}

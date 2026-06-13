@@ -141,8 +141,8 @@ export default async function AdminGuestsPage({
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-[22px] font-display font-bold text-[#16130C]">Guests</h1>
-          <p className="text-[14px] text-[#9C9485] mt-1">
+          <h1 className="text-[22px] font-display font-bold text-dark">Guests</h1>
+          <p className="text-[14px] text-text3 mt-1">
             {totalCount} registered guest{totalCount !== 1 ? "s" : ""} with activity
           </p>
         </div>
@@ -152,7 +152,7 @@ export default async function AdminGuestsPage({
         {/* Search */}
         <div className="px-6 pt-5 pb-4">
           <form action="/admin/guests" method="get" className="relative max-w-xs">
-            <svg className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-[#9C9485]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <svg className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-text3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
             </svg>
             <input
@@ -160,7 +160,7 @@ export default async function AdminGuestsPage({
               name="q"
               defaultValue={q}
               placeholder="Search name or email..."
-              className="w-full pl-10 pr-4 py-2 text-[13px] rounded-lg border border-[#F0EDE8] bg-[#F7F5F2] text-[#16130C] placeholder:text-[#9C9485] focus:outline-none focus:ring-2 focus:ring-[#E8A020]/30 focus:border-[#E8A020]"
+              className="w-full pl-10 pr-4 py-2 text-[13px] rounded-lg border border-[#F0EDE8] bg-[#F7F5F2] text-dark placeholder:text-text3 focus:outline-none focus:ring-2 focus:ring-amber/30 focus:border-amber"
             />
           </form>
         </div>
@@ -170,19 +170,19 @@ export default async function AdminGuestsPage({
           <table className="w-full text-[13px]">
             <thead>
               <tr className="border-b border-[#F0EDE8]">
-                <th className="text-left px-6 py-3 text-[11px] uppercase text-[#9C9485] tracking-wider font-medium">Guest</th>
-                <th className="text-right px-6 py-3 text-[11px] uppercase text-[#9C9485] tracking-wider font-medium">Bookings</th>
-                <th className="text-right px-6 py-3 text-[11px] uppercase text-[#9C9485] tracking-wider font-medium">Enquiries</th>
-                <th className="text-right px-6 py-3 text-[11px] uppercase text-[#9C9485] tracking-wider font-medium">Total spend</th>
-                <th className="text-left px-6 py-3 text-[11px] uppercase text-[#9C9485] tracking-wider font-medium">Last activity</th>
-                <th className="text-left px-6 py-3 text-[11px] uppercase text-[#9C9485] tracking-wider font-medium">Joined</th>
+                <th className="text-left px-6 py-3 text-[11px] uppercase text-text3 tracking-wider font-medium">Guest</th>
+                <th className="text-right px-6 py-3 text-[11px] uppercase text-text3 tracking-wider font-medium">Bookings</th>
+                <th className="text-right px-6 py-3 text-[11px] uppercase text-text3 tracking-wider font-medium">Enquiries</th>
+                <th className="text-right px-6 py-3 text-[11px] uppercase text-text3 tracking-wider font-medium">Total spend</th>
+                <th className="text-left px-6 py-3 text-[11px] uppercase text-text3 tracking-wider font-medium">Last activity</th>
+                <th className="text-left px-6 py-3 text-[11px] uppercase text-text3 tracking-wider font-medium">Joined</th>
                 <th className="text-right px-6 py-3"></th>
               </tr>
             </thead>
             <tbody>
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-16 text-center text-[14px] text-[#9C9485]">
+                  <td colSpan={7} className="px-6 py-16 text-center text-[14px] text-text3">
                     No guests found.
                   </td>
                 </tr>
@@ -190,24 +190,24 @@ export default async function AdminGuestsPage({
                 filtered.map((g) => (
                   <tr key={g.id} className="border-b border-[#F0EDE8] hover:bg-[#F7F5F2] transition-colors">
                     <td className="px-6 py-3.5">
-                      <p className="font-medium text-[#16130C]">{g.name}</p>
-                      {g.email && <p className="text-[12px] text-[#9C9485]">{g.email}</p>}
+                      <p className="font-medium text-dark">{g.name}</p>
+                      {g.email && <p className="text-[12px] text-text3">{g.email}</p>}
                     </td>
-                    <td className="px-6 py-3.5 text-right text-[#16130C] font-medium">{g.bookingCount}</td>
-                    <td className="px-6 py-3.5 text-right text-[#9C9485]">{g.enquiryCount}</td>
-                    <td className="px-6 py-3.5 text-right font-medium text-[#16130C] whitespace-nowrap">
+                    <td className="px-6 py-3.5 text-right text-dark font-medium">{g.bookingCount}</td>
+                    <td className="px-6 py-3.5 text-right text-text3">{g.enquiryCount}</td>
+                    <td className="px-6 py-3.5 text-right font-medium text-dark whitespace-nowrap">
                       {g.totalSpend > 0 ? fmt(g.totalSpend) : "—"}
                     </td>
-                    <td className="px-6 py-3.5 text-[#9C9485] whitespace-nowrap">
+                    <td className="px-6 py-3.5 text-text3 whitespace-nowrap">
                       {formatDate(g.lastActivity)}
                     </td>
-                    <td className="px-6 py-3.5 text-[#9C9485] whitespace-nowrap">
+                    <td className="px-6 py-3.5 text-text3 whitespace-nowrap">
                       {g.createdAt ? formatDate(g.createdAt) : "—"}
                     </td>
                     <td className="px-6 py-3.5 text-right">
                       <Link
                         href={`/admin/guests/${g.id}`}
-                        className="text-[13px] font-medium text-[#E8A020] hover:text-[#C78A1A] transition-colors"
+                        className="text-[13px] font-medium text-amber hover:text-[#C78A1A] transition-colors"
                       >
                         View
                       </Link>
@@ -222,23 +222,23 @@ export default async function AdminGuestsPage({
         {/* Pagination */}
         {totalCount > PER_PAGE && (
           <div className="flex items-center justify-between px-6 py-4 border-t border-[#F0EDE8]">
-            <p className="text-[13px] text-[#9C9485]">
+            <p className="text-[13px] text-text3">
               Showing {offset + 1}–{Math.min(offset + PER_PAGE, totalCount)} of {totalCount}
             </p>
             <div className="flex gap-2">
               {page > 1 ? (
-                <Link href={buildUrl({ page: String(page - 1) })} className="px-3 py-1.5 text-[13px] font-medium rounded-lg border border-[#F0EDE8] text-[#16130C] hover:bg-[#F7F5F2] transition-colors">
+                <Link href={buildUrl({ page: String(page - 1) })} className="px-3 py-1.5 text-[13px] font-medium rounded-lg border border-[#F0EDE8] text-dark hover:bg-[#F7F5F2] transition-colors">
                   Previous
                 </Link>
               ) : (
-                <span className="px-3 py-1.5 text-[13px] font-medium rounded-lg border border-[#F0EDE8] text-[#9C9485] opacity-50 cursor-not-allowed">Previous</span>
+                <span className="px-3 py-1.5 text-[13px] font-medium rounded-lg border border-[#F0EDE8] text-text3 opacity-50 cursor-not-allowed">Previous</span>
               )}
               {page < totalPages ? (
-                <Link href={buildUrl({ page: String(page + 1) })} className="px-3 py-1.5 text-[13px] font-medium rounded-lg border border-[#F0EDE8] text-[#16130C] hover:bg-[#F7F5F2] transition-colors">
+                <Link href={buildUrl({ page: String(page + 1) })} className="px-3 py-1.5 text-[13px] font-medium rounded-lg border border-[#F0EDE8] text-dark hover:bg-[#F7F5F2] transition-colors">
                   Next
                 </Link>
               ) : (
-                <span className="px-3 py-1.5 text-[13px] font-medium rounded-lg border border-[#F0EDE8] text-[#9C9485] opacity-50 cursor-not-allowed">Next</span>
+                <span className="px-3 py-1.5 text-[13px] font-medium rounded-lg border border-[#F0EDE8] text-text3 opacity-50 cursor-not-allowed">Next</span>
               )}
             </div>
           </div>

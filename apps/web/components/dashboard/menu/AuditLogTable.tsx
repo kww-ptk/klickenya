@@ -24,7 +24,7 @@ const ACTION_LABEL: Record<string, string> = {
 };
 
 const ACTION_COLOR: Record<string, string> = {
-  discount_above_threshold: "bg-[#E8A020]/15 text-[#E8A020]",
+  discount_above_threshold: "bg-amber/15 text-amber",
   void_session:             "bg-rose-100 text-rose-700",
   void_order_after_send:    "bg-rose-100 text-rose-700",
   void_order_item:          "bg-rose-100 text-rose-700",
@@ -72,9 +72,9 @@ function formatMetadata(action: string, metadata: Record<string, unknown> | null
 export function AuditLogTable({ rows }: { rows: AuditRow[] }) {
   if (rows.length === 0) {
     return (
-      <div className="bg-white rounded-xl border border-[#E2DDD5] p-8 text-center">
-        <p className="text-[14px] font-bold text-[#16130C]">No restricted actions in this period</p>
-        <p className="text-[12px] text-[#9C9485] mt-1">
+      <div className="bg-white rounded-xl border border-border p-8 text-center">
+        <p className="text-[14px] font-bold text-dark">No restricted actions in this period</p>
+        <p className="text-[12px] text-text3 mt-1">
           When a waiter takes an action that needs a manager override, it shows up here.
         </p>
       </div>
@@ -82,9 +82,9 @@ export function AuditLogTable({ rows }: { rows: AuditRow[] }) {
   }
 
   return (
-    <div className="bg-white rounded-xl border border-[#E2DDD5] overflow-hidden">
+    <div className="bg-white rounded-xl border border-border overflow-hidden">
       {/* Mobile: stacked cards */}
-      <ul className="md:hidden divide-y divide-[#E2DDD5]">
+      <ul className="md:hidden divide-y divide-border">
         {rows.map((row) => {
           const meta = formatMetadata(row.action, row.metadata);
           return (
@@ -92,20 +92,20 @@ export function AuditLogTable({ rows }: { rows: AuditRow[] }) {
               <div className="flex items-baseline justify-between gap-2 mb-1">
                 <span
                   className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide ${
-                    ACTION_COLOR[row.action] ?? "bg-[#F4F1EC] text-[#9C9485]"
+                    ACTION_COLOR[row.action] ?? "bg-surface text-text3"
                   }`}
                 >
                   {ACTION_LABEL[row.action] ?? row.action}
                 </span>
-                <span className="text-[11px] text-[#9C9485]">{formatNairobi(row.created_at)}</span>
+                <span className="text-[11px] text-text3">{formatNairobi(row.created_at)}</span>
               </div>
-              <p className="text-[13px] text-[#16130C]">
+              <p className="text-[13px] text-dark">
                 <span className="font-semibold">{row.acting_staff_name ?? "—"}</span>
                 {row.approving_staff_name && row.approving_staff_name !== row.acting_staff_name && (
-                  <span className="text-[#9C9485]"> · approved by {row.approving_staff_name}</span>
+                  <span className="text-text3"> · approved by {row.approving_staff_name}</span>
                 )}
               </p>
-              {meta && <p className="text-[12px] text-[#5E5848] mt-0.5">{meta}</p>}
+              {meta && <p className="text-[12px] text-text2 mt-0.5">{meta}</p>}
               {row.reason && (
                 <p className="text-[12px] text-[#3D3A32] mt-1 italic">&ldquo;{row.reason}&rdquo;</p>
               )}
@@ -116,7 +116,7 @@ export function AuditLogTable({ rows }: { rows: AuditRow[] }) {
 
       {/* Desktop: table */}
       <table className="hidden md:table w-full text-[13px]">
-        <thead className="bg-[#F4F1EC] text-[11px] uppercase tracking-wide text-[#5E5848]">
+        <thead className="bg-surface text-[11px] uppercase tracking-wide text-text2">
           <tr>
             <th className="text-left px-4 py-2">When</th>
             <th className="text-left px-4 py-2">Action</th>
@@ -126,30 +126,30 @@ export function AuditLogTable({ rows }: { rows: AuditRow[] }) {
             <th className="text-left px-4 py-2">Reason</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-[#F4F1EC]">
+        <tbody className="divide-y divide-surface">
           {rows.map((row) => {
             const meta = formatMetadata(row.action, row.metadata);
             return (
               <tr key={row.id}>
-                <td className="px-4 py-3 text-[#5E5848] whitespace-nowrap">
+                <td className="px-4 py-3 text-text2 whitespace-nowrap">
                   {formatNairobi(row.created_at)}
                 </td>
                 <td className="px-4 py-3">
                   <span
                     className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide whitespace-nowrap ${
-                      ACTION_COLOR[row.action] ?? "bg-[#F4F1EC] text-[#9C9485]"
+                      ACTION_COLOR[row.action] ?? "bg-surface text-text3"
                     }`}
                   >
                     {ACTION_LABEL[row.action] ?? row.action}
                   </span>
                 </td>
-                <td className="px-4 py-3 text-[#16130C] font-semibold">
+                <td className="px-4 py-3 text-dark font-semibold">
                   {row.acting_staff_name ?? "—"}
                 </td>
-                <td className="px-4 py-3 text-[#5E5848]">
+                <td className="px-4 py-3 text-text2">
                   {row.approving_staff_name ?? "—"}
                 </td>
-                <td className="px-4 py-3 text-[#5E5848]">{meta ?? "—"}</td>
+                <td className="px-4 py-3 text-text2">{meta ?? "—"}</td>
                 <td className="px-4 py-3 text-[#3D3A32] italic max-w-[280px] truncate" title={row.reason ?? undefined}>
                   {row.reason ?? "—"}
                 </td>

@@ -108,7 +108,7 @@ export default async function AdminEventDetailPage({ params }: PageProps) {
 
       {/* Cover image */}
       {sanityEvent?.coverPhotoUrl && (
-        <div className="rounded-xl overflow-hidden border border-[#E2DDD5] mb-8 relative h-[240px]">
+        <div className="rounded-xl overflow-hidden border border-border mb-8 relative h-[240px]">
           <Image
             src={sanityEvent.coverPhotoUrl + "?w=800&h=400&fit=crop&auto=format&q=80"}
             alt={ev.title}
@@ -119,7 +119,7 @@ export default async function AdminEventDetailPage({ params }: PageProps) {
       )}
 
       {/* Event details */}
-      <div className="rounded-xl border border-[#E2DDD5] bg-white p-6 mb-6 space-y-3">
+      <div className="rounded-xl border border-border bg-white p-6 mb-6 space-y-3">
         <h3 className="text-[16px] font-bold text-text mb-3">Event Details</h3>
         <Row label="Title" value={sanityEvent?.title ?? ev.title} />
         <Row label="Category" value={sanityEvent?.subcategory?.replace(/_/g, " ") ?? "—"} />
@@ -129,7 +129,7 @@ export default async function AdminEventDetailPage({ params }: PageProps) {
       </div>
 
       {/* Host info */}
-      <div className="rounded-xl border border-[#E2DDD5] bg-white p-6 mb-6 space-y-3">
+      <div className="rounded-xl border border-border bg-white p-6 mb-6 space-y-3">
         <h3 className="text-[16px] font-bold text-text mb-3">Host Info</h3>
         <Row label="Name" value={hostProfile?.display_name ?? "Unknown"} />
         <Row label="Email" value={hostUser?.email ?? "Unknown"} />

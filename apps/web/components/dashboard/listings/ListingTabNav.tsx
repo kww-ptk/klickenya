@@ -47,8 +47,8 @@ export function ListingTabNav({ listingId, tabs, overviewHref: overviewHrefProp 
               shrink-0 flex items-center gap-1.5 h-[34px] px-4 rounded-full text-[13px] font-semibold
               transition-colors whitespace-nowrap
               ${active
-                ? "bg-[#16130C] text-white"
-                : "bg-white border border-[#E2DDD5] text-[#5E5848] hover:border-[#9C9485] hover:text-[#16130C]"
+                ? "bg-dark text-white"
+                : "bg-white border border-border text-text2 hover:border-text3 hover:text-dark"
               }
             `}
           >
@@ -57,7 +57,7 @@ export function ListingTabNav({ listingId, tabs, overviewHref: overviewHrefProp 
               <span className={`
                 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1
                 rounded-full text-[10px] font-bold
-                ${active ? "bg-white/20 text-white" : "bg-[#E8A020]/15 text-[#E8A020]"}
+                ${active ? "bg-white/20 text-white" : "bg-amber/15 text-amber"}
               `}>
                 {tab.badge}
               </span>

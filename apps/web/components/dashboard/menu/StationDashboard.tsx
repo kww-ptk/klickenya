@@ -115,8 +115,8 @@ function elapsed(createdAt: string): string {
 /* ── Status → next action ──────────────────────────── */
 
 const STATUS_NEXT: Record<StationStatus, { label: string; next: string; color: string }> = {
-  new:       { label: "Start preparing", next: "preparing", color: "bg-[#E8A020] text-[#16130C] hover:bg-[#d4911c]" },
-  preparing: { label: "Mark ready",      next: "ready",     color: "bg-[#6B2D8B] text-white hover:bg-[#5a2476]" },
+  new:       { label: "Start preparing", next: "preparing", color: "bg-amber text-dark hover:bg-[#d4911c]" },
+  preparing: { label: "Mark ready",      next: "ready",     color: "bg-purple text-white hover:bg-[#5a2476]" },
   ready:     { label: "Done",            next: "delivered", color: "bg-emerald-600 text-white hover:bg-emerald-700" },
 };
 
@@ -143,34 +143,34 @@ function OrderCard({ order, items, status, isNew, updating, onAdvance, onCancel,
     <div
       className={`rounded-xl border-2 bg-white p-4 shadow-sm transition-all duration-300 ${
         isNew
-          ? "border-[#E8A020] animate-pulse-border"
+          ? "border-amber animate-pulse-border"
           : status === "new"
-          ? "border-[#E8A020]/40"
+          ? "border-amber/40"
           : status === "preparing"
-          ? "border-[#6B2D8B]/30"
+          ? "border-purple/30"
           : "border-emerald-300"
       }`}
     >
       {/* Table number + status badge */}
       <div className="flex items-start justify-between mb-3">
         <div>
-          <p className="text-[11px] font-bold text-[#9C9485] uppercase tracking-widest mb-0.5">Table</p>
-          <p className="font-display text-[36px] font-extrabold text-[#16130C] leading-none tracking-tight">
+          <p className="text-[11px] font-bold text-text3 uppercase tracking-widest mb-0.5">Table</p>
+          <p className="font-display text-[36px] font-extrabold text-dark leading-none tracking-tight">
             {order.table_number ?? "—"}
           </p>
           {order.customer_name && (
-            <p className="text-[13px] text-[#5E5848] mt-0.5">{order.customer_name}</p>
+            <p className="text-[13px] text-text2 mt-0.5">{order.customer_name}</p>
           )}
           {order.waiter_name && (
-            <p className="text-[11px] text-[#9C9485] mt-0.5">via {order.waiter_name}</p>
+            <p className="text-[11px] text-text3 mt-0.5">via {order.waiter_name}</p>
           )}
         </div>
         <span
           className={`text-[11px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wide ${
             status === "new"
-              ? "bg-[#E8A020]/15 text-[#E8A020]"
+              ? "bg-amber/15 text-amber"
               : status === "preparing"
-              ? "bg-[#6B2D8B]/12 text-[#6B2D8B]"
+              ? "bg-purple/12 text-purple"
               : "bg-emerald-100 text-emerald-700"
           }`}
         >
@@ -180,11 +180,11 @@ function OrderCard({ order, items, status, isNew, updating, onAdvance, onCancel,
 
       {/* Order-level note from the guest */}
       {order.notes && (
-        <div className="mb-3 rounded-lg border border-[#E8A020]/40 bg-[#E8A020]/8 px-3 py-2">
-          <p className="text-[10px] font-bold text-[#E8A020] uppercase tracking-wide mb-0.5">
+        <div className="mb-3 rounded-lg border border-amber/40 bg-amber/8 px-3 py-2">
+          <p className="text-[10px] font-bold text-amber uppercase tracking-wide mb-0.5">
             Note from guest
           </p>
-          <p className="text-[12px] text-[#16130C] leading-snug whitespace-pre-wrap">
+          <p className="text-[12px] text-dark leading-snug whitespace-pre-wrap">
             {order.notes}
           </p>
         </div>
@@ -198,14 +198,14 @@ function OrderCard({ order, items, status, isNew, updating, onAdvance, onCancel,
             <div key={item.id}>
               {/* Qty · Name · Line total */}
               <div className="flex items-baseline gap-2">
-                <span className="text-[13px] font-bold text-[#16130C] shrink-0 w-[20px] text-right tabular-nums">
+                <span className="text-[13px] font-bold text-dark shrink-0 w-[20px] text-right tabular-nums">
                   {item.quantity}×
                 </span>
-                <span className="flex-1 text-[13px] font-semibold text-[#16130C] leading-snug">
+                <span className="flex-1 text-[13px] font-semibold text-dark leading-snug">
                   {item.item_name}
                 </span>
                 {item.line_total != null && (
-                  <span className="text-[12px] font-bold text-[#16130C] shrink-0 tabular-nums">
+                  <span className="text-[12px] font-bold text-dark shrink-0 tabular-nums">
                     KSh {item.line_total.toLocaleString("en-KE")}
                   </span>
                 )}
@@ -254,14 +254,14 @@ function OrderCard({ order, items, status, isNew, updating, onAdvance, onCancel,
 
               {/* Special instructions (amber) */}
               {notesPart && (
-                <p className="ml-[28px] mt-1 text-[12px] text-[#E8A020] font-medium">
+                <p className="ml-[28px] mt-1 text-[12px] text-amber font-medium">
                   ⚑ {notesPart}
                 </p>
               )}
 
               {/* Legacy notes field */}
               {item.notes && (
-                <p className="ml-[28px] text-[12px] text-[#9C9485] italic">{item.notes}</p>
+                <p className="ml-[28px] text-[12px] text-text3 italic">{item.notes}</p>
               )}
             </div>
           );
@@ -270,24 +270,24 @@ function OrderCard({ order, items, status, isNew, updating, onAdvance, onCancel,
 
       {/* Sub-total for the items shown on this card */}
       {showLineTotals && (
-        <div className="flex items-center justify-between pt-2 border-t border-[#F4F1EC] mb-3">
-          <span className="text-[12px] font-semibold text-[#5E5848]">Subtotal</span>
-          <span className="text-[13px] font-bold text-[#16130C] tabular-nums">
+        <div className="flex items-center justify-between pt-2 border-t border-surface mb-3">
+          <span className="text-[12px] font-semibold text-text2">Subtotal</span>
+          <span className="text-[13px] font-bold text-dark tabular-nums">
             KSh {lineTotalSum.toLocaleString("en-KE")}
           </span>
         </div>
       )}
 
       {/* Footer: elapsed + actions */}
-      <div className="flex items-center justify-between gap-2 pt-3 border-t border-[#F4F1EC]">
-        <span className="text-[12px] text-[#9C9485]" suppressHydrationWarning>
+      <div className="flex items-center justify-between gap-2 pt-3 border-t border-surface">
+        <span className="text-[12px] text-text3" suppressHydrationWarning>
           {tick >= 0 ? elapsed(order.created_at) : ""}
         </span>
         <div className="flex items-center gap-2">
           <button
             onClick={() => onCancel(order.id, order.table_number, shortId)}
             disabled={updating}
-            className="text-[11px] font-semibold text-[#9C9485] hover:text-[#DC2626] border border-[#E2DDD5] hover:border-[#DC2626]/40 px-3 h-[30px] rounded-full transition-colors disabled:opacity-50"
+            className="text-[11px] font-semibold text-text3 hover:text-[#DC2626] border border-border hover:border-[#DC2626]/40 px-3 h-[30px] rounded-full transition-colors disabled:opacity-50"
           >
             Cancel
           </button>
@@ -320,7 +320,7 @@ function Column({ title, count, colorClass, emptyText, children }: ColumnProps) 
   return (
     <div className="flex-1 min-w-0">
       <div className="flex items-center gap-2 mb-3 px-1">
-        <h2 className="text-[14px] font-bold text-[#16130C] uppercase tracking-wide">{title}</h2>
+        <h2 className="text-[14px] font-bold text-dark uppercase tracking-wide">{title}</h2>
         {count > 0 && (
           <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${colorClass}`}>
             {count}
@@ -329,7 +329,7 @@ function Column({ title, count, colorClass, emptyText, children }: ColumnProps) 
       </div>
       <div className="space-y-3">
         {count === 0 ? (
-          <p className="text-[12px] text-[#9C9485] text-center py-6 px-2">{emptyText}</p>
+          <p className="text-[12px] text-text3 text-center py-6 px-2">{emptyText}</p>
         ) : (
           children
         )}
@@ -529,18 +529,18 @@ export function StationDashboard({ menuId, station, initialOrders }: Props) {
     <div className="w-full">
       {totalCount === 0 ? (
         <div className="flex flex-col items-center justify-center min-h-[50vh] px-6 text-center">
-          <div className="size-16 rounded-full bg-white border border-[#E2DDD5] flex items-center justify-center mb-4 shadow-sm">
+          <div className="size-16 rounded-full bg-white border border-border flex items-center justify-center mb-4 shadow-sm">
             <span className="text-[28px]">{station === "bar" ? "🍹" : "🍽️"}</span>
           </div>
-          <p className="text-[16px] font-bold text-[#16130C] mb-1">No active orders</p>
-          <p className="text-[13px] text-[#9C9485]">New orders will appear here automatically.</p>
+          <p className="text-[16px] font-bold text-dark mb-1">No active orders</p>
+          <p className="text-[13px] text-text3">New orders will appear here automatically.</p>
         </div>
       ) : (
         <div className="flex gap-4 lg:gap-6 items-start">
           <Column
             title="New"
             count={buckets.new.length}
-            colorClass="bg-[#E8A020]/15 text-[#E8A020]"
+            colorClass="bg-amber/15 text-amber"
             emptyText="No new orders"
           >
             {buckets.new.map((b) => (
@@ -561,7 +561,7 @@ export function StationDashboard({ menuId, station, initialOrders }: Props) {
           <Column
             title="Preparing"
             count={buckets.preparing.length}
-            colorClass="bg-[#6B2D8B]/12 text-[#6B2D8B]"
+            colorClass="bg-purple/12 text-purple"
             emptyText="Nothing preparing"
           >
             {buckets.preparing.map((b) => (

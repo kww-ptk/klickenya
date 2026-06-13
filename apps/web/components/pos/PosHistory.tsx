@@ -32,13 +32,13 @@ export function PosHistory({ rows }: PosHistoryProps) {
 
       <main className="flex-1 max-w-screen-md mx-auto w-full px-3 sm:px-6 pt-4 pb-24">
         <h1 className="text-[20px] font-bold text-white">History · today</h1>
-        <p className="text-[12px] text-[#9C9485] mt-1">
+        <p className="text-[12px] text-text3 mt-1">
           {rows.length} closed sessions · {formatKes(totalCollected)} collected
         </p>
 
         <div className="mt-4 rounded-2xl border border-[#2A2520] bg-[#1A170F] overflow-hidden">
           {rows.length === 0 ? (
-            <div className="px-4 py-10 text-center text-[13px] text-[#9C9485]">
+            <div className="px-4 py-10 text-center text-[13px] text-text3">
               No closed sessions yet today.
             </div>
           ) : (
@@ -49,7 +49,7 @@ export function PosHistory({ rows }: PosHistoryProps) {
               >
                 <div className="min-w-0">
                   <p className="text-[14px] font-bold text-white">Table {r.table_number}</p>
-                  <p className="text-[11px] text-[#9C9485]">
+                  <p className="text-[11px] text-text3">
                     {new Date(r.closed_at).toLocaleTimeString("en-KE", {
                       hour: "2-digit",
                       minute: "2-digit",

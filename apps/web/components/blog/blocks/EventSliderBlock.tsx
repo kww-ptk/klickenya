@@ -42,13 +42,13 @@ export function EventSliderBlock({ value }: { value: any }) {
     <div className="my-10">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
-        <h3 className="font-display text-[20px] font-bold text-[#16130C]">
+        <h3 className="font-display text-[20px] font-bold text-dark">
           {heading}
         </h3>
         {ctaText && ctaLink && (
           <Link
             href={ctaLink}
-            className="text-[13px] font-semibold text-[#E8A020] hover:underline shrink-0"
+            className="text-[13px] font-semibold text-amber hover:underline shrink-0"
           >
             {ctaText}
           </Link>
@@ -64,8 +64,8 @@ export function EventSliderBlock({ value }: { value: any }) {
               onClick={() => setActiveFilter(key)}
               className={`shrink-0 px-3.5 py-1.5 rounded-full text-[12px] font-semibold transition-all duration-150 ${
                 activeFilter === key
-                  ? "bg-[#E8A020] text-[#16130C]"
-                  : "bg-[#F4F1EC] text-[#5E5848] hover:bg-[#E2DDD5]"
+                  ? "bg-amber text-dark"
+                  : "bg-surface text-text2 hover:bg-border"
               }`}
             >
               {label}

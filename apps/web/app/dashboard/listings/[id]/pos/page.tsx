@@ -54,19 +54,19 @@ export default async function PosPage({ params }: PageProps) {
       <div>
         <Link
           href={`/dashboard/listings/${id}`}
-          className="text-[13px] text-[#9C9485] hover:text-[#16130C]"
+          className="text-[13px] text-text3 hover:text-dark"
         >
           ← Back to dashboard
         </Link>
-        <h1 className="font-display text-[22px] lg:text-[28px] font-bold tracking-[-0.03em] text-[#16130C] mt-2">
+        <h1 className="font-display text-[22px] lg:text-[28px] font-bold tracking-[-0.03em] text-dark mt-2">
           POS terminal
         </h1>
-        <p className="text-[13px] text-[#9C9485] mt-1 mb-5">
+        <p className="text-[13px] text-text3 mt-1 mb-5">
           Set up your menu first — the POS reads from your menu items.
         </p>
         <Link
           href={`/dashboard/listings/${id}`}
-          className="inline-block bg-[#E8A020] text-[#16130C] font-bold text-[13px] px-5 h-[44px] leading-[44px] rounded-full hover:bg-[#d4911c]"
+          className="inline-block bg-amber text-dark font-bold text-[13px] px-5 h-[44px] leading-[44px] rounded-full hover:bg-[#d4911c]"
         >
           Set up menu →
         </Link>

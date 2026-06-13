@@ -498,7 +498,7 @@ export function SearchPageClient({
                                 className="object-cover group-hover:scale-105 transition-transform duration-300"
                               />
                             ) : (
-                              <div className="w-full h-full bg-gradient-to-br from-[#6B2D8B] to-[#E8A020]" />
+                              <div className="w-full h-full bg-gradient-to-br from-purple to-amber" />
                             )}
                           </div>
                           <p className="text-[14px] font-semibold text-text group-hover:text-amber transition-colors truncate">

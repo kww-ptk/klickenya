@@ -159,13 +159,13 @@ export function ItemForm({ sectionId, menuId, item, onSave, onCancel }: ItemForm
     }
   }
 
-  const inputCls = "w-full border border-[#E2DDD5] rounded-xl px-3.5 py-2.5 text-[14px] text-[#16130C] placeholder:text-[#9C9485] focus:outline-none focus:border-[#E8A020] focus:ring-1 focus:ring-[#E8A020]/30 transition-colors bg-white";
+  const inputCls = "w-full border border-border rounded-xl px-3.5 py-2.5 text-[14px] text-dark placeholder:text-text3 focus:outline-none focus:border-amber focus:ring-1 focus:ring-amber/30 transition-colors bg-white";
 
   return (
-    <form onSubmit={handleSubmit} className="border border-[#E2DDD5] rounded-xl p-4 bg-[#FAFAF8] space-y-3">
+    <form onSubmit={handleSubmit} className="border border-border rounded-xl p-4 bg-canvas space-y-3">
       <div className="grid grid-cols-[1fr_120px] gap-3">
         <div>
-          <label className="block text-[12px] font-semibold text-[#16130C] mb-1">Name *</label>
+          <label className="block text-[12px] font-semibold text-dark mb-1">Name *</label>
           <input
             type="text"
             value={name}
@@ -177,7 +177,7 @@ export function ItemForm({ sectionId, menuId, item, onSave, onCancel }: ItemForm
           />
         </div>
         <div>
-          <label className="block text-[12px] font-semibold text-[#16130C] mb-1">Price (KSh) *</label>
+          <label className="block text-[12px] font-semibold text-dark mb-1">Price (KSh) *</label>
           <input
             type="number"
             value={priceKes}
@@ -193,8 +193,8 @@ export function ItemForm({ sectionId, menuId, item, onSave, onCancel }: ItemForm
 
       <div>
         <div className="flex items-center justify-between mb-1">
-          <label className="block text-[12px] font-semibold text-[#16130C]">Description</label>
-          <span className="text-[11px] text-[#9C9485]">{description.length}/200</span>
+          <label className="block text-[12px] font-semibold text-dark">Description</label>
+          <span className="text-[11px] text-text3">{description.length}/200</span>
         </div>
         <textarea
           value={description}
@@ -208,10 +208,10 @@ export function ItemForm({ sectionId, menuId, item, onSave, onCancel }: ItemForm
 
       {/* Photo upload */}
       <div>
-        <label className="block text-[12px] font-semibold text-[#16130C] mb-1.5">Photo</label>
+        <label className="block text-[12px] font-semibold text-dark mb-1.5">Photo</label>
         {photoPreview ? (
           <div className="flex items-start gap-3">
-            <div className="relative w-[80px] h-[80px] rounded-xl overflow-hidden shrink-0 border border-[#E2DDD5]">
+            <div className="relative w-[80px] h-[80px] rounded-xl overflow-hidden shrink-0 border border-border">
               <Image
                 src={photoPreview}
                 alt="Item photo"
@@ -222,7 +222,7 @@ export function ItemForm({ sectionId, menuId, item, onSave, onCancel }: ItemForm
               />
               {uploading && (
                 <div className="absolute inset-0 bg-white/70 flex items-center justify-center">
-                  <svg className="size-5 animate-spin text-[#E8A020]" viewBox="0 0 24 24" fill="none">
+                  <svg className="size-5 animate-spin text-amber" viewBox="0 0 24 24" fill="none">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                   </svg>
@@ -234,7 +234,7 @@ export function ItemForm({ sectionId, menuId, item, onSave, onCancel }: ItemForm
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={uploading}
-                className="text-[12px] font-semibold text-[#E8A020] hover:underline disabled:opacity-50 text-left"
+                className="text-[12px] font-semibold text-amber hover:underline disabled:opacity-50 text-left"
               >
                 {uploading ? "Uploading..." : "Change photo"}
               </button>
@@ -253,13 +253,13 @@ export function ItemForm({ sectionId, menuId, item, onSave, onCancel }: ItemForm
             type="button"
             onClick={() => fileInputRef.current?.click()}
             disabled={uploading}
-            className="w-full border border-dashed border-[#E2DDD5] rounded-xl py-4 text-center hover:border-[#E8A020]/40 transition-colors disabled:opacity-50"
+            className="w-full border border-dashed border-border rounded-xl py-4 text-center hover:border-amber/40 transition-colors disabled:opacity-50"
           >
             <span className="text-[20px] block mb-1">📷</span>
-            <span className="text-[12px] font-semibold text-[#9C9485]">
+            <span className="text-[12px] font-semibold text-text3">
               Add a photo
             </span>
-            <span className="text-[11px] text-[#9C9485] block mt-0.5">
+            <span className="text-[11px] text-text3 block mt-0.5">
               Auto-resized and compressed
             </span>
           </button>
@@ -274,12 +274,12 @@ export function ItemForm({ sectionId, menuId, item, onSave, onCancel }: ItemForm
       </div>
 
       <div className="flex items-center justify-between">
-        <label className="text-[12px] font-semibold text-[#16130C]">Available</label>
+        <label className="text-[12px] font-semibold text-dark">Available</label>
         <button
           type="button"
           onClick={() => setIsAvailable(!isAvailable)}
           className={`relative w-10 h-[22px] rounded-full transition-colors ${
-            isAvailable ? "bg-[#16A34A]" : "bg-[#E2DDD5]"
+            isAvailable ? "bg-green" : "bg-border"
           }`}
         >
           <span
@@ -291,7 +291,7 @@ export function ItemForm({ sectionId, menuId, item, onSave, onCancel }: ItemForm
       </div>
 
       <div>
-        <label className="block text-[12px] font-semibold text-[#16130C] mb-1.5">Dietary tags</label>
+        <label className="block text-[12px] font-semibold text-dark mb-1.5">Dietary tags</label>
         <div className="flex flex-wrap gap-1.5">
           {DIETARY_OPTIONS.map((opt) => (
             <button
@@ -301,8 +301,8 @@ export function ItemForm({ sectionId, menuId, item, onSave, onCancel }: ItemForm
               onClick={() => toggleTag(opt.tag)}
               className={`rounded-full px-3 py-1 text-[11px] font-bold transition-colors ${
                 dietaryTags.includes(opt.tag)
-                  ? "bg-[#E8A020] text-white"
-                  : "bg-[#F4F1EC] text-[#5E5848] hover:bg-[#E2DDD5]"
+                  ? "bg-amber text-white"
+                  : "bg-surface text-text2 hover:bg-border"
               }`}
             >
               {opt.tag}
@@ -315,14 +315,14 @@ export function ItemForm({ sectionId, menuId, item, onSave, onCancel }: ItemForm
         <button
           type="submit"
           disabled={!isValid || saving || uploading}
-          className="bg-[#E8A020] text-[#16130C] font-bold text-[13px] px-5 h-[36px] rounded-full hover:bg-[#d4911c] transition-colors disabled:opacity-50"
+          className="bg-amber text-dark font-bold text-[13px] px-5 h-[36px] rounded-full hover:bg-[#d4911c] transition-colors disabled:opacity-50"
         >
           {saving ? "Saving..." : "Save"}
         </button>
         <button
           type="button"
           onClick={onCancel}
-          className="text-[13px] font-semibold text-[#9C9485] hover:text-[#16130C] transition-colors px-3"
+          className="text-[13px] font-semibold text-text3 hover:text-dark transition-colors px-3"
         >
           Cancel
         </button>

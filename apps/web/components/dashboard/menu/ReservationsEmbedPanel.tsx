@@ -61,35 +61,35 @@ export function ReservationsEmbedPanel({
   if (!reservationsEnabled) return null;
 
   return (
-    <div className="bg-white rounded-xl lg:rounded-2xl border border-[#E2DDD5] p-4 lg:p-5 shadow-sm">
+    <div className="bg-white rounded-xl lg:rounded-2xl border border-border p-4 lg:p-5 shadow-sm">
       <button
         type="button"
         onClick={() => setExpanded((v) => !v)}
         className="flex items-center justify-between w-full text-left"
       >
-        <p className="text-[14px] font-semibold text-[#16130C]">
+        <p className="text-[14px] font-semibold text-dark">
           Embed on your website
         </p>
-        <span className={`text-[#9C9485] text-[14px] transition-transform ${expanded ? "rotate-180" : ""}`}>
+        <span className={`text-text3 text-[14px] transition-transform ${expanded ? "rotate-180" : ""}`}>
           ▾
         </span>
       </button>
 
       {!expanded && (
-        <p className="text-[12px] text-[#9C9485] mt-1">
+        <p className="text-[12px] text-text3 mt-1">
           Add the booking form to your own site with one line of HTML.
         </p>
       )}
 
       {expanded && (
         <div className="mt-3 space-y-3">
-          <p className="text-[12px] text-[#5E5848] leading-snug">
+          <p className="text-[12px] text-text2 leading-snug">
             Paste this snippet wherever you want the booking form to appear on
             your site. Works with Squarespace, Wix, Webflow, WordPress, or any
             HTML page.
           </p>
 
-          <pre className="text-[11px] leading-snug font-mono bg-[#F4F1EC] border border-[#E2DDD5] rounded-lg p-3 overflow-x-auto whitespace-pre">
+          <pre className="text-[11px] leading-snug font-mono bg-surface border border-border rounded-lg p-3 overflow-x-auto whitespace-pre">
             {snippet}
           </pre>
 
@@ -97,28 +97,28 @@ export function ReservationsEmbedPanel({
             <button
               type="button"
               onClick={handleCopy}
-              className="flex-1 h-[36px] rounded-full bg-[#16130C] text-white text-[13px] font-bold hover:bg-[#2A2520] transition-colors"
+              className="flex-1 h-[36px] rounded-full bg-dark text-white text-[13px] font-bold hover:bg-[#2A2520] transition-colors"
             >
               {copied ? "Copied ✓" : "Copy code"}
             </button>
           </div>
 
           {/* ── Theme picker ────────────────────────────────────────────── */}
-          <div className="border-t border-[#F4F1EC] pt-3">
+          <div className="border-t border-surface pt-3">
             <button
               type="button"
               onClick={() => setThemeOpen((v) => !v)}
-              className="flex items-center gap-1 text-[12px] font-semibold text-[#5E5848] hover:text-[#16130C]"
+              className="flex items-center gap-1 text-[12px] font-semibold text-text2 hover:text-dark"
             >
               <span className={`text-[10px] transition-transform ${themeOpen ? "rotate-90" : ""}`}>▸</span>
               Customise colours and tracking
             </button>
 
             {themeOpen && (
-              <div className="mt-3 space-y-3 pl-3 border-l-2 border-[#F4F1EC]">
+              <div className="mt-3 space-y-3 pl-3 border-l-2 border-surface">
                 {/* Theme */}
                 <div>
-                  <label className="block text-[11px] font-bold text-[#9C9485] uppercase tracking-wide mb-1">
+                  <label className="block text-[11px] font-bold text-text3 uppercase tracking-wide mb-1">
                     Theme
                   </label>
                   <div className="flex gap-2">
@@ -129,8 +129,8 @@ export function ReservationsEmbedPanel({
                         onClick={() => setTheme(t)}
                         className={`flex-1 h-[32px] rounded-full text-[12px] font-semibold transition-colors border ${
                           theme === t
-                            ? "bg-[#E8A020] border-[#E8A020] text-[#16130C]"
-                            : "bg-white border-[#E2DDD5] text-[#5E5848] hover:border-[#9C9485]"
+                            ? "bg-amber border-amber text-dark"
+                            : "bg-white border-border text-text2 hover:border-text3"
                         }`}
                       >
                         {t === "light" ? "Light" : "Dark"}
@@ -141,28 +141,28 @@ export function ReservationsEmbedPanel({
 
                 {/* Accent */}
                 <div>
-                  <label className="block text-[11px] font-bold text-[#9C9485] uppercase tracking-wide mb-1">
+                  <label className="block text-[11px] font-bold text-text3 uppercase tracking-wide mb-1">
                     Accent colour
                   </label>
                   <div className="flex gap-2 items-center">
                     <div
-                      className="size-8 rounded-lg border border-[#E2DDD5] shrink-0"
+                      className="size-8 rounded-lg border border-border shrink-0"
                       style={{ background: `#${accent}` }}
                     />
-                    <span className="text-[#9C9485] text-[12px]">#</span>
+                    <span className="text-text3 text-[12px]">#</span>
                     <input
                       type="text"
                       value={accent}
                       onChange={(e) => setAccent(e.target.value.replace(/[^0-9a-fA-F]/g, "").slice(0, 8))}
                       placeholder="E8A020"
-                      className="flex-1 h-[32px] rounded-lg border border-[#E2DDD5] px-2 text-[13px] font-mono uppercase outline-none focus:border-[#E8A020]"
+                      className="flex-1 h-[32px] rounded-lg border border-border px-2 text-[13px] font-mono uppercase outline-none focus:border-amber"
                     />
                   </div>
                 </div>
 
                 {/* Background */}
                 <div>
-                  <label className="block text-[11px] font-bold text-[#9C9485] uppercase tracking-wide mb-1">
+                  <label className="block text-[11px] font-bold text-text3 uppercase tracking-wide mb-1">
                     Background
                   </label>
                   <div className="flex gap-2">
@@ -173,8 +173,8 @@ export function ReservationsEmbedPanel({
                         onClick={() => setBg(b)}
                         className={`flex-1 h-[32px] rounded-full text-[12px] font-semibold transition-colors border ${
                           bg === b
-                            ? "bg-[#E8A020] border-[#E8A020] text-[#16130C]"
-                            : "bg-white border-[#E2DDD5] text-[#5E5848] hover:border-[#9C9485]"
+                            ? "bg-amber border-amber text-dark"
+                            : "bg-white border-border text-text2 hover:border-text3"
                         }`}
                       >
                         {b === "white" ? "White" : "Transparent"}
@@ -185,7 +185,7 @@ export function ReservationsEmbedPanel({
 
                 {/* Campaign ref tag */}
                 <div>
-                  <label className="block text-[11px] font-bold text-[#9C9485] uppercase tracking-wide mb-1">
+                  <label className="block text-[11px] font-bold text-text3 uppercase tracking-wide mb-1">
                     Campaign tag (optional)
                   </label>
                   <input
@@ -193,9 +193,9 @@ export function ReservationsEmbedPanel({
                     value={refTag}
                     onChange={(e) => setRefTag(e.target.value.slice(0, 64))}
                     placeholder="e.g. instagram-bio"
-                    className="w-full h-[32px] rounded-lg border border-[#E2DDD5] px-3 text-[13px] outline-none focus:border-[#E8A020]"
+                    className="w-full h-[32px] rounded-lg border border-border px-3 text-[13px] outline-none focus:border-amber"
                   />
-                  <p className="text-[11px] text-[#9C9485] mt-1 leading-snug">
+                  <p className="text-[11px] text-text3 mt-1 leading-snug">
                     Add different tags to different placements (Instagram bio,
                     newsletter, etc) and see where bookings come from in your
                     reservations dashboard.
@@ -206,18 +206,18 @@ export function ReservationsEmbedPanel({
           </div>
 
           {/* ── Preview ─────────────────────────────────────────────────── */}
-          <div className="border-t border-[#F4F1EC] pt-3">
+          <div className="border-t border-surface pt-3">
             <button
               type="button"
               onClick={() => setPreviewOpen((v) => !v)}
-              className="flex items-center gap-1 text-[12px] font-semibold text-[#5E5848] hover:text-[#16130C]"
+              className="flex items-center gap-1 text-[12px] font-semibold text-text2 hover:text-dark"
             >
               <span className={`text-[10px] transition-transform ${previewOpen ? "rotate-90" : ""}`}>▸</span>
               Preview
             </button>
 
             {previewOpen && (
-              <div className="mt-3 rounded-lg overflow-hidden border border-[#E2DDD5]">
+              <div className="mt-3 rounded-lg overflow-hidden border border-border">
                 <iframe
                   src={embedUrl}
                   title="Reservation form preview"

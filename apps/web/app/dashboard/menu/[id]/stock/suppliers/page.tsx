@@ -34,14 +34,14 @@ export default async function SuppliersPage({ params }: PageProps) {
       <div className="mb-5">
         <Link
           href={`/dashboard/menu/${menu.id}/stock`}
-          className="text-[13px] text-[#9C9485] hover:text-[#16130C]"
+          className="text-[13px] text-text3 hover:text-dark"
         >
           ← Back to Klickenya Kitchen
         </Link>
-        <h1 className="font-display text-[22px] lg:text-[28px] font-bold tracking-[-0.03em] text-[#16130C] mt-2">
+        <h1 className="font-display text-[22px] lg:text-[28px] font-bold tracking-[-0.03em] text-dark mt-2">
           Suppliers
         </h1>
-        <p className="text-[13px] text-[#9C9485] mt-1">
+        <p className="text-[13px] text-text3 mt-1">
           Who you buy from. Used on purchase orders.
         </p>
       </div>

@@ -25,9 +25,9 @@ export const Toggle = forwardRef<HTMLButtonElement, ToggleProps>(
           "relative inline-flex shrink-0 items-center box-border",
           "w-10 h-[22px] p-[2px] rounded-full",
           "transition-colors duration-200 ease-out cursor-pointer",
-          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#16A34A]/40",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-green/40",
           "disabled:opacity-50 disabled:cursor-not-allowed",
-          checked ? "bg-[#16A34A]" : "bg-[#E2DDD5]",
+          checked ? "bg-green" : "bg-border",
           className,
         )}
         {...rest}

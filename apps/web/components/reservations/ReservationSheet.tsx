@@ -21,7 +21,7 @@ export interface RestaurantArea {
 export interface ReservationSheetProps {
   menuId: string;
   menuName: string;
-  source: "qr_menu" | "listing" | "embed";
+  source: "qr_menu" | "listing" | "embed" | "storefront";
   /**
    * Parent-page hostname when source='embed' (parsed server-side from the
    * Referer header by the embed route, then passed in). API ignores when

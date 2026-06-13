@@ -45,7 +45,7 @@ function newKey() {
 }
 
 const inputCls =
-  "w-full border border-[#E2DDD5] rounded-xl px-3 py-3 text-[15px] text-[#16130C] placeholder:text-[#9C9485] focus:outline-none focus:border-[#E8A020] focus:ring-1 focus:ring-[#E8A020]/30 bg-white";
+  "w-full border border-border rounded-xl px-3 py-3 text-[15px] text-dark placeholder:text-text3 focus:outline-none focus:border-amber focus:ring-1 focus:ring-amber/30 bg-white";
 
 /* ── Component ───────────────────────────────────────── */
 
@@ -363,14 +363,14 @@ export function RecipeBuilder({
       {/* Lines */}
       <div>
         <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
-          <h2 className="font-display text-[18px] font-bold text-[#16130C]">Recipe</h2>
+          <h2 className="font-display text-[18px] font-bold text-dark">Recipe</h2>
           <div className="flex items-center gap-2">
             {canDraft && (
               <button
                 type="button"
                 onClick={generateDraft}
                 disabled={drafting}
-                className="h-10 px-4 rounded-full border border-[#E8A020]/40 text-[#E8A020] text-[13px] font-bold hover:bg-[#E8A020]/5 transition-colors disabled:opacity-50"
+                className="h-10 px-4 rounded-full border border-amber/40 text-amber text-[13px] font-bold hover:bg-amber/5 transition-colors disabled:opacity-50"
               >
                 {drafting ? "Drafting…" : "✨ Generate draft"}
               </button>
@@ -380,7 +380,7 @@ export function RecipeBuilder({
                 type="button"
                 onClick={findMissingPrices}
                 disabled={findingPrices}
-                className="h-10 px-4 rounded-full border border-[#E8A020]/40 text-[#E8A020] text-[13px] font-bold hover:bg-[#E8A020]/5 transition-colors disabled:opacity-50"
+                className="h-10 px-4 rounded-full border border-amber/40 text-amber text-[13px] font-bold hover:bg-amber/5 transition-colors disabled:opacity-50"
                 title={`AI-price ${missingCostIds.length} ingredient${missingCostIds.length === 1 ? "" : "s"} currently at KSh 0`}
               >
                 {findingPrices
@@ -390,7 +390,7 @@ export function RecipeBuilder({
             )}
             <Link
               href={`/dashboard/menu/${menuId}/stock/ingredients`}
-              className="h-10 px-4 rounded-full border border-[#E2DDD5] text-[#5E5848] text-[13px] font-semibold hover:border-[#9C9485] transition-colors flex items-center"
+              className="h-10 px-4 rounded-full border border-border text-text2 text-[13px] font-semibold hover:border-text3 transition-colors flex items-center"
             >
               Manage pantry
             </Link>
@@ -398,20 +398,20 @@ export function RecipeBuilder({
         </div>
 
         {pantry.length === 0 ? (
-          <div className="bg-white rounded-2xl border border-[#E2DDD5] p-6 text-center">
-            <p className="text-[14px] text-[#5E5848] mb-3">
+          <div className="bg-white rounded-2xl border border-border p-6 text-center">
+            <p className="text-[14px] text-text2 mb-3">
               Your pantry is empty. Add a few ingredients first.
             </p>
             <Link
               href={`/dashboard/menu/${menuId}/stock/ingredients`}
-              className="inline-block bg-[#E8A020] text-[#16130C] font-bold text-[13px] px-5 h-[40px] leading-[40px] rounded-full hover:bg-[#d4911c] transition-colors"
+              className="inline-block bg-amber text-dark font-bold text-[13px] px-5 h-[40px] leading-[40px] rounded-full hover:bg-[#d4911c] transition-colors"
             >
               Add ingredients →
             </Link>
           </div>
         ) : (
-          <div className="bg-white rounded-2xl border border-[#E2DDD5] shadow-sm overflow-hidden">
-            <ul className="divide-y divide-[#F4F1EC]">
+          <div className="bg-white rounded-2xl border border-border shadow-sm overflow-hidden">
+            <ul className="divide-y divide-surface">
               {lines.map((l, idx) => {
                 const ing = l.ingredient_id ? pantryById.get(l.ingredient_id) : null;
                 const cost = totals.perLine[idx]?.cost ?? 0;
@@ -420,7 +420,7 @@ export function RecipeBuilder({
                     <div className="grid grid-cols-12 gap-2 sm:gap-3 items-end">
                       {/* Ingredient picker */}
                       <div className="col-span-12 sm:col-span-5">
-                        <label className="block text-[11px] font-semibold text-[#9C9485] mb-1">
+                        <label className="block text-[11px] font-semibold text-text3 mb-1">
                           Ingredient
                         </label>
                         <select
@@ -439,7 +439,7 @@ export function RecipeBuilder({
 
                       {/* EP qty */}
                       <div className="col-span-5 sm:col-span-2">
-                        <label className="block text-[11px] font-semibold text-[#9C9485] mb-1">
+                        <label className="block text-[11px] font-semibold text-text3 mb-1">
                           Qty {ing ? `(${ing.unit})` : ""}
                         </label>
                         <input
@@ -456,7 +456,7 @@ export function RecipeBuilder({
 
                       {/* Yield % */}
                       <div className="col-span-4 sm:col-span-2">
-                        <label className="block text-[11px] font-semibold text-[#9C9485] mb-1">
+                        <label className="block text-[11px] font-semibold text-text3 mb-1">
                           Yield %
                         </label>
                         <input
@@ -474,8 +474,8 @@ export function RecipeBuilder({
 
                       {/* Live cost */}
                       <div className="col-span-2 sm:col-span-2 text-right">
-                        <p className="text-[11px] font-semibold text-[#9C9485] mb-1">Cost</p>
-                        <p className="text-[14px] font-bold text-[#16130C]">{fmtKES(cost)}</p>
+                        <p className="text-[11px] font-semibold text-text3 mb-1">Cost</p>
+                        <p className="text-[14px] font-bold text-dark">{fmtKES(cost)}</p>
                       </div>
 
                       {/* Remove */}
@@ -484,7 +484,7 @@ export function RecipeBuilder({
                           type="button"
                           onClick={() => removeLine(l.key)}
                           aria-label="Remove ingredient"
-                          className="size-11 rounded-full text-[18px] text-[#9C9485] hover:bg-[#DC2626]/10 hover:text-[#DC2626] transition-colors flex items-center justify-center"
+                          className="size-11 rounded-full text-[18px] text-text3 hover:bg-[#DC2626]/10 hover:text-[#DC2626] transition-colors flex items-center justify-center"
                         >
                           ×
                         </button>
@@ -498,7 +498,7 @@ export function RecipeBuilder({
             <button
               type="button"
               onClick={addLine}
-              className="w-full text-left px-4 py-3.5 text-[14px] font-semibold text-[#E8A020] hover:bg-[#E8A020]/5 transition-colors border-t border-[#F4F1EC]"
+              className="w-full text-left px-4 py-3.5 text-[14px] font-semibold text-amber hover:bg-amber/5 transition-colors border-t border-surface"
             >
               + Add ingredient
             </button>
@@ -507,7 +507,7 @@ export function RecipeBuilder({
 
         {/* Notes */}
         <div className="mt-4">
-          <label className="block text-[12px] font-semibold text-[#16130C] mb-1.5">Notes</label>
+          <label className="block text-[12px] font-semibold text-dark mb-1.5">Notes</label>
           <textarea
             rows={3}
             value={notes}
@@ -520,14 +520,14 @@ export function RecipeBuilder({
 
       {/* Summary card */}
       <aside className="lg:sticky lg:top-6 lg:self-start">
-        <div className="bg-white rounded-2xl border border-[#E2DDD5] shadow-sm p-5 space-y-4">
-          <h3 className="font-display text-[16px] font-bold text-[#16130C]">Costing</h3>
+        <div className="bg-white rounded-2xl border border-border shadow-sm p-5 space-y-4">
+          <h3 className="font-display text-[16px] font-bold text-dark">Costing</h3>
 
           <Row label="Ingredient cost" value={fmtKES(totals.ingredientCost)} />
 
           <div>
             <div className="flex items-center justify-between gap-3">
-              <label className="text-[13px] font-semibold text-[#5E5848]">Overhead %</label>
+              <label className="text-[13px] font-semibold text-text2">Overhead %</label>
               <input
                 type="number"
                 inputMode="decimal"
@@ -536,13 +536,13 @@ export function RecipeBuilder({
                 step="1"
                 value={overheadPct}
                 onChange={(e) => setOverheadPct(e.target.value)}
-                className="w-20 border border-[#E2DDD5] rounded-lg px-2 py-1.5 text-[14px] text-right"
+                className="w-20 border border-border rounded-lg px-2 py-1.5 text-[14px] text-right"
               />
             </div>
-            <p className="text-[12px] text-[#9C9485] mt-1">{fmtKES(totals.overhead)}</p>
+            <p className="text-[12px] text-text3 mt-1">{fmtKES(totals.overhead)}</p>
           </div>
 
-          <div className="border-t border-[#F4F1EC] pt-3">
+          <div className="border-t border-surface pt-3">
             <Row
               label="Cost / portion"
               value={fmtKES(totals.costPerPortion)}
@@ -551,15 +551,15 @@ export function RecipeBuilder({
           </div>
 
           <div className="flex items-center justify-between">
-            <span className="text-[13px] font-semibold text-[#5E5848]">Sale price</span>
-            <span className="text-[14px] font-bold text-[#16130C]">{fmtKES(priceKes)}</span>
+            <span className="text-[13px] font-semibold text-text2">Sale price</span>
+            <span className="text-[14px] font-bold text-dark">{fmtKES(priceKes)}</span>
           </div>
 
           <FoodCostChip pct={totals.foodCostPct} target={Number(targetFoodCostPct) || 30} />
 
-          <div className="border-t border-[#F4F1EC] pt-3">
+          <div className="border-t border-surface pt-3">
             <div className="flex items-center justify-between gap-3 mb-1">
-              <label className="text-[13px] font-semibold text-[#5E5848]">Target food cost %</label>
+              <label className="text-[13px] font-semibold text-text2">Target food cost %</label>
               <input
                 type="number"
                 inputMode="decimal"
@@ -568,7 +568,7 @@ export function RecipeBuilder({
                 step="1"
                 value={targetFoodCostPct}
                 onChange={(e) => setTargetFoodCostPct(e.target.value)}
-                className="w-20 border border-[#E2DDD5] rounded-lg px-2 py-1.5 text-[14px] text-right"
+                className="w-20 border border-border rounded-lg px-2 py-1.5 text-[14px] text-right"
               />
             </div>
             <Row label="Suggested sale price" value={fmtKES(totals.suggestedSp)} />
@@ -584,7 +584,7 @@ export function RecipeBuilder({
             type="button"
             onClick={save}
             disabled={saving}
-            className="w-full bg-[#E8A020] text-[#16130C] font-bold text-[14px] h-[48px] rounded-full hover:bg-[#d4911c] transition-colors disabled:opacity-50"
+            className="w-full bg-amber text-dark font-bold text-[14px] h-[48px] rounded-full hover:bg-[#d4911c] transition-colors disabled:opacity-50"
           >
             {saving ? "Saving…" : "Save recipe"}
           </button>
@@ -604,10 +604,10 @@ export function RecipeBuilder({
 function Row({ label, value, big }: { label: string; value: string; big?: boolean }) {
   return (
     <div className="flex items-center justify-between">
-      <span className={big ? "text-[13px] font-semibold text-[#16130C]" : "text-[13px] text-[#5E5848]"}>
+      <span className={big ? "text-[13px] font-semibold text-dark" : "text-[13px] text-text2"}>
         {label}
       </span>
-      <span className={big ? "text-[18px] font-bold text-[#16130C]" : "text-[14px] font-semibold text-[#16130C]"}>
+      <span className={big ? "text-[18px] font-bold text-dark" : "text-[14px] font-semibold text-dark"}>
         {value}
       </span>
     </div>
@@ -617,7 +617,7 @@ function Row({ label, value, big }: { label: string; value: string; big?: boolea
 function FoodCostChip({ pct, target }: { pct: number; target: number }) {
   if (!isFinite(pct) || pct === 0) {
     return (
-      <span className="inline-flex items-center text-[11px] font-bold text-[#9C9485] bg-[#F4F1EC] px-2.5 py-1 rounded-full uppercase tracking-wide">
+      <span className="inline-flex items-center text-[11px] font-bold text-text3 bg-surface px-2.5 py-1 rounded-full uppercase tracking-wide">
         Food cost — set price first
       </span>
     );

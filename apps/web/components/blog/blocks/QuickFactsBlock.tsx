@@ -3,7 +3,7 @@ interface QuickFactsValue { title?: string; accentColor?: 'amber' | 'purple' | '
 
 export function QuickFactsBlock({ value }: { value: QuickFactsValue }) {
   const { title = '✦ Quick Facts', accentColor = 'amber', items = [] } = value
-  const colorMap = { amber: 'text-[#E8A020]', purple: 'text-[#8B4DAB]', teal: 'text-[#0D7377]' }
+  const colorMap = { amber: 'text-amber', purple: 'text-purple2', teal: 'text-teal' }
   return (
     <div className="bg-[#18160F] rounded-[30px] p-8 my-10 relative overflow-hidden">
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_80%_20%,rgba(232,160,32,.12),transparent_60%),radial-gradient(ellipse_at_20%_80%,rgba(13,115,119,.08),transparent_60%)]" />

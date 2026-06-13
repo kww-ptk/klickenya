@@ -88,20 +88,20 @@ export default async function AuditLogPage({ params, searchParams }: PageProps) 
       <div className="mb-4">
         <Link
           href={backHref}
-          className="text-[13px] text-[#9C9485] hover:text-[#16130C] transition-colors"
+          className="text-[13px] text-text3 hover:text-dark transition-colors"
         >
           {backLabel}
         </Link>
       </div>
       <div className="flex items-baseline justify-between mb-4">
         <div>
-          <p className="text-[11px] uppercase tracking-wide text-[#9C9485] font-bold">
+          <p className="text-[11px] uppercase tracking-wide text-text3 font-bold">
             Audit log
           </p>
-          <h1 className="font-display text-[22px] font-bold text-[#16130C] tracking-tight">
+          <h1 className="font-display text-[22px] font-bold text-dark tracking-tight">
             {menu.name}
           </h1>
-          <p className="text-[12px] text-[#9C9485] mt-1">
+          <p className="text-[12px] text-text3 mt-1">
             Manager overrides and restricted actions, last {days} {days === 1 ? "day" : "days"}.
           </p>
         </div>
@@ -123,8 +123,8 @@ export default async function AuditLogPage({ params, searchParams }: PageProps) 
               href={`/dashboard/menu/${id}/audit?days=${days}${f.action === "all" ? "" : `&action=${f.action}`}`}
               className={`px-3 py-1.5 rounded-full border ${
                 active
-                  ? "bg-[#16130C] text-white border-[#16130C]"
-                  : "bg-white text-[#16130C] border-[#E2DDD5] hover:border-[#16130C]"
+                  ? "bg-dark text-white border-dark"
+                  : "bg-white text-dark border-border hover:border-dark"
               }`}
             >
               {f.label}
@@ -138,8 +138,8 @@ export default async function AuditLogPage({ params, searchParams }: PageProps) 
               href={`/dashboard/menu/${id}/audit?days=${d}${actionFilter ? `&action=${actionFilter}` : ""}`}
               className={`px-3 py-1.5 rounded-full border ${
                 days === d
-                  ? "bg-[#16130C] text-white border-[#16130C]"
-                  : "bg-white text-[#16130C] border-[#E2DDD5] hover:border-[#16130C]"
+                  ? "bg-dark text-white border-dark"
+                  : "bg-white text-dark border-border hover:border-dark"
               }`}
             >
               {d === 1 ? "Today" : `${d} days`}
