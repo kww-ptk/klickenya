@@ -6,7 +6,7 @@ import { sanityClient } from "@/lib/sanity/client";
 import { ListingTabNav } from "@/components/dashboard/listings/ListingTabNav";
 import type { TabItem } from "@/components/dashboard/listings/ListingTabNav";
 import {
-  getActiveTabs,
+  LISTING_FEATURES,
   type FeatureContext,
 } from "./_lib/features.config";
 
@@ -14,20 +14,15 @@ import {
  * DEPLOYED_SEGMENTS — Single source of truth for which feature tabSegments have
  * a page.tsx built at /dashboard/listings/[id]/[segment].
  *
- * Update this set when adding new feature pages:
- *   - 'reservations' → add when Prompt 8c creates reservations/page.tsx
- *   - 'orders'       → add when Prompt 9 migrates the orders page here
- *   - 'menu'         → add when Prompt 9 migrates MenuBuilder into this command center
- *
- * Any active tabSegment NOT in this set is rendered as a "Coming soon" card
- * in the Overview Quick Access section and omitted from the tab nav entirely.
- * No dead links, no 404s without a badge.
+ * After the IA promotion (eat → dashboard): menu now has its own page here,
+ * so it's included. The legacy `getActiveTabs()` filtering is replaced by
+ * the explicit, fixed-order tab list below (mirrors /eat layout).
  */
 export const DEPLOYED_SEGMENTS = new Set<string>([
+  "menu",
   "reservations",
   "kitchen",
   "orders",
-  // TODO Prompt 9: add 'menu' when MenuBuilder migrates here.
 ]);
 
 export default async function ListingDashboardLayout({
@@ -138,33 +133,53 @@ export default async function ListingDashboardLayout({
       : undefined,
   };
 
-  // Build active tabs filtered to deployed segments only
-  const activeTabs = getActiveTabs(featureCtx).filter((f) => {
-    if (f.tabSegment && !DEPLOYED_SEGMENTS.has(f.tabSegment)) {
-      if (process.env.NODE_ENV === "development") {
-        console.warn(
-          `[listing-dashboard] Tab '${f.id}' (segment '${f.tabSegment}') is active but has no page.tsx yet — omitting from nav`,
-        );
-      }
-      return false;
-    }
-    return true;
-  });
+  // ── Pending reservations badge ──────────────────────────────────────────
+  let pendingReservations = 0;
+  if (menu) {
+    const { count } = await adminClient
+      .from("reservations")
+      .select("id", { count: "exact", head: true })
+      .eq("menu_id", menu.id)
+      .eq("status", "pending");
+    pendingReservations = count ?? 0;
+  }
 
+  // ── Tabs — fixed order matching /eat IA promotion ────────────────────────
+  // Overview · Menu · Reservations · Orders · POS · Kitchen · Features.
+  // Inactive features hide from the tab strip but surface on the Features
+  // page so owners can enable them. POS shows whenever a menu exists.
+  function isFeatureActive(featureId: string): boolean {
+    const f = LISTING_FEATURES.find((x) => x.id === featureId);
+    return f ? f.getStatus(featureCtx) === "active" : false;
+  }
+
+  const baseHref = `/dashboard/listings/${id}`;
   const tabs: TabItem[] = [
-    {
-      label: "Overview",
-      href: `/dashboard/listings/${id}`,
-    },
-    ...activeTabs.map((f) => ({
-      label: f.label,
-      href: `/dashboard/listings/${id}/${f.tabSegment}`,
-    })),
-    {
-      label: "Features",
-      href: `/dashboard/listings/${id}/features`,
-    },
+    { label: "Overview", href: baseHref },
   ];
+
+  if (menu) {
+    tabs.push({ label: "Menu", href: `${baseHref}/menu` });
+  }
+  if (isFeatureActive("reservations")) {
+    tabs.push({
+      label: "Reservations",
+      href: `${baseHref}/reservations`,
+      badge: pendingReservations > 0 ? pendingReservations : undefined,
+    });
+  }
+  if (isFeatureActive("table_ordering")) {
+    tabs.push({ label: "Orders", href: `${baseHref}/orders` });
+  }
+  if (menu) {
+    // POS is the staff-side of the order pipeline; available whenever a menu
+    // exists (waiter-only restaurants can use POS without QR ordering).
+    tabs.push({ label: "POS", href: `${baseHref}/pos` });
+  }
+  if (isFeatureActive("klickenya_kitchen")) {
+    tabs.push({ label: "Kitchen", href: `${baseHref}/kitchen` });
+  }
+  tabs.push({ label: "Features", href: `${baseHref}/features` });
 
   const typeLabel =
     listing.type === "restaurant" || listing.subcategory === "restaurants"
@@ -197,7 +212,7 @@ export default async function ListingDashboardLayout({
       </div>
 
       {/* ── Tab nav ── */}
-      <ListingTabNav listingId={id} tabs={tabs} />
+      <ListingTabNav listingId={id} tabs={tabs} overviewHref={baseHref} />
 
       {/* ── Page content ── */}
       <div className="mt-5">{children}</div>

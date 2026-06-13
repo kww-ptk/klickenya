@@ -97,6 +97,11 @@ export default async function ReservationsPage({
           listingCity: listing.city ?? null,
           timeWindows,
         }}
+        // Reservation-only mode strips Ordering tables / POS settings / POS
+        // staff cards out of the Settings tab (each moved to its own dedicated
+        // tab) and surfaces a "Next: Table ordering" hint at the bottom.
+        mode="reservation-only"
+        featureBaseHref={`/dashboard/listings/${id}`}
       />
     </ToastProvider>
   );

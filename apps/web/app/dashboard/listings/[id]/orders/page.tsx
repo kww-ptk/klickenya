@@ -107,6 +107,10 @@ export default async function TableOrderingSetupPage({ params }: PageProps) {
       initialTableOrdering={menu.table_ordering ?? false}
       areas={(areasRaw ?? []) as AreaOption[]}
       initialTables={(tablesRaw ?? []) as InitialTable[]}
+      // ordering-only mode routes back-links + back= params through the
+      // /dashboard tree, surfaces a "Next: POS terminal" hint at the bottom.
+      mode="ordering-only"
+      featureBaseHref={`/dashboard/listings/${id}`}
     />
   );
 }

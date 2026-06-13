@@ -1,6 +1,6 @@
-import { redirect } from "next/navigation";
+import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
-import { Lock, UtensilsCrossed, ShoppingCart, CalendarCheck, ShoppingBag, Bike, ChefHat, ChevronRight } from "lucide-react";
+import { Lock, UtensilsCrossed, ShoppingCart, CalendarCheck, ShoppingBag, Bike, ChefHat, Smartphone } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { getAuthUser, getHostProfile, getIsAdmin } from "../../../_lib/auth";
 import { adminClient } from "@/lib/supabase/admin";
@@ -10,8 +10,8 @@ import {
   type FeatureContext,
   type FeatureStatus,
 } from "../_lib/features.config";
+import { FeatureToggleRow } from "./FeatureToggleRow";
 
-/* ── Icon map (avoids dynamic import in RSC) ─────────────────────────────── */
 const ICON_MAP: Record<string, LucideIcon> = {
   UtensilsCrossed,
   ShoppingCart,
@@ -19,29 +19,31 @@ const ICON_MAP: Record<string, LucideIcon> = {
   ShoppingBag,
   Bike,
   ChefHat,
+  Smartphone,
 };
 
-/* ── Status pill config ─────────────────────────────────────────────────── */
 const STATUS_STYLES: Record<FeatureStatus, { label: string; className: string }> = {
-  active: {
-    label: "Active",
-    className: "bg-[#16A34A]/10 text-[#16A34A]",
-  },
-  inactive: {
-    label: "Inactive",
-    className: "bg-[#F4F1EC] text-[#9C9485]",
-  },
-  coming_soon: {
-    label: "Coming soon",
-    className: "bg-[#E8A020]/10 text-[#E8A020]",
-  },
-  paid_coming_soon: {
-    label: "Paid — coming soon",
-    className: "bg-[#6B2D8B]/10 text-[#6B2D8B]",
-  },
+  active: { label: "Active", className: "bg-[#16A34A]/10 text-[#16A34A]" },
+  inactive: { label: "Off", className: "bg-[#F4F1EC] text-[#9C9485]" },
+  coming_soon: { label: "Coming soon", className: "bg-[#E8A020]/10 text-[#E8A020]" },
+  paid_coming_soon: { label: "Paid — coming soon", className: "bg-[#6B2D8B]/10 text-[#6B2D8B]" },
 };
 
-export default async function FeaturesPage({
+/**
+ * /dashboard/listings/[id]/features
+ *
+ * Real switchboard, promoted from the /eat prototype. Replaces the legacy
+ * "coming soon — go to menu builder instead" placeholder. Lists every feature
+ * the restaurant could enable, shows current status, and renders an inline
+ * toggle (live PATCH to /api/menu/settings) for the ones with a backend
+ * switch today.
+ *
+ * Read flow per feature:
+ *   1. LISTING_FEATURES (single source of truth) gives the list + status
+ *   2. menus row provides the toggle's current value
+ *   3. FeatureToggleRow is a client component that PATCHes /api/menu/settings
+ */
+export default async function ListingFeaturesPage({
   params,
 }: {
   params: Promise<{ id: string }>;
@@ -49,41 +51,35 @@ export default async function FeaturesPage({
   const { id } = await params;
 
   const { user } = await getAuthUser();
-  if (!user) redirect("/login");
+  if (!user) redirect(`/login?returnTo=/dashboard/listings/${id}/features`);
 
   const isAdmin = await getIsAdmin(user.id);
-
   const hostProfile = await getHostProfile(user.id);
-  // Admin users may not have a host_profile — only redirect non-admins
   if (!hostProfile && !isAdmin) redirect("/dashboard");
 
-  // Fetch listing slug + type — admin bypasses ownership filter
-  const listing = await sanityClient.fetch<{ slug: string; type: string } | null>(
+  const listing = await sanityClient.fetch<{ slug: string; city: string | null } | null>(
     isAdmin
-      ? `*[_id == $id && (_type == "listing" || _type == "event")][0]{
-          "slug": slug.current, type
-        }`
-      : `*[_id == $id && (hostId == $userId || host._ref == $sanityHostId)][0]{
-          "slug": slug.current, type
+      ? `*[_id == $id && _type == "listing" && (type == "restaurant" || subcategory == "restaurants")][0]{ "slug": slug.current, city }`
+      : `*[_id == $id && _type == "listing" && (type == "restaurant" || subcategory == "restaurants") && (hostId == $userId || host._ref == $sanityHostId)][0]{
+          "slug": slug.current, city
         }`,
-    { id, userId: user.id, sanityHostId: hostProfile?.sanity_host_id ?? "" },
+    {
+      id,
+      userId: user.id,
+      sanityHostId: hostProfile?.sanity_host_id ?? "",
+    },
   );
 
-  if (!listing) redirect("/dashboard/listings");
+  if (!listing?.slug) notFound();
 
-  // Fetch linked menu for feature status — admin bypasses business_id filter
-  // (layout already validated listing ownership upstream).
-  const { data: menu } = await (async () => {
-    if (!listing.slug) return { data: null };
-    let menuQuery = adminClient
-      .from("menus")
-      .select(
-        "id, table_ordering, reservations_enabled, ordering_enabled, takeaway_enabled, delivery_enabled, stock_enabled",
-      )
-      .eq("listing_slug", listing.slug);
-    if (!isAdmin) menuQuery = menuQuery.eq("business_id", user.id);
-    return await menuQuery.maybeSingle();
-  })();
+  let menuQuery = adminClient
+    .from("menus")
+    .select(
+      "id, table_ordering, reservations_enabled, ordering_enabled, takeaway_enabled, delivery_enabled, stock_enabled",
+    )
+    .eq("listing_slug", listing.slug);
+  if (!isAdmin) menuQuery = menuQuery.eq("business_id", user.id);
+  const { data: menu } = await menuQuery.maybeSingle();
 
   const featureCtx: FeatureContext = {
     listingType: "restaurant",
@@ -100,129 +96,175 @@ export default async function FeaturesPage({
       : undefined,
   };
 
-  const features = LISTING_FEATURES.filter((f) =>
+  function toggleColumnFor(featureId: string): string | null {
+    switch (featureId) {
+      case "table_ordering": return "table_ordering";
+      case "reservations":   return "reservations_enabled";
+      case "klickenya_kitchen": return "stock_enabled";
+      default: return null;
+    }
+  }
+  function configureHrefFor(featureId: string): string | null {
+    switch (featureId) {
+      case "table_ordering": return `/dashboard/listings/${id}/orders`;
+      case "reservations":   return `/dashboard/listings/${id}/reservations`;
+      case "klickenya_kitchen": return `/dashboard/listings/${id}/kitchen`;
+      default: return null;
+    }
+  }
+
+  const restaurantFeatures = LISTING_FEATURES.filter((f) =>
     f.appliesTo.includes(featureCtx.listingType),
   );
 
+  const menuStatus: FeatureStatus = menu ? "active" : "inactive";
+
   return (
     <div className="space-y-5">
-      {/* ── Header ── */}
       <div>
         <h2 className="font-display text-[18px] lg:text-[20px] font-bold tracking-[-0.02em] text-[#16130C]">
-          Features &amp; add-ons
+          Features
         </h2>
         <p className="text-[13px] text-[#9C9485] mt-1">
-          Manage the tools available for your listing.
+          Switch capabilities on or off for this restaurant. Toggling takes effect immediately.
         </p>
       </div>
 
-      {/* ── Coming-soon callout ── */}
-      <div className="rounded-xl border border-[#E2DDD5] bg-[#F4F1EC]/60 p-4 lg:p-5">
-        <p className="text-[13px] font-semibold text-[#16130C] mb-1">
-          Add-on management coming soon
-        </p>
-        <p className="text-[13px] text-[#5E5848]">
-          You&apos;ll configure all your listing features here — reservations, table
-          ordering, delivery, and more. For now, use{" "}
-          <span className="font-semibold text-[#16130C]">Menu → Publish Panel</span>{" "}
-          to toggle individual features.
-        </p>
-      </div>
+      <div className="bg-white rounded-xl lg:rounded-2xl border border-[#E2DDD5] shadow-sm divide-y divide-[#F4F1EC]">
+        <FeatureRow
+          icon={UtensilsCrossed}
+          label="Digital menu"
+          shortDescription="Your live menu. QR-accessible for guests."
+          statusBadge={menuStatus === "active" ? "active" : "inactive"}
+          configureHref={menu ? `/dashboard/listings/${id}/menu` : null}
+          toggleColumn={null}
+          menuId={menu?.id ?? null}
+          currentValue={!!menu}
+          locked={!menu}
+          lockedReason={menu ? undefined : "Create a menu first via /dashboard/menus"}
+        />
 
-      {/* ── Feature preview grid ─────────────────────────────────────────────
-           Most cards are read-only previews (status comes from elsewhere; the
-           management surface is built feature-by-feature). For features whose
-           toggle UI already exists in another part of the app, we resolve a
-           setupHref and turn the card into a clickable Link so owners can
-           reach the toggle in one tap. Lock icon stays for read-only cards.
-      ─────────────────────────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        {features.map((feature) => {
+        {restaurantFeatures.map((feature) => {
           const status = feature.getStatus(featureCtx);
-          const style = STATUS_STYLES[status];
-          const Icon = ICON_MAP[feature.icon];
+          const Icon = ICON_MAP[feature.icon] ?? UtensilsCrossed;
+          const toggleColumn = toggleColumnFor(feature.id);
+          const configureHref = configureHrefFor(feature.id);
+          const isComingSoon = status === "coming_soon" || status === "paid_coming_soon";
+          const currentValue = (() => {
+            if (!menu) return false;
+            switch (feature.id) {
+              case "table_ordering": return menu.table_ordering ?? false;
+              case "reservations": return menu.reservations_enabled ?? false;
+              case "klickenya_kitchen": return menu.stock_enabled ?? false;
+              default: return false;
+            }
+          })();
 
-          // Where does the owner go to toggle this feature? Returns null when
-          // the toggle isn't built yet (those cards stay locked).
-          const setupHref = setupHrefFor(feature.id, featureCtx);
-          const cardCls =
-            "relative bg-white rounded-xl lg:rounded-2xl border border-[#E2DDD5] p-4 shadow-sm";
-          const inner = (
-            <>
-              <div className="absolute top-3 right-3 text-[#E2DDD5]">
-                {setupHref ? <ChevronRight className="size-4" /> : <Lock className="size-3.5" />}
-              </div>
-
-              <div className="flex items-start gap-3">
-                <div className="shrink-0 size-9 rounded-xl bg-[#F4F1EC] flex items-center justify-center">
-                  {Icon ? (
-                    <Icon className="size-4 text-[#5E5848]" />
-                  ) : (
-                    <span className="text-[16px]">⚡</span>
-                  )}
-                </div>
-                <div className="flex-1 min-w-0 pr-5">
-                  <p className="text-[13px] font-semibold text-[#16130C]">
-                    {feature.label}
-                  </p>
-                  <p className="text-[12px] text-[#9C9485] mt-0.5 leading-snug">
-                    {feature.shortDescription}
-                  </p>
-                </div>
-              </div>
-
-              <div className="mt-3 flex items-center gap-2">
-                <span
-                  className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide ${style.className}`}
-                >
-                  {style.label}
-                </span>
-                {setupHref && status === "inactive" && (
-                  <span className="text-[11px] font-bold text-[#E8A020] uppercase tracking-wide">
-                    Set up →
-                  </span>
-                )}
-              </div>
-            </>
-          );
-
-          return setupHref ? (
-            <Link
+          return (
+            <FeatureRow
               key={feature.id}
-              href={setupHref}
-              className={`${cardCls} hover:shadow-md hover:border-[#E8A020]/40 transition-all`}
-            >
-              {inner}
-            </Link>
-          ) : (
-            <div key={feature.id} className={`${cardCls} opacity-90`}>
-              {inner}
-            </div>
+              icon={Icon}
+              label={feature.label}
+              shortDescription={feature.shortDescription}
+              statusBadge={status}
+              configureHref={status === "active" ? configureHref : null}
+              toggleColumn={toggleColumn}
+              menuId={menu?.id ?? null}
+              currentValue={currentValue}
+              locked={!menu || isComingSoon}
+              lockedReason={
+                !menu
+                  ? "Requires a menu"
+                  : isComingSoon
+                  ? STATUS_STYLES[status].label
+                  : undefined
+              }
+            />
           );
         })}
+
+        <FeatureRow
+          icon={Smartphone}
+          label="POS terminal"
+          shortDescription="Tablet sign-in for waiters: take orders, settle bills, manage tables."
+          statusBadge={menu ? "active" : "inactive"}
+          configureHref={menu ? `/dashboard/listings/${id}/pos` : null}
+          toggleColumn={null}
+          menuId={null}
+          currentValue={!!menu}
+          locked={!menu}
+          lockedReason={menu ? undefined : "Requires a menu"}
+        />
+      </div>
+
+      <div className="text-[11px] text-[#9C9485] flex items-center gap-1 justify-end">
+        Tap a row to open its configure page. Toggles write to <code className="bg-[#F4F1EC] px-1 rounded">menus</code> via <code className="bg-[#F4F1EC] px-1 rounded">/api/menu/settings</code>.
       </div>
     </div>
   );
 }
 
-/* ── Where does each feature's enable toggle live today? ──────────────────
- * Returns null for features whose toggle UI hasn't been built yet -- those
- * keep the lock icon and stay non-clickable. As real management UI lands
- * here, individual entries can be removed (the in-place toggle takes over).
- *
- * All current entries point at the menu builder, where the existing right-
- * sidebar Publish panel hosts the toggles. Klickenya Kitchen is the one
- * exception: its setup CTA lives one level deeper, on the stock home page.
- */
-function setupHrefFor(featureId: string, ctx: FeatureContext): string | null {
-  if (!ctx.menu) return null;
-  switch (featureId) {
-    case "table_ordering":
-    case "reservations":
-      return `/dashboard/menu/${ctx.menu.id}`;
-    case "klickenya_kitchen":
-      return `/dashboard/menu/${ctx.menu.id}/stock`;
-    default:
-      return null;
-  }
+function FeatureRow({
+  icon: Icon,
+  label,
+  shortDescription,
+  statusBadge,
+  configureHref,
+  toggleColumn,
+  menuId,
+  currentValue,
+  locked,
+  lockedReason,
+}: {
+  icon: LucideIcon;
+  label: string;
+  shortDescription: string;
+  statusBadge: FeatureStatus;
+  configureHref: string | null;
+  toggleColumn: string | null;
+  menuId: string | null;
+  currentValue: boolean;
+  locked: boolean;
+  lockedReason?: string;
+}) {
+  const style = STATUS_STYLES[statusBadge];
+
+  return (
+    <div className="flex items-center gap-3 p-4 lg:p-5">
+      <div className="shrink-0 size-10 rounded-xl bg-[#F4F1EC] flex items-center justify-center">
+        <Icon className="size-5 text-[#5E5848]" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 flex-wrap">
+          <p className="text-[14px] font-semibold text-[#16130C]">{label}</p>
+          <span className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide ${style.className}`}>
+            {style.label}
+          </span>
+        </div>
+        <p className="text-[12px] text-[#9C9485] mt-0.5 leading-snug">{shortDescription}</p>
+        {locked && lockedReason && (
+          <p className="text-[11px] text-[#9C9485] mt-0.5 flex items-center gap-1">
+            <Lock className="size-3" /> {lockedReason}
+          </p>
+        )}
+      </div>
+      <div className="shrink-0 flex items-center gap-2">
+        {configureHref && (
+          <Link
+            href={configureHref}
+            className="text-[12px] font-semibold text-[#E8A020] hover:underline"
+          >
+            Open →
+          </Link>
+        )}
+        {toggleColumn && menuId && !locked && (
+          <FeatureToggleRow
+            menuId={menuId}
+            column={toggleColumn}
+            initialValue={currentValue}
+          />
+        )}
+      </div>
+    </div>
+  );
 }
