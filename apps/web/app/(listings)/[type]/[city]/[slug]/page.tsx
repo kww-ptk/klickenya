@@ -241,6 +241,12 @@ export default async function ListingDetailPage({ params }: PageProps) {
   } | null = null;
 
   if (isRestaurantListing) {
+    // Fetch the menu row regardless of publish state so reservation + other
+    // feature settings (reservations_enabled, areas, time windows, max party
+    // size, etc.) can light up the listing page even when the menu sections
+    // themselves are still in draft. menuData (the public items grid) is only
+    // assigned when is_published === true, so a draft menu is never shown
+    // to guests.
     const { data } = await adminClient
       .from("menus")
       .select(
@@ -259,11 +265,13 @@ export default async function ListingDetailPage({ params }: PageProps) {
       `
       )
       .eq("listing_slug", slug)
-      .eq("is_published", true)
       .single();
 
     if (data) {
-      menuData = data as MenuData;
+      // Items grid is gated on publish; reservations are not.
+      if ((data as Record<string, unknown>).is_published === true) {
+        menuData = data as MenuData;
+      }
 
       // Fetch restaurant areas + host phone + time windows in parallel (non-blocking on error)
       const [areasResult, hostResult, windowsResult] = await Promise.allSettled([
