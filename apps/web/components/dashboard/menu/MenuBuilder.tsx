@@ -8,6 +8,7 @@ import { ItemForm } from "./ItemForm";
 import { OptionGroupEditor } from "./OptionGroupEditor";
 import { TableSetup } from "./TableSetup";
 import { MenuImporter } from "./MenuImporter";
+import { MenuEmbedPanel } from "./MenuEmbedPanel";
 import { useToast } from "@/components/ui/Toast";
 import { Toggle } from "@/components/ui/Toggle";
 
@@ -611,12 +612,22 @@ export function MenuBuilder({
             users don't lose their on/off switches.
         ─────────────────────────────────────────────────────────────────── */}
         {mode === "menu-only" ? (
-          <OtherFeaturesHintCard
-            featureBaseHref={featureBaseHref ?? ""}
-            reservationsEnabled={reservationsEnabled}
-            tableOrdering={tableOrdering}
-            stockEnabled={stockEnabled}
-          />
+          <>
+            <OtherFeaturesHintCard
+              featureBaseHref={featureBaseHref ?? ""}
+              reservationsEnabled={reservationsEnabled}
+              tableOrdering={tableOrdering}
+              stockEnabled={stockEnabled}
+            />
+            {/* Embed menu on owner's website. Shown only when the menu is
+                published — embedding a draft would 404 from the parent site. */}
+            {menu.is_published && (
+              <MenuEmbedPanel
+                menuSlug={menu.slug}
+                reservationsEnabled={reservationsEnabled}
+              />
+            )}
+          </>
         ) : (
           <>
             {/* Table ordering toggle */}
