@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Klickenya Embed Loader — Demo</title>
+    <style>
+      body {
+        font-family: system-ui, -apple-system, sans-serif;
+        max-width: 760px;
+        margin: 0 auto;
+        padding: 24px 16px 80px;
+        color: #16130c;
+        background: #faf8f4;
+      }
+      h1 { font-size: 22px; }
+      h2 { font-size: 15px; margin-top: 40px; color: #5e5848; }
+      p { color: #5e5848; font-size: 14px; line-height: 1.5; }
+      code { background: #f4f1ec; padding: 1px 5px; border-radius: 4px; font-size: 13px; }
+      .widget { border: 1px dashed #d9d2c6; border-radius: 12px; margin-top: 12px; }
+      .controls { margin-top: 8px; }
+      label { font-size: 13px; margin-right: 12px; }
+    </style>
+  </head>
+  <body>
+    <h1>Klickenya Embed Loader — Demo</h1>
+    <p>
+      This page simulates an external business website (Squarespace/Wix/plain
+      HTML). It loads <code>/embed.js</code> once and declares widgets with
+      <code>data-klickenya-tool</code> attributes. The loader injects the iframe
+      and auto-resizes it via the <code>klickenya:resize</code> postMessage
+      bridge. Change <code>data-slug</code> to a real published menu/property
+      slug on your environment.
+    </p>
+
+    <div class="controls">
+      <label>Slug:
+        <input id="slug" value="napule" />
+      </label>
+      <button onclick="applySlug()">Apply to all widgets</button>
+    </div>
+
+    <h2>Reservation widget — <code>data-klickenya-tool="reservation"</code></h2>
+    <div class="widget" data-klickenya-tool="reservation" data-slug="napule"></div>
+
+    <h2>Menu widget (dark) — <code>data-klickenya-tool="menu" data-theme="dark"</code></h2>
+    <div class="widget" data-klickenya-tool="menu" data-slug="napule" data-theme="dark"></div>
+
+    <h2>Menu + booking combo — <code>data-klickenya-tool="restaurant"</code></h2>
+    <div class="widget" data-klickenya-tool="restaurant" data-slug="napule" data-accent="0EA5E9"></div>
+
+    <h2>Property booking — <code>data-klickenya-tool="booking"</code> (route ships in Phase 3)</h2>
+    <div class="widget" data-klickenya-tool="booking" data-slug="kilifi-villa"></div>
+
+    <script src="/embed.js" async></script>
+    <script>
+      // Demo helper: rewrite every widget's slug and re-mount via the public API.
+      function applySlug() {
+        var slug = document.getElementById("slug").value.trim();
+        document.querySelectorAll("[data-klickenya-tool]").forEach(function (el) {
+          el.setAttribute("data-slug", slug);
+          el.removeAttribute("data-klickenya-mounted");
+          el.innerHTML = "";
+        });
+        if (window.Klickenya) window.Klickenya.refresh();
+      }
+    </script>
+  </body>
+</html>

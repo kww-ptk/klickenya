@@ -18,6 +18,33 @@ export async function middleware(request: NextRequest) {
     return response;
   }
 
+  // ── Public embed/SDK API — CORS so a third-party site's own frontend can
+  // call these endpoints directly (Phase 5: public API). Scoped to an explicit
+  // allowlist of already-public, anonymous endpoints — admin/dashboard APIs are
+  // NOT included and stay same-origin only. Abuse is bounded by per-IP rate
+  // limiting + honeypot on the write endpoints. OPTIONS preflight handled here.
+  const PUBLIC_API_CORS_PATHS = [
+    "/api/menu/reservations",
+    "/api/properties/availability-by-booking-slug",
+    "/api/properties/booking-enquiry",
+  ];
+  if (PUBLIC_API_CORS_PATHS.includes(pathname)) {
+    const corsHeaders = {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type",
+      "Access-Control-Max-Age": "86400",
+    };
+    if (request.method === "OPTIONS") {
+      return new NextResponse(null, { status: 204, headers: corsHeaders });
+    }
+    const response = NextResponse.next({ request });
+    for (const [k, v] of Object.entries(corsHeaders)) {
+      response.headers.set(k, v);
+    }
+    return response;
+  }
+
   // ── Partner storefront host: serve the /storefront route tree, no auth ──
   if (!isHouseHost(host)) {
     // Let API routes, Next internals, and already-rewritten paths pass through
