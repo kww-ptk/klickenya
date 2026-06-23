@@ -115,10 +115,24 @@ Replace `?email=&temp=` auto-login with a single-use, short-lived magic token.
 Extract one `provisionHost()` helper used by OAuth callback, claim approve, and
 listing approve so behaviour can't drift.
 
-### D-7 · B-4 — AI-assist step
-Either configure `FIRECRAWL_API_KEY` or feature-flag the step off so users don't see
-a guaranteed error. (Currently degrades gracefully to "fill manually," so low
-urgency.)
+### D-7 · B-4 — AI-assist step always fails
+Returns 503 even with `ANTHROPIC_API_KEY` set (verified locally 2026-06-23), so it
+is **not only** the missing `FIRECRAWL_API_KEY`/`GOOGLE_PLACES_API_KEY`. The
+Anthropic draft call is failing silently. **Solution (in order):**
+1. **Stop swallowing errors** — in `scrapeWebsite`, `fetchGooglePlace`, and
+   `analyseWithAI`, `console.error` the caught error (and the Anthropic HTTP
+   status + body) instead of returning null/"" silently, so the real cause is
+   visible. Do this first — it's the diagnostic.
+2. **Verify/refresh the model id** — `claude-sonnet-4-20250514` may be retired;
+   move to a current Sonnet (e.g. `claude-sonnet-4-6`) or latest.
+3. **Confirm the guidelines path** resolves at runtime; the `join(process.cwd(),
+   "..","..","docs",…)` is fragile under Turbopack. (Empty-string fallback is
+   already handled, but verify it's actually loading the file.)
+4. **Add the input keys** (`FIRECRAWL_API_KEY`, optional `GOOGLE_PLACES_API_KEY`)
+   for real scraping — Firecrawl has a free tier; must be added to env by the owner.
+5. **OR** implement a name-only Anthropic draft and feature-flag the AI step off
+   when no input keys are present, so users never see a guaranteed error.
+**Files:** `apps/web/app/api/list/ai-analyse/route.ts`, env config.
 
 ### D-8 · S-4 — `listing_requests.admin_notes` column (migration 068)
 `/api/admin/listing-requests/[id]/note` 500s until the column exists. Needs a DB

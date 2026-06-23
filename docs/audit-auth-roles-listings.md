@@ -222,11 +222,27 @@ The "unique slug" guard compares the candidate **slug** against the
 a slug will never equal a Sanity document id, so the check effectively never fires.
 Real slug collisions in Sanity aren't caught, risking duplicate/clashing slugs.
 
-### 🟠 B-4 — AI-assist step is exposed but always fails
-Step 2 ("Let AI draft your listing") calls `/api/list/ai-analyse`, which needs
-`FIRECRAWL_API_KEY` — not configured in production. Every user gets **"AI analysis
-unavailable. Please fill in the form manually."** Either wire the key or hide the
-step until it's ready.
+### 🟠 B-4 — AI-assist step always fails (deeper than a missing key)
+Step 2 ("Let AI draft your listing") calls `/api/list/ai-analyse`. It's a 3-key
+pipeline: scrape website (`FIRECRAWL_API_KEY`), pull Google reviews
+(`GOOGLE_PLACES_API_KEY`), then draft via Anthropic (`ANTHROPIC_API_KEY`). The
+first two keys are not configured.
+
+**New finding (verified locally 2026-06-23):** even with `ANTHROPIC_API_KEY`
+present and no scrape inputs, the endpoint returns **503 "AI analysis unavailable.
+Please fill in the form manually."** `analyseWithAI()` does NOT require scraped
+content (it sends "No website content available"), so the **Anthropic draft call
+itself is failing and being silently swallowed** — `scrapeWebsite`,
+`fetchGooglePlace`, and `analyseWithAI` all return `null`/`""` in bare `catch`
+blocks, so the real cause never surfaces in logs. Suspects, in order:
+1. **Stale model id** `claude-sonnet-4-20250514` (route ~line 191) may be retired
+   → 404 → null.
+2. **Guidelines file path** `join(process.cwd(), "..","..","docs", …)` may not
+   resolve at runtime under Next/Turbopack.
+3. **Response JSON parse** failure.
+Because every error is swallowed, the exact cause can't be confirmed without
+adding logging first.
+**File:** `apps/web/app/api/list/ai-analyse/route.ts`.
 
 ### 🟡 B-5 — `/list` is not reachable from the dashboard
 Confirmed in H-1. A logged-in host — the exact person who should list — has no link
