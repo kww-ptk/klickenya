@@ -121,6 +121,13 @@ promote to host ([auth/callback/route.ts:80-107](../apps/web/app/(auth)/auth/cal
 So a user who lands on "Create your host account" and signs up **with email** gets
 a **guest** account — a silent broken promise.
 
+> **Update (live test 2026-06-23):** the F-4 fix attempt sets `role = host` but
+> **fails to create the `host_profiles` row** (`host_profiles.user_id` has no
+> unique constraint → upsert `42P10`; `slug` is NOT NULL → insert `23502`),
+> leaving a half-provisioned host who gets bounced from the dashboard. Full
+> details + corrected approach in the fix plan (F-4). Possibly affects the Google
+> path too — needs verification.
+
 ### 🟠 R-4 — Three host-provisioning code paths that don't agree
 Host accounts are created in **three** places with **subtly different** logic:
 - OAuth callback (`role=host` intent) → promotes, creates `host_profiles` (no slug,

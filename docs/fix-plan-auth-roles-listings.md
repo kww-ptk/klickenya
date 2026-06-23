@@ -9,6 +9,10 @@
 > `fix(auth/listings): canonical domains, host signup parity, list-approve goes
 > live, dashboard list entry` (typecheck passes, dev server compiles clean).
 > Bucket 2 (D-1…D-8) is **⏳ NOT STARTED** — documented only.
+>
+> ⚠️ **F-4 is VERIFIED INCOMPLETE** (live test 2026-06-23) — it sets
+> `users.role = host` but fails to create the `host_profiles` row, so the host is
+> left half-provisioned. **Needs rework before shipping** — details under F-4.
 
 ---
 
@@ -62,6 +66,44 @@ instead of `guest_profiles` (mirrors the OAuth callback path).
 **Risk:** Medium — self-serve host creation via email, but this only makes email
 *consistent with the already-existing Google host path*. Does NOT touch the
 listing-approval gate.
+
+**⚠️ VERIFIED INCOMPLETE (live test 2026-06-23, localhost → prod DB):**
+Registering at `/register?role=host` via email now sets `users.role = host` ✅ but
+**does NOT create the `host_profiles` row** ❌. Two DB facts caught it:
+- `host_profiles.user_id` has **no unique constraint** → the
+  `upsert(..., { onConflict: "user_id" })` errors with Postgres **`42P10`** ("no
+  unique or exclusion constraint matching the ON CONFLICT specification") and
+  inserts nothing.
+- `host_profiles.slug` is **NOT NULL with no default** → any insert that omits a
+  slug fails with **`23502`**. My upsert omitted slug too.
+
+Result: an email host ends up `role=host` with **no host_profile**, so they get
+**redirected out of My Listings / Enquiries / Stats** (those pages `redirect` when
+`getHostProfile` returns null). **So F-4 must not ship as-is.**
+
+**Corrected fix:** generate a unique slug (mirror `makeSlug` + the uniqueness
+check used by claim/listing approve) and **INSERT** (not upsert), guarded by a
+select-existing check:
+```ts
+const base = makeSlug(name) || "host";
+let slug = base;
+// suffix if slug taken
+const { count } = await serviceClient.from("host_profiles")
+  .select("id", { count: "exact", head: true }).eq("slug", slug);
+if ((count ?? 0) > 0) slug = `${base}-${Math.random().toString(36).slice(2,6)}`;
+const { data: existing } = await serviceClient.from("host_profiles")
+  .select("id").eq("user_id", uid).maybeSingle();
+if (!existing) await serviceClient.from("host_profiles")
+  .insert({ user_id: uid, slug, display_name: name, email });
+```
+
+**Also flag (verify) — possible wider bug:** the OAuth callback's host_profiles
+insert ([auth/callback/route.ts ~line 102](../apps/web/app/(auth)/auth/callback/route.ts))
+likewise omits `slug`. Given the NOT NULL constraint it *should* fail for new
+Google hosts too — yet existing host rows have slugs (e.g. `alysa-e`,
+`jessica-mckenzie`). Open question: is there a slug default/trigger, or are
+recent Google `?role=host` signups also silently ending up with no profile? This
+ties to **R-4** (three divergent host-creation paths) and needs a dedicated check.
 
 ### F-5 · H-1 + B-5 — "List your business" entry point in the host dashboard
 **Problem:** no way to reach `/list` from the dashboard; empty state only offers
