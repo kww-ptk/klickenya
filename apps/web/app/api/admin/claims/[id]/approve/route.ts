@@ -17,6 +17,9 @@ const sanityWrite = createSanityClient({
   token: process.env.SANITY_WRITE_TOKEN,
 });
 
+const SITE_URL =
+  process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") || "https://klickenya.com";
+
 type RouteContext = { params: Promise<{ id: string }> };
 
 export async function POST(req: NextRequest, ctx: RouteContext) {
@@ -271,7 +274,7 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
         let hostAccountSection: string;
         if (tempPassword) {
           // Brand new user — show credentials + auto-login link
-          const loginUrl = `https://www.klickenya.com/login?email=${encodeURIComponent(claim.claimant_email)}&temp=${encodeURIComponent(tempPassword)}`;
+          const loginUrl = `${SITE_URL}/login?email=${encodeURIComponent(claim.claimant_email)}&temp=${encodeURIComponent(tempPassword)}`;
           hostAccountSection = `
             <hr style="border: none; border-top: 1px solid #E2DDD5; margin: 24px 0;" />
             <p style="font-size: 15px; color: #5E5848; margin: 0 0 8px;">
@@ -304,7 +307,7 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
               Log in with your existing password to access your host dashboard.
             </p>
             <p style="margin: 0 0 24px;">
-              <a href="https://www.klickenya.com/login" style="display: inline-block; background: #E8A020; color: #16130C; font-weight: 700; text-decoration: none; padding: 12px 28px; border-radius: 999px; font-size: 14px;">Log in to your dashboard →</a>
+              <a href="${SITE_URL}/login" style="display: inline-block; background: #E8A020; color: #16130C; font-weight: 700; text-decoration: none; padding: 12px 28px; border-radius: 999px; font-size: 14px;">Log in to your dashboard →</a>
             </p>
           `;
         } else {

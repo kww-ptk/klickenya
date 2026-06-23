@@ -144,6 +144,8 @@ export default function RegisterPage() {
 
         {/* Form */}
         <form action={handleSubmit} className="space-y-4">
+          {/* Carry the host intent through email signup (parity with Google). */}
+          <input type="hidden" name="role" value={roleParam ?? ""} />
           <div>
             <label
               htmlFor="name"

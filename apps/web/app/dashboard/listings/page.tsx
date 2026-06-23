@@ -66,6 +66,12 @@ export default async function DashboardListingsPage() {
             {listings.length} listing{listings.length !== 1 ? "s" : ""} · {verifiedCount} verified · {pendingCount} pending
           </p>
         </div>
+        <Link
+          href="/list"
+          className="shrink-0 inline-flex items-center bg-amber text-dark font-bold text-[13px] px-5 h-[40px] rounded-full hover:bg-[#d4911c] transition-colors shadow-sm"
+        >
+          List your business →
+        </Link>
       </div>
 
       {listings.length === 0 ? (
@@ -74,15 +80,24 @@ export default async function DashboardListingsPage() {
             <span className="text-[36px]">🏡</span>
           </div>
           <p className="font-display text-[18px] font-bold text-dark mb-1">No listings yet</p>
-          <p className="text-[14px] text-text3 mb-6 max-w-[280px] mx-auto">
-            Claim your first listing on Klickenya and start managing it from here.
+          <p className="text-[14px] text-text3 mb-6 max-w-[320px] mx-auto">
+            List a new business to put it on Klickenya — or claim an existing
+            listing if your business is already on the marketplace.
           </p>
-          <Link
-            href="/"
-            className="inline-block bg-amber text-dark font-bold text-[14px] px-7 h-[48px] leading-[48px] rounded-full hover:bg-[#d4911c] transition-colors shadow-sm"
-          >
-            Claim a listing →
-          </Link>
+          <div className="flex flex-col sm:flex-row gap-2 justify-center">
+            <Link
+              href="/list"
+              className="inline-block bg-amber text-dark font-bold text-[14px] px-7 h-[48px] leading-[48px] rounded-full hover:bg-[#d4911c] transition-colors shadow-sm"
+            >
+              List your business →
+            </Link>
+            <Link
+              href="/"
+              className="inline-block bg-white border border-border text-dark font-bold text-[14px] px-7 h-[48px] leading-[48px] rounded-full hover:border-text3 transition-colors"
+            >
+              Claim a listing
+            </Link>
+          </div>
         </div>
       ) : (
         <div className="space-y-3">
