@@ -39,3 +39,4 @@ pnpm-debug.log*
 
 # Turbo
 .turbo
+.env*

@@ -28,11 +28,13 @@ LIVE and working end-to-end:
   - Guest profile: /profile — bookings/enquiries/events/saved tabs
   - Real estate: /real-estate/list (3-step form, agent/owner/developer)
   - Admin listing-requests: /admin/listing-requests (manual review of new listing submissions)
+  - /list public listing submission: 6-step form → listing_requests → admin approve publishes
   - AI draft reply: /api/admin/ai/draft-reply (uses ANTHROPIC_API_KEY — already live)
   - GHL pipeline: 7 stages, webhooks on claim/approve/reject/RE enquiry/contact
 
 NOT YET BUILT:
-  - /list route (AI-assisted new listing creation) — planned, listing_requests table exists
+  - /list AI-assist step — route is LIVE, but the "Analyse with AI" website-scrape
+    needs FIRECRAWL_API_KEY (not set); it degrades gracefully to manual entry
   - iCal sync engine — ical_feeds table in migration 031, no sync route or cron
   - Stay listing dashboard hub — restaurant hub exists, stay is TODO V2
   - Reviews & ratings system
