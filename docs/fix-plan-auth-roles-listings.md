@@ -1,9 +1,14 @@
 # Fix Plan — Registration, Roles & Host Listing Flows
 
 > Companion to [audit-auth-roles-listings.md](./audit-auth-roles-listings.md).
-> Branch: `fix/auth-roles-listings` (off `dev`). Written before implementation.
+> Branch: `fix/auth-roles-listings` (off `dev`).
 > Two buckets: **(1) Fixing now** — bounded, low/medium risk. **(2) Deferred** —
 > structural features that need a dedicated project; documented, not implemented.
+>
+> **STATUS:** Bucket 1 (F-1…F-6) is **✅ IMPLEMENTED** in commit
+> `fix(auth/listings): canonical domains, host signup parity, list-approve goes
+> live, dashboard list entry` (typecheck passes, dev server compiles clean).
+> Bucket 2 (D-1…D-8) is **⏳ NOT STARTED** — documented only.
 
 ---
 
