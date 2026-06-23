@@ -111,6 +111,43 @@ CLAUDE.md: *"Dashboard rule: max 5 nav items. Keep it tight."* The sidebar has
 **9**: Dashboard, My Listings, Property PMS, Menu, Stats, My Events, Enquiries,
 Edit Profile, Settings. Either the rule is stale or the nav needs grouping.
 
+### HD-9 — Broken / inconsistent active-toggle switches
+There's a clean shared switch — [components/ui/Toggle.tsx](../apps/web/components/ui/Toggle.tsx)
+(`w-10 h-[22px]`, knob `size-[18px]`, `translate-x-[18px]`) — but several places
+**hand-roll their own** instead, and at least one is visually broken.
+
+**🔴 Broken (the reported screenshot):**
+- [property/[id]/_components/RoomManagementSection.tsx:220-234](../apps/web/app/dashboard/property/[id]/_components/RoomManagementSection.tsx)
+  — room "Active — click to deactivate" toggle. Geometry is off: container is
+  `w-9` (36px) but the knob is `size-4` (16px) and translates `18px`, so the knob
+  **overshoots/clips the right edge** of the pill. This is the "not shown nicely"
+  toggle.
+
+**🟠 Inconsistent (custom, should use the shared component):**
+- [components/dashboard/menu/TableSetup.tsx:182-192](../apps/web/components/dashboard/menu/TableSetup.tsx)
+  — table active control is a **text pill** ("Active"/"Off"), not a switch.
+- [property/[id]/settings/page.tsx](../apps/web/app/dashboard/property/[id]/settings/page.tsx)
+  — the "Booking system / Live" toggle + room toggles are custom inline (this page
+  does not import the shared `Toggle`).
+
+**✅ Already correct (use the shared `Toggle`) — no change needed:**
+`listings/[id]/features/FeatureToggleRow.tsx`,
+`eat/listings/[id]/features/FeatureToggleRow.tsx`,
+`listings/[id]/orders/TableOrderingClient.tsx`,
+`components/dashboard/listings/ReservationsSettings.tsx`,
+`components/dashboard/listings/StaffSection.tsx`,
+`components/dashboard/menu/MenuBuilder.tsx`.
+
+**Admin side:** no switch toggles at all — admin uses **status dropdowns / filter
+tabs** for the same active/published concept (`admin/listings/new` `<select>`,
+`admin/listings`, `admin/real-estate`) and never imports the shared `Toggle`. So
+the active/published control is **inconsistent across host (switches) vs admin
+(dropdowns)**.
+
+**Fix direction:** replace the three custom host toggles with the shared
+`<Toggle>` component; decide on one consistent active/published control pattern
+across host and admin.
+
 ### HD-7 — Guest pages live inside the host dashboard tree
 `/dashboard/guest/bookings` and `/dashboard/guest/enquiries` exist under the
 **host** dashboard route group. Guest-facing content nested in the host tree is an
