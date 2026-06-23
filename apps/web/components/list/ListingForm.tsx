@@ -102,6 +102,28 @@ const PHOTO_CONSENT_OPTIONS: { value: PhotoConsent; title: string; desc: string 
   { value: "no", title: "No — I'll provide my own separately", desc: "Email photos to hello@klickenya.com with subject: Photos for your listing." },
 ];
 
+/* ---------- Validation ---------- */
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+function emailError(v: string): string | null {
+  if (!v.trim()) return "Email is required";
+  if (!EMAIL_RE.test(v.trim())) return "Enter a valid email address";
+  return null;
+}
+
+function phoneError(v: string): string | null {
+  if (!v.trim()) return "Phone number is required";
+  const digits = v.replace(/[^0-9]/g, "");
+  if (digits.length < 9 || digits.length > 15)
+    return "Enter a valid phone number with country code (e.g. +254712345678)";
+  return null;
+}
+
+function requiredError(v: string, label: string): string | null {
+  return v.trim() ? null : `${label} is required`;
+}
+
 /* ---------- Step indicator ---------- */
 
 const STEP_LABELS: Record<Step, string> = {
@@ -119,27 +141,47 @@ const STEP_ORDER: Step[] = ["type", "ai", "details", "content", "consent", "otp"
 function StepDots({ current }: { current: Step }) {
   const visible: Step[] = ["type", "ai", "details", "content", "consent", "otp"];
   const currentIdx = visible.indexOf(current);
+  const pct = ((currentIdx + 1) / visible.length) * 100;
   return (
-    <div className="flex items-center gap-2 mb-8">
-      {visible.map((s, i) => (
-        <div key={s} className="flex items-center gap-2">
-          <div
-            className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${
-              i < currentIdx
-                ? "bg-amber text-white"
-                : i === currentIdx
-                ? "bg-dark text-white"
-                : "bg-border text-text3"
-            }`}
-          >
-            {i < currentIdx ? "✓" : i + 1}
-          </div>
-          {i < visible.length - 1 && (
-            <div className={`h-0.5 w-6 ${i < currentIdx ? "bg-amber" : "bg-border"}`} />
-          )}
+    <div className="mb-8">
+      {/* Mobile: compact progress bar — the 6-dot row is too cramped below sm */}
+      <div className="sm:hidden">
+        <div className="flex items-baseline justify-between mb-2">
+          <span className="text-sm font-bold text-dark">{STEP_LABELS[current]}</span>
+          <span className="text-xs text-text3">
+            Step {currentIdx + 1} of {visible.length}
+          </span>
         </div>
-      ))}
-      <span className="ml-2 text-sm text-text2">{STEP_LABELS[current]}</span>
+        <div className="h-1.5 w-full bg-border rounded-full overflow-hidden">
+          <div
+            className="h-full bg-amber rounded-full transition-all duration-300"
+            style={{ width: `${pct}%` }}
+          />
+        </div>
+      </div>
+
+      {/* Desktop: dotted stepper */}
+      <div className="hidden sm:flex items-center gap-2">
+        {visible.map((s, i) => (
+          <div key={s} className="flex items-center gap-2">
+            <div
+              className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${
+                i < currentIdx
+                  ? "bg-amber text-white"
+                  : i === currentIdx
+                  ? "bg-dark text-white"
+                  : "bg-border text-text3"
+              }`}
+            >
+              {i < currentIdx ? "✓" : i + 1}
+            </div>
+            {i < visible.length - 1 && (
+              <div className={`h-0.5 w-6 ${i < currentIdx ? "bg-amber" : "bg-border"}`} />
+            )}
+          </div>
+        ))}
+        <span className="ml-2 text-sm text-text2">{STEP_LABELS[current]}</span>
+      </div>
     </div>
   );
 }
@@ -164,22 +206,32 @@ function Input({
   placeholder,
   type = "text",
   required,
+  error,
+  onBlur,
 }: {
   value: string;
   onChange: (v: string) => void;
   placeholder?: string;
   type?: string;
   required?: boolean;
+  /** When set, shows a red ring + message below the field. */
+  error?: string;
+  onBlur?: () => void;
 }) {
   return (
-    <input
-      type={type}
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      placeholder={placeholder}
-      required={required}
-      className={inputCls}
-    />
+    <>
+      <input
+        type={type}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        onBlur={onBlur}
+        placeholder={placeholder}
+        required={required}
+        aria-invalid={error ? true : undefined}
+        className={`${inputCls} ${error ? "border-red-400 focus:ring-red-300" : ""}`}
+      />
+      {error && <p className="text-xs text-red-600 mt-1">{error}</p>}
+    </>
   );
 }
 
@@ -271,6 +323,16 @@ export default function ListingForm() {
     consentGiven: false,
     otpCode: "",
   });
+
+  // Fields the user has interacted with — errors only show after blur, so the
+  // form doesn't yell at people before they've had a chance to type.
+  const [touched, setTouched] = useState<Set<string>>(new Set());
+  function markTouched(name: string) {
+    setTouched((t) => (t.has(name) ? t : new Set(t).add(name)));
+  }
+  function shownError(name: string, err: string | null): string | undefined {
+    return touched.has(name) && err ? err : undefined;
+  }
 
   function set<K extends keyof FormData>(key: K, value: FormData[K]) {
     setForm((f) => ({ ...f, [key]: value }));
@@ -571,20 +633,50 @@ export default function ListingForm() {
           <div className="space-y-4 mb-8">
             <div>
               <Label>Your full name *</Label>
-              <Input value={form.submitterName} onChange={(v) => set("submitterName", v)} placeholder="e.g. Amina Wanjiru" required />
+              <Input
+                value={form.submitterName}
+                onChange={(v) => set("submitterName", v)}
+                placeholder="e.g. Amina Wanjiru"
+                required
+                onBlur={() => markTouched("submitterName")}
+                error={shownError("submitterName", requiredError(form.submitterName, "Name"))}
+              />
             </div>
             <div>
               <Label>Email address *</Label>
-              <Input value={form.submitterEmail} onChange={(v) => set("submitterEmail", v)} placeholder="you@example.com" type="email" required />
+              <Input
+                value={form.submitterEmail}
+                onChange={(v) => set("submitterEmail", v)}
+                placeholder="you@example.com"
+                type="email"
+                required
+                onBlur={() => markTouched("submitterEmail")}
+                error={shownError("submitterEmail", emailError(form.submitterEmail))}
+              />
             </div>
             <div>
               <Label>Phone number *</Label>
-              <Input value={form.submitterPhone} onChange={(v) => set("submitterPhone", v)} placeholder="+254 7XX XXX XXX" type="tel" required />
+              <Input
+                value={form.submitterPhone}
+                onChange={(v) => set("submitterPhone", v)}
+                placeholder="+254 7XX XXX XXX"
+                type="tel"
+                required
+                onBlur={() => markTouched("submitterPhone")}
+                error={shownError("submitterPhone", phoneError(form.submitterPhone))}
+              />
             </div>
             {!form.businessName && (
               <div>
                 <Label>Business name *</Label>
-                <Input value={form.businessName} onChange={(v) => set("businessName", v)} placeholder="e.g. Watamu Beach House" required />
+                <Input
+                  value={form.businessName}
+                  onChange={(v) => set("businessName", v)}
+                  placeholder="e.g. Watamu Beach House"
+                  required
+                  onBlur={() => markTouched("businessName")}
+                  error={shownError("businessName", requiredError(form.businessName, "Business name"))}
+                />
               </div>
             )}
           </div>
@@ -592,10 +684,10 @@ export default function ListingForm() {
             <PrimaryButton
               onClick={() => setStep("content")}
               disabled={
-                !form.submitterName.trim() ||
-                !form.submitterEmail.trim() ||
-                !form.submitterPhone.trim() ||
-                !form.businessName.trim()
+                !!requiredError(form.submitterName, "Name") ||
+                !!emailError(form.submitterEmail) ||
+                !!phoneError(form.submitterPhone) ||
+                !!requiredError(form.businessName, "Business name")
               }
             >
               Continue →
@@ -625,7 +717,14 @@ export default function ListingForm() {
             {/* Title */}
             <div>
               <Label>Listing title *</Label>
-              <Input value={form.title} onChange={(v) => set("title", v)} placeholder="e.g. Watamu Beach House" required />
+              <Input
+                value={form.title}
+                onChange={(v) => set("title", v)}
+                placeholder="e.g. Watamu Beach House"
+                required
+                onBlur={() => markTouched("title")}
+                error={shownError("title", requiredError(form.title, "Listing title"))}
+              />
               <p className="text-xs text-text3 mt-1">3–8 words, e.g. the name of your business</p>
             </div>
 
@@ -638,9 +737,15 @@ export default function ListingForm() {
                 placeholder="Describe your business in 80–300 words. What makes it special? What can visitors expect?"
                 rows={6}
               />
-              <p className="text-xs text-text3 mt-1">
-                {form.description.split(/\s+/).filter(Boolean).length} words (aim for 80–300)
-              </p>
+              {(() => {
+                const words = form.description.split(/\s+/).filter(Boolean).length;
+                const tooShort = words > 0 && words < 20;
+                return (
+                  <p className={`text-xs mt-1 ${tooShort ? "text-red-600" : "text-text3"}`}>
+                    {words} words (aim for 80–300){tooShort ? " — add a bit more detail" : ""}
+                  </p>
+                );
+              })()}
             </div>
 
             {/* City + Subcategory */}

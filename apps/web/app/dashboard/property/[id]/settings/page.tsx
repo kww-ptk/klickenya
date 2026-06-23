@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
+import { PropertyEmbedPanel } from "@/components/dashboard/property/PropertyEmbedPanel";
 
 /* ---------- Helpers ---------- */
 
@@ -518,6 +519,7 @@ export default function PropertySettingsPage() {
           </div>
         )}
         <p className="text-[10px] text-text3">Embed this link on your website or share it with guests for direct bookings.</p>
+        {bookingSlug.trim() && <PropertyEmbedPanel bookingSlug={bookingSlug.trim()} />}
       </Section>
 
       {/* ── Pricing ── */}

@@ -154,10 +154,36 @@ function reservationNotificationHtml(opts: {
 </body></html>`;
 }
 
+/* ── Rate limiter (per-IP, in-memory — same shape as /api/contact) ────────── */
+// Embed-reachable write endpoint, so this is the most abusable public path.
+// 10 reservations / minute / IP is generous for real use and stops spam.
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
+function isRateLimited(ip: string): boolean {
+  const now = Date.now();
+  const entry = rateLimitMap.get(ip);
+  if (!entry || now > entry.resetAt) {
+    rateLimitMap.set(ip, { count: 1, resetAt: now + 60_000 });
+    return false;
+  }
+  entry.count++;
+  return entry.count > 10;
+}
+
 /* ── POST ────────────────────────────────────────────────────────────────── */
 
 export async function POST(req: NextRequest) {
   try {
+    const ip =
+      req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+      req.headers.get("x-real-ip") ??
+      "unknown";
+    if (isRateLimited(ip)) {
+      return NextResponse.json(
+        { error: "Too many requests. Please try again in a minute." },
+        { status: 429 },
+      );
+    }
+
     const body = await req.json();
 
     const {

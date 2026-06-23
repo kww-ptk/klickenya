@@ -41,6 +41,16 @@ interface BookingWidgetProps {
   rentingType: string;
   entirePlacePrice: number | null;
   rooms: WidgetRoom[];
+  /** Property UUID — required for the embed enquiry endpoint. */
+  propertyId?: string;
+  /** When set, the enquiry POSTs here (embed) instead of the default
+   *  /api/contact path. The embed uses /api/properties/booking-enquiry, a
+   *  public attribution-aware endpoint. */
+  enquiryEndpoint?: string;
+  /** Parent site hostname (embed only) — server-derived from Referer. */
+  sourceOrigin?: string | null;
+  /** Campaign tag (embed only). */
+  sourceRef?: string | null;
 }
 
 interface AvailResult {
@@ -66,6 +76,10 @@ export function BookingWidget({
   rentingType,
   entirePlacePrice,
   rooms,
+  propertyId,
+  enquiryEndpoint,
+  sourceOrigin = null,
+  sourceRef = null,
 }: BookingWidgetProps) {
   const [checkIn, setCheckIn] = useState("");
   const [checkOut, setCheckOut] = useState("");
@@ -134,22 +148,48 @@ export function BookingWidget({
     setError("");
     try {
       const selectedRoomObj = results?.find((r) => r.id === selectedRoom);
-      const res = await fetch("/api/contact", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          listing_title: propertyName,
-          name: name.trim(),
-          email: email.trim(),
-          phone: phone.trim(),
-          message: message.trim() || null,
-          check_in: checkIn,
-          check_out: checkOut,
-          guests,
-          room_preference: selectedRoomObj?.name ?? (selectedRoom === "__entire__" ? "Entire property" : null),
-          source: "booking_widget",
-        }),
-      });
+      const roomPreference =
+        selectedRoomObj?.name ?? (selectedRoom === "__entire__" ? "Entire property" : null);
+
+      // Embed mode: POST to the public attribution-aware enquiry endpoint.
+      // Default (/b/[slug]) mode: legacy /api/contact path, unchanged.
+      const res = enquiryEndpoint
+        ? await fetch(enquiryEndpoint, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              property_id: propertyId,
+              room_id: selectedRoom === "__entire__" ? null : selectedRoom,
+              room_preference: roomPreference,
+              listing_slug: listingSlug,
+              property_name: propertyName,
+              name: name.trim(),
+              email: email.trim(),
+              phone: phone.trim(),
+              message: message.trim() || null,
+              check_in: checkIn,
+              check_out: checkOut,
+              guests,
+              source_origin: sourceOrigin,
+              source_ref: sourceRef,
+            }),
+          })
+        : await fetch("/api/contact", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              listing_title: propertyName,
+              name: name.trim(),
+              email: email.trim(),
+              phone: phone.trim(),
+              message: message.trim() || null,
+              check_in: checkIn,
+              check_out: checkOut,
+              guests,
+              room_preference: roomPreference,
+              source: "booking_widget",
+            }),
+          });
       if (res.ok) setSent(true);
       else setError("Failed to send. Please try again.");
     } catch {
