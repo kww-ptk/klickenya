@@ -1,11 +1,17 @@
 import { createClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
 import { adminClient } from "@/lib/supabase/admin";
-import { hostWelcomeHtml, hostCreatedToAdminHtml } from "@/lib/email/hostEmails";
+import {
+  hostWelcomeHtml,
+  hostWelcomeWithPasswordHtml,
+  hostCreatedToAdminHtml,
+} from "@/lib/email/hostEmails";
 
 export interface CreateHostInput {
   name: string;
   email: string;
+  /** Admin-set password. If omitted, a temp password + magic link are generated (partner flow). */
+  password?: string | null;
   phone?: string | null;
   partnerId?: string | null; // white-label linkage → host_profiles.partner_id
 }
@@ -28,11 +34,12 @@ export async function createHostAccount(
 ): Promise<CreateHostResult> {
   const { name, email, phone, partnerId } = input;
 
-  // Generate temp password
-  const tempPassword = `Welcome${Math.floor(1000 + Math.random() * 9000)}`;
+  const adminSetPassword = input.password?.trim() || null;
+  // Either the admin-set password, or a generated temp password for the magic-link path.
+  const tempPassword =
+    adminSetPassword ?? `Welcome${Math.floor(1000 + Math.random() * 9000)}`;
   const slug = slugify(name);
 
-  // Create auth user with service role
   const supabaseAdmin = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
@@ -52,8 +59,7 @@ export async function createHostAccount(
 
   const userId = authData.user.id;
 
-  // Upsert the users row — auth.admin.createUser() does NOT auto-create
-  // a public.users row, so update() would silently fail on a new account.
+  // auth.admin.createUser() does NOT create a public.users row — upsert it.
   await adminClient
     .from("users")
     .upsert(
@@ -61,7 +67,6 @@ export async function createHostAccount(
       { onConflict: "id" }
     );
 
-  // Create host_profiles row
   const { data: hostProfile, error: profileError } = await adminClient
     .from("host_profiles")
     .insert({
@@ -80,32 +85,43 @@ export async function createHostAccount(
     throw new Error(profileError.message);
   }
 
-  // Generate magic link (24h) with explicit redirect so the link
-  // always lands on the correct domain regardless of Supabase Site URL setting.
-  const siteUrl =
-    process.env.NEXT_PUBLIC_SITE_URL ?? "https://klickenya.com";
-  const { data: linkData } = await supabaseAdmin.auth.admin.generateLink({
-    type: "magiclink",
-    email,
-    options: { redirectTo: `${siteUrl}/auth/callback` },
-  });
-
-  const magicLink =
-    linkData?.properties?.action_link ?? `https://klickenya.com/login`;
-
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://klickenya.com";
   const resend = new Resend(process.env.RESEND_API_KEY);
 
-  // Email to new host
-  await resend.emails
-    .send({
-      from: "Klickenya <hello@klickenya.com>",
-      to: email,
-      subject: "Welcome to Klickenya — your host account is ready",
-      html: hostWelcomeHtml({ name, email, magicLink }),
-    })
-    .catch((err) => console.error("Welcome email error:", err));
+  if (adminSetPassword) {
+    // Admin set the password — email the credentials, no magic link.
+    await resend.emails
+      .send({
+        from: "Klickenya <hello@klickenya.com>",
+        to: email,
+        subject: "Welcome to Klickenya — your host account is ready",
+        html: hostWelcomeWithPasswordHtml({
+          name,
+          email,
+          password: adminSetPassword,
+          loginUrl: `${siteUrl}/login`,
+        }),
+      })
+      .catch((err) => console.error("Welcome email error:", err));
+  } else {
+    // No password (e.g. white-label partner) — keep the magic-link flow.
+    const { data: linkData } = await supabaseAdmin.auth.admin.generateLink({
+      type: "magiclink",
+      email,
+      options: { redirectTo: `${siteUrl}/auth/callback` },
+    });
+    const magicLink =
+      linkData?.properties?.action_link ?? `${siteUrl}/login`;
+    await resend.emails
+      .send({
+        from: "Klickenya <hello@klickenya.com>",
+        to: email,
+        subject: "Welcome to Klickenya — your host account is ready",
+        html: hostWelcomeHtml({ name, email, magicLink }),
+      })
+      .catch((err) => console.error("Welcome email error:", err));
+  }
 
-  // Email to admin
   const adminEmail = process.env.ADMIN_EMAIL;
   if (adminEmail) {
     await resend.emails
