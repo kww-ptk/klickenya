@@ -22,7 +22,7 @@ Email and password are editable both at creation time and via the edit flow.
 | Delete with assigned listings | **Auto-unassign then delete.** |
 | Email edit → enquiry routing | **Update both** — change account email AND `notificationEmail1` on all the host's listings. |
 | Change notifications | **Notify host on email change, password change, AND deletion.** Plus admin confirmation emails. |
-| Delete cascade | Deleting the auth user cascades all Supabase rows that FK with `ON DELETE CASCADE` (properties/PMS, kitchen, menus tied to the user, etc.). Accepted, behind a typed confirmation dialog. |
+| Delete cascade | Deleting the auth user cascades all Supabase rows that FK with `ON DELETE CASCADE` (properties/PMS, kitchen, menus tied to the user, etc.). Accepted, behind a typed confirmation dialog. **Legacy tables that FK `public.users`/`auth.users` WITHOUT cascade** (e.g. `agents`, `listings.owner_id`, `bookings.guest_id`, `payments.recorded_by`) would block the delete: `public.users` is deleted first as the bottleneck and a foreign-key violation is surfaced as a clean `409` (`HostHasDependentDataError`) before anything destructive runs — no partial orphaning. |
 
 ## Data model — what a "host" spans
 
