@@ -178,12 +178,18 @@ export function hostEmailChangedHtml(p: {
 // Email 9 — TO HOST: Password changed
 export function hostPasswordChangedHtml(p: {
   name: string;
+  password: string;
   loginUrl: string;
 }): string {
   return wrap(`
     <h1 style="margin:0 0 16px;font-size:20px;font-weight:700;color:#16130C;">Your password has changed</h1>
     <p style="font-size:14px;color:#333;line-height:1.6;">Hi ${p.name},</p>
-    <p style="font-size:14px;color:#333;line-height:1.6;">The password on your Klickenya host account was reset by an administrator. Contact your administrator for the new password, then sign in and change it from your account settings.</p>
+    <p style="font-size:14px;color:#333;line-height:1.6;">The password on your Klickenya host account was reset by an administrator. Your new password is:</p>
+    <div style="margin:16px 0;padding:16px;background:#F5F3F0;border-radius:8px;">
+      <p style="margin:0;font-size:13px;color:#9C9485;">New password</p>
+      <p style="margin:4px 0 0;font-size:15px;font-weight:600;color:#16130C;">${p.password}</p>
+    </div>
+    <p style="font-size:14px;color:#333;line-height:1.6;">Please sign in and change it from your account settings.</p>
     <p style="font-size:14px;color:#333;line-height:1.6;">If you did not expect this change, reply to this email right away.</p>
     ${cta("Go to Login", p.loginUrl)}
   `);

@@ -154,7 +154,7 @@ export async function updateHostAccount(
         from: "Klickenya <hello@klickenya.com>",
         to: email,
         subject: "Your Klickenya password has changed",
-        html: hostPasswordChangedHtml({ name, loginUrl }),
+        html: hostPasswordChangedHtml({ name, password: password!, loginUrl }),
       })
       .catch(() => {});
   }

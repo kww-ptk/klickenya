@@ -5,7 +5,10 @@ import {
   updateHostAccount,
   HostEmailConflictError,
 } from "@/lib/admin/updateHost";
-import { deleteHostAccount } from "@/lib/admin/deleteHost";
+import {
+  deleteHostAccount,
+  HostHasDependentDataError,
+} from "@/lib/admin/deleteHost";
 
 export async function PATCH(
   request: NextRequest,
@@ -72,6 +75,9 @@ export async function DELETE(
   } catch (err) {
     if (err instanceof AdminAuthError) {
       return NextResponse.json({ error: err.message }, { status: err.status });
+    }
+    if (err instanceof HostHasDependentDataError) {
+      return NextResponse.json({ error: err.message }, { status: 409 });
     }
     console.error("Delete host error:", err);
     return NextResponse.json(

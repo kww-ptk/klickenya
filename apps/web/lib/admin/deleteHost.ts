@@ -10,6 +10,25 @@ import {
   hostDeletedToAdminHtml,
 } from "@/lib/email/hostEmails";
 
+/**
+ * Thrown when the host still owns rows in tables that reference public.users /
+ * auth.users WITHOUT ON DELETE CASCADE (legacy agents, listings.owner_id,
+ * properties.owner_id, bookings.guest_id, payments.recorded_by, …). Mapped to
+ * HTTP 409 so the admin gets a clear "resolve dependents first" message instead
+ * of a generic 500 with a half-deleted account.
+ */
+export class HostHasDependentDataError extends Error {
+  constructor(
+    message = "This host still has dependent records (e.g. an agent profile or legacy listings/bookings). Reassign or remove those before deleting the account."
+  ) {
+    super(message);
+    this.name = "HostHasDependentDataError";
+  }
+}
+
+/** Postgres foreign-key violation code. */
+const FK_VIOLATION = "23503";
+
 export async function deleteHostAccount(input: {
   id: string;
 }): Promise<{ success: true; unassignedCount: number }> {
@@ -30,7 +49,24 @@ export async function deleteHostAccount(input: {
     sanity_host_id: host.sanity_host_id,
   };
 
-  // 1. Auto-unassign every assigned listing (best-effort per listing).
+  // 1. Delete public.users FIRST — it is the foreign-key bottleneck. Several
+  //    legacy tables (agents, listings.owner_id, properties.owner_id,
+  //    bookings.guest_id, …) reference public.users WITHOUT ON DELETE CASCADE,
+  //    so if the host owns any such row this DELETE fails with a 23503. Doing it
+  //    before anything destructive (unassign / host_profiles / auth) means a
+  //    blocked delete leaves the account fully intact — no partial orphaning.
+  const { error: usersErr } = await adminClient
+    .from("users")
+    .delete()
+    .eq("id", host.user_id);
+  if (usersErr) {
+    if (usersErr.code === FK_VIOLATION) throw new HostHasDependentDataError();
+    throw new Error(usersErr.message);
+  }
+
+  // 2. Auto-unassign every assigned listing (best-effort per listing). Sequential
+  //    on purpose: each call mutates the same host doc's listings[] array, so
+  //    parallel runs would race on that shared document.
   const listings = await getAssignedListings(hostRef).catch(() => []);
   for (const l of listings) {
     await unassignListingFromHost(hostRef, l._id).catch((err) =>
@@ -38,21 +74,16 @@ export async function deleteHostAccount(input: {
     );
   }
 
-  // 2. host_profiles — FK to auth.users with no cascade, so delete before the auth user.
+  // 3. host_profiles — FK to auth.users with no cascade; nothing references it.
   const { error: profileErr } = await adminClient
     .from("host_profiles")
     .delete()
     .eq("id", id);
   if (profileErr) throw new Error(profileErr.message);
 
-  // 3. public.users — FK to auth.users with no cascade.
-  const { error: usersErr } = await adminClient
-    .from("users")
-    .delete()
-    .eq("id", host.user_id);
-  if (usersErr) throw new Error(usersErr.message);
-
   // 4. auth user — last; cascades ON DELETE CASCADE children (properties, kitchen, etc.).
+  //    The 23503 catch is defensive: a rare legacy table may reference
+  //    auth.users directly without cascade (e.g. payments.recorded_by).
   const supabaseAdmin = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
@@ -61,7 +92,12 @@ export async function deleteHostAccount(input: {
   const { error: authErr } = await supabaseAdmin.auth.admin.deleteUser(
     host.user_id
   );
-  if (authErr) throw new Error(authErr.message);
+  if (authErr) {
+    if (/foreign key|violates|23503/i.test(authErr.message)) {
+      throw new HostHasDependentDataError();
+    }
+    throw new Error(authErr.message);
+  }
 
   // 5. Notifications (host.email captured before deletion).
   const resend = new Resend(process.env.RESEND_API_KEY);
