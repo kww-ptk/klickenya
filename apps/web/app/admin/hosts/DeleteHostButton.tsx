@@ -48,7 +48,11 @@ export function DeleteHostButton({
       {open && (
         <div
           className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50"
-          onClick={() => setOpen(false)}
+          onClick={() => {
+            setOpen(false);
+            setConfirmText("");
+            setError(null);
+          }}
         >
           <div
             className="bg-white rounded-2xl shadow-xl w-full max-w-[440px] mx-4 p-6"
