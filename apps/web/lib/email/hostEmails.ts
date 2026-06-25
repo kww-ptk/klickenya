@@ -133,3 +133,93 @@ export function hostCreatedToAdminHtml(p: {
     ${cta("View Host", `https://klickenya.com/admin/hosts/${p.hostProfileId}`)}
   `);
 }
+
+// Email 7 — TO NEW HOST: Account created with an admin-set password
+export function hostWelcomeWithPasswordHtml(p: {
+  name: string;
+  email: string;
+  password: string;
+  loginUrl: string;
+}): string {
+  return wrap(`
+    <h1 style="margin:0 0 16px;font-size:20px;font-weight:700;color:#16130C;">Welcome to Klickenya</h1>
+    <p style="font-size:14px;color:#333;line-height:1.6;">Hi ${p.name},</p>
+    <p style="font-size:14px;color:#333;line-height:1.6;">Your Klickenya host account has been created. Use these credentials to sign in:</p>
+    <div style="margin:16px 0;padding:16px;background:#F5F3F0;border-radius:8px;">
+      <p style="margin:0;font-size:13px;color:#9C9485;">Email</p>
+      <p style="margin:4px 0 12px;font-size:15px;font-weight:600;color:#16130C;">${p.email}</p>
+      <p style="margin:0;font-size:13px;color:#9C9485;">Temporary password</p>
+      <p style="margin:4px 0 0;font-size:15px;font-weight:600;color:#16130C;">${p.password}</p>
+    </div>
+    <p style="font-size:14px;color:#333;line-height:1.6;">Please sign in and change your password from your account settings.</p>
+    ${cta("Sign In", p.loginUrl)}
+    <p style="margin-top:24px;font-size:14px;color:#333;line-height:1.6;"><strong>What's next:</strong> Complete your host profile, and we'll assign your listings shortly.</p>
+  `);
+}
+
+// Email 8 — TO HOST: Login email changed
+export function hostEmailChangedHtml(p: {
+  name: string;
+  newEmail: string;
+  loginUrl: string;
+}): string {
+  return wrap(`
+    <h1 style="margin:0 0 16px;font-size:20px;font-weight:700;color:#16130C;">Your login email has changed</h1>
+    <p style="font-size:14px;color:#333;line-height:1.6;">Hi ${p.name},</p>
+    <p style="font-size:14px;color:#333;line-height:1.6;">The email on your Klickenya host account was updated by an administrator. You now sign in with:</p>
+    <div style="margin:16px 0;padding:16px;background:#F5F3F0;border-radius:8px;">
+      <p style="margin:0;font-size:15px;font-weight:600;color:#16130C;">${p.newEmail}</p>
+    </div>
+    <p style="font-size:14px;color:#333;line-height:1.6;">If you did not expect this change, reply to this email right away.</p>
+    ${cta("Go to Login", p.loginUrl)}
+  `);
+}
+
+// Email 9 — TO HOST: Password changed
+export function hostPasswordChangedHtml(p: {
+  name: string;
+  loginUrl: string;
+}): string {
+  return wrap(`
+    <h1 style="margin:0 0 16px;font-size:20px;font-weight:700;color:#16130C;">Your password has changed</h1>
+    <p style="font-size:14px;color:#333;line-height:1.6;">Hi ${p.name},</p>
+    <p style="font-size:14px;color:#333;line-height:1.6;">The password on your Klickenya host account was reset by an administrator. Contact your administrator for the new password, then sign in and change it from your account settings.</p>
+    <p style="font-size:14px;color:#333;line-height:1.6;">If you did not expect this change, reply to this email right away.</p>
+    ${cta("Go to Login", p.loginUrl)}
+  `);
+}
+
+// Email 10 — TO HOST: Account deleted
+export function hostDeletedHtml(p: { name: string }): string {
+  return wrap(`
+    <h1 style="margin:0 0 16px;font-size:20px;font-weight:700;color:#16130C;">Your host account has been closed</h1>
+    <p style="font-size:14px;color:#333;line-height:1.6;">Hi ${p.name},</p>
+    <p style="font-size:14px;color:#333;line-height:1.6;">Your Klickenya host account has been closed by an administrator and you no longer have dashboard access.</p>
+    <p style="font-size:14px;color:#333;line-height:1.6;">If you believe this was a mistake, reply to this email and we'll help.</p>
+  `);
+}
+
+// Email 11 — TO ADMIN: Host updated (confirmation)
+export function hostUpdatedToAdminHtml(p: {
+  name: string;
+  email: string;
+  changes: string[];
+  hostProfileId: string;
+}): string {
+  return wrap(`
+    <h1 style="margin:0 0 16px;font-size:20px;font-weight:700;color:#16130C;">Host Updated</h1>
+    <p style="font-size:14px;color:#333;line-height:1.6;">Host <strong>${p.name}</strong> (${p.email}) was updated via the admin panel.</p>
+    <p style="font-size:13px;color:#9C9485;">Changed: ${p.changes.length ? p.changes.join(", ") : "—"}</p>
+    <p style="font-size:13px;color:#9C9485;">Timestamp: ${new Date().toISOString()}</p>
+    ${cta("View Host", `https://klickenya.com/admin/hosts/${p.hostProfileId}`)}
+  `);
+}
+
+// Email 12 — TO ADMIN: Host deleted (confirmation)
+export function hostDeletedToAdminHtml(p: { name: string; email: string }): string {
+  return wrap(`
+    <h1 style="margin:0 0 16px;font-size:20px;font-weight:700;color:#16130C;">Host Deleted</h1>
+    <p style="font-size:14px;color:#333;line-height:1.6;">Host <strong>${p.name}</strong> (${p.email}) was permanently deleted via the admin panel. Their listings were unassigned and remain live.</p>
+    <p style="font-size:13px;color:#9C9485;">Timestamp: ${new Date().toISOString()}</p>
+  `);
+}
