@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { adminClient } from "@/lib/supabase/admin";
 import { sanityClient } from "@/lib/sanity/client";
-import { CreateHostModal } from "./CreateHostModal";
+import { HostFormModal } from "./HostFormModal";
 
 export const revalidate = 0;
 
@@ -57,7 +57,11 @@ export default async function AdminHostsPage() {
         </h1>
         <div className="flex items-center gap-3">
           <span className="text-sm text-text3">{allHosts.length} total</span>
-          <CreateHostModal />
+          <HostFormModal
+            mode="create"
+            triggerLabel="+ Create Host"
+            triggerClassName="px-4 py-2 text-[13px] font-semibold rounded-xl bg-amber text-white hover:bg-[#d4911c] transition-colors"
+          />
         </div>
       </div>
 
