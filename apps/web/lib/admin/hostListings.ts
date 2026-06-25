@@ -7,9 +7,11 @@ export interface HostRef {
   sanity_host_id: string | null;
 }
 
-// Three ways a listing links to a host (mirrors the admin host detail page query):
+// Three ways a listing links to a host (equivalent to the admin host detail page
+// query, minus its now-redundant inner `_type == "listing"` guard):
 //   1. hostId == user_id              2. host._ref == sanity_host_id
 //   3. _id appears in the host doc's listings[] array
+// When sanity_host_id is null, callers pass "" — a safe no-op for conditions 2 and 3.
 const ASSIGNED_QUERY = `*[_type == "listing" && (
   hostId == $hostId
   || host._ref == $sanityHostId
@@ -45,6 +47,8 @@ export async function unassignListingFromHost(
     })
     .commit();
 
+  // Two commits: the Sanity Mutate API won't reliably mix .set and .unset on a
+  // reference field in one call, so the host reference is unset separately.
   await sanityWriteClient.patch(sanityId).unset(["host"]).commit();
 
   if (host.sanity_host_id) {
@@ -64,13 +68,18 @@ export async function setNotificationEmailForAssignedListings(
   email: string
 ): Promise<void> {
   const listings = await getAssignedListings(host);
-  for (const l of listings) {
-    await sanityWriteClient
-      .patch(l._id)
-      .set({ notificationEmail1: email })
-      .commit()
-      .catch((err: unknown) =>
-        console.error(`Set notificationEmail1 on ${l._id} failed:`, err)
-      );
-  }
+  // Each listing is an independent Sanity doc, so patch them in parallel
+  // (project rule: don't serialise independent API calls). Per-listing .catch
+  // keeps one failure from aborting the rest.
+  await Promise.all(
+    listings.map((l) =>
+      sanityWriteClient
+        .patch(l._id)
+        .set({ notificationEmail1: email })
+        .commit()
+        .catch((err: unknown) =>
+          console.error(`Set notificationEmail1 on ${l._id} failed:`, err)
+        )
+    )
+  );
 }
