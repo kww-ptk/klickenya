@@ -12,10 +12,10 @@ import {
 
 /**
  * Thrown when the host still owns rows in tables that reference public.users /
- * auth.users WITHOUT ON DELETE CASCADE (legacy agents, listings.owner_id,
- * properties.owner_id, bookings.guest_id, payments.recorded_by, …). Mapped to
- * HTTP 409 so the admin gets a clear "resolve dependents first" message instead
- * of a generic 500 with a half-deleted account.
+ * auth.users WITHOUT ON DELETE CASCADE/SET NULL (legacy agents, listings.owner_id,
+ * properties.owner_id, bookings.guest_id, …). Mapped to HTTP 409 so the admin
+ * gets a clear "resolve dependents first" message instead of a generic 500 with
+ * a half-deleted account.
  */
 export class HostHasDependentDataError extends Error {
   constructor(
@@ -64,7 +64,30 @@ export async function deleteHostAccount(input: {
     throw new Error(usersErr.message);
   }
 
-  // 2. Auto-unassign every assigned listing (best-effort per listing). Sequential
+  // 2. Clear the non-cascade references to auth.users so the auth-user delete
+  //    in step 5 isn't blocked. These columns reference auth.users with NO
+  //    ON DELETE rule (RESTRICT): listing_events.host_user_id (027) and
+  //    booking_payments.recorded_by (031). Nulling them preserves the analytics
+  //    and payment rows while unlinking the user. Migration 075 also sets these
+  //    FKs to ON DELETE SET NULL — this is the pre-migration safety net and the
+  //    reason a host with analytics/payment activity can be deleted at all.
+  //    Best-effort: if a null fails, the auth delete below surfaces it as a 409.
+  await adminClient
+    .from("listing_events")
+    .update({ host_user_id: null })
+    .eq("host_user_id", host.user_id)
+    .then(({ error: e }) => {
+      if (e) console.error("Null listing_events.host_user_id failed:", e);
+    });
+  await adminClient
+    .from("booking_payments")
+    .update({ recorded_by: null })
+    .eq("recorded_by", host.user_id)
+    .then(({ error: e }) => {
+      if (e) console.error("Null booking_payments.recorded_by failed:", e);
+    });
+
+  // 3. Auto-unassign every assigned listing (best-effort per listing). Sequential
   //    on purpose: each call mutates the same host doc's listings[] array, so
   //    parallel runs would race on that shared document.
   const listings = await getAssignedListings(hostRef).catch(() => []);
@@ -74,16 +97,18 @@ export async function deleteHostAccount(input: {
     );
   }
 
-  // 3. host_profiles — FK to auth.users with no cascade; nothing references it.
+  // 4. host_profiles — FK to auth.users with no cascade; nothing references it.
   const { error: profileErr } = await adminClient
     .from("host_profiles")
     .delete()
     .eq("id", id);
   if (profileErr) throw new Error(profileErr.message);
 
-  // 4. auth user — last; cascades ON DELETE CASCADE children (properties, kitchen, etc.).
-  //    The 23503 catch is defensive: a rare legacy table may reference
-  //    auth.users directly without cascade (e.g. payments.recorded_by).
+  // 5. auth user — last; cascades ON DELETE CASCADE children (properties, kitchen, etc.).
+  //    With step 1/2 done its remaining references are cleared, so this should
+  //    succeed. The error catch is a backstop: any residual non-cascade FK
+  //    surfaces GoTrue's "Database error deleting user" / a 23503, which we map
+  //    to a clear 409 rather than orphaning the auth user silently.
   const supabaseAdmin = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
@@ -93,13 +118,13 @@ export async function deleteHostAccount(input: {
     host.user_id
   );
   if (authErr) {
-    if (/foreign key|violates|23503/i.test(authErr.message)) {
+    if (/foreign key|violat|23503|database error/i.test(authErr.message)) {
       throw new HostHasDependentDataError();
     }
     throw new Error(authErr.message);
   }
 
-  // 5. Notifications (host.email captured before deletion).
+  // 6. Notifications (host.email captured before deletion).
   const resend = new Resend(process.env.RESEND_API_KEY);
   if (host.email) {
     await resend.emails
