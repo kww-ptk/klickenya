@@ -56,7 +56,11 @@ export async function updateHostAccount(
   );
 
   // --- 1. auth.users (email and/or password). Runs first so a colliding
-  //         email fails here before any DB rows are touched. ---
+  //         email fails here before any DB rows are touched.
+  //         Accepted trade-off: if auth succeeds but a later DB write (step 2/3)
+  //         throws, auth email can diverge from the DB rows. We favour catching
+  //         conflicts early over full cross-store transactionality (not possible
+  //         across the auth API, PostgREST and Sanity); failures are logged. ---
   if (emailChanged || passwordChanged) {
     const updates: {
       email?: string;
