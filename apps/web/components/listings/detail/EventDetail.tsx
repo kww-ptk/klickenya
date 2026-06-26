@@ -11,7 +11,6 @@ import { TrackPageView } from "@/lib/analytics/TrackPageView";
 import { SimilarListings } from "@/components/listings/widgets/SimilarListings";
 import { BookingSidebar } from "@/components/listings/widgets/BookingSidebar";
 import { MobileBookingBar } from "@/components/listings/widgets/MobileBookingBar";
-import { EventCountdown } from "./event/EventCountdown";
 import { WhosJoining } from "@/components/events/WhosJoining";
 import type { ListingCardProps } from "@/components/listings/ListingCard";
 
@@ -49,6 +48,40 @@ interface EventDetailProps {
   attendees?: { name: string }[];
 }
 
+/* ── Helpers ───────────────────────────────────────── */
+
+/**
+ * Format a stored event datetime for display.
+ *
+ * Events are created from a `datetime-local` input and stored via
+ * `new Date(value).toISOString()` on a UTC runtime, so the wall-clock time the
+ * host entered is preserved as UTC (no offset conversion happens). We read it
+ * back as UTC so every viewer sees exactly the date/time the host typed,
+ * regardless of their own browser timezone. Returns null for a missing or
+ * unparseable value so the caller can fall back to "Date to be announced".
+ */
+function formatEventDateTime(
+  iso: string | null | undefined,
+): { date: string; time: string } | null {
+  if (!iso) return null;
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return null;
+  return {
+    date: d.toLocaleDateString("en-GB", {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+      timeZone: "UTC",
+    }),
+    time: d.toLocaleTimeString("en-GB", {
+      hour: "2-digit",
+      minute: "2-digit",
+      timeZone: "UTC",
+    }),
+  };
+}
+
 /* ── Component ─────────────────────────────────────── */
 
 function EventDetail({
@@ -83,6 +116,11 @@ function EventDetail({
   const priceFrom: number | null = listing.priceFrom ?? listing.price ?? null;
   const mobilePrice = isFree ? 0 : (priceFrom ?? 0);
   const showBookingSidebar = !isFree && (ticketTypes.length > 0 || listing.price != null);
+
+  // One-off (non-recurring) event date/time. Null when unset → "Date to be announced".
+  const startFmt = formatEventDateTime(listing.eventDate);
+  const endFmt = formatEventDateTime(listing.eventEndDate);
+  const endSameDay = startFmt != null && endFmt != null && startFmt.date === endFmt.date;
 
   const DAY_LABELS: Record<string, string> = {
     monday: "Monday", tuesday: "Tuesday", wednesday: "Wednesday",
@@ -212,8 +250,30 @@ function EventDetail({
                       </p>
                     )}
                   </div>
+                ) : startFmt ? (
+                  <div>
+                    <p className="text-[16px] font-bold text-purple-700 mb-1">
+                      {startFmt.date}
+                    </p>
+                    <div className="flex items-center gap-2 text-[14px] text-text2">
+                      <Clock className="size-3.5 shrink-0" />
+                      <span>
+                        {startFmt.time}
+                        {endFmt
+                          ? ` — ${endSameDay ? endFmt.time : `${endFmt.date}, ${endFmt.time}`}`
+                          : ""}
+                      </span>
+                    </div>
+                  </div>
                 ) : (
-                  <EventCountdown />
+                  <div>
+                    <p className="text-[16px] font-semibold text-purple-700 mb-1">
+                      Date to be announced
+                    </p>
+                    <p className="text-[13px] text-text2">
+                      Check the description below or contact the organiser for exact dates
+                    </p>
+                  </div>
                 )}
               </div>
             </div>

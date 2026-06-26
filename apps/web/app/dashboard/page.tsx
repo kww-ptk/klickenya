@@ -366,7 +366,7 @@ export default async function DashboardPage() {
               return (
                 <Link
                   key={event._id}
-                  href={`/dashboard/events/${event._id}/attendees`}
+                  href={`/dashboard/events/${event._id}/attendees?from=dashboard`}
                   className="block bg-white rounded-xl lg:rounded-2xl border border-border p-3 lg:p-4 shadow-sm hover:shadow-md hover:border-amber/30 transition-all"
                 >
                   <div className="flex gap-3 items-center">

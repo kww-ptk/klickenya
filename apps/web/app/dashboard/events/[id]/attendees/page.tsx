@@ -18,10 +18,15 @@ interface Attendee {
 
 interface PageProps {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ from?: string }>;
 }
 
-export default async function AttendeesPage({ params }: PageProps) {
+export default async function AttendeesPage({ params, searchParams }: PageProps) {
   const { id } = await params;
+  const { from } = await searchParams;
+  // Return the host to wherever they opened this page from: the dashboard
+  // home's "My Events" section (?from=dashboard) or the dedicated Events page.
+  const backHref = from === "dashboard" ? "/dashboard" : "/dashboard/events";
 
   const { user, supabase } = await getAuthUser();
   if (!user) redirect("/login");
@@ -71,7 +76,7 @@ export default async function AttendeesPage({ params }: PageProps) {
     <div>
       {/* Back link */}
       <Link
-        href="/dashboard/events"
+        href={backHref}
         className="inline-flex items-center gap-1.5 text-[13px] font-medium text-text2 hover:text-text transition-colors mb-6"
       >
         <ArrowLeft className="size-3.5" />
