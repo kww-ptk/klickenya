@@ -114,12 +114,11 @@ export default async function AdminListingsPage({
       {/* Header */}
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div>
-          <h1 className="font-display text-[24px] font-bold text-dark">
-            Listings
-          </h1>
-          <p className="mt-1 text-[14px] text-text3">
-            {filtered.length} listing{filtered.length !== 1 ? "s" : ""}
-          </p>
+          <div className="flex items-center gap-2">
+            <h1 className="font-display text-[24px] lg:text-[28px] font-bold tracking-[-0.03em] text-dark">Listings</h1>
+            <span className="text-[12px] font-semibold text-text3 bg-[#F0EDE8] px-2 py-0.5 rounded-full">{filtered.length}</span>
+          </div>
+          <p className="mt-1 text-[13px] text-text3">All marketplace listings across the platform — edit, verify, and assign to hosts.</p>
         </div>
         <Link
           href="/admin/listings/new"

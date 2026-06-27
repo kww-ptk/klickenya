@@ -113,11 +113,11 @@ export default async function AdminRealEstatePage({
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="font-display text-[24px] font-bold text-dark">
+        <h1 className="font-display text-[24px] lg:text-[28px] font-bold tracking-[-0.03em] text-dark">
           Real Estate
         </h1>
-        <p className="mt-1 text-[14px] text-text3">
-          Manage properties in Sanity Studio. This view is read-only.
+        <p className="mt-1 text-[13px] text-text3">
+          Property sale and rental submissions from agents, owners, and developers — review and publish to the marketplace.
         </p>
       </div>
 

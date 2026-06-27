@@ -21,11 +21,14 @@ export default async function AdminPartnersPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="font-display text-[28px] font-bold text-dark">
-          Partner Sites
-        </h1>
+        <div>
+          <div className="flex items-center gap-2">
+            <h1 className="font-display text-[28px] font-bold text-dark">Partners</h1>
+            <span className="text-[12px] font-semibold text-text3 bg-[#F0EDE8] px-2 py-0.5 rounded-full">{partners.length}</span>
+          </div>
+          <p className="text-[13px] text-text3 mt-1">Partner sites with custom branding and theming applied to their host dashboard.</p>
+        </div>
         <div className="flex items-center gap-3">
-          <span className="text-sm text-text3">{partners.length} total</span>
           <Link
             href="/admin/partners/new"
             className="px-4 py-2 text-[13px] font-semibold rounded-xl bg-amber text-white hover:bg-[#d4911c] transition-colors"

@@ -29,10 +29,13 @@ export default async function AdminClaimsPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="font-display text-[28px] font-bold text-dark">
-          Claim Requests
-        </h1>
-        <span className="text-sm text-text3">{allClaims.length} total</span>
+        <div>
+          <div className="flex items-center gap-2">
+            <h1 className="font-display text-[28px] font-bold text-dark">Verification Requests</h1>
+            <span className="text-[12px] font-semibold text-text3 bg-[#F0EDE8] px-2 py-0.5 rounded-full">{allClaims.length}</span>
+          </div>
+          <p className="text-[13px] text-text3 mt-1">Business ownership claims submitted for listing verification — review OTP and approve.</p>
+        </div>
       </div>
 
       <div className="rounded-2xl bg-white shadow-sm overflow-hidden">

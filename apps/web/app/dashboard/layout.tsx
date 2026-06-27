@@ -222,53 +222,28 @@ export default async function DashboardLayout({
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 py-4 space-y-0.5 overflow-y-auto">
-          <DashboardNavLink
-            href="/dashboard"
-            label="Dashboard"
-            icon={<DashboardIcon />}
-          />
-          <DashboardNavLink
-            href="/dashboard/listings"
-            label="My Listings"
-            icon={<BuildingIcon />}
-          />
-          <DashboardNavLink
-            href="/dashboard/property"
-            label="Property PMS"
-            icon={<HomeIcon />}
-          />
-          <DashboardNavLink
-            href="/dashboard/menus"
-            label="Menu"
-            icon={<MenuIcon />}
-          />
-          <DashboardNavLink
-            href="/dashboard/stats"
-            label="Stats"
-            icon={<ChartIcon />}
-          />
-          <DashboardNavLink
-            href="/dashboard/events"
-            label="My Events"
-            icon={<CalendarIcon />}
-          />
-          <DashboardNavLink
-            href="/dashboard/enquiries"
-            label="Enquiries"
-            icon={<InboxIcon />}
-            badge={enquiryCount}
-          />
-          <DashboardNavLink
-            href="/dashboard/profile/edit"
-            label="Edit Profile"
-            icon={<UserIcon />}
-          />
-          <DashboardNavLink
-            href="/dashboard/settings"
-            label="Settings"
-            icon={<GearIcon />}
-          />
+        <nav className="flex-1 py-3 overflow-y-auto">
+
+          {/* Overview */}
+          <DashboardNavLink href="/dashboard" label="Dashboard" icon={<DashboardIcon />} />
+
+          {/* My Business */}
+          <p className="px-4 pt-4 pb-1 text-[10px] font-semibold uppercase tracking-widest text-white/30">My Business</p>
+          <DashboardNavLink href="/dashboard/listings" label="My Listings" icon={<BuildingIcon />} />
+          <DashboardNavLink href="/dashboard/property" label="Property PMS" icon={<HomeIcon />} />
+          <DashboardNavLink href="/dashboard/menus" label="Menu" icon={<MenuIcon />} />
+          <DashboardNavLink href="/dashboard/stats" label="Stats" icon={<ChartIcon />} />
+
+          {/* Operations */}
+          <p className="px-4 pt-4 pb-1 text-[10px] font-semibold uppercase tracking-widest text-white/30">Operations</p>
+          <DashboardNavLink href="/dashboard/events" label="My Events" icon={<CalendarIcon />} />
+          <DashboardNavLink href="/dashboard/enquiries" label="Enquiries" icon={<InboxIcon />} badge={enquiryCount} />
+
+          {/* Account */}
+          <p className="px-4 pt-4 pb-1 text-[10px] font-semibold uppercase tracking-widest text-white/30">Account</p>
+          <DashboardNavLink href="/dashboard/profile/edit" label="Edit Profile" icon={<UserIcon />} />
+          <DashboardNavLink href="/dashboard/settings" label="Settings" icon={<GearIcon />} />
+
         </nav>
 
         {/* Bottom: guest profile + password banner + sign out */}

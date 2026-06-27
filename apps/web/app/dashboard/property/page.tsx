@@ -37,7 +37,7 @@ export default async function PropertyPMSPage() {
             <h1 className="font-display text-[22px] lg:text-[28px] font-bold tracking-[-0.03em] text-dark">
               Property PMS
             </h1>
-            <p className="text-[13px] text-text3 mt-0.5">Manage your properties</p>
+            <p className="text-[13px] text-text3 mt-0.5">Manage your properties, rooms, availability calendar, and bookings.</p>
           </div>
         </div>
         <div className="bg-white rounded-2xl border border-border p-8 text-center shadow-sm">

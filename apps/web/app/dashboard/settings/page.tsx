@@ -27,7 +27,7 @@ export default async function SettingsPage() {
           Settings
         </h1>
         <p className="text-[13px] text-text3 mt-0.5">
-          Manage your account and preferences
+          Manage your account preferences, notification email, and password settings.
         </p>
       </div>
 

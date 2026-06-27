@@ -85,12 +85,11 @@ export default async function ListingRequestsPage({
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-[22px] font-display font-bold text-dark">
-            Listing Requests
-          </h1>
-          <p className="text-[14px] text-text3 mt-1">
-            {totalCount} total request{totalCount !== 1 ? "s" : ""}
-          </p>
+          <div className="flex items-center gap-2">
+            <h1 className="font-display text-[22px] lg:text-[28px] font-bold tracking-[-0.03em] text-dark">Listing Requests</h1>
+            <span className="text-[12px] font-semibold text-text3 bg-[#F0EDE8] px-2 py-0.5 rounded-full">{totalCount}</span>
+          </div>
+          <p className="text-[13px] text-text3 mt-1">New business submissions from the /list form — review and approve to publish on the marketplace.</p>
         </div>
       </div>
 

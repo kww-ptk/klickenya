@@ -70,7 +70,7 @@ export default async function EnquiriesPage({ searchParams }: { searchParams: Pr
             Enquiries
           </h1>
           <p className="text-[13px] text-text3 mt-0.5">
-            {filterTitle
+            Guest messages and booking requests for your listings — reply, convert to booking, or close.{" "}{filterTitle
               ? <>{enquiries.length} enquir{enquiries.length === 1 ? "y" : "ies"} for {filterTitle}</>
               : <>{enquiries.length} enquir{enquiries.length === 1 ? "y" : "ies"} across your listings</>
             }

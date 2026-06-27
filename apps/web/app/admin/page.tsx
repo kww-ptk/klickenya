@@ -284,6 +284,7 @@ export default async function AdminDashboardPage() {
       <h1 className="font-display text-[28px] font-bold text-dark">
         Dashboard
       </h1>
+      <p className="text-[13px] text-text3 mt-1">Platform overview — pending actions, recent activity, and quick links.</p>
 
       {/* Stats cards row */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">

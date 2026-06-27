@@ -34,6 +34,7 @@ export default async function MenusPage() {
             <h1 className="font-display text-[22px] lg:text-[28px] font-bold tracking-[-0.03em] text-dark mt-2">
               My Menus
             </h1>
+            <p className="text-[13px] text-text3 mt-1">Build and manage your QR menus, digital boards, POS, and kitchen workflows.</p>
           </div>
         </div>
 
