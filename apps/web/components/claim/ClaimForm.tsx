@@ -14,6 +14,12 @@ interface ClaimFormProps {
   listingType: string;
   listingSubcategory?: string | null;
   listingCity?: string;
+  /** "public" (default): initiate → OTP → verify. "authenticated": logged-in host,
+   *  prefilled identity, no OTP — posts to /api/claim/complete. */
+  mode?: "public" | "authenticated";
+  prefillName?: string;
+  prefillEmail?: string;
+  prefillPhone?: string;
 }
 
 type Step = "details" | "accuracy" | "otp" | "success";
@@ -46,16 +52,21 @@ export function ClaimForm({
   listingType,
   listingSubcategory,
   listingCity,
+  mode = "public",
+  prefillName = "",
+  prefillEmail = "",
+  prefillPhone = "",
 }: ClaimFormProps) {
+  const authenticated = mode === "authenticated";
   const [step, setStep] = useState<Step>("details");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [claimId, setClaimId] = useState<string | null>(null);
 
   // Step 1 — Details
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
+  const [name, setName] = useState(prefillName);
+  const [email, setEmail] = useState(prefillEmail);
+  const [phone, setPhone] = useState(prefillPhone);
   const [consentGiven, setConsentGiven] = useState(false);
   const [consentTimestamp, setConsentTimestamp] = useState<string | null>(null);
 
@@ -107,12 +118,15 @@ export function ClaimForm({
   }, [step]);
 
   /* ── Progress indicator ── */
-  const stepIndex = STEPS.findIndex((s) => s.key === step);
+  const visibleSteps = authenticated
+    ? STEPS.filter((s) => s.key !== "otp")
+    : STEPS;
+  const stepIndex = visibleSteps.findIndex((s) => s.key === step);
 
   function ProgressDots() {
     return (
       <div className="flex items-center justify-center gap-0 mb-8">
-        {STEPS.map((s, i) => (
+        {visibleSteps.map((s, i) => (
           <div key={s.key} className="flex items-center">
             <div className="flex flex-col items-center">
               <div
@@ -134,7 +148,7 @@ export function ClaimForm({
                 {s.label}
               </span>
             </div>
-            {i < STEPS.length - 1 && (
+            {i < visibleSteps.length - 1 && (
               <div
                 className={cn(
                   "w-12 h-px mx-1 -mt-4",
@@ -180,6 +194,43 @@ export function ClaimForm({
       if (!res.ok) throw new Error(json.error ?? "Something went wrong");
       setClaimId(json.claimId);
       setStep("otp");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Something went wrong");
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  /* ── Complete claim (authenticated — Step 2 → API, no OTP) ── */
+  async function handleCompleteClaim() {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/claim/complete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          listingSlug,
+          listingSanityId,
+          listingTitle,
+          listingType,
+          listingCity,
+          everythingCorrect,
+          incorrectFields: incorrectFields.length > 0 ? incorrectFields : undefined,
+          additionalNotes:
+            additionalNotes || extraNotes
+              ? [additionalNotes, extraNotes].filter(Boolean).join("\n\n")
+              : undefined,
+          socialMediaUrl: socialMediaUrl || undefined,
+          websiteUrl: websiteUrl || undefined,
+          photoConsent: photoConsent ?? undefined,
+          consentGiven: true,
+          consentText: CONSENT_TEXT,
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error ?? "Something went wrong");
+      setStep("success");
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Something went wrong");
     } finally {
@@ -293,9 +344,11 @@ export function ClaimForm({
               required
             />
           </div>
-          <p className="text-xs text-text3">
-            We&apos;ll send a 6-digit code to your email to verify your identity.
-          </p>
+          {!authenticated && (
+            <p className="text-xs text-text3">
+              We&apos;ll send a 6-digit code to your email to verify your identity.
+            </p>
+          )}
         </div>
 
         {/* Consent box */}
@@ -524,12 +577,12 @@ export function ClaimForm({
             ← Back
           </button>
           <button
-            onClick={handleSubmitClaim}
+            onClick={authenticated ? handleCompleteClaim : handleSubmitClaim}
             disabled={isLoading}
             className="flex-1 bg-amber text-dark font-bold text-sm rounded-full py-3 hover:bg-[#d4911c] transition-all disabled:opacity-60 flex items-center justify-center gap-2"
           >
             {isLoading && <Loader2 className="size-4 animate-spin" />}
-            Send verification code →
+            {authenticated ? "Save & complete claim →" : "Send verification code →"}
           </button>
         </div>
       </div>
@@ -616,7 +669,9 @@ export function ClaimForm({
           🎉 {listingTitle} is now claimed!
         </h2>
         <p className="text-sm text-text2">
-          Our team will review your listing within 24 hours. Once approved, your Verified badge will appear. Check your email for your confirmation.
+          {authenticated
+            ? "Your details and consent are saved. Thanks — your listing is fully claimed."
+            : "Our team will review your listing within 24 hours. Once approved, your Verified badge will appear. Check your email for your confirmation."}
         </p>
       </div>
 

@@ -215,6 +215,28 @@ export default async function DashboardPage() {
     }
   }
 
+  // Assigned listings still missing a completed claim/consent form.
+  // A listing counts as claimed if ANY verified claim_requests row exists for it
+  // (host-dashboard completion OR an earlier public /claim). Matching by the
+  // host's own listing ids covers both without string-interpolating an email.
+  const claimedListingIds = new Set<string>();
+  if (listings.length > 0) {
+    const { data: completedClaims } = await adminClient
+      .from("claim_requests")
+      .select("listing_sanity_id")
+      .eq("status", "verified")
+      .in(
+        "listing_sanity_id",
+        listings.map((l) => l._id)
+      );
+    for (const r of completedClaims ?? []) {
+      if (r.listing_sanity_id) claimedListingIds.add(r.listing_sanity_id);
+    }
+  }
+  const listingsNeedingClaim = listings.filter(
+    (l) => !claimedListingIds.has(l._id)
+  );
+
   const firstName = (hostProfile?.display_name ?? profile?.full_name ?? "Host").split(/\s+/)[0];
   const verifiedCount = listings.filter((l) => l.isVerified).length;
   const totalAttendees = events.reduce((sum, e) => sum + e.attendees, 0);
@@ -294,6 +316,37 @@ export default async function DashboardPage() {
             >
               Set up your digital menu →
             </Link>
+          </div>
+        </div>
+      )}
+
+      {/* Fully-claim prompt — assigned listings without a completed consent form */}
+      {listingsNeedingClaim.length > 0 && (
+        <div
+          className="mb-5 rounded-xl lg:rounded-2xl border border-purple/20 bg-purple/[0.06] p-4 shadow-sm"
+          style={{ borderLeft: "4px solid #7C3AED" }}
+        >
+          <p className="text-[13px] font-bold text-dark mb-1">
+            Fully claim your {listingsNeedingClaim.length === 1 ? "listing" : "listings"}
+          </p>
+          <p className="text-[12.5px] text-text2 mb-3">
+            Confirm your details and consent so we can keep things accurate and feature your photos.
+          </p>
+          <div className="space-y-2">
+            {listingsNeedingClaim.map((l) => (
+              <div
+                key={l._id}
+                className="flex items-center justify-between gap-3 bg-white rounded-xl border border-border px-3 py-2"
+              >
+                <span className="text-[13px] font-medium text-dark truncate">{l.title}</span>
+                <Link
+                  href={`/dashboard/claim/${l._id}`}
+                  className="shrink-0 bg-purple text-white font-bold text-[12px] px-4 h-[34px] flex items-center rounded-full hover:bg-[#6D28D9] transition-colors whitespace-nowrap"
+                >
+                  Complete form →
+                </Link>
+              </div>
+            ))}
           </div>
         </div>
       )}
