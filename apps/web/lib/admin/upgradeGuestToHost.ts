@@ -62,7 +62,21 @@ export async function upgradeGuestToHost(
   await adminClient.auth.admin.updateUserById(userId, {
     user_metadata: { role: "host", name },
   });
-  await adminClient.from("users").update({ role: "host" }).eq("id", userId);
+  // Upsert the public.users row: an auth user may not have one yet (it is
+  // created on login, not signup). Create it if missing, otherwise just flip the
+  // role without clobbering the user's existing name/email.
+  const { data: pubUser } = await adminClient
+    .from("users")
+    .select("id")
+    .eq("id", userId)
+    .maybeSingle();
+  if (pubUser) {
+    await adminClient.from("users").update({ role: "host" }).eq("id", userId);
+  } else {
+    await adminClient
+      .from("users")
+      .insert({ id: userId, email, full_name: name, role: "host" });
+  }
 
   if (existing) {
     return { userId, hostId: existing.id, slug: existing.slug };
