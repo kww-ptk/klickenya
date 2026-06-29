@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
     const { data: existing } = await adminClient
       .from("users")
       .select("id, role")
-      .eq("email", email)
+      .eq("email", String(email).trim().toLowerCase())
       .maybeSingle();
 
     if (!existing) {
