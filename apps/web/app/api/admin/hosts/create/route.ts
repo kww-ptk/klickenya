@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { assertAdmin, AdminAuthError } from "@/lib/admin/auth";
+import { adminClient } from "@/lib/supabase/admin";
 import { createHostAccount } from "@/lib/admin/createHost";
 
 export async function POST(request: NextRequest) {
@@ -18,6 +19,35 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: "Password must be at least 8 characters" },
         { status: 400 }
+      );
+    }
+
+    // If the email already belongs to an account, branch on its role instead of
+    // failing: a guest can be upgraded to host, a host already exists, and an
+    // admin can't become a host.
+    const { data: existing } = await adminClient
+      .from("users")
+      .select("id, role")
+      .eq("email", email)
+      .maybeSingle();
+    if (existing) {
+      if (existing.role === "admin") {
+        return NextResponse.json({ conflict: "admin" }, { status: 409 });
+      }
+      const { data: existingHost } = await adminClient
+        .from("host_profiles")
+        .select("id")
+        .eq("user_id", existing.id)
+        .maybeSingle();
+      if (existing.role === "host" || existingHost) {
+        return NextResponse.json(
+          { conflict: "host", hostId: existingHost?.id ?? null },
+          { status: 409 }
+        );
+      }
+      return NextResponse.json(
+        { conflict: "guest", email, name, userId: existing.id },
+        { status: 409 }
       );
     }
 
