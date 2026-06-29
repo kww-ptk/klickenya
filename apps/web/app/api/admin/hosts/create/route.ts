@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { assertAdmin, AdminAuthError } from "@/lib/admin/auth";
 import { adminClient } from "@/lib/supabase/admin";
+import { findAuthUserByEmail } from "@/lib/admin/findAuthUserByEmail";
 import { createHostAccount } from "@/lib/admin/createHost";
 
 export async function POST(request: NextRequest) {
@@ -24,29 +25,35 @@ export async function POST(request: NextRequest) {
 
     // If the email already belongs to an account, branch on its role instead of
     // failing: a guest can be upgraded to host, a host already exists, and an
-    // admin can't become a host.
-    const { data: existing } = await adminClient
-      .from("users")
-      .select("id, role")
-      .eq("email", String(email).trim().toLowerCase())
-      .maybeSingle();
-    if (existing) {
-      if (existing.role === "admin") {
+    // admin can't become a host. Resolve against auth.users (the source of truth
+    // for "already registered") — an auth user may lack a public.users row (it
+    // is created on login, not signup), so a public.users-only lookup misses
+    // those accounts and the create would fail with a raw error.
+    const existingUser = await findAuthUserByEmail(email);
+    if (existingUser) {
+      const [{ data: pub }, { data: existingHost }] = await Promise.all([
+        adminClient
+          .from("users")
+          .select("role")
+          .eq("id", existingUser.id)
+          .maybeSingle(),
+        adminClient
+          .from("host_profiles")
+          .select("id")
+          .eq("user_id", existingUser.id)
+          .maybeSingle(),
+      ]);
+      if (pub?.role === "admin") {
         return NextResponse.json({ conflict: "admin" }, { status: 409 });
       }
-      const { data: existingHost } = await adminClient
-        .from("host_profiles")
-        .select("id")
-        .eq("user_id", existing.id)
-        .maybeSingle();
-      if (existing.role === "host" || existingHost) {
+      if (pub?.role === "host" || existingHost) {
         return NextResponse.json(
           { conflict: "host", hostId: existingHost?.id ?? null },
           { status: 409 }
         );
       }
       return NextResponse.json(
-        { conflict: "guest", email, name, userId: existing.id },
+        { conflict: "guest", email, name, userId: existingUser.id },
         { status: 409 }
       );
     }

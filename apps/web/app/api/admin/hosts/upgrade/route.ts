@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { assertAdmin, AdminAuthError } from "@/lib/admin/auth";
 import { adminClient } from "@/lib/supabase/admin";
+import { findAuthUserByEmail } from "@/lib/admin/findAuthUserByEmail";
 import { upgradeGuestToHost } from "@/lib/admin/upgradeGuestToHost";
 
 export async function POST(request: NextRequest) {
@@ -16,19 +17,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { data: existing } = await adminClient
-      .from("users")
-      .select("id, role")
-      .eq("email", String(email).trim().toLowerCase())
-      .maybeSingle();
+    const existingUser = await findAuthUserByEmail(email);
 
-    if (!existing) {
+    if (!existingUser) {
       return NextResponse.json(
         { error: "No account found for that email" },
         { status: 404 }
       );
     }
-    if (existing.role === "admin") {
+    const { data: pub } = await adminClient
+      .from("users")
+      .select("role")
+      .eq("id", existingUser.id)
+      .maybeSingle();
+    if (pub?.role === "admin") {
       return NextResponse.json(
         { error: "Admin accounts can't be hosts" },
         { status: 409 }
@@ -36,7 +38,7 @@ export async function POST(request: NextRequest) {
     }
 
     const result = await upgradeGuestToHost({
-      userId: existing.id,
+      userId: existingUser.id,
       name: String(name).trim(),
       email: String(email).trim(),
       phone: (phone ? String(phone) : "").trim() || null,
