@@ -33,7 +33,6 @@ interface FormFields {
   // Experience
   preferredDate: string;
   groupSize: number;
-  experienceLevel: string;
   // Event
   ticketQuantity: number;
   ticketType: string;
@@ -145,7 +144,6 @@ function ContactForm({
     guests: 1,
     preferredDate: "",
     groupSize: 1,
-    experienceLevel: "Beginner",
     ticketQuantity: 1,
     ticketType: ticketTypes?.[0] ?? "General",
     promoCode: "",
@@ -210,7 +208,6 @@ function ContactForm({
           ...base,
           preferredDate: form.preferredDate,
           groupSize: form.groupSize,
-          experienceLevel: form.experienceLevel,
         };
       case "event":
         return {
@@ -380,18 +377,6 @@ function ContactForm({
             />
           </div>
           <Counter label="Group size" value={form.groupSize} onChange={(v) => update("groupSize", v)} suffix="people" />
-          <div className="border border-border rounded-[14px] p-3">
-            <label className={labelCls}>Experience level</label>
-            <select
-              value={form.experienceLevel}
-              onChange={(e) => update("experienceLevel", e.target.value)}
-              className="w-full text-[14px] text-text bg-transparent outline-none"
-            >
-              <option>Beginner</option>
-              <option>Intermediate</option>
-              <option>Experienced</option>
-            </select>
-          </div>
         </>
       )}
 
