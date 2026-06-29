@@ -5,6 +5,7 @@ import { adminClient } from "@/lib/supabase/admin";
 import { sanityClient } from "@/lib/sanity/client";
 import { getAuthUser, getUserProfile, getHostProfile } from "./_lib/auth";
 import { getMenusForOwner } from "@/lib/cache/menu";
+import { getConsentByListingId } from "@/lib/admin/listingConsent";
 
 export default async function DashboardPage() {
   const { user, supabase } = await getAuthUser();
@@ -215,24 +216,11 @@ export default async function DashboardPage() {
     }
   }
 
-  // Assigned listings still missing a completed claim/consent form.
-  // A listing counts as claimed if ANY verified claim_requests row exists for it
-  // (host-dashboard completion OR an earlier public /claim). Matching by the
-  // host's own listing ids covers both without string-interpolating an email.
-  const claimedListingIds = new Set<string>();
-  if (listings.length > 0) {
-    const { data: completedClaims } = await adminClient
-      .from("claim_requests")
-      .select("listing_sanity_id")
-      .eq("status", "verified")
-      .in(
-        "listing_sanity_id",
-        listings.map((l) => l._id)
-      );
-    for (const r of completedClaims ?? []) {
-      if (r.listing_sanity_id) claimedListingIds.add(r.listing_sanity_id);
-    }
-  }
+  // A listing has consent on file if either flow captured it: the claim flow
+  // (claim_requests) or the submission flow (listing_requests). When consent is
+  // already on file we do NOT prompt the owner to "fully claim" it again.
+  const consentMap = await getConsentByListingId(listings.map((l) => l._id));
+  const claimedListingIds = new Set(consentMap.keys());
   const listingsNeedingClaim = listings.filter(
     (l) => !claimedListingIds.has(l._id)
   );
