@@ -1,5 +1,6 @@
 import { sanityClient } from "@/lib/sanity/client";
 import { adminClient } from "@/lib/supabase/admin";
+import { getConsentByListingId } from "@/lib/admin/listingConsent";
 import { StatusBadge } from "@/components/admin/StatusBadge";
 import Link from "next/link";
 
@@ -85,7 +86,7 @@ export default async function AdminListingsPage({
     process.env.NEXT_PUBLIC_SANITY_STUDIO_URL ?? "http://localhost:3333";
 
   // Fetch listings from Sanity, enquiry counts, and menu data in parallel
-  const [listings, { data: contactRequests }, { data: menuData }, { data: consentRows }] = await Promise.all([
+  const [listings, { data: contactRequests }, { data: menuData }] = await Promise.all([
     sanityClient.fetch<Listing[]>(
       `*[_type == "listing"] | order(_createdAt desc) {
         _id, title, slug, type, subcategory, city, status, price, priceUnit, _createdAt
@@ -93,11 +94,6 @@ export default async function AdminListingsPage({
     ),
     adminClient.from("contact_requests").select("listing_id"),
     adminClient.from("menus").select("listing_slug, reservations_enabled"),
-    adminClient
-      .from("claim_requests")
-      .select("listing_sanity_id, photo_consent, created_at")
-      .eq("status", "verified")
-      .order("created_at", { ascending: false }),
   ]);
 
   // Build enquiry count map
@@ -111,18 +107,9 @@ export default async function AdminListingsPage({
     (menuData ?? []).map((m: { listing_slug: string | null; reservations_enabled: boolean }) => [m.listing_slug, m])
   );
 
-  // Build consent map keyed by listing Sanity id. A listing can have several
-  // verified claims (public + host-dashboard); rows are ordered newest-first, so
-  // the first one seen per listing is the most recent.
-  const consentMap = new Map<string, string | null>();
-  for (const r of (consentRows ?? []) as {
-    listing_sanity_id: string | null;
-    photo_consent: string | null;
-  }[]) {
-    if (r.listing_sanity_id && !consentMap.has(r.listing_sanity_id)) {
-      consentMap.set(r.listing_sanity_id, r.photo_consent ?? null);
-    }
-  }
+  // Consent on file from either flow (claim_requests or listing_requests),
+  // keyed by listing Sanity id → recorded photo_consent.
+  const consentMap = await getConsentByListingId(listings.map((l) => l._id));
 
   // Apply filters
   const filtered = listings.filter((listing) => {
