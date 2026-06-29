@@ -38,7 +38,6 @@ export const stayContactSchema = baseContactSchema.extend({
 export const experienceContactSchema = baseContactSchema.extend({
   preferredDate: z.iso.date(),
   groupSize: z.number().min(1).max(50),
-  experienceLevel: z.enum(["Beginner", "Intermediate", "Experienced"]),
   ...listingFields,
   listingType: z.literal("experience"),
 });
