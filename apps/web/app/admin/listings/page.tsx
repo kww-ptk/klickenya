@@ -57,6 +57,20 @@ function capitalize(str: string): string {
   return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
+// Photo-consent choice recorded on the claim/consent form.
+function photoConsentLabel(v: string | null | undefined): string {
+  switch (v) {
+    case "yes_all":
+      return "All photos";
+    case "yes_logo_only":
+      return "Logo only";
+    case "no":
+      return "Own photos";
+    default:
+      return "On file";
+  }
+}
+
 export default async function AdminListingsPage({
   searchParams,
 }: {
@@ -71,7 +85,7 @@ export default async function AdminListingsPage({
     process.env.NEXT_PUBLIC_SANITY_STUDIO_URL ?? "http://localhost:3333";
 
   // Fetch listings from Sanity, enquiry counts, and menu data in parallel
-  const [listings, { data: contactRequests }, { data: menuData }] = await Promise.all([
+  const [listings, { data: contactRequests }, { data: menuData }, { data: consentRows }] = await Promise.all([
     sanityClient.fetch<Listing[]>(
       `*[_type == "listing"] | order(_createdAt desc) {
         _id, title, slug, type, subcategory, city, status, price, priceUnit, _createdAt
@@ -79,6 +93,11 @@ export default async function AdminListingsPage({
     ),
     adminClient.from("contact_requests").select("listing_id"),
     adminClient.from("menus").select("listing_slug, reservations_enabled"),
+    adminClient
+      .from("claim_requests")
+      .select("listing_sanity_id, photo_consent, created_at")
+      .eq("status", "verified")
+      .order("created_at", { ascending: false }),
   ]);
 
   // Build enquiry count map
@@ -91,6 +110,19 @@ export default async function AdminListingsPage({
   const menuBySlug = new Map(
     (menuData ?? []).map((m: { listing_slug: string | null; reservations_enabled: boolean }) => [m.listing_slug, m])
   );
+
+  // Build consent map keyed by listing Sanity id. A listing can have several
+  // verified claims (public + host-dashboard); rows are ordered newest-first, so
+  // the first one seen per listing is the most recent.
+  const consentMap = new Map<string, string | null>();
+  for (const r of (consentRows ?? []) as {
+    listing_sanity_id: string | null;
+    photo_consent: string | null;
+  }[]) {
+    if (r.listing_sanity_id && !consentMap.has(r.listing_sanity_id)) {
+      consentMap.set(r.listing_sanity_id, r.photo_consent ?? null);
+    }
+  }
 
   // Apply filters
   const filtered = listings.filter((listing) => {
@@ -211,6 +243,9 @@ export default async function AdminListingsPage({
                   Status
                 </th>
                 <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-text3">
+                  Consent
+                </th>
+                <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-text3">
                   Price
                 </th>
                 <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-text3">
@@ -231,7 +266,7 @@ export default async function AdminListingsPage({
               {filtered.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={9}
+                    colSpan={10}
                     className="px-6 py-12 text-center text-[13px] text-text3"
                   >
                     No listings found.
@@ -258,6 +293,18 @@ export default async function AdminListingsPage({
                       </td>
                       <td className="px-4 py-3">
                         <StatusBadge status={listing.status} />
+                      </td>
+                      <td className="px-4 py-3">
+                        {consentMap.has(listing._id) ? (
+                          <span className="inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-green-100 px-2 py-0.5 text-[11px] font-semibold text-green-700">
+                            <svg className="size-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                            </svg>
+                            {photoConsentLabel(consentMap.get(listing._id))}
+                          </span>
+                        ) : (
+                          <span className="text-[13px] text-text3">{"—"}</span>
+                        )}
                       </td>
                       <td className="whitespace-nowrap px-4 py-3 text-[13px] text-dark">
                         {formatPrice(listing.price, listing.priceUnit)}
