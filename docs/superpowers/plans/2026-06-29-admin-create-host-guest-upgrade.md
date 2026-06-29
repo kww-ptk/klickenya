@@ -231,23 +231,31 @@ Replace this entire block:
         }
       } else {
 ```
-with:
+with (the try/catch preserves the original behavior: the role flip + profile
+insert errors were `console.error`-swallowed and the flow continued with the
+existing user id, rather than 500-ing the approval):
 ```ts
       } else if (existingUser) {
-        // Existing guest user — promote to host (shared upgrade logic)
-        const upgraded = await upgradeGuestToHost({
-          userId: existingUser.id,
-          name: claim.claimant_name,
-          email: claim.claimant_email,
-          phone: claim.claimant_phone,
-          city: claim.listing_city ?? null,
-          websiteUrl: claim.website_url ?? null,
-          socialUrl: claim.social_media_url ?? null,
-          claimRequestId: id,
-          ghlContactId: claim.ghl_contact_id ?? null,
-        });
-        userId = upgraded.userId;
+        // Existing guest user — promote to host (shared upgrade logic).
+        // Swallow-and-continue to preserve the prior approve behavior: a
+        // host_profiles insert failure here was logged, not fatal.
+        userId = existingUser.id;
         isNewHost = true;
+        try {
+          await upgradeGuestToHost({
+            userId: existingUser.id,
+            name: claim.claimant_name,
+            email: claim.claimant_email,
+            phone: claim.claimant_phone,
+            city: claim.listing_city ?? null,
+            websiteUrl: claim.website_url ?? null,
+            socialUrl: claim.social_media_url ?? null,
+            claimRequestId: id,
+            ghlContactId: claim.ghl_contact_id ?? null,
+          });
+        } catch (upgradeErr) {
+          console.error("Guest-to-host upgrade error:", upgradeErr);
+        }
       } else {
 ```
 
