@@ -63,7 +63,6 @@ const experienceSchema = z.object({
   listingType: z.literal("experience"),
   preferredDate: z.string().min(1),
   groupSize: z.number().min(1).max(50),
-  experienceLevel: z.enum(["Beginner", "Intermediate", "Experienced"]),
 });
 
 const eventSchema = z.object({
@@ -136,7 +135,6 @@ function buildEnquirySummary(data: z.infer<typeof contactSchema>): Record<string
     case "experience":
       summary["Preferred date"] = data.preferredDate;
       summary["Group size"] = String(data.groupSize);
-      summary["Experience level"] = data.experienceLevel;
       break;
     case "event":
       summary["Ticket quantity"] = String(data.ticketQuantity);

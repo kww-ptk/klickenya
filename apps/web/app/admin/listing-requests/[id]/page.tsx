@@ -3,6 +3,7 @@ import { StatusBadge } from "@/components/admin/StatusBadge";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ListingRequestActions } from "./ListingRequestActions";
+import { ListingContentEditor } from "./ListingContentEditor";
 
 function formatDate(dateStr: string) {
   const d = new Date(dateStr);
@@ -41,8 +42,11 @@ export default async function ListingRequestDetailPage({
 
   if (!request) notFound();
 
-  const canApprove = request.status === "submitted" || request.status === "new";
-  const canReject = request.status !== "rejected" && request.status !== "approved";
+  // Approve/Reject available in any state except a final "approved" (the approve
+  // route is idempotent and 409s on re-approval; this just lets the admin act on
+  // a request after a reply, status change, or rejection).
+  const canApprove = request.status !== "approved";
+  const canReject = request.status !== "approved";
 
   return (
     <div className="space-y-6">
@@ -117,54 +121,20 @@ export default async function ListingRequestDetailPage({
             </div>
           )}
 
-          {/* Listing Content */}
-          <div className="bg-white rounded-2xl border border-[#F0EDE8] p-6 space-y-5">
-            <h2 className="text-[18px] font-display font-bold text-dark">
-              Listing Content
-            </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-              <Field label="Draft Title" value={request.draft_title} />
-              <Field label="City" value={request.draft_city || request.location} />
-              <Field label="Type" value={request.listing_type} />
-              <Field label="Subcategory" value={request.draft_subcategory} />
-              <Field label="Business Name" value={request.business_name} />
-              {request.draft_website && (
-                <div>
-                  <p className="text-[12px] text-text3 uppercase tracking-wider font-medium mb-1">
-                    Website
-                  </p>
-                  <a
-                    href={request.draft_website}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-[14px] text-amber hover:underline break-all"
-                  >
-                    {request.draft_website}
-                  </a>
-                </div>
-              )}
-              {request.draft_instagram && (
-                <Field label="Instagram" value={`@${request.draft_instagram}`} />
-              )}
-              {request.draft_phone && (
-                <Field label="Business Phone" value={request.draft_phone} />
-              )}
-              {request.draft_email && (
-                <Field label="Business Email" value={request.draft_email} />
-              )}
-            </div>
-
-            {(request.draft_description || request.description) && (
-              <div>
-                <p className="text-[12px] text-text3 uppercase tracking-wider font-medium mb-2">
-                  Description
-                </p>
-                <div className="bg-[#F7F5F2] rounded-xl p-4 text-[14px] text-dark leading-relaxed whitespace-pre-wrap">
-                  {request.draft_description || request.description}
-                </div>
-              </div>
-            )}
-          </div>
+          {/* Listing Content (inline editable) */}
+          <ListingContentEditor
+            id={id}
+            draftTitle={request.draft_title || ""}
+            draftCity={request.draft_city || request.location || ""}
+            listingType={request.listing_type || ""}
+            draftSubcategory={request.draft_subcategory || ""}
+            businessName={request.business_name || ""}
+            draftWebsite={request.draft_website || ""}
+            draftInstagram={request.draft_instagram || ""}
+            draftPhone={request.draft_phone || ""}
+            draftEmail={request.draft_email || ""}
+            draftDescription={request.draft_description || request.description || ""}
+          />
 
           {/* Submitter Details */}
           <div className="bg-white rounded-2xl border border-[#F0EDE8] p-6 space-y-5">

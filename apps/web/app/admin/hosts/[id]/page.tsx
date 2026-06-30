@@ -3,6 +3,8 @@ import Link from "next/link";
 import { adminClient } from "@/lib/supabase/admin";
 import { sanityPreviewClient as sanityClient } from "@/lib/sanity/client";
 import { HostListingActions, SyncListingsButton } from "./HostListingActions";
+import { HostFormModal } from "../HostFormModal";
+import { DeleteHostButton } from "../DeleteHostButton";
 
 export const revalidate = 0;
 
@@ -107,17 +109,31 @@ export default async function AdminHostDetailPage({ params }: PageProps) {
 
       {/* Section A — Host Details */}
       <div className="rounded-2xl bg-white shadow-sm p-6">
-        <div className="flex items-center gap-4 mb-6">
-          {photoUrl ? (
-            <img src={`${photoUrl}?w=96&h=96&fit=crop&auto=format`} alt="" className="size-16 rounded-2xl object-cover" />
-          ) : (
-            <div className="size-16 rounded-2xl bg-gradient-to-br from-amber to-purple flex items-center justify-center text-white text-[20px] font-bold">
-              {initials}
+        <div className="flex items-start justify-between gap-4 mb-6">
+          <div className="flex items-center gap-4">
+            {photoUrl ? (
+              <img src={`${photoUrl}?w=96&h=96&fit=crop&auto=format`} alt="" className="size-16 rounded-2xl object-cover" />
+            ) : (
+              <div className="size-16 rounded-2xl bg-gradient-to-br from-amber to-purple flex items-center justify-center text-white text-[20px] font-bold">
+                {initials}
+              </div>
+            )}
+            <div>
+              <h1 className="font-display text-[24px] font-bold text-dark">{host.display_name}</h1>
+              <p className="text-[13px] text-text3 mt-0.5">{host.email}</p>
             </div>
-          )}
-          <div>
-            <h1 className="font-display text-[24px] font-bold text-dark">{host.display_name}</h1>
-            <p className="text-[13px] text-text3 mt-0.5">{host.email}</p>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <HostFormModal
+              mode="edit"
+              hostId={host.id}
+              initialName={host.display_name ?? ""}
+              initialEmail={host.email ?? ""}
+              initialPhone={host.phone ?? ""}
+              triggerLabel="Edit"
+              triggerClassName="px-4 py-2 text-[13px] font-semibold rounded-xl border border-border text-dark hover:bg-[#F5F3F0] transition-colors"
+            />
+            <DeleteHostButton hostId={host.id} hostName={host.display_name ?? "this host"} />
           </div>
         </div>
 

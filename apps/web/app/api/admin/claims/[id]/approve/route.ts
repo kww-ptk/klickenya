@@ -3,6 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 import { createClient as createSanityClient } from "next-sanity";
 import { Resend } from "resend";
 import { updateOpportunityStage, GHL_STAGES } from "@/lib/integrations/ghl";
+import { upgradeGuestToHost } from "@/lib/admin/upgradeGuestToHost";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -92,54 +93,25 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
           .update({ total_listings: (existingHost.total_listings ?? 1) + 1 })
           .eq("id", existingHost.id);
       } else if (existingUser) {
-        // Existing guest user — promote to host
+        // Existing guest user — promote to host (shared upgrade logic).
+        // Swallow-and-continue to preserve the prior approve behavior: a
+        // host_profiles insert failure here was logged, not fatal.
         userId = existingUser.id;
         isNewHost = true;
-
-        // Update role to host
-        await supabase.auth.admin.updateUserById(userId, {
-          user_metadata: { role: "host", name: claim.claimant_name },
-        });
-        await supabase
-          .from("users")
-          .update({ role: "host" })
-          .eq("id", userId);
-
-        // Generate unique slug
-        const baseSlug = claim.claimant_name
-          .toLowerCase()
-          .trim()
-          .replace(/[^a-z0-9\s-]/g, "")
-          .replace(/\s+/g, "-");
-
-        let slug = baseSlug;
-        const { count } = await supabase
-          .from("host_profiles")
-          .select("id", { count: "exact", head: true })
-          .eq("slug", slug);
-
-        if ((count ?? 0) > 0) {
-          slug = `${baseSlug}-${Math.random().toString(36).slice(2, 6)}`;
-        }
-
-        // Create host profile for existing user
-        const { error: profileErr } = await supabase
-          .from("host_profiles")
-          .insert({
-            user_id: userId,
-            slug,
-            display_name: claim.claimant_name,
+        try {
+          await upgradeGuestToHost({
+            userId: existingUser.id,
+            name: claim.claimant_name,
             email: claim.claimant_email,
             phone: claim.claimant_phone,
             city: claim.listing_city ?? null,
-            website_url: claim.website_url ?? null,
-            social_url: claim.social_media_url ?? null,
-            claim_request_id: id,
-            ghl_contact_id: claim.ghl_contact_id ?? null,
+            websiteUrl: claim.website_url ?? null,
+            socialUrl: claim.social_media_url ?? null,
+            claimRequestId: id,
+            ghlContactId: claim.ghl_contact_id ?? null,
           });
-
-        if (profileErr) {
-          console.error("Host profile insert error:", profileErr);
+        } catch (upgradeErr) {
+          console.error("Guest-to-host upgrade error:", upgradeErr);
         }
       } else {
         // Step 2c — Create new auth user with temporary password

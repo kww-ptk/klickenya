@@ -5,6 +5,7 @@ import { adminClient } from "@/lib/supabase/admin";
 import { sanityClient } from "@/lib/sanity/client";
 import { getAuthUser, getUserProfile, getHostProfile } from "./_lib/auth";
 import { getMenusForOwner } from "@/lib/cache/menu";
+import { getConsentByListingId } from "@/lib/admin/listingConsent";
 
 export default async function DashboardPage() {
   const { user, supabase } = await getAuthUser();
@@ -215,6 +216,15 @@ export default async function DashboardPage() {
     }
   }
 
+  // A listing has consent on file if either flow captured it: the claim flow
+  // (claim_requests) or the submission flow (listing_requests). When consent is
+  // already on file we do NOT prompt the owner to "fully claim" it again.
+  const consentMap = await getConsentByListingId(listings.map((l) => l._id));
+  const claimedListingIds = new Set(consentMap.keys());
+  const listingsNeedingClaim = listings.filter(
+    (l) => !claimedListingIds.has(l._id)
+  );
+
   const firstName = (hostProfile?.display_name ?? profile?.full_name ?? "Host").split(/\s+/)[0];
   const verifiedCount = listings.filter((l) => l.isVerified).length;
   const totalAttendees = events.reduce((sum, e) => sum + e.attendees, 0);
@@ -294,6 +304,37 @@ export default async function DashboardPage() {
             >
               Set up your digital menu →
             </Link>
+          </div>
+        </div>
+      )}
+
+      {/* Fully-claim prompt — assigned listings without a completed consent form */}
+      {listingsNeedingClaim.length > 0 && (
+        <div
+          className="mb-5 rounded-xl lg:rounded-2xl border border-purple/20 bg-purple/[0.06] p-4 shadow-sm"
+          style={{ borderLeft: "4px solid #7C3AED" }}
+        >
+          <p className="text-[13px] font-bold text-dark mb-1">
+            Fully claim your {listingsNeedingClaim.length === 1 ? "listing" : "listings"}
+          </p>
+          <p className="text-[12.5px] text-text2 mb-3">
+            Confirm your details and consent so we can keep things accurate and feature your photos.
+          </p>
+          <div className="space-y-2">
+            {listingsNeedingClaim.map((l) => (
+              <div
+                key={l._id}
+                className="flex items-center justify-between gap-3 bg-white rounded-xl border border-border px-3 py-2"
+              >
+                <span className="text-[13px] font-medium text-dark truncate">{l.title}</span>
+                <Link
+                  href={`/dashboard/claim/${l._id}`}
+                  className="shrink-0 bg-purple text-white font-bold text-[12px] px-4 h-[34px] flex items-center rounded-full hover:bg-[#6D28D9] transition-colors whitespace-nowrap"
+                >
+                  Complete form →
+                </Link>
+              </div>
+            ))}
           </div>
         </div>
       )}

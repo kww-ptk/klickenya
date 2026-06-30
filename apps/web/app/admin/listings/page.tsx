@@ -1,5 +1,6 @@
 import { sanityClient } from "@/lib/sanity/client";
 import { adminClient } from "@/lib/supabase/admin";
+import { getConsentByListingId } from "@/lib/admin/listingConsent";
 import { StatusBadge } from "@/components/admin/StatusBadge";
 import Link from "next/link";
 
@@ -57,6 +58,20 @@ function capitalize(str: string): string {
   return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
+// Photo-consent choice recorded on the claim/consent form.
+function photoConsentLabel(v: string | null | undefined): string {
+  switch (v) {
+    case "yes_all":
+      return "All photos";
+    case "yes_logo_only":
+      return "Logo only";
+    case "no":
+      return "Own photos";
+    default:
+      return "On file";
+  }
+}
+
 export default async function AdminListingsPage({
   searchParams,
 }: {
@@ -91,6 +106,10 @@ export default async function AdminListingsPage({
   const menuBySlug = new Map(
     (menuData ?? []).map((m: { listing_slug: string | null; reservations_enabled: boolean }) => [m.listing_slug, m])
   );
+
+  // Consent on file from either flow (claim_requests or listing_requests),
+  // keyed by listing Sanity id → recorded photo_consent.
+  const consentMap = await getConsentByListingId(listings.map((l) => l._id));
 
   // Apply filters
   const filtered = listings.filter((listing) => {
@@ -210,6 +229,9 @@ export default async function AdminListingsPage({
                   Status
                 </th>
                 <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-text3">
+                  Consent
+                </th>
+                <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-text3">
                   Price
                 </th>
                 <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-text3">
@@ -230,7 +252,7 @@ export default async function AdminListingsPage({
               {filtered.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={9}
+                    colSpan={10}
                     className="px-6 py-12 text-center text-[13px] text-text3"
                   >
                     No listings found.
@@ -257,6 +279,18 @@ export default async function AdminListingsPage({
                       </td>
                       <td className="px-4 py-3">
                         <StatusBadge status={listing.status} />
+                      </td>
+                      <td className="px-4 py-3">
+                        {consentMap.has(listing._id) ? (
+                          <span className="inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-green-100 px-2 py-0.5 text-[11px] font-semibold text-green-700">
+                            <svg className="size-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                            </svg>
+                            {photoConsentLabel(consentMap.get(listing._id))}
+                          </span>
+                        ) : (
+                          <span className="text-[13px] text-text3">{"—"}</span>
+                        )}
                       </td>
                       <td className="whitespace-nowrap px-4 py-3 text-[13px] text-dark">
                         {formatPrice(listing.price, listing.priceUnit)}
