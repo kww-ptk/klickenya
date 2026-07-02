@@ -28,6 +28,7 @@ function PhotoGallery({ photos, title }: PhotoGalleryProps) {
               fill
               className="object-cover"
               sizes="(max-width: 768px) 100vw, 50vw"
+              quality={85}
               priority
             />
           </div>
@@ -39,6 +40,7 @@ function PhotoGallery({ photos, title }: PhotoGalleryProps) {
                 fill
                 className="object-cover"
                 sizes="25vw"
+                quality={85}
               />
             </div>
           ))}
@@ -56,6 +58,7 @@ function PhotoGallery({ photos, title }: PhotoGalleryProps) {
           fill
           className="object-cover"
           sizes="100vw"
+          quality={85}
           priority
         />
       </div>

@@ -25,6 +25,7 @@ export function PhotoRowBlock({ value }: { value: PhotoRowValue }) {
                 fill
                 className="object-cover transition-transform duration-600 group-hover:scale-[1.04]"
                 sizes="(max-width: 768px) 100vw, 50vw"
+                quality={85}
               />
             )}
           </div>
