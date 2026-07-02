@@ -212,16 +212,16 @@ function ServiceDetail({
           />
         </div>
 
+        <MobileBookingBar
+          type={sanityType}
+          price={listing.price ?? 0}
+          priceUnit={listing.priceUnit ?? "session"}
+          listingId={listing._id}
+          listingTitle={listing.title}
+        />
+
         <SimilarListings listings={similarCards} typeLabel={typeLabel} />
       </article>
-
-      <MobileBookingBar
-        type={sanityType}
-        price={listing.price ?? 0}
-        priceUnit={listing.priceUnit ?? "session"}
-        listingId={listing._id}
-        listingTitle={listing.title}
-      />
     </>
   );
 }

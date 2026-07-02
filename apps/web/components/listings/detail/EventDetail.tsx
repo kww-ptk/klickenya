@@ -561,19 +561,19 @@ function EventDetail({
           </aside>
         </div>
 
+        {/* Mobile booking bar — only for paid events */}
+        {showBookingSidebar && (
+          <MobileBookingBar
+            type={sanityType}
+            price={mobilePrice}
+            priceUnit={listing.priceUnit ?? "ticket"}
+            listingId={listing._id}
+            listingTitle={listing.title}
+          />
+        )}
+
         <SimilarListings listings={similarCards} typeLabel={typeLabel} />
       </article>
-
-      {/* Mobile booking bar — only for paid events */}
-      {showBookingSidebar && (
-        <MobileBookingBar
-          type={sanityType}
-          price={mobilePrice}
-          priceUnit={listing.priceUnit ?? "ticket"}
-          listingId={listing._id}
-          listingTitle={listing.title}
-        />
-      )}
     </>
   );
 }

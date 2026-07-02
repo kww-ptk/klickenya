@@ -214,7 +214,7 @@ export default async function ListingDetailPage({ params }: PageProps) {
   // Photos
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const photos: string[] = (listing.photos ?? []).map((p: any) =>
-    urlForImage(p).width(1000).url()
+    urlForImage(p).width(1500).auto("format").quality(85).url()
   );
 
   // Similar listings

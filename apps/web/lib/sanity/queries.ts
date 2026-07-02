@@ -9,6 +9,22 @@ const IMAGE_FIELDS = `
   crop
 `
 
+// Portable Text description — dereference image assets inside Photo Row blocks
+// so they render on the live page. Without asset->, photos are unresolved refs
+// and PhotoRowBlock renders empty. Assets get a 1500px auto-format transform.
+const DESCRIPTION_FIELDS = `
+  description[]{
+    ...,
+    _type == "photoRowBlock" => {
+      ...,
+      "photos": photos[]{
+        ...,
+        "asset": asset->{ "url": url + "?w=1500&auto=format&q=85" }
+      }
+    }
+  }
+`
+
 // White-label: klickenya.com marketplace shows house listings (no partner)
 // OR partner listings explicitly cross-listed. Interpolate inside the [ ... ]
 // filter of every PUBLIC marketplace listing query.
@@ -118,7 +134,7 @@ export const LISTING_BY_SLUG_QUERY = groq`
     priceUnit,
     bookingType,
     maxGuests,
-    description,
+    ${DESCRIPTION_FIELDS},
     photos[]{ ${IMAGE_FIELDS} },
     amenities,
     tags,
@@ -633,7 +649,7 @@ export const EVENT_BY_SLUG_QUERY = groq`
     priceUnit,
     bookingType,
     maxGuests,
-    description,
+    ${DESCRIPTION_FIELDS},
     photos[]{ ${IMAGE_FIELDS} },
     amenities,
     tags,

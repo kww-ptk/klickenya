@@ -339,20 +339,20 @@ function RestaurantDetail({
           />
         </div>
 
+        <MobileBookingBar
+          type={sanityType}
+          price={listing.price ?? 0}
+          priceUnit={listing.priceUnit ?? "person"}
+          listingId={listing._id}
+          listingTitle={listing.title}
+          cuisine={cuisine}
+          priceRange={listing.priceRange}
+          menuSlug={menuData?.slug}
+          reservationsConfig={reservationsConfig ?? null}
+        />
+
         <SimilarListings listings={similarCards} typeLabel={typeLabel} />
       </article>
-
-      <MobileBookingBar
-        type={sanityType}
-        price={listing.price ?? 0}
-        priceUnit={listing.priceUnit ?? "person"}
-        listingId={listing._id}
-        listingTitle={listing.title}
-        cuisine={cuisine}
-        priceRange={listing.priceRange}
-        menuSlug={menuData?.slug}
-        reservationsConfig={reservationsConfig ?? null}
-      />
     </>
   );
 }
