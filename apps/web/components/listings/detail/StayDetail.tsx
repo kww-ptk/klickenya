@@ -264,20 +264,20 @@ function StayDetail({
           )}
         </div>
 
+        {!hasPms && (
+          <MobileBookingBar
+            type={sanityType}
+            price={listing.price ?? 0}
+            priceUnit={listing.priceUnit ?? "night"}
+            listingId={listing._id}
+            listingTitle={listing.title}
+            maxGuests={listing.maxGuests}
+            onDatesChange={handleDatesChange}
+          />
+        )}
+
         <SimilarListings listings={similarCards} typeLabel={typeLabel} />
       </article>
-
-      {!hasPms && (
-        <MobileBookingBar
-          type={sanityType}
-          price={listing.price ?? 0}
-          priceUnit={listing.priceUnit ?? "night"}
-          listingId={listing._id}
-          listingTitle={listing.title}
-          maxGuests={listing.maxGuests}
-          onDatesChange={handleDatesChange}
-        />
-      )}
     </>
   );
 }
