@@ -3,6 +3,7 @@ import { z } from "zod/v4";
 import { assertAdmin, AdminAuthError } from "@/lib/admin/auth";
 import { sanityWriteClient } from "@/lib/sanity/writeClient";
 import { syncEventPending } from "@/lib/listings/events";
+import { revalidateListingPaths } from "@/lib/listings/revalidate";
 
 const body = z.object({ status: z.enum(["archived", "published"]) });
 
@@ -16,6 +17,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     if (!existing) return NextResponse.json({ error: "Listing not found." }, { status: 404 });
     await sanityWriteClient.patch(id).set({ status }).commit();
     if (status === "archived") await syncEventPending(id, existing.type, "archive");
+    revalidateListingPaths();
     return NextResponse.json({ success: true, status });
   } catch (err) {
     if (err instanceof AdminAuthError) return NextResponse.json({ error: err.message }, { status: err.status });

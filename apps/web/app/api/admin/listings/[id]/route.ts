@@ -4,6 +4,7 @@ import { assertAdmin, AdminAuthError } from "@/lib/admin/auth";
 import { sanityWriteClient } from "@/lib/sanity/writeClient";
 import { listingInputSchema, inputToSanityFields } from "@/lib/listings/listingFields";
 import { syncEventPending } from "@/lib/listings/events";
+import { revalidateListingPaths } from "@/lib/listings/revalidate";
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -22,6 +23,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     const fields = inputToSanityFields(data);
     await sanityWriteClient.patch(id).set(fields).commit();
     await syncEventPending(id, data.type, "update", { title: data.title, city: data.city });
+    revalidateListingPaths();
     return NextResponse.json({ success: true, id, slug: data.slug });
   } catch (err) {
     if (err instanceof AdminAuthError) return NextResponse.json({ error: err.message }, { status: err.status });
@@ -40,6 +42,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     if (!existing) return NextResponse.json({ error: "Listing not found." }, { status: 404 });
     await syncEventPending(id, existing.type, "delete");
     await sanityWriteClient.delete(id);
+    revalidateListingPaths();
     return NextResponse.json({ success: true });
   } catch (err) {
     if (err instanceof AdminAuthError) return NextResponse.json({ error: err.message }, { status: err.status });
