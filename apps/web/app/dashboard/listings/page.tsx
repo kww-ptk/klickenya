@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { sanityClient } from "@/lib/sanity/client";
+import { ListingRowActions } from "@/components/listings/ListingRowActions";
 import { getAuthUser, getHostProfile } from "../_lib/auth";
 
 export default async function DashboardListingsPage() {
@@ -21,11 +22,12 @@ export default async function DashboardListingsPage() {
     city: string | null;
     imageUrl: string | null;
     isVerified: boolean;
+    status: string | null;
   }[] = [];
 
   try {
     const raw = await sanityClient.fetch<
-      { _id: string; title: string; slug: string; type: string; subcategory: string | null; city: string | null; coverPhoto: { asset?: { url?: string } } | null; isVerified: boolean }[]
+      { _id: string; title: string; slug: string; type: string; subcategory: string | null; city: string | null; coverPhoto: { asset?: { url?: string } } | null; isVerified: boolean; status: string | null }[]
     >(
       `*[_type == "listing" && (
         hostId == $hostId
@@ -34,7 +36,7 @@ export default async function DashboardListingsPage() {
       )] | order(_createdAt desc) {
         _id, title, "slug": slug.current, type, subcategory, city,
         "coverPhoto": photos[0]{ asset->{ _id, url } },
-        isVerified
+        isVerified, status
       }`,
       { hostId: hostProfile.user_id, sanityHostId: hostProfile.sanity_host_id ?? "" }
     );
@@ -47,6 +49,7 @@ export default async function DashboardListingsPage() {
       city: l.city,
       imageUrl: l.coverPhoto?.asset?.url ? `${l.coverPhoto.asset.url}?w=400&auto=format` : null,
       isVerified: l.isVerified,
+      status: l.status ?? null,
     }));
   } catch (err) {
     console.error("Sanity listing fetch error:", err);
@@ -140,7 +143,10 @@ export default async function DashboardListingsPage() {
                         </>
                       )}
                     </div>
-                    <div className="mt-1.5">
+                    <div className="mt-1.5 flex items-center gap-1.5">
+                      {listing.status === "archived" && (
+                        <span className="text-[10px] font-bold text-text3 bg-surface px-2 py-0.5 rounded-full">Archived</span>
+                      )}
                       {listing.isVerified ? (
                         <span className="inline-flex items-center gap-1 text-[10px] font-bold text-green bg-green/8 px-2 py-0.5 rounded-full">
                           <svg className="w-2.5 h-2.5" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
@@ -168,6 +174,9 @@ export default async function DashboardListingsPage() {
                   >
                     View listing →
                   </Link>
+                </div>
+                <div className="flex items-center justify-end mt-2.5 pt-2.5 border-t border-surface">
+                  <ListingRowActions id={listing._id} editHref={`/dashboard/listings/${listing._id}/edit`} variant="host" status={listing.status ?? undefined} />
                 </div>
               </div>
             );

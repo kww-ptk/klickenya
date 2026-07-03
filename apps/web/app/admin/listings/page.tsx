@@ -2,6 +2,7 @@ import { sanityClient } from "@/lib/sanity/client";
 import { adminClient } from "@/lib/supabase/admin";
 import { getConsentByListingId } from "@/lib/admin/listingConsent";
 import { StatusBadge } from "@/components/admin/StatusBadge";
+import { ListingRowActions } from "@/components/listings/ListingRowActions";
 import Link from "next/link";
 
 export const revalidate = 0;
@@ -314,29 +315,37 @@ export default async function AdminListingsPage({
                         {formatDate(listing._createdAt)}
                       </td>
                       <td className="whitespace-nowrap px-6 py-3 text-right">
-                        <div className="flex items-center justify-end gap-3">
-                          {isRestaurant && (
-                            <Link
-                              href={`/dashboard/listings/${listing._id}/reservations`}
-                              className="text-[13px] font-medium text-[#7C3AED] underline-offset-2 hover:underline"
+                        <div className="flex flex-col items-end gap-2">
+                          <ListingRowActions
+                            id={listing._id}
+                            editHref={`/admin/listings/${listing._id}/edit`}
+                            variant="admin"
+                            status={listing.status}
+                          />
+                          <div className="flex items-center justify-end gap-3">
+                            {isRestaurant && (
+                              <Link
+                                href={`/dashboard/listings/${listing._id}/reservations`}
+                                className="text-[13px] font-medium text-[#7C3AED] underline-offset-2 hover:underline"
+                              >
+                                Command center
+                              </Link>
+                            )}
+                            <a
+                              href={`${studioUrl}/structure/listing;${listing._id}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-[13px] font-medium text-amber underline-offset-2 hover:underline"
                             >
-                              Command center
+                              Edit in Sanity
+                            </a>
+                            <Link
+                              href={`/listings/${listing.type}/${listing.slug.current}`}
+                              className="text-[13px] font-medium text-text3 underline-offset-2 hover:text-dark hover:underline"
+                            >
+                              View on site
                             </Link>
-                          )}
-                          <a
-                            href={`${studioUrl}/structure/listing;${listing._id}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-[13px] font-medium text-amber underline-offset-2 hover:underline"
-                          >
-                            Edit in Sanity
-                          </a>
-                          <Link
-                            href={`/listings/${listing.type}/${listing.slug.current}`}
-                            className="text-[13px] font-medium text-text3 underline-offset-2 hover:text-dark hover:underline"
-                          >
-                            View on site
-                          </Link>
+                          </div>
                         </div>
                       </td>
                     </tr>
