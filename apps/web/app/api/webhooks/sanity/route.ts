@@ -6,6 +6,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { NextRequest, NextResponse } from 'next/server'
+import { revalidateListingPaths } from '@/lib/listings/revalidate'
 
 const WEBHOOK_SECRET = process.env.SANITY_WEBHOOK_SECRET
 
@@ -23,19 +24,11 @@ export async function POST(request: NextRequest) {
 
     switch (_type) {
       case 'listing': {
-        if (slugValue) {
-          revalidatePath(`/stays/${slugValue}`, 'page')
-          revalidatePath(`/experiences/${slugValue}`, 'page')
-          revalidatePath(`/events/${slugValue}`, 'page')
-          revalidatePath(`/rentals/${slugValue}`, 'page')
-          revalidatePath(`/services/${slugValue}`, 'page')
-        }
-        revalidatePath('/stays', 'page')
-        revalidatePath('/experiences', 'page')
-        revalidatePath('/events', 'page')
-        revalidatePath('/rentals', 'page')
-        revalidatePath('/services', 'page')
-        revalidatePath('/', 'page')
+        // The real detail route is /[type]/[city]/[slug]; the previous per-slug
+        // paths here (e.g. /stays/<slug>) were missing the city segment and never
+        // matched, so listing edits never refreshed the live page. Revalidate the
+        // route templates instead.
+        revalidateListingPaths()
         break
       }
 
