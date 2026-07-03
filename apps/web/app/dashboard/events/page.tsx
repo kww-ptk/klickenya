@@ -4,11 +4,13 @@ import Image from "next/image";
 import { Calendar } from "lucide-react";
 import { adminClient } from "@/lib/supabase/admin";
 import { sanityClient } from "@/lib/sanity/client";
+import { ListingRowActions } from "@/components/listings/ListingRowActions";
 import { getAuthUser, getHostProfile } from "../_lib/auth";
 
 interface EventRow {
   id: string;
   sanity_event_id: string;
+  sanityId: string | null;
   title: string;
   city: string | null;
   status: string;
@@ -87,6 +89,7 @@ export default async function MyEventsPage() {
     eventRows.push({
       id: row.id,
       sanity_event_id: sanityId,
+      sanityId: sanityId || null,
       title: sanity?.title ?? row.title,
       city: sanity?.city ?? row.city,
       status: row.status,
@@ -104,6 +107,7 @@ export default async function MyEventsPage() {
     eventRows.push({
       id: se._id,
       sanity_event_id: se._id,
+      sanityId: se._id,
       title: se.title,
       city: se.city,
       status: se.status === "published" ? "approved" : se.status,
@@ -228,6 +232,9 @@ export default async function MyEventsPage() {
                     >
                       Attendees ({event.attendees})
                     </Link>
+                  )}
+                  {event.sanityId && (
+                    <ListingRowActions id={event.sanityId} editHref={`/dashboard/listings/${event.sanityId}/edit`} variant="host" status={event.status} />
                   )}
                 </div>
               </div>
