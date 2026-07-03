@@ -920,3 +920,19 @@ export const SITE_SETTINGS_QUERY = groq`
     stats
   }
 `
+
+export const LISTING_EDIT_QUERY = groq`
+  *[_id == $id && _type == "listing"][0]{
+    _id, title, slug, type, subcategory, status, city, county, address,
+    price, priceUnit, bookingType, maxGuests, rentingType, description,
+    website, instagram, facebook, phone, email, notificationEmail1, notificationEmail2,
+    amenities, tags,
+    photos[]{ asset->{ _id, url }, alt },
+    cuisine, priceRange, openingHours, atmosphere, reservationRequired,
+    duration, maxGroupSize, difficulty, minAge, languages, meetingPoint,
+    eventDate, eventEndDate, venue, ageRestriction, dresscode, venueAddress, doorsOpen,
+    isFree, priceFrom, ticketLink, organizer,
+    serviceArea, responseTime, providerInfo, seoTitle, seoDescription,
+    hostId, "hostRef": host._ref
+  }
+`

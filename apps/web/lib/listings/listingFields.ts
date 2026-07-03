@@ -236,3 +236,46 @@ export function inputToSanityFields(data: ListingInput) {
 
   return fields;
 }
+
+/** Build editor form values from a fetched Sanity listing doc.
+ *  `doc.photos` must be projected with asset->{_id,url}. */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function sanityDocToForm(doc: Record<string, any>): ListingFormValues {
+  const plain = isPlainDescription(doc.description);
+  return {
+    ...emptyListingForm,
+    title: doc.title ?? "",
+    slug: doc.slug?.current ?? doc.slug ?? "",
+    type: doc.type ?? "stay",
+    subcategory: doc.subcategory ?? "",
+    city: doc.city ?? "",
+    county: doc.county ?? "",
+    address: doc.address ?? "",
+    status: (doc.status ?? "draft") as ListingFormValues["status"],
+    description: descriptionToText(doc.description),
+    descriptionLocked: !plain,
+    price: doc.price != null ? String(doc.price) : "",
+    priceUnit: doc.priceUnit ?? "night",
+    bookingType: doc.bookingType ?? "contact_form",
+    maxGuests: doc.maxGuests != null ? String(doc.maxGuests) : "",
+    rentingType: doc.rentingType ?? "entire_place",
+    website: doc.website ?? "", instagram: doc.instagram ?? "", facebook: doc.facebook ?? "",
+    phone: doc.phone ?? "", email: doc.email ?? "",
+    notificationEmail: doc.notificationEmail1 ?? "", notificationEmail2: doc.notificationEmail2 ?? "",
+    amenities: doc.amenities ?? [], tags: doc.tags ?? [],
+    photos: sanityPhotosToUploaded(doc.photos),
+    cuisine: doc.cuisine ?? [], priceRange: doc.priceRange ?? "", openingHours: doc.openingHours ?? "",
+    atmosphere: doc.atmosphere ?? "", reservationRequired: !!doc.reservationRequired,
+    duration: doc.duration ?? "", maxGroupSize: doc.maxGroupSize != null ? String(doc.maxGroupSize) : "",
+    difficulty: doc.difficulty ?? "", minAge: doc.minAge != null ? String(doc.minAge) : "",
+    languages: doc.languages ?? [], meetingPoint: doc.meetingPoint ?? "",
+    eventDate: doc.eventDate ? String(doc.eventDate).slice(0, 16) : "",
+    eventEndDate: doc.eventEndDate ? String(doc.eventEndDate).slice(0, 16) : "",
+    venue: doc.venue ?? "", ageRestriction: doc.ageRestriction ?? "", dresscode: doc.dresscode ?? "",
+    venueAddress: doc.venueAddress ?? "", doorsOpen: doc.doorsOpen ?? "", isFree: !!doc.isFree,
+    priceFrom: doc.priceFrom != null ? String(doc.priceFrom) : "", ticketLink: doc.ticketLink ?? "",
+    organizer: doc.organizer ?? "",
+    serviceArea: doc.serviceArea ?? "", responseTime: doc.responseTime ?? "", providerInfo: doc.providerInfo ?? "",
+    seoTitle: doc.seoTitle ?? "", seoDescription: doc.seoDescription ?? "",
+  };
+}
