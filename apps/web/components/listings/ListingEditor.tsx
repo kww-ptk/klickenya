@@ -447,7 +447,9 @@ export function ListingEditor({ mode, role, initialValues, listingId, onSuccessR
         </Link>
         <h1 className="font-display text-[24px] font-bold text-dark">{heading}</h1>
         <p className="mt-1 text-[14px] text-text3">
-          Creates a listing directly in Sanity. Edit all details in Sanity Studio afterwards.
+          {mode === "create"
+            ? "Creates a listing directly in Sanity. Edit all details in Sanity Studio afterwards."
+            : "Changes save straight to the live listing. Rich descriptions and advanced fields stay editable in Sanity Studio."}
         </p>
       </div>
 
