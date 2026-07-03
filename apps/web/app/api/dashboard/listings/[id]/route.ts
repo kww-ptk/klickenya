@@ -19,8 +19,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     if (!type) return NextResponse.json({ error: "Listing not found." }, { status: 404 });
 
     const data = listingInputSchema.parse(await req.json());
-    const stored = await sanityWriteClient.fetch<{ slug: string; type: string }>(
+    const stored = await sanityWriteClient.fetch<{ slug: string; type: string } | null>(
       `*[_id == $id][0]{ "slug": slug.current, type }`, { id });
+    if (!stored) return NextResponse.json({ error: "Listing not found." }, { status: 404 });
     const safe: ListingInput = { ...data, slug: stored.slug, type: stored.type, status: data.status === "archived" ? "archived" : "published" };
     const fields = inputToSanityFields(safe);
     await sanityWriteClient.patch(id).set(fields).commit();
