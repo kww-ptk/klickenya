@@ -271,7 +271,9 @@ export function BookingWidget({
                 <div className="bg-gradient-to-br from-dark to-[#2A2520] p-4">
                   <p className="text-[14px] font-bold text-white">Entire property</p>
                   <p className="text-[11px] text-white/50">All {rooms.length} rooms</p>
-                  <p className="text-[18px] font-bold text-amber mt-1">{fmt(entirePlacePrice ?? rooms.reduce((s, r) => s + r.pricePerNight, 0))} <span className="text-[11px] text-white/40 font-normal">/ night</span></p>
+                  {(() => { const p = entirePlacePrice ?? rooms.reduce((s, r) => s + r.pricePerNight, 0); return (
+                    <p className="text-[18px] font-bold text-amber mt-1">{p > 0 ? (<>{fmt(p)} <span className="text-[11px] text-white/40 font-normal">/ night</span></>) : "Price on request"}</p>
+                  ); })()}
                 </div>
               </button>
             )}
@@ -308,7 +310,7 @@ export function BookingWidget({
                       Sleeps {room.maxGuests}{room.bedType ? ` · ${room.bedType}` : ""}
                     </p>
                     <p className={cn("text-[15px] font-bold mt-1", room.available ? "text-amber" : "text-text3")}>
-                      {fmt(room.pricePerNight)} <span className="text-[10px] text-text3 font-normal">/ night</span>
+                      {room.pricePerNight > 0 ? (<>{fmt(room.pricePerNight)} <span className="text-[10px] text-text3 font-normal">/ night</span></>) : "Price on request"}
                     </p>
                   </div>
                 </div>
@@ -320,8 +322,14 @@ export function BookingWidget({
           {selectedRoom && (
             <div className="mt-4 pt-4 border-t border-border">
               <div className="flex justify-between text-[13px] mb-3">
-                <span className="text-text3">{fmt(selectedPrice)} x {nights} night{nights !== 1 ? "s" : ""}</span>
-                <span className="text-[17px] font-bold text-dark">{fmt(selectedPrice * nights)}</span>
+                {selectedPrice > 0 ? (
+                  <>
+                    <span className="text-text3">{fmt(selectedPrice)} x {nights} night{nights !== 1 ? "s" : ""}</span>
+                    <span className="text-[17px] font-bold text-dark">{fmt(selectedPrice * nights)}</span>
+                  </>
+                ) : (
+                  <span className="text-[15px] font-bold text-dark">Price on request</span>
+                )}
               </div>
               <button
                 type="button"
@@ -366,7 +374,7 @@ export function BookingWidget({
                 <p className="text-[13px] font-bold text-dark">
                   {selectedRoom === "__entire__" ? "Entire property" : results?.find((r) => r.id === selectedRoom)?.name}
                 </p>
-                <p className="text-[11px] text-text3">{nights} nights · {fmt(selectedPrice * nights)}</p>
+                <p className="text-[11px] text-text3">{nights} nights{selectedPrice > 0 ? ` · ${fmt(selectedPrice * nights)}` : " · Price on request"}</p>
               </div>
               <input type="text" placeholder="Full name" value={name} onChange={(e) => setName(e.target.value)} className="w-full border border-border rounded-[14px] px-4 py-3 text-[14px] outline-none focus:border-amber" />
               <input type="email" placeholder="Email address" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full border border-border rounded-[14px] px-4 py-3 text-[14px] outline-none focus:border-amber" />

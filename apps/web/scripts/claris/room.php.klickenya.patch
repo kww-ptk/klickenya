@@ -1,0 +1,24 @@
+diff --git a/room.php b/room.php
+index 0e4574b..bc32b32 100644
+--- a/room.php
++++ b/room.php
+@@ -261,7 +261,18 @@ include __DIR__ . '/includes/header.php';
+         <p class="booking-card__price"><strong>Price on request</strong></p>
+         <?php endif; ?>
+         <h3 class="booking-card__title">Book This Villa</h3>
+-        <?php if ($form_mode === 'availability'): ?>
++        <?php
++          // Booking form source. Klickenya widget replaces the old PHP forms.
++          // Flip $USE_KLICKENYA to false to restore the legacy forms (parallel-run fallback).
++          $USE_KLICKENYA = true;
++          if ($USE_KLICKENYA):
++            $klk_base = str_contains($_SERVER['HTTP_HOST'] ?? '', 'localhost')
++              ? 'http://localhost:3000'
++              : 'https://klickenya.com';
++        ?>
++          <script src="<?= $klk_base ?>/embed.js" async></script>
++          <div data-klickenya-tool="booking" data-slug="<?= e($room['slug']) ?>"></div>
++        <?php elseif ($form_mode === 'availability'): ?>
+           <?php include __DIR__ . '/includes/form-availability.php'; ?>
+         <?php else: ?>
+           <?php include __DIR__ . '/includes/form-enquiry.php'; ?>
