@@ -270,112 +270,44 @@ export default async function AdminLayout({
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 py-4 space-y-0.5 overflow-y-auto">
-          <AdminNavLink
-            href="/admin"
-            label="Dashboard"
-            icon={<DashboardIcon />}
-          />
-          <AdminNavLink
-            href="/admin/contact-requests"
-            label="Contact Requests"
-            icon={<InboxIcon />}
-            badge={unreadContacts}
-          />
-          <AdminNavLink
-            href="/admin/listing-requests"
-            label="Listing Requests"
-            icon={<ClipboardIcon />}
-            badge={unreadListingReqs}
-          />
-          <AdminNavLink
-            href="/admin/general-contacts"
-            label="General Contacts"
-            icon={<EnvelopeIcon />}
-            badge={unreadGeneralContacts}
-          />
-          <AdminNavLink
-            href="/admin/property-enquiries"
-            label="Property Enquiries"
-            icon={<BuildingIcon />}
-            badge={unreadEnquiries}
-          />
-          <AdminNavLink
-            href="/admin/bookings"
-            label="Bookings"
-            icon={<CalendarIcon />}
-          />
-          <AdminNavLink
-            href="/admin/reservations"
-            label="Reservations"
-            icon={<CalendarIcon />}
-            badge={pendingReservations}
-          />
-          <AdminNavLink
-            href="/admin/guests"
-            label="Guests"
-            icon={<UsersIcon />}
-          />
-          <AdminNavLink
-            href="/admin/ambassadors"
-            label="Ambassadors"
-            icon={<MegaphoneIcon />}
-            badge={unreadAmbassadors}
-          />
-          <AdminNavLink
-            href="/admin/claims"
-            label="Verification Requests"
-            icon={<ShieldIcon />}
-            badge={pendingClaims}
-          />
-          <AdminNavLink
-            href="/admin/events"
-            label="Events"
-            icon={<CalendarIcon />}
-            badge={pendingEvents}
-          />
-          <AdminNavLink
-            href="/admin/hosts"
-            label="Hosts"
-            icon={<UsersIcon />}
-          />
-          <AdminNavLink
-            href="/admin/partners"
-            label="Partners"
-            icon={<GlobeIcon />}
-          />
-          <AdminNavLink
-            href="/admin/analytics"
-            label="Analytics"
-            icon={<ChartIcon />}
-          />
-          <AdminNavLink
-            href="/admin/newsletter"
-            label="Subscribers"
-            icon={<UsersIcon />}
-            badge={totalSubscribers}
-          />
-          <AdminNavLink
-            href="/admin/listings"
-            label="Listings"
-            icon={<ListIcon />}
-          />
-          <AdminNavLink
-            href="/admin/real-estate"
-            label="Real Estate"
-            icon={<HomeIcon />}
-          />
-          <AdminNavLink
-            href={sanityStudioUrl}
-            label="Blog Posts"
-            icon={<BlogIcon />}
-            external
-          />
-          <AdminNavLink
-            href="/admin/settings"
-            label="Settings"
-            icon={<GearIcon />}
-          />
+        <nav className="flex-1 py-3 overflow-y-auto">
+
+          {/* Overview */}
+          <AdminNavLink href="/admin" label="Dashboard" icon={<DashboardIcon />} />
+
+          {/* Inbox */}
+          <p className="px-4 pt-4 pb-1 text-[10px] font-semibold uppercase tracking-widest text-white/30">Inbox</p>
+          <AdminNavLink href="/admin/contact-requests" label="Contact Requests" icon={<InboxIcon />} badge={unreadContacts} />
+          <AdminNavLink href="/admin/property-enquiries" label="Property Enquiries" icon={<BuildingIcon />} badge={unreadEnquiries} />
+          <AdminNavLink href="/admin/general-contacts" label="General Contacts" icon={<EnvelopeIcon />} badge={unreadGeneralContacts} />
+
+          {/* Listings */}
+          <p className="px-4 pt-4 pb-1 text-[10px] font-semibold uppercase tracking-widest text-white/30">Listings</p>
+          <AdminNavLink href="/admin/listing-requests" label="Listing Requests" icon={<ClipboardIcon />} badge={unreadListingReqs} />
+          <AdminNavLink href="/admin/listings" label="All Listings" icon={<ListIcon />} />
+          <AdminNavLink href="/admin/real-estate" label="Real Estate" icon={<HomeIcon />} />
+          <AdminNavLink href="/admin/claims" label="Verifications" icon={<ShieldIcon />} badge={pendingClaims} />
+
+          {/* People */}
+          <p className="px-4 pt-4 pb-1 text-[10px] font-semibold uppercase tracking-widest text-white/30">People</p>
+          <AdminNavLink href="/admin/hosts" label="Hosts" icon={<UsersIcon />} />
+          <AdminNavLink href="/admin/guests" label="Guests" icon={<UsersIcon />} />
+          <AdminNavLink href="/admin/ambassadors" label="Ambassadors" icon={<MegaphoneIcon />} badge={unreadAmbassadors} />
+          <AdminNavLink href="/admin/newsletter" label="Subscribers" icon={<UsersIcon />} badge={totalSubscribers} />
+
+          {/* Activity */}
+          <p className="px-4 pt-4 pb-1 text-[10px] font-semibold uppercase tracking-widest text-white/30">Activity</p>
+          <AdminNavLink href="/admin/bookings" label="Bookings" icon={<CalendarIcon />} />
+          <AdminNavLink href="/admin/reservations" label="Reservations" icon={<CalendarIcon />} badge={pendingReservations} />
+          <AdminNavLink href="/admin/events" label="Events" icon={<CalendarIcon />} badge={pendingEvents} />
+
+          {/* System */}
+          <p className="px-4 pt-4 pb-1 text-[10px] font-semibold uppercase tracking-widest text-white/30">System</p>
+          <AdminNavLink href="/admin/partners" label="Partners" icon={<GlobeIcon />} />
+          <AdminNavLink href="/admin/analytics" label="Analytics" icon={<ChartIcon />} />
+          <AdminNavLink href={sanityStudioUrl} label="Blog Posts" icon={<BlogIcon />} external />
+          <AdminNavLink href="/admin/settings" label="Settings" icon={<GearIcon />} />
+
         </nav>
 
         {/* User / Sign out */}

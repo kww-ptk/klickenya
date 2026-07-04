@@ -62,12 +62,11 @@ export default async function DashboardListingsPage() {
     <div>
       <div className="flex items-center justify-between mb-5">
         <div>
-          <h1 className="font-display text-[22px] lg:text-[28px] font-bold tracking-[-0.03em] text-dark">
-            My Listings
-          </h1>
-          <p className="text-[13px] text-text3 mt-0.5">
-            {listings.length} listing{listings.length !== 1 ? "s" : ""} · {verifiedCount} verified · {pendingCount} pending
-          </p>
+          <div className="flex items-center gap-2">
+            <h1 className="font-display text-[22px] lg:text-[28px] font-bold tracking-[-0.03em] text-dark">My Listings</h1>
+            <span className="text-[12px] font-semibold text-text3 bg-[#F0EDE8] px-2 py-0.5 rounded-full">{listings.length}</span>
+          </div>
+          <p className="text-[13px] text-text3 mt-0.5">Your marketplace listings and their command centres — manage menus, POS, reservations, and more.</p>
         </div>
         <Link
           href="/list"

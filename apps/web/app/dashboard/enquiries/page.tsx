@@ -14,11 +14,20 @@ export default async function EnquiriesPage({ searchParams }: { searchParams: Pr
 
   if (!hostProfile) redirect("/dashboard");
 
-  // Get all listing _ids owned by this host from Sanity
+  // Get all listing _ids owned by this host from Sanity (marketplace-linked listings)
   const listingIds = await sanityClient.fetch<string[]>(
     `*[_type == "listing" && (hostId == $hostId || host._ref == $sanityHostId)]._id`,
     { hostId: hostProfile.user_id, sanityHostId: hostProfile.sanity_host_id ?? "" }
   );
+
+  // Get all property ids owned by this host from Supabase (PMS + resort embeds).
+  // Decoupled from Sanity so embed enquiries appear even when a property has no
+  // marketplace listing (e.g. resorts that keep their own website).
+  const { data: ownedProps } = await adminClient
+    .from("properties")
+    .select("id")
+    .eq("owner_id", hostProfile.user_id);
+  const propertyIds = (ownedProps ?? []).map((p) => p.id);
 
   // Fetch enquiries for those listings
   let enquiries: {
@@ -30,6 +39,7 @@ export default async function EnquiriesPage({ searchParams }: { searchParams: Pr
     listing_title: string | null;
     listing_type: string | null;
     listing_sanity_id: string | null;
+    property_id: string | null;
     status: string;
     created_at: string;
     check_in: string | null;
@@ -39,21 +49,34 @@ export default async function EnquiriesPage({ searchParams }: { searchParams: Pr
     notes: string | null;
   }[] = [];
 
-  if (listingIds.length > 0) {
-    let query = adminClient
+  const SELECT =
+    "id, full_name, email, phone, message, listing_title, listing_type, listing_sanity_id, property_id, status, created_at, check_in, check_out, guests, calendar_status, notes";
+
+  if (filterListingId && listingIds.includes(filterListingId)) {
+    // Filtered to one marketplace listing — unchanged behaviour.
+    const { data } = await adminClient
       .from("contact_requests")
-      .select("id, full_name, email, phone, message, listing_title, listing_type, listing_sanity_id, status, created_at, check_in, check_out, guests, calendar_status, notes")
+      .select(SELECT)
+      .eq("listing_sanity_id", filterListingId)
       .order("created_at", { ascending: false })
       .limit(50);
-
-    if (filterListingId && listingIds.includes(filterListingId)) {
-      query = query.eq("listing_sanity_id", filterListingId);
-    } else {
-      query = query.in("listing_sanity_id", listingIds);
-    }
-
-    const { data } = await query;
     enquiries = data ?? [];
+  } else if (listingIds.length > 0 || propertyIds.length > 0) {
+    // Two separate queries (avoids .or() quoting issues with Sanity ids), then
+    // merge + de-dupe by id and keep the newest 50.
+    const [byListing, byProperty] = await Promise.all([
+      listingIds.length
+        ? adminClient.from("contact_requests").select(SELECT).in("listing_sanity_id", listingIds).order("created_at", { ascending: false }).limit(50)
+        : Promise.resolve({ data: [] as typeof enquiries }),
+      propertyIds.length
+        ? adminClient.from("contact_requests").select(SELECT).in("property_id", propertyIds).order("created_at", { ascending: false }).limit(50)
+        : Promise.resolve({ data: [] as typeof enquiries }),
+    ]);
+    const seen = new Set<string>();
+    enquiries = [...(byListing.data ?? []), ...(byProperty.data ?? [])]
+      .filter((e) => (seen.has(e.id) ? false : (seen.add(e.id), true)))
+      .sort((a, b) => (a.created_at < b.created_at ? 1 : -1))
+      .slice(0, 50);
   }
 
   // Get the listing title for filter display
@@ -70,7 +93,7 @@ export default async function EnquiriesPage({ searchParams }: { searchParams: Pr
             Enquiries
           </h1>
           <p className="text-[13px] text-text3 mt-0.5">
-            {filterTitle
+            Guest messages and booking requests for your listings — reply, convert to booking, or close.{" "}{filterTitle
               ? <>{enquiries.length} enquir{enquiries.length === 1 ? "y" : "ies"} for {filterTitle}</>
               : <>{enquiries.length} enquir{enquiries.length === 1 ? "y" : "ies"} across your listings</>
             }

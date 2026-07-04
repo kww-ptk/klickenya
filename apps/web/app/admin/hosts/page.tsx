@@ -52,9 +52,13 @@ export default async function AdminHostsPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="font-display text-[28px] font-bold text-dark">
-          Hosts
-        </h1>
+        <div>
+          <div className="flex items-center gap-2">
+            <h1 className="font-display text-[28px] font-bold text-dark">Hosts</h1>
+            <span className="text-[12px] font-semibold text-text3 bg-[#F0EDE8] px-2 py-0.5 rounded-full">{allHosts.length}</span>
+          </div>
+          <p className="text-[13px] text-text3 mt-1">All host accounts — view assigned listings, manage menus, and control feature access.</p>
+        </div>
         <div className="flex items-center gap-3">
           <span className="text-sm text-text3">{allHosts.length} total</span>
           <HostFormModal

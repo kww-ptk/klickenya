@@ -242,7 +242,7 @@ export default async function DashboardPage() {
             {greeting}, {firstName}
           </h1>
           <p className="text-[13px] text-text3 mt-0.5">
-            Here&apos;s an overview of your dashboard
+            Overview of your listings, events, enquiries, and recent activity.
           </p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
