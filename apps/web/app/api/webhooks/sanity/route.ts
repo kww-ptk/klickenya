@@ -6,7 +6,8 @@
 
 import { revalidatePath } from 'next/cache'
 import { NextRequest, NextResponse } from 'next/server'
-import { revalidateListingPaths } from '@/lib/listings/revalidate'
+import { sanityClient } from '@/lib/sanity/client'
+import { revalidateListing } from '@/lib/listings/revalidate'
 
 const WEBHOOK_SECRET = process.env.SANITY_WEBHOOK_SECRET
 
@@ -24,11 +25,19 @@ export async function POST(request: NextRequest) {
 
     switch (_type) {
       case 'listing': {
-        // The real detail route is /[type]/[city]/[slug]; the previous per-slug
-        // paths here (e.g. /stays/<slug>) were missing the city segment and never
-        // matched, so listing edits never refreshed the live page. Revalidate the
-        // route templates instead.
-        revalidateListingPaths()
+        // The real detail route is /[type]/[city]/[slug] and is force-static, so we
+        // must revalidate the CONCRETE URL. The webhook projection only gives us the
+        // slug, so fetch the type + city to build the path. (The old per-slug paths
+        // here were missing the /city/ segment and never matched.)
+        if (slugValue) {
+          const doc = await sanityClient.fetch<{ type?: string; city?: string } | null>(
+            `*[_type == "listing" && slug.current == $slug][0]{ type, city }`,
+            { slug: slugValue },
+          )
+          revalidateListing(doc?.type, doc?.city, slugValue)
+        } else {
+          revalidateListing()
+        }
         break
       }
 

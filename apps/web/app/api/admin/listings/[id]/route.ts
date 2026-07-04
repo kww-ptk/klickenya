@@ -4,7 +4,7 @@ import { assertAdmin, AdminAuthError } from "@/lib/admin/auth";
 import { sanityWriteClient } from "@/lib/sanity/writeClient";
 import { listingInputSchema, inputToSanityFields } from "@/lib/listings/listingFields";
 import { syncEventPending } from "@/lib/listings/events";
-import { revalidateListingPaths } from "@/lib/listings/revalidate";
+import { revalidateListing } from "@/lib/listings/revalidate";
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -23,7 +23,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     const fields = inputToSanityFields(data);
     await sanityWriteClient.patch(id).set(fields).commit();
     await syncEventPending(id, data.type, "update", { title: data.title, city: data.city });
-    revalidateListingPaths();
+    revalidateListing(data.type, data.city, data.slug);
     return NextResponse.json({ success: true, id, slug: data.slug });
   } catch (err) {
     if (err instanceof AdminAuthError) return NextResponse.json({ error: err.message }, { status: err.status });
@@ -37,12 +37,12 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
   try {
     await assertAdmin(req);
     const { id } = await params;
-    const existing = await sanityWriteClient.fetch<{ _id: string; type: string } | null>(
-      `*[_id == $id && _type == "listing"][0]{ _id, type }`, { id });
+    const existing = await sanityWriteClient.fetch<{ _id: string; type: string; city?: string; slug?: string } | null>(
+      `*[_id == $id && _type == "listing"][0]{ _id, type, city, "slug": slug.current }`, { id });
     if (!existing) return NextResponse.json({ error: "Listing not found." }, { status: 404 });
     await syncEventPending(id, existing.type, "delete");
     await sanityWriteClient.delete(id);
-    revalidateListingPaths();
+    revalidateListing(existing.type, existing.city, existing.slug);
     return NextResponse.json({ success: true });
   } catch (err) {
     if (err instanceof AdminAuthError) return NextResponse.json({ error: err.message }, { status: err.status });
