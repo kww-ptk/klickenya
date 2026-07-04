@@ -6,9 +6,9 @@ export async function hostOwnsListing(
   listingId: string,
   userId: string,
   sanityHostId: string | null,
-): Promise<{ ok: boolean; type?: string }> {
-  const doc = await sanityWriteClient.fetch<{ _id: string; type: string; hostId?: string; hostRef?: string } | null>(
-    `*[_id == $id && _type == "listing"][0]{ _id, type, hostId, "hostRef": host._ref }`,
+): Promise<{ ok: boolean; type?: string; city?: string; slug?: string }> {
+  const doc = await sanityWriteClient.fetch<{ _id: string; type: string; hostId?: string; hostRef?: string; city?: string; slug?: string } | null>(
+    `*[_id == $id && _type == "listing"][0]{ _id, type, hostId, "hostRef": host._ref, city, "slug": slug.current }`,
     { id: listingId },
   );
   if (!doc) return { ok: false };
@@ -20,5 +20,5 @@ export async function hostOwnsListing(
     );
     owns = inList;
   }
-  return { ok: owns, type: doc.type };
+  return { ok: owns, type: doc.type, city: doc.city, slug: doc.slug };
 }
