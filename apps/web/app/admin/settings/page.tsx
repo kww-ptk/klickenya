@@ -46,9 +46,10 @@ export default function AdminSettingsPage() {
   return (
     <div className="space-y-8">
       {/* Page heading */}
-      <h1 className="font-display text-[24px] font-bold text-dark">
+      <h1 className="font-display text-[24px] lg:text-[28px] font-bold tracking-[-0.03em] text-dark">
         Settings
       </h1>
+      <p className="text-[13px] text-text3 mt-1">Platform configuration — admin email, notification settings, and system preferences.</p>
 
       {/* Admin Email */}
       <div className="rounded-2xl bg-white p-6 shadow-sm">

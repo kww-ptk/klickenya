@@ -43,7 +43,11 @@ export default async function EnquiryDetailPage({
     roomName = room?.name ?? null;
   }
 
-  // Verify ownership via Sanity
+  // Verify ownership — via the Sanity listing OR via the owned property (resort
+  // embed enquiries have no Sanity listing, only property_id). Deny access if
+  // ownership can't be established, so a host can't open another host's enquiry
+  // by guessing its id (Issue 3 — guest PII exposure).
+  let owns = false;
   if (request.listing_sanity_id) {
     const ownerCheck = await sanityClient.fetch<string | null>(
       `*[_type == "listing" && _id == $listingId && (hostId == $hostId || host._ref == $sanityHostId)][0]._id`,
@@ -53,8 +57,18 @@ export default async function EnquiryDetailPage({
         sanityHostId: hostProfile.sanity_host_id ?? "",
       }
     );
-    if (!ownerCheck) redirect("/dashboard/enquiries");
+    owns = !!ownerCheck;
   }
+  if (!owns && request.property_id) {
+    const { data: ownedProp } = await adminClient
+      .from("properties")
+      .select("id")
+      .eq("id", request.property_id)
+      .eq("owner_id", hostProfile.user_id)
+      .maybeSingle();
+    owns = !!ownedProp;
+  }
+  if (!owns) redirect("/dashboard/enquiries");
 
   // Parse notes for enquiry details and conversation history
   const notesStr = (request.notes as string) || "";

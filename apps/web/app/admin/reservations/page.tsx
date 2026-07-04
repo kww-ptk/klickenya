@@ -84,10 +84,11 @@ export default async function AdminReservationsPage({
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-[22px] font-display font-bold text-dark">All Reservations</h1>
-          <p className="text-[14px] text-text3 mt-1">
-            {totalCount} reservation{totalCount !== 1 ? "s" : ""} across all restaurants
-          </p>
+          <div className="flex items-center gap-2">
+            <h1 className="font-display text-[22px] lg:text-[28px] font-bold tracking-[-0.03em] text-dark">All Reservations</h1>
+            <span className="text-[12px] font-semibold text-text3 bg-[#F0EDE8] px-2 py-0.5 rounded-full">{totalCount}</span>
+          </div>
+          <p className="text-[13px] text-text3 mt-1">Table reservation requests from restaurant listings — confirm, seat, or cancel.</p>
         </div>
       </div>
 

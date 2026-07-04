@@ -151,7 +151,10 @@ export default async function AdminAnalyticsPage({
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="font-display text-[28px] font-bold text-dark">Analytics</h1>
+        <div>
+          <h1 className="font-display text-[28px] font-bold text-dark">Analytics</h1>
+          <p className="text-[13px] text-text3 mt-1">Platform-wide traffic, listing views, and performance data.</p>
+        </div>
         <div className="flex items-center gap-1 bg-white rounded-xl border border-border p-1">
           {[7, 30, 90].map((d) => (
             <Link

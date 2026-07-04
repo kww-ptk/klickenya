@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Building2, Calendar, Check, Sparkles, MapPin, Users, Zap } from "lucide-react";
+import { Building2, Calendar, Check, Sparkles, MapPin, Users, Zap, Code2, LayoutDashboard, CalendarDays, UtensilsCrossed, ShoppingBag } from "lucide-react";
 import { Nav } from "@/components/shared/Nav";
 import { Footer } from "@/components/shared/Footer";
 import { UpgradeButton } from "./UpgradeButton";
@@ -137,6 +137,130 @@ export default function BecomeAHostPage() {
                 ))}
               </ul>
               <UpgradeButton label="Create an event" redirectTo="/dashboard/events/new" />
+            </div>
+          </div>
+        </section>
+
+        {/* Embed widget section */}
+        <section className="bg-canvas py-14 md:py-20 px-5 border-t border-border">
+          <div className="max-w-[900px] mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+              <div>
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber/10 border border-amber/20 mb-5">
+                  <Code2 className="size-3.5 text-amber" />
+                  <span className="text-[12px] font-semibold text-amber uppercase tracking-widest">Already have a website?</span>
+                </div>
+                <h2 className="font-display text-[clamp(22px,3vw,32px)] font-bold text-dark tracking-[-0.03em] mb-4">
+                  Embed Klickenya directly into your existing site
+                </h2>
+                <p className="text-[15px] text-text2 leading-[1.7] mb-6">
+                  Already have a website for your resort, restaurant, or business? No need to rebuild it.
+                  Drop one line of code and Klickenya powers your booking forms, reservation system, and menu
+                  — all managed from your Klickenya dashboard. Your site keeps its design. We handle the rest.
+                </p>
+                <ul className="space-y-3 mb-8">
+                  {[
+                    "Booking & enquiry forms on your own site",
+                    "Table reservation widget for restaurants",
+                    "QR menu embed for dine-in guests",
+                    "All submissions go into your Klickenya dashboard",
+                    "No separate database or admin panel needed",
+                  ].map((item) => (
+                    <li key={item} className="flex items-start gap-2.5 text-[13px] text-text2">
+                      <Check className="size-4 text-green shrink-0 mt-0.5" />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div className="rounded-[20px] bg-dark p-6 font-mono text-[13px] leading-[1.8]">
+                <p className="text-white/40 mb-2 text-[11px]">{"<!-- Add to your website — that's it -->"}</p>
+                <p className="text-amber">{"<script"}</p>
+                <p className="text-white/70 pl-4">{"src=\"https://klickenya.com/embed.js\""}</p>
+                <p className="text-white/70 pl-4">{"async"}</p>
+                <p className="text-amber">{"></script>"}</p>
+                <br />
+                <p className="text-amber">{"<div"}</p>
+                <p className="text-white/70 pl-4">{"data-klickenya-tool=\"booking\""}</p>
+                <p className="text-white/70 pl-4">{"data-slug=\"your-property\""}</p>
+                <p className="text-amber">{"></div>"}</p>
+                <br />
+                <p className="text-green/70 text-[11px">{"✓ Bookings go straight to your dashboard"}</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Host dashboard / business tools section */}
+        <section className="bg-white py-14 md:py-20 px-5 border-t border-border">
+          <div className="max-w-[900px] mx-auto">
+            <div className="text-center mb-12">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-purple-600/10 border border-purple-600/20 mb-5">
+                <LayoutDashboard className="size-3.5 text-purple-600" />
+                <span className="text-[12px] font-semibold text-purple-600 uppercase tracking-widest">Host Dashboard</span>
+              </div>
+              <h2 className="font-display text-[clamp(22px,3vw,32px)] font-bold text-dark tracking-[-0.03em] mb-3">
+                Everything to run your business — in one place
+              </h2>
+              <p className="text-[15px] text-text2 max-w-[520px] mx-auto">
+                When you list on Klickenya you get a full business dashboard — not just a profile page.
+                Manage operations, track bookings, and serve guests better.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
+              {[
+                {
+                  icon: CalendarDays,
+                  title: "Property & Room Management",
+                  description: "Manage availability, rooms, pricing, and bookings. Syncs with Airbnb and Booking.com via iCal.",
+                  color: "text-amber",
+                  bg: "bg-amber/10",
+                },
+                {
+                  icon: UtensilsCrossed,
+                  title: "QR Menu & POS",
+                  description: "Build your digital menu, let guests order by scanning a QR code, and manage orders from a live POS terminal.",
+                  color: "text-green",
+                  bg: "bg-green/10",
+                },
+                {
+                  icon: CalendarDays,
+                  title: "Table Reservations",
+                  description: "Accept table bookings online with time windows, capacity controls, and automatic guest confirmations.",
+                  color: "text-purple-600",
+                  bg: "bg-purple-600/10",
+                },
+                {
+                  icon: ShoppingBag,
+                  title: "Kitchen & Stock",
+                  description: "Track ingredients, manage recipes, run purchase orders, and auto-deduct stock when orders go through.",
+                  color: "text-amber",
+                  bg: "bg-amber/10",
+                },
+                {
+                  icon: Users,
+                  title: "Enquiries & Guests",
+                  description: "All guest messages, booking requests, and event attendees in one inbox — never miss a lead.",
+                  color: "text-green",
+                  bg: "bg-green/10",
+                },
+                {
+                  icon: LayoutDashboard,
+                  title: "Multi-Property Support",
+                  description: "Own more than one property? Manage all of them from a single host account with separate dashboards per property.",
+                  color: "text-purple-600",
+                  bg: "bg-purple-600/10",
+                },
+              ].map((tool) => (
+                <div key={tool.title} className="rounded-[16px] border border-border p-6 hover:shadow-md transition-all duration-200">
+                  <div className={`size-10 rounded-xl ${tool.bg} flex items-center justify-center mb-4`}>
+                    <tool.icon className={`size-5 ${tool.color}`} />
+                  </div>
+                  <h3 className="text-[14px] font-bold text-dark mb-2">{tool.title}</h3>
+                  <p className="text-[13px] text-text2 leading-[1.65]">{tool.description}</p>
+                </div>
+              ))}
             </div>
           </div>
         </section>

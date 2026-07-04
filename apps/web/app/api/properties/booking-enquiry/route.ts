@@ -215,6 +215,23 @@ export async function POST(req: NextRequest) {
             .single();
           if (hostProfile?.email) notificationEmails.push(hostProfile.email);
         }
+        // Decoupled fallback: no Sanity listing (e.g. resort embeds) — resolve the
+        // host email from the property owner so the host is still notified.
+        if (notificationEmails.length === 0) {
+          const { data: prop } = await adminClient
+            .from("properties")
+            .select("owner_id")
+            .eq("id", property_id)
+            .maybeSingle();
+          if (prop?.owner_id) {
+            const { data: ownerProfile } = await adminClient
+              .from("host_profiles")
+              .select("email")
+              .eq("user_id", prop.owner_id)
+              .maybeSingle();
+            if (ownerProfile?.email) notificationEmails.push(ownerProfile.email);
+          }
+        }
 
         // Confirmation to the guest.
         await resend.emails.send({

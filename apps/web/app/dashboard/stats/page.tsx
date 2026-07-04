@@ -121,7 +121,7 @@ export default async function DashboardStatsPage({
             Stats
           </h1>
           <p className="text-[13px] text-text3 mt-0.5">
-            Last {days} days across {listings.length} listing{listings.length !== 1 ? "s" : ""}
+            Track page views, enquiry trends, and listing performance. Last {days} days across {listings.length} listing{listings.length !== 1 ? "s" : ""}.
           </p>
         </div>
         <div className="flex items-center gap-1 bg-white rounded-xl border border-border p-1">

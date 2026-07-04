@@ -106,6 +106,7 @@ export function EditProfileForm({
         <h1 className="font-display text-[22px] lg:text-[28px] font-bold tracking-[-0.03em] text-dark">
           Edit Profile
         </h1>
+        <p className="text-[13px] text-text3 mt-1">Update your public host profile — name, bio, photo, and contact links visible to guests.</p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-5 max-w-lg">

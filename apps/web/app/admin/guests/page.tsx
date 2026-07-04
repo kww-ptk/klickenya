@@ -141,10 +141,11 @@ export default async function AdminGuestsPage({
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-[22px] font-display font-bold text-dark">Guests</h1>
-          <p className="text-[14px] text-text3 mt-1">
-            {totalCount} registered guest{totalCount !== 1 ? "s" : ""} with activity
-          </p>
+          <div className="flex items-center gap-2">
+            <h1 className="font-display text-[22px] lg:text-[28px] font-bold tracking-[-0.03em] text-dark">Guests</h1>
+            <span className="text-[12px] font-semibold text-text3 bg-[#F0EDE8] px-2 py-0.5 rounded-full">{totalCount}</span>
+          </div>
+          <p className="text-[13px] text-text3 mt-1">All registered guest accounts on the platform — view bookings, enquiries, and profile activity.</p>
         </div>
       </div>
 

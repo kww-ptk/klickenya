@@ -1,5 +1,6 @@
 import { Metadata } from "next";
 import ListingForm from "@/components/list/ListingForm";
+import BackButton from "./BackButton";
 
 export const metadata: Metadata = {
   title: "List Your Business | Klickenya",
@@ -13,6 +14,7 @@ export default function ListPage() {
       {/* Hero */}
       <div className="bg-white border-b border-border">
         <div className="max-w-3xl mx-auto px-4 py-10 sm:py-14">
+          <BackButton />
           <p className="text-sm font-semibold text-amber uppercase tracking-widest mb-2">
             List your business
           </p>

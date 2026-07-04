@@ -142,8 +142,8 @@ export default async function MyEventsPage() {
           <h1 className="font-display text-[clamp(24px,3.5vw,32px)] font-bold text-text tracking-[-0.03em]">
             My Events
           </h1>
-          <p className="text-text2 text-[15px] mt-1">
-            Events you&apos;ve created on Klickenya
+          <p className="text-[13px] text-text3 mt-1">
+            Create and manage events for your guests — concerts, activations, experiences. Submitted events go to admin review before going public.
           </p>
         </div>
         <Link

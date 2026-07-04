@@ -53,7 +53,10 @@ export default async function AdminEventsPage() {
 
   return (
     <div className="max-w-[1200px] mx-auto px-5 md:px-10 py-8">
-      <h1 className="text-[28px] font-bold text-text mb-6">Events</h1>
+      <div className="mb-6">
+        <h1 className="font-display text-[28px] font-bold text-dark">Events</h1>
+        <p className="text-[13px] text-text3 mt-1">Host-submitted events pending approval before going public on the marketplace.</p>
+      </div>
 
       {rows.length === 0 ? (
         <p className="text-text2 text-[15px]">No event submissions yet.</p>
