@@ -5,7 +5,7 @@ import { assertAdmin, AdminAuthError } from "@/lib/admin/auth";
 import { sanityWriteClient } from "@/lib/sanity/writeClient";
 import { listingInputSchema, inputToSanityFields } from "@/lib/listings/listingFields";
 import { syncEventPending } from "@/lib/listings/events";
-import { revalidateListing } from "@/lib/listings/revalidate";
+import { revalidateListing, revalidateHostPagesForListing } from "@/lib/listings/revalidate";
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -25,6 +25,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     await sanityWriteClient.patch(id).set(fields).commit();
     await syncEventPending(id, data.type, "update", { title: data.title, city: data.city });
     revalidateListing(data.type, data.city, data.slug);
+    await revalidateHostPagesForListing(sanityWriteClient, id);
     return NextResponse.json({ success: true, id, slug: data.slug });
   } catch (err) {
     if (err instanceof AdminAuthError) return NextResponse.json({ error: err.message }, { status: err.status });

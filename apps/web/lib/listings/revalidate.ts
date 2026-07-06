@@ -1,5 +1,25 @@
 import { revalidatePath } from "next/cache";
 
+/** Minimal Sanity client shape — just the fetch we need. */
+type SanityFetcher = {
+  fetch: <R = unknown>(query: string, params?: Record<string, unknown>) => Promise<R>;
+};
+
+/**
+ * Revalidate every host profile page (`/hosts/[slug]`) that shows this listing's
+ * card. `revalidateListing` covers the marketplace grids + detail page, but the
+ * host page renders the same listing as a card and must be refreshed separately —
+ * otherwise an edited title updates the detail page but not the host-page card.
+ */
+export async function revalidateHostPagesForListing(client: SanityFetcher, listingId: string) {
+  const slugs = await client.fetch<(string | null)[]>(
+    `*[_type == "host" && references($id)].slug.current`,
+    { id: listingId },
+  );
+  revalidatePath("/hosts", "page");
+  for (const s of slugs) if (s) revalidatePath(`/hosts/${s}`, "page");
+}
+
 /** Sanity `type` value → the plural URL segment used by the public routes.
  *  Mirrors TYPE_TO_SANITY in (listings)/[type]/[city]/[slug]/page.tsx. */
 const SANITY_TYPE_TO_URL: Record<string, string> = {

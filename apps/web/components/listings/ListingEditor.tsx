@@ -202,6 +202,19 @@ type AiSuggestion = {
 
 type AppliedField = { label: string; value: string };
 
+/* ---------- AI-filled highlight wrapper ----------
+   Module-scope (stable identity) and stable DOM structure so the wrapped
+   input never remounts mid-render — a nested definition here caused inputs
+   to lose focus after every keystroke ("one letter at a time"). */
+function AiHighlight({ active, children }: { active: boolean; children: React.ReactNode }) {
+  return (
+    <div className={active ? "ring-2 ring-amber/40 rounded-xl" : undefined}>
+      {children}
+      {active && <p className="text-[11px] text-amber mt-0.5 px-1">✨ AI filled</p>}
+    </div>
+  );
+}
+
 /* ---------- Editor ---------- */
 
 interface ListingEditorProps {
@@ -424,16 +437,6 @@ export function ListingEditor({ mode, role, initialValues, listingId, onSuccessR
   const aiReady = form.title.trim().length >= 3;
 
   /* Highlight wrapper */
-  function AiHighlight({ field, children }: { field: string; children: React.ReactNode }) {
-    if (!aiFieldsApplied.has(field)) return <>{children}</>;
-    return (
-      <div className="ring-2 ring-amber/40 rounded-xl">
-        {children}
-        <p className="text-[11px] text-amber mt-0.5 px-1">✨ AI filled</p>
-      </div>
-    );
-  }
-
   return (
     <>
       {/* Header */}
@@ -608,7 +611,7 @@ export function ListingEditor({ mode, role, initialValues, listingId, onSuccessR
             </div>
           ) : (
             <>
-              <AiHighlight field="description">
+              <AiHighlight active={aiFieldsApplied.has("description")}>
                 <textarea value={form.description}
                   onChange={(e) => set("description", e.target.value)}
                   placeholder="Describe the listing in 80–300 words…"
@@ -671,7 +674,7 @@ export function ListingEditor({ mode, role, initialValues, listingId, onSuccessR
 
         {/* ── Amenities ── */}
         <SectionCard title="Amenities">
-          <AiHighlight field="amenities">
+          <AiHighlight active={aiFieldsApplied.has("amenities")}>
             <Chips options={AMENITIES} selected={form.amenities}
               onToggle={(v) => toggleMulti("amenities", v)} colorScheme="amber" />
           </AiHighlight>
@@ -685,7 +688,7 @@ export function ListingEditor({ mode, role, initialValues, listingId, onSuccessR
               <span className="ml-1 font-semibold text-dark">{form.tags.length} selected.</span>
             )}
           </p>
-          <AiHighlight field="tags">
+          <AiHighlight active={aiFieldsApplied.has("tags")}>
             <Chips options={displayedTags} selected={form.tags}
               onToggle={(v) => toggleMulti("tags", v)} colorScheme="dark" />
           </AiHighlight>
@@ -872,14 +875,14 @@ export function ListingEditor({ mode, role, initialValues, listingId, onSuccessR
         {/* ── SEO ── */}
         <SectionCard title="SEO">
           <Field label="SEO title" optional hint="Overrides the default page title. Max 60 chars.">
-            <AiHighlight field="seoTitle">
+            <AiHighlight active={aiFieldsApplied.has("seoTitle")}>
               <Input value={form.seoTitle} onChange={(v) => set("seoTitle", v.slice(0, 60))}
                 placeholder="e.g. Watamu Beach House — Luxury Villa Kenya" />
             </AiHighlight>
             <p className="mt-1 text-[12px] text-text3">{form.seoTitle.length}/60</p>
           </Field>
           <Field label="Meta description" optional hint="Shown in search results. Max 160 chars.">
-            <AiHighlight field="seoDescription">
+            <AiHighlight active={aiFieldsApplied.has("seoDescription")}>
               <textarea value={form.seoDescription}
                 onChange={(e) => set("seoDescription", e.target.value.slice(0, 160))}
                 placeholder="Short description for search engines…" rows={3}
