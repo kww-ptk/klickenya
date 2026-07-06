@@ -4,6 +4,7 @@ import { createClient as createSanityClient } from "next-sanity";
 import { Resend } from "resend";
 import { updateOpportunityStage, GHL_STAGES } from "@/lib/integrations/ghl";
 import { upgradeGuestToHost } from "@/lib/admin/upgradeGuestToHost";
+import { uniqueHostSlug } from "@/lib/sanity/hostSlug";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -199,12 +200,8 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
             .set({ host: { _type: "reference", _ref: existingHost.sanity_host_id } })
             .commit();
         } else {
-          // New host — create Sanity host document
-          const slugBase = claim.claimant_name
-            .toLowerCase()
-            .trim()
-            .replace(/[^a-z0-9\s-]/g, "")
-            .replace(/\s+/g, "-");
+          // New host — create Sanity host document with a collision-free slug
+          const slugBase = await uniqueHostSlug(sanityWrite, claim.claimant_name);
 
           const sanityHost = await sanityWrite.create({
             _type: "host",

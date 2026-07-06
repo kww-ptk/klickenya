@@ -5,6 +5,7 @@ import { adminClient } from "@/lib/supabase/admin";
 import { createClient as createSanityClient } from "next-sanity";
 import { Resend } from "resend";
 import { listingAssignedToHostHtml, listingAssignedToAdminHtml } from "@/lib/email/hostEmails";
+import { uniqueHostSlug } from "@/lib/sanity/hostSlug";
 
 const sanityWrite = createSanityClient({
   projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID!,
@@ -44,10 +45,7 @@ export async function POST(
     let sanityHostId = host.sanity_host_id;
     if (!sanityHostId) {
       try {
-        const slug = (host.display_name ?? "host")
-          .toLowerCase()
-          .replace(/[^a-z0-9]+/g, "-")
-          .replace(/^-|-$/g, "");
+        const slug = await uniqueHostSlug(sanityWrite, host.display_name);
 
         const sanityHost = await sanityWrite.create({
           _type: "host",
