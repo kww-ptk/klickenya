@@ -44,6 +44,12 @@ async function main() {
       user_id: ownerId, slug: "claris-african-experience",
       display_name: "Claris African Experience", email: HOST_EMAIL });
   }
+  // Ensure a public.users row with the host role, so login lands on /dashboard
+  // (not /profile). Upsert so it self-heals for an already-existing host too.
+  await supa.from("users").upsert(
+    { id: ownerId, email: HOST_EMAIL, role: "host", full_name: "Claris African Experience" },
+    { onConflict: "id" }
+  );
   console.log("host:", ownerId);
 
   // 3. Wipe prior Claris-host properties (removes option-A setup + any prior B run).
