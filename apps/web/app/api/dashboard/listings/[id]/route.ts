@@ -5,7 +5,7 @@ import { sanityWriteClient } from "@/lib/sanity/writeClient";
 import { listingInputSchema, inputToSanityFields, type ListingInput } from "@/lib/listings/listingFields";
 import { hostOwnsListing } from "@/lib/listings/ownership";
 import { syncEventPending } from "@/lib/listings/events";
-import { revalidateListing } from "@/lib/listings/revalidate";
+import { revalidateListing, revalidateHostPagesForListing } from "@/lib/listings/revalidate";
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -28,6 +28,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     await sanityWriteClient.patch(id).set(fields).commit();
     await syncEventPending(id, stored.type, "update", { title: safe.title, city: safe.city });
     revalidateListing(stored.type, safe.city, stored.slug);
+    await revalidateHostPagesForListing(sanityWriteClient, id);
     return NextResponse.json({ success: true, id });
   } catch (err) {
     if (err instanceof z.ZodError) return NextResponse.json({ error: err.issues[0]?.message ?? "Invalid data." }, { status: 400 });
