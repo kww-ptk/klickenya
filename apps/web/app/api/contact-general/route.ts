@@ -17,6 +17,7 @@ const generalContactSchema = z.object({
   email: z.email("Invalid email address"),
   subject: z.string().min(1, "Subject is required"),
   message: z.string().min(1, "Message is required"),
+  source: z.string().optional(), // partner site tag (e.g. "claris") for attribution
 });
 
 /* ---------- Rate limiter ---------- */
@@ -67,14 +68,21 @@ export async function POST(request: NextRequest) {
     const data = parsed.data;
 
     /* Save to Supabase */
-    const { error: dbError } = await supabase
+    const baseRow = {
+      name: data.name,
+      email: data.email,
+      subject: data.subject,
+      message: data.message,
+    };
+    // Try with the source tag; fall back if the column isn't migrated yet
+    // (Postgres 42703 / PostgREST PGRST204 "column not found").
+    let { error: dbError } = await supabase
       .from("general_contacts")
-      .insert({
-        name: data.name,
-        email: data.email,
-        subject: data.subject,
-        message: data.message,
-      });
+      .insert({ ...baseRow, source: data.source ?? null });
+    if (dbError && (dbError.code === "42703" || dbError.code === "PGRST204")) {
+      const res = await supabase.from("general_contacts").insert(baseRow);
+      dbError = res.error;
+    }
 
     if (dbError) {
       console.error("General contact DB error:", dbError);
