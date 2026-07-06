@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { adminClient } from "@/lib/supabase/admin";
 import { StatusBadge } from "@/components/admin/StatusBadge";
 import { ClaimActions } from "./ClaimActions";
+import { studioEditUrl } from "@/lib/sanity/studio";
 
 export const revalidate = 0;
 
@@ -165,7 +166,7 @@ export default async function AdminClaimDetailPage({ params }: PageProps) {
           View listing →
         </a>
         <a
-          href={`https://klickenya.sanity.studio/structure/listing;${claim.listing_sanity_id}`}
+          href={studioEditUrl("listing", claim.listing_sanity_id)}
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex items-center rounded-xl border border-border bg-white px-4 py-2.5 font-semibold text-dark hover:bg-[#F9F7F4] transition-colors"

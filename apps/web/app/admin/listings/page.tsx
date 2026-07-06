@@ -3,6 +3,8 @@ import { adminClient } from "@/lib/supabase/admin";
 import { getConsentByListingId } from "@/lib/admin/listingConsent";
 import { StatusBadge } from "@/components/admin/StatusBadge";
 import { ListingRowActions } from "@/components/listings/ListingRowActions";
+import { studioEditUrl } from "@/lib/sanity/studio";
+import { listingPublicPath } from "@/lib/listings/url";
 import Link from "next/link";
 
 export const revalidate = 0;
@@ -82,9 +84,6 @@ export default async function AdminListingsPage({
   const filterType = params.type ?? "";
   const filterStatus = params.status ?? "";
   const createdTitle = params.created ?? "";
-
-  const studioUrl =
-    process.env.NEXT_PUBLIC_SANITY_STUDIO_URL ?? "http://localhost:3333";
 
   // Fetch listings from Sanity, enquiry counts, and menu data in parallel
   const [listings, { data: contactRequests }, { data: menuData }] = await Promise.all([
@@ -331,7 +330,7 @@ export default async function AdminListingsPage({
                               </Link>
                             )}
                             <a
-                              href={`${studioUrl}/structure/listing;${listing._id}`}
+                              href={studioEditUrl("listing", listing._id)}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="text-[13px] font-medium text-amber underline-offset-2 hover:underline"
@@ -339,7 +338,7 @@ export default async function AdminListingsPage({
                               Edit in Sanity
                             </a>
                             <Link
-                              href={`/listings/${listing.type}/${listing.slug.current}`}
+                              href={listingPublicPath(listing.type, listing.city, listing.slug.current)}
                               className="text-[13px] font-medium text-text3 underline-offset-2 hover:text-dark hover:underline"
                             >
                               View on site
