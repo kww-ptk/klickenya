@@ -1,6 +1,7 @@
 import { sanityClient } from "@/lib/sanity/client";
 import { adminClient } from "@/lib/supabase/admin";
 import { StatusBadge } from "@/components/admin/StatusBadge";
+import { studioEditUrl } from "@/lib/sanity/studio";
 import Link from "next/link";
 
 export const revalidate = 0;
@@ -67,8 +68,6 @@ export default async function AdminRealEstatePage({
   const filterCategory = params.category ?? "";
   const filterStatus = params.status ?? "";
 
-  const studioUrl =
-    process.env.NEXT_PUBLIC_SANITY_STUDIO_URL ?? "http://localhost:3333";
 
   // Fetch properties from Sanity and enquiry counts from Supabase in parallel
   const [properties, { data: propertyEnquiries }] = await Promise.all([
@@ -249,7 +248,7 @@ export default async function AdminRealEstatePage({
                       <td className="whitespace-nowrap px-6 py-3 text-right">
                         <div className="flex items-center justify-end gap-3">
                           <a
-                            href={`${studioUrl}/structure/property;${property._id}`}
+                            href={studioEditUrl("property", property._id)}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-[13px] font-medium text-amber underline-offset-2 hover:underline"

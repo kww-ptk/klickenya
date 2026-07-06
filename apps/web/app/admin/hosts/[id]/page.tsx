@@ -5,6 +5,7 @@ import { sanityPreviewClient as sanityClient } from "@/lib/sanity/client";
 import { HostListingActions, SyncListingsButton } from "./HostListingActions";
 import { HostFormModal } from "../HostFormModal";
 import { DeleteHostButton } from "../DeleteHostButton";
+import { studioEditUrl } from "@/lib/sanity/studio";
 
 export const revalidate = 0;
 
@@ -95,7 +96,6 @@ export default async function AdminHostDetailPage({ params }: PageProps) {
     .toUpperCase()
     .slice(0, 2);
 
-  const sanityStudioUrl = process.env.NEXT_PUBLIC_SANITY_STUDIO_URL || "http://localhost:3333";
 
   return (
     <div className="max-w-3xl space-y-6">
@@ -171,7 +171,7 @@ export default async function AdminHostDetailPage({ params }: PageProps) {
             </Link>
           )}
           {host.sanity_host_id && (
-            <a href={`${sanityStudioUrl}/structure/host;${host.sanity_host_id}`} target="_blank" rel="noopener noreferrer" className="text-[13px] font-medium text-purple hover:underline">
+            <a href={studioEditUrl("host", host.sanity_host_id)} target="_blank" rel="noopener noreferrer" className="text-[13px] font-medium text-purple hover:underline">
               Edit in Sanity →
             </a>
           )}
@@ -233,7 +233,7 @@ export default async function AdminHostDetailPage({ params }: PageProps) {
                       ) : null;
                     })()}
                     <a
-                      href={`${sanityStudioUrl}/structure/listing;${listing._id}`}
+                      href={studioEditUrl("listing", listing._id)}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-[12px] font-medium text-purple hover:underline"
