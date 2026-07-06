@@ -2,6 +2,7 @@ import Link from "next/link";
 import { adminClient } from "@/lib/supabase/admin";
 import { sanityClient } from "@/lib/sanity/client";
 import { StatusBadge } from "@/components/admin/StatusBadge";
+import { STUDIO_URL } from "@/lib/sanity/studio";
 
 export const revalidate = 0;
 
@@ -275,8 +276,6 @@ export default async function AdminDashboardPage() {
   const pendingAmbassadors =
     ambassadorAppsThisWeek - approvedAmbassadorsThisWeek;
 
-  const sanityStudioUrl =
-    process.env.NEXT_PUBLIC_SANITY_STUDIO_URL ?? "/studio";
 
   return (
     <div className="space-y-8">
@@ -732,7 +731,7 @@ export default async function AdminDashboardPage() {
       {/* Quick actions */}
       <div className="flex flex-wrap items-center gap-3">
         <a
-          href={sanityStudioUrl}
+          href={STUDIO_URL}
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex items-center rounded-xl bg-amber px-4 py-2.5 text-[13px] font-semibold text-white transition-colors hover:bg-amber/90"
