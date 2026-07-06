@@ -3,6 +3,7 @@ import { adminClient } from "@/lib/supabase/admin";
 import { AdminNavLink } from "./_components/AdminNavLink";
 import { AdminSignOut } from "./_components/AdminSignOut";
 import { AdminBottomNav } from "./_components/AdminBottomNav";
+import { STUDIO_URL } from "@/lib/sanity/studio";
 
 /* ---------- SVG icon components ---------- */
 
@@ -247,8 +248,6 @@ export default async function AdminLayout({
   const pendingEvents = eventsRes.count ?? 0;
   const pendingReservations = reservationsRes.count ?? 0;
 
-  const sanityStudioUrl =
-    process.env.NEXT_PUBLIC_SANITY_STUDIO_URL || "http://localhost:3333";
 
   return (
     <div className="flex min-h-screen">
@@ -305,7 +304,7 @@ export default async function AdminLayout({
           <p className="px-4 pt-4 pb-1 text-[10px] font-semibold uppercase tracking-widest text-white/30">System</p>
           <AdminNavLink href="/admin/partners" label="Partners" icon={<GlobeIcon />} />
           <AdminNavLink href="/admin/analytics" label="Analytics" icon={<ChartIcon />} />
-          <AdminNavLink href={sanityStudioUrl} label="Blog Posts" icon={<BlogIcon />} external />
+          <AdminNavLink href={STUDIO_URL} label="Blog Posts" icon={<BlogIcon />} external />
           <AdminNavLink href="/admin/settings" label="Settings" icon={<GearIcon />} />
 
         </nav>

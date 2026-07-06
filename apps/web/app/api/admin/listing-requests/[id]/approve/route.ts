@@ -4,6 +4,7 @@ import { createClient as createSanityClient } from "next-sanity";
 import { Resend } from "resend";
 import { assertAdmin, AdminAuthError } from "@/lib/admin/auth";
 import { updateOpportunityStage, GHL_STAGES } from "@/lib/integrations/ghl";
+import { uniqueHostSlug } from "@/lib/sanity/hostSlug";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -243,7 +244,7 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
           .set({ host: { _type: "reference", _ref: existingSanityHostId } })
           .commit();
       } else {
-        const hostSlugBase = makeSlug(request.name);
+        const hostSlugBase = await uniqueHostSlug(sanityWrite, request.name);
         const sanityHost = await sanityWrite.create({
           _type: "host",
           name: request.name,

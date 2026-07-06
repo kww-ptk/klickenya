@@ -226,7 +226,7 @@ export const HOST_BY_SLUG_QUERY = groq`
     planTier,
     verified,
     createdAt,
-    "listings": listings[]->{ ${LISTING_CARD_FIELDS} },
+    "listings": *[_type == "listing" && (host._ref == ^._id || _id in ^.listings[]._ref) && ${MARKETPLACE_PARTNER_FILTER}]{ ${LISTING_CARD_FIELDS} },
     "events": *[_type == "listing" && type == "event" && status == "published" && host._ref == ^._id && ${MARKETPLACE_PARTNER_FILTER}]{ ${LISTING_CARD_FIELDS}, eventDate, eventEndDate, venue, isFree, priceFrom, isRecurring, recurrenceRule, schedule[]{ _key, day, startTime, endTime }, "coverPhotoUrl": photos[0].asset->url }
   }
 `
