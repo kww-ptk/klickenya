@@ -29,6 +29,15 @@ export default defineType({
   ],
   fields: [
     defineField({
+      name: 'partner',
+      title: 'Partner (white-label owner)',
+      description:
+        "Leave empty for Klickenya house listings. Set to a partner to make this property belong to that partner's branded site.",
+      type: 'reference',
+      to: [{ type: 'partner' }],
+      group: 'details',
+    }),
+    defineField({
       name: 'title',
       title: 'Title',
       type: 'string',
