@@ -59,18 +59,19 @@ export async function PATCH(
     return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
   }
 
+  // Sanitize the array _key before inlining it into the patch selector
+  // (keys are generated as hex, so alphanumeric-only is safe and injection-proof).
+  const safeKey = key.replace(/[^a-zA-Z0-9]/g, "");
+
   const set: Record<string, unknown> = {};
   for (const field of EDITABLE_FIELDS) {
-    if (field in body) set[`promotions[_key==$key].${field}`] = body[field];
+    if (field in body) set[`promotions[_key=="${safeKey}"].${field}`] = body[field];
   }
   if (Object.keys(set).length === 0) {
     return NextResponse.json({ error: "No editable fields provided" }, { status: 400 });
   }
 
-  await sanityWriteClient
-    .patch(docId)
-    .set(set)
-    .commit({ params: { key } });
+  await sanityWriteClient.patch(docId).set(set).commit();
 
   return NextResponse.json({ success: true });
 }
@@ -93,9 +94,10 @@ export async function DELETE(
     return NextResponse.json({ error: "Unknown partner" }, { status: 400 });
   }
 
+  const safeKey = key.replace(/[^a-zA-Z0-9]/g, "");
   await sanityWriteClient
     .patch(docId)
-    .unset([`promotions[_key=="${key}"]`])
+    .unset([`promotions[_key=="${safeKey}"]`])
     .commit();
 
   return NextResponse.json({ success: true });
