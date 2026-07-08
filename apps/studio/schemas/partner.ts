@@ -169,6 +169,51 @@ export default defineType({
       rows: 20,
       group: 'content',
     }),
+
+    // Promotions / offers — lightweight partner-specific marketing banners
+    // shown on the partner's own site (not marketplace inventory). Managed
+    // from the partner's own admin via /api/partner/offers.
+    defineField({
+      name: 'promotions',
+      title: 'Promotions / Offers',
+      type: 'array',
+      group: 'content',
+      of: [
+        {
+          type: 'object',
+          name: 'promotion',
+          fields: [
+            { name: 'title', title: 'Title', type: 'string', validation: (rule) => rule.required() },
+            { name: 'subtitle', title: 'Subtitle', type: 'string' },
+            {
+              name: 'category',
+              title: 'Category',
+              type: 'string',
+              options: {
+                list: [
+                  { title: 'Rental / Villas', value: 'rental' },
+                  { title: 'Safari / Tours', value: 'safari' },
+                  { title: 'For Sale', value: 'sale' },
+                  { title: 'Special', value: 'special' },
+                ],
+              },
+              initialValue: 'rental',
+            },
+            { name: 'badge', title: 'Badge', type: 'string' },
+            { name: 'body', title: 'Body text', type: 'text', rows: 3 },
+            { name: 'ctaLabel', title: 'CTA label', type: 'string' },
+            { name: 'ctaUrl', title: 'CTA URL', type: 'string' },
+            { name: 'image', title: 'Image', type: 'image' },
+            { name: 'validFrom', title: 'Valid from', type: 'date' },
+            { name: 'validTo', title: 'Valid to', type: 'date' },
+            { name: 'isPublished', title: 'Published', type: 'boolean', initialValue: true },
+          ],
+          preview: {
+            select: { title: 'title', subtitle: 'category' },
+          },
+        },
+      ],
+    }),
   ],
   preview: {
     select: { title: 'name', subtitle: 'slug.current', media: 'logo' },

@@ -196,41 +196,194 @@ name/description/amenities/photos exist — pricing, availability wiring not yet
   new `room-edit.php` won't appear on the live site until Phase 4 repoints the snapshot generator.
   Flagged in-page with an admin notice so this isn't a silent surprise.
 
-##### For-sale properties, tours, offers — not started
-Still pending: confirm whether Claris's for-sale properties belong in the same Supabase PMS
-`properties` table (different category) or need the Sanity `property` schema; build the Sanity
-`partner` document for Claris (none exists yet — only "Napulè Restaurant" does) plus the
-`promotions` array field on it for offers; build the `listing` (type: experience) integration for
-tours. Each is roughly its own build the size of the villas work above.
+##### For-sale properties — ✅ DONE (2026-07-08)
+**Confirmed:** unlike villas, no for-sale data existed anywhere in Klickenya yet (checked live —
+empty). Genuinely new content, not just rewiring.
+**Files:** `admin/properties.php`, `property-edit.php`, `includes/klickenya.php` (added
+`klickenya_request()` generic helper + for-sale wrappers),
+`apps/studio/schemas/property.ts` (added `partner` reference field, mirroring `listing.ts`),
+`apps/web/app/api/partner/for-sale/route.ts` (new), `apps/web/app/api/partner/for-sale/[id]/route.ts` (new).
+- ✅ Created the Klickenya `partner` Sanity document for Claris (`partner-claris` — none existed
+  before this; only "Napulè Restaurant" did). Unblocks tours/offers too.
+- ✅ For-sale properties are Sanity `property` documents, scoped via the new `partner` field.
+- ✅ Full create → list → update round-trip verified live (test documents created and deleted
+  during verification, not left in production content).
+- ⚠️ Scoped down like villas: photo upload, SEO Google-preview widget, and delete aren't wired.
 
-#### 2D — Availability/holds → Klickenya booking engine (do fourth — depends on 2C)
-**Files:** `admin/holds.php`, `conflicts.php`, `gantt.php`
-- Replace `units`/`holds`/`availability_blocks` queries with Klickenya's
-  `create_booking_with_payment()` RPC + `property_fees`/`booking_fees`, keyed by the Sanity
-  document `_id` from 2C (not the old Neon `room_id`/`unit_id`).
-- **Test:** create a hold from admin, confirm it blocks the correct date range on the public
-  availability calendar.
+##### Tours — ✅ DONE (2026-07-08)
+**Files:** `admin/tours.php`, `tour-edit.php`, `includes/klickenya.php` (tour wrappers),
+`apps/web/app/api/partner/tours/route.ts` (new), `apps/web/app/api/partner/tours/[id]/route.ts` (new).
+- ✅ Tours are Sanity `listing` documents (`type: "experience"`, `partner` → claris,
+  `publishToMarketplace: false`), scoped via the partner reference.
+- ✅ Full create → list → update round-trip verified live via both the browser fetch and the
+  Claris PHP path (test docs created and deleted during verification).
+- ⚠️ Scoped down: photo upload and delete aren't wired.
 
-### Phase 3 — Flip public forms to Klickenya-only
+##### Offers — ✅ DONE (2026-07-08)
+**Files:** `admin/offers.php`, `offer-edit.php`, `includes/klickenya.php` (offer wrappers),
+`apps/studio/schemas/partner.ts` (added `promotions` array field),
+`apps/web/app/api/partner/offers/route.ts` (new), `apps/web/app/api/partner/offers/[key]/route.ts` (new).
+- ✅ Offers stored as the `promotions` array on the Claris `partner` Sanity document (not a
+  top-level type — lightweight marketing banners, not marketplace inventory). Each addressed by
+  Sanity array `_key`.
+- ✅ Full CRUD (create/list/update/delete) verified live via both browser and Claris PHP path
+  (test data self-cleans via the delete step).
+- ⚠️ Scoped down: image upload isn't wired.
+
+**2C is now functionally complete** (villas, for-sale, tours, offers all rewired to Klickenya).
+Remaining across 2C, deferred deliberately and logged above per type: image/photo upload for all
+four (needs Supabase Storage / Sanity asset upload endpoints), plus villa gallery/FAQ/units/iCal,
+SEO Google-preview widgets, and slug editing. None block the Neon-retirement path; they're
+fidelity gaps in the admin UI, not data-layer gaps.
+
+#### 2D — Availability/holds → Klickenya booking engine — ✅ DONE (2026-07-08), read-only + stubs
+**Files:** `admin/holds.php`, `gantt.php`, `conflicts.php`, `includes/klickenya.php`
+(`klickenya_fetch_bookings`), `apps/web/app/api/partner/bookings/route.ts` (new).
+**Model mismatch (key finding):** Claris used a `holds` table (pending→confirmed) over
+`units`/`availability_blocks`. Klickenya models this differently — confirmed reservations live in
+`bookings` (verified live, not from migration files — `nights` is a generated column, financials
+in `*_kes`), and hold state is enquiry-level (`contact_requests.calendar_status = 'held'`,
+`hold_type`, `expires_at`). No 1:1 mapping, and Klickenya's confirm/cancel/convert flows are
+owner-session-authenticated with different semantics.
+- ✅ `GET /api/partner/bookings` — merges the partner's confirmed `bookings` + held enquiries into
+  one feed, scoped via `resolvePartnerOwner`. Verified live: correctly excluded another owner's
+  booking (count 0), then surfaced a throwaway Claris booking with the right room name (count 1),
+  then cleaned up.
+- ✅ `admin/holds.php` rewritten as a **read-only** Holds & Bookings view (KPIs + table). Confirm/
+  cancel deliberately deferred to the Klickenya host dashboard (same deferral pattern as 2A's
+  write path) — flagged in-page.
+- ✅ `admin/gantt.php` (calendar-block editor) and `admin/conflicts.php` (iCal channel-conflict
+  resolver) converted to informational stubs pointing at the Klickenya dashboard. Both previously
+  wrote Claris-only availability tables; conflicts.php overlaps Phase 5 (iCal). Off Neon now,
+  clearly communicated, no hidden regression.
+- ⚠️ **Remaining for 2D (deferred):** confirm/cancel/convert write actions from the Claris admin;
+  a partner-scoped calendar-block edit API (to restore gantt.php's editor); channel-conflict
+  resolution (folds into Phase 5 iCal). All need owner-scoped write endpoints that don't exist
+  yet.
+
+#### 2E — Remaining admin pages still on Neon (newly surfaced 2026-07-08)
+Buckets 2A–2D covered submissions, auth, content, and holds — but the admin has a few more pages
+that still read Neon directly, found while doing 2D:
+- `admin/dashboard.php` — KPI tiles (counts from Neon).
+- `admin/audit.php` — the admin audit log (`admin_audit_log` table).
+- `admin/settings.php` — site settings (`settings` table); note `set_setting`/`setting` in
+  `includes/db.php` still hit Neon, and `audit_log()` writes to Neon on every admin action.
+- `includes/_layout.php` sidebar — a `channel_conflicts` count query on every page load (already
+  wrapped in try/catch, so it degrades to 0 when Neon is gone — safe, but still a live query
+  until then).
+These weren't in the original 2A–2D plan. Decide per page: repoint (dashboard KPIs could read the
+partner API), drop (audit log may not be needed once Klickenya owns the data), or leave until
+Phase 6. None block the public-site/forms work (Phases 3–5).
+
+### Full Neon audit — everything still touching Neon (2026-07-08)
+Grep of the whole Claris repo for live DB calls. **Key finding: much of it is already dormant** —
+villa pages use the Klickenya booking widget (`room.php`: `$USE_KLICKENYA = true`, embed.js), so
+the local booking/availability/iCal stack is a fallback that the live site no longer exercises.
+
+**ACTIVE Neon dependencies (still hit on the live site):**
+- Public form writes — `api/submit-contact.php`, `submit-enquiry.php`, `submit-agency.php`,
+  `submit-newsletter.php` (INSERT into `submissions` + a Neon `COUNT` rate-limit on every submit).
+  Each already forwards to Klickenya; the Neon write is the redundant half. **Nuance:**
+  `submit-enquiry.php` interleaves the active enquiry+forward path with a *dormant* local
+  hold-creation branch (`create_hold_with_block`, only reached when `$form_mode==='availability'`
+  — legacy fallback). Flipping to Klickenya-only means dropping that legacy branch.
+  Rate-limiting must move to a non-Neon mechanism (file-based, or rely on Klickenya's built-in
+  per-IP limit). Local `send_notification` (Claris-team email) lives in `mail.php` and is
+  Neon-free — keep it so the Claris team keeps getting alerts.
+- Public content pages that still read Neon directly — `property.php` (for-sale detail;
+  for-sale data now lives in Sanity via 2C, so this should read Sanity/Klickenya), `sitemap.php`
+  (rooms/tours listing). NOTE: `index.php`, `rooms.php`, `room.php`, `tours.php`, `offers.php`,
+  `for-sale.php` already read the static snapshot, not Neon directly.
+- Admin leftovers (see 2E) — `dashboard.php`, `audit.php`, `settings.php`, `hold-action.php`.
+
+**DORMANT Neon code (fallback-only, live site doesn't use it):**
+- `booking.php`, `api/check-availability.php` — legacy local booking form (superseded by widget).
+- `api/ical.php`, `api/sync-ical.php`, `bin/ical-expire-holds.php` — local iCal engine
+  (Klickenya has its own; `rooms.ical_export_token` seen live).
+- `create_hold_with_block` / `expire_stale_holds` in `includes/db.php`.
+
+**Stale after 2B (login is Klickenya now) — safe to remove/stub:**
+- `admin/forgot-password.php`, `admin/reset-password.php`, `bin/create-admin.php`,
+  `bin/reset-admin-password.php`, and the `login_attempts` rate-limit still in `includes/auth.php`.
+
+**Migration/infra (retire with Neon in Phase 6):**
+- `admin/migrate.php`, `bin/migrate.php`, `db/schema.sql`, `db/migrations/*`, and the PDO
+  connector + `setting`/`set_setting`/`audit_log` helpers in `includes/db.php`.
+
+**Reality check:** "no more Neon" is not one more edit. It's Phases 3–5 + 2E (code) **plus Phase 6**
+(migrate existing rows, ~2-week parallel run, then drop the DB) — the last part is operational, not
+code, so it cannot be completed in a single session. The DB connector stays wired until Phase 6
+regardless of how much code is repointed.
+
+### Phase 3 — Flip public forms to Klickenya-only — ✅ DONE (2026-07-08)
 **Files:** `api/submit-contact.php`, `submit-enquiry.php`, `submit-agency.php`,
-`submit-newsletter.php`
-- Remove the Neon `INSERT`, keep only `klickenya_forward(...)`.
-- **Sequencing:** only after 2A is live and verified — submissions need somewhere real to land
-  before you cut off the Neon write.
+`submit-newsletter.php`, `includes/ratelimit.php` (new).
+- ✅ All four forms: removed the Neon `INSERT` into `submissions` and the Neon `COUNT`
+  rate-limit. Added `includes/ratelimit.php` — a file-based per-IP limiter (same limits: 5/10min
+  for contact/enquiry/agency, 3/hr for newsletter). Kept `klickenya_forward(...)` and the
+  Neon-free `send_notification` (so the Claris team still gets email alerts).
+- ✅ `submit-enquiry.php`: dropped the dormant local availability/24h-hold branch
+  (`find_available_unit` / `create_hold_with_block`) — villa pages use the Klickenya widget,
+  which owns availability. Room/tour lookup kept (reads the snapshot, not Neon) for the subject.
+- ✅ Verified live: newsletter POST through the real Claris PHP server → `forwarded:true` (no
+  Neon), and the file-based limiter returned 200,200,429 per-IP as expected. Test subscribers
+  cleaned from dev.
+- **The public forms no longer touch Neon at all.** (`includes/db.php` is still `require`d for
+  `client_ip()`/`e()`/`parse_env()`, which don't open a DB connection unless a query runs.)
 
-### Phase 4 — Static snapshot sources from Sanity, not Neon
-**File:** `scripts/export-villas-static.php`
-- Rewrite the generator to pull rooms/tours/offers/properties from Sanity's GROQ API instead of
-  Neon `SELECT`s.
-- `includes/db.php`'s snapshot-reading functions (`fetch_room_by_slug`, `fetch_published_villas`,
-  etc.) don't need to change — they already read the snapshot file first, DB second. Only the
-  generator's data source changes.
-- **Sequencing:** only after 2C is live and verified.
+### 2E — Leftover admin pages → off Neon — ✅ DONE (2026-07-08)
+- ✅ `admin/dashboard.php` — repointed KPIs + recent list to `klickenya_fetch_submissions()`.
+- ✅ `admin/settings.php`, `admin/audit.php` — stubbed to informational pages (their options were
+  all legacy-booking / local-auth, now handled by Klickenya). Removes the last
+  `setting`/`set_setting`/`audit_log` callers among admin pages.
+- ✅ `admin/forgot-password.php`, `admin/reset-password.php`, `admin/hold-action.php` — stubbed
+  (login + holds are Klickenya now).
+- ✅ `includes/auth.php` — `login_attempts` Neon throttle replaced with a file-based per-IP
+  failure counter (`is_rate_limited`/`login_record_failure`/`login_clear_failures`); Klickenya
+  also rate-limits server-side.
+- ✅ `admin/_layout.php` — removed the per-page `channel_conflicts` COUNT query (now hard 0).
 
-### Phase 5 — iCal sync repoints to Klickenya
-**Files:** `api/ical.php`, `bin/ical-expire-holds.php`
-- Repoint from Neon's `holds`/`availability_blocks` to the same Klickenya booking tables 2D uses.
-- **Sequencing:** only after 2D is live and verified.
+### Phase 4 — Public pages off Neon — 🟡 PARTIAL (2026-07-08)
+- ✅ `property.php` (for-sale detail + "other properties"), `sitemap.php` — repointed to the
+  snapshot-first accessors (added `fetch_property_by_slug` / `fetch_property_images` to
+  `includes/db.php`); no direct Neon reads at request time.
+- ✅ `booking.php` — stubbed to a "contact us" notice (local hold management retired).
+- ❌ **Remaining (the keystone) — and it is BLOCKED ON DATA, not code (verified 2026-07-08):**
+  `scripts/export-villas-static.php` still builds the snapshot from Neon. Repointing it to
+  Klickenya was investigated in depth and **cannot be done yet without gutting the live public
+  site**, because Klickenya does not hold complete content:
+  - **Slugs are fine** — all **42/42** villa slugs match Klickenya's `booking_slug` exactly, so
+    public URLs/SEO would be preserved. (Earlier worry was a false alarm from an unsorted peek.)
+  - **But the data is incomplete in Klickenya:**
+    - **42/42 villas have `price_kes = 0`** — the Phase 1 import brought name/description/photos/
+      amenities/slug but NOT prices. Sourcing villas from Klickenya today → every villa shows no
+      price. The live snapshot still has the real prices.
+    - **0 tours, 0 for-sale, 0 offers in Klickenya** — these were never migrated; the admin can
+      now *create* them (2C), but the existing content still lives only in Neon. Sourcing from
+      Klickenya today → blank `/tours`, `/for-sale`, `/offers`.
+    - Also lost in the current villa data: FAQs, the short/long description split, bed counts,
+      and display currency/unit (Klickenya is KES-only).
+  - **Sequencing correction:** Phase 4 (generator) therefore depends on the **content migration**
+    (Phase 6's "import existing Neon rows into Klickenya"), not the other way round. The generator
+    can only source from Klickenya once Klickenya actually holds the complete, priced content.
+    Building it before then would break the live site — so it is intentionally NOT done.
+  - Secondary shape mismatch to handle at that point: partner API returns `photos` as URL arrays
+    per item; the snapshot uses separate `images`/`tourImages`/`propertyImages` maps keyed by id.
+    Assign synthetic int ids in the generator (the `fetch_*` accessors cast ids to int).
+
+### Phase 5 — iCal / local booking engine retired — ✅ DONE (2026-07-08)
+- ✅ `api/ical.php` → 410 Gone (OTAs should use Klickenya's per-room iCal export).
+- ✅ `api/sync-ical.php`, `bin/ical-expire-holds.php`, `api/check-availability.php` → no-op
+  stubs (no local availability store to sync/expire/check).
+
+### ✅ Milestone (2026-07-08): the entire LIVE request path is off Neon
+Every public page, admin page, and API endpoint now serves without a Neon query. A full-repo grep
+for live DB calls returns only **offline/CLI** files: `scripts/export-villas-static.php` (Phase 4
+keystone), and `admin/migrate.php` / `bin/migrate.php` / `bin/create-admin.php` /
+`bin/reset-admin-password.php` (infra + dead-after-2B CLI — deleted with Neon in Phase 6).
+**Neon is not yet gone** — the snapshot generator still sources content from it, the connector +
+helpers remain in `includes/db.php` as the Phase-6 fallback, and existing data hasn't been
+migrated — but nothing the browser hits touches Neon anymore.
 
 ### Phase 6 — Data migration & safe cutover (do not skip this)
 This is what makes retirement *safe*, not just *code-complete*.
