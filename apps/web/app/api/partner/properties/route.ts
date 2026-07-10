@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
   const { data: rooms } = await adminClient
     .from("rooms")
     .select(
-      "id, property_id, name, description, base_price_kes, max_guests, room_size_sqm, amenities, photos, is_active, display_order"
+      "id, property_id, name, description, short_description, bed_count, faqs, base_price_kes, max_guests, room_size_sqm, amenities, photos, is_active, display_order"
     )
     .in("property_id", propertyIds)
     .order("display_order", { ascending: true });
@@ -55,6 +55,9 @@ export async function GET(request: NextRequest) {
       id: r.id,
       name: r.name,
       description: r.description,
+      short_description: r.short_description,
+      bed_count: r.bed_count,
+      faqs: r.faqs ?? [],
       price_kes: r.base_price_kes,
       max_guests: r.max_guests,
       size_sqm: r.room_size_sqm,

@@ -15,6 +15,9 @@ import { verifyPartnerKey, resolvePartnerOwner } from "@/lib/partner/auth";
 const EDITABLE_FIELDS = [
   "name",
   "description",
+  "short_description",
+  "bed_count",
+  "faqs",
   "base_price_kes",
   "max_guests",
   "room_size_sqm",
@@ -30,7 +33,7 @@ async function loadOwnedRoom(roomId: string, partner: string) {
   const { data: room } = await adminClient
     .from("rooms")
     .select(
-      "id, property_id, name, description, base_price_kes, max_guests, room_size_sqm, amenities, photos, is_active, display_order, properties(owner_id, city, county, booking_slug)"
+      "id, property_id, name, description, short_description, bed_count, faqs, base_price_kes, max_guests, room_size_sqm, amenities, photos, is_active, display_order, properties(owner_id, city, county, booking_slug)"
     )
     .eq("id", roomId)
     .maybeSingle();
@@ -100,7 +103,7 @@ export async function PATCH(
     .update(update)
     .eq("id", roomId)
     .select(
-      "id, property_id, name, description, base_price_kes, max_guests, room_size_sqm, amenities, photos, is_active, display_order"
+      "id, property_id, name, description, short_description, bed_count, faqs, base_price_kes, max_guests, room_size_sqm, amenities, photos, is_active, display_order"
     )
     .single();
 
