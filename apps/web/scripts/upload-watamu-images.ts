@@ -71,6 +71,27 @@ const RESTAURANTS: { slug: string; images: ImageSpec[] }[] = [
     ],
   },
   {
+    slug: 'african-footprint-watamu',
+    images: [
+      { url: 'https://itin-dev.wanderlogstatic.com/freeImage/J8H3aLrT1J3hiYWlPsE7VBoYcRozKSCa', alt: 'African Footprint beach club on Jacaranda Beach, Watamu' },
+      { url: 'https://itin-dev.wanderlogstatic.com/freeImage/ATZNWCeg3BbQTaQJbc7TXo2S0lAYyzHK', alt: 'Seating and bar setting at African Footprint, Watamu' },
+    ],
+  },
+  {
+    slug: 'swahili-cafe-watamu',
+    images: [
+      { url: 'https://swahilicafe.org/assets/images/swahili-cafe.jpg', alt: 'Swahili Cafe local restaurant in Timboni, Watamu' },
+      { url: 'https://swahilicafe.org/assets/images/LOLO1.jpeg', alt: 'Swahili Cafe interior and setting, Watamu' },
+    ],
+  },
+  {
+    slug: 'the-musafir-watamu',
+    images: [
+      { url: 'https://cdn.prod.website-files.com/667d4286644e58960632a889/69faf9c9bea15fdcd606bc3f_image00001.webp', alt: 'The Musafir floating dhow bar and restaurant on Mida Creek, Watamu' },
+      { url: 'https://cdn.prod.website-files.com/667d4286644e58960632a889/69faf9c9640cd60893c2fdb3_image00005.webp', alt: 'Dining aboard The Musafir floating dhow, Mida Creek, Watamu' },
+    ],
+  },
+  {
     slug: 'the-rock-and-sea-watamu',
     images: [
       { url: 'https://static.wixstatic.com/media/1a25ba_77b1eb4226414218a19a8154b79b67ac~mv2.jpg', alt: 'The Rock and Sea panoramic clifftop restaurant, Watamu' },
@@ -91,13 +112,11 @@ const RESTAURANTS: { slug: string; images: ImageSpec[] }[] = [
 
 /**
  * ⚠️ NO usable public image URL was found for these — add photos manually in Studio.
- *   tortuga-beach-bar-watamu   → Instagram @tortuga_bar_garodawatamu / @tortugabeachh
- *   african-footprint-watamu   → TripAdvisor "African Footprint" Watamu photos
- *   swahili-cafe-watamu        → facebook.com/SwahiliCafe / TripAdvisor
- *   the-musafir-watamu         → Instagram @themusafir_watamu / Temple Point FB
+ *   tortuga-beach-bar-watamu   → Instagram @tortuga_bar_garodawatamu (Instagram-only;
+ *                                 CDN URLs are session-signed — owner must supply a stable image)
  *   theos-pizza-watamu         → (draft — venue unconfirmed)
- *   napule-watamu              → (draft — venue unconfirmed)
  *   sette-vizi-watamu          → (draft — venue unconfirmed)
+ *   non-solo-padel-watamu      → (draft — the goplacesdigital URLs below now 404)
  */
 
 function fetchBuffer(url: string, redirects = 0): Promise<Buffer> {
@@ -138,14 +157,20 @@ async function main() {
   for (const r of RESTAURANTS) {
     console.log(`  📷 ${r.slug}`)
 
-    const id = await client.fetch(
-      `*[_type == "listing" && slug.current == $slug][0]._id`,
+    const doc = await client.fetch(
+      `*[_type == "listing" && slug.current == $slug][0]{ _id, "photos": count(photos) }`,
       { slug: r.slug }
     )
-    if (!id) {
+    if (!doc?._id) {
       console.log('    ❌ Listing not found, skipping\n')
       continue
     }
+    // Idempotent: don't re-upload if this listing already has photos.
+    if (doc.photos > 0) {
+      console.log(`    ⏭️  Already has ${doc.photos} photo(s), skipping\n`)
+      continue
+    }
+    const id = doc._id
 
     const photos: any[] = []
     for (const img of r.images) {
