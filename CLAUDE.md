@@ -10,7 +10,7 @@ Stack: Next.js 15 App Router · Sanity (content) · Supabase (auth + dynamic dat
 Monorepo: apps/web · apps/studio · packages/shared · packages/database.
 
 ## Current state (as of audit May 8, 2026)
-Migration count: 076 (last: 076_claim_requests_host_completion.sql)
+Migration count: 079 (last: 079_event_ticketing.sql)
 Missing on disk: 046, 047, 050 (squashed or never committed — don't reuse these numbers)
 Collision on disk: 073 has TWO files (073_partner_linkage.sql + 073_staff_cross_station_access.sql) — historical, don't reuse 073
 LIVE and working end-to-end:
@@ -26,6 +26,7 @@ LIVE and working end-to-end:
   - Table reservations: /dashboard/listings/[id]/reservations (migrations 049–053)
   - Klickenya Kitchen: stock, recipes, purchase orders, auto-deduction, reports (migrations 060–066)
   - Events system: /dashboard/events — add event form, attendees, admin review
+  - Event ticketing: Paystack checkout (M-Pesa/card) + unified free+paid QR tickets, door scanner at /dashboard/events/[id]/scan, ledger + manual host payouts (migration 079)
   - Guest profile: /profile — bookings/enquiries/events/saved tabs
   - Real estate: /real-estate/list (3-step form, agent/owner/developer)
   - Admin listing-requests: /admin/listing-requests (manual review of new listing submissions)
@@ -39,7 +40,7 @@ NOT YET BUILT:
   - iCal sync engine — ical_feeds table in migration 031, no sync route or cron
   - Stay listing dashboard hub — restaurant hub exists, stay is TODO V2
   - Reviews & ratings system
-  - M-Pesa / Paystack payment integration
+  - M-Pesa / Paystack payment integration (LIVE for event tickets via Paystack; not yet for bookings/subscriptions)
   - WhatsApp OTP (email only currently)
   - Google Places API integration (GOOGLE_PLACES_API_KEY not in env)
 
@@ -60,7 +61,7 @@ NOT YET BUILT:
   Mobile-first. Test on iPhone Safari before declaring done.
 
 ## Database — Supabase
-  Next migration number: 077 (don't use 046, 047, 050 — gaps on disk; 073 is a double — already used twice)
+  Next migration number: 080 (079 is event ticketing; don't use 046, 047, 050 — gaps on disk; 073 is a double — already used twice)
   RLS enabled on all tables. Check policies before querying from client.
   create_booking_with_payment() RPC handles bookings — don't INSERT directly.
   guest_user_id present on bookings (040) and contact_requests (042).
@@ -176,6 +177,7 @@ NOT YET BUILT:
   ADMIN_EMAIL                       NEXT_PUBLIC_SITE_URL
   TURNSTILE_SECRET_KEY              NEXT_PUBLIC_GUEST_REGISTRATION
   NEXT_PUBLIC_SENTRY_DSN            SENTRY_AUTH_TOKEN
+  PAYSTACK_SECRET_KEY               PLATFORM_TICKET_FEE_BPS   # ticket payments (Paystack) + platform fee in bps
   # NOT YET in env — add before building these features:
   GOOGLE_PLACES_API_KEY             # needed for AI listing import (Google reviews)
   FIRECRAWL_API_KEY                 # needed for AI listing import (website scrape)

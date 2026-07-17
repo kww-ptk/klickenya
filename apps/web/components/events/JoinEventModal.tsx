@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { X, Loader2, Check } from "lucide-react";
+import { Turnstile } from "@marsidev/react-turnstile";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 
@@ -23,6 +24,7 @@ export function JoinEventModal({
   onClose,
   onSuccess,
 }: JoinEventModalProps) {
+  const hasSiteKey = !!process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -32,6 +34,7 @@ export function JoinEventModal({
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [ticketCode, setTicketCode] = useState<string | null>(null);
+  const [turnstileToken, setTurnstileToken] = useState("");
 
   // Check auth state and pre-fill
   useEffect(() => {
@@ -99,7 +102,7 @@ export function JoinEventModal({
           phone: phone.trim() || undefined,
           userId: userId || undefined,
           tiers: [{ tierKey: "free", qty: 1 }],
-          turnstileToken: "dev",
+          turnstileToken: turnstileToken || "dev",
         }),
       });
 
@@ -211,8 +214,15 @@ export function JoinEventModal({
                   />
                 </div>
 
+                {hasSiteKey && (
+                  <Turnstile
+                    siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY!}
+                    onSuccess={setTurnstileToken}
+                  />
+                )}
+
                 <button
-                  disabled={loading || !name.trim() || !email.trim()}
+                  disabled={loading || !name.trim() || !email.trim() || (hasSiteKey && !turnstileToken)}
                   onClick={handleSubmit}
                   className={cn(
                     "w-full py-3 rounded-xl font-semibold text-[14px] transition-colors flex items-center justify-center gap-2",
