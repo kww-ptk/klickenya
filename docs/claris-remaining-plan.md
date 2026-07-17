@@ -376,6 +376,22 @@ regardless of how much code is repointed.
 - ✅ `api/sync-ical.php`, `bin/ical-expire-holds.php`, `api/check-availability.php` → no-op
   stubs (no local availability store to sync/expire/check).
 
+### ✅ Phase 4 COMPLETE (2026-07-10): content sourced from Klickenya, not Neon
+Migration 078 applied (rooms gained faqs/short_description/bed_count). Then:
+- Backfilled all 42 villas' FAQs/short-desc/bed-count from the snapshot (counts match: 39/42/39).
+- Migrated the 5 tours, 3 offers, 2 for-sale into Klickenya (text) via the partner API.
+- Extracted the 10 items' images + original slugs into `includes/claris-media.php` (images are
+  static files, never in Neon).
+- Rewrote `scripts/export-villas-static.php` to build the snapshot ENTIRELY from Klickenya
+  (villas incl. new fields + photo URLs; tours/offers/for-sale content + static images by title,
+  original public slugs preserved). Regenerated `villas-static.php` (source=klickenya).
+- Verified by direct `.php` rendering: villa pages show 6 FAQ accordions, amenities, 30
+  Klickenya-hosted images; tours/offers/for-sale render with images + original slugs. (The local
+  clean-URL dev router serves the homepage for extensionless paths — a known local quirk; test
+  pages via `/x.php`.)
+**Decision taken:** images for tours/offers/for-sale stay as static assets (Option B) — they were
+never in Neon; moving them into Sanity is a later follow-up bundled with wiring admin image upload.
+
 ### ✅ Milestone (2026-07-08): the entire LIVE request path is off Neon
 Every public page, admin page, and API endpoint now serves without a Neon query. A full-repo grep
 for live DB calls returns only **offline/CLI** files: `scripts/export-villas-static.php` (Phase 4
