@@ -375,39 +375,9 @@ const RESTAURANTS: Restaurant[] = [
     seoDescription: 'Local Timboni favourite in Watamu for authentic, budget Swahili food: pilau, biryani, fresh fish, calamari and spiced Swahili tea.',
   },
 
-  // ─────────────────────────────────────────────── Napul'è  ⚠️ UNVERIFIED
-  {
-    title: "Napul'è",
-    slug: 'napule-watamu',
-    status: 'draft', // ⚠️ Not independently verifiable online. A "Napul'è" listing may already exist on Klickenya — check for a duplicate before publishing.
-    city: 'Watamu',
-    county: 'Kilifi',
-    address: 'Watamu (address to be confirmed)',
-    price: 2000,
-    priceUnit: 'person',
-    priceRange: 'mid-range',
-    cuisine: ['Italian'],
-    openingHours: 'To be confirmed',
-    atmosphere: 'casual',
-    reservationRequired: false,
-    tags: [
-      'napule', 'watamu', 'italian', 'pizzeria', 'wood-fired-pizza',
-      'neapolitan', 'pasta', 'casual', 'family', 'unconfirmed',
-    ],
-    highlights: [
-      highlight('🍕', 'Wood-Fired Pizza', 'Neapolitan-style pizza — the name Napul’è nods to Naples, the home of pizza'),
-      highlight('🇮🇹', 'Italian Kitchen', 'Part of Watamu’s long-established Italian dining tradition'),
-      highlight('🍷', 'Casual Dinner Spot', 'An informal, sit-down pizzeria atmosphere'),
-    ],
-    description: [
-      textBlock("Napul'è — Watamu", 'h2'),
-      textBlock("Napul'è is an Italian wood-fired pizzeria in Watamu, part of the town's long and unusually deep Italian dining tradition — Watamu has been home to an Italian community for decades, and its beach restaurants and pizzerias are a big reason food-lovers seek the town out. The name itself is the Neapolitan word for Naples, the birthplace of pizza, which signals the style to expect."),
-      textBlock('Note', 'h3'),
-      textBlock('This listing is held as a draft: the venue’s specifics could not be independently verified in public sources during research, and a "Napul’è" listing may already exist on Klickenya. Before publishing, confirm the exact business name and spelling, physical location, opening hours and contact details — and check for a duplicate listing.'),
-    ],
-    seoTitle: "Napul'è — Italian Wood-Fired Pizzeria in Watamu",
-    seoDescription: "Neapolitan-style wood-fired pizza in Watamu, part of the town's Italian dining tradition. Details pending verification.",
-  },
+  // ─────────────────────────────────────────────────────────────── Napul'è
+  // SKIPPED — already exists on Klickenya as "Napul'è Restaurant"
+  // (slug: napul-restaurant, published, Watamu). Not re-created here to avoid a duplicate.
 
   // ──────────────────────────────────────────────────────────── Lichthaus
   {
