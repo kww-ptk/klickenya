@@ -12,7 +12,7 @@ import {
   DEFAULT_PRICE_UNIT_BY_TYPE,
 } from "@/lib/constants/listing";
 import { ImageUploader } from "@/components/shared/ImageUploader";
-import { emptyListingForm, type ListingFormValues } from "@/lib/listings/listingFields";
+import { emptyListingForm, type ListingFormValues, type ListingScheduleRow } from "@/lib/listings/listingFields";
 
 /* ---------- Constants ---------- */
 
@@ -86,6 +86,15 @@ const LANGUAGE_OPTIONS = ["English", "Swahili", "Italian", "French", "German", "
 const AGE_RESTRICTION_OPTIONS = [
   { value: "all-ages", label: "All Ages" }, { value: "18+", label: "18+" }, { value: "21+", label: "21+" },
 ];
+
+const DAYS_OF_WEEK = [
+  { value: "monday", label: "Monday" }, { value: "tuesday", label: "Tuesday" },
+  { value: "wednesday", label: "Wednesday" }, { value: "thursday", label: "Thursday" },
+  { value: "friday", label: "Friday" }, { value: "saturday", label: "Saturday" },
+  { value: "sunday", label: "Sunday" },
+];
+
+const emptyScheduleRow = (): ListingScheduleRow => ({ day: "", startTime: "", endTime: "" });
 
 const RESPONSE_TIME_OPTIONS = [
   { value: "within-1-hour", label: "Within 1 hour" }, { value: "same-day", label: "Same day" },
@@ -258,6 +267,20 @@ export function ListingEditor({ mode, role, initialValues, listingId, onSuccessR
     });
   }
 
+  /* Recurring-event weekly schedule handlers */
+  function updateSchedule(idx: number, field: keyof ListingScheduleRow, value: string) {
+    setForm((f) => ({
+      ...f,
+      schedule: f.schedule.map((s, i) => (i === idx ? { ...s, [field]: value } : s)),
+    }));
+  }
+  function addScheduleRow() {
+    setForm((f) => (f.schedule.length < 7 ? { ...f, schedule: [...f.schedule, emptyScheduleRow()] } : f));
+  }
+  function removeScheduleRow(idx: number) {
+    setForm((f) => ({ ...f, schedule: f.schedule.filter((_, i) => i !== idx) }));
+  }
+
   /* Auto-slug (create only) */
   useEffect(() => {
     if (mode === "create" && !slugManuallyEdited) set("slug", makeSlug(form.title));
@@ -398,6 +421,9 @@ export function ListingEditor({ mode, role, initialValues, listingId, onSuccessR
         meetingPoint: isExperience && form.meetingPoint ? form.meetingPoint : undefined,
         eventDate: isEvent && form.eventDate ? form.eventDate : undefined,
         eventEndDate: isEvent && form.eventEndDate ? form.eventEndDate : undefined,
+        isRecurring: isEvent ? form.isRecurring : undefined,
+        recurrenceRule: isEvent && form.isRecurring ? form.recurrenceRule || undefined : undefined,
+        schedule: isEvent && form.isRecurring && form.schedule.length ? form.schedule : undefined,
         venue: isEvent && form.venue ? form.venue : undefined,
         ageRestriction: isEvent && form.ageRestriction ? form.ageRestriction : undefined,
         dresscode: isEvent && form.dresscode ? form.dresscode : undefined,
@@ -808,12 +834,16 @@ export function ListingEditor({ mode, role, initialValues, listingId, onSuccessR
         {isEvent && (
           <SectionCard title="🎫 Event details">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-              <Field label="Start date & time" optional>
-                <Input value={form.eventDate} onChange={(v) => set("eventDate", v)} type="datetime-local" />
-              </Field>
-              <Field label="End date & time" optional>
-                <Input value={form.eventEndDate} onChange={(v) => set("eventEndDate", v)} type="datetime-local" />
-              </Field>
+              {!form.isRecurring && (
+                <>
+                  <Field label="Start date & time" optional>
+                    <Input value={form.eventDate} onChange={(v) => set("eventDate", v)} type="datetime-local" />
+                  </Field>
+                  <Field label="End date & time" optional>
+                    <Input value={form.eventEndDate} onChange={(v) => set("eventEndDate", v)} type="datetime-local" />
+                  </Field>
+                </>
+              )}
               <Field label="Venue name" optional>
                 <Input value={form.venue} onChange={(v) => set("venue", v)} placeholder='"Papa Remo Beach Club"' />
               </Field>
@@ -842,6 +872,63 @@ export function ListingEditor({ mode, role, initialValues, listingId, onSuccessR
                 <Input value={form.ticketLink} onChange={(v) => set("ticketLink", v)} placeholder="https://…" type="url" />
               </Field>
             </div>
+
+            {/* Recurring toggle */}
+            <div className="flex items-center gap-3 pt-1">
+              <button
+                type="button"
+                onClick={() => setForm((f) => ({
+                  ...f,
+                  isRecurring: !f.isRecurring,
+                  schedule: !f.isRecurring && f.schedule.length === 0 ? [emptyScheduleRow()] : f.schedule,
+                }))}
+                className={`relative w-11 h-6 rounded-full transition-colors ${form.isRecurring ? "bg-amber" : "bg-border"}`}
+                aria-pressed={form.isRecurring}
+              >
+                <span className={`absolute top-0.5 left-0.5 size-5 rounded-full bg-white transition-transform shadow-sm ${form.isRecurring ? "translate-x-5" : ""}`} />
+              </button>
+              <span className="text-[13px] font-semibold text-dark">This is a recurring event</span>
+            </div>
+
+            {form.isRecurring && (
+              <div className="space-y-4">
+                <Field label="Recurrence label" optional hint="Short label shown on the event page">
+                  <Input value={form.recurrenceRule} onChange={(v) => set("recurrenceRule", v)}
+                    placeholder="e.g. Every Friday" />
+                </Field>
+
+                <div>
+                  <label className="block text-[13px] font-semibold text-dark mb-1.5">Weekly schedule</label>
+                  <p className="text-[12px] text-text3 mb-3">Add the days and times this event runs.</p>
+                  <div className="space-y-3">
+                    {form.schedule.map((row, i) => (
+                      <div key={i} className="flex items-center gap-2">
+                        <select value={row.day} onChange={(e) => updateSchedule(i, "day", e.target.value)}
+                          className={`${inputCls} flex-1 text-[16px]`}>
+                          <option value="">Day…</option>
+                          {DAYS_OF_WEEK.map((d) => <option key={d.value} value={d.value}>{d.label}</option>)}
+                        </select>
+                        <input type="time" value={row.startTime} onChange={(e) => updateSchedule(i, "startTime", e.target.value)}
+                          aria-label="Start time" className={`${inputCls} w-28 text-[16px]`} />
+                        <input type="time" value={row.endTime} onChange={(e) => updateSchedule(i, "endTime", e.target.value)}
+                          aria-label="End time" className={`${inputCls} w-28 text-[16px]`} />
+                        <button type="button" onClick={() => removeScheduleRow(i)}
+                          className="shrink-0 text-red-500 hover:text-red-700 transition-colors text-[13px] font-semibold px-2">
+                          Remove
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                  {form.schedule.length < 7 && (
+                    <button type="button" onClick={addScheduleRow}
+                      className="mt-3 flex items-center gap-1.5 text-[13px] font-semibold text-amber hover:text-[#D4901C] transition-colors">
+                      + Add day
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+
             <label className="flex items-center gap-2 cursor-pointer">
               <input type="checkbox" checked={form.isFree}
                 onChange={(e) => set("isFree", e.target.checked)}
