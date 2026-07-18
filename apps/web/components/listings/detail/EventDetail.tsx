@@ -490,6 +490,8 @@ function EventDetail({
                   isFree={isFree}
                   tiers={ticketTypes}
                   anchorId="tickets"
+                  isRecurring={isRecurring}
+                  schedule={schedule}
                 />
                 {ticketLink && (
                   <a
@@ -515,6 +517,8 @@ function EventDetail({
                     eventSanityId={listing._id}
                     isFree={isFree}
                     tiers={ticketTypes}
+                    isRecurring={isRecurring}
+                    schedule={schedule}
                   />
                   {ticketLink && (
                     <a
