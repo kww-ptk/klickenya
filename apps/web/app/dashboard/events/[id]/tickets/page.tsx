@@ -2,7 +2,8 @@ import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { adminClient } from "@/lib/supabase/admin";
-import { sanityClient } from "@/lib/sanity/client";
+import { resolveOwnedEvent } from "@/lib/events/ownedEvent";
+import DoorCodesPanel from "./DoorCodesPanel";
 
 export const metadata = { title: "Ticket sales — Klickenya" };
 
@@ -14,41 +15,12 @@ export default async function TicketsPage({ params }: { params: Promise<{ id: st
 
   // [id] is polymorphic — EITHER an events_pending row id OR a Sanity listing _id.
   // Tickets are keyed by the real Sanity _id (event_sanity_id), so resolve [id]
-  // down to that before querying ticket tables. Mirrors scan/page.tsx exactly.
-  let sanityEventId = "";
-  let eventTitle = "Event";
+  // down to that before querying ticket tables.
+  const owned = await resolveOwnedEvent(supabase, user.id, id);
+  if (!owned) notFound();
+  const { sanityEventId, eventTitle } = owned;
 
-  // 1. Try events_pending (host-scoped by RLS + explicit host_id filter).
-  const { data: hostProfile } = await supabase
-    .from("host_profiles")
-    .select("sanity_host_id")
-    .eq("user_id", user.id)
-    .maybeSingle();
-
-  const { data: pendingEvent } = await supabase
-    .from("events_pending")
-    .select("title, sanity_event_id")
-    .eq("id", id)
-    .eq("host_id", user.id)
-    .maybeSingle();
-
-  if (pendingEvent?.sanity_event_id) {
-    sanityEventId = pendingEvent.sanity_event_id;
-    eventTitle = pendingEvent.title ?? "Event";
-  } else {
-    // 2. Fallback: id is a Sanity listing _id — scope to this host for ownership.
-    const sanityEvent = await sanityClient.fetch<{ _id: string; title: string } | null>(
-      `*[_type == "listing" && _id == $id && (hostId == $userId || host._ref == $sanityHostId)][0]{ _id, title }`,
-      { id, userId: user.id, sanityHostId: hostProfile?.sanity_host_id ?? "" },
-    );
-    if (!sanityEvent) notFound();
-    sanityEventId = sanityEvent._id;
-    eventTitle = sanityEvent.title ?? "Event";
-  }
-
-  if (!sanityEventId) notFound();
-
-  const [{ data: orders }, { data: tickets }] = await Promise.all([
+  const [{ data: orders }, { data: tickets }, { data: doorCodes }] = await Promise.all([
     adminClient
       .from("ticket_orders")
       .select("id, status, total_kes, platform_fee_bps, buyer_name, buyer_email, created_at, lines")
@@ -61,6 +33,12 @@ export default async function TicketsPage({ params }: { params: Promise<{ id: st
       .eq("event_sanity_id", sanityEventId)
       .order("created_at", { ascending: false })
       .limit(1000),
+    adminClient
+      .from("event_door_codes")
+      .select("id, label, created_at")
+      .eq("event_sanity_id", sanityEventId)
+      .is("revoked_at", null)
+      .order("created_at", { ascending: false }),
   ]);
 
   const paid = (orders ?? []).filter((o) => o.status === "paid");
@@ -100,6 +78,8 @@ export default async function TicketsPage({ params }: { params: Promise<{ id: st
           Payout = gross − KSh {fees.toLocaleString("en-KE")} platform fee. Paid out manually after the event.
         </p>
       )}
+
+      <DoorCodesPanel eventId={id} initialCodes={doorCodes ?? []} />
 
       <h2 className="mt-8 font-bold">Tickets</h2>
       <div className="mt-3 divide-y divide-neutral-100 rounded-xl border border-neutral-200">
