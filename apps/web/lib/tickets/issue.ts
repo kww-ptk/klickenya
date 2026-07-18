@@ -13,6 +13,7 @@ export type TicketRow = {
   price_kes: number;
   status: string;
   occurrence_date: string | null;
+  attendee_name: string;
 };
 
 export async function issueTicketsForOrder(orderId: string): Promise<TicketRow[]> {
@@ -26,13 +27,13 @@ export async function issueTicketsForOrder(orderId: string): Promise<TicketRow[]
   // Idempotency guard — webhook retries and callback-poller races both land here.
   const { data: existing } = await adminClient
     .from("tickets")
-    .select("id, code, tier_key, tier_name, price_kes, status, occurrence_date")
+    .select("id, code, tier_key, tier_name, price_kes, status, occurrence_date, attendee_name")
     .eq("order_id", orderId);
   if (existing && existing.length > 0) return existing as TicketRow[];
 
-  const lines = order.lines as OrderLine[];
+  const lines = order.lines as (OrderLine & { names?: string[] })[];
   const rows = lines.flatMap((line) =>
-    Array.from({ length: line.qty }, () => ({
+    Array.from({ length: line.qty }, (_unused, i) => ({
       order_id: order.id,
       event_sanity_id: order.event_sanity_id,
       occurrence_date: order.occurrence_date,
@@ -40,7 +41,7 @@ export async function issueTicketsForOrder(orderId: string): Promise<TicketRow[]
       tier_name: line.tier_name,
       price_kes: line.unit_price_kes,
       code: generateTicketCode(),
-      attendee_name: order.buyer_name,
+      attendee_name: (line.names?.[i] ?? "").trim() || order.buyer_name,
       attendee_email: order.buyer_email,
     })),
   );
@@ -48,7 +49,7 @@ export async function issueTicketsForOrder(orderId: string): Promise<TicketRow[]
   const { data: inserted, error: insErr } = await adminClient
     .from("tickets")
     .insert(rows)
-    .select("id, code, tier_key, tier_name, price_kes, status, occurrence_date");
+    .select("id, code, tier_key, tier_name, price_kes, status, occurrence_date, attendee_name");
   if (insErr || !inserted) throw new Error(`Ticket insert failed: ${insErr?.message}`);
 
   // Bridge into event_attendees so WhosJoining counts, host attendee CRM,

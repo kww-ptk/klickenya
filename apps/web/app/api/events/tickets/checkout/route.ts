@@ -17,6 +17,7 @@ const checkoutSchema = z.object({
   phone: z.string().trim().max(20).optional(),
   userId: z.string().uuid().optional(),
   tiers: z.array(z.object({ tierKey: z.string().max(60), qty: z.number().int() })).min(1).max(5),
+  attendees: z.array(z.object({ tierKey: z.string().max(60), name: z.string().trim().max(80) })).max(20).optional(),
   couponCode: z.string().trim().toUpperCase().min(1).max(40).optional(),
   occurrenceDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
   turnstileToken: z.string().min(1),
@@ -86,6 +87,16 @@ export async function POST(req: NextRequest) {
 
     const feeBps = Number(process.env.PLATFORM_TICKET_FEE_BPS ?? 0);
     const totals = computeTotals(lines, feeBps);
+
+    // Attach per-ticket attendee names to each line (labels only — pricing/reserve
+    // keep using the plain `lines`). Only the stored `lines` column carries `names`.
+    const attendees = body.attendees ?? [];
+    const linesWithNames = lines.map((l) => {
+      const names = attendees.filter((a) => a.tierKey === l.tier_key).map((a) => a.name);
+      // pad/truncate to qty; blanks are fine (issuance falls back to buyer name)
+      const padded = Array.from({ length: l.qty }, (_, i) => (names[i] ?? "").trim());
+      return { ...l, names: padded };
+    });
 
     // ── Coupon (optional) ──────────────────────────────────────────────
     let couponId: string | null = null;
@@ -158,7 +169,7 @@ export async function POST(req: NextRequest) {
         platform_fee_bps: isFreeOrder ? 0 : feeBps,
         coupon_id: couponId,
         discount_kes: discountKes,
-        lines,
+        lines: linesWithNames,
         provider: isFreeOrder ? "free" : "paystack",
         paid_at: isFreeOrder ? new Date().toISOString() : null,
         expires_at: isFreeOrder
@@ -189,7 +200,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({
         orderId: order.id,
         status: "paid",
-        tickets: tickets.map((t) => ({ code: t.code, tierName: t.tier_name })),
+        tickets: tickets.map((t) => ({ code: t.code, tierName: t.tier_name, attendeeName: t.attendee_name })),
       });
     }
 
