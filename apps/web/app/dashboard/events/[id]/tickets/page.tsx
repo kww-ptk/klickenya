@@ -2,8 +2,10 @@ import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { adminClient } from "@/lib/supabase/admin";
+import { sanityClient } from "@/lib/sanity/client";
 import { resolveOwnedEvent } from "@/lib/events/ownedEvent";
 import DoorCodesPanel from "./DoorCodesPanel";
+import TierManager from "./TierManager";
 
 export const metadata = { title: "Ticket sales — Klickenya" };
 
@@ -40,6 +42,15 @@ export default async function TicketsPage({ params }: { params: Promise<{ id: st
       .is("revoked_at", null)
       .order("created_at", { ascending: false }),
   ]);
+
+  const tierDoc = await sanityClient.fetch<{ ticketTypes: { _key: string; name: string; price: number; description?: string; available?: number; isSoldOut?: boolean }[] | null } | null>(
+    `*[_type == "listing" && _id == $id][0]{ ticketTypes[]{_key, name, price, description, available, isSoldOut} }`,
+    { id: sanityEventId },
+  );
+  const { data: counters } = await adminClient
+    .from("event_ticket_counters").select("tier_key, sold").eq("event_sanity_id", sanityEventId);
+  const soldByKey = new Map((counters ?? []).map((c) => [c.tier_key, c.sold]));
+  const initialTiers = (tierDoc?.ticketTypes ?? []).map((t) => ({ ...t, sold: soldByKey.get(t._key) ?? 0 }));
 
   const paid = (orders ?? []).filter((o) => o.status === "paid");
   const gross = paid.reduce((s, o) => s + o.total_kes, 0);
@@ -80,6 +91,8 @@ export default async function TicketsPage({ params }: { params: Promise<{ id: st
       )}
 
       <DoorCodesPanel eventId={id} initialCodes={doorCodes ?? []} />
+
+      <TierManager eventId={id} initialTiers={initialTiers} />
 
       <h2 className="mt-8 font-bold">Tickets</h2>
       <div className="mt-3 divide-y divide-neutral-100 rounded-xl border border-neutral-200">
