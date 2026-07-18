@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Loader2, Plus, Trash2, Upload } from "lucide-react";
 import { cn } from "@/lib/utils";
+import VenueListingPicker from "@/components/events/VenueListingPicker";
 
 /* ── Constants ──────────────────────────────────────── */
 
@@ -155,6 +156,7 @@ export function AddEventForm({ hostDisplayName, sanityHostId }: AddEventFormProp
   const [doorsOpen, setDoorsOpen] = useState("");
   const [venueName, setVenueName] = useState("");
   const [venueAddress, setVenueAddress] = useState("");
+  const [venueListing, setVenueListing] = useState<{ _id: string; title: string } | null>(null);
   const [isRecurring, setIsRecurring] = useState(false);
   const [recurrenceRule, setRecurrenceRule] = useState("");
   const [schedule, setSchedule] = useState<ScheduleRow[]>([emptySchedule()]);
@@ -252,6 +254,7 @@ export function AddEventForm({ hostDisplayName, sanityHostId }: AddEventFormProp
       formData.set("doorsOpen", doorsOpen);
       formData.set("venueName", venueName);
       formData.set("venueAddress", venueAddress);
+      formData.set("venueListingId", venueListing?._id ?? "");
       formData.set("isRecurring", String(isRecurring));
       formData.set("recurrenceRule", recurrenceRule);
       if (isRecurring) {
@@ -475,6 +478,11 @@ export function AddEventForm({ hostDisplayName, sanityHostId }: AddEventFormProp
           <div>
             <label className={labelCls}>Venue address</label>
             <input className={inputCls} value={venueAddress} onChange={(e) => setVenueAddress(e.target.value)} placeholder="Full address" />
+          </div>
+
+          <div>
+            <label className={labelCls}>Venue (Klickenya listing)</label>
+            <VenueListingPicker value={venueListing} onChange={setVenueListing} />
           </div>
 
           {/* Recurring toggle */}

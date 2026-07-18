@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
-import { Star, MapPin, CalendarDays, Clock, Users, ExternalLink } from "lucide-react";
+import { Star, MapPin, CalendarDays, Clock, Users, ExternalLink, ArrowRight } from "lucide-react";
+import { listingPublicPath } from "@/lib/listings/url";
 import { PortableTextRenderer } from "@/components/blog/PortableTextRenderer";
 import { PhotoGallery } from "@/components/listings/widgets/PhotoGallery";
 import { Breadcrumb } from "@/components/listings/widgets/Breadcrumb";
@@ -107,6 +108,16 @@ function EventDetail({
   const isRecurring = listing.isRecurring === true;
   const recurrenceRule: string | null = listing.recurrenceRule ?? null;
   const venue: string | null = listing.venue ?? null;
+  const venueListingRef: {
+    title?: string;
+    type?: string;
+    city?: string | null;
+    slug?: string | null;
+  } | null = listing.venueListingRef ?? null;
+  const venueLink =
+    venueListingRef?.slug && venueListingRef.type
+      ? listingPublicPath(venueListingRef.type, venueListingRef.city, venueListingRef.slug)
+      : null;
   const venueAddress: string | null = listing.venueAddress ?? null;
   const doorsOpen: string | null = listing.doorsOpen ?? null;
   const ageRestriction: string | null = listing.ageRestriction ?? null;
@@ -224,6 +235,15 @@ function EventDetail({
                     <Clock className="size-3.5 shrink-0" />
                     <span>Doors open at {doorsOpen}</span>
                   </div>
+                )}
+                {venueLink && (
+                  <Link
+                    href={venueLink}
+                    className="group inline-flex items-center gap-1.5 text-[13px] font-semibold text-purple-600 hover:text-purple-700 transition-colors mt-3 pt-3 border-t border-border"
+                  >
+                    At {venueListingRef?.title ?? venue}
+                    <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />
+                  </Link>
                 )}
               </div>
 
