@@ -11,6 +11,12 @@ interface WeekendEventCardProps {
   eventDate: string;
   isFree: boolean;
   priceFrom: number | null;
+  /**
+   * Optional recurrence label (e.g. "Every Friday"). Used as a fallback for
+   * recurring / undated events where `eventDate` is missing or unparseable, so
+   * the date badge and weekday line stay meaningful instead of showing NaN.
+   */
+  recurrenceRule?: string | null;
 }
 
 const SUBCATEGORY_LABELS: Record<string, string> = {
@@ -32,11 +38,17 @@ function WeekendEventCard({
   eventDate,
   isFree,
   priceFrom,
+  recurrenceRule,
 }: WeekendEventCardProps) {
   const date = new Date(eventDate);
-  const day = date.getDate();
-  const month = date.toLocaleDateString("en-US", { month: "short" }).toUpperCase();
-  const weekday = date.toLocaleDateString("en-US", { weekday: "short" });
+  const hasValidDate = !Number.isNaN(date.getTime());
+  const day = hasValidDate ? date.getDate() : null;
+  const month = hasValidDate
+    ? date.toLocaleDateString("en-US", { month: "short" }).toUpperCase()
+    : null;
+  const weekday = hasValidDate
+    ? date.toLocaleDateString("en-US", { weekday: "short" })
+    : null;
   const citySlug = city.toLowerCase().replace(/\s+/g, "-");
 
   return (
@@ -58,11 +70,19 @@ function WeekendEventCard({
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
 
-        {/* Date badge */}
-        <div className="absolute top-3 left-3 bg-white rounded-[12px] px-3 py-1.5 text-center shadow-lg">
-          <p className="text-[10px] font-bold uppercase tracking-wide text-purple-600">{month}</p>
-          <p className="text-[20px] font-extrabold leading-none text-zinc-900">{day}</p>
-        </div>
+        {/* Date badge — concrete date, or a recurrence pill for undated/recurring events */}
+        {hasValidDate ? (
+          <div className="absolute top-3 left-3 bg-white rounded-[12px] px-3 py-1.5 text-center shadow-lg">
+            <p className="text-[10px] font-bold uppercase tracking-wide text-purple-600">{month}</p>
+            <p className="text-[20px] font-extrabold leading-none text-zinc-900">{day}</p>
+          </div>
+        ) : (
+          <div className="absolute top-3 left-3 bg-white rounded-[12px] px-3 py-1.5 text-center shadow-lg">
+            <p className="text-[12px] font-bold uppercase tracking-wide text-purple-600 leading-none">
+              {recurrenceRule || "TBA"}
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Body */}
@@ -74,8 +94,12 @@ function WeekendEventCard({
         <div className="flex items-center gap-1.5 text-[13px] text-white/50 mb-3">
           <MapPin className="size-3.5 shrink-0" />
           <span>{city}</span>
-          <span className="mx-1">·</span>
-          <span>{weekday}</span>
+          {(weekday || recurrenceRule) && (
+            <>
+              <span className="mx-1">·</span>
+              <span>{weekday ?? recurrenceRule}</span>
+            </>
+          )}
         </div>
 
         <div className="flex items-center gap-2">

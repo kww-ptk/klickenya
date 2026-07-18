@@ -7,6 +7,7 @@ import {
   EVENT_BY_SLUG_QUERY,
   LISTING_SLUGS_QUERY,
   SIMILAR_LISTINGS_QUERY,
+  EVENTS_AT_VENUE_QUERY,
 } from "@/lib/sanity/queries";
 import { urlForImage } from "@/lib/sanity/image";
 import { JsonLd } from "@/components/seo/JsonLd";
@@ -18,6 +19,7 @@ import { RestaurantDetail } from "@/components/listings/detail/RestaurantDetail"
 import { ExperienceDetail } from "@/components/listings/detail/ExperienceDetail";
 import { EventDetail } from "@/components/listings/detail/EventDetail";
 import { ServiceDetail } from "@/components/listings/detail/ServiceDetail";
+import { EventsHere, type EventsHereItem } from "@/components/listings/EventsHere";
 
 export const dynamic = 'force-static';
 export const revalidate = 3600;
@@ -222,6 +224,28 @@ export default async function ListingDetailPage({ params }: PageProps) {
     query: SIMILAR_LISTINGS_QUERY,
     params: { type: sanityType, city: cityName, slug },
   });
+
+  // Events happening at THIS listing (its venueListing points here). Runs for
+  // every listing type — any listing can be a venue. Single GROQ call reusing
+  // the page's cached sanityFetch.
+  const { data: venueEvents } = await sanityFetch({
+    query: EVENTS_AT_VENUE_QUERY,
+    params: { id: listing._id },
+  });
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const eventsHereItems: EventsHereItem[] = (venueEvents ?? []).map((e: any) => ({
+    id: e._id,
+    title: e.title ?? "Untitled",
+    slug: e.slug ?? "",
+    city: e.city ?? "",
+    subcategory: e.subcategory ?? null,
+    coverPhotoUrl: e.coverPhotoUrl ?? null,
+    eventDate: e.eventDate ?? "",
+    isFree: e.isFree ?? false,
+    priceFrom: e.priceFrom ?? e.price ?? null,
+    isRecurring: e.isRecurring ?? false,
+    recurrenceRule: e.recurrenceRule ?? null,
+  }));
 
   // Fetch Supabase menu data for restaurants only
   const isRestaurantListing =
@@ -556,6 +580,11 @@ export default async function ListingDetailPage({ params }: PageProps) {
     <>
       <JsonLd schema={jsonLd} />
       <Detail {...detailProps} />
+      {eventsHereItems.length > 0 && (
+        <div className="max-w-[1280px] mx-auto px-5 md:px-10">
+          <EventsHere events={eventsHereItems} />
+        </div>
+      )}
     </>
   );
 }

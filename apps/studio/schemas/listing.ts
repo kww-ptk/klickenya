@@ -754,6 +754,16 @@ export default defineType({
       group: 'event',
     }),
     defineField({
+      name: 'venueListing',
+      title: 'Venue (Klickenya listing)',
+      type: 'reference',
+      to: [{ type: 'listing' }],
+      description:
+        'Optional — link this event to a venue listing on Klickenya. Independent of the venue name/address above.',
+      hidden: ({ document }: HiddenCtx) => !isEvent({ document }),
+      group: 'event',
+    }),
+    defineField({
       name: 'performers',
       title: 'Performers / Lineup',
       type: 'array',

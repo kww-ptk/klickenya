@@ -50,7 +50,11 @@ export const listingInputSchema = z.object({
   meetingPoint: z.string().optional(),
   eventDate: z.string().optional(),
   eventEndDate: z.string().optional(),
+  isRecurring: z.boolean().optional(),
+  recurrenceRule: z.string().optional(),
+  schedule: z.array(z.object({ day: z.string(), startTime: z.string(), endTime: z.string().optional() })).optional(),
   venue: z.string().optional(),
+  venueListingId: z.string().optional(),
   ageRestriction: z.string().optional(),
   dresscode: z.string().optional(),
   venueAddress: z.string().optional(),
@@ -69,6 +73,9 @@ export const listingInputSchema = z.object({
 
 export type ListingInput = z.infer<typeof listingInputSchema>;
 
+/** Weekly recurring-event schedule row (client form state). */
+export interface ListingScheduleRow { day: string; startTime: string; endTime: string; }
+
 /* ── Client-side form state shape (all strings, for controlled inputs) ── */
 export interface ListingFormValues {
   title: string; slug: string; type: string; subcategory: string; city: string; county: string; address: string;
@@ -79,7 +86,8 @@ export interface ListingFormValues {
   amenities: string[]; tags: string[]; photos: UploadedImage[]; photoConsent: string;
   cuisine: string[]; priceRange: string; openingHours: string; atmosphere: string; reservationRequired: boolean;
   duration: string; maxGroupSize: string; difficulty: string; minAge: string; languages: string[]; meetingPoint: string;
-  eventDate: string; eventEndDate: string; venue: string; ageRestriction: string; dresscode: string;
+  eventDate: string; eventEndDate: string; isRecurring: boolean; recurrenceRule: string; schedule: ListingScheduleRow[];
+  venue: string; venueListingId: string; venueListingTitle: string; ageRestriction: string; dresscode: string;
   venueAddress: string; doorsOpen: string; isFree: boolean; priceFrom: string; ticketLink: string; organizer: string;
   serviceArea: string; responseTime: string; providerInfo: string;
   seoTitle: string; seoDescription: string;
@@ -94,7 +102,8 @@ export const emptyListingForm: ListingFormValues = {
   amenities: [], tags: [], photos: [], photoConsent: "",
   cuisine: [], priceRange: "", openingHours: "", atmosphere: "", reservationRequired: false,
   duration: "", maxGroupSize: "", difficulty: "", minAge: "", languages: [], meetingPoint: "",
-  eventDate: "", eventEndDate: "", venue: "", ageRestriction: "", dresscode: "",
+  eventDate: "", eventEndDate: "", isRecurring: false, recurrenceRule: "", schedule: [],
+  venue: "", venueListingId: "", venueListingTitle: "", ageRestriction: "", dresscode: "",
   venueAddress: "", doorsOpen: "", isFree: false, priceFrom: "", ticketLink: "", organizer: "",
   serviceArea: "", responseTime: "", providerInfo: "",
   seoTitle: "", seoDescription: "",
@@ -214,7 +223,22 @@ export function inputToSanityFields(data: ListingInput) {
     meetingPoint: isExperience ? data.meetingPoint || undefined : undefined,
     eventDate: isEvent ? data.eventDate || undefined : undefined,
     eventEndDate: isEvent ? data.eventEndDate || undefined : undefined,
+    isRecurring: isEvent ? (data.isRecurring ?? false) : undefined,
+    recurrenceRule: isEvent && data.isRecurring ? (data.recurrenceRule || undefined) : undefined,
+    schedule: isEvent && data.isRecurring
+      ? (data.schedule ?? [])
+          .filter((s) => s.day && s.startTime)
+          .map((s) => ({
+            _key: globalThis.crypto.randomUUID(),
+            day: s.day,
+            startTime: s.startTime,
+            ...(s.endTime ? { endTime: s.endTime } : {}),
+          }))
+      : undefined,
     venue: isEvent ? data.venue || undefined : undefined,
+    venueListing: isEvent
+      ? (data.venueListingId ? { _type: "reference", _ref: data.venueListingId } : null)
+      : undefined,
     ageRestriction: isEvent ? data.ageRestriction || undefined : undefined,
     dresscode: isEvent ? data.dresscode || undefined : undefined,
     venueAddress: isEvent ? data.venueAddress || undefined : undefined,
@@ -271,7 +295,15 @@ export function sanityDocToForm(doc: Record<string, any>): ListingFormValues {
     languages: doc.languages ?? [], meetingPoint: doc.meetingPoint ?? "",
     eventDate: doc.eventDate ? String(doc.eventDate).slice(0, 16) : "",
     eventEndDate: doc.eventEndDate ? String(doc.eventEndDate).slice(0, 16) : "",
-    venue: doc.venue ?? "", ageRestriction: doc.ageRestriction ?? "", dresscode: doc.dresscode ?? "",
+    isRecurring: !!doc.isRecurring,
+    recurrenceRule: doc.recurrenceRule ?? "",
+    schedule: (doc.schedule ?? []).map((s: { day?: string; startTime?: string; endTime?: string }) => ({
+      day: s.day ?? "", startTime: s.startTime ?? "", endTime: s.endTime ?? "",
+    })),
+    venue: doc.venue ?? "",
+    venueListingId: doc.venueListingId ?? doc.venueListing?._ref ?? "",
+    venueListingTitle: doc.venueListingRef?.title ?? "",
+    ageRestriction: doc.ageRestriction ?? "", dresscode: doc.dresscode ?? "",
     venueAddress: doc.venueAddress ?? "", doorsOpen: doc.doorsOpen ?? "", isFree: !!doc.isFree,
     priceFrom: doc.priceFrom != null ? String(doc.priceFrom) : "", ticketLink: doc.ticketLink ?? "",
     organizer: doc.organizer ?? "",

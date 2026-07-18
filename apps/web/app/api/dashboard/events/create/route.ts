@@ -112,6 +112,7 @@ export async function POST(req: NextRequest) {
     const doorsOpen = formData.get("doorsOpen") as string;
     const venueName = (formData.get("venueName") as string)?.trim();
     const venueAddress = (formData.get("venueAddress") as string)?.trim();
+    const venueListingId = (formData.get("venueListingId") as string)?.trim();
     const isRecurring = formData.get("isRecurring") === "true";
     const recurrenceRule = (formData.get("recurrenceRule") as string)?.trim();
     const scheduleJson = formData.get("schedule") as string | null;
@@ -210,6 +211,7 @@ export async function POST(req: NextRequest) {
       doorsOpen: doorsOpen || undefined,
       venue: venueName || undefined,
       venueAddress: venueAddress || undefined,
+      ...(venueListingId ? { venueListing: { _type: "reference", _ref: venueListingId } } : {}),
       isRecurring,
       recurrenceRule: isRecurring ? recurrenceRule : undefined,
       schedule: isRecurring && scheduleJson
