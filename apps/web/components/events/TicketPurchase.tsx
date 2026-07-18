@@ -77,12 +77,15 @@ export function TicketPurchase({
   }, [isRecurring, occurrenceDate, occurrenceDates]);
 
   const [qty, setQty] = useState<Record<string, number>>({});
+  // Per-ticket attendee names, keyed by tier _key. names[tierKey] has length
+  // equal to that tier's qty. Kept in sync inside the +/- qty handlers below.
+  const [names, setNames] = useState<Record<string, string[]>>({});
   const [name, setName] = useState(defaultName ?? "");
   const [email, setEmail] = useState(defaultEmail ?? "");
   const [token, setToken] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [freeDone, setFreeDone] = useState<{ code: string }[] | null>(null);
+  const [freeDone, setFreeDone] = useState<{ code: string; tierName: string; attendeeName: string }[] | null>(null);
   const [couponCode, setCouponCode] = useState("");
   const [couponResult, setCouponResult] = useState<{ discount_kes: number; total_kes: number } | null>(null);
   const [couponMsg, setCouponMsg] = useState<string | null>(null);
@@ -151,6 +154,14 @@ export function TicketPurchase({
     if (selected.length === 0) { setError("Pick at least one ticket"); return; }
     if (isRecurring && !occurrenceDate) { setError("Pick a date"); return; }
     if (!name.trim() || !email.trim()) { setError("Name and email are required"); return; }
+    // One attendee entry per ticket, in the same tier order as `selected`.
+    // Falls back to the buyer name when an attendee field is left blank.
+    const attendees = selected.flatMap((line) =>
+      Array.from({ length: line.qty }, (_, i) => ({
+        tierKey: line.tierKey,
+        name: (names[line.tierKey]?.[i] ?? "").trim() || name,
+      })),
+    );
     setBusy(true);
     try {
       const res = await fetch("/api/events/tickets/checkout", {
@@ -159,6 +170,7 @@ export function TicketPurchase({
         body: JSON.stringify({
           eventSanityId, name, email, userId,
           tiers: selected,
+          attendees,
           turnstileToken: token || "dev",
           ...(isRecurring ? { occurrenceDate } : {}),
           ...(couponResult ? { couponCode: couponCode.trim().toUpperCase() } : {}),
@@ -180,14 +192,26 @@ export function TicketPurchase({
 
   if (freeDone) {
     return (
-      <div className="rounded-2xl border border-green-200 bg-green-50 p-5 text-center">
-        <p className="font-bold text-green-800">You&apos;re in! 🎟️</p>
-        <p className="mt-1 text-sm text-green-700">
+      <div className="rounded-2xl border border-green-200 bg-green-50 p-5">
+        <p className="text-center font-bold text-green-800">You&apos;re in! 🎟️</p>
+        <p className="mt-1 text-center text-sm text-green-700">
           Ticket{freeDone.length > 1 ? "s" : ""} sent to your email with QR code{freeDone.length > 1 ? "s" : ""}.
         </p>
-        <a href={`/t/${freeDone[0].code}`} className="mt-3 inline-block text-sm font-semibold text-green-800 underline">
-          View your ticket →
-        </a>
+        <div className="mt-4 space-y-2">
+          {freeDone.map((t) => (
+            <a
+              key={t.code}
+              href={`/t/${t.code}`}
+              className="flex items-center justify-between gap-3 rounded-xl border border-green-200 bg-white p-3 text-left"
+            >
+              <span className="min-w-0">
+                <span className="block truncate text-sm font-semibold text-green-900">{t.attendeeName}</span>
+                <span className="block truncate text-xs text-green-700">{t.tierName}</span>
+              </span>
+              <span className="shrink-0 text-sm font-semibold text-green-800 underline">View QR →</span>
+            </a>
+          ))}
+        </div>
       </div>
     );
   }
@@ -238,16 +262,59 @@ export function TicketPurchase({
             </div>
             <div className="flex items-center gap-2">
               <button type="button" aria-label={`Fewer ${t.name}`}
-                onClick={() => { setQty((q) => ({ ...q, [t._key]: Math.max(0, (q[t._key] ?? 0) - 1) })); resetCoupon(); }}
+                onClick={() => {
+                  const nextQ = Math.max(0, (qty[t._key] ?? 0) - 1);
+                  setQty((q) => ({ ...q, [t._key]: nextQ }));
+                  setNames((prev) => ({ ...prev, [t._key]: (prev[t._key] ?? []).slice(0, nextQ) }));
+                  resetCoupon();
+                }}
                 className="h-9 w-9 rounded-full border text-lg leading-none">−</button>
               <span className="w-5 text-center text-sm font-semibold">{qty[t._key] ?? 0}</span>
               <button type="button" aria-label={`More ${t.name}`}
-                onClick={() => { setQty((q) => ({ ...q, [t._key]: Math.min(10, (q[t._key] ?? 0) + 1) })); resetCoupon(); }}
+                onClick={() => {
+                  const nextQ = Math.min(10, (qty[t._key] ?? 0) + 1);
+                  setQty((q) => ({ ...q, [t._key]: nextQ }));
+                  setNames((prev) => {
+                    const arr = (prev[t._key] ?? []).slice(0, nextQ);
+                    while (arr.length < nextQ) arr.push(name); // prefill new slots with buyer name
+                    return { ...prev, [t._key]: arr };
+                  });
+                  resetCoupon();
+                }}
                 className="h-9 w-9 rounded-full border text-lg leading-none">+</button>
             </div>
           </div>
         ))}
       </div>
+      {selected.length > 0 && (
+        <div className="mt-3">
+          <p className="text-sm font-semibold text-neutral-700">Who&apos;s each ticket for?</p>
+          <div className="mt-2 space-y-2">
+            {effectiveTiers
+              .filter((t) => (qty[t._key] ?? 0) > 0)
+              .flatMap((t) =>
+                Array.from({ length: qty[t._key] ?? 0 }, (_, i) => (
+                  <input
+                    key={`${t._key}-${i}`}
+                    value={names[t._key]?.[i] ?? ""}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      setNames((prev) => {
+                        const arr = (prev[t._key] ?? []).slice();
+                        while (arr.length <= i) arr.push(name);
+                        arr[i] = v;
+                        return { ...prev, [t._key]: arr };
+                      });
+                    }}
+                    placeholder={`${t.name} · Ticket ${i + 1}`}
+                    aria-label={`${t.name} · Ticket ${i + 1}`}
+                    className="w-full rounded-lg border border-neutral-300 px-3 py-3 text-[16px]"
+                  />
+                )),
+              )}
+          </div>
+        </div>
+      )}
       <div className="mt-3 space-y-2">
         <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name"
           className="w-full rounded-lg border border-neutral-300 px-3 py-3 text-[16px]" />
