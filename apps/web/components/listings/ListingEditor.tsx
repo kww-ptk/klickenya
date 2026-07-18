@@ -12,6 +12,7 @@ import {
   DEFAULT_PRICE_UNIT_BY_TYPE,
 } from "@/lib/constants/listing";
 import { ImageUploader } from "@/components/shared/ImageUploader";
+import VenueListingPicker from "@/components/events/VenueListingPicker";
 import { emptyListingForm, type ListingFormValues, type ListingScheduleRow } from "@/lib/listings/listingFields";
 
 /* ---------- Constants ---------- */
@@ -425,6 +426,7 @@ export function ListingEditor({ mode, role, initialValues, listingId, onSuccessR
         recurrenceRule: isEvent && form.isRecurring ? form.recurrenceRule || undefined : undefined,
         schedule: isEvent && form.isRecurring && form.schedule.length ? form.schedule : undefined,
         venue: isEvent && form.venue ? form.venue : undefined,
+        venueListingId: isEvent ? form.venueListingId || undefined : undefined,
         ageRestriction: isEvent && form.ageRestriction ? form.ageRestriction : undefined,
         dresscode: isEvent && form.dresscode ? form.dresscode : undefined,
         venueAddress: isEvent && form.venueAddress ? form.venueAddress : undefined,
@@ -849,6 +851,14 @@ export function ListingEditor({ mode, role, initialValues, listingId, onSuccessR
               </Field>
               <Field label="Venue address" optional>
                 <Input value={form.venueAddress} onChange={(v) => set("venueAddress", v)} placeholder="Full address" />
+              </Field>
+              <Field label="Venue (Klickenya listing)" optional>
+                <VenueListingPicker
+                  value={form.venueListingId ? { _id: form.venueListingId, title: form.venueListingTitle } : null}
+                  onChange={(v) =>
+                    setForm((f) => ({ ...f, venueListingId: v?._id ?? "", venueListingTitle: v?.title ?? "" }))
+                  }
+                />
               </Field>
               <Field label="Doors open" optional>
                 <Input value={form.doorsOpen} onChange={(v) => set("doorsOpen", v)} placeholder="e.g. 18:00" />

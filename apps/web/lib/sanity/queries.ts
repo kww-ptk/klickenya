@@ -931,7 +931,8 @@ export const LISTING_EDIT_QUERY = groq`
     cuisine, priceRange, openingHours, atmosphere, reservationRequired,
     duration, maxGroupSize, difficulty, minAge, languages, meetingPoint,
     eventDate, eventEndDate, isRecurring, recurrenceRule, schedule[]{ day, startTime, endTime },
-    venue, ageRestriction, dresscode, venueAddress, doorsOpen,
+    venue, "venueListingId": venueListing._ref, "venueListingRef": venueListing->{title},
+    ageRestriction, dresscode, venueAddress, doorsOpen,
     isFree, priceFrom, ticketLink, organizer,
     serviceArea, responseTime, providerInfo, seoTitle, seoDescription,
     hostId, "hostRef": host._ref

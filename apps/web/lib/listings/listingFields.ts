@@ -54,6 +54,7 @@ export const listingInputSchema = z.object({
   recurrenceRule: z.string().optional(),
   schedule: z.array(z.object({ day: z.string(), startTime: z.string(), endTime: z.string().optional() })).optional(),
   venue: z.string().optional(),
+  venueListingId: z.string().optional(),
   ageRestriction: z.string().optional(),
   dresscode: z.string().optional(),
   venueAddress: z.string().optional(),
@@ -86,7 +87,7 @@ export interface ListingFormValues {
   cuisine: string[]; priceRange: string; openingHours: string; atmosphere: string; reservationRequired: boolean;
   duration: string; maxGroupSize: string; difficulty: string; minAge: string; languages: string[]; meetingPoint: string;
   eventDate: string; eventEndDate: string; isRecurring: boolean; recurrenceRule: string; schedule: ListingScheduleRow[];
-  venue: string; ageRestriction: string; dresscode: string;
+  venue: string; venueListingId: string; venueListingTitle: string; ageRestriction: string; dresscode: string;
   venueAddress: string; doorsOpen: string; isFree: boolean; priceFrom: string; ticketLink: string; organizer: string;
   serviceArea: string; responseTime: string; providerInfo: string;
   seoTitle: string; seoDescription: string;
@@ -102,7 +103,7 @@ export const emptyListingForm: ListingFormValues = {
   cuisine: [], priceRange: "", openingHours: "", atmosphere: "", reservationRequired: false,
   duration: "", maxGroupSize: "", difficulty: "", minAge: "", languages: [], meetingPoint: "",
   eventDate: "", eventEndDate: "", isRecurring: false, recurrenceRule: "", schedule: [],
-  venue: "", ageRestriction: "", dresscode: "",
+  venue: "", venueListingId: "", venueListingTitle: "", ageRestriction: "", dresscode: "",
   venueAddress: "", doorsOpen: "", isFree: false, priceFrom: "", ticketLink: "", organizer: "",
   serviceArea: "", responseTime: "", providerInfo: "",
   seoTitle: "", seoDescription: "",
@@ -235,6 +236,9 @@ export function inputToSanityFields(data: ListingInput) {
           }))
       : undefined,
     venue: isEvent ? data.venue || undefined : undefined,
+    venueListing: isEvent
+      ? (data.venueListingId ? { _type: "reference", _ref: data.venueListingId } : null)
+      : undefined,
     ageRestriction: isEvent ? data.ageRestriction || undefined : undefined,
     dresscode: isEvent ? data.dresscode || undefined : undefined,
     venueAddress: isEvent ? data.venueAddress || undefined : undefined,
@@ -296,7 +300,10 @@ export function sanityDocToForm(doc: Record<string, any>): ListingFormValues {
     schedule: (doc.schedule ?? []).map((s: { day?: string; startTime?: string; endTime?: string }) => ({
       day: s.day ?? "", startTime: s.startTime ?? "", endTime: s.endTime ?? "",
     })),
-    venue: doc.venue ?? "", ageRestriction: doc.ageRestriction ?? "", dresscode: doc.dresscode ?? "",
+    venue: doc.venue ?? "",
+    venueListingId: doc.venueListingId ?? doc.venueListing?._ref ?? "",
+    venueListingTitle: doc.venueListingRef?.title ?? "",
+    ageRestriction: doc.ageRestriction ?? "", dresscode: doc.dresscode ?? "",
     venueAddress: doc.venueAddress ?? "", doorsOpen: doc.doorsOpen ?? "", isFree: !!doc.isFree,
     priceFrom: doc.priceFrom != null ? String(doc.priceFrom) : "", ticketLink: doc.ticketLink ?? "",
     organizer: doc.organizer ?? "",
