@@ -554,6 +554,7 @@ export default async function ListingDetailPage({ params }: PageProps) {
     recentBookings,
     hasPms,
     reservationsConfig,
+    eventsHere: eventsHereItems,
   };
 
   const Detail = (() => {
@@ -580,7 +581,9 @@ export default async function ListingDetailPage({ params }: PageProps) {
     <>
       <JsonLd schema={jsonLd} />
       <Detail {...detailProps} />
-      {eventsHereItems.length > 0 && (
+      {/* Restaurants render "Events happening here" under the menu inside
+          RestaurantDetail; every other listing type renders it here. */}
+      {listing.subcategory !== "restaurants" && sanityType !== "restaurant" && eventsHereItems.length > 0 && (
         <div className="max-w-[1280px] mx-auto px-5 md:px-10">
           <EventsHere events={eventsHereItems} />
         </div>
