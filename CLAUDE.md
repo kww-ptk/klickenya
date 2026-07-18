@@ -10,7 +10,7 @@ Stack: Next.js 15 App Router · Sanity (content) · Supabase (auth + dynamic dat
 Monorepo: apps/web · apps/studio · packages/shared · packages/database.
 
 ## Current state (as of audit May 8, 2026)
-Migration count: 079 (last: 079_event_ticketing.sql)
+Migration count: 081 (last: 081_event_coupons.sql)
 Missing on disk: 046, 047, 050 (squashed or never committed — don't reuse these numbers)
 Collision on disk: 073 has TWO files (073_partner_linkage.sql + 073_staff_cross_station_access.sql) — historical, don't reuse 073
 LIVE and working end-to-end:
@@ -26,7 +26,7 @@ LIVE and working end-to-end:
   - Table reservations: /dashboard/listings/[id]/reservations (migrations 049–053)
   - Klickenya Kitchen: stock, recipes, purchase orders, auto-deduction, reports (migrations 060–066)
   - Events system: /dashboard/events — add event form, attendees, admin review
-  - Event ticketing: Paystack checkout (M-Pesa/card) + unified free+paid QR tickets, door scanner at /dashboard/events/[id]/scan, ledger + manual host payouts (migration 079)
+  - Event ticketing: Paystack checkout (M-Pesa/card) + unified free+paid QR tickets, door scanner at /dashboard/events/[id]/scan, ledger + manual host payouts (migration 079), host ticket-tier editing (price/availability), per-event coupons (%/fixed, max-redemptions/expiry/one-per-customer), sales/guest monitoring dashboard, admin access to any event's ticketing
   - Guest profile: /profile — bookings/enquiries/events/saved tabs
   - Real estate: /real-estate/list (3-step form, agent/owner/developer)
   - Admin listing-requests: /admin/listing-requests (manual review of new listing submissions)
@@ -61,7 +61,7 @@ NOT YET BUILT:
   Mobile-first. Test on iPhone Safari before declaring done.
 
 ## Database — Supabase
-  Next migration number: 080 (079 is event ticketing; don't use 046, 047, 050 — gaps on disk; 073 is a double — already used twice)
+  Next migration number: 082 (081 is event coupons; don't use 046, 047, 050 — gaps on disk; 073 is a double — already used twice)
   RLS enabled on all tables. Check policies before querying from client.
   create_booking_with_payment() RPC handles bookings — don't INSERT directly.
   guest_user_id present on bookings (040) and contact_requests (042).
