@@ -5,6 +5,7 @@ import { sanityClient } from "@/lib/sanity/client";
 import { getPaymentProvider } from "@/lib/payments";
 import { buildOrderLines, computeTotals, type SanityTier } from "@/lib/tickets/pricing";
 import { issueTicketsForOrder } from "@/lib/tickets/issue";
+import { applyCoupon, couponError, type Coupon } from "@/lib/tickets/coupon";
 
 const PENDING_TTL_MINUTES = 20;
 
@@ -15,6 +16,7 @@ const checkoutSchema = z.object({
   phone: z.string().trim().max(20).optional(),
   userId: z.string().uuid().optional(),
   tiers: z.array(z.object({ tierKey: z.string().max(60), qty: z.number().int() })).min(1).max(5),
+  couponCode: z.string().trim().toUpperCase().min(1).max(40).optional(),
   turnstileToken: z.string().min(1),
 });
 
@@ -79,13 +81,40 @@ export async function POST(req: NextRequest) {
 
     const feeBps = Number(process.env.PLATFORM_TICKET_FEE_BPS ?? 0);
     const totals = computeTotals(lines, feeBps);
-    const isFreeOrder = totals.total_kes === 0;
+
+    // ── Coupon (optional) ──────────────────────────────────────────────
+    let couponId: string | null = null;
+    let discountKes = 0;
+    let finalTotal = totals.total_kes;
+    if (body.couponCode && !event.isFree) {
+      const { data: coupon } = await adminClient
+        .from("event_coupons")
+        .select("id, event_sanity_id, discount_type, discount_value, expires_at, active, one_per_customer")
+        .eq("event_sanity_id", body.eventSanityId).eq("code", body.couponCode).eq("active", true).maybeSingle();
+      if (!coupon) return NextResponse.json({ error: "Invalid coupon code" }, { status: 400 });
+
+      if (couponError(coupon as Coupon, { now: new Date(), eventSanityId: body.eventSanityId })) {
+        return NextResponse.json({ error: "Coupon not valid" }, { status: 400 });
+      }
+      if (coupon.one_per_customer) {
+        const { data: prior } = await adminClient
+          .from("coupon_redemptions").select("id").eq("coupon_id", coupon.id).eq("buyer_email", body.email).limit(1).maybeSingle();
+        if (prior) return NextResponse.json({ error: "You've already used this coupon" }, { status: 409 });
+      }
+      const applied = applyCoupon(totals.subtotal_kes, coupon as Coupon);
+      couponId = coupon.id; discountKes = applied.discount_kes; finalTotal = applied.total_kes;
+
+      const { error: cErr } = await adminClient.rpc("reserve_coupon", { p_coupon_id: coupon.id });
+      if (cErr) return NextResponse.json({ error: "Coupon no longer available" }, { status: 409 });
+    }
+    const isFreeOrder = finalTotal === 0;
 
     const { error: reserveErr } = await adminClient.rpc("reserve_event_tickets", {
       p_event_sanity_id: body.eventSanityId,
       p_lines: lines.map((l) => ({ tier_key: l.tier_key, qty: l.qty, capacity: l.capacity })),
     });
     if (reserveErr) {
+      if (couponId) await adminClient.rpc("release_coupon", { p_coupon_id: couponId });
       if (reserveErr.message?.includes("SOLD_OUT")) {
         return NextResponse.json({ error: "Sold out — not enough tickets left" }, { status: 409 });
       }
@@ -103,8 +132,10 @@ export async function POST(req: NextRequest) {
         user_id: body.userId ?? null,
         status: isFreeOrder ? "paid" : "pending",
         subtotal_kes: totals.subtotal_kes,
-        total_kes: totals.total_kes,
+        total_kes: finalTotal,
         platform_fee_bps: isFreeOrder ? 0 : feeBps,
+        coupon_id: couponId,
+        discount_kes: discountKes,
         lines,
         provider: isFreeOrder ? "free" : "paystack",
         paid_at: isFreeOrder ? new Date().toISOString() : null,
@@ -119,8 +150,15 @@ export async function POST(req: NextRequest) {
         p_event_sanity_id: body.eventSanityId,
         p_lines: lines.map((l) => ({ tier_key: l.tier_key, qty: l.qty })),
       });
+      if (couponId) await adminClient.rpc("release_coupon", { p_coupon_id: couponId });
       console.error("[checkout] order insert failed:", orderErr);
       return NextResponse.json({ error: "Could not create order" }, { status: 500 });
+    }
+
+    if (couponId) {
+      await adminClient.from("coupon_redemptions").insert({
+        coupon_id: couponId, order_id: order.id, buyer_email: body.email, discount_kes: discountKes,
+      });
     }
 
     if (isFreeOrder) {
@@ -136,7 +174,7 @@ export async function POST(req: NextRequest) {
     const provider = getPaymentProvider("paystack");
     const init = await provider.initialize({
       orderId: order.id,
-      amountKes: totals.total_kes,
+      amountKes: finalTotal,
       email: body.email,
       callbackUrl: `${site}/events/tickets/confirm?order=${order.id}`,
       metadata: { event_sanity_id: body.eventSanityId, event_title: event.title },
