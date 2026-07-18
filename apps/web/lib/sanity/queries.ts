@@ -667,6 +667,7 @@ export const EVENT_BY_SLUG_QUERY = groq`
     eventDate,
     eventEndDate,
     venue,
+    "venueListingRef": venueListing->{ title, type, city, "slug": slug.current },
     venueAddress,
     doorsOpen,
     organizer,
@@ -685,6 +686,31 @@ export const EVENT_BY_SLUG_QUERY = groq`
     isFeatured,
     hostId,
     createdByHost
+  }
+`
+
+// Events linked to a given listing (its venue). Includes upcoming one-off events
+// plus recurring / undated events. Projects exactly the fields WeekendEventCard
+// needs so the "Events happening here" section on any listing detail page renders
+// the fully-designed event card.
+export const EVENTS_AT_VENUE_QUERY = groq`
+  *[_type == "listing" && type == "event" && status == "published"
+    && venueListing._ref == $id
+    && (isRecurring == true || !defined(eventDate) || eventDate >= now())
+    && ${MARKETPLACE_PARTNER_FILTER}]
+    | order(eventDate asc) [0...8] {
+      _id,
+      title,
+      "slug": slug.current,
+      city,
+      subcategory,
+      eventDate,
+      isFree,
+      priceFrom,
+      price,
+      isRecurring,
+      recurrenceRule,
+      "coverPhotoUrl": photos[0].asset->url
   }
 `
 
