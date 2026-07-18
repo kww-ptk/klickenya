@@ -1,6 +1,6 @@
 import { redirect, notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { resolveOwnedEvent } from "@/lib/events/ownedEvent";
+import { resolveManageableEvent } from "@/lib/events/manageableEvent";
 import ScannerClient from "./ScannerClient";
 
 export const metadata = { title: "Scan tickets — Klickenya" };
@@ -15,9 +15,9 @@ export default async function ScanPage({ params }: { params: Promise<{ id: strin
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const owned = await resolveOwnedEvent(supabase, user.id, id);
-  if (!owned) notFound();
-  const { sanityEventId: eventSanityId, eventTitle } = owned;
+  const manageable = await resolveManageableEvent(supabase, user.id, id);
+  if (!manageable) notFound();
+  const { sanityEventId: eventSanityId, eventTitle } = manageable;
 
   return <ScannerClient eventSanityId={eventSanityId} eventTitle={eventTitle} />;
 }
