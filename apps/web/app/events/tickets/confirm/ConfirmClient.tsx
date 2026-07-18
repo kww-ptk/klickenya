@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 
-type TicketOut = { code: string; tierName: string };
+type TicketOut = { code: string; tierName: string; attendeeName?: string };
 
 export default function ConfirmClient() {
   const orderId = useSearchParams().get("order");
@@ -68,9 +68,10 @@ export default function ConfirmClient() {
             href={`/t/${t.code}`}
             className="block rounded-xl border border-neutral-200 p-4 text-left hover:border-amber-500"
           >
-            <span className="font-semibold">{t.tierName}</span>
-            <span className="ml-2 font-mono text-xs text-neutral-500">{t.code}</span>
             <span className="float-right text-amber-600 text-sm font-semibold">View QR →</span>
+            {t.attendeeName && <span className="block font-semibold">{t.attendeeName}</span>}
+            <span className={t.attendeeName ? "text-sm text-neutral-500" : "font-semibold"}>{t.tierName}</span>
+            <span className="ml-2 font-mono text-xs text-neutral-500">{t.code}</span>
           </Link>
         ))}
       </div>
