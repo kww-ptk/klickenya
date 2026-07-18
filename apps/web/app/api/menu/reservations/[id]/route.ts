@@ -336,11 +336,13 @@ async function resolveRestaurant(
         address?: string;
         city?: string;
         county?: string;
-        photo?: Parameters<typeof imageUrl>[0];
-        host?: { phone?: string } | null;
+        listingPhoto?: Parameters<typeof imageUrl>[0];
+        host?: { phone?: string; photo?: Parameters<typeof imageUrl>[0] } | null;
       } | null>(
         `*[_type == "listing" && slug.current == $slug][0]{
-          title, address, city, county, "photo": photos[0], host->{ phone }
+          title, address, city, county,
+          "listingPhoto": photos[0],
+          host->{ phone, photo }
         }`,
         { slug: menu.listing_slug },
       );
@@ -348,9 +350,11 @@ async function resolveRestaurant(
       if (listing?.title) restaurantName = listing.title;
       if (listing?.host?.phone) hostPhone = listing.host.phone;
 
-      if (listing?.photo) {
+      // Logo: prefer the host's profile photo; fall back to the listing photo.
+      const logoSource = listing?.host?.photo ?? listing?.listingPhoto;
+      if (logoSource) {
         try {
-          contact.logoUrl = imageUrl(listing.photo, 200);
+          contact.logoUrl = imageUrl(logoSource, 200);
         } catch {
           /* image builder failure is non-fatal */
         }
