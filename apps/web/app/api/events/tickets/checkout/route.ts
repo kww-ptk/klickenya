@@ -6,6 +6,7 @@ import { getPaymentProvider } from "@/lib/payments";
 import { buildOrderLines, computeTotals, type SanityTier } from "@/lib/tickets/pricing";
 import { issueTicketsForOrder } from "@/lib/tickets/issue";
 import { applyCoupon, couponError, type Coupon } from "@/lib/tickets/coupon";
+import { isValidOccurrence, OCCURRENCE_SENTINEL } from "@/lib/tickets/occurrences";
 
 const PENDING_TTL_MINUTES = 20;
 
@@ -17,6 +18,7 @@ const checkoutSchema = z.object({
   userId: z.string().uuid().optional(),
   tiers: z.array(z.object({ tierKey: z.string().max(60), qty: z.number().int() })).min(1).max(5),
   couponCode: z.string().trim().toUpperCase().min(1).max(40).optional(),
+  occurrenceDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
   turnstileToken: z.string().min(1),
 });
 
@@ -48,10 +50,13 @@ export async function POST(req: NextRequest) {
     const event = await sanityClient.fetch<{
       title: string; status: string | null; isFree: boolean | null;
       totalCapacity: number | null; eventDate: string | null;
+      isRecurring: boolean | null;
+      schedule: { day?: string; startTime?: string; endTime?: string }[] | null;
       ticketTypes: SanityTier[] | null;
     } | null>(
       `*[_type == "listing" && _id == $id && type == "event"][0]{
         title, status, isFree, totalCapacity, eventDate,
+        isRecurring, schedule[]{day, startTime, endTime},
         ticketTypes[]{_key, name, price, available, isSoldOut}
       }`,
       { id: body.eventSanityId },
@@ -109,8 +114,24 @@ export async function POST(req: NextRequest) {
     }
     const isFreeOrder = finalTotal === 0;
 
+    // ── Occurrence date (recurring events) ─────────────────────────────
+    let ticketOccurrenceDate: string | null = null;  // stored on order + tickets
+    let counterDate = OCCURRENCE_SENTINEL;            // inventory key
+    if (event.isRecurring) {
+      if (!body.occurrenceDate) {
+        return NextResponse.json({ error: "Please pick a date" }, { status: 400 });
+      }
+      const nowISO = new Date().toISOString().slice(0, 10);
+      if (!isValidOccurrence(event.schedule ?? [], body.occurrenceDate, nowISO)) {
+        return NextResponse.json({ error: "That date isn't available" }, { status: 400 });
+      }
+      ticketOccurrenceDate = body.occurrenceDate;
+      counterDate = body.occurrenceDate;
+    }
+
     const { error: reserveErr } = await adminClient.rpc("reserve_event_tickets", {
       p_event_sanity_id: body.eventSanityId,
+      p_occurrence_date: counterDate,
       p_lines: lines.map((l) => ({ tier_key: l.tier_key, qty: l.qty, capacity: l.capacity })),
     });
     if (reserveErr) {
@@ -130,6 +151,7 @@ export async function POST(req: NextRequest) {
         buyer_email: body.email,
         buyer_phone: body.phone ?? null,
         user_id: body.userId ?? null,
+        occurrence_date: ticketOccurrenceDate,
         status: isFreeOrder ? "paid" : "pending",
         subtotal_kes: totals.subtotal_kes,
         total_kes: finalTotal,
@@ -148,6 +170,7 @@ export async function POST(req: NextRequest) {
     if (orderErr || !order) {
       await adminClient.rpc("release_event_tickets", {
         p_event_sanity_id: body.eventSanityId,
+        p_occurrence_date: counterDate,
         p_lines: lines.map((l) => ({ tier_key: l.tier_key, qty: l.qty })),
       });
       if (couponId) await adminClient.rpc("release_coupon", { p_coupon_id: couponId });

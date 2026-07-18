@@ -9,6 +9,7 @@ export type PdfTicket = {
   price_kes: number;
   code: string;
   qrDataUrl: string; // PNG data URL
+  dateStr?: string | null; // per-ticket occurrence night; falls back to event.dateStr
 };
 
 export type PdfEvent = {
@@ -64,7 +65,8 @@ export async function renderTicketsPdf(event: PdfEvent, tickets: PdfTicket[]): P
     doc.setFont("helvetica", "normal");
     doc.setFontSize(9);
     doc.setTextColor(...GREY);
-    if (event.dateStr) { doc.text(event.dateStr, M, y); y += 5; }
+    const dateStr = t.dateStr ?? event.dateStr;
+    if (dateStr) { doc.text(dateStr, M, y); y += 5; }
     if (event.venue) {
       const vLines = (doc.splitTextToSize(event.venue, innerW) as string[]).slice(0, 2);
       doc.text(vLines, M, y);

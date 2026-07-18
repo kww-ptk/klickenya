@@ -13,7 +13,7 @@ export default async function TicketPage({ params }: { params: Promise<{ code: s
 
   const { data: ticket } = await adminClient
     .from("tickets")
-    .select("code, tier_name, price_kes, status, attendee_name, event_sanity_id, checked_in_at")
+    .select("code, tier_name, price_kes, status, attendee_name, event_sanity_id, checked_in_at, occurrence_date")
     .eq("code", code)
     .maybeSingle();
   if (!ticket) notFound();
@@ -25,7 +25,13 @@ export default async function TicketPage({ params }: { params: Promise<{ code: s
     { id: ticket.event_sanity_id },
   );
 
-  const dateStr = event?.eventDate
+  // A recurring-event ticket admits to one specific night — show THAT date.
+  // Falls back to the event's generic eventDate for one-off tickets.
+  const dateStr = ticket.occurrence_date
+    ? new Date(ticket.occurrence_date + "T00:00:00+03:00").toLocaleDateString("en-KE", {
+        dateStyle: "full", timeZone: "Africa/Nairobi",
+      })
+    : event?.eventDate
     ? new Date(event.eventDate).toLocaleString("en-KE", {
         dateStyle: "full", timeStyle: "short", timeZone: "Africa/Nairobi",
       })
