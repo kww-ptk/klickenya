@@ -8,6 +8,7 @@ import { AmenitiesList } from "@/components/listings/widgets/AmenitiesList";
 import { HostBadge } from "@/components/listings/widgets/HostBadge";
 import { TrackPageView } from "@/lib/analytics/TrackPageView";
 import { SimilarListings } from "@/components/listings/widgets/SimilarListings";
+import { EventsHere, type EventsHereItem } from "@/components/listings/EventsHere";
 import { BookingSidebar } from "@/components/listings/widgets/BookingSidebar";
 import { MobileBookingBar } from "@/components/listings/widgets/MobileBookingBar";
 import type { RestaurantArea } from "@/components/reservations/ReservationSheet";
@@ -44,6 +45,7 @@ interface RestaurantDetailProps {
   similarCards: ListingCardProps[];
   menuData?: MenuData | null;
   reservationsConfig?: ReservationsConfig | null;
+  eventsHere?: EventsHereItem[];
 }
 
 /* ── Helpers ───────────────────────────────────────── */
@@ -72,6 +74,7 @@ function RestaurantDetail({
   similarCards,
   menuData,
   reservationsConfig,
+  eventsHere,
 }: RestaurantDetailProps) {
   const highlights = listing.highlights ?? [];
   const amenities: string[] = listing.amenities ?? [];
@@ -350,6 +353,10 @@ function RestaurantDetail({
           menuSlug={menuData?.slug}
           reservationsConfig={reservationsConfig ?? null}
         />
+
+        {eventsHere && eventsHere.length > 0 && (
+          <EventsHere events={eventsHere} />
+        )}
 
         <SimilarListings listings={similarCards} typeLabel={typeLabel} />
       </article>
