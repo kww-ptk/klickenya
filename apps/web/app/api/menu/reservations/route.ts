@@ -507,18 +507,23 @@ async function sendHostNotification(opts: {
 
   // Resolve Sanity listing (for notification emails + listing command center URL)
   let sanityListingId: string | null = null;
+  // Restaurant name is the listing title, not the internal menu label; fall back
+  // to menu.name when the listing can't be resolved.
+  let restaurantName = menu.name;
 
   if (menu.listing_slug) {
     try {
       const sanityListing = await sanityClient.fetch<{
         _id: string;
+        title?: string;
         notificationEmail1?: string;
         notificationEmail2?: string;
       } | null>(
-        `*[_type == "listing" && slug.current == $slug][0]{ _id, notificationEmail1, notificationEmail2 }`,
+        `*[_type == "listing" && slug.current == $slug][0]{ _id, title, notificationEmail1, notificationEmail2 }`,
         { slug: menu.listing_slug },
       );
       if (sanityListing?._id) sanityListingId = sanityListing._id;
+      if (sanityListing?.title) restaurantName = sanityListing.title;
       if (sanityListing?.notificationEmail1) notificationEmails.push(sanityListing.notificationEmail1);
       if (sanityListing?.notificationEmail2) notificationEmails.push(sanityListing.notificationEmail2);
     } catch {
@@ -563,7 +568,7 @@ async function sendHostNotification(opts: {
       reservedFor,
       areaName,
       guestMessage,
-      restaurantName: menu.name,
+      restaurantName,
       dashboardUrl,
     }),
   });
