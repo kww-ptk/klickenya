@@ -103,8 +103,10 @@ export function WhosJoining({
         eventTitle={eventTitle}
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
-        onSuccess={(newCount, joinerName) => {
-          setCount(newCount);
+        onSuccess={(delta, joinerName) => {
+          // The unified ticket checkout reports how many tickets were just
+          // issued (a delta), not an absolute total — increment the count.
+          setCount((c) => c + delta);
           if (joinerName) {
             setAttendeeList((prev) => [{ name: joinerName }, ...prev]);
           }

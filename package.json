@@ -8,7 +8,7 @@
     "build": "pnpm --filter @klickenya/web build",
     "build:studio": "pnpm --filter @klickenya/studio build",
     "lint": "pnpm --filter @klickenya/web lint",
-    "typecheck": "pnpm --filter @klickenya/web tsc --noEmit"
+    "typecheck": "pnpm --filter @klickenya/web exec tsc --noEmit"
   },
   "engines": {
     "node": ">=20"

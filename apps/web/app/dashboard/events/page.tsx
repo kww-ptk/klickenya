@@ -46,7 +46,7 @@ export default async function MyEventsPage() {
     sanityClient.fetch<
       { _id: string; title: string; slug: string; status: string; city: string | null; eventDate: string | null; coverPhotoUrl: string | null }[]
     >(
-      `*[_type == "listing" && listingType == "event" && (hostId == $userId || host._ref == $sanityHostId)]{
+      `*[_type == "listing" && type == "event" && (hostId == $userId || host._ref == $sanityHostId)]{
         _id,
         title,
         "slug": slug.current,
@@ -231,6 +231,22 @@ export default async function MyEventsPage() {
                       className="px-3.5 py-1.5 rounded-lg bg-purple-600/10 text-purple-600 text-[12px] font-semibold hover:bg-purple-600/20 transition-colors text-center"
                     >
                       Attendees ({event.attendees})
+                    </Link>
+                  )}
+                  {event.sanity_event_id && (
+                    <Link
+                      href={`/dashboard/events/${event.id}/tickets`}
+                      className="px-3.5 py-1.5 rounded-lg bg-emerald-600/10 text-emerald-700 text-[12px] font-semibold hover:bg-emerald-600/20 transition-colors text-center"
+                    >
+                      Tickets
+                    </Link>
+                  )}
+                  {event.sanity_event_id && (
+                    <Link
+                      href={`/dashboard/events/${event.id}/scan`}
+                      className="px-3.5 py-1.5 rounded-lg bg-[#16130C]/10 text-[#16130C] text-[12px] font-semibold hover:bg-[#16130C]/20 transition-colors text-center"
+                    >
+                      Scan
                     </Link>
                   )}
                   {event.sanityId && (

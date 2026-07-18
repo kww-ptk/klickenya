@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { X, Loader2, Check } from "lucide-react";
+import { Turnstile } from "@marsidev/react-turnstile";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 
@@ -23,6 +24,7 @@ export function JoinEventModal({
   onClose,
   onSuccess,
 }: JoinEventModalProps) {
+  const hasSiteKey = !!process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -31,6 +33,8 @@ export function JoinEventModal({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [ticketCode, setTicketCode] = useState<string | null>(null);
+  const [turnstileToken, setTurnstileToken] = useState("");
 
   // Check auth state and pre-fill
   useEffect(() => {
@@ -67,6 +71,7 @@ export function JoinEventModal({
     if (!isOpen) {
       setError(null);
       setSuccess(false);
+      setTicketCode(null);
     }
   }, [isOpen]);
 
@@ -87,7 +92,7 @@ export function JoinEventModal({
     setError(null);
 
     try {
-      const res = await fetch("/api/events/join", {
+      const res = await fetch("/api/events/tickets/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -96,6 +101,8 @@ export function JoinEventModal({
           email: email.trim(),
           phone: phone.trim() || undefined,
           userId: userId || undefined,
+          tiers: [{ tierKey: "free", qty: 1 }],
+          turnstileToken: turnstileToken || "dev",
         }),
       });
 
@@ -106,8 +113,12 @@ export function JoinEventModal({
         return;
       }
 
+      const tickets: { code: string }[] = data.tickets ?? [];
+      setTicketCode(tickets[0]?.code ?? null);
       setSuccess(true);
-      onSuccess(data.attendeeCount, name.trim());
+      // Free RSVP → checkout issues one ticket. Report the delta; WhosJoining
+      // increments its running count from this.
+      onSuccess(tickets.length || 1, name.trim());
     } catch {
       setError("Something went wrong. Please try again.");
     } finally {
@@ -141,11 +152,19 @@ export function JoinEventModal({
                 You&apos;re joining {eventTitle}!
               </p>
               <p className="text-[13px] text-text3">
-                Check your email for the confirmation details.
+                Your ticket has been emailed to you with a QR code.
               </p>
+              {ticketCode && (
+                <a
+                  href={`/t/${ticketCode}`}
+                  className="mt-4 inline-block text-[14px] font-semibold text-purple-600 hover:text-purple-700 underline transition-colors"
+                >
+                  View your ticket →
+                </a>
+              )}
               <button
                 onClick={onClose}
-                className="mt-6 px-6 py-2.5 rounded-xl bg-dark text-white font-semibold text-[14px] hover:bg-[#2d2a23] transition-colors"
+                className="mt-6 px-6 py-2.5 rounded-xl bg-dark text-white font-semibold text-[14px] hover:bg-[#2d2a23] transition-colors block mx-auto"
               >
                 Done
               </button>
@@ -195,8 +214,15 @@ export function JoinEventModal({
                   />
                 </div>
 
+                {hasSiteKey && (
+                  <Turnstile
+                    siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY!}
+                    onSuccess={setTurnstileToken}
+                  />
+                )}
+
                 <button
-                  disabled={loading || !name.trim() || !email.trim()}
+                  disabled={loading || !name.trim() || !email.trim() || (hasSiteKey && !turnstileToken)}
                   onClick={handleSubmit}
                   className={cn(
                     "w-full py-3 rounded-xl font-semibold text-[14px] transition-colors flex items-center justify-center gap-2",

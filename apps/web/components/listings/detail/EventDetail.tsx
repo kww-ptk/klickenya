@@ -12,6 +12,7 @@ import { SimilarListings } from "@/components/listings/widgets/SimilarListings";
 import { BookingSidebar } from "@/components/listings/widgets/BookingSidebar";
 import { MobileBookingBar } from "@/components/listings/widgets/MobileBookingBar";
 import { WhosJoining } from "@/components/events/WhosJoining";
+import { TicketPurchase } from "@/components/events/TicketPurchase";
 import type { ListingCardProps } from "@/components/listings/ListingCard";
 
 /* ── Types ─────────────────────────────────────────── */
@@ -116,6 +117,10 @@ function EventDetail({
   const priceFrom: number | null = listing.priceFrom ?? listing.price ?? null;
   const mobilePrice = isFree ? 0 : (priceFrom ?? 0);
   const showBookingSidebar = !isFree && (ticketTypes.length > 0 || listing.price != null);
+  // Free events, or paid events with real ticket tiers, use the in-app unified
+  // checkout (TicketPurchase). Paid events with only a flat price / external
+  // link fall back to the legacy CTA card below.
+  const hasBuyableTickets = isFree || ticketTypes.length > 0;
 
   // One-off (non-recurring) event date/time. Null when unset → "Date to be announced".
   const startFmt = formatEventDateTime(listing.eventDate);
@@ -456,44 +461,79 @@ function EventDetail({
             )}
 
             <AmenitiesList amenities={amenities} heading="What to expect" />
+
+            {/* Mobile in-app ticket purchase — both free + paid (fixes missing mobile CTA) */}
+            {hasBuyableTickets && (
+              <div className="lg:hidden mt-8 pb-28">
+                <TicketPurchase
+                  eventSanityId={listing._id}
+                  isFree={isFree}
+                  tiers={ticketTypes}
+                  anchorId="tickets"
+                />
+                {ticketLink && (
+                  <a
+                    href={ticketLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-3 block text-center text-[13px] font-semibold text-purple-600 hover:text-purple-700 transition-colors"
+                  >
+                    or buy on the external site →
+                  </a>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Right column — always visible */}
           <aside className="hidden lg:block w-[350px] shrink-0">
             <div className="sticky top-[76px] space-y-6">
-              {/* Ticket CTA for paid events */}
-              {showBookingSidebar && (
-                <div className="border border-border rounded-[24px] shadow-lg p-6 bg-white">
-                  <p className="text-[22px] font-bold text-dark mb-1">
-                    From KSh {mobilePrice.toLocaleString()}
-                  </p>
-                  <p className="text-[13px] text-text2 mb-4">per {listing.priceUnit ?? "ticket"}</p>
-                  {ticketLink ? (
+              {/* Primary booking CTA — unified in-app checkout (free + paid tiers) */}
+              {hasBuyableTickets ? (
+                <div>
+                  <TicketPurchase
+                    eventSanityId={listing._id}
+                    isFree={isFree}
+                    tiers={ticketTypes}
+                  />
+                  {ticketLink && (
                     <a
                       href={ticketLink}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="block w-full py-3 rounded-xl bg-purple-600 text-white font-semibold text-[14px] text-center hover:bg-purple-700 transition-colors"
+                      className="mt-3 block text-center text-[13px] font-semibold text-purple-600 hover:text-purple-700 transition-colors"
                     >
-                      Get tickets
+                      or buy on the external site →
                     </a>
-                  ) : (
-                    <Link
-                      href="#tickets"
-                      className="block w-full py-3 rounded-xl bg-purple-600 text-white font-semibold text-[14px] text-center hover:bg-purple-700 transition-colors"
-                    >
-                      View tickets
-                    </Link>
                   )}
                 </div>
-              )}
-
-              {/* Free event badge */}
-              {isFree && (
-                <div className="rounded-[24px] border border-emerald-200 bg-emerald-50 p-6 text-center">
-                  <p className="text-[22px] font-bold text-emerald-700 mb-1">Free event</p>
-                  <p className="text-[13px] text-emerald-600">No ticket required — just show up!</p>
-                </div>
+              ) : (
+                showBookingSidebar && (
+                  /* Paid event with only a flat price / external link — legacy CTA card */
+                  <div className="border border-border rounded-[24px] shadow-lg p-6 bg-white">
+                    <p className="text-[22px] font-bold text-dark mb-1">
+                      From KSh {mobilePrice.toLocaleString()}
+                    </p>
+                    <p className="text-[13px] text-text2 mb-4">per {listing.priceUnit ?? "ticket"}</p>
+                    {ticketLink ? (
+                      <a
+                        href={ticketLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block w-full py-3 rounded-xl bg-purple-600 text-white font-semibold text-[14px] text-center hover:bg-purple-700 transition-colors"
+                      >
+                        Get tickets
+                      </a>
+                    ) : (
+                      <Link
+                        href="#tickets"
+                        className="block w-full py-3 rounded-xl bg-purple-600 text-white font-semibold text-[14px] text-center hover:bg-purple-700 transition-colors"
+                      >
+                        View tickets
+                      </Link>
+                    )}
+                  </div>
+                )
               )}
 
               {/* Related events in city */}
@@ -561,8 +601,38 @@ function EventDetail({
           </aside>
         </div>
 
-        {/* Mobile booking bar — only for paid events */}
-        {showBookingSidebar && (
+        {/* Mobile sticky CTA — scrolls to the in-app tickets section (free + paid) */}
+        {hasBuyableTickets && (
+          <div className="fixed bottom-0 left-0 right-0 z-[150] lg:hidden">
+            <div className="bg-white shadow-[0_-2px_12px_rgba(0,0,0,0.08)] px-4 py-3 pb-[max(12px,env(safe-area-inset-bottom))]">
+              <div className="flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  {isFree ? (
+                    <span className="font-display text-[18px] font-extrabold tracking-[-0.02em] text-dark">
+                      Free entry
+                    </span>
+                  ) : (
+                    <>
+                      <span className="font-display text-[18px] font-extrabold tracking-[-0.02em] text-dark">
+                        KSh {mobilePrice.toLocaleString()}
+                      </span>
+                      <span className="text-[13px] text-text2"> / {listing.priceUnit ?? "ticket"}</span>
+                    </>
+                  )}
+                </div>
+                <a
+                  href="#tickets"
+                  className="h-[36px] px-5 rounded-full text-[13px] font-bold flex items-center shrink-0 bg-purple-600 text-white"
+                >
+                  {isFree ? "Get free ticket" : "Get tickets"}
+                </a>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Legacy mobile booking bar — paid events with only a flat price / external link */}
+        {!hasBuyableTickets && showBookingSidebar && (
           <MobileBookingBar
             type={sanityType}
             price={mobilePrice}
