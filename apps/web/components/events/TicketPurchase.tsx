@@ -1,9 +1,40 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Turnstile } from "@marsidev/react-turnstile";
+import { nextOccurrences } from "@/lib/tickets/occurrences";
 
 type Tier = { _key: string; name: string; price: number; description?: string; isSoldOut?: boolean };
+type ScheduleRow = { day?: string; startTime?: string; endTime?: string };
+
+// Format a stored "last booked" timestamp as a short relative string ("3 hours
+// ago", "2 days ago"). Returns null when the value is missing or older than
+// MAX_AGE_DAYS — the caller then hides the line rather than show stale proof.
+const MAX_AGE_DAYS = 14;
+function relativeTime(iso: string | null): string | null {
+  if (!iso) return null;
+  const then = new Date(iso).getTime();
+  if (Number.isNaN(then)) return null;
+  const diffMs = Date.now() - then;
+  if (diffMs < 0) return null;
+  const mins = Math.floor(diffMs / 60_000);
+  if (mins > MAX_AGE_DAYS * 24 * 60) return null;
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins} minute${mins === 1 ? "" : "s"} ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours} hour${hours === 1 ? "" : "s"} ago`;
+  const days = Math.floor(hours / 24);
+  return `${days} day${days === 1 ? "" : "s"} ago`;
+}
+
+// Format an occurrence date (YYYY-MM-DD) for a picker pill, in Kenya time.
+function formatOccurrence(dateISO: string): string {
+  return new Date(dateISO + "T00:00:00+03:00").toLocaleDateString("en-KE", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+  });
+}
 
 export function TicketPurchase({
   eventSanityId,
@@ -13,6 +44,8 @@ export function TicketPurchase({
   defaultName,
   defaultEmail,
   anchorId,
+  isRecurring,
+  schedule,
 }: {
   eventSanityId: string;
   isFree: boolean;
@@ -21,11 +54,28 @@ export function TicketPurchase({
   defaultName?: string;
   defaultEmail?: string;
   anchorId?: string;
+  isRecurring?: boolean;
+  schedule?: ScheduleRow[];
 }) {
   const hasSiteKey = !!process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
   const effectiveTiers: Tier[] = isFree
     ? [{ _key: "free", name: "Free entry", price: 0 }]
     : tiers.filter((t) => !t.isSoldOut);
+
+  // Recurring events: the buyer must pick which upcoming occurrence to attend.
+  // Computed client-side from the weekly schedule (isomorphic, no network).
+  const occurrenceDates = useMemo(
+    () => (isRecurring ? nextOccurrences(schedule ?? [], new Date().toISOString().slice(0, 10), 8) : []),
+    [isRecurring, schedule],
+  );
+  const [occurrenceDate, setOccurrenceDate] = useState<string>(occurrenceDates[0] ?? "");
+  // Keep the default valid if the computed dates arrive/refresh.
+  useEffect(() => {
+    if (isRecurring && !occurrenceDate && occurrenceDates.length > 0) {
+      setOccurrenceDate(occurrenceDates[0]);
+    }
+  }, [isRecurring, occurrenceDate, occurrenceDates]);
+
   const [qty, setQty] = useState<Record<string, number>>({});
   const [name, setName] = useState(defaultName ?? "");
   const [email, setEmail] = useState(defaultEmail ?? "");
@@ -37,6 +87,19 @@ export function TicketPurchase({
   const [couponResult, setCouponResult] = useState<{ discount_kes: number; total_kes: number } | null>(null);
   const [couponMsg, setCouponMsg] = useState<string | null>(null);
   const [couponBusy, setCouponBusy] = useState(false);
+  const [lastBookedAt, setLastBookedAt] = useState<string | null>(null);
+
+  // Fetch the real "last booked" timestamp for honest social proof. We only
+  // render the line when it exists and is recent (see relativeTime). Never fake.
+  useEffect(() => {
+    let cancelled = false;
+    fetch(`/api/events/tickets/recent-booking?eventSanityId=${encodeURIComponent(eventSanityId)}`)
+      .then((r) => r.json())
+      .then((j) => { if (!cancelled) setLastBookedAt(j?.lastBookedAt ?? null); })
+      .catch(() => { if (!cancelled) setLastBookedAt(null); });
+    return () => { cancelled = true; };
+  }, [eventSanityId]);
+  const lastBookedLabel = relativeTime(lastBookedAt);
 
   const selected = effectiveTiers
     .map((t) => ({ tierKey: t._key, qty: qty[t._key] ?? 0 }))
@@ -60,7 +123,12 @@ export function TicketPurchase({
       const res = await fetch("/api/events/tickets/coupon/preview", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ eventSanityId, code: couponCode.trim().toUpperCase(), tiers: selected }),
+        body: JSON.stringify({
+          eventSanityId,
+          code: couponCode.trim().toUpperCase(),
+          tiers: selected,
+          ...(isRecurring ? { occurrenceDate } : {}),
+        }),
       });
       const json = await res.json();
       if (!res.ok || !json.valid) {
@@ -81,6 +149,7 @@ export function TicketPurchase({
   async function submit() {
     setError(null);
     if (selected.length === 0) { setError("Pick at least one ticket"); return; }
+    if (isRecurring && !occurrenceDate) { setError("Pick a date"); return; }
     if (!name.trim() || !email.trim()) { setError("Name and email are required"); return; }
     setBusy(true);
     try {
@@ -91,6 +160,7 @@ export function TicketPurchase({
           eventSanityId, name, email, userId,
           tiers: selected,
           turnstileToken: token || "dev",
+          ...(isRecurring ? { occurrenceDate } : {}),
           ...(couponResult ? { couponCode: couponCode.trim().toUpperCase() } : {}),
         }),
       });
@@ -125,6 +195,37 @@ export function TicketPurchase({
   return (
     <div className="rounded-2xl border border-neutral-200 p-5" {...(anchorId ? { id: anchorId } : {})}>
       <h3 className="font-bold">{isFree ? "Get your free ticket" : "Buy tickets"}</h3>
+      {isRecurring && (
+        <div className="mt-3">
+          <p className="text-sm font-semibold text-neutral-700">Choose a date</p>
+          {occurrenceDates.length > 0 ? (
+            <div className="mt-2 -mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
+              {occurrenceDates.map((d) => {
+                const active = d === occurrenceDate;
+                return (
+                  <button
+                    key={d}
+                    type="button"
+                    onClick={() => { setOccurrenceDate(d); resetCoupon(); }}
+                    aria-pressed={active}
+                    className={`shrink-0 whitespace-nowrap rounded-full border px-3.5 py-2 text-sm font-semibold transition-colors ${
+                      active
+                        ? "border-amber-500 bg-amber-500 text-white"
+                        : "border-neutral-300 text-neutral-700 hover:border-amber-400"
+                    }`}
+                  >
+                    {formatOccurrence(d)}
+                  </button>
+                );
+              })}
+            </div>
+          ) : (
+            <p className="mt-1 text-sm text-neutral-500">
+              No upcoming dates scheduled — check the description for details.
+            </p>
+          )}
+        </div>
+      )}
       <div className="mt-3 space-y-2">
         {effectiveTiers.map((t) => (
           <div key={t._key} className="flex items-center justify-between gap-3 rounded-lg border border-neutral-100 p-3">
@@ -181,16 +282,32 @@ export function TicketPurchase({
       {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
       <button
         onClick={submit}
-        disabled={busy || (hasSiteKey && !token)}
+        disabled={busy || (hasSiteKey && !token) || (isRecurring && !occurrenceDate)}
         className="mt-4 w-full rounded-xl bg-amber-500 py-3.5 font-bold text-white disabled:opacity-50"
       >
         {busy ? "One moment…" : isFree ? "Get free ticket" : `Pay KSh ${payTotal.toLocaleString("en-KE")} — M-Pesa / Card`}
       </button>
-      {!isFree && (
-        <p className="mt-2 text-center text-xs text-neutral-400">
-          Secure payment via Paystack. Tickets arrive by email instantly.
+
+      {/* Trust signals — muted, compact. Last-booked only renders when it is real
+          and recent (see relativeTime); we never fabricate social proof. */}
+      <div className="mt-3 space-y-1.5 text-xs text-neutral-500">
+        {!isFree && (
+          <p className="flex items-center gap-1.5">
+            <span aria-hidden>🔒</span>
+            <span>Secure payment — M-Pesa &amp; card via Paystack</span>
+          </p>
+        )}
+        <p className="flex items-center gap-1.5">
+          <span aria-hidden>✓</span>
+          <span>Official tickets — sold on Klickenya</span>
         </p>
-      )}
+        {lastBookedLabel && (
+          <p className="flex items-center gap-1.5 text-neutral-600">
+            <span aria-hidden>🎟</span>
+            <span>Last booked {lastBookedLabel}</span>
+          </p>
+        )}
+      </div>
     </div>
   );
 }

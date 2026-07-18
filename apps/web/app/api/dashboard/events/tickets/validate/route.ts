@@ -10,6 +10,7 @@ import { getDoorSession } from "@/lib/tickets/doorSession";
 const schema = z.object({
   eventSanityId: z.string().min(5).max(120),
   code: z.string().regex(TICKET_CODE_RE),
+  scanDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
 });
 
 // Ownership mirrors apps/web/app/api/dashboard/events/attendees/{remove,email}/route.ts:
@@ -40,7 +41,7 @@ export async function POST(req: NextRequest) {
   try {
     const parsed = schema.safeParse(await req.json());
     if (!parsed.success) return NextResponse.json({ error: "Invalid request" }, { status: 400 });
-    const { eventSanityId, code } = parsed.data;
+    const { eventSanityId, code, scanDate } = parsed.data;
 
     // Two ways to authorize a scan (staff-first, like POS getPosOrOwnerAuth):
     //  1. A signed door cookie scoped to THIS event (gate staff, no login).
@@ -61,13 +62,24 @@ export async function POST(req: NextRequest) {
 
     const { data: ticket } = await adminClient
       .from("tickets")
-      .select("id, event_sanity_id, tier_name, attendee_name, status, checked_in_at")
+      .select("id, event_sanity_id, tier_name, attendee_name, status, checked_in_at, occurrence_date")
       .eq("code", code)
       .maybeSingle();
 
     if (!ticket) return NextResponse.json({ result: "invalid" });
     if (ticket.event_sanity_id !== eventSanityId) {
       return NextResponse.json({ result: "wrong_event", tierName: ticket.tier_name });
+    }
+    // Date-scoped recurring events: a ticket carries the night it was bought for.
+    // Only enforce when the ticket has an occurrence_date (one-off events are NULL →
+    // unchanged) AND the scanner told us which night it is scanning for. No scanDate
+    // (older clients) → skip the check for backward safety.
+    if (ticket.occurrence_date && scanDate && ticket.occurrence_date !== scanDate) {
+      return NextResponse.json({
+        result: "wrong_date",
+        occurrenceDate: ticket.occurrence_date,
+        attendeeName: ticket.attendee_name,
+      });
     }
     if (ticket.status === "cancelled") {
       return NextResponse.json({ result: "cancelled", attendeeName: ticket.attendee_name });

@@ -9,7 +9,7 @@ export async function GET(req: NextRequest) {
 
   const { data: stale } = await adminClient
     .from("ticket_orders")
-    .select("id, event_sanity_id, lines, coupon_id")
+    .select("id, event_sanity_id, lines, coupon_id, occurrence_date")
     .eq("status", "pending")
     .lt("expires_at", new Date().toISOString())
     .limit(200);
@@ -27,6 +27,7 @@ export async function GET(req: NextRequest) {
     const lines = order.lines as OrderLine[];
     await adminClient.rpc("release_event_tickets", {
       p_event_sanity_id: order.event_sanity_id,
+      p_occurrence_date: order.occurrence_date ?? "2000-01-01",
       p_lines: lines.map((l) => ({ tier_key: l.tier_key, qty: l.qty })),
     });
     if (order.coupon_id) await adminClient.rpc("release_coupon", { p_coupon_id: order.coupon_id });

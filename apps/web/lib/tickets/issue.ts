@@ -12,12 +12,13 @@ export type TicketRow = {
   tier_name: string;
   price_kes: number;
   status: string;
+  occurrence_date: string | null;
 };
 
 export async function issueTicketsForOrder(orderId: string): Promise<TicketRow[]> {
   const { data: order, error } = await adminClient
     .from("ticket_orders")
-    .select("id, event_sanity_id, buyer_name, buyer_email, buyer_phone, user_id, lines, status")
+    .select("id, event_sanity_id, buyer_name, buyer_email, buyer_phone, user_id, lines, status, occurrence_date")
     .eq("id", orderId)
     .single();
   if (error || !order) throw new Error(`Order not found: ${orderId}`);
@@ -25,7 +26,7 @@ export async function issueTicketsForOrder(orderId: string): Promise<TicketRow[]
   // Idempotency guard — webhook retries and callback-poller races both land here.
   const { data: existing } = await adminClient
     .from("tickets")
-    .select("id, code, tier_key, tier_name, price_kes, status")
+    .select("id, code, tier_key, tier_name, price_kes, status, occurrence_date")
     .eq("order_id", orderId);
   if (existing && existing.length > 0) return existing as TicketRow[];
 
@@ -34,6 +35,7 @@ export async function issueTicketsForOrder(orderId: string): Promise<TicketRow[]
     Array.from({ length: line.qty }, () => ({
       order_id: order.id,
       event_sanity_id: order.event_sanity_id,
+      occurrence_date: order.occurrence_date,
       tier_key: line.tier_key,
       tier_name: line.tier_name,
       price_kes: line.unit_price_kes,
@@ -46,7 +48,7 @@ export async function issueTicketsForOrder(orderId: string): Promise<TicketRow[]
   const { data: inserted, error: insErr } = await adminClient
     .from("tickets")
     .insert(rows)
-    .select("id, code, tier_key, tier_name, price_kes, status");
+    .select("id, code, tier_key, tier_name, price_kes, status, occurrence_date");
   if (insErr || !inserted) throw new Error(`Ticket insert failed: ${insErr?.message}`);
 
   // Bridge into event_attendees so WhosJoining counts, host attendee CRM,
