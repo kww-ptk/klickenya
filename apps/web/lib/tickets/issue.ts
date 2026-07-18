@@ -17,7 +17,7 @@ export type TicketRow = {
 export async function issueTicketsForOrder(orderId: string): Promise<TicketRow[]> {
   const { data: order, error } = await adminClient
     .from("ticket_orders")
-    .select("id, event_sanity_id, buyer_name, buyer_email, buyer_phone, user_id, lines, status")
+    .select("id, event_sanity_id, buyer_name, buyer_email, buyer_phone, user_id, lines, status, occurrence_date")
     .eq("id", orderId)
     .single();
   if (error || !order) throw new Error(`Order not found: ${orderId}`);
@@ -34,6 +34,7 @@ export async function issueTicketsForOrder(orderId: string): Promise<TicketRow[]
     Array.from({ length: line.qty }, () => ({
       order_id: order.id,
       event_sanity_id: order.event_sanity_id,
+      occurrence_date: order.occurrence_date,
       tier_key: line.tier_key,
       tier_name: line.tier_name,
       price_kes: line.unit_price_kes,
