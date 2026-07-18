@@ -6,6 +6,7 @@ import { sanityClient } from "@/lib/sanity/client";
 import { resolveOwnedEvent } from "@/lib/events/ownedEvent";
 import DoorCodesPanel from "./DoorCodesPanel";
 import TierManager from "./TierManager";
+import CouponManager from "./CouponManager";
 
 export const metadata = { title: "Ticket sales — Klickenya" };
 
@@ -52,6 +53,21 @@ export default async function TicketsPage({ params }: { params: Promise<{ id: st
   const soldByKey = new Map((counters ?? []).map((c) => [c.tier_key, c.sold]));
   const initialTiers = (tierDoc?.ticketTypes ?? []).map((t) => ({ ...t, sold: soldByKey.get(t._key) ?? 0 }));
 
+  const { data: couponRows } = await adminClient
+    .from("event_coupons")
+    .select("id, code, discount_type, discount_value, max_redemptions, redeemed, expires_at, one_per_customer")
+    .eq("event_sanity_id", sanityEventId).eq("active", true).order("created_at", { ascending: false });
+  const couponIds = (couponRows ?? []).map((c) => c.id);
+  const { data: redemptions } = await adminClient
+    .from("coupon_redemptions").select("coupon_id, discount_kes")
+    .in("coupon_id", couponIds.length ? couponIds : ["00000000-0000-0000-0000-000000000000"]);
+  const useMap = new Map<string, { uses: number; given: number }>();
+  for (const r of redemptions ?? []) {
+    const cur = useMap.get(r.coupon_id) ?? { uses: 0, given: 0 };
+    useMap.set(r.coupon_id, { uses: cur.uses + 1, given: cur.given + r.discount_kes });
+  }
+  const initialCoupons = (couponRows ?? []).map((c) => ({ ...c, uses: useMap.get(c.id)?.uses ?? 0, discount_given: useMap.get(c.id)?.given ?? 0 }));
+
   const paid = (orders ?? []).filter((o) => o.status === "paid");
   const gross = paid.reduce((s, o) => s + o.total_kes, 0);
   const fees = paid.reduce((s, o) => s + Math.floor((o.total_kes * o.platform_fee_bps) / 10_000), 0);
@@ -93,6 +109,8 @@ export default async function TicketsPage({ params }: { params: Promise<{ id: st
       <DoorCodesPanel eventId={id} initialCodes={doorCodes ?? []} />
 
       <TierManager eventId={id} initialTiers={initialTiers} />
+
+      <CouponManager eventId={id} initial={initialCoupons} />
 
       <h2 className="mt-8 font-bold">Tickets</h2>
       <div className="mt-3 divide-y divide-neutral-100 rounded-xl border border-neutral-200">

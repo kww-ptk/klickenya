@@ -33,11 +33,50 @@ export function TicketPurchase({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [freeDone, setFreeDone] = useState<{ code: string }[] | null>(null);
+  const [couponCode, setCouponCode] = useState("");
+  const [couponResult, setCouponResult] = useState<{ discount_kes: number; total_kes: number } | null>(null);
+  const [couponMsg, setCouponMsg] = useState<string | null>(null);
+  const [couponBusy, setCouponBusy] = useState(false);
 
   const selected = effectiveTiers
     .map((t) => ({ tierKey: t._key, qty: qty[t._key] ?? 0 }))
     .filter((l) => l.qty > 0);
   const total = effectiveTiers.reduce((s, t) => s + t.price * (qty[t._key] ?? 0), 0);
+  // When a coupon is applied, the pay button charges the discounted total.
+  const payTotal = couponResult ? couponResult.total_kes : total;
+
+  // Any change to selected tiers/qty invalidates a previously previewed coupon —
+  // the discount was computed for the old cart, so force a re-apply.
+  function resetCoupon() {
+    setCouponResult(null);
+    setCouponMsg(null);
+  }
+
+  async function applyCoupon() {
+    if (!couponCode.trim()) return;
+    if (selected.length === 0) { setCouponResult(null); setCouponMsg("Pick at least one ticket first"); return; }
+    setCouponBusy(true); setCouponMsg(null);
+    try {
+      const res = await fetch("/api/events/tickets/coupon/preview", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ eventSanityId, code: couponCode.trim().toUpperCase(), tiers: selected }),
+      });
+      const json = await res.json();
+      if (!res.ok || !json.valid) {
+        setCouponResult(null);
+        setCouponMsg(json.error ?? "Coupon not valid");
+        return;
+      }
+      setCouponResult({ discount_kes: json.discount_kes, total_kes: json.total_kes });
+      setCouponMsg(`−KSh ${json.discount_kes.toLocaleString("en-KE")} applied`);
+    } catch {
+      setCouponResult(null);
+      setCouponMsg("Network error — please retry");
+    } finally {
+      setCouponBusy(false);
+    }
+  }
 
   async function submit() {
     setError(null);
@@ -52,6 +91,7 @@ export function TicketPurchase({
           eventSanityId, name, email, userId,
           tiers: selected,
           turnstileToken: token || "dev",
+          ...(couponResult ? { couponCode: couponCode.trim().toUpperCase() } : {}),
         }),
       });
       const json = await res.json();
@@ -97,11 +137,11 @@ export function TicketPurchase({
             </div>
             <div className="flex items-center gap-2">
               <button type="button" aria-label={`Fewer ${t.name}`}
-                onClick={() => setQty((q) => ({ ...q, [t._key]: Math.max(0, (q[t._key] ?? 0) - 1) }))}
+                onClick={() => { setQty((q) => ({ ...q, [t._key]: Math.max(0, (q[t._key] ?? 0) - 1) })); resetCoupon(); }}
                 className="h-9 w-9 rounded-full border text-lg leading-none">−</button>
               <span className="w-5 text-center text-sm font-semibold">{qty[t._key] ?? 0}</span>
               <button type="button" aria-label={`More ${t.name}`}
-                onClick={() => setQty((q) => ({ ...q, [t._key]: Math.min(10, (q[t._key] ?? 0) + 1) }))}
+                onClick={() => { setQty((q) => ({ ...q, [t._key]: Math.min(10, (q[t._key] ?? 0) + 1) })); resetCoupon(); }}
                 className="h-9 w-9 rounded-full border text-lg leading-none">+</button>
             </div>
           </div>
@@ -113,6 +153,23 @@ export function TicketPurchase({
         <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" type="email"
           className="w-full rounded-lg border border-neutral-300 px-3 py-3 text-[16px]" />
       </div>
+      {!isFree && (
+        <div className="mt-3">
+          <div className="flex items-center gap-2">
+            <input value={couponCode}
+              onChange={(e) => { setCouponCode(e.target.value.toUpperCase()); resetCoupon(); }}
+              placeholder="Have a coupon?"
+              className="w-full rounded-lg border border-neutral-300 px-3 py-3 text-[16px] font-mono uppercase" />
+            <button type="button" onClick={applyCoupon} disabled={couponBusy || !couponCode.trim()}
+              className="shrink-0 rounded-lg border border-amber-500 px-4 py-3 text-sm font-semibold text-amber-600 disabled:opacity-50">
+              {couponBusy ? "…" : "Apply"}
+            </button>
+          </div>
+          {couponMsg && (
+            <p className={`mt-1 text-sm ${couponResult ? "text-green-600" : "text-red-600"}`}>{couponMsg}</p>
+          )}
+        </div>
+      )}
       {hasSiteKey && (
         <div className="mt-3">
           <Turnstile
@@ -127,7 +184,7 @@ export function TicketPurchase({
         disabled={busy || (hasSiteKey && !token)}
         className="mt-4 w-full rounded-xl bg-amber-500 py-3.5 font-bold text-white disabled:opacity-50"
       >
-        {busy ? "One moment…" : isFree ? "Get free ticket" : `Pay KSh ${total.toLocaleString("en-KE")} — M-Pesa / Card`}
+        {busy ? "One moment…" : isFree ? "Get free ticket" : `Pay KSh ${payTotal.toLocaleString("en-KE")} — M-Pesa / Card`}
       </button>
       {!isFree && (
         <p className="mt-2 text-center text-xs text-neutral-400">
