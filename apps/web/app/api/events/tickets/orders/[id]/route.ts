@@ -39,6 +39,6 @@ export async function GET(
   return NextResponse.json({
     status: "paid",
     totalKes: order.total_kes,
-    tickets: tickets.map((t) => ({ code: t.code, tierName: t.tier_name })),
+    tickets: tickets.map((t) => ({ code: t.code, tierName: t.tier_name, attendeeName: t.attendee_name })),
   });
 }
