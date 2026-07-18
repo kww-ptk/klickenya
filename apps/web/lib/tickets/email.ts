@@ -33,8 +33,16 @@ export async function sendTicketEmail(
   const pdfTickets: PdfTicket[] = [];
   for (const t of tickets) {
     const qrDataUrl = await QRCode.toDataURL(`${SITE}/t/${t.code}`, { width: 480, margin: 1 });
+    // Each ticket admits to its own occurrence (recurring events); fall back to
+    // the event-level date for one-off tickets.
+    const ticketDateStr = t.occurrence_date
+      ? new Date(t.occurrence_date + "T00:00:00+03:00").toLocaleDateString("en-KE", {
+          dateStyle: "full", timeZone: "Africa/Nairobi",
+        })
+      : dateStr;
     pdfTickets.push({
       tier_name: t.tier_name, attendee_name: name, price_kes: t.price_kes, code: t.code, qrDataUrl,
+      dateStr: ticketDateStr,
     });
   }
 

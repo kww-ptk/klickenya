@@ -12,6 +12,7 @@ export type TicketRow = {
   tier_name: string;
   price_kes: number;
   status: string;
+  occurrence_date: string | null;
 };
 
 export async function issueTicketsForOrder(orderId: string): Promise<TicketRow[]> {
@@ -25,7 +26,7 @@ export async function issueTicketsForOrder(orderId: string): Promise<TicketRow[]
   // Idempotency guard — webhook retries and callback-poller races both land here.
   const { data: existing } = await adminClient
     .from("tickets")
-    .select("id, code, tier_key, tier_name, price_kes, status")
+    .select("id, code, tier_key, tier_name, price_kes, status, occurrence_date")
     .eq("order_id", orderId);
   if (existing && existing.length > 0) return existing as TicketRow[];
 
@@ -47,7 +48,7 @@ export async function issueTicketsForOrder(orderId: string): Promise<TicketRow[]
   const { data: inserted, error: insErr } = await adminClient
     .from("tickets")
     .insert(rows)
-    .select("id, code, tier_key, tier_name, price_kes, status");
+    .select("id, code, tier_key, tier_name, price_kes, status, occurrence_date");
   if (insErr || !inserted) throw new Error(`Ticket insert failed: ${insErr?.message}`);
 
   // Bridge into event_attendees so WhosJoining counts, host attendee CRM,
