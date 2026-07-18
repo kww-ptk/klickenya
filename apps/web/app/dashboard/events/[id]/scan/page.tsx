@@ -1,6 +1,7 @@
 import { redirect, notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { resolveManageableEvent } from "@/lib/events/manageableEvent";
+import { getCheckinCounts } from "@/lib/tickets/checkinCounts";
 import ScannerClient from "./ScannerClient";
 
 export const metadata = { title: "Scan tickets — Klickenya" };
@@ -19,5 +20,14 @@ export default async function ScanPage({ params }: { params: Promise<{ id: strin
   if (!manageable) notFound();
   const { sanityEventId: eventSanityId, eventTitle } = manageable;
 
-  return <ScannerClient eventSanityId={eventSanityId} eventTitle={eventTitle} />;
+  const { total, checkedIn } = await getCheckinCounts(eventSanityId);
+
+  return (
+    <ScannerClient
+      eventSanityId={eventSanityId}
+      eventTitle={eventTitle}
+      initialCheckedIn={checkedIn}
+      totalIssued={total}
+    />
+  );
 }

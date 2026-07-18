@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { sanityClient } from "@/lib/sanity/client";
 import { verifyDoorSession, DOOR_SESSION_COOKIE } from "@/lib/tickets/doorSession";
+import { getCheckinCounts } from "@/lib/tickets/checkinCounts";
 import ScannerClient from "@/app/dashboard/events/[id]/scan/ScannerClient";
 import DoorCodeEntry from "./DoorCodeEntry";
 
@@ -12,9 +13,19 @@ export default async function ScanPage() {
   const session = verifyDoorSession(store.get(DOOR_SESSION_COOKIE)?.value);
   if (!session) return <DoorCodeEntry />;
 
-  const event = await sanityClient.fetch<{ title: string } | null>(
-    `*[_type == "listing" && _id == $id][0]{title}`,
-    { id: session.event_sanity_id },
+  const [event, { total, checkedIn }] = await Promise.all([
+    sanityClient.fetch<{ title: string } | null>(
+      `*[_type == "listing" && _id == $id][0]{title}`,
+      { id: session.event_sanity_id },
+    ),
+    getCheckinCounts(session.event_sanity_id),
+  ]);
+  return (
+    <ScannerClient
+      eventSanityId={session.event_sanity_id}
+      eventTitle={event?.title ?? "Event"}
+      initialCheckedIn={checkedIn}
+      totalIssued={total}
+    />
   );
-  return <ScannerClient eventSanityId={session.event_sanity_id} eventTitle={event?.title ?? "Event"} />;
 }
