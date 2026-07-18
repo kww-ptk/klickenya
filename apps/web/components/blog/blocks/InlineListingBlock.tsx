@@ -1,5 +1,6 @@
 import Image from 'next/image'
 import Link from 'next/link'
+import { listingPublicPath } from '@/lib/listings/url'
 
 interface InlineListingValue {
   listing?: {
@@ -22,7 +23,9 @@ export function InlineListingBlock({ value }: { value: InlineListingValue }) {
 
   const slug = listing.slug?.current
   const typeLabel = listing.type?.replace(/-/g, ' ') || 'Stay'
-  const href = slug ? `/${listing.type}/${(listing.city || '').toLowerCase()}/${slug}` : '#'
+  // Use the canonical public path helper (plural type segment + slugified city);
+  // building the URL from the raw singular `listing.type` 404s.
+  const href = slug ? listingPublicPath(listing.type ?? '', listing.city, slug) : '#'
 
   return (
     <Link href={href} className="flex gap-3.5 items-center p-3.5 rounded-[22px] border border-[#E4E0D8] bg-white my-2.5 transition-all hover:shadow-[0_2px_10px_rgba(0,0,0,.06),0_0_0_1px_rgba(0,0,0,.03)] hover:-translate-y-0.5 group">
