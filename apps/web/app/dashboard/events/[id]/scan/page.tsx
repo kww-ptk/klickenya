@@ -1,7 +1,9 @@
 import { redirect, notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { sanityClient } from "@/lib/sanity/client";
 import { resolveManageableEvent } from "@/lib/events/manageableEvent";
 import { getCheckinCounts } from "@/lib/tickets/checkinCounts";
+import { nextOccurrences } from "@/lib/tickets/occurrences";
 import ScannerClient from "./ScannerClient";
 
 export const metadata = { title: "Scan tickets — Klickenya" };
@@ -20,7 +22,24 @@ export default async function ScanPage({ params }: { params: Promise<{ id: strin
   if (!manageable) notFound();
   const { sanityEventId: eventSanityId, eventTitle } = manageable;
 
-  const { total, checkedIn } = await getCheckinCounts(eventSanityId);
+  const [{ total, checkedIn }, event] = await Promise.all([
+    getCheckinCounts(eventSanityId),
+    sanityClient.fetch<{
+      isRecurring: boolean | null;
+      schedule: { day?: string; startTime?: string; endTime?: string }[] | null;
+    } | null>(
+      `*[_type == "listing" && _id == $id][0]{ isRecurring, schedule[]{day, startTime, endTime} }`,
+      { id: eventSanityId },
+    ),
+  ]);
+
+  const today = new Date().toISOString().slice(0, 10);
+  const occurrenceDates = event?.isRecurring
+    ? nextOccurrences(event.schedule ?? [], today, 8)
+    : [];
+  const defaultScanDate = occurrenceDates.includes(today)
+    ? today
+    : (occurrenceDates[0] ?? null);
 
   return (
     <ScannerClient
@@ -28,6 +47,8 @@ export default async function ScanPage({ params }: { params: Promise<{ id: strin
       eventTitle={eventTitle}
       initialCheckedIn={checkedIn}
       totalIssued={total}
+      occurrenceDates={occurrenceDates}
+      defaultScanDate={defaultScanDate}
     />
   );
 }
