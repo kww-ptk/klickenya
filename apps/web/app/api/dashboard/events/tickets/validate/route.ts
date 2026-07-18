@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { adminClient } from "@/lib/supabase/admin";
 import { sanityClient } from "@/lib/sanity/client";
 import { TICKET_CODE_RE } from "@/lib/tickets/codes";
+import { getDoorSession } from "@/lib/tickets/doorSession";
 
 const schema = z.object({
   eventSanityId: z.string().min(5).max(120),
@@ -37,16 +38,25 @@ async function userOwnsEvent(
 
 export async function POST(req: NextRequest) {
   try {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
     const parsed = schema.safeParse(await req.json());
     if (!parsed.success) return NextResponse.json({ error: "Invalid request" }, { status: 400 });
     const { eventSanityId, code } = parsed.data;
 
-    if (!(await userOwnsEvent(supabase, user.id, eventSanityId))) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    // Two ways to authorize a scan (staff-first, like POS getPosOrOwnerAuth):
+    //  1. A signed door cookie scoped to THIS event (gate staff, no login).
+    //  2. The host's own Supabase login + event ownership (existing path).
+    const door = getDoorSession(req);
+    const doorOk = door?.event_sanity_id === eventSanityId;
+
+    let checkedInBy: string | null = null;
+    if (!doorOk) {
+      const supabase = await createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      if (!(await userOwnsEvent(supabase, user.id, eventSanityId))) {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      }
+      checkedInBy = user.id;
     }
 
     const { data: ticket } = await adminClient
@@ -74,7 +84,7 @@ export async function POST(req: NextRequest) {
     // If a concurrent request already flipped it, this returns no row → already_used.
     const { data: flipped } = await adminClient
       .from("tickets")
-      .update({ status: "checked_in", checked_in_at: new Date().toISOString(), checked_in_by: user.id })
+      .update({ status: "checked_in", checked_in_at: new Date().toISOString(), checked_in_by: checkedInBy })
       .eq("id", ticket.id)
       .eq("status", "issued")
       .select("id")
