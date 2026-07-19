@@ -57,9 +57,11 @@ interface RestaurantContact {
   addressLine: string | null;
 }
 
-/** Escape user/CMS-provided strings before interpolating into email HTML. */
-function esc(s: string): string {
-  return s.replace(/[&<>"']/g, (c) =>
+/** Escape user/CMS-provided strings before interpolating into email HTML.
+ *  Coerces non-string input (null/undefined/number) so a missing DB/CMS field
+ *  can never throw and silently kill the whole email. */
+function esc(s: unknown): string {
+  return String(s ?? "").replace(/[&<>"']/g, (c) =>
     c === "&" ? "&amp;"
       : c === "<" ? "&lt;"
       : c === ">" ? "&gt;"
@@ -273,8 +275,8 @@ async function sendGuestEmail(opts: {
   reservedFor: string;
   contact: RestaurantContact;
   declineReason?: string;
-}): Promise<void> {
-  if (!process.env.RESEND_API_KEY) return;
+}): Promise<{ id: string | null; skipped?: boolean }> {
+  if (!process.env.RESEND_API_KEY) return { id: null, skipped: true };
 
   const { guestEmail, newStatus, guestName, restaurantName, partySize, reservedFor, contact, declineReason } = opts;
   const formattedDate = formatNairobiDate(reservedFor);
@@ -295,12 +297,19 @@ async function sendGuestEmail(opts: {
   }
 
   const resend = new Resend(process.env.RESEND_API_KEY);
-  await resend.emails.send({
+  // The Resend SDK returns { data, error } — it does NOT throw on API-level
+  // rejections. Historically we ignored `error`, so any rejected send (e.g.
+  // unverified domain, rate limit) failed completely silently. Surface it.
+  const { data, error } = await resend.emails.send({
     from: "Klickenya Bookings <bookings@klickenya.com>",
     to: guestEmail,
     subject,
     html,
   });
+  if (error) {
+    throw new Error(`Resend rejected email: ${error.name ?? "unknown"} — ${error.message ?? JSON.stringify(error)}`);
+  }
+  return { id: data?.id ?? null };
 }
 
 /* ── Restaurant name + contact resolver ──────────────────────────────────── */
@@ -543,30 +552,48 @@ export async function PATCH(
     // NOTE: Guest emails (approve/decline/cancel) fire on admin actions identically
     // to owner actions. Per April 2026 decision: admin = full superuser parity,
     // no email guard. Do not add isAdmin suppression without revisiting this decision.
+    // Awaited (not fire-and-forget): a fire-and-forget send can be truncated
+    // when the serverless function freezes after the response returns, which
+    // silently drops the email. Awaiting also lets us report the real outcome.
+    // Email failure is still NON-FATAL — the status change already succeeded.
     const guestEmail = reservation.guest_email as string | null;
-    if (
-      guestEmail &&
-      whatsAppTransitions.includes(newStatus as WhatsAppTransition)
-    ) {
-      void sendGuestEmail({
-        guestEmail,
-        newStatus: newStatus as "approved" | "declined" | "cancelled",
-        guestName: reservation.guest_name,
-        restaurantName,
-        partySize: reservation.party_size,
-        reservedFor: reservation.reserved_for,
-        contact,
-        declineReason: newStatus === "declined" ? decline_reason : undefined,
-      }).catch((err) => {
-        console.error("[reservations PATCH] guest email error (non-fatal):", err);
-      });
+    const emailEligible =
+      !!guestEmail && whatsAppTransitions.includes(newStatus as WhatsAppTransition);
+    let guestEmailSent = false;
+    let emailError: string | null = null;
+
+    if (emailEligible && guestEmail) {
+      try {
+        const result = await sendGuestEmail({
+          guestEmail,
+          newStatus: newStatus as "approved" | "declined" | "cancelled",
+          guestName: reservation.guest_name,
+          restaurantName,
+          partySize: reservation.party_size,
+          reservedFor: reservation.reserved_for,
+          contact,
+          declineReason: newStatus === "declined" ? decline_reason : undefined,
+        });
+        guestEmailSent = !result.skipped;
+      } catch (err) {
+        emailError = err instanceof Error ? err.message : String(err);
+        console.error(
+          `[reservations PATCH] guest email failed (non-fatal) — reservation=${reservationId} status=${newStatus}:`,
+          emailError,
+        );
+      }
+    } else if (!guestEmail && whatsAppTransitions.includes(newStatus as WhatsAppTransition)) {
+      console.warn(
+        `[reservations PATCH] no guest_email on reservation=${reservationId} — confirmation email skipped`,
+      );
     }
 
     return NextResponse.json({
       success: true,
       status: newStatus,
       whatsapp_url,
-      guest_email_sent: !!(guestEmail && whatsAppTransitions.includes(newStatus as WhatsAppTransition)),
+      guest_email_sent: guestEmailSent,
+      email_error: emailError,
     });
   } catch {
     return NextResponse.json({ error: "Server error" }, { status: 500 });
