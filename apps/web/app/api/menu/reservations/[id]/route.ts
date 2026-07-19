@@ -117,7 +117,7 @@ function contactHtml(contact: RestaurantContact, whatsappText: string, cancelNot
   if (addressLine) {
     parts.push(
       `<p style="margin:0 0 14px;font-size:14px;color:#333;line-height:1.5;">
-        <span style="color:#16A34A;">&#128205;</span> ${esc(addressLine)}
+        <span style="color:#E8A020;">&#128205;</span> ${esc(addressLine)}
       </p>`,
     );
   }
@@ -127,7 +127,7 @@ function contactHtml(contact: RestaurantContact, whatsappText: string, cancelNot
     const href = `${whatsappUrl}?text=${encodeURIComponent(whatsappText)}`;
     buttons.push(
       `<td style="padding:0 8px 8px 0;">
-        <a href="${esc(href)}" style="display:inline-block;background-color:#16A34A;color:#fff;text-decoration:none;font-size:14px;font-weight:600;padding:12px 20px;border-radius:8px;">Message on WhatsApp</a>
+        <a href="${esc(href)}" style="display:inline-block;background-color:#E8A020;color:#fff;text-decoration:none;font-size:14px;font-weight:600;padding:12px 20px;border-radius:8px;">Message on WhatsApp</a>
       </td>`,
     );
   }
@@ -168,7 +168,7 @@ function emailShell(title: string, header: string, inner: string): string {
         ${inner}
       </td></tr>
       <tr><td style="padding:18px 32px;background-color:#fafafa;border-top:1px solid #e5e7eb;">
-        <p style="margin:0;font-size:12px;color:#9ca3af;text-align:center;">Booking managed via <strong style="color:#16A34A;">Klickenya</strong> &middot; klickenya.com</p>
+        <p style="margin:0;font-size:12px;color:#9ca3af;text-align:center;">Booking managed via <strong style="color:#E8A020;">Klickenya</strong> &middot; klickenya.com</p>
       </td></tr>
     </table>
   </td></tr>
@@ -198,7 +198,7 @@ function guestApproveHtml(opts: {
     ${contactHtml(contact, whatsappText, cancelNote)}`;
   return emailShell(
     "Reservation confirmed",
-    headerHtml("#16A34A", "Reservation confirmed", restaurantName, contact.logoUrl),
+    headerHtml("#E8A020", "Reservation confirmed", restaurantName, contact.logoUrl),
     inner,
   );
 }
