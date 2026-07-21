@@ -70,11 +70,12 @@ export const LISTING_FEATURES: FeatureDefinition[] = [
   {
     id: 'takeaway',
     label: 'Takeaway orders',
-    shortDescription: 'Customers order for pickup.',
-    longDescription: 'Coming Q3 2026. Guests order ahead and collect.',
+    shortDescription: 'Customers order ahead for pickup.',
+    longDescription:
+      'Guests order from your public menu without a table, you accept with a ready time, they pick up and pay at the counter.',
     icon: 'ShoppingBag',
     appliesTo: ['restaurant'],
-    getStatus: () => 'coming_soon',
+    getStatus: (ctx) => (ctx.menu?.takeaway_enabled ? 'active' : 'inactive'),
   },
   {
     id: 'delivery',

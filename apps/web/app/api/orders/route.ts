@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod/v4";
 import { adminClient } from "@/lib/supabase/admin";
+import { normalizeKenyanPhone } from "@/lib/orders/phone";
 import {
   findOpenSessionForTable,
   openSessionForTable,
@@ -28,11 +29,13 @@ const selectedOptionSchema = z.object({
 });
 
 const orderSchema = z.object({
-  menu_id:       z.string().uuid(),
-  table_number:  z.string().min(1).max(20),
-  table_id:      z.string().uuid().optional(), // registered table (optional)
-  customer_name: z.string().max(100).optional(),
-  order_note:    z.string().max(500).optional(),
+  menu_id:        z.string().uuid(),
+  order_type:     z.enum(["dine_in", "takeaway"]).default("dine_in"),
+  table_number:   z.string().min(1).max(20).optional(),
+  table_id:       z.string().uuid().optional(), // registered table (optional)
+  customer_name:  z.string().max(100).optional(),
+  customer_phone: z.string().max(30).optional(),
+  order_note:     z.string().max(500).optional(),
   items: z
     .array(
       z.object({
@@ -46,17 +49,17 @@ const orderSchema = z.object({
     .max(50),
 });
 
-/* ── POST — submit a new dine-in order ──────────────── */
+/* ── POST — submit a new guest order (dine-in or takeaway) ── */
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const data = orderSchema.parse(body);
 
-    /* STEP 1 — Verify menu exists and table ordering is enabled */
+    /* STEP 1 — Verify menu exists and the requested ordering mode is enabled */
     const { data: menu } = await adminClient
       .from("menus")
-      .select("id, table_ordering, is_published, default_service_charge_pct")
+      .select("id, table_ordering, takeaway_enabled, is_published, default_service_charge_pct")
       .eq("id", data.menu_id)
       .single();
 
@@ -64,11 +67,41 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Menu not found." }, { status: 404 });
     }
 
-    if (!menu.table_ordering) {
-      return NextResponse.json(
-        { error: "Table ordering is not enabled for this menu." },
-        { status: 400 }
-      );
+    let normalizedPhone: string | null = null;
+
+    if (data.order_type === "takeaway") {
+      if (!menu.takeaway_enabled) {
+        return NextResponse.json(
+          { error: "Takeaway ordering is not enabled for this menu." },
+          { status: 400 }
+        );
+      }
+      if (!data.customer_name?.trim()) {
+        return NextResponse.json(
+          { error: "Please enter your name." },
+          { status: 400 }
+        );
+      }
+      normalizedPhone = normalizeKenyanPhone(data.customer_phone ?? "");
+      if (!normalizedPhone) {
+        return NextResponse.json(
+          { error: "Enter a valid phone number (e.g. 0712 345 678 or +254712345678)." },
+          { status: 400 }
+        );
+      }
+    } else {
+      if (!menu.table_ordering) {
+        return NextResponse.json(
+          { error: "Table ordering is not enabled for this menu." },
+          { status: 400 }
+        );
+      }
+      if (!data.table_number) {
+        return NextResponse.json(
+          { error: "Please enter your table number." },
+          { status: 400 }
+        );
+      }
     }
 
     /* STEP 2 — Fetch all submitted items from DB (never trust client prices) */
@@ -222,11 +255,13 @@ export async function POST(req: NextRequest) {
 
     /* STEP 6 — Validate table_id if provided, otherwise try to resolve by
        table_number so we can attach to a session even when the QR predates
-       table registration. */
-    let tableDisplayNumber = data.table_number;
+       table registration. Takeaway orders are tableless — skip entirely. */
+    let tableDisplayNumber: string | null = data.table_number ?? null;
     let resolvedTableId: string | null = null;
 
-    if (data.table_id) {
+    if (data.order_type === "takeaway") {
+      tableDisplayNumber = null;
+    } else if (data.table_id) {
       const { data: tableRow } = await adminClient
         .from("restaurant_tables")
         .select("id, table_number, menu_id, is_active")
@@ -306,7 +341,7 @@ export async function POST(req: NextRequest) {
        sessions silently attached — invisible to them unless they look.
        If we couldn't resolve a registered table (resolvedTableId null), the
        order is left session-less.
-       TODO V3: handle tableless orders (takeaway?) once the takeaway flow ships. */
+       Takeaway orders (order_type='takeaway') are intentionally session-less. */
     let sessionId: string | null = null;
     if (resolvedTableId) {
       const existing = await findOpenSessionForTable(resolvedTableId);
@@ -329,12 +364,13 @@ export async function POST(req: NextRequest) {
       .from("orders")
       .insert({
         menu_id:          data.menu_id,
-        order_type:       "dine_in",
+        order_type:       data.order_type,
         status:           "new",
         table_number:     tableDisplayNumber,
         table_id:         resolvedTableId,
         table_session_id: sessionId,
         customer_name:    data.customer_name ?? null,
+        customer_phone:   normalizedPhone,
         notes:            sanitizeNotes(data.order_note),
         subtotal_kes:     subtotal,
         delivery_fee_kes: 0,
@@ -388,6 +424,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       order_id:          order.id,
       short_id:          order.id.slice(0, 8).toUpperCase(),
+      order_type:        data.order_type,
       estimated_minutes: 20,
       table_number:      tableDisplayNumber,
       line_items,
