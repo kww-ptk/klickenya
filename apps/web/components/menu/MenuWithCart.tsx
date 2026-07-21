@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 import type { MenuSection, MenuItem } from "@/components/listings/detail/restaurant/MenuDisplay";
 import { MenuTabBar } from "@/components/menu/MenuTabBar";
@@ -164,18 +165,38 @@ function CartItemCard({ item, totalQty, onAdd, onRemove }: CartItemCardProps) {
 interface CartPanelProps {
   cart: Map<string, CartItem>;
   menuId: string;
+  menuSlug: string;
   initialTable?: string;
   /** Active tables for the dropdown picker. Empty = falls back to text input. */
   tables: Array<{ id: string; table_number: string; floor_section: string | null }>;
+  tableOrdering: boolean;
+  takeawayEnabled: boolean;
   onBack: () => void;
   onConfirmed: (data: ConfirmData) => void;
   onUpdateQty: (cartId: string, delta: number) => void;
   onEditLine: (cartItem: CartItem) => void;
 }
 
-function CartPanel({ cart, menuId, initialTable, tables, onBack, onConfirmed, onUpdateQty, onEditLine }: CartPanelProps) {
+function CartPanel({
+  cart,
+  menuId,
+  menuSlug,
+  initialTable,
+  tables,
+  tableOrdering,
+  takeawayEnabled,
+  onBack,
+  onConfirmed,
+  onUpdateQty,
+  onEditLine,
+}: CartPanelProps) {
+  const router = useRouter();
   const [tableNumber, setTableNumber] = useState(initialTable ?? "");
   const [customerName, setCustomerName] = useState("");
+  const [customerPhone, setCustomerPhone] = useState("");
+  const [orderType, setOrderType] = useState<"dine_in" | "takeaway">(
+    tableOrdering ? "dine_in" : "takeaway",
+  );
   const [orderNote, setOrderNote] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -184,9 +205,19 @@ function CartPanel({ cart, menuId, initialTable, tables, onBack, onConfirmed, on
   const subtotal = entries.reduce((sum, e) => sum + e.display_total, 0);
 
   async function handlePlaceOrder() {
-    if (!tableNumber.trim()) {
+    if (orderType === "dine_in" && !tableNumber.trim()) {
       setError("Please enter your table number.");
       return;
+    }
+    if (orderType === "takeaway") {
+      if (!customerName.trim()) {
+        setError("Please enter your name.");
+        return;
+      }
+      if (!/^\+?[\d\s\-()]{7,18}$/.test(customerPhone.trim())) {
+        setError("Enter a valid phone number (e.g. 0712 345 678).");
+        return;
+      }
     }
 
     setSubmitting(true);
@@ -198,8 +229,10 @@ function CartPanel({ cart, menuId, initialTable, tables, onBack, onConfirmed, on
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           menu_id: menuId,
-          table_number: tableNumber.trim(),
+          order_type: orderType,
+          table_number: orderType === "dine_in" ? tableNumber.trim() : undefined,
           customer_name: customerName.trim() || undefined,
+          customer_phone: orderType === "takeaway" ? customerPhone.trim() : undefined,
           order_note: orderNote.trim() || undefined,
           items: entries.map((e) => ({
             menu_item_id: e.menu_item_id,
@@ -219,6 +252,13 @@ function CartPanel({ cart, menuId, initialTable, tables, onBack, onConfirmed, on
 
       if (!res.ok) {
         setError(data.error ?? "Something went wrong. Please try again.");
+        return;
+      }
+
+      if (orderType === "takeaway") {
+        // Takeaway guests follow progress on the live status page — the
+        // restaurant still has to accept the order.
+        router.push(`/m/${menuSlug}/order/${data.order_id}`);
         return;
       }
 
@@ -343,8 +383,34 @@ function CartPanel({ cart, menuId, initialTable, tables, onBack, onConfirmed, on
           <span className="text-[16px] font-bold text-dark tabular-nums">{formatPrice(subtotal)}</span>
         </div>
 
-        {/* Table number + name */}
+        {/* Order type picker — only when both modes are available */}
+        {tableOrdering && takeawayEnabled && (
+          <div className="flex rounded-xl border border-border overflow-hidden mt-2">
+            {(
+              [
+                { key: "dine_in", label: "At a table" },
+                { key: "takeaway", label: "Takeaway (pickup)" },
+              ] as const
+            ).map((opt) => (
+              <button
+                key={opt.key}
+                type="button"
+                onClick={() => setOrderType(opt.key)}
+                className={`flex-1 py-3 text-[14px] font-bold transition-colors ${
+                  orderType === opt.key
+                    ? "bg-amber text-dark"
+                    : "bg-white text-text2 hover:bg-surface"
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Table number + name (dine-in) / name + phone (takeaway) */}
         <div className="bg-white rounded-xl border border-border px-4 py-4 mt-2 space-y-3">
+          {orderType === "dine_in" ? (
           <div>
             <label className="block text-[12px] font-bold text-dark mb-1.5 uppercase tracking-wide">
               Table number <span className="text-red-500">*</span>
@@ -403,6 +469,8 @@ function CartPanel({ cart, menuId, initialTable, tables, onBack, onConfirmed, on
               />
             )}
           </div>
+          ) : null}
+          {orderType === "dine_in" ? (
           <div>
             <label className="block text-[12px] font-bold text-dark mb-1.5 uppercase tracking-wide">
               Your name{" "}
@@ -417,6 +485,41 @@ function CartPanel({ cart, menuId, initialTable, tables, onBack, onConfirmed, on
               className={inputCls}
             />
           </div>
+          ) : (
+          <>
+            <div>
+              <label className="block text-[12px] font-bold text-dark mb-1.5 uppercase tracking-wide">
+                Your name <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                value={customerName}
+                onChange={(e) => setCustomerName(e.target.value)}
+                placeholder="e.g. James"
+                maxLength={100}
+                className={inputCls}
+                autoFocus
+              />
+            </div>
+            <div>
+              <label className="block text-[12px] font-bold text-dark mb-1.5 uppercase tracking-wide">
+                Phone number <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="tel"
+                inputMode="tel"
+                value={customerPhone}
+                onChange={(e) => setCustomerPhone(e.target.value)}
+                placeholder="e.g. 0712 345 678"
+                maxLength={20}
+                className={inputCls}
+              />
+              <p className="text-[12px] text-text3 mt-1.5">
+                Pay at pickup. The restaurant confirms your order and you follow progress live.
+              </p>
+            </div>
+          </>
+          )}
           <div>
             <label className="block text-[12px] font-bold text-dark mb-1.5 uppercase tracking-wide">
               Additional information{" "}
@@ -446,7 +549,9 @@ function CartPanel({ cart, menuId, initialTable, tables, onBack, onConfirmed, on
         </button>
 
         <p className="text-[12px] text-text3 text-center pb-8">
-          We&apos;ll bring your order to the table — no payment needed now.
+          {orderType === "takeaway"
+            ? "Pay when you collect — the restaurant will confirm your order first."
+            : "We’ll bring your order to the table — no payment needed now."}
         </p>
       </div>
     </div>
@@ -569,6 +674,7 @@ function groupTablesBySection(
 interface MenuWithCartProps {
   sections: MenuSection[];
   menuId: string;
+  menuSlug: string;
   initialTable?: string;
   /**
    * Active tables for this menu. When non-empty, the cart shows a dropdown
@@ -577,9 +683,19 @@ interface MenuWithCartProps {
    * block ordering entirely).
    */
   tables?: Array<{ id: string; table_number: string; floor_section: string | null }>;
+  tableOrdering: boolean;
+  takeawayEnabled: boolean;
 }
 
-export function MenuWithCart({ sections, menuId, initialTable, tables = [] }: MenuWithCartProps) {
+export function MenuWithCart({
+  sections,
+  menuId,
+  menuSlug,
+  initialTable,
+  tables = [],
+  tableOrdering,
+  takeawayEnabled,
+}: MenuWithCartProps) {
   const [activeTags, setActiveTags] = useState<string[]>([]);
   // Cart keyed by cart_id — same item with different options = separate lines
   const [cart, setCart] = useState<Map<string, CartItem>>(new Map());
@@ -769,8 +885,11 @@ export function MenuWithCart({ sections, menuId, initialTable, tables = [] }: Me
         <CartPanel
           cart={cart}
           menuId={menuId}
+          menuSlug={menuSlug}
           initialTable={initialTable}
           tables={tables}
+          tableOrdering={tableOrdering}
+          takeawayEnabled={takeawayEnabled}
           onBack={() => setView("browse")}
           onConfirmed={(data) => {
             setConfirmData(data);
