@@ -48,7 +48,7 @@ export default async function TableOrderingSetupPage({ params }: PageProps) {
   // Admin bypasses business_id ownership filter (layout already validated listing ownership).
   let menuQuery = adminClient
     .from("menus")
-    .select("id, name, slug, table_ordering, listing_slug")
+    .select("id, name, slug, table_ordering, takeaway_enabled, listing_slug")
     .eq("listing_slug", listing.slug);
   if (!isAdmin) menuQuery = menuQuery.eq("business_id", user.id);
   const { data: menu } = await menuQuery.maybeSingle();
@@ -105,6 +105,7 @@ export default async function TableOrderingSetupPage({ params }: PageProps) {
       menuName={menu.name}
       menuSlug={menu.slug}
       initialTableOrdering={menu.table_ordering ?? false}
+      initialTakeawayEnabled={menu.takeaway_enabled ?? false}
       areas={(areasRaw ?? []) as AreaOption[]}
       initialTables={(tablesRaw ?? []) as InitialTable[]}
       // ordering-only mode routes back-links + back= params through the
