@@ -45,8 +45,11 @@ export async function GET(req: NextRequest) {
       .select(`
         id,
         status,
+        order_type,
         table_number,
         customer_name,
+        customer_phone,
+        estimated_ready_at,
         notes,
         total_kes,
         created_at,
@@ -125,6 +128,7 @@ export async function PATCH(req: NextRequest) {
     const newStatus         = body?.status;
     const reason            = (body?.reason ?? "").toString().trim() || null;
     const managerOverridePin = body?.manager_override_pin ?? null;
+    const estimatedReadyMinutes = Number(body?.estimated_ready_minutes);
 
     if (!order_id || !newStatus) {
       return NextResponse.json(
@@ -136,7 +140,7 @@ export async function PATCH(req: NextRequest) {
     // Fetch the order so we can authorise against its menu_id.
     const { data: order } = await adminClient
       .from("orders")
-      .select("id, status, menu_id")
+      .select("id, status, menu_id, order_type")
       .eq("id", order_id)
       .single();
 
@@ -227,15 +231,58 @@ export async function PATCH(req: NextRequest) {
       }
       // Belt-and-braces: if the order has no live items (all voided), the
       // trigger won't fire and orders.status would stay put. Force-set it.
-      await adminClient.from("orders").update({ status: "cancelled" }).eq("id", order_id);
+      // Takeaway declines also record the reason for the guest status page.
+      await adminClient
+        .from("orders")
+        .update(
+          order.order_type === "takeaway" && reason
+            ? { status: "cancelled", decline_reason: reason }
+            : { status: "cancelled" },
+        )
+        .eq("id", order_id);
     } else {
+      const updatePayload: Record<string, unknown> = { status: newStatus };
+
+      // Takeaway accept: new → preparing stamps acceptance + promised time,
+      // and cascades items so the station board and the derive_order_status
+      // trigger agree (same cascade idea the cancel path uses).
+      const isTakeawayAccept =
+        order.order_type === "takeaway" &&
+        order.status === "new" &&
+        newStatus === "preparing";
+
+      if (isTakeawayAccept) {
+        updatePayload.accepted_at = new Date().toISOString();
+        if (
+          Number.isFinite(estimatedReadyMinutes) &&
+          estimatedReadyMinutes > 0 &&
+          estimatedReadyMinutes <= 240
+        ) {
+          updatePayload.estimated_ready_at = new Date(
+            Date.now() + estimatedReadyMinutes * 60_000,
+          ).toISOString();
+        }
+      }
+
       const { error } = await adminClient
         .from("orders")
-        .update({ status: newStatus })
+        .update(updatePayload)
         .eq("id", order_id);
       if (error) {
         console.error("[menu/orders PATCH] error:", error);
         return NextResponse.json({ error: "Failed to update order." }, { status: 500 });
+      }
+
+      if (isTakeawayAccept) {
+        const { error: cascadeErr } = await adminClient
+          .from("order_items")
+          .update({ station_status: "preparing" })
+          .eq("order_id", order_id)
+          .eq("is_voided", false)
+          .eq("station_status", "new");
+        if (cascadeErr) {
+          console.error("[menu/orders PATCH takeaway cascade] error:", cascadeErr);
+        }
       }
     }
 

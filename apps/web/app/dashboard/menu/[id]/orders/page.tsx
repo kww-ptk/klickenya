@@ -48,7 +48,7 @@ export default async function OrdersPage({ params, searchParams }: PageProps) {
   const { data: orders } = await adminClient
     .from("orders")
     .select(`
-      id, status, table_number, customer_name, notes,
+      id, status, order_type, table_number, customer_name, customer_phone, estimated_ready_at, notes,
       total_kes, created_at, waiter_id,
       order_items (
         id, item_name, item_price, quantity, notes,
