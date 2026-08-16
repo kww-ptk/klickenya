@@ -160,6 +160,7 @@ export default defineType({
         { type: 'destinationSectionBlock' },
         { type: 'distanceChipsBlock' },
         { type: 'deciderGridBlock' },
+        { type: 'filterableListBlock' },
         { type: 'listingSliderBlock' },
         { type: 'eventSliderBlock' },
         { type: 'exchangeRateBlock' },
