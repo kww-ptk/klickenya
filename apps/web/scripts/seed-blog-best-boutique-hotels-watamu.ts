@@ -354,9 +354,9 @@ function buildBody(IMG: Record<string, string>): any[] {
       { label: 'Privacy', color: 'teal', title: 'Book Zuri', items: ['You want to see almost nobody', 'Gardens and design matter to you', 'Honeymoon or a big anniversary', 'You might want to try kitesurfing'] },
       { label: 'Food', color: 'blue', title: 'Book Kobe', items: ['You plan holidays around meals', 'You want the sandbank in front of you', 'You need more than one room type', 'Travelling June to October'] },
       { label: 'Service', color: 'amber', title: 'Book Lonno', items: ['Being looked after is the whole point', 'You want the tower room view', 'You love Swahili architecture', 'The beach is not your top priority'] },
-      { label: 'Nature', color: 'green', title: 'Book the Treehouse', items: ['You want yoga and real quiet', 'You want proper guided tours', 'Healthy food matters to you', 'You like unusual buildings'] },
+      { label: 'Nature', color: 'teal', title: 'Book the Treehouse', items: ['You want yoga and real quiet', 'You want proper guided tours', 'Healthy food matters to you', 'You like unusual buildings'] },
       { label: 'Value', color: 'purple', title: 'Book Palm Garden', items: ['You want boutique without the beachfront price', 'Adults only suits you', 'You care about a good drink', 'You want a spa on site'] },
-      { label: 'Wow', color: 'red', title: 'Book Rock and Sea', items: ['You want the most beautiful setting', 'Sleeping under the stars appeals', 'You do not mind arriving by boat', 'One or two nights, not a week'] },
+      { label: 'Wow', color: 'blue', title: 'Book Rock and Sea', items: ['You want the most beautiful setting', 'Sleeping under the stars appeals', 'You do not mind arriving by boat', 'One or two nights, not a week'] },
     ]),
     compareTable(
       [{ label: 'Zuri', color: 'teal' }, { label: 'Kobe', color: 'blue' }, { label: 'Palm Garden', color: 'purple' }],

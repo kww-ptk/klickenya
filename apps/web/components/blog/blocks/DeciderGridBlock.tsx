@@ -6,6 +6,8 @@ const cardStyles: Record<string, { bg: string; border: string; label: string }> 
   blue: { bg: 'bg-[rgba(37,99,235,.05)]', border: 'border-[rgba(37,99,235,.18)]', label: 'text-[#2563EB]' },
   purple: { bg: 'bg-[rgba(139,77,171,.10)]', border: 'border-[rgba(139,77,171,.2)]', label: 'text-purple2' },
   amber: { bg: 'bg-[rgba(232,160,32,.08)]', border: 'border-[rgba(232,160,32,.2)]', label: 'text-[#B8860B]' },
+  green: { bg: 'bg-[rgba(34,139,84,.07)]', border: 'border-[rgba(34,139,84,.2)]', label: 'text-[#228B54]' },
+  red: { bg: 'bg-[rgba(200,58,48,.06)]', border: 'border-[rgba(200,58,48,.18)]', label: 'text-[#C83A30]' },
 }
 
 export function DeciderGridBlock({ value }: { value: DeciderGridValue }) {
@@ -13,7 +15,9 @@ export function DeciderGridBlock({ value }: { value: DeciderGridValue }) {
   return (
     <div className={`grid gap-3.5 my-5 mb-9 max-md:grid-cols-1 ${cards.length === 4 ? 'grid-cols-2 lg:grid-cols-4' : 'grid-cols-3'}`}>
       {cards.map((card, i) => {
-        const s = cardStyles[card.color || 'teal']
+        // Fall back rather than crash: the Sanity schema offers colours this map
+        // may not know about, and an undefined lookup here 500s the whole post.
+        const s = cardStyles[card.color || 'teal'] ?? cardStyles.teal
         return (
           <div key={i} className={`p-[22px] px-5 rounded-[22px] border ${s.bg} ${s.border} transition-all hover:-translate-y-[3px] hover:shadow-[0_8px_28px_rgba(0,0,0,.08),0_0_0_1px_rgba(0,0,0,.03)]`}>
             {card.label && <p className={`text-[11px] font-extrabold uppercase tracking-[.07em] mb-2.5 ${s.label}`}>{card.label}</p>}
