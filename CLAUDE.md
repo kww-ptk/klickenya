@@ -141,6 +141,7 @@ NOT YET BUILT:
   Kitchen orders page tagged with route: kitchen_orders for a future Sentry alert.
 
 ## Blog publishing (Sanity CMS)
+  FULL GUIDE: docs/how-to-add-a-blog-post.md — read that before writing a new post.
   Seed scripts in apps/web/scripts/seed-blog-*.ts push blog content to Sanity.
   Require the WRITE token (skCbj0aG...), not the read-only token.
   This environment cannot reach api.sanity.io (network blocked) — user must run locally:
