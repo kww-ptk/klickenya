@@ -395,7 +395,7 @@ function buildBody(IMG: Record<string, string>): any[] {
       { label: 'Special occasion', color: 'purple', title: 'Tribal Table or Salt and Smoke', items: ['Elegant and romantic on Bofa', 'Or serious meat and fire', 'Book ahead for both', 'High end, worth it'] },
       { label: 'Sunset', color: 'amber', title: "Salty's on the Creek", items: ['The best light in Kilifi', 'Seafood and good cocktails', 'Arrive an hour before', 'The Twisted Fig runs it close'] },
       { label: 'Something different', color: 'teal', title: 'Asian Kitchen', items: ['Noodles and sushi', 'Nowhere else does this here', 'Clifftop ocean views', 'Book at weekends'] },
-      { label: 'Cheap and excellent', color: 'green', title: 'Village Dishes', items: ['Swahili and coastal food', 'Barbecue and shawarma', 'The famous fresh juice', 'Nuus for shawarma alone'] },
+      { label: 'Cheap and excellent', color: 'amber', title: 'Village Dishes', items: ['Swahili and coastal food', 'Barbecue and shawarma', 'The famous fresh juice', 'Nuus for shawarma alone'] },
     ]),
     budgetTable(
       ['Price band', 'What it means', 'Where'],
