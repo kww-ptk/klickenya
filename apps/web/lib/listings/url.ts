@@ -6,7 +6,7 @@
  * `/listings/{type}/{slug}` (singular type, no city, wrong prefix) which 404s.
  * Mirrors mapListingToCard in app/hosts/[slug]/page.tsx and revalidate.ts.
  */
-const TYPE_TO_URL_SEGMENT: Record<string, string> = {
+export const TYPE_TO_URL_SEGMENT: Record<string, string> = {
   stay: "stays",
   experience: "experiences",
   event: "events",
