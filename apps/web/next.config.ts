@@ -50,6 +50,74 @@ function legacyListingRedirects() {
   );
 }
 
+/**
+ * Legacy WordPress URLs → their Next.js equivalents.
+ *
+ * The site was a WordPress install before the Next.js rebuild and Google still
+ * has a batch of the old permalinks indexed. Every one of them is dead: most
+ * match no route and get served as a cached 200 of the not-found shell, and the
+ * date-archive ones hard 404. Two of them still rank on page one, including
+ * /2024/07/05/how-to-get-around-watamu which sits directly below the live
+ * journal post for the same query and splits the signal with it.
+ *
+ * Only /blog/:path*, one date URL and one beach URL were ever mapped (in
+ * vercel.json and below). These are the rest.
+ *
+ * Destinations verified 200 before adding: /destinations/{watamu,kilifi,diani},
+ * /real-estate, /experiences/watamu/{garoda-beach,jacaranda-beach,mida-creek}.
+ */
+function legacyWordpressRedirects() {
+  return [
+    // Old WP taxonomy: /kenya/<city>/<section>/<slug>. The slugs match the
+    // listing slugs we kept, so these land on the real listing page.
+    {
+      source: "/kenya/:city/beach/:slug",
+      destination: "/experiences/:city/:slug",
+      permanent: true,
+    },
+    {
+      source: "/kenya/:city/things-to-do/:slug",
+      destination: "/experiences/:city/:slug",
+      permanent: true,
+    },
+    // Old WP region hubs → the destination pages that replaced them.
+    {
+      source: "/region/:city",
+      destination: "/destinations/:city",
+      permanent: true,
+    },
+    // Individual posts that are still indexed.
+    {
+      source: "/how-to-get-around-watamu",
+      destination: "/journal/watamu-transport-guide",
+      permanent: true,
+    },
+    {
+      source: "/24-things-to-do-in-watamu",
+      destination: "/journal/complete-guide-watamu-kenya-2026",
+      permanent: true,
+    },
+    {
+      source: "/watamu-real-estate-investment-guide",
+      destination: "/real-estate",
+      permanent: true,
+    },
+    // Date-archive permalinks. The known one is mapped to its replacement; the
+    // rest cannot be mapped slug-for-slug, so they land on the journal index,
+    // which beats a 404. Order matters: specific before the catch-all.
+    {
+      source: "/:year(\\d{4})/:month(\\d{2})/:day(\\d{2})/how-to-get-around-watamu",
+      destination: "/journal/watamu-transport-guide",
+      permanent: true,
+    },
+    {
+      source: "/:year(\\d{4})/:month(\\d{2})/:day(\\d{2})/:slug",
+      destination: "/journal",
+      permanent: true,
+    },
+  ];
+}
+
 const nextConfig: NextConfig = {
   async redirects() {
     return [
@@ -64,6 +132,9 @@ const nextConfig: NextConfig = {
         destination: "/journal/money-exchange-atm-watamu-guide",
         permanent: true,
       },
+      // Must come last: contains a date-archive catch-all that would otherwise
+      // shadow the specific date mappings above.
+      ...legacyWordpressRedirects(),
     ];
   },
   images: {
