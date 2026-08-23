@@ -1,23 +1,40 @@
 /** Price / label formatting shared by every real-estate surface. */
 
-/** Compact price for cards and headings: "KSh 12.5M", "KSh 850,000". */
-export function formatPrice(price: number): string {
+import { DEFAULT_CURRENCY, toCurrency, withSymbol, type Currency } from "./currency";
+
+/**
+ * Compact price for cards and headings: "KSh 12.5M", "€485,000", "$1.2M".
+ *
+ * The currency argument defaults to shillings so the call sites that are
+ * inherently KES (neighbourhood averages, the valuation tool, the filter
+ * chips) stay correct without passing it. Anything rendering a property price
+ * must pass the property's own currency.
+ */
+export function formatPrice(
+  price: number,
+  currency: Currency | string = DEFAULT_CURRENCY
+): string {
+  const code = toCurrency(currency);
   if (!Number.isFinite(price) || price <= 0) return "Price on request";
   if (price >= 1_000_000_000) {
     const b = price / 1_000_000_000;
-    return `KSh ${b % 1 === 0 ? b.toFixed(0) : b.toFixed(1)}B`;
+    return withSymbol(`${b % 1 === 0 ? b.toFixed(0) : b.toFixed(1)}B`, code);
   }
   if (price >= 1_000_000) {
     const m = price / 1_000_000;
-    return `KSh ${m % 1 === 0 ? m.toFixed(0) : m.toFixed(1)}M`;
+    return withSymbol(`${m % 1 === 0 ? m.toFixed(0) : m.toFixed(1)}M`, code);
   }
-  return `KSh ${price.toLocaleString("en-KE")}`;
+  return withSymbol(price.toLocaleString("en-KE"), code);
 }
 
-/** Full price with every digit — used in JSON-LD and the admin table. */
-export function formatPriceFull(price: number): string {
+/** Full price with every digit — used on the detail page and in admin. */
+export function formatPriceFull(
+  price: number,
+  currency: Currency | string = DEFAULT_CURRENCY
+): string {
+  const code = toCurrency(currency);
   if (!Number.isFinite(price) || price <= 0) return "Price on request";
-  return `KSh ${new Intl.NumberFormat("en-KE").format(price)}`;
+  return withSymbol(new Intl.NumberFormat("en-KE").format(price), code);
 }
 
 /**

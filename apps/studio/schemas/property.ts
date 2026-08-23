@@ -113,10 +113,28 @@ export default defineType({
       group: 'details',
     }),
     defineField({
+      name: 'currency',
+      title: 'Currency',
+      description:
+        'Currency the asking price is quoted in. Coastal property is often priced in euro for international buyers. Leave as Kenyan shillings unless the seller quotes otherwise.',
+      type: 'string',
+      options: {
+        list: [
+          { title: 'Kenyan shillings (KSh)', value: 'KES' },
+          { title: 'Euro (EUR)', value: 'EUR' },
+          { title: 'US dollars (USD)', value: 'USD' },
+          { title: 'Pounds sterling (GBP)', value: 'GBP' },
+        ],
+      },
+      initialValue: 'KES',
+      group: 'details',
+    }),
+    defineField({
       name: 'price',
       title: 'Price',
       type: 'number',
-      description: 'Price in KES',
+      description:
+        'Amount in the currency selected above. Enter the number only, no symbol or separators.',
       validation: (rule) => rule.required().min(0),
       group: 'details',
     }),
@@ -270,7 +288,8 @@ export default defineType({
       name: 'previousPrice',
       title: 'Previous Price',
       type: 'number',
-      description: "Previous price — shows 'Reduced' badge if set",
+      description:
+        "Previous price in the same currency as the asking price. Shows a 'Reduced' badge when set.",
       group: 'details',
     }),
     defineField({
@@ -336,12 +355,17 @@ export default defineType({
       neighbourhood: 'neighbourhood',
       city: 'city',
       status: 'status',
+      price: 'price',
+      currency: 'currency',
       partner: 'partner.slug.current',
       onMarketplace: 'publishToMarketplace',
       media: 'photos.0',
     },
-    prepare({ title, neighbourhood, city, status, partner, onMarketplace, media }) {
+    prepare({ title, neighbourhood, city, status, price, currency, partner, onMarketplace, media }) {
       const place = [neighbourhood, city].filter(Boolean).join(', ')
+      const money = price
+        ? `${{ KES: 'KSh', EUR: '\u20AC', USD: '$', GBP: '\u00A3' }[currency || 'KES']}${price.toLocaleString()}`
+        : null
       // A partner property that is not published to the marketplace is invisible
       // on klickenya.com, which is easy to miss from the document alone.
       const scope = partner

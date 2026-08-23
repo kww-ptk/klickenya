@@ -4,6 +4,7 @@ import {
   propertyPath,
   isClosedStatus,
 } from "./constants";
+import { toCurrency } from "./currency";
 import type { PropertyCardData } from "./mappers";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -77,6 +78,9 @@ export function propertyListingSchema(property: any, photos: string[]) {
   const url = absoluteUrl(propertyPath(slug));
   const isRent =
     property.listingCategory === "for-rent" || property.priceType === "per-month";
+  // priceCurrency was hardcoded to KES, which told Google a euro asking price
+  // was a shilling one.
+  const currency = toCurrency(property.currency);
 
   const schema: Record<string, unknown> = {
     "@context": "https://schema.org",
@@ -100,7 +104,7 @@ export function propertyListingSchema(property: any, photos: string[]) {
     offers: {
       "@type": "Offer",
       price: property.price,
-      priceCurrency: "KES",
+      priceCurrency: currency,
       availability: availability(property.status),
       url,
       ...(isRent
@@ -108,7 +112,7 @@ export function propertyListingSchema(property: any, photos: string[]) {
             priceSpecification: {
               "@type": "UnitPriceSpecification",
               price: property.price,
-              priceCurrency: "KES",
+              priceCurrency: currency,
               unitCode: "MON",
               billingIncrement: 1,
             },

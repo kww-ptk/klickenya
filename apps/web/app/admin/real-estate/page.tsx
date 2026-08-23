@@ -27,6 +27,7 @@ type Property = {
   neighbourhood: string;
   status: string;
   price: number;
+  currency: string;
   priceType: string;
   photoCount: number;
   agent: { displayName: string } | null;
@@ -56,7 +57,7 @@ export default async function AdminRealEstatePage({
   const [properties, { data: propertyEnquiries }] = await Promise.all([
     sanityClient.fetch<Property[]>(
       `*[_type == "property"] | order(_createdAt desc) {
-        _id, title, slug, listingCategory, city, neighbourhood, status, price, priceType,
+        _id, title, slug, listingCategory, city, neighbourhood, status, price, currency, priceType,
         "photoCount": count(photos),
         "agent": agent->{ displayName },
         "partnerSlug": partner->slug.current,
@@ -286,7 +287,7 @@ export default async function AdminRealEstatePage({
                         />
                       </td>
                       <td className="whitespace-nowrap px-4 py-3 text-[13px] text-dark">
-                        {formatPriceFull(property.price)}
+                        {formatPriceFull(property.price, property.currency)}
                         {suffix && (
                           <span className="text-text3"> / mo</span>
                         )}

@@ -19,6 +19,7 @@ function card(overrides: Partial<PropertyCardData> = {}): PropertyCardData {
     propertyType: "apartment",
     status: "available",
     price: 10_000_000,
+    currency: "KES",
     priceType: "total",
     features: [],
     neighbourhood: "Kilimani",

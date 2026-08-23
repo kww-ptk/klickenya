@@ -48,6 +48,7 @@ import {
   pricePerSqm,
 } from "@/lib/real-estate/format";
 import { mapPropertiesToCards } from "@/lib/real-estate/mappers";
+import { toCurrency } from "@/lib/real-estate/currency";
 import { absoluteUrl, propertyListingSchema } from "@/lib/real-estate/schema";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -108,6 +109,7 @@ async function PropertyDetail({ slug }: { slug: string }) {
   const closed = isClosedStatus(property.status);
   const reduction = getReductionPercent(property.previousPrice, property.price);
   const suffix = priceSuffix(property.listingCategory, property.priceType);
+  const currency = toCurrency(property.currency);
   const perSqm = pricePerSqm(property.price, property.sizeSqm);
   const acres = formatAcres(property.landSizeAcres);
   const url = absoluteUrl(propertyPath(slug));
@@ -138,19 +140,21 @@ async function PropertyDetail({ slug }: { slug: string }) {
     <>
       <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
         <span className="font-display text-[32px] font-extrabold tracking-[-0.03em] text-dark">
-          {formatPrice(property.price ?? 0)}
+          {formatPrice(property.price ?? 0, currency)}
         </span>
         {suffix && <span className="text-[14px] text-text2">{suffix}</span>}
       </div>
       {/* formatPrice abbreviates anything over a million, so show the exact
           figure underneath where it was abbreviated. */}
       {property.price >= 1_000_000 && (
-        <p className="mt-0.5 text-[13px] text-text3">{formatPriceFull(property.price)}</p>
+        <p className="mt-0.5 text-[13px] text-text3">
+          {formatPriceFull(property.price, currency)}
+        </p>
       )}
       {reduction != null && reduction > 0 && (
         <div className="mt-2 flex items-center gap-2">
           <span className="text-[14px] text-text3 line-through">
-            {formatPrice(property.previousPrice)}
+            {formatPrice(property.previousPrice, currency)}
           </span>
           <span className="inline-flex items-center gap-0.5 rounded-full bg-green/12 px-2 py-0.5 text-[11px] font-bold text-green">
             &darr;{reduction}% reduced
@@ -159,7 +163,7 @@ async function PropertyDetail({ slug }: { slug: string }) {
       )}
       {perSqm && (
         <p className="mt-2 text-[13.5px] text-text2">
-          {formatPriceFull(perSqm)} per m&sup2;
+          {formatPriceFull(perSqm, currency)} per m&sup2;
         </p>
       )}
     </>
@@ -452,7 +456,7 @@ async function PropertyDetail({ slug }: { slug: string }) {
       <div className="fixed inset-x-0 bottom-[calc(62px+env(safe-area-inset-bottom))] z-[150] flex items-center justify-between gap-3 border-t border-border bg-white px-5 py-3.5 md:bottom-0 lg:hidden">
         <div className="min-w-0">
           <span className="font-display text-[20px] font-extrabold tracking-[-0.02em] text-dark">
-            {formatPrice(property.price ?? 0)}
+            {formatPrice(property.price ?? 0, currency)}
           </span>
           {suffix && <span className="text-[13px] text-text2"> {suffix}</span>}
         </div>

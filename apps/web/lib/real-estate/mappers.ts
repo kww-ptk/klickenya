@@ -1,4 +1,5 @@
 import { urlForImage } from "@/lib/sanity/image";
+import { toCurrency, type Currency } from "./currency";
 
 /**
  * The shape every property grid renders. Built once here instead of the four
@@ -12,6 +13,7 @@ export interface PropertyCardData {
   propertyType?: string;
   status: string;
   price: number;
+  currency: Currency;
   priceType: string;
   previousPrice?: number;
   isFeatured?: boolean;
@@ -44,6 +46,7 @@ export function mapPropertyToCard(p: any): PropertyCardData {
     propertyType: p.propertyType,
     status: p.status ?? "available",
     price: p.price ?? 0,
+    currency: toCurrency(p.currency),
     priceType: p.priceType ?? "total",
     previousPrice: p.previousPrice ?? undefined,
     isFeatured: p.isFeatured ?? false,

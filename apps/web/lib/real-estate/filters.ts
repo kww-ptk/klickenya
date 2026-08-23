@@ -1,5 +1,6 @@
 import type { PropertyCardData } from "./mappers";
 import { citySlug } from "./constants";
+import { toComparableKes } from "./currency";
 
 /**
  * Search/filter state. Serialised straight into the query string so a filtered
@@ -133,6 +134,11 @@ export function applyFilters(
   savedIds?: ReadonlySet<string>
 ): PropertyCardData[] {
   return cards.filter((card) => {
+    // The min/max the user typed is in shillings, but a listing may be priced
+    // in euro. Compare on an approximate shilling equivalent so a €485,000
+    // villa is not treated as cheaper than a KSh 2M plot. The converted figure
+    // is never shown; see APPROX_KES_RATES.
+    const comparablePrice = toComparableKes(card.price, card.currency);
     if (!cityMatches(card.city, filters.city)) return false;
     if (
       filters.neighbourhood &&
@@ -142,8 +148,8 @@ export function applyFilters(
     if (filters.type && card.propertyType !== filters.type) return false;
     if (filters.beds != null && (card.bedrooms ?? 0) < filters.beds) return false;
     if (filters.baths != null && (card.bathrooms ?? 0) < filters.baths) return false;
-    if (filters.minPrice != null && card.price < filters.minPrice) return false;
-    if (filters.maxPrice != null && card.price > filters.maxPrice) return false;
+    if (filters.minPrice != null && comparablePrice < filters.minPrice) return false;
+    if (filters.maxPrice != null && comparablePrice > filters.maxPrice) return false;
     if (filters.minSize != null && (card.sizeSqm ?? 0) < filters.minSize) return false;
     if (filters.newOnly && !card.isNewDevelopment) return false;
     if (filters.savedOnly && !(savedIds?.has(card.id) ?? false)) return false;
@@ -160,11 +166,13 @@ export function sortProperties(
   sort: SortKey
 ): PropertyCardData[] {
   const out = [...cards];
+  // Sorting compares shilling equivalents for the same reason applyFilters does.
+  const kes = (c: PropertyCardData) => toComparableKes(c.price, c.currency);
   switch (sort) {
     case "price-asc":
-      return out.sort((a, b) => a.price - b.price);
+      return out.sort((a, b) => kes(a) - kes(b));
     case "price-desc":
-      return out.sort((a, b) => b.price - a.price);
+      return out.sort((a, b) => kes(b) - kes(a));
     case "beds-desc":
       return out.sort((a, b) => (b.bedrooms ?? 0) - (a.bedrooms ?? 0));
     case "size-desc":

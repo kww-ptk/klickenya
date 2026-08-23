@@ -1,5 +1,5 @@
 # Klickenya — CLAUDE.md
-# Last updated: June 29, 2026 (host edit/delete, claim completion, guest→host upgrade; migration counter → 077)
+# Last updated: August 23, 2026 (real-estate overhaul: search, SEO, property currency; migration counter → 084)
 # Read this at the start of every session before writing any code.
 
 ## What Klickenya is
@@ -10,7 +10,7 @@ Stack: Next.js 15 App Router · Sanity (content) · Supabase (auth + dynamic dat
 Monorepo: apps/web · apps/studio · packages/shared · packages/database.
 
 ## Current state (as of audit May 8, 2026)
-Migration count: 082 (last: 082_occurrence_dates.sql)
+Migration count: 084 (last: 084_valuations_property_type.sql)
 Missing on disk: 046, 047, 050 (squashed or never committed — don't reuse these numbers)
 Collision on disk: 073 has TWO files (073_partner_linkage.sql + 073_staff_cross_station_access.sql) — historical, don't reuse 073
 LIVE and working end-to-end:
@@ -61,7 +61,7 @@ NOT YET BUILT:
   Mobile-first. Test on iPhone Safari before declaring done.
 
 ## Database — Supabase
-  Next migration number: 083 (082 is occurrence dates — recurring-event tickets bound to a specific night + per-night inventory; don't use 046, 047, 050 — gaps on disk; 073 is a double — already used twice)
+  Next migration number: 085 (084 adds valuations.property_type — the valuation route always inserted a column the table never had, so every insert failed with PGRST204 and was swallowed; 083 is takeaway orders; don't use 046, 047, 050 — gaps on disk; 073 is a double — already used twice)
   RLS enabled on all tables. Check policies before querying from client.
   create_booking_with_payment() RPC handles bookings — don't INSERT directly.
   guest_user_id present on bookings (040) and contact_requests (042).
@@ -98,6 +98,19 @@ NOT YET BUILT:
   Consider extracting the projection into a shared constant if a table is
   read from 4+ places — order_items is now at that threshold. Worth doing
   next time someone adds a column there.
+
+## Real estate — property prices carry a currency
+  `property.currency` (KES default, plus EUR/USD/GBP) says what `price` is quoted in.
+  Coastal stock is genuinely sold in euro: the Claris properties are EUR, and before this
+  field existed a 485,000 euro asking price rendered as "KSh 485,000".
+  Anything rendering a property price MUST pass the currency:
+    formatPrice(price, currency)   NOT   formatPrice(price)
+  The bare call defaults to KES, which is correct for neighbourhood averages, the valuation
+  tool and the filter chips, and wrong for everything that comes off a property document.
+  Price filtering and sorting compare an approximate shilling equivalent
+  (lib/real-estate/currency.ts, APPROX_KES_RATES). Those rates are maintained by hand and are
+  never shown to anyone — display is always the listing's own currency.
+  The hub market medians deliberately use KES listings only and say so in the caption.
 
 ## Sanity schema — listing.ts groups
   general · media · rooms · restaurant · experience · event · service · seo · verification · notifications

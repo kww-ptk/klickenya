@@ -10,6 +10,7 @@ interface Development {
   city: string;
   neighbourhood: string;
   price: number;
+  currency?: string;
   completionPercentage?: number;
   unitsAvailable?: number;
   coverPhoto?: string;
@@ -78,7 +79,7 @@ function NewDevelopments({ developments }: NewDevelopmentsProps) {
               📍 {dev.neighbourhood}, {dev.city}
             </p>
             <p className="text-[15px] font-bold text-text">
-              From {formatPrice(dev.price)}
+              From {formatPrice(dev.price, dev.currency)}
               <span className="text-text3 font-normal text-[12.5px]"> · per unit</span>
             </p>
             {dev.unitsAvailable != null && dev.unitsAvailable > 0 && (

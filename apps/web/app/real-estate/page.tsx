@@ -290,6 +290,7 @@ export default async function RealEstateHomePage() {
               city: d.city,
               neighbourhood: d.neighbourhood,
               price: d.price,
+              currency: d.currency,
               completionPercentage: d.completionPercentage,
               unitsAvailable: d.unitsAvailable,
               coverPhoto: d.coverPhoto,

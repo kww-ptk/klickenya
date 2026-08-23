@@ -34,6 +34,7 @@ function PropertyCard({
   listingCategory,
   status,
   price,
+  currency,
   priceType,
   previousPrice,
   isFeatured,
@@ -161,7 +162,7 @@ function PropertyCard({
                 large ? "text-[26px]" : "text-[20px]"
               )}
             >
-              {formatPrice(price)}
+              {formatPrice(price, currency)}
             </span>
             {suffix && (
               <span className="text-[13px] font-normal text-text2">{suffix}</span>

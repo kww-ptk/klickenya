@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { isCurrency } from "@/lib/real-estate/currency";
 import { sanityClient } from "@/lib/sanity/client";
 import { sanityWriteClient } from "@/lib/sanity/writeClient";
 import { verifyPartnerKey } from "@/lib/partner/auth";
@@ -42,7 +43,7 @@ export async function GET(request: NextRequest) {
 
   const properties = await sanityClient.fetch(
     `*[_type == "property" && partner->slug.current == $partner] | order(_createdAt desc) {
-      _id, title, "slug": slug.current, status, price, bedrooms, bathrooms,
+      _id, title, "slug": slug.current, status, price, currency, bedrooms, bathrooms,
       sizeSqm, neighbourhood, city, "photo": photos[0].asset->url
     }`,
     { partner }
@@ -88,6 +89,11 @@ export async function POST(request: NextRequest) {
     listingCategory: "for-sale",
     status: "draft",
     price: typeof body.price === "number" ? body.price : 0,
+    // Partners quote in their buyers' currency: the Claris stock is priced in
+    // euro. Before this field existed the number was stored bare and the
+    // marketplace rendered it as shillings, off by a factor of roughly 150.
+    // Anything unrecognised falls back to shillings, the Kenyan default.
+    currency: isCurrency(body.currency) ? body.currency : "KES",
     description: typeof body.description === "string" && body.description
       ? toPortableText(body.description)
       : undefined,

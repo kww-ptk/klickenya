@@ -33,8 +33,15 @@ function MarketDataStrip({
   properties,
   neighbourhoodSlugs = {},
 }: MarketDataStripProps) {
-  const forSale = properties.filter((p) => p.listingCategory === "for-sale");
-  const forRent = properties.filter((p) => p.listingCategory === "for-rent");
+  // Medians are computed from shilling listings only. Folding a euro asking
+  // price into the same median would produce a number that means nothing, and
+  // converting at a hand-maintained rate would make the headline figure move
+  // whenever somebody edited that constant. The caption says which it is.
+  const inKes = properties.filter((p) => p.currency === "KES");
+  const excluded = properties.length - inKes.length;
+
+  const forSale = inKes.filter((p) => p.listingCategory === "for-sale");
+  const forRent = inKes.filter((p) => p.listingCategory === "for-rent");
 
   const medianSalePrice = median(forSale.map((p) => p.price).filter((n) => n > 0));
   const medianRent = median(forRent.map((p) => p.price).filter((n) => n > 0));
@@ -99,7 +106,8 @@ function MarketDataStrip({
 
   const maxBar = Math.max(...bars.map((b) => b.value), 1);
 
-  if (stats.length === 0) return null;
+  // Nothing priced in shillings means nothing to average honestly.
+  if (stats.length === 0 || inKes.length === 0) return null;
 
   return (
     <section className="bg-dark px-5 py-14 md:px-10">
@@ -114,8 +122,16 @@ function MarketDataStrip({
             market at a glance
           </h2>
           <p className="mt-2.5 text-[14px] leading-[1.55] text-white/45">
-            Calculated from the {properties.length} properties currently
-            published on Klickenya. These are asking prices, not sale prices.
+            Calculated from the {inKes.length}{" "}
+            {inKes.length === 1 ? "property" : "properties"} priced in shillings
+            on Klickenya. These are asking prices, not sale prices.
+            {excluded > 0 && (
+              <>
+                {" "}
+                {excluded} {excluded === 1 ? "listing" : "listings"} priced in
+                another currency {excluded === 1 ? "is" : "are"} not included.
+              </>
+            )}
           </p>
 
           <div className="mt-7 flex flex-col gap-3">
