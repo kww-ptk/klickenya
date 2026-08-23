@@ -157,7 +157,11 @@ function PropertyGallery({
           role="dialog"
           aria-modal="true"
           aria-label={`${title} photo viewer`}
-          className="fixed inset-0 z-[300] flex flex-col bg-dark/95"
+          // Explicit rgba rather than bg-dark/95: the page behind was reading
+          // straight through the token opacity, so the lightbox never felt
+          // like a layer above the page.
+          style={{ backgroundColor: "rgba(12, 10, 6, 0.985)" }}
+          className="fixed inset-0 z-[300] flex flex-col"
         >
           <div className="flex items-center justify-between px-5 py-4 text-white">
             <span className="text-[14px] font-semibold">

@@ -111,16 +111,21 @@ function PropertyCard({
             </div>
           )}
 
-          {/* Category + new-build badges */}
+          {/* Category + new-build badges. A sold or let property is not "For
+              Sale" any more, so the category badge gives way to the status
+              ribbon below; under offer keeps it, because it is still on the
+              market until the sale completes. */}
           <div className="absolute left-3.5 top-3.5 flex flex-wrap items-center gap-1.5 pr-14">
-            <span
-              className={cn(
-                "rounded-full px-2.5 py-1 text-[11px] font-bold backdrop-blur-[8px]",
-                categoryStyle
-              )}
-            >
-              {categoryLabel}
-            </span>
+            {!closed && (
+              <span
+                className={cn(
+                  "rounded-full px-2.5 py-1 text-[11px] font-bold backdrop-blur-[8px]",
+                  categoryStyle
+                )}
+              >
+                {categoryLabel}
+              </span>
+            )}
             {isNewDevelopment && (
               <span className="rounded-full bg-blue-500/90 px-2.5 py-1 text-[11px] font-bold text-white backdrop-blur-[8px]">
                 Off-plan

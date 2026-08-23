@@ -52,6 +52,8 @@ import { absoluteUrl, propertyListingSchema } from "@/lib/real-estate/schema";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
+
+
 export async function fetchProperty(slug: string) {
   return sanityClient.fetch(PROPERTY_BY_SLUG_QUERY, { slug }).catch(() => null);
 }
@@ -391,8 +393,6 @@ async function PropertyDetail({ slug }: { slug: string }) {
                 <PropertyEnquiryForm
                   propertyId={property._id}
                   propertyTitle={property.title}
-                  price={property.price}
-                  priceType={property.priceType}
                   agentName={agent?.displayName}
                   listingCategory={property.listingCategory}
                 />
@@ -423,7 +423,7 @@ async function PropertyDetail({ slug }: { slug: string }) {
       </article>
 
       {/* ── Mobile enquiry ─────────────────── */}
-      <div id="enquire" className="mx-auto max-w-[560px] px-5 pb-28 lg:hidden">
+      <div id="enquire" className="mx-auto max-w-[560px] px-5 pb-[160px] md:pb-28 lg:hidden">
         <div className="rounded-[32px] border border-border bg-white p-7 shadow-lg">
           {agent && (
             <>
@@ -438,16 +438,18 @@ async function PropertyDetail({ slug }: { slug: string }) {
           <PropertyEnquiryForm
             propertyId={property._id}
             propertyTitle={property.title}
-            price={property.price}
-            priceType={property.priceType}
             agentName={agent?.displayName}
             listingCategory={property.listingCategory}
           />
         </div>
       </div>
 
-      {/* ── Mobile bottom bar ──────────────── */}
-      <div className="fixed inset-x-0 bottom-0 z-[150] flex items-center justify-between gap-3 border-t border-border bg-white px-5 py-3.5 lg:hidden">
+      {/* ── Mobile bottom bar ──────────────────
+          MobileBottomNav in the root layout is fixed at bottom-0, 62px tall,
+          z-200 and md:hidden. Sitting this bar at bottom-0 too put the price
+          and the Enquire button underneath it. Below md it stacks above the
+          nav; from md up the nav is gone and this returns to the bottom. */}
+      <div className="fixed inset-x-0 bottom-[calc(62px+env(safe-area-inset-bottom))] z-[150] flex items-center justify-between gap-3 border-t border-border bg-white px-5 py-3.5 md:bottom-0 lg:hidden">
         <div className="min-w-0">
           <span className="font-display text-[20px] font-extrabold tracking-[-0.02em] text-dark">
             {formatPrice(property.price ?? 0)}

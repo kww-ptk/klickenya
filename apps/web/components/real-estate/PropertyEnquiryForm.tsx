@@ -3,17 +3,14 @@
 import { useState, type FormEvent } from "react";
 import { cn } from "@/lib/utils";
 import PhoneInput from "@/components/ui/PhoneInput";
-import { priceSuffix } from "@/lib/real-estate/format";
 
 /* ─── Types ──────────────────────────────────────── */
 
 interface PropertyEnquiryFormProps {
   propertyId: string;
   propertyTitle: string;
-  price?: number;
-  priceType?: string;
   agentName?: string;
-  /** Drives the default enquiry type and the /month price suffix. */
+  /** Drives which enquiry types are offered. */
   listingCategory?: string;
 }
 
@@ -42,11 +39,15 @@ const ENQUIRY_TYPES = [
 
 /* ─── Component ──────────────────────────────────── */
 
+/*
+ * The form used to repeat the asking price above its first field. Every place
+ * it renders already shows the price prominently: the sticky sidebar card on
+ * desktop, and the price card plus the fixed bottom bar on mobile. Three copies
+ * of the same number on one screen is noise.
+ */
 function PropertyEnquiryForm({
   propertyId,
   propertyTitle,
-  price,
-  priceType,
   agentName,
   listingCategory,
 }: PropertyEnquiryFormProps) {
@@ -130,18 +131,6 @@ function PropertyEnquiryForm({
       <h3 className="font-display text-[18px] font-bold text-text tracking-[-0.02em]">
         Enquire about this property
       </h3>
-
-      {/* ─── Price display ───────────────────────── */}
-      {price != null && (
-        <div className="flex items-baseline gap-1.5 -mt-1 mb-1">
-          <span className="font-display text-[24px] font-extrabold tracking-[-0.02em] text-dark">
-            KSh {price.toLocaleString("en-KE")}
-          </span>
-          {priceSuffix(listingCategory, priceType) && (
-            <span className="text-[14px] text-text2">/ month</span>
-          )}
-        </div>
-      )}
 
       {/* ─── Contact fields ──────────────────────── */}
       <input
