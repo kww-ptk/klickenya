@@ -1,30 +1,23 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { cn } from '@/lib/utils';
+import { formatPrice } from '@/lib/real-estate/format';
+import { propertyPath } from '@/lib/real-estate/constants';
 
 interface Development {
   title: string;
   slug: string;
-  developerName: string;
+  developerName?: string;
   city: string;
   neighbourhood: string;
   price: number;
-  completionPercentage: number;
-  unitsAvailable: number;
-  coverPhoto: string;
-  isNewDevelopment: boolean;
+  completionPercentage?: number;
+  unitsAvailable?: number;
+  coverPhoto?: string;
+  isNewDevelopment?: boolean;
 }
 
 interface NewDevelopmentsProps {
   developments: Development[];
-}
-
-function formatPrice(price: number): string {
-  if (price >= 1_000_000) {
-    const m = price / 1_000_000;
-    return `KSh ${m % 1 === 0 ? m.toFixed(0) : m.toFixed(1)}M`;
-  }
-  return `KSh ${price.toLocaleString()}`;
 }
 
 function NewDevelopments({ developments }: NewDevelopmentsProps) {
@@ -33,7 +26,7 @@ function NewDevelopments({ developments }: NewDevelopmentsProps) {
       {developments.map((dev) => (
         <Link
           key={dev.slug}
-          href={`/real-estate/new-developments/${dev.slug}`}
+          href={propertyPath(dev.slug)}
           className="shrink-0 w-[320px] bg-white border border-border rounded-[22px] overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all cursor-pointer group"
         >
           {/* Media */}
@@ -56,24 +49,28 @@ function NewDevelopments({ developments }: NewDevelopmentsProps) {
             )}
 
             {/* Completion bar */}
+            {dev.completionPercentage != null && (
             <div className="absolute bottom-0 left-0 right-0 bg-dark/70 backdrop-blur-[6px] px-3.5 py-2 flex items-center gap-2.5">
               <div className="flex-1 h-1 bg-white/20 rounded-full overflow-hidden">
                 <div
                   className="h-full rounded-full bg-amber"
-                  style={{ width: `${dev.completionPercentage}%` }}
+                  style={{ width: `${Math.min(100, dev.completionPercentage ?? 0)}%` }}
                 />
               </div>
               <span className="text-[11px] font-bold text-amber shrink-0">
                 {dev.completionPercentage}%
               </span>
             </div>
+            )}
           </div>
 
           {/* Body */}
           <div className="p-4">
-            <p className="text-[11.5px] font-semibold text-purple2 uppercase tracking-[0.04em] mb-1">
-              {dev.developerName}
-            </p>
+            {dev.developerName && (
+              <p className="text-[11.5px] font-semibold text-purple2 uppercase tracking-[0.04em] mb-1">
+                {dev.developerName}
+              </p>
+            )}
             <h3 className="text-[16px] font-bold text-text tracking-[-0.01em] mb-1">
               {dev.title}
             </h3>
@@ -84,9 +81,11 @@ function NewDevelopments({ developments }: NewDevelopmentsProps) {
               From {formatPrice(dev.price)}
               <span className="text-text3 font-normal text-[12.5px]"> · per unit</span>
             </p>
-            <span className="inline-block mt-2 px-3 py-1 rounded-full bg-surface border border-border text-[11.5px] font-semibold text-text2">
-              {dev.unitsAvailable} units available
-            </span>
+            {dev.unitsAvailable != null && dev.unitsAvailable > 0 && (
+              <span className="inline-block mt-2 px-3 py-1 rounded-full bg-surface border border-border text-[11.5px] font-semibold text-text2">
+                {dev.unitsAvailable} {dev.unitsAvailable === 1 ? 'unit' : 'units'} available
+              </span>
+            )}
           </div>
         </Link>
       ))}

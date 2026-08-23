@@ -1,88 +1,81 @@
-"use client";
-
-import { useState } from "react";
-import { Map, ChevronDown } from "lucide-react";
+import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { PROPERTY_CATEGORIES, CATEGORY_LABELS, categoryPath } from "@/lib/real-estate/constants";
+
+/**
+ * Category navigation.
+ *
+ * This was a client component whose tabs called setState and nothing else, so
+ * none of them navigated anywhere. It also offered Luxury and Student tabs with
+ * no matching data, plus a sort dropdown and a "Map view" button that were both
+ * inert. Sorting now lives in PropertyBrowser, where it works.
+ */
 
 interface PropertyCategoryNavProps {
   activeCategory?: string;
-  onCategoryChange?: (id: string) => void;
 }
 
-const categories = [
-  { id: "all", icon: "\u2728", label: "All" },
-  { id: "for-sale", icon: "\uD83C\uDFE0", label: "For Sale" },
-  { id: "for-rent", icon: "\uD83D\uDD11", label: "For Rent" },
-  { id: "land", icon: "\uD83C\uDF0D", label: "Land" },
-  { id: "commercial", icon: "\uD83C\uDFE2", label: "Commercial" },
-  { id: "new-builds", icon: "\uD83C\uDFD7", label: "New Builds" },
-  { id: "luxury", icon: "\uD83D\uDC8E", label: "Luxury" },
-  { id: "student", icon: "\uD83C\uDF93", label: "Student" },
-];
+const ICONS: Record<string, string> = {
+  all: "✨",
+  "for-sale": "🏠",
+  "for-rent": "🔑",
+  land: "🌍",
+  commercial: "🏢",
+  "new-developments": "🏗",
+};
 
-function PropertyCategoryNav({
-  activeCategory: controlledCategory,
-  onCategoryChange,
-}: PropertyCategoryNavProps) {
-  const [internalCategory, setInternalCategory] = useState("all");
-  const active = controlledCategory ?? internalCategory;
-
-  function handleSelect(id: string) {
-    setInternalCategory(id);
-    onCategoryChange?.(id);
-  }
+function PropertyCategoryNav({ activeCategory }: PropertyCategoryNavProps) {
+  const tabs = [
+    { id: "all", label: "All", href: "/real-estate" },
+    ...PROPERTY_CATEGORIES.map((c) => ({
+      id: c,
+      label: CATEGORY_LABELS[c],
+      href: categoryPath(c),
+    })),
+    {
+      id: "new-developments",
+      label: "New Builds",
+      href: "/real-estate/new-developments",
+    },
+  ];
 
   return (
-    <div className="sticky top-[65px] z-[200] bg-white/97 backdrop-blur-[20px] border-b border-border">
-      <div className="flex items-stretch overflow-x-auto scrollbar-none">
-        {/* Category tabs */}
-        <div className="flex items-stretch">
-          {categories.map((cat) => {
-            const isActive = active === cat.id;
-            return (
-              <button
-                key={cat.id}
-                onClick={() => handleSelect(cat.id)}
+    <nav
+      aria-label="Property categories"
+      className="sticky top-[65px] z-[200] border-b border-border bg-white/97 backdrop-blur-[20px]"
+    >
+      <ul className="flex items-stretch overflow-x-auto scrollbar-none">
+        {tabs.map((tab) => {
+          const isActive = activeCategory === tab.id;
+          return (
+            <li key={tab.id}>
+              <Link
+                href={tab.href}
+                aria-current={isActive ? "page" : undefined}
                 className={cn(
-                  "shrink-0 flex flex-col items-center gap-1.5 px-5 py-3 border-b-2 min-w-[80px] cursor-pointer transition-all duration-200",
+                  "flex min-w-[80px] shrink-0 cursor-pointer flex-col items-center gap-1.5 border-b-2 px-5 py-3 transition-all duration-200",
                   isActive
                     ? "border-purple2 opacity-100"
-                    : "border-transparent opacity-50 hover:opacity-85"
+                    : "border-transparent opacity-55 hover:opacity-100"
                 )}
               >
-                <span className="text-[20px] leading-none">{cat.icon}</span>
+                <span className="text-[20px] leading-none" aria-hidden="true">
+                  {ICONS[tab.id]}
+                </span>
                 <span
                   className={cn(
-                    "text-[12px] font-semibold whitespace-nowrap",
+                    "whitespace-nowrap text-[12px] font-semibold",
                     isActive ? "text-purple2" : "text-text2"
                   )}
                 >
-                  {cat.label}
+                  {tab.label}
                 </span>
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Right section: sort + map */}
-        <div className="ml-auto shrink-0 flex items-center gap-2.5 pl-5 border-l border-border pr-4">
-          <div className="relative">
-            <select className="appearance-none px-3 py-2 pr-7 rounded-[10px] border border-border text-[13px] font-semibold text-text2 bg-transparent cursor-pointer focus:outline-none focus:border-purple2">
-              <option>Newest</option>
-              <option>Price: Low to High</option>
-              <option>Price: High to Low</option>
-              <option>Most Popular</option>
-            </select>
-            <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 size-3.5 text-text3 pointer-events-none" />
-          </div>
-
-          <button className="flex items-center gap-1.5 px-3.5 py-2 rounded-[10px] border border-border text-[13px] font-semibold text-text2 hover:border-purple2 hover:text-purple2 transition-colors duration-200 whitespace-nowrap">
-            <Map className="size-4" />
-            Map view
-          </button>
-        </div>
-      </div>
-    </div>
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
+    </nav>
   );
 }
 

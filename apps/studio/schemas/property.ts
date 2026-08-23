@@ -38,6 +38,16 @@ export default defineType({
       group: 'details',
     }),
     defineField({
+      name: 'publishToMarketplace',
+      title: 'Also publish on klickenya.com marketplace',
+      description:
+        'Only relevant for partner properties. When ON, this partner property also appears on the Klickenya marketplace. House properties (no partner) always appear on the marketplace.',
+      type: 'boolean',
+      initialValue: false,
+      hidden: ({document}: {document: {partner?: unknown}}) => !document?.partner,
+      group: 'details',
+    }),
+    defineField({
       name: 'title',
       title: 'Title',
       type: 'string',
@@ -325,12 +335,23 @@ export default defineType({
       title: 'title',
       neighbourhood: 'neighbourhood',
       city: 'city',
+      status: 'status',
+      partner: 'partner.slug.current',
+      onMarketplace: 'publishToMarketplace',
       media: 'photos.0',
     },
-    prepare({ title, neighbourhood, city, media }) {
+    prepare({ title, neighbourhood, city, status, partner, onMarketplace, media }) {
+      const place = [neighbourhood, city].filter(Boolean).join(', ')
+      // A partner property that is not published to the marketplace is invisible
+      // on klickenya.com, which is easy to miss from the document alone.
+      const scope = partner
+        ? onMarketplace
+          ? `${partner} + marketplace`
+          : `${partner} only`
+        : 'marketplace'
       return {
         title,
-        subtitle: [neighbourhood, city].filter(Boolean).join(', '),
+        subtitle: [place, status, scope].filter(Boolean).join(' · '),
         media,
       }
     },

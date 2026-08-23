@@ -3,15 +3,19 @@ import { PropertySearchBox } from "./PropertySearchBox";
 import { MouseGlow } from "@/components/shared/MouseGlow";
 
 async function PropertyHero() {
+  // Count what is actually browsable. The old query counted every property
+  // document, including drafts, sold listings and white-label partner stock.
   const count: number = await sanityClient
-    .fetch(`count(*[_type == "property"])`)
+    .fetch(
+      `count(*[_type == "property" && status == "available" && (!defined(partner) || publishToMarketplace == true)])`
+    )
     .catch(() => 0);
 
   const stats = [
-    { value: count > 0 ? `${count}+` : "Growing fast", label: "Properties listed" },
-    { value: "47", label: "All counties covered" },
-    { value: "Free", label: "No commission" },
-    { value: "AI", label: "Free valuations" },
+    { value: count > 0 ? `${count}` : "Growing fast", label: "Properties listed" },
+    { value: "Free", label: "To list your property" },
+    { value: "Free", label: "Buyer enquiries" },
+    { value: "Instant", label: "Property valuations" },
   ];
   return (
     <section className="relative min-h-screen flex flex-col overflow-hidden" style={{ background: "linear-gradient(180deg, #16130C 0%, #1a1610 40%, #1f1a12 70%, #16130C 100%)" }}>
@@ -41,7 +45,12 @@ async function PropertyHero() {
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber opacity-75" />
             <span className="relative inline-flex size-[6px] rounded-full bg-amber" />
           </span>
-          Kenya&apos;s property marketplace {count > 0 && <>&middot; {count}+ listings</>}
+          Kenya&apos;s property marketplace{" "}
+          {count > 0 && (
+            <>
+              &middot; {count} {count === 1 ? "listing" : "listings"}
+            </>
+          )}
         </div>
 
         {/* Heading */}
@@ -65,8 +74,8 @@ async function PropertyHero() {
           className="text-white/55 max-w-[460px] leading-[1.65] mb-10"
           style={{ fontSize: "clamp(15px, 1.8vw, 18px)" }}
         >
-          Search thousands of properties across all 47 counties. Verified
-          listings, transparent pricing, and AI-powered valuations.
+          Houses, apartments, land and commercial space across Kenya. Asking
+          prices in shillings, verified agents, and free enquiries.
         </p>
 
         {/* Search box */}

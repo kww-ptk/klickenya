@@ -78,8 +78,8 @@ function ValuationCTA() {
             <em className="text-amber not-italic">2026</em>?
           </h2>
           <p className="text-[16px] text-white/50 leading-[1.7] mb-8">
-            Get an instant AI-powered estimate based on recent sales, market trends, and
-            property characteristics in your area. No obligation, completely free.
+            Get an instant estimate built from average prices per square metre in your
+            area, adjusted for property type and size. Free, and no contact details needed.
           </p>
 
           <div className="flex flex-wrap gap-3">
@@ -107,7 +107,7 @@ function ValuationCTA() {
             Get your instant estimate
           </h3>
           <p className="text-[13px] text-text2 mb-6">
-            Enter your property details to receive an AI-powered valuation.
+            Enter your property details for an instant estimate.
           </p>
 
           {/* Address */}

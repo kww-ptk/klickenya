@@ -55,8 +55,18 @@ const LISTING_CARD_FIELDS = `
   publishToMarketplace
 `
 
+// Properties belonging to a white-label partner stay off klickenya.com unless
+// the partner opted them into the marketplace — same rule listings already had.
+const PROPERTY_MARKETPLACE_FILTER = `(!defined(partner) || publishToMarketplace == true)`
+
+// Only these statuses are public. Drafts never render; sold/let stay reachable
+// at their own URL (see PROPERTY_BY_SLUG_QUERY) but drop out of every grid.
+const PROPERTY_PUBLIC_FILTER = `status == "available"`
+
 const PROPERTY_CARD_FIELDS = `
   _id,
+  _createdAt,
+  _updatedAt,
   title,
   slug,
   listingCategory,
@@ -67,6 +77,8 @@ const PROPERTY_CARD_FIELDS = `
   bedrooms,
   bathrooms,
   sizeSqm,
+  landSizeAcres,
+  features,
   neighbourhood,
   city,
   isNewDevelopment,
@@ -75,6 +87,7 @@ const PROPERTY_CARD_FIELDS = `
   completionPercentage,
   developerName,
   unitsAvailable,
+  "photoCount": count(photos),
   "coverPhoto": photos[0]{ ${IMAGE_FIELDS} }
 `
 
@@ -388,32 +401,46 @@ export const LATEST_BLOG_POSTS_QUERY = groq`
 // ── Real Estate: Properties ───────────────────────
 
 export const PROPERTIES_QUERY = groq`
-  *[_type == "property" && status == "available"] | order(_createdAt desc) {
+  *[_type == "property" && ${PROPERTY_PUBLIC_FILTER} && ${PROPERTY_MARKETPLACE_FILTER}] | order(_createdAt desc) {
     ${PROPERTY_CARD_FIELDS}
   }
 `
 
 export const PROPERTIES_BY_CATEGORY_QUERY = groq`
-  *[_type == "property" && status == "available" && listingCategory == $category] | order(_createdAt desc) {
+  *[_type == "property" && ${PROPERTY_PUBLIC_FILTER} && ${PROPERTY_MARKETPLACE_FILTER} && listingCategory == $category] | order(_createdAt desc) {
     ${PROPERTY_CARD_FIELDS}
   }
 `
 
 export const PROPERTIES_BY_CATEGORY_CITY_QUERY = groq`
-  *[_type == "property" && status == "available" && listingCategory == $category && lower(city) == lower($city)] | order(_createdAt desc) {
+  *[_type == "property" && ${PROPERTY_PUBLIC_FILTER} && ${PROPERTY_MARKETPLACE_FILTER} && listingCategory == $category && lower(city) == lower($city)] | order(_createdAt desc) {
+    ${PROPERTY_CARD_FIELDS}
+  }
+`
+
+// Every live property in one city, all categories. The city landing page uses
+// this to build accurate cross-category links: linking a category with zero
+// properties in that city would manufacture an empty, thin page.
+export const PROPERTIES_BY_CITY_QUERY = groq`
+  *[_type == "property" && ${PROPERTY_PUBLIC_FILTER} && ${PROPERTY_MARKETPLACE_FILTER} && lower(city) == lower($city)] | order(_createdAt desc) {
     ${PROPERTY_CARD_FIELDS}
   }
 `
 
 export const PROPERTIES_BY_NEIGHBOURHOOD_QUERY = groq`
-  *[_type == "property" && status == "available" && lower(neighbourhood) == lower($neighbourhood) && lower(city) == lower($city)] | order(_createdAt desc) {
+  *[_type == "property" && ${PROPERTY_PUBLIC_FILTER} && ${PROPERTY_MARKETPLACE_FILTER} && lower(neighbourhood) == lower($neighbourhood)] | order(_createdAt desc) {
     ${PROPERTY_CARD_FIELDS}
   }
 `
 
+// No status filter: a sold or let property keeps its URL so inbound links and
+// indexed results land on a real page that says "Sold" instead of a 404. The
+// page itself decides what to render and whether to noindex.
 export const PROPERTY_BY_SLUG_QUERY = groq`
-  *[_type == "property" && slug.current == $slug][0] {
+  *[_type == "property" && slug.current == $slug && ${PROPERTY_MARKETPLACE_FILTER}][0] {
     _id,
+    _createdAt,
+    _updatedAt,
     title,
     slug,
     listingCategory,
@@ -461,29 +488,46 @@ export const PROPERTY_BY_SLUG_QUERY = groq`
 `
 
 export const PROPERTY_SLUGS_QUERY = groq`
-  *[_type == "property" && status == "available"] {
+  *[_type == "property" && ${PROPERTY_PUBLIC_FILTER} && ${PROPERTY_MARKETPLACE_FILTER}] {
     "slug": slug.current,
+    _updatedAt,
     listingCategory,
     city,
     neighbourhood
   }
 `
 
+// Same neighbourhood first, then anything else in the same city and category,
+// so a listing in a thin neighbourhood still shows three related properties
+// instead of an empty rail.
 export const SIMILAR_PROPERTIES_QUERY = groq`
-  *[_type == "property" && status == "available" && listingCategory == $category && lower(neighbourhood) == lower($neighbourhood) && slug.current != $slug] | order(_createdAt desc) [0...3] {
+  *[_type == "property" && ${PROPERTY_PUBLIC_FILTER} && ${PROPERTY_MARKETPLACE_FILTER}
+    && listingCategory == $category
+    && slug.current != $slug
+    && (lower(neighbourhood) == lower($neighbourhood) || lower(city) == lower($city))]
+    | order(select(lower(neighbourhood) == lower($neighbourhood) => 0, 1) asc, _createdAt desc) [0...4] {
     ${PROPERTY_CARD_FIELDS}
   }
 `
 
 export const FEATURED_PROPERTIES_QUERY = groq`
-  *[_type == "property" && status == "available" && isFeatured == true] | order(_createdAt desc) [0...6] {
+  *[_type == "property" && ${PROPERTY_PUBLIC_FILTER} && ${PROPERTY_MARKETPLACE_FILTER} && isFeatured == true] | order(_createdAt desc) [0...8] {
     ${PROPERTY_CARD_FIELDS}
   }
 `
 
 export const NEW_DEVELOPMENTS_QUERY = groq`
-  *[_type == "property" && status == "available" && isNewDevelopment == true] | order(_createdAt desc) {
+  *[_type == "property" && ${PROPERTY_PUBLIC_FILTER} && ${PROPERTY_MARKETPLACE_FILTER} && isNewDevelopment == true] | order(_createdAt desc) {
     ${PROPERTY_CARD_FIELDS}
+  }
+`
+
+// Cities that actually have live properties — powers the internal-link rails
+// that give /real-estate/[category]/[city] pages something pointing at them.
+export const PROPERTY_CITIES_QUERY = groq`
+  *[_type == "property" && ${PROPERTY_PUBLIC_FILTER} && ${PROPERTY_MARKETPLACE_FILTER} && defined(city)] {
+    city,
+    listingCategory
   }
 `
 
@@ -492,11 +536,12 @@ export const AGENTS_QUERY = groq`
     _id,
     displayName,
     slug,
-    photo{ asset->{_id, url, metadata{dimensions}}, alt, hotspot, crop },
+    photo{ ${IMAGE_FIELDS} },
     agencyName,
     isVerified,
     specialisations,
-    subscriptionTier
+    subscriptionTier,
+    "propertyCount": count(*[_type == "property" && ${PROPERTY_PUBLIC_FILTER} && ${PROPERTY_MARKETPLACE_FILTER} && agent._ref == ^._id])
   }
 `
 
@@ -505,7 +550,7 @@ export const AGENT_BY_SLUG_QUERY = groq`
     _id,
     displayName,
     slug,
-    photo{ asset->{_id, url, metadata{dimensions}}, alt, hotspot, crop },
+    photo{ ${IMAGE_FIELDS} },
     agencyName,
     licenceNumber,
     isVerified,
@@ -519,7 +564,7 @@ export const AGENT_BY_SLUG_QUERY = groq`
 `
 
 export const PROPERTIES_BY_AGENT_QUERY = groq`
-  *[_type == "property" && status == "available" && agent._ref == $agentId] | order(_createdAt desc) {
+  *[_type == "property" && ${PROPERTY_PUBLIC_FILTER} && ${PROPERTY_MARKETPLACE_FILTER} && agent._ref == $agentId] | order(_createdAt desc) {
     ${PROPERTY_CARD_FIELDS}
   }
 `
@@ -590,7 +635,15 @@ export const NEIGHBOURHOODS_QUERY = groq`
     city,
     avgPriceForSale,
     avgPriceForRent,
-    "heroImage": heroImage{ ${IMAGE_FIELDS} }
+    "heroImage": heroImage{ ${IMAGE_FIELDS} },
+    "propertyCount": count(*[_type == "property" && ${PROPERTY_PUBLIC_FILTER} && ${PROPERTY_MARKETPLACE_FILTER} && lower(neighbourhood) == lower(^.name)])
+  }
+`
+
+export const NEIGHBOURHOOD_SLUGS_QUERY = groq`
+  *[_type == "neighbourhood" && defined(slug.current)] {
+    "slug": slug.current,
+    _updatedAt
   }
 `
 
@@ -612,6 +665,9 @@ export const NEIGHBOURHOOD_BY_SLUG_QUERY = groq`
     seoDescription,
     "heroImage": heroImage{ ${IMAGE_FIELDS} },
     "relatedProperties": relatedProperties[]->{
+      ${PROPERTY_CARD_FIELDS}
+    },
+    "properties": *[_type == "property" && ${PROPERTY_PUBLIC_FILTER} && ${PROPERTY_MARKETPLACE_FILTER} && lower(neighbourhood) == lower(^.name)] | order(_createdAt desc) {
       ${PROPERTY_CARD_FIELDS}
     }
   }
