@@ -189,6 +189,10 @@ export function sortProperties(
  * Facet counts for the filter panel — every option shows how many properties
  * it would return, so nobody picks a filter that empties the grid.
  */
+/** A feature shown as a filter must narrow the list to more than one result. */
+const FEATURE_FACET_MIN_COUNT = 2;
+const MAX_FEATURE_FACETS = 14;
+
 export interface Facets {
   cities: { value: string; count: number }[];
   neighbourhoods: { value: string; count: number }[];
@@ -214,8 +218,9 @@ export function buildFacets(cards: PropertyCardData[]): Facets {
     for (const f of card.features) features.set(f, (features.get(f) ?? 0) + 1);
   }
 
-  const toSorted = (m: Map<string, number>) =>
+  const toSorted = (m: Map<string, number>, minCount = 1) =>
     Array.from(m.entries())
+      .filter(([, count]) => count >= minCount)
       .map(([value, count]) => ({ value, count }))
       .sort((a, b) => b.count - a.count || a.value.localeCompare(b.value));
 
@@ -223,6 +228,10 @@ export function buildFacets(cards: PropertyCardData[]): Facets {
     cities: toSorted(cities),
     neighbourhoods: toSorted(neighbourhoods),
     types: toSorted(types),
-    features: toSorted(features),
+    // Listings carry their agent's own wording alongside the canonical
+    // vocabulary, so a lot of one-off strings arrive with imported stock.
+    // Require a feature to appear on at least two properties before it earns a
+    // filter chip, and cap the list so the panel stays scannable.
+    features: toSorted(features, FEATURE_FACET_MIN_COUNT).slice(0, MAX_FEATURE_FACETS),
   };
 }

@@ -22,16 +22,16 @@ interface CategoryCopy {
 const CATEGORY_COPY: Record<PropertyCategory, CategoryCopy> = {
   "for-sale": {
     intro: (place) =>
-      `Browse houses, apartments and villas for sale in ${place}. Every listing shows the asking price in Kenyan shillings, the size in square metres and the agent handling the sale, so you can compare properties without chasing anyone for basic numbers.`,
+      `Browse houses, apartments and villas for sale in ${place}. Every listing shows the asking price in the currency the seller quotes it in, the size in square metres and the agent handling the sale, so you can compare properties without chasing anyone for basic numbers.`,
     body: (place) => [
       `Buying property in ${place} usually starts with a shortlist and a budget. Use the price filter to set your ceiling, then narrow by bedrooms and by the features that actually change how a home lives, things like a borehole, backup generator, secure parking or a gated compound.`,
-      `Prices on Klickenya are asking prices set by the seller or their agent. Kenyan sellers generally expect some negotiation, and properties that have been listed a while often move furthest. Where a seller has dropped their price we show the previous figure and the percentage reduction on the card, so you can see which listings have room in them.`,
+      `Prices on Klickenya are asking prices set by the seller or their agent. Most are quoted in Kenyan shillings, though coastal property aimed at international buyers is often priced in euro, and each listing shows its own currency. Sellers generally expect some negotiation, and properties that have been listed a while often move furthest. Where a seller has dropped their price we show the previous figure and the percentage reduction on the card.`,
       `Once you find something you like, send an enquiry through the listing page. It reaches the listing agent directly along with your phone number, so viewings can be arranged over a call or WhatsApp the same day.`,
     ],
     faqs: (place) => [
       {
         question: `How much does it cost to buy a house in ${place}?`,
-        answer: `It depends heavily on the neighbourhood and the size of the property. Use the price filter on this page to see the live range across current listings in ${place}, and open a neighbourhood page to see the average price per square metre for that specific area.`,
+        answer: `It depends heavily on the neighbourhood and the size of the property. Use the price filter on this page to see the live range across current listings in ${place}, and open a neighbourhood page to see the average price per square metre for that specific area. Prices are shown in the currency the seller quotes: shillings for most of the country, often euro on the coast.`,
       },
       {
         question: "What fees should a buyer budget for in Kenya?",
@@ -52,7 +52,7 @@ const CATEGORY_COPY: Record<PropertyCategory, CategoryCopy> = {
   },
   "for-rent": {
     intro: (place) =>
-      `Find apartments, houses and furnished homes to rent in ${place}. Rent on every listing is shown per month in Kenyan shillings, alongside the bedroom count, the size and the features included.`,
+      `Find apartments, houses and furnished homes to rent in ${place}. Rent on every listing is shown per month, alongside the bedroom count, the size and the features included.`,
     body: (place) => [
       `Rental hunting in ${place} moves quickly, so filter to your budget first and then sort by newest to see what has just come onto the market. The bedroom and bathroom filters help when you are sharing, and the feature chips let you insist on the things that matter, such as parking, a lift, backup power or 24 hour security.`,
       `Kenyan landlords typically ask for one month of rent as a deposit plus the first month up front, though some ask for two. Service charge is sometimes quoted separately from rent, so confirm what is included before you commit. Ask the agent directly through the enquiry form and you will have it in writing.`,
@@ -61,7 +61,7 @@ const CATEGORY_COPY: Record<PropertyCategory, CategoryCopy> = {
     faqs: (place) => [
       {
         question: `How much is rent in ${place}?`,
-        answer: `Rent varies by neighbourhood and by how new the building is. The price filter on this page shows the live range across current rentals in ${place}, and each listing states the monthly figure in Kenyan shillings.`,
+        answer: `Rent varies by neighbourhood and by how new the building is. The price filter on this page shows the live range across current rentals in ${place}, and each listing states the monthly figure and the currency it is quoted in.`,
       },
       {
         question: "What deposit do landlords ask for in Kenya?",
@@ -82,7 +82,7 @@ const CATEGORY_COPY: Record<PropertyCategory, CategoryCopy> = {
   },
   land: {
     intro: (place) =>
-      `Browse plots and land for sale in ${place}. Each listing shows the asking price, the size in acres or square metres and the area, so you can compare plots on the numbers that matter.`,
+      `Browse plots and land for sale in ${place}. Each listing shows the asking price and its currency, the size in acres or square metres and the area, so you can compare plots on the numbers that matter.`,
     body: (place) => [
       `Land in ${place} is priced by size and by access. A plot on a tarmac road with power and water at the boundary carries a premium over one that needs a murram access road cut to it, so read the description carefully and ask the agent what services reach the plot.`,
       `Before any land purchase in Kenya, instruct an advocate to run an official search at the lands registry. That confirms who holds the title, whether the parcel carries a caveat or a charge, and whether the title is freehold or leasehold. Ask for the title number early and verify it independently.`,

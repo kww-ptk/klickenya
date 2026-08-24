@@ -69,8 +69,8 @@ function AgentCard({
       {/* Name */}
       <p className="text-[15px] font-bold text-text mb-0.5">{name}</p>
 
-      {/* Agency */}
-      {agency && (
+      {/* Agency — omitted when it just repeats the agent's own name. */}
+      {agency && agency !== name && (
         <p className="text-[12.5px] text-text3 mb-2.5">{agency}</p>
       )}
 

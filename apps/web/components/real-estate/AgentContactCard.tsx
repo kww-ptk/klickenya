@@ -23,6 +23,12 @@ function AgentContactCard({
   propertyUrl: string;
 }) {
   const slug = agent.slug?.current ?? agent.slug ?? "";
+  // Independent agents trade under their own name, so displayName and
+  // agencyName are often the same string. Printing both just repeats it.
+  const agency =
+    agent.agencyName && agent.agencyName !== agent.displayName
+      ? agent.agencyName
+      : null;
   const whatsapp = toWhatsAppNumber(agent.phone);
   const waMessage = encodeURIComponent(
     `Hi ${agent.displayName ?? "there"}, I saw "${propertyTitle}" on Klickenya and would like to arrange a viewing. ${propertyUrl}`
@@ -61,8 +67,8 @@ function AgentContactCard({
               </span>
             )}
           </div>
-          {agent.agencyName && (
-            <p className="truncate text-[12.5px] text-text3">{agent.agencyName}</p>
+          {agency && (
+            <p className="truncate text-[12.5px] text-text3">{agency}</p>
           )}
           {agent.licenceNumber && (
             <p className="truncate text-[11.5px] text-text3">

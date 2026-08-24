@@ -156,17 +156,36 @@ describe("sortProperties", () => {
 });
 
 describe("buildFacets", () => {
-  it("counts each city, neighbourhood, type and feature", () => {
+  it("counts each city, neighbourhood and type", () => {
     const facets = buildFacets([
       card({ id: "a", city: "Nairobi", propertyType: "apartment", features: ["Pool"] }),
       card({ id: "b", city: "Nairobi", propertyType: "villa", features: ["Pool", "Gym"] }),
     ]);
     expect(facets.cities).toEqual([{ value: "Nairobi", count: 2 }]);
-    expect(facets.features).toEqual([
-      { value: "Pool", count: 2 },
-      { value: "Gym", count: 1 },
-    ]);
     expect(facets.types.map((t) => t.value).sort()).toEqual(["apartment", "villa"]);
+  });
+
+  /*
+   * Imported listings carry the agent's own feature wording next to the
+   * canonical vocabulary. Claris alone contributed "4 ceiling fans" and
+   * "About 100 m from the beach", each on a single property. A chip that
+   * narrows the grid to one result is a label, not a filter.
+   */
+  it("only offers a feature as a filter when two or more properties have it", () => {
+    const facets = buildFacets([
+      card({ id: "a", features: ["Pool", "4 ceiling fans"] }),
+      card({ id: "b", features: ["Pool", "Gym"] }),
+    ]);
+    expect(facets.features).toEqual([{ value: "Pool", count: 2 }]);
+  });
+
+  it("caps the feature list so the panel stays scannable", () => {
+    const many = Array.from({ length: 30 }, (_, i) => `Feature ${i}`);
+    const facets = buildFacets([
+      card({ id: "a", features: many }),
+      card({ id: "b", features: many }),
+    ]);
+    expect(facets.features.length).toBeLessThanOrEqual(14);
   });
 });
 
