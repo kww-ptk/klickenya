@@ -74,8 +74,8 @@ async function PropertyHero() {
           className="text-white/55 max-w-[460px] leading-[1.65] mb-10"
           style={{ fontSize: "clamp(15px, 1.8vw, 18px)" }}
         >
-          Houses, apartments, land and commercial space across Kenya. Asking
-          prices in shillings, verified agents, and free enquiries.
+          Houses, apartments, land and commercial space across Kenya. Real
+          asking prices, verified agents, and free enquiries.
         </p>
 
         {/* Search box */}

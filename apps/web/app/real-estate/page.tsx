@@ -18,7 +18,6 @@ import { PropertyGrid } from "@/components/real-estate/PropertyGrid";
 import { NeighbourhoodCard } from "@/components/real-estate/NeighbourhoodCard";
 import { AgentCard } from "@/components/real-estate/AgentCard";
 import { MarketDataStrip } from "@/components/real-estate/MarketDataStrip";
-import { MapTeaser } from "@/components/real-estate/MapTeaser";
 import { ValuationCTA } from "@/components/real-estate/ValuationCTA";
 import { WhoCanList } from "@/components/real-estate/WhoCanList";
 import { NewDevelopments } from "@/components/real-estate/NewDevelopments";
@@ -102,6 +101,13 @@ export default async function RealEstateHomePage() {
 
   const heroFeatured = featuredCards.slice(0, 3);
   const moreFeatured = featuredCards.slice(3, 8);
+
+  // The hub used to render nothing but featured properties, so with isFeatured
+  // unset across the board — which is the default, and what the Claris import
+  // produced — it showed no properties at all and you had to find the "View
+  // all" link to see any stock. Latest listings always render.
+  const featuredIds = new Set(featuredCards.map((c) => c.id));
+  const latest = allProperties.filter((c) => !featuredIds.has(c.id)).slice(0, 8);
 
   const neighbourhoodCards = ((neighbourhoodsResult.data ?? []) as any[])
     .map(mapNeighbourhood)
@@ -198,6 +204,48 @@ export default async function RealEstateHomePage() {
         </section>
       )}
 
+      {/* ── Latest listings ────────────────── */}
+      {latest.length > 0 && (
+        <section className="mx-auto max-w-[1320px] px-5 pb-4 pt-14 md:px-10">
+          <div className="mb-8 flex items-end justify-between">
+            <div>
+              <span className="mb-1.5 block text-[11px] font-bold uppercase tracking-[0.09em] text-purple2">
+                On the market
+              </span>
+              <h2 className="text-[clamp(26px,3vw,40px)] font-bold tracking-[-0.03em] text-text">
+                Latest properties
+              </h2>
+              <p className="mt-1.5 text-[15px] text-text2">
+                Everything recently listed across Kenya, newest first.
+              </p>
+            </div>
+            <Link
+              href={categoryPath("for-sale")}
+              className="hidden whitespace-nowrap text-[14px] font-semibold text-purple2 hover:underline sm:block"
+            >
+              View all &rarr;
+            </Link>
+          </div>
+
+          <PropertyGrid variant="standard">
+            {latest.map((card, i) => (
+              <PropertyCard
+                key={card.id}
+                {...card}
+                priority={featuredCards.length === 0 && i === 0}
+              />
+            ))}
+          </PropertyGrid>
+
+          <Link
+            href={categoryPath("for-sale")}
+            className="mt-8 inline-flex items-center justify-center rounded-full border border-border px-6 py-3 text-[14px] font-semibold text-text2 transition-colors hover:border-purple2 hover:text-purple2 sm:hidden"
+          >
+            View all properties &rarr;
+          </Link>
+        </section>
+      )}
+
       <WhoCanList />
 
       {/* ── Neighbourhoods ─────────────────── */}
@@ -230,8 +278,6 @@ export default async function RealEstateHomePage() {
         properties={allProperties}
         neighbourhoodSlugs={neighbourhoodSlugs}
       />
-
-      <MapTeaser />
 
       {/* ── Agents ─────────────────────────── */}
       {agentCards.length > 0 && (
