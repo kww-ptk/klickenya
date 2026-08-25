@@ -1,8 +1,16 @@
 import type { MetadataRoute } from 'next'
 import { groq } from 'next-sanity'
 import { sanityClient } from '@/lib/sanity/client'
+import { listingPublicPath, TYPE_TO_URL_SEGMENT } from '@/lib/listings/url'
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://klickenya.com'
+
+/**
+ * Regenerate hourly. Without this the sitemap is built once at deploy time, so
+ * listings published from Sanity after a deploy never appear until the next
+ * one. `revalidate` keeps it in step with the content.
+ */
+export const revalidate = 3600
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // ── Fetch all dynamic slugs in parallel ────────────
@@ -72,10 +80,21 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ]
 
   // ── Dynamic listing routes (/[type]/[city]/[slug]) ─
+  // The public route uses the PLURAL url segment ("experiences"), not the
+  // Sanity `type` value ("experience"). Building these by hand previously
+  // emitted /experience/... for every listing — URLs that still match the
+  // [type]/[city]/[slug] route, fail isValidType() and, because that route is
+  // force-static, get served as a cached 200 of the not-found shell. Google saw
+  // 87 duplicate soft-404s canonicalising to the homepage and never saw a real
+  // listing URL. Go through listingPublicPath() so this cannot drift again — it
+  // is the same construction generateStaticParams() uses.
+  const knownType = (t: string) =>
+    Object.prototype.hasOwnProperty.call(TYPE_TO_URL_SEGMENT, t)
+
   const listingRoutes: MetadataRoute.Sitemap = listings
-    .filter((l) => l.slug && l.type && l.city)
+    .filter((l) => l.slug && l.type && l.city && knownType(l.type))
     .map((l) => ({
-      url: `${BASE_URL}/${l.type}/${encodeURIComponent(l.city.toLowerCase().replace(/\s+/g, '-'))}/${l.slug}`,
+      url: `${BASE_URL}${listingPublicPath(l.type, l.city, l.slug)}`,
       lastModified: new Date(),
       changeFrequency: 'weekly' as const,
       priority: 0.8,
@@ -84,16 +103,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // ── City-level pages derived from listings ─────────
   const citySet = new Set<string>()
   listings.forEach((l) => {
-    if (l.type && l.city) {
-      citySet.add(
-        `${l.type}/${l.city.toLowerCase().replace(/\s+/g, '-')}`
-      )
+    if (l.type && l.city && knownType(l.type)) {
+      // Same construction as the detail URLs, minus the slug, so the two can
+      // never disagree about the type segment or the city slug.
+      citySet.add(listingPublicPath(l.type, l.city, '').replace(/\/$/, ''))
     }
   })
 
   const cityRoutes: MetadataRoute.Sitemap = Array.from(citySet).map(
-    (key) => ({
-      url: `${BASE_URL}/${key}`,
+    (path) => ({
+      url: `${BASE_URL}${path}`,
       lastModified: new Date(),
       changeFrequency: 'weekly' as const,
       priority: 0.7,
