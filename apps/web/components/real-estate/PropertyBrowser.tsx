@@ -3,7 +3,11 @@
 import { useCallback, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { SlidersHorizontal, X } from "lucide-react";
-import { PROPERTY_TYPE_LABELS } from "@/lib/real-estate/constants";
+import {
+  LISTED_BY_LABELS,
+  PROPERTY_TYPE_LABELS,
+  type ListedBy,
+} from "@/lib/real-estate/constants";
 import { formatPrice } from "@/lib/real-estate/format";
 import type { PropertyCardData } from "@/lib/real-estate/mappers";
 import {
@@ -103,6 +107,11 @@ function PropertyBrowser({
     chips.push({ label: `Up to ${formatPrice(filters.maxPrice)}`, clear: { maxPrice: null } });
   if (filters.minSize)
     chips.push({ label: `${filters.minSize}m²+`, clear: { minSize: null } });
+  if (filters.listedBy)
+    chips.push({
+      label: LISTED_BY_LABELS[filters.listedBy as ListedBy] ?? filters.listedBy,
+      clear: { listedBy: "" },
+    });
   if (filters.newOnly) chips.push({ label: "New developments", clear: { newOnly: false } });
   if (filters.savedOnly) chips.push({ label: "Saved only", clear: { savedOnly: false } });
   for (const f of filters.features)

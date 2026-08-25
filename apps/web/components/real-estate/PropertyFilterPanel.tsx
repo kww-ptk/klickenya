@@ -2,7 +2,11 @@
 
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { PROPERTY_TYPE_LABELS } from "@/lib/real-estate/constants";
+import {
+  LISTED_BY_LABELS,
+  PROPERTY_TYPE_LABELS,
+  type ListedBy,
+} from "@/lib/real-estate/constants";
 import {
   SORT_OPTIONS,
   type Facets,
@@ -225,6 +229,27 @@ function PropertyFilterPanel({
               );
             })}
           </div>
+        </div>
+      )}
+
+      {facets.listedBy.length > 1 && (
+        <div>
+          <label className={labelCls} htmlFor="filter-listed-by">
+            Listed by
+          </label>
+          <select
+            id="filter-listed-by"
+            className={fieldCls}
+            value={filters.listedBy}
+            onChange={(e) => onChange({ listedBy: e.target.value })}
+          >
+            <option value="">Anyone</option>
+            {facets.listedBy.map((l) => (
+              <option key={l.value} value={l.value}>
+                {LISTED_BY_LABELS[l.value as ListedBy] ?? l.value} ({l.count})
+              </option>
+            ))}
+          </select>
         </div>
       )}
 

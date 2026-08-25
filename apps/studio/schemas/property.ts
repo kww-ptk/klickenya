@@ -270,6 +270,23 @@ export default defineType({
       group: 'details',
     }),
     defineField({
+      name: 'listedBy',
+      title: 'Listed by',
+      description:
+        'Who is selling. Buyers use this to find owner-direct property where there is no agent commission, so it is worth getting right.',
+      type: 'string',
+      options: {
+        list: [
+          { title: 'Estate agency', value: 'agency' },
+          { title: 'Private owner', value: 'owner' },
+          { title: 'Property developer', value: 'developer' },
+        ],
+        layout: 'radio',
+      },
+      initialValue: 'agency',
+      group: 'details',
+    }),
+    defineField({
       name: 'agent',
       title: 'Agent',
       type: 'reference',

@@ -1,5 +1,5 @@
 import type { PropertyCardData } from "./mappers";
-import { citySlug } from "./constants";
+import { citySlug, isListedBy } from "./constants";
 import { toComparableKes } from "./currency";
 
 /**
@@ -17,6 +17,7 @@ export interface PropertyFilters {
   maxPrice: number | null;
   minSize: number | null;
   features: string[];
+  listedBy: string;
   newOnly: boolean;
   savedOnly: boolean;
   sort: SortKey;
@@ -44,6 +45,7 @@ export const EMPTY_FILTERS: PropertyFilters = {
   maxPrice: null,
   minSize: null,
   features: [],
+  listedBy: "",
   newOnly: false,
   savedOnly: false,
   sort: "newest",
@@ -73,6 +75,7 @@ export function parseFilters(params: URLSearchParams): PropertyFilters {
     maxPrice: toInt(params.get("maxPrice")),
     minSize: toInt(params.get("minSize")),
     features,
+    listedBy: isListedBy(params.get("listedBy")) ? params.get("listedBy")! : "",
     newOnly: params.get("new") === "1",
     savedOnly: params.get("saved") === "1",
     sort: (SORT_KEYS.includes(sort) ? sort : "newest") as SortKey,
@@ -91,6 +94,7 @@ export function serialiseFilters(filters: PropertyFilters): string {
   if (filters.maxPrice) p.set("maxPrice", String(filters.maxPrice));
   if (filters.minSize) p.set("minSize", String(filters.minSize));
   if (filters.features.length) p.set("features", filters.features.join(","));
+  if (filters.listedBy) p.set("listedBy", filters.listedBy);
   if (filters.newOnly) p.set("new", "1");
   if (filters.savedOnly) p.set("saved", "1");
   if (filters.sort !== "newest") p.set("sort", filters.sort);
@@ -108,6 +112,7 @@ export function countActiveFilters(filters: PropertyFilters): number {
   if (filters.minPrice) n++;
   if (filters.maxPrice) n++;
   if (filters.minSize) n++;
+  if (filters.listedBy) n++;
   if (filters.newOnly) n++;
   if (filters.savedOnly) n++;
   n += filters.features.length;
@@ -151,6 +156,7 @@ export function applyFilters(
     if (filters.minPrice != null && comparablePrice < filters.minPrice) return false;
     if (filters.maxPrice != null && comparablePrice > filters.maxPrice) return false;
     if (filters.minSize != null && (card.sizeSqm ?? 0) < filters.minSize) return false;
+    if (filters.listedBy && card.listedBy !== filters.listedBy) return false;
     if (filters.newOnly && !card.isNewDevelopment) return false;
     if (filters.savedOnly && !(savedIds?.has(card.id) ?? false)) return false;
     if (filters.features.length) {
@@ -198,6 +204,7 @@ export interface Facets {
   neighbourhoods: { value: string; count: number }[];
   types: { value: string; count: number }[];
   features: { value: string; count: number }[];
+  listedBy: { value: string; count: number }[];
 }
 
 export function buildFacets(cards: PropertyCardData[]): Facets {
@@ -205,6 +212,7 @@ export function buildFacets(cards: PropertyCardData[]): Facets {
   const neighbourhoods = new Map<string, number>();
   const types = new Map<string, number>();
   const features = new Map<string, number>();
+  const listedBy = new Map<string, number>();
 
   for (const card of cards) {
     if (card.city) cities.set(card.city, (cities.get(card.city) ?? 0) + 1);
@@ -216,6 +224,7 @@ export function buildFacets(cards: PropertyCardData[]): Facets {
     if (card.propertyType)
       types.set(card.propertyType, (types.get(card.propertyType) ?? 0) + 1);
     for (const f of card.features) features.set(f, (features.get(f) ?? 0) + 1);
+    if (card.listedBy) listedBy.set(card.listedBy, (listedBy.get(card.listedBy) ?? 0) + 1);
   }
 
   const toSorted = (m: Map<string, number>, minCount = 1) =>
@@ -233,5 +242,8 @@ export function buildFacets(cards: PropertyCardData[]): Facets {
     // Require a feature to appear on at least two properties before it earns a
     // filter chip, and cap the list so the panel stays scannable.
     features: toSorted(features, FEATURE_FACET_MIN_COUNT).slice(0, MAX_FEATURE_FACETS),
+    // Only worth offering when the results actually contain a mix; a control
+    // with one option filters nothing.
+    listedBy: listedBy.size > 1 ? toSorted(listedBy) : [],
   };
 }

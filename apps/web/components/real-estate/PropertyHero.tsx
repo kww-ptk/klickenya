@@ -1,20 +1,25 @@
-import { sanityClient } from "@/lib/sanity/client";
 import { PropertySearchBox } from "./PropertySearchBox";
 import { MouseGlow } from "@/components/shared/MouseGlow";
+import type { PropertyCardData } from "@/lib/real-estate/mappers";
+import {
+  buildLocationOptions,
+  buildSearchIndex,
+} from "@/lib/real-estate/searchIndex";
 
-async function PropertyHero() {
-  // Count what is actually browsable. The old query counted every property
-  // document, including drafts, sold listings and white-label partner stock.
-  const count: number = await sanityClient
-    .fetch(
-      `count(*[_type == "property" && status == "available" && (!defined(partner) || publishToMarketplace == true)])`
-    )
-    .catch(() => 0);
+/**
+ * The hub already fetches every live property, so the hero takes that list
+ * rather than running its own count query. It also feeds the search box the
+ * locations that actually have stock and a compact index for live match counts.
+ */
+function PropertyHero({ properties }: { properties: PropertyCardData[] }) {
+  const count = properties.length;
+  const locations = buildLocationOptions(properties);
+  const index = buildSearchIndex(properties);
 
   const stats = [
     { value: count > 0 ? `${count}` : "Growing fast", label: "Properties listed" },
-    { value: "Free", label: "To list your property" },
     { value: "Free", label: "Buyer enquiries" },
+    { value: "Verified", label: "Agents and owners" },
     { value: "Instant", label: "Property valuations" },
   ];
   return (
@@ -79,7 +84,7 @@ async function PropertyHero() {
         </p>
 
         {/* Search box */}
-        <PropertySearchBox />
+        <PropertySearchBox locations={locations} index={index} />
       </div>
 
       {/* Stats bar */}

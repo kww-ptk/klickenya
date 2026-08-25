@@ -15,6 +15,11 @@
  * only fetched and uploaded when a property has none — re-running does not
  * re-upload 48 images or orphan the old assets.
  *
+ * listingCategory doubles as the browse category, so a plot has to be "land"
+ * rather than "for-sale" or it never shows under /real-estate/land and instead
+ * hides among the houses. Same for commercial. propertyType records what the
+ * asset is; listingCategory records which grid it belongs in.
+ *
  * Two listings on the Claris site are deliberately NOT imported: Mida Creek
  * Building Plot (CAE-1002) and Turtle Bay Garden Villa (CAE-1001). Both are
  * priced in US dollars rather than euro, both carry reference codes no other
@@ -186,6 +191,9 @@ async function main() {
       description: portableText(p.descriptionParagraphs),
       isNewDevelopment: p.isNewDevelopment,
       isFeatured: false,
+      // Claris is an estate agency; the two off-plan compounds are still sold
+      // through them rather than direct from the developer.
+      listedBy: "agency",
       seoDescription: p.seoDescription,
       agent: { _type: "reference", _ref: AGENT_ID },
     };

@@ -70,6 +70,45 @@ export function isClosedStatus(status?: string | null): boolean {
   return CLOSED_STATUSES.includes(status ?? "");
 }
 
+/* ── Who is selling ────────────────────────────────── */
+
+/**
+ * The /real-estate/list flow has always asked whether someone is an agent, an
+ * owner or a developer, but only ever wrote the answer into a free-text note on
+ * a contact request. It never reached the property, so a buyer could not tell
+ * an agency listing from an owner-direct one.
+ */
+export const LISTED_BY_OPTIONS = ["agency", "owner", "developer"] as const;
+
+export type ListedBy = (typeof LISTED_BY_OPTIONS)[number];
+
+export const LISTED_BY_LABELS: Record<ListedBy, string> = {
+  agency: "Agency",
+  owner: "Private owner",
+  developer: "Developer",
+};
+
+/** Longer form for the detail page, where there is room to be explicit. */
+export const LISTED_BY_DESCRIPTIONS: Record<ListedBy, string> = {
+  agency: "Listed by an estate agency",
+  owner: "Listed directly by the owner",
+  developer: "Listed by the property developer",
+};
+
+/**
+ * Owner-direct is the one buyers actively hunt for, because it usually means no
+ * agent commission, so it gets the colour. The others stay neutral.
+ */
+export const LISTED_BY_BADGE_STYLES: Record<ListedBy, string> = {
+  agency: "bg-dark/70 text-white",
+  owner: "bg-green/90 text-white",
+  developer: "bg-blue-500/85 text-white",
+};
+
+export function isListedBy(value: unknown): value is ListedBy {
+  return typeof value === "string" && (LISTED_BY_OPTIONS as readonly string[]).includes(value);
+}
+
 /* ── Property types ────────────────────────────────── */
 
 export const PROPERTY_TYPES = [

@@ -9,7 +9,7 @@ const CARDS = [
     icon: "👔",
     title: "Real Estate Agents",
     body: "List your full portfolio. Receive enquiries directly. Build a verified profile and get found by buyers searching in your area.",
-    badge: "Free during launch",
+    badge: "Agencies welcome",
     badgeClass: "bg-purple-50 text-purple-600 ring-1 ring-purple-200",
     cta: "List as an agent",
     href: "/real-estate/list",
@@ -56,7 +56,7 @@ function WhoCanList() {
           </h2>
           <p className="text-[16px] text-text2 max-w-lg mx-auto leading-[1.65]">
             Whether you&apos;re a registered agent, private seller, or developer
-            — list your properties free and reach buyers across Kenya.
+            — list your properties and reach buyers across Kenya.
           </p>
         </div>
 

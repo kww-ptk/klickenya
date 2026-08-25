@@ -1,23 +1,30 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useMemo, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { PROPERTY_TYPES } from "@/lib/real-estate/constants";
+import { LocationPicker, type LocationOption } from "./LocationPicker";
+import {
+  countMatches,
+  digitsOnly,
+  formatThousands,
+  type SearchIndexEntry,
+} from "@/lib/real-estate/searchIndex";
 
 /**
  * Hero search.
  *
- * Two things were broken here. The box built a query string that the category
- * pages never read, so every search returned the unfiltered category; that is
- * fixed on the receiving end by PropertyBrowser. And the "New Developments" tab
- * pushed to /real-estate/new-builds, which is not a category, so it fell
- * through to the property detail branch and 404ed.
+ * Previously this built a query string that the receiving page never read, so
+ * every search returned the unfiltered category, and its "New Developments" tab
+ * pushed to a URL that did not exist. Both are fixed. Beyond that it was a bare
+ * text field for location with no idea what was on the market, unformatted
+ * price boxes, and a bedrooms selector shown even when searching land.
  *
- * Layout is now a wrapping grid. The old single flex row squeezed five fields
- * and a button into whatever width was available, which was unusable on a
- * phone. Fields are 16px so iOS Safari does not zoom on focus.
+ * It now offers only locations that have listings, counts matches live so
+ * nobody submits into an empty grid, formats prices as you type, validates the
+ * range, and hides fields that make no sense for the selected tab.
  */
 
 const TABS = [
@@ -33,18 +40,30 @@ const TABS = [
   },
 ] as const;
 
+/** Bedrooms are meaningless on a plot or a warehouse. */
+const TABS_WITHOUT_BEDROOMS = new Set(["land", "commercial"]);
+
+/** Offering "Apartment" under the Land tab just invites an empty result. */
+const TYPES_FOR_TAB: Record<string, string[]> = {
+  land: ["land"],
+  commercial: ["commercial"],
+};
+
 const fieldCls =
   "w-full bg-transparent text-[16px] font-medium text-text outline-none placeholder:text-text3";
 
-// text-left is explicit: the hero centres its content, and the fields would
-// otherwise inherit centred labels and centred placeholder text.
 const wrapCls =
   "flex flex-col gap-0.5 rounded-[14px] border border-border px-4 py-2.5 text-left transition-colors focus-within:border-purple2";
 
-const labelCls =
-  "text-[10px] font-bold uppercase tracking-[0.06em] text-text";
+const labelCls = "text-[10px] font-bold uppercase tracking-[0.06em] text-text";
 
-function PropertySearchBox() {
+function PropertySearchBox({
+  locations = [],
+  index = [],
+}: {
+  locations?: LocationOption[];
+  index?: SearchIndexEntry[];
+}) {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<string>("for-sale");
   const [location, setLocation] = useState("");
@@ -53,15 +72,54 @@ function PropertySearchBox() {
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
 
+  const showBedrooms = !TABS_WITHOUT_BEDROOMS.has(activeTab);
+  const allowedTypes = TYPES_FOR_TAB[activeTab];
+  const typeOptions = allowedTypes
+    ? PROPERTY_TYPES.filter((t) => allowedTypes.includes(t.value))
+    : PROPERTY_TYPES.filter((t) => t.value !== "land" && t.value !== "commercial");
+
+  const min = minPrice ? Number(minPrice) : null;
+  const max = maxPrice ? Number(maxPrice) : null;
+  const rangeInverted = min != null && max != null && min > max;
+
+  const matches = useMemo(
+    () =>
+      index.length === 0
+        ? null
+        : countMatches(index, {
+            category: activeTab,
+            location,
+            type: propertyType,
+            beds: showBedrooms ? bedrooms : "",
+            minPrice: rangeInverted ? null : min,
+            maxPrice: rangeInverted ? null : max,
+          }),
+    [index, activeTab, location, propertyType, bedrooms, showBedrooms, min, max, rangeInverted]
+  );
+
+  function selectTab(id: string) {
+    setActiveTab(id);
+    // Carrying a bedroom count into a land search would silently exclude
+    // every plot, because plots have no bedrooms.
+    if (TABS_WITHOUT_BEDROOMS.has(id)) setBedrooms("");
+    // Same for a property type the new tab does not offer.
+    const allowed = TYPES_FOR_TAB[id];
+    if (allowed && propertyType && !allowed.includes(propertyType)) setPropertyType("");
+    if (!allowed && (propertyType === "land" || propertyType === "commercial")) {
+      setPropertyType("");
+    }
+  }
+
   function handleSubmit(e: FormEvent) {
     e.preventDefault();
+    if (rangeInverted) return;
 
     const params = new URLSearchParams();
     if (location.trim()) params.set("city", location.trim());
     if (propertyType) params.set("type", propertyType);
-    if (bedrooms) params.set("beds", bedrooms);
-    if (minPrice) params.set("minPrice", minPrice);
-    if (maxPrice) params.set("maxPrice", maxPrice);
+    if (showBedrooms && bedrooms) params.set("beds", bedrooms);
+    if (min != null) params.set("minPrice", String(min));
+    if (max != null) params.set("maxPrice", String(max));
 
     const target = TABS.find((t) => t.id === activeTab)?.href ?? "/real-estate/for-sale";
     const qs = params.toString();
@@ -73,7 +131,7 @@ function PropertySearchBox() {
       onSubmit={handleSubmit}
       role="search"
       aria-label="Search properties"
-      className="w-full max-w-[880px] overflow-hidden rounded-[26px] bg-white/97 shadow-xl backdrop-blur-[20px]"
+      className="w-full max-w-[880px] overflow-visible rounded-[26px] bg-white/97 shadow-xl backdrop-blur-[20px]"
     >
       {/* Tabs */}
       <div className="flex overflow-x-auto border-b border-border px-1.5 scrollbar-none">
@@ -84,7 +142,7 @@ function PropertySearchBox() {
               key={tab.id}
               type="button"
               aria-pressed={isActive}
-              onClick={() => setActiveTab(tab.id)}
+              onClick={() => selectTab(tab.id)}
               className={cn(
                 "shrink-0 whitespace-nowrap border-b-2 px-4 py-3.5 text-[13px] font-semibold transition-colors duration-200",
                 isActive
@@ -99,18 +157,23 @@ function PropertySearchBox() {
       </div>
 
       {/* Fields */}
-      <div className="grid grid-cols-1 items-stretch gap-2.5 p-3 sm:grid-cols-2 lg:grid-cols-[1.2fr_1fr_0.85fr_1.3fr_auto]">
+      <div
+        className={cn(
+          "grid grid-cols-1 items-stretch gap-2.5 p-3 sm:grid-cols-2",
+          showBedrooms
+            ? "lg:grid-cols-[1.2fr_1fr_0.85fr_1.3fr_auto]"
+            : "lg:grid-cols-[1.3fr_1fr_1.4fr_auto]"
+        )}
+      >
         <div className={wrapCls}>
-          <label className={labelCls} htmlFor="search-location">
+          <span className={labelCls} id="search-location-label">
             Location
-          </label>
-          <input
-            id="search-location"
-            type="text"
-            placeholder="Nairobi, Mombasa..."
+          </span>
+          <LocationPicker
             value={location}
-            onChange={(e) => setLocation(e.target.value)}
-            className={fieldCls}
+            onChange={setLocation}
+            options={locations}
+            onSubmit={() => handleSubmit(new Event("submit") as unknown as FormEvent)}
           />
         </div>
 
@@ -125,7 +188,7 @@ function PropertySearchBox() {
             className={cn(fieldCls, "cursor-pointer appearance-none")}
           >
             <option value="">Any type</option>
-            {PROPERTY_TYPES.map((t) => (
+            {typeOptions.map((t) => (
               <option key={t.value} value={t.value}>
                 {t.label}
               </option>
@@ -133,35 +196,43 @@ function PropertySearchBox() {
           </select>
         </div>
 
-        <div className={wrapCls}>
-          <label className={labelCls} htmlFor="search-beds">
-            Bedrooms
-          </label>
-          <select
-            id="search-beds"
-            value={bedrooms}
-            onChange={(e) => setBedrooms(e.target.value)}
-            className={cn(fieldCls, "cursor-pointer appearance-none")}
-          >
-            <option value="">Any</option>
-            {[1, 2, 3, 4, 5].map((n) => (
-              <option key={n} value={n}>
-                {n}+
-              </option>
-            ))}
-          </select>
-        </div>
+        {showBedrooms && (
+          <div className={wrapCls}>
+            <label className={labelCls} htmlFor="search-beds">
+              Bedrooms
+            </label>
+            <select
+              id="search-beds"
+              value={bedrooms}
+              onChange={(e) => setBedrooms(e.target.value)}
+              className={cn(fieldCls, "cursor-pointer appearance-none")}
+            >
+              <option value="">Any</option>
+              {[1, 2, 3, 4, 5].map((n) => (
+                <option key={n} value={n}>
+                  {n}+
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
 
-        <div className={wrapCls}>
+        <div
+          className={cn(
+            wrapCls,
+            rangeInverted && "border-[#EF4444] focus-within:border-[#EF4444]"
+          )}
+        >
           <span className={labelCls}>Price range (KSh)</span>
           <div className="flex items-center gap-1.5">
             <input
               type="text"
               inputMode="numeric"
-              aria-label="Minimum price"
+              aria-label="Minimum price in Kenyan shillings"
+              aria-invalid={rangeInverted}
               placeholder="Min"
-              value={minPrice}
-              onChange={(e) => setMinPrice(e.target.value.replace(/\D/g, ""))}
+              value={formatThousands(minPrice)}
+              onChange={(e) => setMinPrice(digitsOnly(e.target.value))}
               className={fieldCls}
             />
             <span className="text-[13px] text-text3" aria-hidden="true">
@@ -170,10 +241,11 @@ function PropertySearchBox() {
             <input
               type="text"
               inputMode="numeric"
-              aria-label="Maximum price"
+              aria-label="Maximum price in Kenyan shillings"
+              aria-invalid={rangeInverted}
               placeholder="Max"
-              value={maxPrice}
-              onChange={(e) => setMaxPrice(e.target.value.replace(/\D/g, ""))}
+              value={formatThousands(maxPrice)}
+              onChange={(e) => setMaxPrice(digitsOnly(e.target.value))}
               className={fieldCls}
             />
           </div>
@@ -181,12 +253,39 @@ function PropertySearchBox() {
 
         <button
           type="submit"
-          className="col-span-full flex h-[52px] items-center justify-center gap-2 self-center rounded-[18px] bg-purple2 px-7 text-[15px] font-bold text-white shadow-[0_4px_16px_rgba(139,77,171,0.35)] transition-all duration-200 hover:bg-[#9B5ABF] lg:col-span-1"
+          disabled={rangeInverted}
+          className={cn(
+            "col-span-full flex h-[52px] items-center justify-center gap-2 self-center rounded-[18px] px-7 text-[15px] font-bold transition-all duration-200 lg:col-span-1",
+            rangeInverted
+              ? "cursor-not-allowed bg-border text-text3"
+              : "bg-purple2 text-white shadow-[0_4px_16px_rgba(139,77,171,0.35)] hover:bg-[#9B5ABF]"
+          )}
         >
           <Search className="size-4" />
-          Search
+          {/* While the range is inverted the count is computed with the price
+              ignored, so showing it would promise results the search cannot
+              honour. */}
+          {rangeInverted
+            ? "Check price range"
+            : matches == null
+              ? "Search"
+              : matches === 0
+                ? "No matches"
+                : `Show ${matches}`}
         </button>
       </div>
+
+      {/* Feedback sits outside the grid so it never shifts the fields. */}
+      {(rangeInverted || matches === 0) && (
+        <p
+          role="status"
+          className="px-4 pb-3.5 text-[13px] font-medium text-text2"
+        >
+          {rangeInverted
+            ? "The minimum price is above the maximum."
+            : "Nothing matches yet. Try a wider price range or clear the location."}
+        </p>
+      )}
     </form>
   );
 }

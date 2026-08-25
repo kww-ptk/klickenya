@@ -5,6 +5,8 @@ import { cn } from "@/lib/utils";
 import {
   CATEGORY_BADGE_STYLES,
   CATEGORY_LABELS,
+  LISTED_BY_BADGE_STYLES,
+  LISTED_BY_LABELS,
   STATUS_LABELS,
   isPropertyCategory,
   isClosedStatus,
@@ -39,6 +41,7 @@ function PropertyCard({
   previousPrice,
   isFeatured,
   isNewDevelopment,
+  listedBy,
   bedrooms,
   bathrooms,
   sizeSqm,
@@ -148,6 +151,19 @@ function PropertyCard({
             <span className="absolute bottom-3 left-3 flex items-center gap-1 rounded-full bg-dark/55 px-2 py-1 text-[11px] font-semibold text-white backdrop-blur-[6px]">
               <Images className="size-3" />
               {photoCount}
+            </span>
+          )}
+
+          {/* Who is selling. Owner-direct usually means no agent commission,
+              which is the thing buyers scan a grid for. */}
+          {listedBy && !closed && (
+            <span
+              className={cn(
+                "absolute bottom-3 right-3 rounded-full px-2.5 py-1 text-[11px] font-bold backdrop-blur-[6px]",
+                LISTED_BY_BADGE_STYLES[listedBy]
+              )}
+            >
+              {LISTED_BY_LABELS[listedBy]}
             </span>
           )}
         </div>

@@ -208,3 +208,43 @@ describe("countActiveFilters", () => {
     expect(countActiveFilters({ ...EMPTY_FILTERS, sort: "price-asc" })).toBe(0);
   });
 });
+
+describe("listed-by filtering", () => {
+  const cards = [
+    card({ id: "agency", listedBy: "agency" }),
+    card({ id: "owner", listedBy: "owner" }),
+    card({ id: "dev", listedBy: "developer" }),
+    card({ id: "unknown" }),
+  ];
+
+  it("narrows to owner-direct listings", () => {
+    const result = applyFilters(cards, { ...EMPTY_FILTERS, listedBy: "owner" });
+    expect(result.map((c) => c.id)).toEqual(["owner"]);
+  });
+
+  it("excludes listings that never said who is selling", () => {
+    const result = applyFilters(cards, { ...EMPTY_FILTERS, listedBy: "agency" });
+    expect(result.map((c) => c.id)).toEqual(["agency"]);
+  });
+
+  it("counts as an active filter and survives a URL round trip", () => {
+    const filters = { ...EMPTY_FILTERS, listedBy: "owner" };
+    expect(countActiveFilters(filters)).toBe(1);
+    expect(parseFilters(new URLSearchParams(serialiseFilters(filters)))).toEqual(filters);
+  });
+
+  it("ignores a junk listedBy param", () => {
+    expect(parseFilters(new URLSearchParams("listedBy=pirate")).listedBy).toBe("");
+  });
+
+  /* A control with one option filters nothing, so it should not be offered. */
+  it("offers the facet only when the results are mixed", () => {
+    expect(buildFacets([card({ id: "a", listedBy: "agency" })]).listedBy).toEqual([]);
+    expect(
+      buildFacets([
+        card({ id: "a", listedBy: "agency" }),
+        card({ id: "b", listedBy: "owner" }),
+      ]).listedBy
+    ).toHaveLength(2);
+  });
+});

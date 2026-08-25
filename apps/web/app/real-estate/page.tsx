@@ -49,7 +49,7 @@ const PATH = "/real-estate";
 export const metadata: Metadata = {
   title: "Property in Kenya | Houses, Apartments and Land",
   description:
-    "Buy, rent or sell property across Kenya. Browse houses, apartments, land and commercial space with asking prices in shillings, verified agents and free enquiries.",
+    "Buy, rent or sell property across Kenya. Browse houses, apartments, land and commercial space from agencies, developers and private owners, with transparent asking prices and free enquiries.",
   alternates: { canonical: absoluteUrl(PATH) },
   openGraph: {
     title: "Property in Kenya | Houses, Apartments and Land | Klickenya",
@@ -74,7 +74,7 @@ const FAQS = [
   {
     question: "Can I list my own property?",
     answer:
-      "Yes. Owners, agents and developers can all list on Klickenya, and listing is free during the launch phase. Submit your property through the listing form and it goes live once it has been reviewed.",
+      "Yes. Owners, agents and developers can all list on Klickenya. Submit your property through the listing form and it goes live once our team has reviewed it. Every listing shows whether it came from an agency, a developer, or the owner directly.",
   },
   {
     question: "Are the prices on Klickenya negotiable?",
@@ -157,7 +157,7 @@ export default async function RealEstateHomePage() {
       />
       <Nav transparent />
 
-      <PropertyHero />
+      <PropertyHero properties={allProperties} />
 
       <PropertyCategoryNav activeCategory="all" />
 
@@ -388,7 +388,7 @@ export default async function RealEstateHomePage() {
           </h2>
           <p className="mx-auto mb-8 max-w-[560px] text-[16px] leading-[1.7] text-white/50">
             Get your property in front of buyers and renters across Kenya.
-            Listing is free during our launch phase.
+            Agencies, developers and private owners can all list.
           </p>
           {/* This used to point at /how-it-works, which is not the listing form. */}
           <Link

@@ -29,7 +29,10 @@ import { SavePropertyButton } from "@/components/real-estate/SavePropertyButton"
 import {
   CATEGORY_BADGE_STYLES,
   CATEGORY_LABELS,
+  LISTED_BY_DESCRIPTIONS,
   STATUS_LABELS,
+  isListedBy,
+  type ListedBy,
   categoryPath,
   categoryCityPath,
   isClosedStatus,
@@ -110,6 +113,10 @@ async function PropertyDetail({ slug }: { slug: string }) {
   const reduction = getReductionPercent(property.previousPrice, property.price);
   const suffix = priceSuffix(property.listingCategory, property.priceType);
   const currency = toCurrency(property.currency);
+  // `property` is any (Sanity), so the guard narrows nothing on its own.
+  const listedBy: ListedBy | null = isListedBy(property.listedBy)
+    ? (property.listedBy as ListedBy)
+    : null;
   const perSqm = pricePerSqm(property.price, property.sizeSqm);
   const acres = formatAcres(property.landSizeAcres);
   const url = absoluteUrl(propertyPath(slug));
@@ -238,6 +245,11 @@ async function PropertyDetail({ slug }: { slug: string }) {
               {property.isFeatured && (
                 <span className="inline-block rounded-full bg-amber/15 px-3 py-1 text-[12px] font-bold uppercase tracking-wide text-amber">
                   Featured
+                </span>
+              )}
+              {listedBy && (
+                <span className="inline-block rounded-full border border-border px-3 py-1 text-[12px] font-semibold text-text2">
+                  {LISTED_BY_DESCRIPTIONS[listedBy]}
                 </span>
               )}
             </div>

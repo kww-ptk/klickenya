@@ -1,5 +1,6 @@
 import { urlForImage } from "@/lib/sanity/image";
 import { toCurrency, type Currency } from "./currency";
+import { isListedBy, type ListedBy } from "./constants";
 
 /**
  * The shape every property grid renders. Built once here instead of the four
@@ -18,6 +19,7 @@ export interface PropertyCardData {
   previousPrice?: number;
   isFeatured?: boolean;
   isNewDevelopment?: boolean;
+  listedBy?: ListedBy;
   bedrooms?: number;
   bathrooms?: number;
   sizeSqm?: number;
@@ -51,6 +53,7 @@ export function mapPropertyToCard(p: any): PropertyCardData {
     previousPrice: p.previousPrice ?? undefined,
     isFeatured: p.isFeatured ?? false,
     isNewDevelopment: p.isNewDevelopment ?? false,
+    listedBy: isListedBy(p.listedBy) ? p.listedBy : undefined,
     bedrooms: p.bedrooms ?? undefined,
     bathrooms: p.bathrooms ?? undefined,
     sizeSqm: p.sizeSqm ?? undefined,

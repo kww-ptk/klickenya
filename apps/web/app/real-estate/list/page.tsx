@@ -454,8 +454,8 @@ export default function RealEstateListPage() {
               List your property on Klickenya
             </h1>
             <p className="text-[15px] text-text2 mb-8 max-w-md">
-              Tell us about yourself and your property. Our team will create your
-              listing within 24 hours — completely free.
+              Tell us about yourself and your property. Our team will review the
+              details and build your listing for you.
             </p>
 
             <div className="bg-white rounded-2xl shadow-sm border border-border p-6 md:p-8">
@@ -1238,7 +1238,7 @@ export default function RealEstateListPage() {
                   {[
                     { num: "1", label: "Tell us about yourself", desc: "Agent, owner, or developer" },
                     { num: "2", label: "Share your property details", desc: "Type, location, price, photos" },
-                    { num: "3", label: "We create your listing", desc: "Live within 24 hours, free" },
+                    { num: "3", label: "We create your listing", desc: "Written and published by our team" },
                   ].map((s, i) => (
                     <div key={s.num} className="flex items-start gap-3">
                       <span className="flex items-center justify-center size-8 rounded-full bg-purple-100 text-purple-600 text-[13px] font-bold shrink-0">
@@ -1261,7 +1261,7 @@ export default function RealEstateListPage() {
                 </h3>
                 <div className="space-y-4">
                   {[
-                    { icon: "🆓", title: "Completely free", desc: "No listing fees, no commission" },
+                    { icon: "✍️", title: "We write it for you", desc: "Send the details and photos, we build the listing" },
                     { icon: "📩", title: "Direct enquiries", desc: "Buyers and renters contact you directly" },
                     { icon: "✓", title: "Verified badge", desc: "Build trust with a green tick on your listing" },
                     { icon: "📊", title: "Listing analytics", desc: "See views, enquiries, and performance" },
