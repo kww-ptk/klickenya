@@ -7,6 +7,8 @@ import {
   PROPERTY_TYPE_LABELS,
   type ListedBy,
 } from "@/lib/real-estate/constants";
+import { convert, roundConverted } from "@/lib/real-estate/currency";
+import { useDisplayCurrency } from "@/components/currency/CurrencyProvider";
 import {
   SORT_OPTIONS,
   type Facets,
@@ -41,6 +43,22 @@ function PropertyFilterPanel({
   showNeighbourhoodFilter = true,
   className,
 }: PropertyFilterPanelProps) {
+  const { currency: display, rates } = useDisplayCurrency();
+
+  /*
+   * Filter state travels in the URL as shillings so a shared link means the
+   * same thing to everyone, but the boxes show and accept whatever currency the
+   * viewer is browsing in.
+   */
+  const fromKes = (kes: number | null) =>
+    kes == null ? "" : String(roundConverted(convert(kes, "KES", display, rates)));
+
+  const toKes = (input: string) => {
+    const digits = input.replace(/\D/g, "");
+    if (!digits) return null;
+    return Math.round(convert(Number(digits), display, "KES", rates));
+  };
+
   function toggleFeature(feature: string) {
     const next = filters.features.includes(feature)
       ? filters.features.filter((f) => f !== feature)
@@ -157,31 +175,25 @@ function PropertyFilterPanel({
       </div>
 
       <div>
-        <span className={labelCls}>Price range (KSh)</span>
+        <span className={labelCls}>Price range ({display})</span>
         <div className="grid grid-cols-2 gap-3">
           <input
             type="text"
             inputMode="numeric"
-            aria-label="Minimum price in Kenyan shillings"
+            aria-label={`Minimum price in ${display}`}
             placeholder="Min"
             className={fieldCls}
-            value={filters.minPrice ?? ""}
-            onChange={(e) => {
-              const digits = e.target.value.replace(/\D/g, "");
-              onChange({ minPrice: digits ? Number(digits) : null });
-            }}
+            value={fromKes(filters.minPrice)}
+            onChange={(e) => onChange({ minPrice: toKes(e.target.value) })}
           />
           <input
             type="text"
             inputMode="numeric"
-            aria-label="Maximum price in Kenyan shillings"
+            aria-label={`Maximum price in ${display}`}
             placeholder="Max"
             className={fieldCls}
-            value={filters.maxPrice ?? ""}
-            onChange={(e) => {
-              const digits = e.target.value.replace(/\D/g, "");
-              onChange({ maxPrice: digits ? Number(digits) : null });
-            }}
+            value={fromKes(filters.maxPrice)}
+            onChange={(e) => onChange({ maxPrice: toKes(e.target.value) })}
           />
         </div>
       </div>

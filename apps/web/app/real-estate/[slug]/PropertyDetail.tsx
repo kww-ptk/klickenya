@@ -26,6 +26,7 @@ import { PropertyMap } from "@/components/real-estate/PropertyMap";
 import { PropertyEnquiryForm } from "@/components/real-estate/PropertyEnquiryForm";
 import { AgentContactCard } from "@/components/real-estate/AgentContactCard";
 import { SavePropertyButton } from "@/components/real-estate/SavePropertyButton";
+import { PropertyPrice } from "@/components/real-estate/PropertyPrice";
 import {
   CATEGORY_BADGE_STYLES,
   CATEGORY_LABELS,
@@ -145,14 +146,15 @@ async function PropertyDetail({ slug }: { slug: string }) {
 
   const priceBlock = (
     <>
-      <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
-        <span className="font-display text-[32px] font-extrabold tracking-[-0.03em] text-dark">
-          {formatPrice(property.price ?? 0, currency)}
-        </span>
-        {suffix && <span className="text-[14px] text-text2">{suffix}</span>}
-      </div>
+      <PropertyPrice
+        price={property.price ?? 0}
+        currency={currency}
+        listingCategory={property.listingCategory}
+        priceType={property.priceType}
+        size="detail"
+      />
       {/* formatPrice abbreviates anything over a million, so show the exact
-          figure underneath where it was abbreviated. */}
+          quoted figure underneath where it was abbreviated. */}
       {property.price >= 1_000_000 && (
         <p className="mt-0.5 text-[13px] text-text3">
           {formatPriceFull(property.price, currency)}
@@ -467,10 +469,13 @@ async function PropertyDetail({ slug }: { slug: string }) {
           nav; from md up the nav is gone and this returns to the bottom. */}
       <div className="fixed inset-x-0 bottom-[calc(62px+env(safe-area-inset-bottom))] z-[150] flex items-center justify-between gap-3 border-t border-border bg-white px-5 py-3.5 md:bottom-0 lg:hidden">
         <div className="min-w-0">
-          <span className="font-display text-[20px] font-extrabold tracking-[-0.02em] text-dark">
-            {formatPrice(property.price ?? 0, currency)}
-          </span>
-          {suffix && <span className="text-[13px] text-text2"> {suffix}</span>}
+          <PropertyPrice
+            price={property.price ?? 0}
+            currency={currency}
+            listingCategory={property.listingCategory}
+            priceType={property.priceType}
+            size="bar"
+          />
         </div>
         <div className="flex shrink-0 items-center gap-2">
           <SavePropertyButton

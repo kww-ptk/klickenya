@@ -1,10 +1,12 @@
 "use client";
 
-import { useMemo, useState, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { PROPERTY_TYPES } from "@/lib/real-estate/constants";
+import { convert } from "@/lib/real-estate/currency";
+import { useDisplayCurrency } from "@/components/currency/CurrencyProvider";
 import { LocationPicker, type LocationOption } from "./LocationPicker";
 import {
   countMatches,
@@ -65,6 +67,7 @@ function PropertySearchBox({
   index?: SearchIndexEntry[];
 }) {
   const router = useRouter();
+  const { currency: display, rates } = useDisplayCurrency();
   const [activeTab, setActiveTab] = useState<string>("for-sale");
   const [location, setLocation] = useState("");
   const [propertyType, setPropertyType] = useState("");
@@ -78,24 +81,30 @@ function PropertySearchBox({
     ? PROPERTY_TYPES.filter((t) => allowedTypes.includes(t.value))
     : PROPERTY_TYPES.filter((t) => t.value !== "land" && t.value !== "commercial");
 
+  // Typed in whatever currency the viewer is browsing in. Comparison and the
+  // URL are always shillings, so a shared link means the same thing to whoever
+  // opens it, whatever their own currency preference happens to be.
   const min = minPrice ? Number(minPrice) : null;
   const max = maxPrice ? Number(maxPrice) : null;
   const rangeInverted = min != null && max != null && min > max;
 
-  const matches = useMemo(
-    () =>
-      index.length === 0
-        ? null
-        : countMatches(index, {
-            category: activeTab,
-            location,
-            type: propertyType,
-            beds: showBedrooms ? bedrooms : "",
-            minPrice: rangeInverted ? null : min,
-            maxPrice: rangeInverted ? null : max,
-          }),
-    [index, activeTab, location, propertyType, bedrooms, showBedrooms, min, max, rangeInverted]
-  );
+  const toKes = (amount: number | null) =>
+    amount == null ? null : Math.round(convert(amount, display, "KES", rates));
+
+  // No useMemo here: this project compiles with the React Compiler, which
+  // memoises automatically. A hand-rolled memo it cannot preserve is worse
+  // than none, and it warns about exactly that.
+  const matches =
+    index.length === 0
+      ? null
+      : countMatches(index, {
+          category: activeTab,
+          location,
+          type: propertyType,
+          beds: showBedrooms ? bedrooms : "",
+          minPrice: rangeInverted ? null : toKes(min),
+          maxPrice: rangeInverted ? null : toKes(max),
+        });
 
   function selectTab(id: string) {
     setActiveTab(id);
@@ -118,8 +127,10 @@ function PropertySearchBox({
     if (location.trim()) params.set("city", location.trim());
     if (propertyType) params.set("type", propertyType);
     if (showBedrooms && bedrooms) params.set("beds", bedrooms);
-    if (min != null) params.set("minPrice", String(min));
-    if (max != null) params.set("maxPrice", String(max));
+    const minKes = toKes(min);
+    const maxKes = toKes(max);
+    if (minKes != null) params.set("minPrice", String(minKes));
+    if (maxKes != null) params.set("maxPrice", String(maxKes));
 
     const target = TABS.find((t) => t.id === activeTab)?.href ?? "/real-estate/for-sale";
     const qs = params.toString();
@@ -223,12 +234,12 @@ function PropertySearchBox({
             rangeInverted && "border-[#EF4444] focus-within:border-[#EF4444]"
           )}
         >
-          <span className={labelCls}>Price range (KSh)</span>
+          <span className={labelCls}>Price range ({display})</span>
           <div className="flex items-center gap-1.5">
             <input
               type="text"
               inputMode="numeric"
-              aria-label="Minimum price in Kenyan shillings"
+              aria-label={`Minimum price in ${display}`}
               aria-invalid={rangeInverted}
               placeholder="Min"
               value={formatThousands(minPrice)}
@@ -241,7 +252,7 @@ function PropertySearchBox({
             <input
               type="text"
               inputMode="numeric"
-              aria-label="Maximum price in Kenyan shillings"
+              aria-label={`Maximum price in ${display}`}
               aria-invalid={rangeInverted}
               placeholder="Max"
               value={formatThousands(maxPrice)}

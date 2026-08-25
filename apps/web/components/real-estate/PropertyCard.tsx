@@ -14,14 +14,13 @@ import {
   type PropertyStatus,
 } from "@/lib/real-estate/constants";
 import {
-  formatPrice,
   formatAcres,
   getReductionPercent,
   pluralize,
-  priceSuffix,
 } from "@/lib/real-estate/format";
 import type { PropertyCardData } from "@/lib/real-estate/mappers";
 import { SavePropertyButton } from "./SavePropertyButton";
+import { PropertyPrice } from "./PropertyPrice";
 
 interface PropertyCardProps extends PropertyCardData {
   large?: boolean;
@@ -55,7 +54,6 @@ function PropertyCard({
   priority,
 }: PropertyCardProps) {
   const reduction = getReductionPercent(previousPrice, price);
-  const suffix = priceSuffix(listingCategory, priceType);
   const closed = isClosedStatus(status);
 
   // The badge shows what the property IS (For Sale / For Rent). The previous
@@ -171,18 +169,14 @@ function PropertyCard({
         {/* Body */}
         <div className="flex flex-1 flex-col p-4">
           {/* Price row */}
-          <div className="mb-1.5 flex items-baseline gap-1.5">
-            <span
-              className={cn(
-                "font-bold tracking-[-0.02em] text-text",
-                large ? "text-[26px]" : "text-[20px]"
-              )}
-            >
-              {formatPrice(price, currency)}
-            </span>
-            {suffix && (
-              <span className="text-[13px] font-normal text-text2">{suffix}</span>
-            )}
+          <div className="mb-1.5 flex items-start gap-1.5">
+            <PropertyPrice
+              price={price}
+              currency={currency}
+              listingCategory={listingCategory}
+              priceType={priceType}
+              size={large ? "large" : "card"}
+            />
             <span className="flex-1" />
             {reduction != null && reduction > 0 ? (
               <span className="inline-flex items-center gap-0.5 rounded-full bg-green/12 px-2 py-0.5 text-[11px] font-bold text-green">

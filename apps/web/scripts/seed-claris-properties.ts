@@ -166,8 +166,10 @@ async function main() {
       _id: string;
       photoCount: number;
       keys: string[];
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      photos: any[] | null;
     } | null>(
-      `*[_id == $id][0]{ _id, "photoCount": count(photos), "keys": photos[]._key }`,
+      `*[_id == $id][0]{ _id, "photoCount": count(photos), "keys": photos[]._key, photos }`,
       { id: _id }
     );
 
@@ -204,12 +206,14 @@ async function main() {
     if (p.landSizeAcres != null) doc.landSizeAcres = p.landSizeAcres;
     if (p.unitsAvailable != null) doc.unitsAvailable = p.unitsAvailable;
 
-    const needsPhotos = !existing || existing.photoCount === 0;
+    // GROQ count() on a missing field returns null, not 0, so an equality check
+    // against 0 never fires and a photo-less document looks like it has photos.
+    const needsPhotos = !existing?.photoCount;
 
     console.log(
       `\n${p.title}\n  ${p.currency} ${p.price.toLocaleString()} · ${p.propertyType} · ${p.neighbourhood}, ${p.city}` +
         `\n  ${p.descriptionParagraphs.length} paragraphs · ${p.features.length} features · ` +
-        `${needsPhotos ? `${p.photos.length} photos to upload` : `${existing?.photoCount} photos already on the document`}` +
+        `${needsPhotos ? `${p.photos.length} photos to upload` : `${existing?.photoCount ?? 0} photos already on the document`}` +
         `\n  ${existing ? "updates" : "creates"} ${_id}`
     );
 
@@ -255,6 +259,14 @@ async function main() {
         updated++;
       }
       continue;
+    }
+
+    // createOrReplace writes the whole document, so anything left off `doc` is
+    // deleted. Photos are uploaded once and skipped on later runs, which meant
+    // a second run silently wiped every image on all eight properties. Carry
+    // them forward explicitly.
+    if (!needsPhotos && existing?.photos?.length) {
+      doc.photos = existing.photos;
     }
 
     if (needsPhotos) {

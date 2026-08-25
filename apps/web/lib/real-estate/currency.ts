@@ -70,3 +70,40 @@ export const APPROX_KES_RATES: Record<Currency, number> = {
 export function toComparableKes(price: number, currency: Currency): number {
   return price * (APPROX_KES_RATES[currency] ?? 1);
 }
+
+/* ── Conversion ────────────────────────────────────── */
+
+/** How many shillings one unit of each currency buys. */
+export type KesRates = Record<Currency, number>;
+
+/**
+ * Convert between any two currencies through shillings.
+ *
+ * Displayed conversions are always approximate and must be labelled as such
+ * wherever they appear, alongside the price the seller actually quoted. The
+ * seller is paid in their own currency; this is a comparison aid.
+ */
+export function convert(
+  amount: number,
+  from: Currency,
+  to: Currency,
+  rates: KesRates
+): number {
+  if (from === to) return amount;
+  const kes = amount * (rates[from] ?? 1);
+  const perTarget = rates[to] ?? 1;
+  return perTarget === 0 ? kes : kes / perTarget;
+}
+
+/**
+ * Rounds a converted figure to a precision the rate can actually support.
+ * Printing "KSh 30,961,150" from a daily rate implies precision that is not
+ * there; the magnitude is the useful part.
+ */
+export function roundConverted(amount: number): number {
+  if (amount >= 10_000_000) return Math.round(amount / 100_000) * 100_000;
+  if (amount >= 1_000_000) return Math.round(amount / 10_000) * 10_000;
+  if (amount >= 100_000) return Math.round(amount / 1_000) * 1_000;
+  if (amount >= 1_000) return Math.round(amount / 100) * 100;
+  return Math.round(amount);
+}

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { CurrencySwitcher } from "@/components/currency/CurrencySwitcher";
 import { PROPERTY_CATEGORIES, CATEGORY_LABELS, categoryPath } from "@/lib/real-estate/constants";
 
 /**
@@ -44,7 +45,8 @@ function PropertyCategoryNav({ activeCategory }: PropertyCategoryNavProps) {
       aria-label="Property categories"
       className="sticky top-[65px] z-[200] border-b border-border bg-white/97 backdrop-blur-[20px]"
     >
-      <ul className="flex items-stretch overflow-x-auto scrollbar-none">
+      <div className="flex items-center gap-3 pr-3">
+      <ul className="flex flex-1 items-stretch overflow-x-auto scrollbar-none">
         {tabs.map((tab) => {
           const isActive = activeCategory === tab.id;
           return (
@@ -75,6 +77,11 @@ function PropertyCategoryNav({ activeCategory }: PropertyCategoryNavProps) {
           );
         })}
       </ul>
+
+      {/* Prices across the marketplace are quoted in whatever the seller uses,
+          so the control that reconciles them belongs next to the browse tabs. */}
+      <CurrencySwitcher className="hidden shrink-0 sm:block" />
+      </div>
     </nav>
   );
 }

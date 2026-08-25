@@ -9,6 +9,8 @@ import {
   type ListedBy,
 } from "@/lib/real-estate/constants";
 import { formatPrice } from "@/lib/real-estate/format";
+import { convert, roundConverted } from "@/lib/real-estate/currency";
+import { useDisplayCurrency } from "@/components/currency/CurrencyProvider";
 import type { PropertyCardData } from "@/lib/real-estate/mappers";
 import {
   EMPTY_FILTERS,
@@ -55,6 +57,11 @@ function PropertyBrowser({
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { savedIds } = useSavedProperties();
+  const { currency: display, rates } = useDisplayCurrency();
+
+  // Filter values are shillings in the URL; chips read in the viewer's currency.
+  const asDisplay = (kes: number) =>
+    formatPrice(roundConverted(convert(kes, "KES", display, rates)), display);
   const [sheetOpen, setSheetOpen] = useState(false);
 
   const filters = useMemo(
@@ -102,9 +109,9 @@ function PropertyBrowser({
   if (filters.baths)
     chips.push({ label: `${filters.baths}+ baths`, clear: { baths: null } });
   if (filters.minPrice)
-    chips.push({ label: `From ${formatPrice(filters.minPrice)}`, clear: { minPrice: null } });
+    chips.push({ label: `From ${asDisplay(filters.minPrice)}`, clear: { minPrice: null } });
   if (filters.maxPrice)
-    chips.push({ label: `Up to ${formatPrice(filters.maxPrice)}`, clear: { maxPrice: null } });
+    chips.push({ label: `Up to ${asDisplay(filters.maxPrice)}`, clear: { maxPrice: null } });
   if (filters.minSize)
     chips.push({ label: `${filters.minSize}m²+`, clear: { minSize: null } });
   if (filters.listedBy)

@@ -1,5 +1,6 @@
 import { PropertySearchBox } from "./PropertySearchBox";
 import { MouseGlow } from "@/components/shared/MouseGlow";
+import { CurrencySwitcher } from "@/components/currency/CurrencySwitcher";
 import type { PropertyCardData } from "@/lib/real-estate/mappers";
 import {
   buildLocationOptions,
@@ -85,6 +86,10 @@ function PropertyHero({ properties }: { properties: PropertyCardData[] }) {
 
         {/* Search box */}
         <PropertySearchBox locations={locations} index={index} />
+
+        <div className="mt-5 sm:hidden">
+          <CurrencySwitcher />
+        </div>
       </div>
 
       {/* Stats bar */}
