@@ -5,8 +5,8 @@
     "slug": "studio-apartment-heart-of-watamu",
     "listingCategory": "for-sale",
     "propertyType": "studio",
-    "price": 55000,
-    "currency": "EUR",
+    "price": 8300000,
+    "currency": "KES",
     "priceType": "total",
     "bedrooms": null,
     "bathrooms": 1,
@@ -33,9 +33,10 @@
       "One of the greatest advantages of this investment is that the purchase includes one full year of professional property management by Claris African Experience, allowing the new owner to start generating rental income immediately without the stress of day-to-day operations.",
       "Thanks to its central location, residents and guests are within walking distance of restaurants, supermarkets, cafés, shops, banks, and Watamu's world-famous white sandy beaches, making this property highly attractive to tourists throughout the year.",
       "Sale price: €55,000 (legal fees, transfer costs, and government charges not included).",
-      "Invest with confidence. When you purchase through Claris African Experience, you are not simply buying a property — you are investing in a professionally managed asset with local expertise, transparent support, and a trusted partner dedicated to maximizing the long-term value and profitability of your investment in Watamu."
+      "Invest with confidence. When you purchase through Claris African Experience, you are not simply buying a property — you are investing in a professionally managed asset with local expertise, transparent support, and a trusted partner dedicated to maximizing the long-term value and profitability of your investment in Watamu.",
+      "Claris quotes this property at €55,000. The shilling figure shown is converted at 151.03 and is indicative; the sale is agreed in euro."
     ],
-    "seoDescription": "Bright 45 sqm studio apartment for sale in central Watamu — €55,000. Secure 6-unit compound, 24/7 security, income-ready with 1 year of management included.",
+    "seoDescription": "Bright 45 sqm studio apartment for sale in central Watamu. Secure 6-unit compound, 24/7 security, income-ready with 1 year of management included.",
     "photos": [
       "https://clarisafricanexperience.com/assets/img/properties/studio-apartment-01.jpg",
       "https://clarisafricanexperience.com/assets/img/properties/studio-apartment-02.jpg",
@@ -45,7 +46,12 @@
       "https://clarisafricanexperience.com/assets/img/properties/studio-apartment-06.jpg",
       "https://clarisafricanexperience.com/assets/img/properties/studio-apartment-07.jpg",
       "https://clarisafricanexperience.com/assets/img/properties/studio-apartment-08.jpg"
-    ]
+    ],
+    "sourceCurrency": "EUR",
+    "sourcePrice": 55000,
+    "conversionRate": 151.0346,
+    "conversionDate": "2026-08-25",
+    "_priceNoteApplied": true
   },
   {
     "sourceUrl": "https://clarisafricanexperience.com/property.php?slug=nuri-residence",
@@ -53,8 +59,8 @@
     "slug": "nuri-residence-watamu",
     "listingCategory": "for-sale",
     "propertyType": "apartment",
-    "price": 109000,
-    "currency": "EUR",
+    "price": 16500000,
+    "currency": "KES",
     "priceType": "total",
     "bedrooms": 2,
     "bathrooms": null,
@@ -83,16 +89,22 @@
       "Residents will enjoy a beautiful tropical swimming pool, landscaped gardens, private parking, and a secure gated environment, all within walking distance of one of Watamu's most beautiful beaches.",
       "Price list — Until the end of June: €109,000. From July: €119,000. Upon completion: €129,000.",
       "Investment opportunity. Nuri Residence offers an exceptional opportunity for both private buyers and investors. Thanks to its prime location near Ocean Breeze Beach, the increasing demand for quality accommodation in Watamu, and the area's continuous development, these apartments offer excellent annual rental income potential together with strong long-term capital appreciation. Whether you are looking for a holiday home, a permanent residence, or a property to generate passive income through holiday rentals, Nuri Residence represents a secure and valuable investment in one of Kenya's most attractive coastal destinations.",
-      "Why choose Claris African Experience? Buying through Claris African Experience means investing with confidence. Our professional team assists every client throughout the entire purchasing process — including property verification and due diligence, legal assistance and title verification, investment consultancy, property management services, holiday rental management, maintenance coordination, and owner support before and after purchase. Our mission is to transform every property into a secure, transparent, and profitable investment while offering complete peace of mind to every owner."
+      "Why choose Claris African Experience? Buying through Claris African Experience means investing with confidence. Our professional team assists every client throughout the entire purchasing process — including property verification and due diligence, legal assistance and title verification, investment consultancy, property management services, holiday rental management, maintenance coordination, and owner support before and after purchase. Our mission is to transform every property into a secure, transparent, and profitable investment while offering complete peace of mind to every owner.",
+      "Claris quotes this property at €109,000. The shilling figure shown is converted at 151.03 and is indicative; the sale is agreed in euro."
     ],
-    "seoDescription": "Nuri Residence, Watamu: exclusive 2-bedroom apartments for sale from €109,000, steps from Ocean Breeze Beach. Modern Swahili design, tropical pool, gated & secu",
+    "seoDescription": "Nuri Residence, Watamu: exclusive 2-bedroom apartments for sale steps from Ocean Breeze Beach. Modern Swahili design, tropical pool, gated & secure.",
     "photos": [
       "https://clarisafricanexperience.com/assets/img/properties/nuri-residence-05.jpg",
       "https://clarisafricanexperience.com/assets/img/properties/nuri-residence-02.jpg",
       "https://clarisafricanexperience.com/assets/img/properties/nuri-residence-01.jpg",
       "https://clarisafricanexperience.com/assets/img/properties/nuri-residence-03.jpg",
       "https://clarisafricanexperience.com/assets/img/properties/nuri-residence-04.jpg"
-    ]
+    ],
+    "sourceCurrency": "EUR",
+    "sourcePrice": 109000,
+    "conversionRate": 151.0346,
+    "conversionDate": "2026-08-25",
+    "_priceNoteApplied": true
   },
   {
     "sourceUrl": "https://clarisafricanexperience.com/property.php?slug=kanani-beachfront-plot",
@@ -100,8 +112,8 @@
     "slug": "half-acre-beachfront-plot-kanani-watamu",
     "listingCategory": "land",
     "propertyType": "land",
-    "price": 125000,
-    "currency": "EUR",
+    "price": 18900000,
+    "currency": "KES",
     "priceType": "total",
     "bedrooms": null,
     "bathrooms": null,
@@ -125,13 +137,19 @@
       "The property benefits from a completely clean and verified title, providing buyers with peace of mind and a secure investment.",
       "One of its most attractive features is the possibility of creating a private beach area or an exclusive beachfront terrace, allowing future owners to enjoy uninterrupted ocean views and direct access to the white sandy beaches of Watamu.",
       "Why invest? Beachfront land in Watamu is becoming increasingly rare, making this property an outstanding opportunity for investors seeking both long-term capital appreciation and exceptional development potential. Its strategic location, clean documentation, direct beach access, and exclusivity make it suitable for a wide range of projects, from a prestigious private residence to a high-end hospitality development. Whether you are looking to build your dream beachfront home or develop an income-generating property, this plot offers an exceptional combination of location, security, and future value.",
-      "Why choose Claris African Experience? Purchasing through Claris African Experience means investing with complete confidence. Our experienced team provides comprehensive assistance throughout every stage of the acquisition process — including property verification and due diligence, title verification, legal assistance, investment consultancy, development support, property management, holiday rental management, and long-term owner assistance. Our mission is to ensure every investment is secure, transparent, and positioned to maximize its long-term value."
+      "Why choose Claris African Experience? Purchasing through Claris African Experience means investing with complete confidence. Our experienced team provides comprehensive assistance throughout every stage of the acquisition process — including property verification and due diligence, title verification, legal assistance, investment consultancy, development support, property management, holiday rental management, and long-term owner assistance. Our mission is to ensure every investment is secure, transparent, and positioned to maximize its long-term value.",
+      "Claris quotes this property at €125,000. The shilling figure shown is converted at 151.03 and is indicative; the sale is agreed in euro."
     ],
-    "seoDescription": "Rare half-acre beachfront plot for sale in Kanani, Watamu — €125,000. Clean verified title, direct road-to-ocean access. Ideal for a luxury villa or boutique re",
+    "seoDescription": "Rare half-acre beachfront plot for sale in Kanani, Watamu. Clean verified title, direct road-to-ocean access. Ideal for a luxury villa or boutique resort.",
     "photos": [
       "https://clarisafricanexperience.com/assets/img/properties/kanani-plot-01.jpg",
       "https://clarisafricanexperience.com/assets/img/properties/kanani-plot-02.jpg"
-    ]
+    ],
+    "sourceCurrency": "EUR",
+    "sourcePrice": 125000,
+    "conversionRate": 151.0346,
+    "conversionDate": "2026-08-25",
+    "_priceNoteApplied": true
   },
   {
     "sourceUrl": "https://clarisafricanexperience.com/property.php?slug=horizon-apartment",
@@ -139,8 +157,8 @@
     "slug": "horizon-apartment-watamu",
     "listingCategory": "for-sale",
     "propertyType": "apartment",
-    "price": 130000,
-    "currency": "EUR",
+    "price": 19600000,
+    "currency": "KES",
     "priceType": "total",
     "bedrooms": 2,
     "bathrooms": 2,
@@ -165,9 +183,10 @@
       "Situated on the second floor, this bright and tastefully designed apartment offers the perfect balance of comfort, privacy, and functionality. The interiors have been carefully finished to provide a welcoming atmosphere, while the compound ensures security, tranquility, and a premium lifestyle.",
       "One of the greatest advantages of this investment is that the apartment is ready to generate income immediately. To maximize your return from day one, the purchase includes one full year of professional property management by Claris African Experience, allowing you to enjoy a hassle-free investment with experienced local management dedicated to maximizing occupancy and maintaining the property to the highest standards.",
       "Investment opportunity. Horizon Apartment is an outstanding opportunity for buyers looking to invest in the continuously growing Watamu real estate market. Its excellent location, attractive design, and immediate rental potential make it a property capable of delivering a strong annual return while offering the peace of mind of professional management. Whether you are looking for your own tropical retreat or a property that can generate income from the moment of purchase, Horizon Apartment offers the perfect combination of lifestyle, security, and long-term value.",
-      "Sale price: €130,000 (purchase costs and legal transfer fees excluded). Professionally managed by Claris African Experience — one year of property management included."
+      "Sale price: €130,000 (purchase costs and legal transfer fees excluded). Professionally managed by Claris African Experience — one year of property management included.",
+      "Claris quotes this property at €130,000. The shilling figure shown is converted at 151.03 and is indicative; the sale is agreed in euro."
     ],
-    "seoDescription": "Horizon Apartment: bright 2-bed, 2-bath apartment for sale at €130,000 in the exclusive 4 Passi Compound, Watamu. Income-ready with 1 year of management include",
+    "seoDescription": "Horizon Apartment: bright 2-bed, 2-bath apartment for sale in the exclusive 4 Passi Compound, Watamu. Income-ready with 1 year of management included.",
     "photos": [
       "https://clarisafricanexperience.com/assets/img/properties/horizon-apartment-01.jpg",
       "https://clarisafricanexperience.com/assets/img/properties/horizon-apartment-02.jpg",
@@ -177,7 +196,12 @@
       "https://clarisafricanexperience.com/assets/img/properties/horizon-apartment-06.jpg",
       "https://clarisafricanexperience.com/assets/img/properties/horizon-apartment-07.jpg",
       "https://clarisafricanexperience.com/assets/img/properties/horizon-apartment-08.jpg"
-    ]
+    ],
+    "sourceCurrency": "EUR",
+    "sourcePrice": 130000,
+    "conversionRate": 151.0346,
+    "conversionDate": "2026-08-25",
+    "_priceNoteApplied": true
   },
   {
     "sourceUrl": "https://clarisafricanexperience.com/property.php?slug=dany-house",
@@ -185,8 +209,8 @@
     "slug": "dany-house-watamu",
     "listingCategory": "for-sale",
     "propertyType": "house",
-    "price": 150000,
-    "currency": "EUR",
+    "price": 22700000,
+    "currency": "KES",
     "priceType": "total",
     "bedrooms": 3,
     "bathrooms": 2,
@@ -219,15 +243,21 @@
       "Located inside the secure Rafiki Village compound, the property benefits from 24-hour security, a shared swimming pool, backup power, and a well-maintained environment that guarantees peace of mind throughout the year.",
       "Its strategic location along Jacaranda Road provides quick access to beaches, restaurants, shopping facilities, and the famous Watamu Marine National Park, making it an ideal property for both residential living and holiday rentals.",
       "Why invest in Dany House? Watamu has become one of East Africa's fastest-growing coastal destinations, attracting international investors, holidaymakers, and families looking for an exceptional lifestyle by the Indian Ocean. Properties within secure compounds such as Rafiki Village continue to experience strong rental demand throughout the year thanks to their excellent location, security, and quality of life. Dany House offers not only a beautiful place to live, but also an excellent investment opportunity capable of generating attractive rental returns while benefiting from the long-term appreciation of the Watamu real estate market.",
-      "Why choose Claris African Experience? Purchasing a property through Claris African Experience means much more than simply buying real estate. Our team accompanies every client throughout the entire investment process — including property verification and due diligence, legal assistance and documentation support, title verification, investment consultancy, property management, maintenance coordination, rental management, income-generation strategies, and long-term owner assistance. Our goal is to transform every property into a secure, profitable, and professionally managed investment while providing complete transparency and local expertise throughout every stage of ownership."
+      "Why choose Claris African Experience? Purchasing a property through Claris African Experience means much more than simply buying real estate. Our team accompanies every client throughout the entire investment process — including property verification and due diligence, legal assistance and documentation support, title verification, investment consultancy, property management, maintenance coordination, rental management, income-generation strategies, and long-term owner assistance. Our goal is to transform every property into a secure, profitable, and professionally managed investment while providing complete transparency and local expertise throughout every stage of ownership.",
+      "Claris quotes this property at €150,000. The shilling figure shown is converted at 151.03 and is indicative; the sale is agreed in euro."
     ],
-    "seoDescription": "Dany House: elegant 3-bed, 2-bath furnished villa for sale at €150,000 in secure Rafiki Village, Jacaranda Road, Watamu. Turnkey coastal home or rental investme",
+    "seoDescription": "Dany House: elegant 3-bed, 2-bath furnished villa for sale in secure Rafiki Village, Jacaranda Road, Watamu. Turnkey coastal home or rental investment.",
     "photos": [
       "https://clarisafricanexperience.com/assets/img/properties/dany-house-01.jpg",
       "https://clarisafricanexperience.com/assets/img/properties/dany-house-02.jpg",
       "https://clarisafricanexperience.com/assets/img/properties/dany-house-03.jpg",
       "https://clarisafricanexperience.com/assets/img/properties/dany-house-04.jpg"
-    ]
+    ],
+    "sourceCurrency": "EUR",
+    "sourcePrice": 150000,
+    "conversionRate": 151.0346,
+    "conversionDate": "2026-08-25",
+    "_priceNoteApplied": true
   },
   {
     "sourceUrl": "https://clarisafricanexperience.com/property.php?slug=sunset-dream-compound",
@@ -235,8 +265,8 @@
     "slug": "sunset-dream-compound-watamu",
     "listingCategory": "for-sale",
     "propertyType": "apartment",
-    "price": 200000,
-    "currency": "EUR",
+    "price": 30200000,
+    "currency": "KES",
     "priceType": "total",
     "bedrooms": 2,
     "bathrooms": 2,
@@ -268,9 +298,10 @@
       "Apartment Type A — €200,000 (unfurnished) / €210,000 (partially furnished). Internal area 125 sqm plus a 20 sqm private terrace, with a spacious living room, open-plan kitchen, storage room, 2 bedrooms and 2 bathrooms. The furnished option includes sofa cushions, bedroom curtains, kitchen appliances, a dining table and chairs, and ceiling fans. Apartments come pre-fitted for air conditioning, which can be fully installed for an additional €2,500.",
       "Apartment Type B — Penthouse — €250,000 (unfurnished) / €260,000 (partially furnished). Internal area 138 sqm plus a 20 sqm private terrace and an exclusive 110 sqm rooftop terrace, with a spacious living room, kitchen, 2 bedrooms and 2 bathrooms. The spectacular private rooftop offers endless possibilities — an outdoor lounge, entertainment area, jacuzzi, pergola, or panoramic relaxation space overlooking the tropical surroundings.",
       "Investment opportunity. Sunset Dream Compound represents an exceptional opportunity for investors and private buyers seeking a premium property in one of Watamu's most established residential neighborhoods. Its strategic location within Watamu Reef, high construction standards, spacious layouts, and modern infrastructure make these apartments ideal both as private residences and as professionally managed holiday rental investments capable of generating an excellent annual return. As Watamu continues to experience strong growth in international tourism and real estate demand, Sunset Dream Compound offers significant long-term appreciation potential while providing owners with a secure, elegant, and highly desirable property.",
-      "Why choose Claris African Experience? Purchasing through Claris African Experience means investing with complete confidence. Our professional team supports every client throughout the entire purchasing process — including property verification and due diligence, legal assistance and title verification, investment consultancy, property management, holiday rental management, maintenance coordination, and owner assistance before and after purchase. Our goal is to transform every property into a secure, transparent, and profitable investment while offering complete peace of mind throughout every stage of ownership."
+      "Why choose Claris African Experience? Purchasing through Claris African Experience means investing with complete confidence. Our professional team supports every client throughout the entire purchasing process — including property verification and due diligence, legal assistance and title verification, investment consultancy, property management, holiday rental management, maintenance coordination, and owner assistance before and after purchase. Our goal is to transform every property into a secure, transparent, and profitable investment while offering complete peace of mind throughout every stage of ownership.",
+      "Claris quotes this property at €200,000. The shilling figure shown is converted at 151.03 and is indicative; the sale is agreed in euro."
     ],
-    "seoDescription": "Sunset Dream Compound, Watamu Reef: premium 2-bed apartments from €200,000 and a penthouse from €250,000 on Jacaranda Road. Pool, solar, mahogany finishes, gate",
+    "seoDescription": "Sunset Dream Compound, Watamu Reef: premium 2-bed apartments and a penthouse on Jacaranda Road. Pool, solar, mahogany finishes, gated.",
     "photos": [
       "https://clarisafricanexperience.com/assets/img/properties/sunset-dream-02.jpg",
       "https://clarisafricanexperience.com/assets/img/properties/sunset-dream-03.jpg",
@@ -279,7 +310,12 @@
       "https://clarisafricanexperience.com/assets/img/properties/sunset-dream-01.jpg",
       "https://clarisafricanexperience.com/assets/img/properties/sunset-dream-04.jpg",
       "https://clarisafricanexperience.com/assets/img/properties/sunset-dream-05.jpg"
-    ]
+    ],
+    "sourceCurrency": "EUR",
+    "sourcePrice": 200000,
+    "conversionRate": 151.0346,
+    "conversionDate": "2026-08-25",
+    "_priceNoteApplied": true
   },
   {
     "sourceUrl": "https://clarisafricanexperience.com/property.php?slug=white-lotus-3",
@@ -287,8 +323,8 @@
     "slug": "white-lotus-3-watamu",
     "listingCategory": "for-sale",
     "propertyType": "villa",
-    "price": 205000,
-    "currency": "EUR",
+    "price": 31000000,
+    "currency": "KES",
     "priceType": "total",
     "bedrooms": 2,
     "bathrooms": 2,
@@ -318,9 +354,10 @@
       "To ensure uninterrupted electricity, the property is equipped with a backup inverter system supported by two batteries.",
       "Residents also enjoy access to a beautiful shared swimming pool within the compound, while benefiting from a peaceful, secure, and professionally maintained residential environment only a short walk from one of the most beautiful beaches in Kenya.",
       "Why invest in White Lotus 3? White Lotus 3 represents an outstanding investment opportunity in one of Watamu's fastest-growing and most desirable residential areas. Its prime location, only a few steps from the spectacular Garoda Beach, together with the strong demand for premium holiday accommodation throughout the year, allows the property to generate an excellent annual rental return while also benefiting from long-term capital appreciation. Whether purchased as a private residence, a holiday retreat, or a professionally managed investment, White Lotus 3 offers the perfect combination of lifestyle, security, and profitability. Its modern finishes, secure residential compound, complete furnishings, and exceptional location make it highly attractive to both international buyers and holiday guests, ensuring consistent demand and excellent investment potential for years to come.",
-      "Why choose Claris African Experience? Purchasing a property through Claris African Experience means much more than simply buying real estate. Our experienced team accompanies every client throughout the entire investment process — including property verification and due diligence, legal assistance and documentation support, title verification, investment consultancy, property management, maintenance coordination, holiday rental management, income optimization strategies, and long-term owner assistance. Our mission is to transform every property into a secure, transparent, professionally managed, and profitable investment while providing complete peace of mind throughout every stage of ownership."
+      "Why choose Claris African Experience? Purchasing a property through Claris African Experience means much more than simply buying real estate. Our experienced team accompanies every client throughout the entire investment process — including property verification and due diligence, legal assistance and documentation support, title verification, investment consultancy, property management, maintenance coordination, holiday rental management, income optimization strategies, and long-term owner assistance. Our mission is to transform every property into a secure, transparent, professionally managed, and profitable investment while providing complete peace of mind throughout every stage of ownership.",
+      "Claris quotes this property at €205,000. The shilling figure shown is converted at 151.03 and is indicative; the sale is agreed in euro."
     ],
-    "seoDescription": "White Lotus 3: modern 2-bed, 2-bath fully fitted villa for sale at €205,000 on Turtle Bay Road, Watamu — steps from Garoda Beach. Secure gated compound with poo",
+    "seoDescription": "White Lotus 3: modern 2-bed, 2-bath fully fitted villa for sale on Turtle Bay Road, Watamu, steps from Garoda Beach. Secure gated compound with pool.",
     "photos": [
       "https://clarisafricanexperience.com/assets/img/properties/white-lotus-3-01.jpg",
       "https://clarisafricanexperience.com/assets/img/properties/white-lotus-3-02.jpg",
@@ -331,7 +368,12 @@
       "https://clarisafricanexperience.com/assets/img/properties/white-lotus-3-07.jpg",
       "https://clarisafricanexperience.com/assets/img/properties/white-lotus-3-08.jpg",
       "https://clarisafricanexperience.com/assets/img/properties/white-lotus-3-09.jpg"
-    ]
+    ],
+    "sourceCurrency": "EUR",
+    "sourcePrice": 205000,
+    "conversionRate": 151.0346,
+    "conversionDate": "2026-08-25",
+    "_priceNoteApplied": true
   },
   {
     "sourceUrl": "https://clarisafricanexperience.com/property.php?slug=nyumba-gabula",
@@ -339,8 +381,8 @@
     "slug": "nyumba-gabula-watamu",
     "listingCategory": "for-sale",
     "propertyType": "villa",
-    "price": 250000,
-    "currency": "EUR",
+    "price": 37800000,
+    "currency": "KES",
     "priceType": "total",
     "bedrooms": 3,
     "bathrooms": 3,
@@ -369,15 +411,21 @@
       "Residents can also enjoy access to a beautiful swimming pool, creating the perfect environment for relaxation throughout the year.",
       "Only a short walk from Watamu's spectacular white sandy beaches and crystal-clear waters, Nyumba Gabula combines an exceptional location with quality construction and outstanding investment potential.",
       "Why invest in Nyumba Gabula? Watamu has become one of East Africa's most attractive destinations for international investors, holiday homeowners, and luxury tourism. The continuous growth of the tourism sector and the increasing demand for premium villas have made properties in prime locations highly sought after. Being located only 100 meters from the beach, Nyumba Gabula offers exceptional rental potential while also representing an excellent long-term investment with strong capital appreciation prospects. Whether you are looking for a private residence, a holiday escape, or an income-generating property, Nyumba Gabula offers the ideal combination of location, lifestyle, and investment security.",
-      "Why choose Claris African Experience? Purchasing a property through Claris African Experience means much more than simply buying real estate. Our experienced team accompanies every client throughout the entire investment journey — including property verification and due diligence, legal assistance and documentation support, title verification, investment consultancy, property management, maintenance coordination, holiday rental management, income-generation strategies, and long-term owner assistance. Our mission is to ensure every investment is secure, transparent, professionally managed, and capable of generating long-term value."
+      "Why choose Claris African Experience? Purchasing a property through Claris African Experience means much more than simply buying real estate. Our experienced team accompanies every client throughout the entire investment journey — including property verification and due diligence, legal assistance and documentation support, title verification, investment consultancy, property management, maintenance coordination, holiday rental management, income-generation strategies, and long-term owner assistance. Our mission is to ensure every investment is secure, transparent, professionally managed, and capable of generating long-term value.",
+      "Claris quotes this property at €250,000. The shilling figure shown is converted at 151.03 and is indicative; the sale is agreed in euro."
     ],
-    "seoDescription": "Nyumba Gabula: elegant 3-bed ensuite villa for sale at €250,000 on New Road, Watamu — approx. 100 m from the beach. Private compound, pool, A/C. Residence or re",
+    "seoDescription": "Nyumba Gabula: elegant 3-bed ensuite villa for sale on New Road, Watamu, approx. 100 m from the beach. Private compound, pool, A/C.",
     "photos": [
       "https://clarisafricanexperience.com/assets/img/properties/nyumba-gabula-01.jpg",
       "https://clarisafricanexperience.com/assets/img/properties/nyumba-gabula-02.jpg",
       "https://clarisafricanexperience.com/assets/img/properties/nyumba-gabula-03.jpg",
       "https://clarisafricanexperience.com/assets/img/properties/nyumba-gabula-04.jpg",
       "https://clarisafricanexperience.com/assets/img/properties/nyumba-gabula-05.jpg"
-    ]
+    ],
+    "sourceCurrency": "EUR",
+    "sourcePrice": 250000,
+    "conversionRate": 151.0346,
+    "conversionDate": "2026-08-25",
+    "_priceNoteApplied": true
   }
 ]

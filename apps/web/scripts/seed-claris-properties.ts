@@ -15,6 +15,14 @@
  * only fetched and uploaded when a property has none — re-running does not
  * re-upload 48 images or orphan the old assets.
  *
+ * PRICES. Claris quotes in euro. The stored price is that figure converted to
+ * shillings once, at a recorded rate on a recorded date, and frozen in the data
+ * file — not converted at run time, or every re-run would quietly move every
+ * asking price. sourcePrice and sourceCurrency keep what the seller actually
+ * asks, the description states it, and the sale is agreed in euro. Re-convert
+ * by clearing sourceCurrency in the data file when the shilling has moved
+ * enough to matter.
+ *
  * listingCategory doubles as the browse category, so a plot has to be "land"
  * rather than "for-sale" or it never shows under /real-estate/land and instead
  * hides among the houses. Same for commercial. propertyType records what the
@@ -65,6 +73,11 @@ interface SourceProperty {
   price: number;
   currency: string;
   priceType: string;
+  /** What the seller quotes, before conversion. */
+  sourcePrice?: number;
+  sourceCurrency?: string;
+  conversionRate?: number;
+  conversionDate?: string;
   bedrooms: number | null;
   bathrooms: number | null;
   sizeSqm: number | null;
@@ -211,7 +224,11 @@ async function main() {
     const needsPhotos = !existing?.photoCount;
 
     console.log(
-      `\n${p.title}\n  ${p.currency} ${p.price.toLocaleString()} · ${p.propertyType} · ${p.neighbourhood}, ${p.city}` +
+      `\n${p.title}\n  ${p.currency} ${p.price.toLocaleString()}` +
+        (p.sourceCurrency && p.sourcePrice
+          ? ` (from ${p.sourceCurrency} ${p.sourcePrice.toLocaleString()} at ${p.conversionRate})`
+          : "") +
+        ` · ${p.propertyType} · ${p.neighbourhood}, ${p.city}` +
         `\n  ${p.descriptionParagraphs.length} paragraphs · ${p.features.length} features · ` +
         `${needsPhotos ? `${p.photos.length} photos to upload` : `${existing?.photoCount ?? 0} photos already on the document`}` +
         `\n  ${existing ? "updates" : "creates"} ${_id}`
