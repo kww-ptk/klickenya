@@ -5,6 +5,10 @@ on:
     branches: [main]
     paths:
       - 'apps/studio/**'
+  # Lets the Studio be redeployed on demand. Without this the only way to
+  # recover from a failed deploy is to push another change under apps/studio,
+  # which is why a month of failures went unnoticed and unfixed.
+  workflow_dispatch:
 
 jobs:
   deploy:
