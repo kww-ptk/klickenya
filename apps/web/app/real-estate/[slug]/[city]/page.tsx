@@ -10,11 +10,13 @@ import { mapPropertiesToCards } from "@/lib/real-estate/mappers";
 import {
   CATEGORY_LABELS,
   PROPERTY_CATEGORIES,
+  areaPath,
   categoryCityPath,
   categoryPath,
   citySlug,
   isPropertyCategory,
 } from "@/lib/real-estate/constants";
+import { isKnownPlace } from "@/lib/real-estate/places";
 import { capitalizeWords } from "@/lib/real-estate/format";
 import { categoryHeading } from "@/lib/real-estate/content";
 import { absoluteUrl } from "@/lib/real-estate/schema";
@@ -120,17 +122,40 @@ export default async function CategoryCityPage({ params }: PageProps) {
     <CategoryPageShell
       category={category}
       place={cityName}
+      placeSlug={city}
       heading={categoryHeading(category, cityName)}
       crumbs={[
         { name: "Home", path: "/" },
         { name: "Real Estate", path: "/real-estate" },
-        { name: CATEGORY_LABELS[category], path: categoryPath(category) },
-        { name: cityName },
+        // A town with a hub gets the town in the trail rather than the
+        // category, because the hub is the parent a visitor actually wants:
+        // it holds every category for this place, not just this one.
+        ...(isKnownPlace(city)
+          ? [{ name: cityName, path: areaPath(city) }]
+          : [{ name: CATEGORY_LABELS[category], path: categoryPath(category) }]),
+        { name: isKnownPlace(city) ? CATEGORY_LABELS[category] : cityName },
       ]}
       canonicalPath={categoryCityPath(category, city)}
       cards={cards}
       showCityFilter={false}
       rails={[
+        // The town hub carries the market data, the sub-area guide and the
+        // long-form copy for this place. Anyone who landed on a single
+        // category should be able to find it.
+        ...(isKnownPlace(city)
+          ? [
+              {
+                title: `Everything in ${cityName}`,
+                description: `Market data, neighbourhoods and every category in ${cityName} on one page.`,
+                links: [
+                  {
+                    label: `Real estate in ${cityName}`,
+                    href: areaPath(city),
+                  },
+                ],
+              },
+            ]
+          : []),
         {
           title: `Other property in ${cityName}`,
           links: otherCategories,

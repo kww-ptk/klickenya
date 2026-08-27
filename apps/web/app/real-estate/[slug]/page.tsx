@@ -3,6 +3,7 @@ import { sanityClient, sanityFetch } from "@/lib/sanity/client";
 import {
   NEIGHBOURHOODS_QUERY,
   PROPERTIES_BY_CATEGORY_QUERY,
+  PROPERTY_COUNT_BY_CITY_QUERY,
   PROPERTY_SLUGS_QUERY,
 } from "@/lib/sanity/queries";
 import { urlForImage } from "@/lib/sanity/image";
@@ -11,15 +12,19 @@ import { mapNeighbourhood, mapPropertiesToCards } from "@/lib/real-estate/mapper
 import {
   CATEGORY_LABELS,
   PROPERTY_CATEGORIES,
+  RESERVED_REAL_ESTATE_SEGMENTS,
+  areaPath,
   categoryCityPath,
   categoryPath,
   isPropertyCategory,
   neighbourhoodPath,
   type PropertyCategory,
 } from "@/lib/real-estate/constants";
+import { PLACE_SLUGS, getPlace, isKnownPlace } from "@/lib/real-estate/places";
 import { categoryHeading } from "@/lib/real-estate/content";
 import { absoluteUrl, shouldNoIndex } from "@/lib/real-estate/schema";
 import { PropertyDetail, fetchProperty } from "./PropertyDetail";
+import { AreaHub } from "./AreaHub";
 
 export const revalidate = 3600;
 
@@ -34,9 +39,18 @@ export async function generateStaticParams() {
     .fetch(PROPERTY_SLUGS_QUERY)
     .catch(() => []);
 
+  // One dynamic segment resolves three different kinds of page, so the
+  // namespaces have to be kept apart. A property slugged "watamu" or "land"
+  // would otherwise be shadowed by the hub that owns the name and would render
+  // that hub instead, silently.
+  const reserved = new Set([...RESERVED_REAL_ESTATE_SEGMENTS, ...PLACE_SLUGS]);
+
   return [
     ...PROPERTY_CATEGORIES.map((c) => ({ slug: c })),
-    ...(slugs ?? []).filter((s) => s.slug).map((s) => ({ slug: s.slug })),
+    ...PLACE_SLUGS.map((slug) => ({ slug })),
+    ...(slugs ?? [])
+      .filter((s) => s.slug && !reserved.has(s.slug.toLowerCase()))
+      .map((s) => ({ slug: s.slug })),
   ];
 }
 
@@ -70,6 +84,40 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
         description,
         url: absoluteUrl(categoryPath(slug)),
         type: "website",
+      },
+    };
+  }
+
+  const town = getPlace(slug);
+  if (town) {
+    const canonical = absoluteUrl(areaPath(town.slug));
+
+    // A hub with no stock is a page about a property market with no property
+    // on it, which is thin however good the copy is. It stays live and useful
+    // to anyone who lands on it, and it stays out of the index until there is
+    // something to list. It flips back on its own once stock arrives.
+    const { data: liveCount } = await sanityFetch({
+      query: PROPERTY_COUNT_BY_CITY_QUERY,
+      params: { city: town.name },
+    }).catch(() => ({ data: 0 }));
+
+    return {
+      title: town.metaTitle,
+      description: town.metaDescription,
+      ...(Number(liveCount) > 0
+        ? {}
+        : { robots: { index: false, follow: true } }),
+      alternates: { canonical },
+      openGraph: {
+        title: town.metaTitle,
+        description: town.metaDescription,
+        url: canonical,
+        type: "website",
+      },
+      twitter: {
+        card: "summary_large_image",
+        title: town.metaTitle,
+        description: town.metaDescription,
       },
     };
   }
@@ -207,6 +255,9 @@ export default async function RealEstateSlugPage({ params }: PageProps) {
   const { slug } = await params;
 
   if (isPropertyCategory(slug)) return <CategoryView category={slug} />;
+
+  // Town hubs win the name. See RESERVED_REAL_ESTATE_SEGMENTS.
+  if (isKnownPlace(slug)) return <AreaHub slug={slug} />;
 
   return <PropertyDetail slug={slug} />;
 }

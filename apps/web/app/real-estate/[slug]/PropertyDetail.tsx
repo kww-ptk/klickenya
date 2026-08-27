@@ -34,8 +34,10 @@ import {
   STATUS_LABELS,
   isListedBy,
   type ListedBy,
+  areaPath,
   categoryPath,
   categoryCityPath,
+  citySlug,
   isClosedStatus,
   isPropertyCategory,
   propertyPath,
@@ -54,6 +56,7 @@ import {
 import { mapPropertiesToCards } from "@/lib/real-estate/mappers";
 import { toCurrency } from "@/lib/real-estate/currency";
 import { absoluteUrl, propertyListingSchema } from "@/lib/real-estate/schema";
+import { isKnownPlace } from "@/lib/real-estate/places";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -107,6 +110,13 @@ async function PropertyDetail({ slug }: { slug: string }) {
   const cityHref = cityPageExists
     ? categoryCityPath(category, property.city)
     : categoryPath(category);
+
+  // A town hub is the strongest parent this listing has: it holds every
+  // category for the town plus the market data and the local guidance. Unlike
+  // /[category]/[city] it never 404s when this property sells, because it is
+  // not built from a single category's stock.
+  const townSlug = property.city ? citySlug(property.city) : "";
+  const townHub = townSlug && isKnownPlace(townSlug) ? areaPath(townSlug) : null;
 
   const features: string[] = property.features ?? [];
   const agent = property.agent;
@@ -189,10 +199,21 @@ async function PropertyDetail({ slug }: { slug: string }) {
           crumbs={[
             { name: "Home", path: "/" },
             { name: "Real Estate", path: "/real-estate" },
-            { name: categoryLabel, path: categoryPath(category) },
-            ...(cityPageExists
-              ? [{ name: property.city, path: cityHref }]
-              : []),
+            // With a hub the trail reads Real Estate > Watamu > For Sale.
+            // Without one it keeps the old Real Estate > For Sale > Watamu.
+            ...(townHub
+              ? [
+                  { name: property.city, path: townHub },
+                  cityPageExists
+                    ? { name: categoryLabel, path: cityHref }
+                    : { name: categoryLabel, path: categoryPath(category) },
+                ]
+              : [
+                  { name: categoryLabel, path: categoryPath(category) },
+                  ...(cityPageExists
+                    ? [{ name: property.city, path: cityHref }]
+                    : []),
+                ]),
             { name: property.title },
           ]}
         />
