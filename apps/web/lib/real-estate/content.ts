@@ -1,5 +1,6 @@
 import type { FaqItem } from "./schema";
 import { CATEGORY_LABELS, type PropertyCategory } from "./constants";
+import { placeCategoryCopy } from "./places";
 
 /**
  * On-page copy for the category and city landing pages.
@@ -7,6 +8,12 @@ import { CATEGORY_LABELS, type PropertyCategory } from "./constants";
  * These pages were a heading and a grid, which is thin against the incumbents
  * ranking for the same queries. Every string here is written to answer the
  * query directly in the first sentence so an AI answer engine can lift it.
+ *
+ * These strings are the FLOOR, not the ceiling. They are written to be true of
+ * anywhere in Kenya, which is what makes them safe to render for the long tail
+ * of towns and what makes them too generic to win a head term. A town that
+ * matters commercially gets real copy in lib/real-estate/places.ts, and the
+ * accessors below prefer it whenever it exists.
  *
  * House style (see docs/how-to-add-a-blog-post.md): no dashes in prose.
  */
@@ -142,16 +149,43 @@ const CATEGORY_COPY: Record<PropertyCategory, CategoryCopy> = {
   },
 };
 
-export function categoryIntro(category: PropertyCategory, place: string): string {
-  return CATEGORY_COPY[category].intro(place);
+/**
+ * `placeSlug` is the citySlug() form of the place, e.g. "watamu". Passing it
+ * lets a place in the PLACES registry replace the template with copy written
+ * for that specific market. An unknown slug, or none at all, falls back to the
+ * template, so every town keeps working.
+ */
+export function categoryIntro(
+  category: PropertyCategory,
+  place: string,
+  placeSlug?: string
+): string {
+  return (
+    placeCategoryCopy(placeSlug, category)?.intro ??
+    CATEGORY_COPY[category].intro(place)
+  );
 }
 
-export function categoryBody(category: PropertyCategory, place: string): string[] {
-  return CATEGORY_COPY[category].body(place);
+export function categoryBody(
+  category: PropertyCategory,
+  place: string,
+  placeSlug?: string
+): string[] {
+  return (
+    placeCategoryCopy(placeSlug, category)?.body ??
+    CATEGORY_COPY[category].body(place)
+  );
 }
 
-export function categoryFaqs(category: PropertyCategory, place: string): FaqItem[] {
-  return CATEGORY_COPY[category].faqs(place);
+export function categoryFaqs(
+  category: PropertyCategory,
+  place: string,
+  placeSlug?: string
+): FaqItem[] {
+  return (
+    placeCategoryCopy(placeSlug, category)?.faqs ??
+    CATEGORY_COPY[category].faqs(place)
+  );
 }
 
 /**
@@ -174,7 +208,7 @@ export function categoryPhrase(category: PropertyCategory, place?: string): stri
 export function categoryHeading(category: PropertyCategory, place?: string): string {
   const base =
     category === "land"
-      ? "Land for sale"
+      ? "Land and plots for sale"
       : category === "commercial"
         ? "Commercial property"
         : `Property ${CATEGORY_LABELS[category].toLowerCase()}`;

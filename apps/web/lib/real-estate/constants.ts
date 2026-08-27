@@ -180,6 +180,40 @@ export function neighbourhoodPath(slug: string): string {
   return `${REAL_ESTATE_BASE}/neighbourhood/${slug}`;
 }
 
+/**
+ * Town hub, e.g. /real-estate/watamu.
+ *
+ * This deliberately sits at the top level rather than under /area/ or /in/,
+ * because "real estate watamu" is a head term and the shorter URL is the
+ * stronger one. The cost is that town slugs share a namespace with property
+ * slugs under /real-estate/[slug], so both are reserved words. See
+ * isReservedPropertySlug below.
+ */
+export function areaPath(slug: string): string {
+  return `${REAL_ESTATE_BASE}/${citySlug(slug)}`;
+}
+
+/**
+ * Segments under /real-estate that are NOT property slugs.
+ *
+ * /real-estate/[slug] resolves category pages, town hubs and property detail
+ * pages from one dynamic segment, in that order. A property slugged "watamu"
+ * or "land" would be shadowed by the hub that owns the name, so the route
+ * refuses to treat a reserved word as a property and the sitemap drops it
+ * rather than emitting a URL that renders something else.
+ *
+ * PLACE_SLUGS is not imported here: constants.ts is the leaf that places.ts
+ * imports from, and reaching back would make the cycle. The route composes the
+ * two instead.
+ */
+export const RESERVED_REAL_ESTATE_SEGMENTS: readonly string[] = [
+  ...PROPERTY_CATEGORIES,
+  "neighbourhood",
+  "agent",
+  "list",
+  "new-developments",
+];
+
 export function agentPath(slug: string): string {
   return `${REAL_ESTATE_BASE}/agent/${slug}`;
 }

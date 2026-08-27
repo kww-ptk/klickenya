@@ -4,11 +4,14 @@ import { sanityClient } from '@/lib/sanity/client'
 import { listingPublicPath, TYPE_TO_URL_SEGMENT } from '@/lib/listings/url'
 import {
   PROPERTY_CATEGORIES,
+  RESERVED_REAL_ESTATE_SEGMENTS,
+  areaPath,
   categoryCityPath,
   categoryPath,
   isPropertyCategory,
   neighbourhoodPath,
 } from '@/lib/real-estate/constants'
+import { PLACE_SLUGS } from '@/lib/real-estate/places'
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://klickenya.com'
 
@@ -70,6 +73,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         .catch(() => []),
     ])
 
+  const townsWithStock = new Set(
+    properties
+      .filter((p) => p.city)
+      .map((p) => p.city.toLowerCase().trim().replace(/\s+/g, '-'))
+  )
+
   // ── Static routes ──────────────────────────────────
   const staticRoutes: MetadataRoute.Sitemap = [
     {
@@ -105,6 +114,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: new Date(),
       changeFrequency: 'daily' as const,
       priority: 0.8,
+    })),
+    // Town hubs. These are the pages built to win "<town> real estate", so
+    // they outrank the category pages in the sitemap too. A hub with no stock
+    // is noindexed (see the [slug] route's generateMetadata) and submitting a
+    // noindexed URL just spends crawl budget to be told no.
+    ...PLACE_SLUGS.filter((slug) => townsWithStock.has(slug)).map((slug) => ({
+      url: `${BASE_URL}${areaPath(slug)}`,
+      lastModified: new Date(),
+      changeFrequency: 'daily' as const,
+      priority: 0.9,
     })),
     ...['/about', '/contact', '/how-it-works', '/privacy', '/terms'].map(
       (path) => ({
@@ -177,8 +196,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }))
 
   // ── Real estate property routes (/real-estate/[slug])
+  // A property slugged "watamu" or "land" is shadowed by the hub that owns the
+  // segment (see RESERVED_REAL_ESTATE_SEGMENTS), so emitting its URL here would
+  // point Google at a page showing something else entirely.
+  const reservedSlugs = new Set([
+    ...RESERVED_REAL_ESTATE_SEGMENTS,
+    ...PLACE_SLUGS,
+  ])
+
   const propertyRoutes: MetadataRoute.Sitemap = properties
-    .filter((p) => p.slug)
+    .filter((p) => p.slug && !reservedSlugs.has(p.slug.toLowerCase()))
     .map((p) => ({
       url: `${BASE_URL}/real-estate/${p.slug}`,
       lastModified: p.updatedAt ? new Date(p.updatedAt) : new Date(),

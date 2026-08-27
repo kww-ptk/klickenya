@@ -549,6 +549,72 @@ export const AGENTS_QUERY = groq`
   }
 `
 
+/** Live property count for one town. Cheap enough to call from metadata. */
+export const PROPERTY_COUNT_BY_CITY_QUERY = groq`
+  count(*[_type == "property" && ${PROPERTY_PUBLIC_FILTER} && ${PROPERTY_MARKETPLACE_FILTER} && lower(city) == lower($city)])
+`
+
+/**
+ * Journal posts that belong on a town hub.
+ *
+ * Two ways in, because they answer different needs:
+ *   - `location` is an enum already on every post (watamu, kilifi, diani,
+ *     nairobi...), so every existing guide for a town qualifies with no
+ *     retagging. This is the breadth.
+ *   - a `realestate-<town>` keyword is the explicit opt in, for a post that
+ *     should lead on the property page whatever its location field says. These
+ *     are ranked first.
+ *
+ * `tags` is the hidden legacy field and is checked too so older posts still
+ * count.
+ */
+export const PLACE_GUIDES_QUERY = groq`
+  *[
+    _type == "blogPost" &&
+    status == "published" &&
+    (location == $location || $tag in keywords || $tag in tags)
+  ] | order(publishedAt desc) {
+    title,
+    "slug": slug.current,
+    excerpt,
+    primaryCategory,
+    "isRealEstate": $tag in keywords || $tag in tags
+  }
+`
+
+/**
+ * Just the city and category of every live property.
+ *
+ * Used to validate internal links before rendering them: /[category]/[city]
+ * 404s on an empty combination, so a "nearby towns" rail built from a static
+ * list would ship four dead links the moment those towns had no stock.
+ */
+export const PROPERTY_PLACES_QUERY = groq`
+  *[_type == "property" && ${PROPERTY_PUBLIC_FILTER} && ${PROPERTY_MARKETPLACE_FILTER}] {
+    city, listingCategory
+  }
+`
+
+/**
+ * Agents with live stock in one town, for the town hub.
+ *
+ * AGENTS_QUERY counts an agent's whole portfolio, so on a Watamu page it would
+ * show a Nairobi agency with 40 listings and none of them here. This counts
+ * only the properties in the town and drops anyone left on zero.
+ */
+export const AGENTS_BY_CITY_QUERY = groq`
+  *[_type == "agent"] {
+    _id,
+    displayName,
+    slug,
+    photo{ ${IMAGE_FIELDS} },
+    agencyName,
+    isVerified,
+    specialisations,
+    "propertyCount": count(*[_type == "property" && ${PROPERTY_PUBLIC_FILTER} && ${PROPERTY_MARKETPLACE_FILTER} && agent._ref == ^._id && lower(city) == lower($city)])
+  } | order(propertyCount desc)
+`
+
 export const AGENT_BY_SLUG_QUERY = groq`
   *[_type == "agent" && slug.current == $slug][0] {
     _id,
