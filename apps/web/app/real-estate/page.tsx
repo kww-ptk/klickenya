@@ -32,11 +32,13 @@ import {
 import {
   CATEGORY_LABELS,
   PROPERTY_CATEGORIES,
+  areaPath,
   categoryCityPath,
   categoryPath,
   isPropertyCategory,
   neighbourhoodPath,
 } from "@/lib/real-estate/constants";
+import { PLACES } from "@/lib/real-estate/places";
 import { categoryHeading } from "@/lib/real-estate/content";
 import { absoluteUrl, itemListSchema } from "@/lib/real-estate/schema";
 
@@ -146,6 +148,23 @@ export default async function RealEstateHomePage() {
   const cityLinks = Array.from(cityPairs.values())
     .sort((a, b) => b.count - a.count)
     .slice(0, 20);
+
+  // Town hubs. Only surfaced for towns that actually have stock, since an
+  // empty hub is a page nobody should be sent to.
+  const townCounts = new Map<string, number>();
+  for (const card of allProperties) {
+    if (!card.city) continue;
+    const key = card.city.toLowerCase().trim().replace(/\s+/g, "-");
+    townCounts.set(key, (townCounts.get(key) ?? 0) + 1);
+  }
+
+  const townLinks = Object.values(PLACES)
+    .filter((place) => (townCounts.get(place.slug) ?? 0) > 0)
+    .map((place) => ({
+      label: `Real estate in ${place.name}`,
+      href: areaPath(place.slug),
+      count: townCounts.get(place.slug),
+    }));
 
   return (
     <>
@@ -360,6 +379,12 @@ export default async function RealEstateHomePage() {
             label: categoryHeading(c),
             href: categoryPath(c),
           }))}
+        />
+
+        <InternalLinkRail
+          title="Browse by town"
+          description="A single page per town, with the market data, the neighbourhoods and every category in one place."
+          links={townLinks}
         />
 
         <InternalLinkRail

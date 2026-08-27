@@ -29,6 +29,12 @@ interface CategoryPageShellProps {
   category: PropertyCategory;
   /** "Kenya", "Nairobi", "Kilimani" — used in the copy and the H1. */
   place: string;
+  /**
+   * citySlug() form of `place`. When the place has an entry in the PLACES
+   * registry this swaps the templated copy for copy written for that market.
+   * Omitted on the national pages, where the template is the right answer.
+   */
+  placeSlug?: string;
   heading: string;
   crumbs: Crumb[];
   canonicalPath: string;
@@ -41,6 +47,7 @@ interface CategoryPageShellProps {
 function CategoryPageShell({
   category,
   place,
+  placeSlug,
   heading,
   crumbs,
   canonicalPath,
@@ -49,8 +56,8 @@ function CategoryPageShell({
   showCityFilter = true,
   showNeighbourhoodFilter = true,
 }: CategoryPageShellProps) {
-  const body = categoryBody(category, place);
-  const faqs = categoryFaqs(category, place);
+  const body = categoryBody(category, place, placeSlug);
+  const faqs = categoryFaqs(category, place, placeSlug);
 
   return (
     <>
@@ -68,7 +75,7 @@ function CategoryPageShell({
               {heading}
             </h1>
             <p className="mt-3 text-[15.5px] leading-[1.7] text-text2">
-              {categoryIntro(category, place)}
+              {categoryIntro(category, place, placeSlug)}
             </p>
           </header>
 

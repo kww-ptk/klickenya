@@ -1,9 +1,11 @@
 import {
   SITE_URL,
   agentPath,
+  areaPath,
   propertyPath,
   isClosedStatus,
 } from "./constants";
+import type { PlaceContent } from "./places";
 import { toCurrency } from "./currency";
 import type { PropertyCardData } from "./mappers";
 
@@ -202,6 +204,58 @@ export function agentSchema(agent: any, photoUrl?: string) {
       ? { areaServed: agent.serviceAreas.map((a: string) => ({ "@type": "Place", name: a })) }
       : {}),
     address: { "@type": "PostalAddress", addressCountry: "KE" },
+  };
+}
+
+/* ── Town hubs ─────────────────────────────────────── */
+
+/**
+ * The town hub is the page that has to win "real estate watamu", and a bare
+ * ItemList does not tell Google what the page is ABOUT, only what it lists.
+ * A CollectionPage whose `about` is a geographic Place with coordinates ties
+ * the URL to the town as an entity, which is what feeds both the local pack
+ * and the answer engines.
+ */
+export function areaHubSchema(
+  place: PlaceContent,
+  { propertyCount }: { propertyCount: number }
+) {
+  const url = absoluteUrl(areaPath(place.slug));
+
+  return {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "@id": url,
+    url,
+    name: place.metaTitle,
+    description: place.metaDescription,
+    isPartOf: { "@type": "WebSite", "@id": `${SITE_URL}/#website`, url: SITE_URL },
+    about: {
+      "@type": "Place",
+      name: place.name,
+      description: place.tagline,
+      geo: {
+        "@type": "GeoCoordinates",
+        latitude: place.lat,
+        longitude: place.lng,
+      },
+      address: {
+        "@type": "PostalAddress",
+        addressLocality: place.name,
+        addressRegion: place.county,
+        addressCountry: "KE",
+      },
+      containsPlace: place.subAreas.map((area) => ({
+        "@type": "Place",
+        name: area.name,
+        description: area.blurb,
+      })),
+    },
+    mainEntity: {
+      "@type": "ItemList",
+      name: `Property for sale and rent in ${place.name}`,
+      numberOfItems: propertyCount,
+    },
   };
 }
 
