@@ -80,7 +80,10 @@ function MarketDataStrip({
       icon: "📍",
       label: "Areas with live listings",
       value: String(new Set(properties.map((p) => p.neighbourhood).filter(Boolean)).size),
-      note: `across ${new Set(properties.map((p) => p.city).filter(Boolean)).size} towns and cities`,
+      note: (() => {
+        const towns = new Set(properties.map((p) => p.city).filter(Boolean)).size;
+        return towns === 1 ? "in 1 town" : `across ${towns} towns and cities`;
+      })(),
     },
   ].filter(Boolean) as {
     icon: string;
@@ -105,13 +108,29 @@ function MarketDataStrip({
     .slice(0, 6);
 
   const maxBar = Math.max(...bars.map((b) => b.value), 1);
+  const hasChart = bars.length > 0;
+
+  // Literal classes so Tailwind keeps them. The count varies: rentals add a
+  // median rent card, and any figure without enough data to stand behind is
+  // dropped entirely, so a fixed column count would orphan a card.
+  const COLUMNS: Record<number, string> = {
+    1: "lg:grid-cols-1",
+    2: "lg:grid-cols-2",
+    3: "lg:grid-cols-3",
+    4: "lg:grid-cols-4",
+  };
 
   // Nothing priced in shillings means nothing to average honestly.
   if (stats.length === 0 || inKes.length === 0) return null;
 
   return (
     <section className="bg-dark px-5 py-14 md:px-10">
-      <div className="mx-auto grid max-w-[1320px] grid-cols-1 items-center gap-[60px] lg:grid-cols-2">
+      <div
+        className={cn(
+          "mx-auto grid max-w-[1320px] grid-cols-1 gap-[60px]",
+          hasChart ? "items-center lg:grid-cols-2" : "max-w-[1100px]"
+        )}
+      >
         <div>
           <span className="mb-1.5 block text-[11px] font-bold uppercase tracking-[0.09em] text-amber">
             Market data
@@ -134,24 +153,61 @@ function MarketDataStrip({
             )}
           </p>
 
-          <div className="mt-7 flex flex-col gap-3">
+          <div
+            className={cn(
+              "mt-7 gap-3",
+              hasChart
+                ? "flex flex-col"
+                : cn(
+                    "grid grid-cols-1 sm:grid-cols-2",
+                    COLUMNS[Math.min(stats.length, 4)] ?? "lg:grid-cols-3"
+                  )
+            )}
+          >
             {stats.map((card) => (
               <div
                 key={card.label}
-                className="flex items-center gap-4 rounded-[16px] border border-white/[0.07] bg-white/5 px-5 py-4 transition-colors hover:bg-white/[0.09]"
+                className={cn(
+                  "rounded-[16px] border border-white/[0.07] bg-white/5 px-5 py-4 transition-colors hover:bg-white/[0.09]",
+                  // Beside the chart there is width for a row. In the wider
+                  // grid each card is only a third, so the label and the figure
+                  // wrapped against a right-aligned note; stack instead.
+                  hasChart ? "flex items-center gap-4" : "flex flex-col gap-3"
+                )}
               >
-                <div className="flex size-10 shrink-0 items-center justify-center rounded-[10px] bg-amber/[0.12] text-[18px]">
-                  <span aria-hidden="true">{card.icon}</span>
+                <div className="flex items-center gap-4">
+                  <div className="flex size-10 shrink-0 items-center justify-center rounded-[10px] bg-amber/[0.12] text-[18px]">
+                    <span aria-hidden="true">{card.icon}</span>
+                  </div>
+                  {hasChart && (
+                    <div className="min-w-0 flex-1">
+                      <p className="mb-0.5 text-[12px] font-medium text-white/40">
+                        {card.label}
+                      </p>
+                      <p className="text-[20px] font-bold tracking-[-0.03em] text-white">
+                        {card.value}
+                      </p>
+                    </div>
+                  )}
+                  {!hasChart && (
+                    <p className="text-[12.5px] font-medium leading-[1.4] text-white/40">
+                      {card.label}
+                    </p>
+                  )}
                 </div>
-                <div className="min-w-0 flex-1">
-                  <p className="mb-0.5 text-[12px] font-medium text-white/40">
-                    {card.label}
-                  </p>
-                  <p className="text-[20px] font-bold tracking-[-0.03em] text-white">
+
+                {!hasChart && (
+                  <p className="text-[26px] font-bold leading-none tracking-[-0.03em] text-white">
                     {card.value}
                   </p>
-                </div>
-                <span className="shrink-0 text-right text-[11.5px] font-medium text-white/35">
+                )}
+
+                <span
+                  className={cn(
+                    "text-[11.5px] font-medium text-white/35",
+                    hasChart ? "shrink-0 text-right" : "mt-auto"
+                  )}
+                >
                   {card.note}
                 </span>
               </div>
@@ -159,7 +215,7 @@ function MarketDataStrip({
           </div>
         </div>
 
-        {bars.length > 0 && (
+        {hasChart && (
           <div>
             <h3 className="mb-5 text-[13px] font-semibold uppercase tracking-[0.02em] text-white/50">
               Median asking price per m&sup2; by neighbourhood
