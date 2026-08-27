@@ -1,17 +1,27 @@
-import { sanityClient } from "@/lib/sanity/client";
 import { PropertySearchBox } from "./PropertySearchBox";
 import { MouseGlow } from "@/components/shared/MouseGlow";
+import { CurrencySwitcher } from "@/components/currency/CurrencySwitcher";
+import type { PropertyCardData } from "@/lib/real-estate/mappers";
+import {
+  buildLocationOptions,
+  buildSearchIndex,
+} from "@/lib/real-estate/searchIndex";
 
-async function PropertyHero() {
-  const count: number = await sanityClient
-    .fetch(`count(*[_type == "property"])`)
-    .catch(() => 0);
+/**
+ * The hub already fetches every live property, so the hero takes that list
+ * rather than running its own count query. It also feeds the search box the
+ * locations that actually have stock and a compact index for live match counts.
+ */
+function PropertyHero({ properties }: { properties: PropertyCardData[] }) {
+  const count = properties.length;
+  const locations = buildLocationOptions(properties);
+  const index = buildSearchIndex(properties);
 
   const stats = [
-    { value: count > 0 ? `${count}+` : "Growing fast", label: "Properties listed" },
-    { value: "47", label: "All counties covered" },
-    { value: "Free", label: "No commission" },
-    { value: "AI", label: "Free valuations" },
+    { value: count > 0 ? `${count}` : "Growing fast", label: "Properties listed" },
+    { value: "Free", label: "Buyer enquiries" },
+    { value: "Verified", label: "Agents and owners" },
+    { value: "Instant", label: "Property valuations" },
   ];
   return (
     <section className="relative min-h-screen flex flex-col overflow-hidden" style={{ background: "linear-gradient(180deg, #16130C 0%, #1a1610 40%, #1f1a12 70%, #16130C 100%)" }}>
@@ -41,7 +51,12 @@ async function PropertyHero() {
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber opacity-75" />
             <span className="relative inline-flex size-[6px] rounded-full bg-amber" />
           </span>
-          Kenya&apos;s property marketplace {count > 0 && <>&middot; {count}+ listings</>}
+          Kenya&apos;s property marketplace{" "}
+          {count > 0 && (
+            <>
+              &middot; {count} {count === 1 ? "listing" : "listings"}
+            </>
+          )}
         </div>
 
         {/* Heading */}
@@ -65,12 +80,16 @@ async function PropertyHero() {
           className="text-white/55 max-w-[460px] leading-[1.65] mb-10"
           style={{ fontSize: "clamp(15px, 1.8vw, 18px)" }}
         >
-          Search thousands of properties across all 47 counties. Verified
-          listings, transparent pricing, and AI-powered valuations.
+          Houses, apartments, land and commercial space across Kenya. Real
+          asking prices, verified agents, and free enquiries.
         </p>
 
         {/* Search box */}
-        <PropertySearchBox />
+        <PropertySearchBox locations={locations} index={index} />
+
+        <div className="mt-5 sm:hidden">
+          <CurrencySwitcher />
+        </div>
       </div>
 
       {/* Stats bar */}

@@ -3,8 +3,13 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { Bricolage_Grotesque } from "next/font/google";
 import { VisualEditing } from "next-sanity/visual-editing";
 import { SanityLive } from "@/lib/sanity/client";
-import { draftMode } from "next/headers";
+import { cookies, draftMode } from "next/headers";
 import { MobileBottomNav } from "@/components/home/MobileBottomNav";
+import {
+  CurrencyProvider,
+  CURRENCY_COOKIE,
+} from "@/components/currency/CurrencyProvider";
+import { getRates } from "@/lib/currency/rates";
 import { CityCountsProvider } from "@/context/CityCountsContext";
 import { SavedListingsProvider } from "@/hooks/useSavedListings";
 import { getCityCounts } from "@/lib/sanity/getCityCounts";
@@ -116,10 +121,10 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const [{ isEnabled: isDraftMode }, cityCounts] = await Promise.all([
-    draftMode(),
-    getCityCounts(),
-  ]);
+  const [{ isEnabled: isDraftMode }, cityCounts, rates, cookieStore] =
+    await Promise.all([draftMode(), getCityCounts(), getRates(), cookies()]);
+
+  const currencyPreference = cookieStore.get(CURRENCY_COOKIE)?.value;
 
   return (
     <html lang="en">
@@ -142,7 +147,17 @@ export default async function RootLayout({
       >
         <SavedListingsProvider>
         <CityCountsProvider cityCounts={cityCounts}>
-          {children}
+          {/* System wide on purpose: stays, events and tickets can adopt the
+              same preference by calling useDisplayCurrency. Only the
+              real-estate surfaces read it today. */}
+          <CurrencyProvider
+            initialCurrency={currencyPreference}
+            rates={rates.kesPer}
+            ratesUpdatedAt={rates.updatedAt}
+            isLive={rates.source === "live"}
+          >
+            {children}
+          </CurrencyProvider>
           <MobileBottomNav />
         </CityCountsProvider>
         </SavedListingsProvider>

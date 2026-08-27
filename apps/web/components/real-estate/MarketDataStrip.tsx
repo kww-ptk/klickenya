@@ -1,120 +1,216 @@
-'use client';
+import { cn } from "@/lib/utils";
+import type { PropertyCardData } from "@/lib/real-estate/mappers";
+import { formatPrice, formatPriceFull, pricePerSqm } from "@/lib/real-estate/format";
+import { neighbourhoodPath } from "@/lib/real-estate/constants";
+import Link from "next/link";
 
-import { useRef, useEffect, useState } from 'react';
-import { cn } from '@/lib/utils';
+/**
+ * Market snapshot computed from the live listings on the site.
+ *
+ * This block used to render four hardcoded figures with invented month on month
+ * deltas under the heading "Real-time insights from thousands of listings".
+ * None of it came from data. Everything here is derived from the properties
+ * currently published, and the copy says exactly that. Where there is not
+ * enough data to compute a figure honestly, the figure is not shown.
+ */
 
-const marketCards = [
-  { icon: '🏙', label: 'Avg. price/sqm · Nairobi', value: 'KSh 124,500', change: '+8.2%', up: true },
-  { icon: '🔑', label: 'Avg. rent · 2BR Nairobi', value: 'KSh 68,000 / mo', change: '+4.1%', up: true },
-  { icon: '📊', label: 'Avg. rental yield · Nairobi', value: '6.8% p.a.', change: '-0.3%', up: false },
-  { icon: '⏱', label: 'Avg. days on market', value: '42 days', change: '-6 days', up: false },
-];
+interface MarketDataStripProps {
+  properties: PropertyCardData[];
+  /** Slug lookup so bars can link to the neighbourhood page when one exists. */
+  neighbourhoodSlugs?: Record<string, string>;
+}
 
-const barData = [
-  { label: 'Kilimani', val: 124, highlight: true },
-  { label: 'Westlands', val: 138, highlight: false },
-  { label: 'Karen', val: 95, highlight: false },
-  { label: 'Lavington', val: 112, highlight: false },
-  { label: 'Upperhill', val: 165, highlight: false },
-  { label: 'Nyali', val: 78, highlight: true },
-];
+function median(values: number[]): number | null {
+  if (values.length === 0) return null;
+  const sorted = [...values].sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+  return sorted.length % 2 === 0
+    ? Math.round((sorted[mid - 1] + sorted[mid]) / 2)
+    : sorted[mid];
+}
 
-const maxVal = Math.max(...barData.map((d) => d.val));
+function MarketDataStrip({
+  properties,
+  neighbourhoodSlugs = {},
+}: MarketDataStripProps) {
+  // Medians are computed from shilling listings only. Folding a euro asking
+  // price into the same median would produce a number that means nothing, and
+  // converting at a hand-maintained rate would make the headline figure move
+  // whenever somebody edited that constant. The caption says which it is.
+  const inKes = properties.filter((p) => p.currency === "KES");
+  const excluded = properties.length - inKes.length;
 
-function MarketDataStrip() {
-  const chartRef = useRef<HTMLDivElement>(null);
-  const [animated, setAnimated] = useState(false);
+  const forSale = inKes.filter((p) => p.listingCategory === "for-sale");
+  const forRent = inKes.filter((p) => p.listingCategory === "for-rent");
 
-  useEffect(() => {
-    const el = chartRef.current;
-    if (!el) return;
+  const medianSalePrice = median(forSale.map((p) => p.price).filter((n) => n > 0));
+  const medianRent = median(forRent.map((p) => p.price).filter((n) => n > 0));
 
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setAnimated(true);
-          observer.disconnect();
+  const sqmRates = forSale
+    .map((p) => pricePerSqm(p.price, p.sizeSqm))
+    .filter((n): n is number => n != null);
+  const medianSqm = median(sqmRates);
+
+  const stats = [
+    medianSalePrice
+      ? {
+          icon: "🏙",
+          label: "Median asking price, for sale",
+          value: formatPrice(medianSalePrice),
+          note: `${forSale.length} listings`,
         }
-      },
-      { threshold: 0.3 }
-    );
+      : null,
+    medianRent
+      ? {
+          icon: "🔑",
+          label: "Median monthly rent",
+          value: `${formatPrice(medianRent)} / mo`,
+          note: `${forRent.length} rentals`,
+        }
+      : null,
+    medianSqm
+      ? {
+          icon: "📊",
+          label: "Median price per m²",
+          value: formatPriceFull(medianSqm),
+          note: `${sqmRates.length} listings with a stated size`,
+        }
+      : null,
+    {
+      icon: "📍",
+      label: "Areas with live listings",
+      value: String(new Set(properties.map((p) => p.neighbourhood).filter(Boolean)).size),
+      note: `across ${new Set(properties.map((p) => p.city).filter(Boolean)).size} towns and cities`,
+    },
+  ].filter(Boolean) as {
+    icon: string;
+    label: string;
+    value: string;
+    note: string;
+  }[];
 
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, []);
+  // Price per square metre by neighbourhood, from listings that state a size.
+  const byArea = new Map<string, number[]>();
+  for (const p of forSale) {
+    const rate = pricePerSqm(p.price, p.sizeSqm);
+    if (!rate || !p.neighbourhood) continue;
+    byArea.set(p.neighbourhood, [...(byArea.get(p.neighbourhood) ?? []), rate]);
+  }
+
+  const bars = Array.from(byArea.entries())
+    // One listing is an anecdote, not a rate. Require at least two.
+    .filter(([, rates]) => rates.length >= 2)
+    .map(([name, rates]) => ({ name, value: median(rates) ?? 0, count: rates.length }))
+    .sort((a, b) => b.value - a.value)
+    .slice(0, 6);
+
+  const maxBar = Math.max(...bars.map((b) => b.value), 1);
+
+  // Nothing priced in shillings means nothing to average honestly.
+  if (stats.length === 0 || inKes.length === 0) return null;
 
   return (
-    <section className="bg-dark py-14 px-5 md:px-10">
-      <div className="max-w-[1320px] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-[60px] items-center">
-        {/* Left */}
+    <section className="bg-dark px-5 py-14 md:px-10">
+      <div className="mx-auto grid max-w-[1320px] grid-cols-1 items-center gap-[60px] lg:grid-cols-2">
         <div>
-          <span className="text-[11px] font-bold tracking-[0.09em] uppercase text-amber mb-1.5 block">
-            Market Data
+          <span className="mb-1.5 block text-[11px] font-bold uppercase tracking-[0.09em] text-amber">
+            Market data
           </span>
-          <h2 className="text-[clamp(22px,2.8vw,34px)] font-semibold tracking-[-0.03em] text-white leading-[1.1]">
+          <h2 className="text-[clamp(22px,2.8vw,34px)] font-semibold leading-[1.1] tracking-[-0.03em] text-white">
             Kenya property
             <br />
             market at a glance
           </h2>
-          <p className="text-[14px] text-white/45 mt-2.5 leading-[1.55]">
-            Real-time insights from thousands of listings across Kenya&apos;s top markets.
+          <p className="mt-2.5 text-[14px] leading-[1.55] text-white/45">
+            Calculated from the {inKes.length}{" "}
+            {inKes.length === 1 ? "property" : "properties"} priced in shillings
+            on Klickenya. These are asking prices, not sale prices.
+            {excluded > 0 && (
+              <>
+                {" "}
+                {excluded} {excluded === 1 ? "listing" : "listings"} priced in
+                another currency {excluded === 1 ? "is" : "are"} not included.
+              </>
+            )}
           </p>
 
-          <div className="flex flex-col gap-3 mt-7">
-            {marketCards.map((card) => (
+          <div className="mt-7 flex flex-col gap-3">
+            {stats.map((card) => (
               <div
                 key={card.label}
-                className="flex items-center gap-4 bg-white/5 border border-white/[0.07] rounded-[16px] px-5 py-4 hover:bg-white/[0.09] transition-colors"
+                className="flex items-center gap-4 rounded-[16px] border border-white/[0.07] bg-white/5 px-5 py-4 transition-colors hover:bg-white/[0.09]"
               >
-                <div className="size-10 rounded-[10px] bg-amber/[0.12] flex items-center justify-center text-[18px] shrink-0">
-                  {card.icon}
+                <div className="flex size-10 shrink-0 items-center justify-center rounded-[10px] bg-amber/[0.12] text-[18px]">
+                  <span aria-hidden="true">{card.icon}</span>
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-[12px] text-white/40 font-medium mb-0.5">{card.label}</p>
-                  <p className="text-[20px] font-bold text-white tracking-[-0.03em]">{card.value}</p>
+                  <p className="mb-0.5 text-[12px] font-medium text-white/40">
+                    {card.label}
+                  </p>
+                  <p className="text-[20px] font-bold tracking-[-0.03em] text-white">
+                    {card.value}
+                  </p>
                 </div>
-                <span
-                  className={cn(
-                    'shrink-0 px-2.5 py-0.5 rounded-full text-[11.5px] font-bold',
-                    card.up ? 'bg-green/15 text-[#4ADE80]' : 'bg-red-500/15 text-[#F87171]'
-                  )}
-                >
-                  {card.change}
+                <span className="shrink-0 text-right text-[11.5px] font-medium text-white/35">
+                  {card.note}
                 </span>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Right — Bar Chart */}
-        <div>
-          <h3 className="text-[13px] font-semibold text-white/50 mb-5 tracking-[0.02em] uppercase">
-            Avg. price per sqm by neighbourhood (KSh &apos;000)
-          </h3>
-          <div ref={chartRef} className="flex items-end gap-2.5 h-[160px]">
-            {barData.map((bar) => {
-              const pct = (bar.val / maxVal) * 100;
-              return (
-                <div key={bar.label} className="flex-1 flex flex-col justify-end h-full">
+        {bars.length > 0 && (
+          <div>
+            <h3 className="mb-5 text-[13px] font-semibold uppercase tracking-[0.02em] text-white/50">
+              Median asking price per m&sup2; by neighbourhood
+            </h3>
+            <div className="flex h-[180px] items-end gap-2.5">
+              {bars.map((bar, i) => {
+                const slug = neighbourhoodSlugs[bar.name];
+                const pct = Math.max(6, (bar.value / maxBar) * 100);
+                const inner = (
+                  <>
+                    <span className="mb-1.5 block text-center text-[11px] font-bold text-white/70">
+                      {Math.round(bar.value / 1000)}k
+                    </span>
+                    <div
+                      className={cn(
+                        "w-full rounded-t-[4px]",
+                        i === 0
+                          ? "bg-gradient-to-t from-amber/80 to-amber"
+                          : "bg-gradient-to-t from-purple2/60 to-purple2"
+                      )}
+                      style={{ height: `${pct}%` }}
+                    />
+                    <span className="mt-2 block text-center text-[11px] font-medium text-white/35">
+                      {bar.name}
+                    </span>
+                  </>
+                );
+
+                return (
                   <div
-                    className={cn(
-                      'w-full rounded-t-[4px] transition-all duration-700 ease-out',
-                      bar.highlight
-                        ? 'bg-gradient-to-t from-amber/80 to-amber'
-                        : 'bg-gradient-to-t from-purple2/60 to-purple2'
+                    key={bar.name}
+                    className="flex h-full flex-1 flex-col justify-end"
+                    title={`${bar.name}: ${formatPriceFull(bar.value)} per m² across ${bar.count} listings`}
+                  >
+                    {slug ? (
+                      <Link href={neighbourhoodPath(slug)} className="flex h-full flex-col justify-end">
+                        {inner}
+                      </Link>
+                    ) : (
+                      inner
                     )}
-                    style={{
-                      height: animated ? `${pct}%` : '0%',
-                    }}
-                  />
-                  <span className="text-[11px] text-white/30 text-center font-medium mt-2">
-                    {bar.label}
-                  </span>
-                </div>
-              );
-            })}
+                  </div>
+                );
+              })}
+            </div>
+            <p className="mt-4 text-[12px] leading-[1.6] text-white/30">
+              Median of the listings in each area that state a floor size. Areas
+              with fewer than two such listings are not shown.
+            </p>
           </div>
-        </div>
+        )}
       </div>
     </section>
   );

@@ -57,25 +57,29 @@ export async function POST(request: NextRequest) {
         break
       }
 
+      // Properties live under /real-estate, not /property. Every path here was
+      // a route that does not exist, so editing a property in Studio has never
+      // revalidated anything and changes waited out the hour of ISR instead.
       case 'property': {
         if (slugValue) {
-          revalidatePath(`/property/for-sale/${slugValue}`, 'page')
-          revalidatePath(`/property/for-rent/${slugValue}`, 'page')
-          revalidatePath(`/property/land/${slugValue}`, 'page')
-          revalidatePath(`/property/commercial/${slugValue}`, 'page')
+          revalidatePath(`/real-estate/${slugValue}`, 'page')
         }
-        revalidatePath('/property', 'page')
-        revalidatePath('/property/for-sale', 'page')
-        revalidatePath('/property/for-rent', 'page')
-        revalidatePath('/property/land', 'page')
-        revalidatePath('/property/commercial', 'page')
+        revalidatePath('/real-estate', 'page')
+        revalidatePath('/real-estate/for-sale', 'page')
+        revalidatePath('/real-estate/for-rent', 'page')
+        revalidatePath('/real-estate/land', 'page')
+        revalidatePath('/real-estate/commercial', 'page')
+        revalidatePath('/real-estate/new-developments', 'page')
         break
       }
 
+      // Same problem: the route is /real-estate/neighbourhood/[slug], singular
+      // and nested, not /neighbourhoods/[slug].
       case 'neighbourhood': {
         if (slugValue) {
-          revalidatePath(`/neighbourhoods/${slugValue}`, 'page')
+          revalidatePath(`/real-estate/neighbourhood/${slugValue}`, 'page')
         }
+        revalidatePath('/real-estate', 'page')
         break
       }
 

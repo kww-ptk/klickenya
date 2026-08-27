@@ -9,9 +9,9 @@ import PhoneInput from "@/components/ui/PhoneInput";
 interface PropertyEnquiryFormProps {
   propertyId: string;
   propertyTitle: string;
-  price?: number;
-  priceType?: string;
   agentName?: string;
+  /** Drives which enquiry types are offered. */
+  listingCategory?: string;
 }
 
 interface FormState {
@@ -25,23 +25,44 @@ interface FormState {
 
 type Status = "idle" | "loading" | "success" | "error";
 
+/* 16px, not 14px: iOS Safari zooms the viewport on focus for anything smaller
+   (see CLAUDE.md). */
 const inputCls =
-  "w-full border-[1.5px] border-border rounded-[10px] px-3.5 py-3 text-[14px] text-text bg-white outline-none focus:border-purple2 transition-colors placeholder:text-text3";
+  "w-full border-[1.5px] border-border rounded-[10px] px-3.5 py-3 text-[16px] text-text bg-white outline-none focus:border-purple2 transition-colors placeholder:text-text3";
+
+const ENQUIRY_TYPES = [
+  "I want to buy",
+  "I want to rent",
+  "I want to arrange a viewing",
+  "I want more information",
+] as const;
 
 /* ─── Component ──────────────────────────────────── */
 
+/*
+ * The form used to repeat the asking price above its first field. Every place
+ * it renders already shows the price prominently: the sticky sidebar card on
+ * desktop, and the price card plus the fixed bottom bar on mobile. Three copies
+ * of the same number on one screen is noise.
+ */
 function PropertyEnquiryForm({
   propertyId,
   propertyTitle,
-  price,
-  priceType,
   agentName,
+  listingCategory,
 }: PropertyEnquiryFormProps) {
+  const isRental = listingCategory === "for-rent";
+  // Offering "I want to buy" on a rental, and vice versa, just adds a wrong
+  // option to pick.
+  const enquiryTypes = ENQUIRY_TYPES.filter((t) =>
+    isRental ? t !== "I want to buy" : t !== "I want to rent"
+  );
+
   const [form, setForm] = useState<FormState>({
     name: "",
     email: "",
     phone: "",
-    enquiryType: "I want more information",
+    enquiryType: isRental ? "I want to rent" : "I want to buy",
     message: "",
     mortgageInterest: false,
   });
@@ -97,7 +118,8 @@ function PropertyEnquiryForm({
         </div>
         <h4 className="text-[16px] font-bold text-text mb-1">Enquiry sent!</h4>
         <p className="text-[13px] text-text2 leading-[1.5] max-w-[240px] mx-auto">
-          {agentName ? `${agentName} will` : "The agent will"} get back to you within 2 hours. Check your email for confirmation.
+          {agentName ? `${agentName} has` : "The agent has"} your details and will be in
+          touch. A confirmation is on its way to your inbox.
         </p>
       </div>
     );
@@ -110,21 +132,11 @@ function PropertyEnquiryForm({
         Enquire about this property
       </h3>
 
-      {/* ─── Price display ───────────────────────── */}
-      {price != null && (
-        <div className="flex items-baseline gap-1.5 -mt-1 mb-1">
-          <span className="font-display text-[24px] font-extrabold tracking-[-0.02em] text-dark">
-            KSh {price.toLocaleString()}
-          </span>
-          {priceType === "per-month" && (
-            <span className="text-[14px] text-text2">/ month</span>
-          )}
-        </div>
-      )}
-
       {/* ─── Contact fields ──────────────────────── */}
       <input
         type="text"
+        autoComplete="name"
+        aria-label="Full name"
         placeholder="Full name"
         className={inputCls}
         value={form.name}
@@ -133,6 +145,8 @@ function PropertyEnquiryForm({
       />
       <input
         type="email"
+        autoComplete="email"
+        aria-label="Email address"
         placeholder="Email address"
         className={inputCls}
         value={form.email}
@@ -148,18 +162,21 @@ function PropertyEnquiryForm({
 
       {/* ─── Enquiry type ────────────────────────── */}
       <select
+        aria-label="What is your enquiry about?"
         value={form.enquiryType}
         onChange={(e) => update("enquiryType", e.target.value)}
         className={inputCls}
       >
-        <option>I want to buy</option>
-        <option>I want to rent</option>
-        <option>I want to arrange a viewing</option>
-        <option>I want more information</option>
+        {enquiryTypes.map((t) => (
+          <option key={t} value={t}>
+            {t}
+          </option>
+        ))}
       </select>
 
       {/* ─── Message ─────────────────────────────── */}
       <textarea
+        aria-label="Message"
         placeholder="Message (optional)"
         rows={3}
         className={cn(inputCls, "resize-none")}
@@ -215,7 +232,7 @@ function PropertyEnquiryForm({
       <div className="flex items-center justify-center gap-2.5 text-[11.5px] text-text3">
         <span>&#128274; Secure</span>
         <span className="text-border">&#183;</span>
-        <span>&#128241; Agent replies within 2hrs</span>
+        <span>&#128241; Goes straight to the agent</span>
         <span className="text-border">&#183;</span>
         <span>&#10003; Free to enquire</span>
       </div>

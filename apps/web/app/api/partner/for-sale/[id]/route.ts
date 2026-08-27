@@ -17,6 +17,9 @@ const EDITABLE_FIELDS = [
   "propertyType",
   "status",
   "price",
+  // A partner that can edit the price must be able to edit the currency it is
+  // quoted in, or a euro listing silently reverts to being read as shillings.
+  "currency",
   "bedrooms",
   "bathrooms",
   "sizeSqm",

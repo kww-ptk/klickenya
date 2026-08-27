@@ -2,6 +2,13 @@ import type { MetadataRoute } from 'next'
 import { groq } from 'next-sanity'
 import { sanityClient } from '@/lib/sanity/client'
 import { listingPublicPath, TYPE_TO_URL_SEGMENT } from '@/lib/listings/url'
+import {
+  PROPERTY_CATEGORIES,
+  categoryCityPath,
+  categoryPath,
+  isPropertyCategory,
+  neighbourhoodPath,
+} from '@/lib/real-estate/constants'
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://klickenya.com'
 
@@ -14,7 +21,7 @@ export const revalidate = 3600
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // ── Fetch all dynamic slugs in parallel ────────────
-  const [listings, posts, destinations, properties, agents] =
+  const [listings, posts, destinations, properties, agents, neighbourhoods] =
     await Promise.all([
       sanityClient
         .fetch<{ slug: string; type: string; city: string }[]>(
@@ -33,14 +40,32 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
           groq`*[_type == "destination"]{ "slug": slug.current }`
         )
         .catch(() => []),
+      // Partner stock that has not been published to the marketplace does not
+      // belong in klickenya.com's sitemap.
       sanityClient
-        .fetch<{ slug: string }[]>(
-          groq`*[_type == "property" && status == "available"]{ "slug": slug.current }`
+        .fetch<
+          {
+            slug: string
+            listingCategory: string
+            city: string
+            updatedAt: string
+          }[]
+        >(
+          groq`*[_type == "property" && status == "available" && (!defined(partner) || publishToMarketplace == true)]{
+            "slug": slug.current, listingCategory, city, "updatedAt": _updatedAt
+          }`
         )
         .catch(() => []),
       sanityClient
-        .fetch<{ slug: string }[]>(
-          groq`*[_type == "agent"]{ "slug": slug.current }`
+        .fetch<{ slug: string; updatedAt: string }[]>(
+          groq`*[_type == "agent"]{ "slug": slug.current, "updatedAt": _updatedAt }`
+        )
+        .catch(() => []),
+      sanityClient
+        .fetch<{ slug: string; updatedAt: string }[]>(
+          groq`*[_type == "neighbourhood" && defined(slug.current)]{
+            "slug": slug.current, "updatedAt": _updatedAt
+          }`
         )
         .catch(() => []),
     ])
@@ -68,6 +93,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: new Date(),
       changeFrequency: 'weekly' as const,
       priority: 0.7,
+    })),
+    // Real-estate hubs. The four category pages and the new-developments and
+    // valuation pages are all pre-rendered and none of them were listed here.
+    ...[
+      ...PROPERTY_CATEGORIES.map((c) => categoryPath(c)),
+      '/real-estate/new-developments',
+      '/valuation',
+    ].map((path) => ({
+      url: `${BASE_URL}${path}`,
+      lastModified: new Date(),
+      changeFrequency: 'daily' as const,
+      priority: 0.8,
     })),
     ...['/about', '/contact', '/how-it-works', '/privacy', '/terms'].map(
       (path) => ({
@@ -144,9 +181,41 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     .filter((p) => p.slug)
     .map((p) => ({
       url: `${BASE_URL}/real-estate/${p.slug}`,
-      lastModified: new Date(),
+      lastModified: p.updatedAt ? new Date(p.updatedAt) : new Date(),
       changeFrequency: 'weekly' as const,
       priority: 0.8,
+    }))
+
+  // ── Category + city routes (/real-estate/[category]/[city])
+  // Built the same way generateStaticParams builds them, and only for
+  // combinations that actually have a listing: an empty one now 404s.
+  const cityKeys = new Map<string, Date>()
+  for (const p of properties) {
+    if (!p.listingCategory || !p.city) continue
+    if (!isPropertyCategory(p.listingCategory)) continue
+    const href = categoryCityPath(p.listingCategory, p.city)
+    const updated = p.updatedAt ? new Date(p.updatedAt) : new Date()
+    const existing = cityKeys.get(href)
+    if (!existing || updated > existing) cityKeys.set(href, updated)
+  }
+
+  const categoryCityRoutes: MetadataRoute.Sitemap = Array.from(
+    cityKeys.entries()
+  ).map(([href, lastModified]) => ({
+    url: `${BASE_URL}${href}`,
+    lastModified,
+    changeFrequency: 'daily' as const,
+    priority: 0.7,
+  }))
+
+  // ── Neighbourhood routes (/real-estate/neighbourhood/[slug])
+  const neighbourhoodRoutes: MetadataRoute.Sitemap = neighbourhoods
+    .filter((n) => n.slug)
+    .map((n) => ({
+      url: `${BASE_URL}${neighbourhoodPath(n.slug)}`,
+      lastModified: n.updatedAt ? new Date(n.updatedAt) : new Date(),
+      changeFrequency: 'weekly' as const,
+      priority: 0.7,
     }))
 
   // ── Agent routes (/real-estate/agent/[slug]) ───────
@@ -154,9 +223,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     .filter((a) => a.slug)
     .map((a) => ({
       url: `${BASE_URL}/real-estate/agent/${a.slug}`,
-      lastModified: new Date(),
+      lastModified: a.updatedAt ? new Date(a.updatedAt) : new Date(),
       changeFrequency: 'weekly' as const,
-      priority: 0.8,
+      priority: 0.7,
     }))
 
   return [
@@ -166,6 +235,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...blogRoutes,
     ...destinationRoutes,
     ...propertyRoutes,
+    ...categoryCityRoutes,
+    ...neighbourhoodRoutes,
     ...agentRoutes,
   ]
 }
