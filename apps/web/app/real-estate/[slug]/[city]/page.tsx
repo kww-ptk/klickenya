@@ -1,90 +1,46 @@
 import { type Metadata } from "next";
 import { notFound } from "next/navigation";
-import Link from "next/link";
-import { ChevronRight } from "lucide-react";
 import { sanityClient, sanityFetch } from "@/lib/sanity/client";
 import {
-  PROPERTIES_BY_CATEGORY_CITY_QUERY,
+  PROPERTIES_BY_CITY_QUERY,
   PROPERTY_SLUGS_QUERY,
 } from "@/lib/sanity/queries";
-import { urlForImage } from "@/lib/sanity/image";
-import { Nav } from "@/components/shared/Nav";
-import { Footer } from "@/components/shared/Footer";
-import { PropertyCategoryNav } from "@/components/real-estate/PropertyCategoryNav";
-import { PropertyCard } from "@/components/real-estate/PropertyCard";
-import { PropertyGrid } from "@/components/real-estate/PropertyGrid";
+import { CategoryPageShell } from "@/components/real-estate/CategoryPageShell";
+import { mapPropertiesToCards } from "@/lib/real-estate/mappers";
+import {
+  CATEGORY_LABELS,
+  PROPERTY_CATEGORIES,
+  categoryCityPath,
+  categoryPath,
+  citySlug,
+  isPropertyCategory,
+} from "@/lib/real-estate/constants";
+import { capitalizeWords } from "@/lib/real-estate/format";
+import { categoryHeading } from "@/lib/real-estate/content";
+import { absoluteUrl } from "@/lib/real-estate/schema";
 
-export const dynamic = 'force-static';
+export const dynamic = "force-static";
 export const revalidate = 3600;
-
-/* ── Category mapping ──────────────────────────────── */
-
-const VALID_CATEGORIES = ["for-sale", "for-rent", "land", "commercial"] as const;
-type Category = (typeof VALID_CATEGORIES)[number];
-
-const CATEGORY_LABELS: Record<Category, string> = {
-  "for-sale": "For Sale",
-  "for-rent": "For Rent",
-  land: "Land",
-  commercial: "Commercial",
-};
-
-function isValidCategory(value: string): value is Category {
-  return VALID_CATEGORIES.includes(value as Category);
-}
-
-function capitalize(str: string): string {
-  return str
-    .split("-")
-    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-    .join(" ");
-}
-
-/* ── Mapper ────────────────────────────────────────── */
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function mapPropertyToCard(p: any) {
-  return {
-    id: p._id,
-    title: p.title ?? "Untitled",
-    slug: p.slug?.current ?? p.slug ?? "",
-    listingCategory: p.listingCategory ?? "for-sale",
-    propertyType: p.propertyType,
-    status: p.status ?? "available",
-    price: p.price ?? 0,
-    priceType: p.priceType ?? "total",
-    previousPrice: p.previousPrice,
-    isFeatured: p.isFeatured,
-    isNewDevelopment: p.isNewDevelopment,
-    bedrooms: p.bedrooms,
-    bathrooms: p.bathrooms,
-    sizeSqm: p.sizeSqm,
-    neighbourhood: p.neighbourhood ?? "",
-    city: p.city ?? "",
-    coverPhoto: p.coverPhoto ? urlForImage(p.coverPhoto).width(800).url() : "",
-  };
-}
 
 /* ── Static params ─────────────────────────────────── */
 
 export async function generateStaticParams() {
-  const slugs: { slug: string; listingCategory: string; city: string }[] =
-    await sanityClient.fetch(PROPERTY_SLUGS_QUERY).catch(() => []);
+  const slugs: { listingCategory: string; city: string }[] = await sanityClient
+    .fetch(PROPERTY_SLUGS_QUERY)
+    .catch(() => []);
 
   const seen = new Set<string>();
   const params: { slug: string; city: string }[] = [];
 
   for (const item of slugs ?? []) {
     if (!item.listingCategory || !item.city) continue;
-    if (!isValidCategory(item.listingCategory)) continue;
+    if (!isPropertyCategory(item.listingCategory)) continue;
 
-    const citySlug = item.city.toLowerCase().replace(/\s+/g, "-");
-    const key = `${item.listingCategory}/${citySlug}`;
-
-    if (!seen.has(key)) {
-      seen.add(key);
-      params.push({ slug: item.listingCategory, city: citySlug });
-    }
+    const city = citySlug(item.city);
+    const key = `${item.listingCategory}/${city}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    params.push({ slug: item.listingCategory, city });
   }
 
   return params;
@@ -98,25 +54,34 @@ interface PageProps {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug: category, city } = await params;
+  if (!isPropertyCategory(category)) return {};
 
-  if (!isValidCategory(category)) return {};
+  const cityName = capitalizeWords(city);
+  const heading = categoryHeading(category, cityName);
+  const title = heading;
+  const description = `${heading} on Klickenya. Compare live asking prices, sizes and features, and enquire with the listing agent for free.`;
+  const canonical = absoluteUrl(categoryCityPath(category, city));
 
-  const label = CATEGORY_LABELS[category];
-  const cityName = capitalize(city);
-  const title = `Properties ${label} in ${cityName} | Klickenya`;
-  const description = `Browse properties ${label.toLowerCase()} in ${cityName}, Kenya. Verified listings with transparent pricing on Klickenya.`;
+  // dynamicParams lets any /[category]/[city] pair render on demand, and this
+  // app currently serves notFound() with a 200 status (an unmatched route does
+  // the same), so a bare notFound() would leave an indexable soft 404 behind.
+  // Deciding here means the page carries noindex whichever shell is rendered.
+  // Next dedupes this fetch with the one in the page component.
+  const { data: cityProperties } = await sanityFetch({
+    query: PROPERTIES_BY_CITY_QUERY,
+    params: { city: cityName },
+  }).catch(() => ({ data: [] }));
+
+  const hasListings = mapPropertiesToCards(cityProperties).some(
+    (c) => c.listingCategory === category
+  );
 
   return {
     title,
     description,
-    alternates: {
-      canonical: `https://klickenya.com/real-estate/${category}/${city}`,
-    },
-    openGraph: {
-      title,
-      description,
-      url: `https://klickenya.com/real-estate/${category}/${city}`,
-    },
+    ...(hasListings ? {} : { robots: { index: false, follow: true } }),
+    alternates: { canonical },
+    openGraph: { title, description, url: canonical, type: "website" },
   };
 }
 
@@ -124,99 +89,60 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function CategoryCityPage({ params }: PageProps) {
   const { slug: category, city } = await params;
+  if (!isPropertyCategory(category)) notFound();
 
-  if (!isValidCategory(category)) notFound();
+  const cityName = capitalizeWords(city);
 
-  const label = CATEGORY_LABELS[category];
-  const cityName = capitalize(city);
-
-  const { data: properties } = await sanityFetch({
-    query: PROPERTIES_BY_CATEGORY_CITY_QUERY,
-    params: { category, city: cityName },
+  // One fetch for the whole city so the cross-category rail can be built from
+  // real counts. Linking a category that has nothing in this city would create
+  // an empty page for Google to treat as a soft 404.
+  const { data: cityProperties } = await sanityFetch({
+    query: PROPERTIES_BY_CITY_QUERY,
+    params: { city: cityName },
   }).catch(() => ({ data: [] }));
 
-  const cards = ((properties ?? []) as unknown[]).map(mapPropertyToCard);
+  const allCityCards = mapPropertiesToCards(cityProperties);
+  const cards = allCityCards.filter((c) => c.listingCategory === category);
+
+  // dynamicParams is on, so an invented /real-estate/for-rent/atlantis would
+  // otherwise render as a cached empty 200. Nothing to list means nothing to
+  // index.
+  if (cards.length === 0) notFound();
+
+  const otherCategories = PROPERTY_CATEGORIES.filter(
+    (c) => c !== category && allCityCards.some((card) => card.listingCategory === c)
+  ).map((c) => ({
+    label: categoryHeading(c, cityName),
+    href: categoryCityPath(c, city),
+  }));
 
   return (
-    <>
-      <Nav />
-
-      <div className="pt-[68px]">
-        <PropertyCategoryNav activeCategory={category} />
-
-        <section className="max-w-[1320px] mx-auto px-5 md:px-10 py-10">
-          {/* Breadcrumb */}
-          <nav aria-label="Breadcrumb" className="mb-6">
-            <ol className="flex items-center gap-1.5 text-[13.5px] text-text2">
-              <li>
-                <Link href="/" className="hover:text-text transition-colors">
-                  Home
-                </Link>
-              </li>
-              <li aria-hidden="true">
-                <ChevronRight className="size-3 text-text3" />
-              </li>
-              <li>
-                <Link
-                  href="/real-estate"
-                  className="hover:text-text transition-colors"
-                >
-                  Real Estate
-                </Link>
-              </li>
-              <li aria-hidden="true">
-                <ChevronRight className="size-3 text-text3" />
-              </li>
-              <li>
-                <Link
-                  href={`/real-estate/${category}`}
-                  className="hover:text-text transition-colors"
-                >
-                  {label}
-                </Link>
-              </li>
-              <li aria-hidden="true">
-                <ChevronRight className="size-3 text-text3" />
-              </li>
-              <li className="font-semibold text-text">{cityName}</li>
-            </ol>
-          </nav>
-
-          {/* Heading */}
-          <div className="mb-8">
-            <h1 className="font-display text-[clamp(28px,3.5vw,42px)] font-extrabold tracking-[-0.03em] text-dark">
-              Properties {label} in {cityName}
-            </h1>
-            <p className="mt-2 text-[15px] text-text2">
-              {cards.length > 0
-                ? `${cards.length} propert${cards.length !== 1 ? "ies" : "y"} found`
-                : "No properties found yet"}
-            </p>
-          </div>
-
-          {/* Grid or empty state */}
-          {cards.length > 0 ? (
-            <PropertyGrid variant="standard">
-              {cards.map((card) => (
-                <PropertyCard key={card.id} {...card} />
-              ))}
-            </PropertyGrid>
-          ) : (
-            <div className="flex flex-col items-center justify-center py-24 text-center">
-              <span className="text-[48px] mb-4">🏠</span>
-              <p className="text-[18px] font-semibold text-text mb-2">
-                No properties {label.toLowerCase()} in {cityName}
-              </p>
-              <p className="text-[15px] text-text2 max-w-[380px]">
-                We&apos;re adding new properties all the time. Check back soon
-                or explore another city.
-              </p>
-            </div>
-          )}
-        </section>
-      </div>
-
-      <Footer />
-    </>
+    <CategoryPageShell
+      category={category}
+      place={cityName}
+      heading={categoryHeading(category, cityName)}
+      crumbs={[
+        { name: "Home", path: "/" },
+        { name: "Real Estate", path: "/real-estate" },
+        { name: CATEGORY_LABELS[category], path: categoryPath(category) },
+        { name: cityName },
+      ]}
+      canonicalPath={categoryCityPath(category, city)}
+      cards={cards}
+      showCityFilter={false}
+      rails={[
+        {
+          title: `Other property in ${cityName}`,
+          links: otherCategories,
+        },
+        {
+          title: "Browse all of Kenya",
+          links: PROPERTY_CATEGORIES.map((c) => ({
+            label: categoryHeading(c),
+            href: categoryPath(c),
+          })),
+        },
+      ]}
+    />
   );
 }

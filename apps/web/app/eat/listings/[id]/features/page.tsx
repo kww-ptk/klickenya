@@ -102,6 +102,7 @@ export default async function EatFeaturesPage({
   function toggleColumnFor(featureId: string): string | null {
     switch (featureId) {
       case "table_ordering": return "table_ordering";
+      case "takeaway":       return "takeaway_enabled";
       case "reservations":   return "reservations_enabled";
       case "klickenya_kitchen": return "stock_enabled";
       default: return null;
@@ -110,6 +111,7 @@ export default async function EatFeaturesPage({
   function configureHrefFor(featureId: string): string | null {
     switch (featureId) {
       case "table_ordering": return `/eat/listings/${id}/orders`;
+      case "takeaway":       return `/eat/listings/${id}/orders`;
       case "reservations":   return `/eat/listings/${id}/reservations`;
       case "klickenya_kitchen": return `/eat/listings/${id}/kitchen`;
       default: return null;
@@ -160,6 +162,7 @@ export default async function EatFeaturesPage({
             if (!menu) return false;
             switch (feature.id) {
               case "table_ordering": return menu.table_ordering ?? false;
+              case "takeaway": return menu.takeaway_enabled ?? false;
               case "reservations": return menu.reservations_enabled ?? false;
               case "klickenya_kitchen": return menu.stock_enabled ?? false;
               default: return false;

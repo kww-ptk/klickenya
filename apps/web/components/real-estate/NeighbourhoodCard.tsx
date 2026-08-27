@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { neighbourhoodPath } from "@/lib/real-estate/constants";
 
 interface NeighbourhoodCardProps {
   name: string;
@@ -7,7 +8,8 @@ interface NeighbourhoodCardProps {
   city: string;
   tagline?: string;
   avgPrice?: number;
-  listingsCount?: number;
+  /** Live properties whose `neighbourhood` matches this document. */
+  propertyCount?: number;
   imageUrl?: string;
 }
 
@@ -25,16 +27,16 @@ function NeighbourhoodCard({
   city,
   tagline,
   avgPrice,
-  listingsCount,
+  propertyCount,
   imageUrl,
 }: NeighbourhoodCardProps) {
   return (
     <Link
-      href={`/real-estate/neighbourhood/${slug}`}
+      href={neighbourhoodPath(slug)}
       className="relative rounded-[22px] overflow-hidden cursor-pointer aspect-[3/4] group block"
     >
       {/* Image */}
-      {imageUrl && (
+      {imageUrl ? (
         <Image
           src={imageUrl}
           alt={name}
@@ -42,6 +44,8 @@ function NeighbourhoodCard({
           className="object-cover transition-transform duration-600 group-hover:scale-[1.06]"
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
         />
+      ) : (
+        <div className="absolute inset-0 bg-gradient-to-br from-purple2/70 to-dark" />
       )}
 
       {/* Overlay */}
@@ -69,9 +73,9 @@ function NeighbourhoodCard({
 
         {/* Stats pills */}
         <div className="flex gap-2.5">
-          {listingsCount != null && listingsCount > 0 && (
+          {propertyCount != null && propertyCount > 0 && (
             <span className="px-2.5 py-1 rounded-full bg-white/12 backdrop-blur-[8px] text-[11px] font-semibold text-white/80">
-              {listingsCount} listings
+              {propertyCount} {propertyCount === 1 ? "listing" : "listings"}
             </span>
           )}
           {avgPrice != null && avgPrice > 0 && (

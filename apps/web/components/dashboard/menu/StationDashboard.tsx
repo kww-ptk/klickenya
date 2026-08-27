@@ -2,6 +2,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { pickupWaMeLink } from "@/lib/orders/takeaway";
 
 /* ── Types ─────────────────────────────────────────── */
 
@@ -28,8 +29,11 @@ interface OrderItem {
 export interface DashboardOrder {
   id: string;
   status: string;
+  order_type?: "dine_in" | "takeaway" | "delivery";
   table_number: string | null;
   customer_name: string | null;
+  customer_phone?: string | null;
+  estimated_ready_at?: string | null;
   notes?: string | null;
   total_kes: number | null;
   created_at: string;
@@ -130,10 +134,11 @@ interface CardProps {
   updating: boolean;
   onAdvance: (items: OrderItem[], nextStatus: string) => void;
   onCancel: (orderId: string, tableNumber: string | null, shortId: string) => void;
+  onAcceptTakeaway: (order: DashboardOrder, items: OrderItem[], minutes: number) => void;
   tick: number;
 }
 
-function OrderCard({ order, items, status, isNew, updating, onAdvance, onCancel, tick }: CardProps) {
+function OrderCard({ order, items, status, isNew, updating, onAdvance, onCancel, onAcceptTakeaway, tick }: CardProps) {
   const action = STATUS_NEXT[status];
   const shortId = order.id.slice(0, 8).toUpperCase();
   const lineTotalSum = items.reduce((s, i) => s + (i.line_total ?? 0), 0);
@@ -154,12 +159,33 @@ function OrderCard({ order, items, status, isNew, updating, onAdvance, onCancel,
       {/* Table number + status badge */}
       <div className="flex items-start justify-between mb-3">
         <div>
-          <p className="text-[11px] font-bold text-text3 uppercase tracking-widest mb-0.5">Table</p>
-          <p className="font-display text-[36px] font-extrabold text-dark leading-none tracking-tight">
-            {order.table_number ?? "—"}
-          </p>
-          {order.customer_name && (
-            <p className="text-[13px] text-text2 mt-0.5">{order.customer_name}</p>
+          {order.order_type === "takeaway" ? (
+            <>
+              <p className="text-[11px] font-bold text-amber uppercase tracking-widest mb-0.5">
+                🛍 Takeaway
+              </p>
+              <p className="font-display text-[22px] font-extrabold text-dark leading-tight tracking-tight">
+                {order.customer_name ?? "Guest"}
+              </p>
+              {order.customer_phone && (
+                <a
+                  href={`tel:${order.customer_phone}`}
+                  className="text-[13px] text-text2 mt-0.5 underline decoration-border underline-offset-2"
+                >
+                  {order.customer_phone}
+                </a>
+              )}
+            </>
+          ) : (
+            <>
+              <p className="text-[11px] font-bold text-text3 uppercase tracking-widest mb-0.5">Table</p>
+              <p className="font-display text-[36px] font-extrabold text-dark leading-none tracking-tight">
+                {order.table_number ?? "—"}
+              </p>
+              {order.customer_name && (
+                <p className="text-[13px] text-text2 mt-0.5">{order.customer_name}</p>
+              )}
+            </>
           )}
           {order.waiter_name && (
             <p className="text-[11px] text-text3 mt-0.5">via {order.waiter_name}</p>
@@ -283,22 +309,57 @@ function OrderCard({ order, items, status, isNew, updating, onAdvance, onCancel,
         <span className="text-[12px] text-text3" suppressHydrationWarning>
           {tick >= 0 ? elapsed(order.created_at) : ""}
         </span>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => onCancel(order.id, order.table_number, shortId)}
-            disabled={updating}
-            className="text-[11px] font-semibold text-text3 hover:text-[#DC2626] border border-border hover:border-[#DC2626]/40 px-3 h-[30px] rounded-full transition-colors disabled:opacity-50"
-          >
-            Cancel
-          </button>
-          {action && (
-            <button
-              onClick={() => onAdvance(items, action.next)}
-              disabled={updating}
-              className={`text-[12px] font-bold px-4 h-[34px] rounded-full transition-colors disabled:opacity-50 ${action.color}`}
-            >
-              {updating ? "…" : action.label}
-            </button>
+        <div className="flex items-center gap-2 flex-wrap justify-end">
+          {order.order_type === "takeaway" && status === "new" ? (
+            <>
+              <button
+                onClick={() => onCancel(order.id, order.table_number, shortId)}
+                disabled={updating}
+                className="text-[11px] font-semibold text-text3 hover:text-[#DC2626] border border-border hover:border-[#DC2626]/40 px-3 h-[30px] rounded-full transition-colors disabled:opacity-50"
+              >
+                Decline
+              </button>
+              <span className="text-[11px] font-bold text-text3 uppercase">Accept:</span>
+              {[15, 30, 45].map((mins) => (
+                <button
+                  key={mins}
+                  onClick={() => onAcceptTakeaway(order, items, mins)}
+                  disabled={updating}
+                  className="text-[12px] font-bold px-3 h-[34px] rounded-full bg-amber text-dark hover:bg-[#d4911c] transition-colors disabled:opacity-50"
+                >
+                  {mins}m
+                </button>
+              ))}
+            </>
+          ) : (
+            <>
+              {order.order_type === "takeaway" && status === "ready" && order.customer_phone && (
+                <a
+                  href={pickupWaMeLink(order.customer_phone, order.customer_name, shortId)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[11px] font-semibold text-emerald-700 border border-emerald-300 hover:bg-emerald-50 px-3 h-[30px] rounded-full transition-colors inline-flex items-center"
+                >
+                  WhatsApp
+                </a>
+              )}
+              <button
+                onClick={() => onCancel(order.id, order.table_number, shortId)}
+                disabled={updating}
+                className="text-[11px] font-semibold text-text3 hover:text-[#DC2626] border border-border hover:border-[#DC2626]/40 px-3 h-[30px] rounded-full transition-colors disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              {action && (
+                <button
+                  onClick={() => onAdvance(items, action.next)}
+                  disabled={updating}
+                  className={`text-[12px] font-bold px-4 h-[34px] rounded-full transition-colors disabled:opacity-50 ${action.color}`}
+                >
+                  {updating ? "…" : action.label}
+                </button>
+              )}
+            </>
           )}
         </div>
       </div>
@@ -462,12 +523,67 @@ export function StationDashboard({ menuId, station, initialOrders }: Props) {
     [],
   );
 
-  /* ── Cancel whole order ── */
+  /* ── Accept a takeaway order: order-level PATCH stamps accepted_at +
+   * estimated_ready_at and cascades items to preparing server-side.
+   * Optimistic locally; the next poll confirms. ── */
+  const handleAcceptTakeaway = useCallback(
+    async (order: DashboardOrder, items: OrderItem[], minutes: number) => {
+      const cardKey = items.map((i) => i.id).join(",");
+      const snapshot = ordersRef.current;
+
+      const optimistic = snapshot.map((o) =>
+        o.id === order.id
+          ? {
+              ...o,
+              status: "preparing",
+              order_items: (o.order_items ?? []).map((it) =>
+                it.station_status === "new"
+                  ? { ...it, station_status: "preparing" as OrderItem["station_status"] }
+                  : it,
+              ),
+            }
+          : o,
+      );
+      ordersRef.current = optimistic;
+      setOrders(optimistic);
+
+      setUpdatingKeys((p) => new Set(p).add(cardKey));
+      try {
+        const res = await fetch("/api/menu/orders", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            order_id: order.id,
+            status: "preparing",
+            estimated_ready_minutes: minutes,
+          }),
+        });
+        if (!res.ok) {
+          console.warn("[StationDashboard] takeaway accept failed:", res.status);
+          ordersRef.current = snapshot;
+          setOrders(snapshot);
+        }
+      } catch (e) {
+        console.warn("[StationDashboard] takeaway accept error:", e);
+        ordersRef.current = snapshot;
+        setOrders(snapshot);
+      } finally {
+        setUpdatingKeys((p) => {
+          const n = new Set(p);
+          n.delete(cardKey);
+          return n;
+        });
+      }
+    },
+    [],
+  );
+
+  /* ── Cancel whole order (doubles as takeaway Decline) ── */
   const handleCancel = useCallback(
     async (orderId: string, tableNumber: string | null, shortId: string) => {
-      const label = tableNumber ? `table ${tableNumber}` : `order #${shortId}`;
-      if (!window.confirm(`Cancel order #${shortId} for ${label}?`)) return;
-      const reason = window.prompt("Why are you cancelling? (manager will be notified)") ?? "";
+      const label = tableNumber ? `table ${tableNumber}` : `takeaway #${shortId}`;
+      if (!window.confirm(`Cancel order #${shortId} (${label})?`)) return;
+      const reason = window.prompt("Reason (shown to the guest for takeaway orders)") ?? "";
       if (!reason.trim()) return;
 
       setUpdatingKeys((p) => new Set(p).add(`cancel:${orderId}`));
@@ -553,6 +669,7 @@ export function StationDashboard({ menuId, station, initialOrders }: Props) {
                 updating={updatingKeys.has(b.items.map((i) => i.id).join(",")) || updatingKeys.has(`cancel:${b.order.id}`)}
                 onAdvance={handleAdvance}
                 onCancel={handleCancel}
+                onAcceptTakeaway={handleAcceptTakeaway}
                 tick={tick}
               />
             ))}
@@ -574,6 +691,7 @@ export function StationDashboard({ menuId, station, initialOrders }: Props) {
                 updating={updatingKeys.has(b.items.map((i) => i.id).join(",")) || updatingKeys.has(`cancel:${b.order.id}`)}
                 onAdvance={handleAdvance}
                 onCancel={handleCancel}
+                onAcceptTakeaway={handleAcceptTakeaway}
                 tick={tick}
               />
             ))}
@@ -595,6 +713,7 @@ export function StationDashboard({ menuId, station, initialOrders }: Props) {
                 updating={updatingKeys.has(b.items.map((i) => i.id).join(",")) || updatingKeys.has(`cancel:${b.order.id}`)}
                 onAdvance={handleAdvance}
                 onCancel={handleCancel}
+                onAcceptTakeaway={handleAcceptTakeaway}
                 tick={tick}
               />
             ))}

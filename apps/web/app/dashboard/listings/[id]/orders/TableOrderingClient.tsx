@@ -17,6 +17,7 @@ interface Props {
   menuName:  string;
   menuSlug:  string;
   initialTableOrdering: boolean;
+  initialTakeawayEnabled: boolean;
   areas:     AreaOption[];
   initialTables: InitialTable[];
   /**
@@ -44,6 +45,7 @@ function Inner({
   menuName,
   menuSlug,
   initialTableOrdering,
+  initialTakeawayEnabled,
   areas,
   initialTables,
   mode = "full",
@@ -52,6 +54,8 @@ function Inner({
   const { showToast } = useToast();
   const [enabled, setEnabled] = useState(initialTableOrdering);
   const [toggling, setToggling] = useState(false);
+  const [takeaway, setTakeaway] = useState(initialTakeawayEnabled);
+  const [togglingTakeaway, setTogglingTakeaway] = useState(false);
 
   // Same toggle endpoint the menu builder's Publish panel uses, so behaviour
   // (warnings about open orders etc) stays consistent.
@@ -84,6 +88,28 @@ function Inner({
       showToast("Failed to update table ordering setting", "error");
     } finally {
       setToggling(false);
+    }
+  }
+
+  async function toggleTakeaway() {
+    const next = !takeaway;
+    if (!next && !confirm("Disable takeaway? Guests will no longer be able to order for pickup.")) {
+      return;
+    }
+    setTogglingTakeaway(true);
+    try {
+      const res = await fetch("/api/menu/settings", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ menu_id: menuId, takeaway_enabled: next }),
+      });
+      if (!res.ok) throw new Error();
+      showToast(next ? "Takeaway ordering enabled" : "Takeaway ordering disabled");
+      setTakeaway(next);
+    } catch {
+      showToast("Failed to update takeaway setting", "error");
+    } finally {
+      setTogglingTakeaway(false);
     }
   }
 
@@ -144,6 +170,21 @@ function Inner({
             </p>
           </div>
         )}
+      </div>
+
+      {/* Takeaway toggle card */}
+      <div className="bg-white rounded-2xl border border-border shadow-sm p-5">
+        <div className="flex items-center justify-between gap-4 flex-wrap">
+          <div>
+            <p className="text-[14px] font-bold text-dark">Takeaway orders</p>
+            <p className="text-[12px] text-text3 mt-0.5 max-w-[480px]">
+              {takeaway
+                ? "Active — guests can order for pickup from your public menu. Accept each order from the kitchen view."
+                : "Off. Turn it on to let guests order ahead and collect at the counter."}
+            </p>
+          </div>
+          <Toggle checked={takeaway} onChange={toggleTakeaway} disabled={togglingTakeaway} />
+        </div>
       </div>
 
       {/* Tables — switch between list (CRUD) and floor map (positions) */}

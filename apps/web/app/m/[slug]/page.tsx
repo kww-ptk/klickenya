@@ -16,6 +16,7 @@ export const revalidate = 60;
 // Extends MenuData with flags used only by this page
 type MenuWithOrdering = MenuData & {
   table_ordering: boolean;
+  takeaway_enabled: boolean;
   reservations_enabled: boolean;
   default_reservation_duration: number;
   reservations_lead_time_hours: number;
@@ -37,7 +38,7 @@ async function getMenu(slug: string): Promise<{
     .from("menus")
     .select(
       `
-      id, name, is_published, table_ordering,
+      id, name, is_published, table_ordering, takeaway_enabled,
       reservations_enabled, default_reservation_duration,
       reservations_lead_time_hours, reservations_max_party_size,
       reservations_max_advance_days, listing_slug, business_id,
@@ -201,7 +202,7 @@ export default async function MenuPage({ params, searchParams }: PageProps) {
         </h1>
 
         {/* Right-side action buttons */}
-        {(menu.table_ordering || showBookButton) && (
+        {(menu.table_ordering || menu.takeaway_enabled || showBookButton) && (
           <div className="absolute right-4 top-1/2 -translate-y-1/2 flex flex-col items-end gap-1.5">
             {showBookButton && (
               <ReservationSheet
@@ -224,24 +225,27 @@ export default async function MenuPage({ params, searchParams }: PageProps) {
       </header>
 
       {/*
-        Conditional rendering based on table_ordering flag:
-        - table_ordering = false → read-only browse (MenuWithFilters, unchanged)
-        - table_ordering = true  → cart-enabled browse (MenuWithCart)
+        Conditional rendering based on the ordering flags:
+        - neither table_ordering nor takeaway_enabled → read-only browse (MenuWithFilters)
+        - either enabled → cart-enabled browse (MenuWithCart)
         The browse UI is identical in both cases; MenuWithCart layers cart controls on top.
       */}
-      {menu.table_ordering ? (
+      {menu.table_ordering || menu.takeaway_enabled ? (
         <MenuWithCart
           sections={sections}
           menuId={menu.id}
+          menuSlug={slug}
           initialTable={prefilledTable}
           tables={tables}
+          tableOrdering={menu.table_ordering ?? false}
+          takeawayEnabled={menu.takeaway_enabled ?? false}
         />
       ) : (
         <MenuWithFilters sections={sections} />
       )}
 
       {/* Powered by — only shown in read-only mode; cart mode has its own footer */}
-      {!menu.table_ordering && (
+      {!(menu.table_ordering || menu.takeaway_enabled) && (
         <div className="text-center pb-6">
           <Link
             href="https://klickenya.com"

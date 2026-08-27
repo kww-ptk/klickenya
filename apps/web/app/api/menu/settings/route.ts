@@ -73,6 +73,7 @@ export async function PATCH(req: NextRequest) {
     const {
       menu_id,
       table_ordering,
+      takeaway_enabled,
       reservations_enabled,
       default_reservation_duration,
       reservations_lead_time_hours,
@@ -108,6 +109,9 @@ export async function PATCH(req: NextRequest) {
 
     if (typeof table_ordering === "boolean") {
       updates.table_ordering = table_ordering;
+    }
+    if (typeof takeaway_enabled === "boolean") {
+      updates.takeaway_enabled = takeaway_enabled;
     }
     if (typeof reservations_enabled === "boolean") {
       updates.reservations_enabled = reservations_enabled;
