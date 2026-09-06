@@ -25,7 +25,10 @@ type ContactRequest = {
 type PropertyEnquiry = {
   id: string;
   property_title?: string;
-  full_name: string;
+  // `name` on property_enquiries, not `full_name`. contact_requests above is
+  // the one that uses full_name; this select was reading the wrong column and
+  // asking for property_title, which did not exist until migration 085.
+  name: string;
   phone: string;
   created_at: string;
   status: string;
@@ -157,7 +160,7 @@ export default async function AdminDashboardPage() {
     // Supabase: recent 5 property enquiries
     adminClient
       .from("property_enquiries")
-      .select("id, property_title, full_name, phone, created_at, status")
+      .select("id, property_title, name, phone, created_at, status")
       .order("created_at", { ascending: false })
       .limit(5)
       .then(({ data }) => (data ?? []) as PropertyEnquiry[]),
@@ -483,7 +486,7 @@ export default async function AdminDashboardPage() {
                       {enq.property_title ?? "Property enquiry"}
                     </p>
                     <p className="mt-0.5 text-[13px] text-text3">
-                      {enq.full_name} &middot; {enq.phone}
+                      {enq.name} &middot; {enq.phone}
                     </p>
                   </div>
                   <div className="ml-4 flex shrink-0 items-center gap-3">
