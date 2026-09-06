@@ -22,14 +22,26 @@ type ContactRequestInsert = {
   message?: string;
 };
 
+/**
+ * Mirrors property_enquiries after migration 085.
+ *
+ * This type still said `full_name` and required `agent_id` long after the
+ * enquiry route, the admin surface and packages/shared/types had moved to
+ * `name`. It described the table as it was created in 001, which is the shape
+ * that made every submission fail.
+ *
+ * property_id and agent_id are Sanity document ids, not Supabase row ids.
+ */
 type PropertyEnquiryInsert = {
   property_id: string;
-  agent_id: string;
-  full_name: string;
+  property_title: string;
+  agent_id?: string;
+  name: string;
   email: string;
   phone?: string;
   message?: string;
   enquiry_type?: string;
+  mortgage_interest?: boolean;
 };
 
 type ContactStatus = "new" | "responded" | "converted" | "closed";
