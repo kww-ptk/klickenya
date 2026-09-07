@@ -6,6 +6,7 @@ import { sanityClient } from "@/lib/sanity/client";
 import { getAuthUser, getUserProfile, getHostProfile } from "./_lib/auth";
 import { getMenusForOwner } from "@/lib/cache/menu";
 import { getConsentByListingId } from "@/lib/admin/listingConsent";
+import { StartReservationsCard } from "./StartReservationsCard";
 
 export default async function DashboardPage() {
   const { user, supabase } = await getAuthUser();
@@ -225,6 +226,36 @@ export default async function DashboardPage() {
     (l) => !claimedListingIds.has(l._id)
   );
 
+  /* Restaurant onboarding step 2. Once every listing is fully claimed, the next
+     thing a restaurant host needs is reservations switched on. That flag lives
+     on the `menus` row rather than the listing, and getMenusForOwner does not
+     project it, so query it directly rather than widening a cached helper that
+     other pages depend on. */
+  let reservationsSetup:
+    | { listingId: string; title: string; menuId: string; city: string | null }
+    | null = null;
+
+  if (restaurantSlugs.length > 0 && listingsNeedingClaim.length === 0) {
+    const { data: menuRows } = await adminClient
+      .from("menus")
+      .select("id, listing_slug, reservations_enabled")
+      .eq("business_id", user.id)
+      .in("listing_slug", restaurantSlugs);
+
+    const pending = (menuRows ?? []).find((m) => m.reservations_enabled !== true);
+    if (pending) {
+      const match = restaurantListings.find((l) => l.slug === pending.listing_slug);
+      if (match) {
+        reservationsSetup = {
+          listingId: match._id,
+          title: match.title,
+          menuId: pending.id,
+          city: match.city,
+        };
+      }
+    }
+  }
+
   const firstName = (hostProfile?.display_name ?? profile?.full_name ?? "Host").split(/\s+/)[0];
   const verifiedCount = listings.filter((l) => l.isVerified).length;
   const totalAttendees = events.reduce((sum, e) => sum + e.attendees, 0);
@@ -285,28 +316,13 @@ export default async function DashboardPage() {
         ))}
       </div>
 
-      {/* Menu banner for restaurant owners */}
-      {unpublishedMenuSlug && (
-        <div className="mb-5 rounded-xl lg:rounded-2xl border border-amber/20 bg-amber/[0.06] p-4 shadow-sm" style={{ borderLeft: "4px solid #E8A020" }}>
-          <div className="flex items-center gap-3">
-            <span className="text-[24px] shrink-0">🍽️</span>
-            <div className="flex-1 min-w-0">
-              <p className="text-[13px] font-bold text-dark">
-                Your digital menu isn&apos;t live yet
-              </p>
-              <p className="text-[12.5px] text-text2 mt-0.5">
-                Add your menu and print a QR code for your tables.
-              </p>
-            </div>
-            <Link
-              href="/dashboard/menus"
-              className="shrink-0 bg-amber text-dark font-bold text-[12px] px-4 h-[36px] flex items-center rounded-full hover:bg-[#d4911c] transition-colors whitespace-nowrap"
-            >
-              Set up your digital menu →
-            </Link>
-          </div>
-        </div>
-      )}
+      {/* ── Restaurant onboarding ladder ──────────────────────────────
+          One step at a time, in the order a new host actually needs them:
+            1. fully claim the listing
+            2. start receiving reservations
+            3. digital menu
+          Previously all three showed at once and the digital menu banner
+          came first, which is the noise this replaces. */}
 
       {/* Fully-claim prompt — assigned listings without a completed consent form */}
       {listingsNeedingClaim.length > 0 && (
@@ -335,6 +351,45 @@ export default async function DashboardPage() {
                 </Link>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* Onboarding step 2 — only once nothing is left to claim */}
+      {reservationsSetup && (
+        <StartReservationsCard
+          menuId={reservationsSetup.menuId}
+          listingId={reservationsSetup.listingId}
+          title={reservationsSetup.title}
+          listingCity={reservationsSetup.city}
+        />
+      )}
+
+      {/* Menu banner — deliberately the LAST onboarding step.
+          A menus row is auto-created with is_published:false on assign and on
+          claim verify, so this used to fire for every brand new restaurant host
+          before they had claimed anything. It now waits until the listing is
+          fully claimed and reservations are running. */}
+      {unpublishedMenuSlug &&
+        listingsNeedingClaim.length === 0 &&
+        !reservationsSetup && (
+        <div className="mb-5 rounded-xl lg:rounded-2xl border border-amber/20 bg-amber/[0.06] p-4 shadow-sm" style={{ borderLeft: "4px solid #E8A020" }}>
+          <div className="flex items-center gap-3">
+            <span className="text-[24px] shrink-0">🍽️</span>
+            <div className="flex-1 min-w-0">
+              <p className="text-[13px] font-bold text-dark">
+                Your digital menu isn&apos;t live yet
+              </p>
+              <p className="text-[12.5px] text-text2 mt-0.5">
+                Add your menu and print a QR code for your tables.
+              </p>
+            </div>
+            <Link
+              href="/dashboard/menus"
+              className="shrink-0 bg-amber text-dark font-bold text-[12px] px-4 h-[36px] flex items-center rounded-full hover:bg-[#d4911c] transition-colors whitespace-nowrap"
+            >
+              Set up your digital menu →
+            </Link>
           </div>
         </div>
       )}
