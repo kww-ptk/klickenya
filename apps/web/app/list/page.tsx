@@ -3,7 +3,7 @@ import ListingForm from "@/components/list/ListingForm";
 import BackButton from "./BackButton";
 
 export const metadata: Metadata = {
-  title: "List Your Business | Klickenya",
+  title: "List Your Business",
   description:
     "Add your business to Klickenya — Kenya's fastest-growing marketplace. Takes less than 5 minutes.",
 };
