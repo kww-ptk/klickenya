@@ -5,7 +5,7 @@ import { Footer } from "@/components/shared/Footer";
 import { UpgradeButton } from "./UpgradeButton";
 
 export const metadata = {
-  title: "Become a Host | Klickenya",
+  title: "Become a Host",
   description: "Join the community putting Kenya on the map. List your villa, restaurant, safari or event — and connect with travellers who are actually looking for you.",
 };
 
