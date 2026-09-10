@@ -356,6 +356,7 @@ export const BLOG_POST_BY_SLUG_QUERY = groq`
     focusKeyword,
     readingTime,
     publishedAt,
+    _updatedAt,
     seoTitle,
     seoDescription,
     "coverImage": coverImage{ ${IMAGE_FIELDS} },
