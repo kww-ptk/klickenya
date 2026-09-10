@@ -131,7 +131,10 @@ export default async function BlogPostPage({
     description: post.seoDescription || post.excerpt,
     image: heroImageUrl,
     datePublished: post.publishedAt,
-    dateModified: post.publishedAt,
+    // Sanity stamps _updatedAt on every write, so a content edit signals
+    // freshness to Google without anyone having to move publishedAt (which
+    // would wrongly reset the original publication date).
+    dateModified: post._updatedAt ?? post.publishedAt,
     author: {
       "@type": "Person",
       name: post.author?.name || "Klickenya",
