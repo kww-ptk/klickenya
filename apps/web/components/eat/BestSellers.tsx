@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { BadgeCheck, CalendarCheck } from "lucide-react";
+import { BadgeCheck, CalendarCheck, UtensilsCrossed } from "lucide-react";
 import { isOpenNow } from "@/lib/listings/openingHours";
 
 export type BestSeller = {
@@ -35,28 +35,35 @@ export type BestSeller = {
  */
 export function BestSellers({ items }: { items: BestSeller[] }) {
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-4 gap-y-7">
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-x-3.5 gap-y-6">
       {items.map((d, i) => {
         const open = isOpenNow(d.openingHours);
         return (
           <article key={`${d.menuSlug}-${d.name}-${i}`} className="group">
             <Link href={`/m/${d.menuSlug}`} className="block">
-              <div className="relative aspect-[4/3] rounded-[18px] overflow-hidden bg-surface2">
+              <div className="relative aspect-[4/3] rounded-[14px] overflow-hidden bg-surface2">
                 {d.photo ? (
                   <Image
                     src={d.photo}
                     alt=""
                     fill
-                    sizes="(max-width: 640px) 50vw, (max-width: 1280px) 33vw, 300px"
+                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, (max-width: 1280px) 25vw, 200px"
                     className={`object-cover transition-transform duration-300 group-hover:scale-[1.03] ${
                       open === false ? "grayscale opacity-75" : ""
                     }`}
                   />
-                ) : null}
+                ) : (
+                  // No photo — usually a menu whose listing_slug does not match
+                  // a Sanity listing. A warm field reads as intentional; an
+                  // empty grey box reads as broken.
+                  <span className="absolute inset-0 flex items-center justify-center bg-amber-dim">
+                    <UtensilsCrossed className="size-6 text-amber-700/40" />
+                  </span>
+                )}
 
                 {open !== null && (
                   <span
-                    className={`absolute top-2.5 left-2.5 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-extrabold ${
+                    className={`absolute top-2 left-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold ${
                       open ? "bg-white text-green" : "bg-dark/85 text-white"
                     }`}
                   >
@@ -70,7 +77,7 @@ export function BestSellers({ items }: { items: BestSeller[] }) {
                 )}
 
                 {d.canBook && (
-                  <span className="absolute bottom-2.5 left-2.5 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/95 text-dark text-[11px] font-extrabold">
+                  <span className="absolute bottom-2 left-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/95 text-dark text-[10px] font-extrabold">
                     <CalendarCheck className="size-3" />
                     Takes bookings
                   </span>
@@ -78,14 +85,14 @@ export function BestSellers({ items }: { items: BestSeller[] }) {
               </div>
             </Link>
 
-            <div className="pt-3">
+            <div className="pt-2.5">
               <Link href={`/m/${d.menuSlug}`}>
-                <h3 className="font-display text-[16px] font-extrabold text-text leading-[1.25] tracking-[-0.015em] group-hover:text-amber-700 transition-colors">
+                <h3 className="font-display text-[14px] font-extrabold text-text leading-[1.25] tracking-[-0.015em] group-hover:text-amber-700 transition-colors line-clamp-2">
                   {d.name}
                 </h3>
               </Link>
 
-              <p className="flex items-center gap-1 text-[12.5px] text-text2 mt-0.5 truncate">
+              <p className="flex items-center gap-1 text-[11.5px] text-text2 mt-0.5 truncate">
                 <span className="truncate">{d.restaurant}</span>
                 {d.isVerified && (
                   <BadgeCheck
@@ -95,7 +102,7 @@ export function BestSellers({ items }: { items: BestSeller[] }) {
                 )}
               </p>
 
-              <p className="font-display text-[17px] font-extrabold text-amber-700 mt-1.5 tabular-nums">
+              <p className="font-display text-[14.5px] font-extrabold text-amber-700 mt-1 tabular-nums">
                 KSh {d.priceKes.toLocaleString()}
               </p>
             </div>
