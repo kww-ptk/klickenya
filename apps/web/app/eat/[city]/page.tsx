@@ -5,6 +5,7 @@ import { ArrowRight, BookOpen, UtensilsCrossed } from "lucide-react";
 import { sanityFetch } from "@/lib/sanity/client";
 import { EAT_RESTAURANTS_QUERY, CITY_GUIDES_QUERY } from "@/lib/sanity/queries";
 import { urlForImage } from "@/lib/sanity/image";
+import { getMenuCapabilities } from "@/lib/eat/menus";
 import { Nav } from "@/components/shared/Nav";
 import { Footer } from "@/components/shared/Footer";
 import { JsonLd } from "@/components/seo/JsonLd";
@@ -81,33 +82,30 @@ export async function generateStaticParams() {
   return [...cities].map((city) => ({ city }));
 }
 
-function toCard(listing: EatListing): EatCityCard {
+function toCard(
+  listing: EatListing,
+  caps: Map<string, { menuSlug: string; canOrder: boolean; canBook: boolean; canDeliver: boolean }>,
+): EatCityCard {
   const citySlug = toSlug(listing.city ?? "");
   const slug =
     typeof listing.slug === "string" ? listing.slug : (listing.slug?.current ?? "");
-  const photoUrl = listing.coverPhoto
-    ? urlForImage(listing.coverPhoto).width(800).url()
-    : "";
+  const cap = caps.get(slug);
 
   return {
     id: listing._id,
-    title: listing.title ?? "Untitled",
+    name: listing.title ?? "Untitled",
     city: listing.city ?? "",
-    price: listing.price ?? null,
-    priceUnit: listing.priceUnit ?? "person",
+    cuisine: listing.cuisine ?? [],
     priceRange: listing.priceRange,
     rating: listing.avgRating,
     reviewCount: listing.reviewCount,
-    type: "restaurant",
-    subcategory: listing.subcategory,
+    photo: listing.coverPhoto ? urlForImage(listing.coverPhoto).width(800).url() : "",
     openingHours: listing.openingHours,
-    isVerified: listing.isVerified ?? false,
-    hostName: listing.hostRef?.name ?? listing.hostName,
-    hostPhotoUrl: listing.hostRef?.photo?.asset?.url,
-    hostSlug: listing.hostRef?.slug,
-    photos: photoUrl ? [photoUrl] : [],
     href: `/restaurants/${citySlug}/${slug}`,
-    cuisine: listing.cuisine ?? [],
+    orderHref: cap?.canOrder && cap.menuSlug ? `/m/${cap.menuSlug}` : undefined,
+    canOrder: Boolean(cap?.canOrder && cap.menuSlug),
+    canBook: Boolean(cap?.canBook),
+    canDeliver: Boolean(cap?.canDeliver),
     priceRangeKey: listing.priceRange,
   };
 }
@@ -120,8 +118,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   // Distinct from /restaurants/[city] ("Restaurants in Watamu"), which targets
   // browsing intent. This page targets the "where should I eat" question.
-  const title = `Where to Eat in ${cityName}`;
-  const description = `Every restaurant in ${cityName}, Kenya — filter by cuisine, price and what's open right now, with menus and opening hours.`;
+  const title = `Food Delivery & Restaurant Ordering in ${cityName}`;
+  const description = `Order food online or book a table in ${cityName}, Kenya. Browse menus by cuisine and price, see what's open right now, and order direct from the restaurant.`;
 
   return {
     title,
@@ -153,7 +151,8 @@ export default async function EatCityPage({ params }: PageProps) {
     console.error("[/eat/[city]] guides fetch error:", err);
   }
 
-  const cards = inCity.map(toCard);
+  const caps = await getMenuCapabilities();
+  const cards = inCity.map((r) => toCard(r, caps));
   const cuisines = [...new Set(cards.flatMap((c) => c.cuisine).filter(Boolean))].sort();
   const priceRanges = ["budget", "mid-range", "fine-dining"].filter((p) =>
     cards.some((c) => c.priceRangeKey === p),
@@ -165,12 +164,12 @@ export default async function EatCityPage({ params }: PageProps) {
         schema={{
           "@context": "https://schema.org",
           "@type": "ItemList",
-          name: `Where to eat in ${cityName}`,
+          name: `Restaurants in ${cityName}`,
           numberOfItems: cards.length,
           itemListElement: cards.map((c, i) => ({
             "@type": "ListItem",
             position: i + 1,
-            name: c.title,
+            name: c.name,
             url: `https://klickenya.com${c.href}`,
           })),
         }}
@@ -203,14 +202,13 @@ export default async function EatCityPage({ params }: PageProps) {
           </div>
 
           <h1 className="font-display text-[clamp(38px,7vw,72px)] font-extrabold text-white uppercase tracking-[-0.045em] leading-[0.94] mb-5">
-            Where to eat
-            <br />
-            in {cityName}
+            Eat in {cityName}
           </h1>
           <p className="text-white/55 text-[16px] leading-[1.65] max-w-[620px]">
+            Order online straight from the kitchen, or book a table.
             {cuisines.length > 0
-              ? `${cuisines.slice(0, 4).join(", ")} and more — filter by what you feel like, what you want to spend, or what's open right now.`
-              : `Every restaurant we know in ${cityName}, with menus and opening hours.`}
+              ? ` ${cuisines.slice(0, 4).join(", ")} and more — filter by what you feel like, what you want to spend, or what's open right now.`
+              : ""}
           </p>
         </div>
       </header>

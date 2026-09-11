@@ -2,14 +2,11 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
-import { ChevronLeft, ChevronRight, Clock } from "lucide-react";
-import { ListingGrid } from "@/components/listings/ListingGrid";
-import type { ListingCardProps } from "@/components/listings/ListingCard";
+import { ChevronLeft, ChevronRight, Clock, ShoppingBag } from "lucide-react";
+import { FoodGrid, type FoodCardData } from "@/components/eat/FoodCard";
 import { isOpenNow } from "@/lib/listings/openingHours";
 
-export type EatCard = ListingCardProps & {
-  cuisine: string[];
-};
+export type EatCard = FoodCardData;
 
 export type CuisineTile = {
   name: string;
@@ -48,16 +45,18 @@ export function EatExplorer({
 }) {
   const [active, setActive] = useState<string | null>(null);
   const [openOnly, setOpenOnly] = useState(false);
+  const [orderOnly, setOrderOnly] = useState(false);
   const railRef = useRef<HTMLDivElement>(null);
 
   const filtered = useMemo(
     () =>
       cards.filter((c) => {
         if (active && !c.cuisine.includes(active)) return false;
+        if (orderOnly && !c.canOrder) return false;
         if (openOnly && isOpenNow(c.openingHours) !== true) return false;
         return true;
       }),
-    [cards, active, openOnly],
+    [cards, active, openOnly, orderOnly],
   );
 
   const [atStart, setAtStart] = useState(true);
@@ -217,17 +216,32 @@ export function EatExplorer({
             Open now
           </button>
 
+          <button
+            type="button"
+            onClick={() => setOrderOnly((v) => !v)}
+            aria-pressed={orderOnly}
+            className={`inline-flex items-center gap-1.5 px-4 py-2.5 rounded-full border text-[13px] font-bold transition-colors ${
+              orderOnly
+                ? "border-amber bg-amber text-dark"
+                : "border-border bg-white text-text2 hover:border-amber hover:text-text"
+            }`}
+          >
+            <ShoppingBag className="size-3.5" />
+            Order online
+          </button>
+
           <p className="text-text2 text-[14px] font-semibold" aria-live="polite">
             {filtered.length} {filtered.length === 1 ? "place" : "places"}
             {active ? ` · ${active}` : ""}
           </p>
 
-          {(active || openOnly) && (
+          {(active || openOnly || orderOnly) && (
             <button
               type="button"
               onClick={() => {
                 setActive(null);
                 setOpenOnly(false);
+                setOrderOnly(false);
               }}
               className="text-[13px] font-bold text-text3 hover:text-text underline underline-offset-4"
             >
@@ -237,7 +251,7 @@ export function EatExplorer({
         </div>
 
         {filtered.length > 0 ? (
-          <ListingGrid listings={filtered} columns={4} />
+          <FoodGrid items={filtered} />
         ) : (
           <div className="rounded-[22px] border border-border bg-surface px-6 py-14 text-center">
             <p className="text-text2 text-[15px]">

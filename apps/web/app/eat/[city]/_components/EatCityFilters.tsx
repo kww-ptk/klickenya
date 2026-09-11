@@ -1,15 +1,11 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Clock } from "lucide-react";
-import { ListingGrid } from "@/components/listings/ListingGrid";
-import type { ListingCardProps } from "@/components/listings/ListingCard";
+import { Clock, ShoppingBag } from "lucide-react";
+import { FoodGrid, type FoodCardData } from "@/components/eat/FoodCard";
 import { isOpenNow } from "@/lib/listings/openingHours";
 
-export type EatCityCard = ListingCardProps & {
-  cuisine: string[];
-  priceRangeKey?: string;
-};
+export type EatCityCard = FoodCardData & { priceRangeKey?: string };
 
 const PRICE_LABELS: Record<string, string> = {
   budget: "$ Budget",
@@ -39,15 +35,17 @@ export function EatCityFilters({
   const [cuisine, setCuisine] = useState<string | null>(null);
   const [price, setPrice] = useState<string | null>(null);
   const [openOnly, setOpenOnly] = useState(false);
+  const [orderOnly, setOrderOnly] = useState(false);
 
   const filtered = useMemo(() => {
     return cards.filter((c) => {
       if (cuisine && !c.cuisine.includes(cuisine)) return false;
       if (price && c.priceRangeKey !== price) return false;
+      if (orderOnly && !c.canOrder) return false;
       if (openOnly && isOpenNow(c.openingHours) !== true) return false;
       return true;
     });
-  }, [cards, cuisine, price, openOnly]);
+  }, [cards, cuisine, price, openOnly, orderOnly]);
 
   const chip =
     "px-3.5 py-2 rounded-full border text-[13px] font-semibold transition-colors";
@@ -65,6 +63,16 @@ export function EatCityFilters({
         >
           <Clock className="size-3.5" />
           Open now
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setOrderOnly((v) => !v)}
+          aria-pressed={orderOnly}
+          className={`${chip} ${orderOnly ? on : off} inline-flex items-center gap-1.5`}
+        >
+          <ShoppingBag className="size-3.5" />
+          Order online
         </button>
 
         {cuisines.map((c) => (
@@ -91,13 +99,14 @@ export function EatCityFilters({
           </button>
         ))}
 
-        {(cuisine || price || openOnly) && (
+        {(cuisine || price || openOnly || orderOnly) && (
           <button
             type="button"
             onClick={() => {
               setCuisine(null);
               setPrice(null);
               setOpenOnly(false);
+              setOrderOnly(false);
             }}
             className="text-[13px] font-semibold text-text3 hover:text-text underline underline-offset-4 ml-1"
           >
@@ -112,7 +121,7 @@ export function EatCityFilters({
       </p>
 
       {filtered.length > 0 ? (
-        <ListingGrid listings={filtered} columns={4} />
+        <FoodGrid items={filtered} />
       ) : (
         <div className="rounded-[22px] border border-border bg-surface px-6 py-14 text-center">
           <p className="text-text2 text-[15px]">

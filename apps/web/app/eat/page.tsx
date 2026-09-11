@@ -4,6 +4,7 @@ import { ArrowRight, MapPin, UtensilsCrossed, Sparkles } from "lucide-react";
 import { sanityFetch } from "@/lib/sanity/client";
 import { EAT_RESTAURANTS_QUERY } from "@/lib/sanity/queries";
 import { urlForImage } from "@/lib/sanity/image";
+import { getMenuCapabilities } from "@/lib/eat/menus";
 import { Nav } from "@/components/shared/Nav";
 import { Footer } from "@/components/shared/Footer";
 import { JsonLd } from "@/components/seo/JsonLd";
@@ -34,9 +35,9 @@ import {
 export const revalidate = 3600;
 
 export const metadata: Metadata = {
-  title: "Eat — Restaurants on the Kenya Coast",
+  title: "Food Delivery & Restaurant Ordering in Watamu & Kilifi",
   description:
-    "Find where to eat in Watamu, Kilifi and along the Kenyan coast. Filter by cuisine and what's open right now, then book a table.",
+    "Order food online or book a table in Watamu, Kilifi and across the Kenyan coast. Browse menus, see what's open now, and order direct from the restaurant. Food delivery coming to the coast.",
   alternates: { canonical: "/eat" },
 };
 
@@ -65,28 +66,29 @@ function photoOf(listing: EatListing, width: number): string {
   return listing.coverPhoto ? urlForImage(listing.coverPhoto).width(width).url() : "";
 }
 
-function toCard(listing: EatListing): EatCard {
+function toCard(
+  listing: EatListing,
+  caps: Map<string, { menuSlug: string; canOrder: boolean; canBook: boolean; canDeliver: boolean }>,
+): EatCard {
   const slug =
     typeof listing.slug === "string" ? listing.slug : (listing.slug?.current ?? "");
+  const cap = caps.get(slug);
+
   return {
     id: listing._id,
-    title: listing.title ?? "Untitled",
+    name: listing.title ?? "Untitled",
     city: listing.city ?? "",
-    price: listing.price ?? null,
-    priceUnit: listing.priceUnit ?? "person",
+    cuisine: listing.cuisine ?? [],
     priceRange: listing.priceRange,
     rating: listing.avgRating,
     reviewCount: listing.reviewCount,
-    type: "restaurant",
-    subcategory: listing.subcategory,
+    photo: photoOf(listing, 800),
     openingHours: listing.openingHours,
-    isVerified: listing.isVerified ?? false,
-    hostName: listing.hostRef?.name ?? listing.hostName,
-    hostPhotoUrl: listing.hostRef?.photo?.asset?.url,
-    hostSlug: listing.hostRef?.slug,
-    photos: [photoOf(listing, 800)].filter(Boolean),
     href: `/restaurants/${toSlug(listing.city ?? "")}/${slug}`,
-    cuisine: listing.cuisine ?? [],
+    orderHref: cap?.canOrder && cap.menuSlug ? `/m/${cap.menuSlug}` : undefined,
+    canOrder: Boolean(cap?.canOrder && cap.menuSlug),
+    canBook: Boolean(cap?.canBook),
+    canDeliver: Boolean(cap?.canDeliver),
   };
 }
 
@@ -100,7 +102,9 @@ export default async function EatPage() {
     console.error("[/eat] Sanity fetch error:", err);
   }
 
-  const cards = restaurants.map(toCard);
+  const caps = await getMenuCapabilities();
+  const cards = restaurants.map((r) => toCard(r, caps));
+  const orderableCount = cards.filter((c) => c.canOrder).length;
 
   // Cuisine tiles. The photo is background texture only (the tile renders it
   // desaturated behind a colour field), but two tiles showing the same image
@@ -148,7 +152,7 @@ export default async function EatPage() {
           itemListElement: cards.map((c, i) => ({
             "@type": "ListItem",
             position: i + 1,
-            name: c.title,
+            name: c.name,
             url: `https://klickenya.com${c.href}`,
           })),
         }}
@@ -167,21 +171,21 @@ export default async function EatPage() {
           <div className="flex items-center gap-2.5 px-4 py-2 rounded-full bg-white/10 backdrop-blur-[16px] border border-white/15 mb-8">
             <UtensilsCrossed className="size-3.5 text-amber" />
             <span className="text-[13px] font-semibold text-white/85">
-              {restaurants.length > 0
-                ? `${restaurants.length} places across the coast`
+              {orderableCount > 0
+                ? `${orderableCount} taking orders online`
                 : "Watamu · Kilifi · the Kenyan coast"}
             </span>
           </div>
 
           <h1 className="font-display font-extrabold text-white uppercase tracking-[-0.045em] leading-[0.92] text-[clamp(44px,9vw,88px)] mb-6">
-            Find it.
+            Find it. Book it.
             <br />
-            Book it. Eat it.
+            Or order it.
           </h1>
 
           <p className="max-w-[520px] leading-[1.6] mb-9 text-white/55 text-[16px] md:text-[17px]">
-            Every restaurant worth knowing in Watamu and Kilifi — menus, opening
-            hours, and a table when you want one.
+            Order food online straight from the kitchen, or book a table. Watamu,
+            Kilifi and across the coast — delivery landing soon.
           </p>
 
           <div className="flex flex-wrap items-center justify-center gap-3">
@@ -189,7 +193,7 @@ export default async function EatPage() {
               href="#browse"
               className="inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-amber text-dark text-[15px] font-extrabold hover:bg-amber2 transition-colors"
             >
-              Browse restaurants
+              Order food now
               <ArrowRight className="size-4" />
             </a>
             {cities[0] && (
