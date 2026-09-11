@@ -1,10 +1,18 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, MapPin, UtensilsCrossed, Sparkles } from "lucide-react";
+import {
+  ArrowRight,
+  MapPin,
+  UtensilsCrossed,
+  Sparkles,
+  Search,
+  ShoppingBag,
+  Bike,
+} from "lucide-react";
 import { sanityFetch } from "@/lib/sanity/client";
 import { EAT_RESTAURANTS_QUERY } from "@/lib/sanity/queries";
 import { urlForImage } from "@/lib/sanity/image";
-import { getMenuCapabilities } from "@/lib/eat/menus";
+import { getMenuCapabilities, getSampleDishes } from "@/lib/eat/menus";
 import { Nav } from "@/components/shared/Nav";
 import { Footer } from "@/components/shared/Footer";
 import { JsonLd } from "@/components/seo/JsonLd";
@@ -102,7 +110,10 @@ export default async function EatPage() {
     console.error("[/eat] Sanity fetch error:", err);
   }
 
-  const caps = await getMenuCapabilities();
+  const [caps, dishes] = await Promise.all([
+    getMenuCapabilities(),
+    getSampleDishes(12),
+  ]);
   const cards = restaurants.map((r) => toCard(r, caps));
   const orderableCount = cards.filter((c) => c.canOrder).length;
 
@@ -178,9 +189,9 @@ export default async function EatPage() {
           </div>
 
           <h1 className="font-display font-extrabold text-white uppercase tracking-[-0.045em] leading-[0.92] text-[clamp(44px,9vw,88px)] mb-6">
-            Find it. Book it.
+            Crave it.
             <br />
-            Or order it.
+            Tap it. Eat it.
           </h1>
 
           <p className="max-w-[520px] leading-[1.6] mb-9 text-white/55 text-[16px] md:text-[17px]">
@@ -226,6 +237,118 @@ export default async function EatPage() {
             </div>
           </div>
         )}
+      </section>
+
+      {/* ── On the menu — real dishes off live menus ────────── */}
+      {dishes.length > 0 && (
+        <section className="bg-surface border-y border-border py-14 md:py-20">
+          <div className="max-w-[1280px] mx-auto px-5 md:px-10">
+            <span className="text-[11px] font-bold tracking-[0.09em] uppercase text-amber-600 mb-1.5 block">
+              On the menu
+            </span>
+            <h2 className="font-display text-[clamp(24px,3.5vw,34px)] font-extrabold text-text tracking-[-0.03em] mb-2">
+              What people are eating
+            </h2>
+            <p className="text-text2 text-[15px] mb-8">
+              Straight off menus published by the kitchens themselves.
+            </p>
+
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+              {dishes.map((d, i) => (
+                <Link
+                  key={`${d.menuSlug}-${d.name}-${i}`}
+                  href={`/m/${d.menuSlug}`}
+                  className="group rounded-[18px] border border-border bg-white p-4 hover:border-amber transition-colors flex flex-col justify-between min-h-[128px]"
+                >
+                  <div>
+                    <p className="font-display text-[15px] font-extrabold text-text leading-[1.25] tracking-[-0.01em] group-hover:text-amber-700 transition-colors">
+                      {d.name}
+                    </p>
+                    <p className="text-text3 text-[12px] mt-1 truncate">{d.restaurant}</p>
+                  </div>
+                  <p className="font-display text-[17px] font-extrabold text-amber-700 mt-3 tabular-nums">
+                    KSh {d.priceKes.toLocaleString()}
+                  </p>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* ── How it works ────────────────────────────────────── */}
+      <section className="max-w-[1280px] mx-auto px-5 md:px-10 py-14 md:py-20">
+        <span className="text-[11px] font-bold tracking-[0.09em] uppercase text-amber-600 mb-1.5 block">
+          How it works
+        </span>
+        <h2 className="font-display text-[clamp(24px,3.5vw,34px)] font-extrabold text-text tracking-[-0.03em] mb-8">
+          Three taps to dinner
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {[
+            {
+              icon: Search,
+              title: "Find a kitchen",
+              body: "Filter by craving, price, or what's open right now in Watamu, Kilifi and across the coast.",
+            },
+            {
+              icon: ShoppingBag,
+              title: "Order or book",
+              body: "Order online straight from the restaurant's own menu, or reserve a table for later.",
+            },
+            {
+              icon: UtensilsCrossed,
+              title: "Eat",
+              body: "The kitchen confirms with a time. Track it live, then collect — no phone calls, no queue.",
+            },
+          ].map((step, i) => (
+            <div
+              key={step.title}
+              className="rounded-[22px] border border-border bg-white p-6"
+            >
+              <div className="flex items-center gap-3 mb-3">
+                <span className="size-9 rounded-full bg-amber-dim flex items-center justify-center">
+                  <step.icon className="size-4 text-amber-700" />
+                </span>
+                <span className="text-[12px] font-extrabold text-text3 tabular-nums">
+                  0{i + 1}
+                </span>
+              </div>
+              <h3 className="font-display text-[18px] font-extrabold text-text tracking-[-0.02em] mb-1.5">
+                {step.title}
+              </h3>
+              <p className="text-text2 text-[14px] leading-[1.6]">{step.body}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ── Delivery ────────────────────────────────────────── */}
+      <section className="max-w-[1280px] mx-auto px-5 md:px-10 pb-14 md:pb-20">
+        <div className="rounded-[22px] border border-amber bg-amber-dim px-6 py-7 md:px-9 md:py-8 flex flex-wrap items-center gap-5 justify-between">
+          <div className="flex items-start gap-4 max-w-[640px]">
+            <span className="size-10 rounded-full bg-amber flex items-center justify-center shrink-0">
+              <Bike className="size-5 text-dark" />
+            </span>
+            <div>
+              <h2 className="font-display text-[19px] font-extrabold text-text tracking-[-0.02em] mb-1">
+                Food delivery is coming to the coast
+              </h2>
+              <p className="text-text2 text-[14px] leading-[1.6]">
+                Right now you can order ahead and collect, or book a table.
+                Delivery to your door is next — restaurants in Watamu and Kilifi
+                can register their interest today.
+              </p>
+            </div>
+          </div>
+          <Link
+            href="/contact"
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-dark text-white text-[14px] font-extrabold hover:bg-text2 transition-colors shrink-0"
+          >
+            Tell us your town
+            <ArrowRight className="size-4" />
+          </Link>
+        </div>
       </section>
 
       {/* ── Cities ─────────────────────────────────────────── */}

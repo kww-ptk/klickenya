@@ -74,3 +74,101 @@ export const getMenuCapabilities = cache(
     return map;
   },
 );
+
+/* ── Dishes ─────────────────────────────────────────────── */
+
+export type Dish = {
+  name: string;
+  priceKes: number;
+  section: string;
+  restaurant: string;
+  menuSlug: string;
+};
+
+type DishRow = {
+  name: string | null;
+  price_kes: number | null;
+  menu_sections: {
+    title: string | null;
+    menus: { slug: string | null; name: string | null } | null;
+  } | null;
+};
+
+/**
+ * Real dishes off live menus, for the "what people are eating" section.
+ *
+ * Deliberately typographic rather than photo-led: of 162 available items only
+ * two carry a photo and none are flagged featured, so a photo grid would show
+ * two dishes. Names and prices are the honest, and better, material — they are
+ * also the long-tail search terms people actually type.
+ *
+ * Spreads across restaurants so one large menu cannot fill the section, and
+ * skips the very top of the price range so it reads as "dinner here" rather
+ * than a list of the most expensive things on the coast.
+ */
+export const getSampleDishes = cache(async (limit = 12): Promise<Dish[]> => {
+  try {
+    const { data, error } = await adminClient
+      .from("menu_items")
+      .select(
+        "name, price_kes, menu_sections!inner(title, menus!inner(slug, name, is_published))",
+      )
+      .eq("is_available", true)
+      .eq("menu_sections.menus.is_published", true)
+      .gt("price_kes", 0)
+      .order("price_kes", { ascending: false })
+      .limit(200);
+
+    if (error) {
+      console.error("[eat/dishes] query failed:", error.message);
+      return [];
+    }
+
+    const rows = (data ?? []) as unknown as DishRow[];
+    const usable = rows.filter(
+      (r) => r.name && r.price_kes && r.menu_sections?.menus?.slug,
+    );
+
+    // Drop the top decile — the outliers skew the whole section expensive.
+    const trimmed = usable.slice(Math.floor(usable.length * 0.1));
+
+    // Round-robin by restaurant so no single menu dominates.
+    const byRestaurant = new Map<string, DishRow[]>();
+    for (const r of trimmed) {
+      const key = r.menu_sections!.menus!.slug!;
+      const list = byRestaurant.get(key);
+      if (list) list.push(r);
+      else byRestaurant.set(key, [r]);
+    }
+
+    const out: Dish[] = [];
+    let round = 0;
+    while (out.length < limit) {
+      let added = false;
+      for (const list of byRestaurant.values()) {
+        const row = list[round];
+        if (!row) continue;
+        out.push({
+          name: row.name!,
+          priceKes: row.price_kes!,
+          section: row.menu_sections?.title ?? "",
+          // Menu rows are often named "<Restaurant> Menu"; the suffix is noise
+          // on a dish card, which already sits under an "On the menu" heading.
+          restaurant: (row.menu_sections!.menus!.name ?? "")
+            .replace(/\s+menu$/i, "")
+            .trim(),
+          menuSlug: row.menu_sections!.menus!.slug!,
+        });
+        added = true;
+        if (out.length >= limit) break;
+      }
+      if (!added) break; // every menu exhausted
+      round += 1;
+    }
+
+    return out;
+  } catch (err) {
+    console.error("[eat/dishes] unexpected error:", err);
+    return [];
+  }
+});
