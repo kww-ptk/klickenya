@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { BadgeCheck } from "lucide-react";
+import { BadgeCheck, CalendarCheck } from "lucide-react";
 import { isOpenNow } from "@/lib/listings/openingHours";
 
 export type BestSeller = {
@@ -10,90 +10,96 @@ export type BestSeller = {
   priceKes: number;
   restaurant: string;
   menuSlug: string;
-  restaurantPhoto: string;
+  /** Dish photo when the kitchen uploaded one, else the restaurant's. */
+  photo: string;
+  /** True when `photo` is the dish itself rather than the venue. */
+  photoIsDish: boolean;
   openingHours?: string;
   isVerified: boolean;
+  canBook: boolean;
   city: string;
 };
 
 /**
- * Best sellers — real dishes off live menus, with the trust signals we can
- * actually evidence.
+ * Best sellers — real dishes off live menus.
  *
- * Deliberately NOT the signal set an aggregator shows. There is no review
- * system, so no rating; no coordinates on restaurant listings, so no distance;
- * no delivery, so no ETA or fee. Inventing any of them would be a lie printed
- * next to a price. What is real: the kitchen's own photo, whether it is open
- * right now, and whether the owner verified the listing through the claim flow.
+ * Trust signals are limited to what can be evidenced: open right now
+ * (computed in the browser against the reader's clock), the owner-verified
+ * badge from the claim flow, and whether the kitchen takes bookings. There is
+ * no review system, no coordinates and no delivery, so no rating, distance,
+ * ETA or fee — inventing those would put a lie next to a real price.
  *
- * Open-now is computed in the browser against the reader's clock — a cached
- * page cannot answer it.
+ * Images: only 2 of 162 menu items carry their own photo, so most cards fall
+ * back to the restaurant's cover image. Those are venue shots as often as food
+ * shots, so the card never captions the image as the dish.
  */
 export function BestSellers({ items }: { items: BestSeller[] }) {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3.5">
+    <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-4 gap-y-7">
       {items.map((d, i) => {
         const open = isOpenNow(d.openingHours);
         return (
-          <Link
-            key={`${d.menuSlug}-${d.name}-${i}`}
-            href={`/m/${d.menuSlug}`}
-            className="group rounded-[20px] border border-border bg-white p-4 hover:border-amber hover:shadow-sm transition-all flex flex-col"
-          >
-            {/* Kitchen identity */}
-            <div className="flex items-center gap-2.5 mb-3.5">
-              <span className="relative size-9 rounded-full overflow-hidden bg-surface2 shrink-0">
-                {d.restaurantPhoto ? (
+          <article key={`${d.menuSlug}-${d.name}-${i}`} className="group">
+            <Link href={`/m/${d.menuSlug}`} className="block">
+              <div className="relative aspect-[4/3] rounded-[18px] overflow-hidden bg-surface2">
+                {d.photo ? (
                   <Image
-                    src={d.restaurantPhoto}
+                    src={d.photo}
                     alt=""
                     fill
-                    sizes="36px"
-                    className="object-cover"
+                    sizes="(max-width: 640px) 50vw, (max-width: 1280px) 33vw, 300px"
+                    className={`object-cover transition-transform duration-300 group-hover:scale-[1.03] ${
+                      open === false ? "grayscale opacity-75" : ""
+                    }`}
                   />
                 ) : null}
-              </span>
-              <div className="min-w-0">
-                <p className="text-[12.5px] font-bold text-text truncate flex items-center gap-1">
-                  {d.restaurant}
-                  {d.isVerified && (
-                    <BadgeCheck
-                      className="size-3.5 text-amber-600 shrink-0"
-                      aria-label="Verified restaurant"
-                    />
-                  )}
-                </p>
+
                 {open !== null && (
                   <span
-                    className={`inline-flex items-center gap-1 text-[11px] font-bold ${
-                      open ? "text-green" : "text-text3"
+                    className={`absolute top-2.5 left-2.5 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-extrabold ${
+                      open ? "bg-white text-green" : "bg-dark/85 text-white"
                     }`}
                   >
                     <span
                       className={`size-1.5 rounded-full ${
-                        open ? "bg-green" : "bg-text3"
+                        open ? "bg-green" : "bg-white/60"
                       }`}
                     />
                     {open ? "Open now" : "Closed"}
                   </span>
                 )}
+
+                {d.canBook && (
+                  <span className="absolute bottom-2.5 left-2.5 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/95 text-dark text-[11px] font-extrabold">
+                    <CalendarCheck className="size-3" />
+                    Takes bookings
+                  </span>
+                )}
               </div>
-            </div>
+            </Link>
 
-            {/* The dish */}
-            <p className="font-display text-[16px] font-extrabold text-text leading-[1.25] tracking-[-0.015em] group-hover:text-amber-700 transition-colors">
-              {d.name}
-            </p>
+            <div className="pt-3">
+              <Link href={`/m/${d.menuSlug}`}>
+                <h3 className="font-display text-[16px] font-extrabold text-text leading-[1.25] tracking-[-0.015em] group-hover:text-amber-700 transition-colors">
+                  {d.name}
+                </h3>
+              </Link>
 
-            <div className="mt-auto pt-3 flex items-baseline justify-between gap-2">
-              <span className="font-display text-[18px] font-extrabold text-amber-700 tabular-nums">
+              <p className="flex items-center gap-1 text-[12.5px] text-text2 mt-0.5 truncate">
+                <span className="truncate">{d.restaurant}</span>
+                {d.isVerified && (
+                  <BadgeCheck
+                    className="size-3.5 text-amber-600 shrink-0"
+                    aria-label="Verified restaurant"
+                  />
+                )}
+              </p>
+
+              <p className="font-display text-[17px] font-extrabold text-amber-700 mt-1.5 tabular-nums">
                 KSh {d.priceKes.toLocaleString()}
-              </span>
-              <span className="text-[11px] font-semibold text-text3 truncate">
-                {d.city}
-              </span>
+              </p>
             </div>
-          </Link>
+          </article>
         );
       })}
     </div>

@@ -93,11 +93,15 @@ export type Dish = {
   /** Sanity listing slug, so callers can attach the restaurant's photo,
    *  opening hours and verified status to the dish. */
   listingSlug: string;
+  /** The dish's own photo, when the kitchen uploaded one. Only 2 of 162
+   *  items currently have one, so callers must have a fallback. */
+  photoUrl: string;
 };
 
 type DishRow = {
   name: string | null;
   price_kes: number | null;
+  photo_url: string | null;
   menu_sections: {
     title: string | null;
     menus: {
@@ -125,7 +129,7 @@ export const getSampleDishes = cache(async (limit = 12): Promise<Dish[]> => {
     const { data, error } = await adminClient
       .from("menu_items")
       .select(
-        "name, price_kes, menu_sections!inner(title, menus!inner(slug, name, listing_slug, is_published))",
+        "name, price_kes, photo_url, menu_sections!inner(title, menus!inner(slug, name, listing_slug, is_published))",
       )
       .eq("is_available", true)
       .eq("menu_sections.menus.is_published", true)
@@ -147,8 +151,14 @@ export const getSampleDishes = cache(async (limit = 12): Promise<Dish[]> => {
     const trimmed = usable.slice(Math.floor(usable.length * 0.1));
 
     // Round-robin by restaurant so no single menu dominates.
+    // A dish with its own photo is the only case where the image truly shows
+    // the dish, so those sort to the front of each restaurant's queue.
+    const ordered = [...trimmed].sort(
+      (a, b) => Number(Boolean(b.photo_url)) - Number(Boolean(a.photo_url)),
+    );
+
     const byRestaurant = new Map<string, DishRow[]>();
-    for (const r of trimmed) {
+    for (const r of ordered) {
       const key = r.menu_sections!.menus!.slug!;
       const list = byRestaurant.get(key);
       if (list) list.push(r);
@@ -173,6 +183,7 @@ export const getSampleDishes = cache(async (limit = 12): Promise<Dish[]> => {
             .trim(),
           menuSlug: row.menu_sections!.menus!.slug!,
           listingSlug: row.menu_sections!.menus!.listing_slug ?? "",
+          photoUrl: row.photo_url ?? "",
         });
         added = true;
         if (out.length >= limit) break;

@@ -154,14 +154,21 @@ export default async function EatPage() {
   }
   const bestSellers: BestSeller[] = dishes.map((d) => {
     const listing = listingBySlug.get(d.listingSlug);
+    const cap = caps.get(d.listingSlug);
     return {
       name: d.name,
       priceKes: d.priceKes,
       restaurant: listing?.title ?? d.restaurant,
       menuSlug: d.menuSlug,
-      restaurantPhoto: listing ? photoOf(listing, 200) : "",
+      // Restaurant photo only. menu_items.photo_url exists but the values in
+      // the data are HOTLINKED from third-party sites (e.g. a food blogger's
+      // grilled-octopus shot), which breaks next/image's host allowlist and is
+      // not ours to display. Revisit once dish photos are uploaded assets.
+      photo: listing ? photoOf(listing, 600) : "",
+      photoIsDish: false,
       openingHours: listing?.openingHours,
       isVerified: Boolean(listing?.isVerified),
+      canBook: Boolean(cap?.canBook),
       city: listing?.city ?? "",
     };
   });
@@ -243,31 +250,30 @@ export default async function EatPage() {
 
       </section>
 
-      {/* ── Best sellers — first thing after the hero, because the dish is
-             the product. Real items off live menus, real prices. ─────────── */}
-      {bestSellers.length > 0 && (
-        <section className="max-w-[1280px] mx-auto px-5 md:px-10 py-12 md:py-16">
-          <div className="flex items-end justify-between gap-4 mb-7">
-            <div>
-              <span className="text-[11px] font-bold tracking-[0.09em] uppercase text-amber-600 mb-1.5 block">
-                Best sellers
-              </span>
-              <h2 className="font-display text-[clamp(24px,3.5vw,34px)] font-extrabold text-text tracking-[-0.03em]">
-                What people are eating
-              </h2>
-              <p className="text-text2 text-[15px] mt-1.5">
-                Straight off menus published by the kitchens themselves.
-              </p>
-            </div>
-          </div>
-          <BestSellers items={bestSellers} />
-        </section>
-      )}
-
-      {/* ── Explorer — dark rail, grid on canvas ─────────────────────────── */}
+      {/* ── Explorer — slider stays attached to the hero; best sellers sit
+             between it and the results ─────────────────────────────────── */}
       <section id="browse" className="pb-14 md:pb-20 scroll-mt-16">
         {cards.length > 0 ? (
-          <EatExplorer cards={cards} cuisines={cuisines} />
+          <EatExplorer
+            cards={cards}
+            cuisines={cuisines}
+            middle={
+              bestSellers.length > 0 ? (
+                <section className="max-w-[1280px] mx-auto px-5 md:px-10 pt-12 md:pt-16">
+                  <span className="text-[11px] font-bold tracking-[0.09em] uppercase text-amber-600 mb-1.5 block">
+                    Best sellers
+                  </span>
+                  <h2 className="font-display text-[clamp(24px,3.5vw,34px)] font-extrabold text-text tracking-[-0.03em]">
+                    What people are eating
+                  </h2>
+                  <p className="text-text2 text-[15px] mt-1.5 mb-7">
+                    Straight off menus published by the kitchens themselves.
+                  </p>
+                  <BestSellers items={bestSellers} />
+                </section>
+              ) : null
+            }
+          />
         ) : (
           <div className="max-w-[1280px] mx-auto px-5 md:px-10">
             <div className="rounded-[22px] border border-border bg-surface px-6 py-14 text-center">

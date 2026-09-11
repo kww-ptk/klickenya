@@ -39,14 +39,21 @@ const PALETTE = [
 export function EatExplorer({
   cards,
   cuisines,
+  middle,
 }: {
   cards: EatCard[];
   cuisines: CuisineTile[];
+  /** Rendered between the cuisine slider and the results. Lets the hero keep
+   *  its slider attached (as designed) while another section sits above the
+   *  grid, without splitting the slider from the state it drives. */
+  middle?: React.ReactNode;
 }) {
   const [active, setActive] = useState<string | null>(null);
   const [openOnly, setOpenOnly] = useState(false);
   const [orderOnly, setOrderOnly] = useState(false);
   const railRef = useRef<HTMLDivElement>(null);
+  const resultsRef = useRef<HTMLDivElement>(null);
+  const interacted = useRef(false);
 
   const filtered = useMemo(
     () =>
@@ -86,6 +93,18 @@ export function EatExplorer({
     const step = Math.max(el.clientWidth - 160, 200);
     el.scrollBy({ left: dir * step, behavior: reduced ? "auto" : "smooth" });
   }, []);
+
+  /** With a section sitting between the slider and the grid, a filter change
+   *  would otherwise update results the user cannot see. Scroll them there —
+   *  but never on first render, only after they actually pick something. */
+  useEffect(() => {
+    if (!interacted.current) return;
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    resultsRef.current?.scrollIntoView({
+      behavior: reduced ? "auto" : "smooth",
+      block: "start",
+    });
+  }, [active, openOnly, orderOnly]);
 
   /** Arrow keys page the rail when it has focus. */
   const onRailKeyDown = useCallback(
@@ -130,7 +149,10 @@ export function EatExplorer({
               <button
                 key={c.name}
                 type="button"
-                onClick={() => setActive((v) => (v === c.name ? null : c.name))}
+                onClick={() => {
+                  interacted.current = true;
+                  setActive((v) => (v === c.name ? null : c.name));
+                }}
                 aria-pressed={isActive}
                 className={`group relative shrink-0 snap-start w-[142px] sm:w-[172px] aspect-[3/4] rounded-[18px] overflow-hidden ${tone.bar} transition-transform duration-200 hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-dark ${
                   isActive ? "-translate-y-1 ring-2 ring-white ring-offset-2 ring-offset-dark" : ""
@@ -199,12 +221,20 @@ export function EatExplorer({
         </div>
       </div>
 
+      {middle}
+
       {/* ── Controls + results ───────────────────────── */}
-      <div className="max-w-[1280px] mx-auto px-5 md:px-10 pt-10">
+      <div
+        ref={resultsRef}
+        className="max-w-[1280px] mx-auto px-5 md:px-10 pt-10 scroll-mt-16"
+      >
         <div className="flex flex-wrap items-center gap-3 mb-7">
           <button
             type="button"
-            onClick={() => setOpenOnly((v) => !v)}
+            onClick={() => {
+              interacted.current = true;
+              setOpenOnly((v) => !v);
+            }}
             aria-pressed={openOnly}
             className={`inline-flex items-center gap-1.5 px-4 py-2.5 rounded-full border text-[13px] font-bold transition-colors ${
               openOnly
@@ -218,7 +248,10 @@ export function EatExplorer({
 
           <button
             type="button"
-            onClick={() => setOrderOnly((v) => !v)}
+            onClick={() => {
+              interacted.current = true;
+              setOrderOnly((v) => !v);
+            }}
             aria-pressed={orderOnly}
             className={`inline-flex items-center gap-1.5 px-4 py-2.5 rounded-full border text-[13px] font-bold transition-colors ${
               orderOnly
