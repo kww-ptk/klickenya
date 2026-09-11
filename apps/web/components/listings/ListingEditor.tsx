@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { SUBCATEGORIES_BY_TYPE, SUBCATEGORY_LABELS } from "@/lib/constants/subcategories";
@@ -14,6 +14,14 @@ import {
 import { ImageUploader } from "@/components/shared/ImageUploader";
 import VenueListingPicker from "@/components/events/VenueListingPicker";
 import { emptyListingForm, type ListingFormValues, type ListingScheduleRow } from "@/lib/listings/listingFields";
+import {
+  newRowKey,
+  originalRowText,
+  rowsToParts,
+  rowsWordCount,
+  textRowLabel,
+  type DescriptionRow,
+} from "@/lib/listings/description";
 
 /* ---------- Constants ---------- */
 
@@ -225,6 +233,72 @@ function AiHighlight({ active, children }: { active: boolean; children: React.Re
   );
 }
 
+/* ---------- Rich description rows ----------
+   A listing description is portable text: prose interleaved with cards (Quick
+   Facts, Tip Card, Photo Row…). Flattening all of that into one textarea would
+   destroy the cards, so the editor used to disable the box and say "edit it in
+   Sanity Studio" — which hosts have no account for. Instead each prose block
+   gets its own box and everything that cannot survive a plain-text round trip
+   is shown locked and carried through untouched. */
+
+function DescriptionRows({ rows, onChangeText, onRemove, onAdd }: {
+  rows: DescriptionRow[];
+  onChangeText: (key: string, text: string) => void;
+  onRemove: (key: string) => void;
+  onAdd: () => void;
+}) {
+  return (
+    <div className="space-y-3">
+      {rows.map((row) => {
+        if (row.kind === "fixed") {
+          return (
+            <div key={row.key}
+              className="flex items-start gap-2 rounded-xl border border-dashed border-border bg-[#FAF9F7] px-3.5 py-2.5">
+              <span className="text-[13px] leading-5">🔒</span>
+              <div className="min-w-0">
+                <p className="text-[12px] font-semibold text-text2">{row.label}</p>
+                {row.detail && <p className="text-[12px] text-text3 truncate">{row.detail}</p>}
+              </div>
+            </div>
+          );
+        }
+        const isHeading = row.style !== "normal" && !row.listItem;
+        return (
+          <div key={row.key}>
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-[11px] font-semibold uppercase tracking-wide text-text3">
+                {textRowLabel(row)}
+              </span>
+              <button type="button" onClick={() => onRemove(row.key)}
+                className="text-[11px] font-semibold text-text3 hover:text-red-600 transition-colors">
+                Remove
+              </button>
+            </div>
+            {isHeading ? (
+              <input type="text" value={row.text}
+                onChange={(e) => onChangeText(row.key, e.target.value)}
+                placeholder="Heading"
+                className="w-full border border-border rounded-xl px-3.5 py-2.5 text-[14px] font-semibold text-dark placeholder-text3 focus:outline-none focus:ring-2 focus:ring-amber/40 focus:border-amber bg-white"
+              />
+            ) : (
+              <textarea value={row.text}
+                onChange={(e) => onChangeText(row.key, e.target.value)}
+                placeholder="Write this paragraph…"
+                rows={Math.min(8, Math.max(3, Math.ceil(row.text.length / 70)))}
+                className="w-full border border-border rounded-xl px-3.5 py-2.5 text-[14px] text-dark placeholder-text3 focus:outline-none focus:ring-2 focus:ring-amber/40 focus:border-amber bg-white resize-none"
+              />
+            )}
+          </div>
+        );
+      })}
+      <button type="button" onClick={onAdd}
+        className="text-[13px] font-semibold text-amber hover:text-[#D4901C] transition-colors">
+        + Add paragraph
+      </button>
+    </div>
+  );
+}
+
 /* ---------- Editor ---------- */
 
 interface ListingEditorProps {
@@ -266,6 +340,31 @@ export function ListingEditor({ mode, role, initialValues, listingId, onSuccessR
       const arr = (f[key] as string[]);
       return { ...f, [key]: arr.includes(item) ? arr.filter((x) => x !== item) : [...arr, item] };
     });
+  }
+
+  /* Rich-description rows. `originalRowText` lets an untouched block be sent back
+     as "keep" so a save rewrites only what the host actually changed. */
+  const loadedRowText = useRef(originalRowText(initialValues?.descriptionRows ?? []));
+
+  function setRowText(key: string, text: string) {
+    setForm((f) => ({
+      ...f,
+      descriptionRows: (f.descriptionRows ?? []).map((r) =>
+        r.key === key && r.kind === "text" ? { ...r, text } : r,
+      ),
+    }));
+  }
+  function removeRow(key: string) {
+    setForm((f) => ({ ...f, descriptionRows: (f.descriptionRows ?? []).filter((r) => r.key !== key) }));
+  }
+  function addRow() {
+    setForm((f) => ({
+      ...f,
+      descriptionRows: [
+        ...(f.descriptionRows ?? []),
+        { kind: "text", key: newRowKey(), style: "normal", text: "" },
+      ],
+    }));
   }
 
   /* Recurring-event weekly schedule handlers */
@@ -310,7 +409,8 @@ export function ListingEditor({ mode, role, initialValues, listingId, onSuccessR
   const displayedTags = showAllTags ? TAG_SUGGESTIONS : relevantTags;
 
   /* Description quality */
-  const wc = wordCount(form.description);
+  const richRows = form.descriptionRows;
+  const wc = richRows ? rowsWordCount(richRows) : wordCount(form.description);
   const wcColor = wc === 0 ? "text-text3" : wc < 50 ? "text-red-500" : wc < 80 ? "text-amber-500" : "text-green-600";
   const wcLabel = wc === 0 ? "No description yet" : wc < 50 ? `${wc} words — too short` : wc < 80 ? `${wc} words — a bit short` : `${wc} words ✓`;
 
@@ -342,8 +442,10 @@ export function ListingEditor({ mode, role, initialValues, listingId, onSuccessR
 
       setForm((f) => {
         const next = { ...f };
-        // Always fill description (improve if exists, create if empty)
-        if (s.description) {
+        // Always fill description (improve if exists, create if empty). A rich
+        // description is a block layout the AI's single blob cannot be mapped onto,
+        // so leave it alone rather than claim a change that gets dropped on save.
+        if (s.description && !f.descriptionRows) {
           next.description = s.description;
           applied.push({ label: "Description", value: `${wordCount(s.description)} words` });
           appliedKeys.add("description");
@@ -442,8 +544,8 @@ export function ListingEditor({ mode, role, initialValues, listingId, onSuccessR
         seoDescription: form.seoDescription || undefined,
         submissionSource: "admin",
         status: form.status,
-        descriptionLocked: form.descriptionLocked,
-        description: form.descriptionLocked ? undefined : (form.description || undefined),
+        descriptionParts: richRows ? rowsToParts(richRows, loadedRowText.current) : undefined,
+        description: richRows ? undefined : (form.description || undefined),
       };
       const endpoint =
         mode === "create" ? "/api/admin/listings"
@@ -480,7 +582,7 @@ export function ListingEditor({ mode, role, initialValues, listingId, onSuccessR
         <p className="mt-1 text-[14px] text-text3">
           {mode === "create"
             ? "Creates a listing directly in Sanity. Edit all details in Sanity Studio afterwards."
-            : "Changes save straight to the live listing. Rich descriptions and advanced fields stay editable in Sanity Studio."}
+            : "Changes save straight to the live listing."}
         </p>
       </div>
 
@@ -631,12 +733,15 @@ export function ListingEditor({ mode, role, initialValues, listingId, onSuccessR
 
         {/* ── Description ── */}
         <SectionCard title="Description">
-          {form.descriptionLocked ? (
-            <div>
-              <textarea value={form.description} disabled rows={7}
-                className="w-full border border-border rounded-xl px-3.5 py-2.5 text-[14px] text-text2 bg-[#F7F5F2] resize-none" />
-              <p className="mt-1 text-[12px] text-amber">This description has rich content (photos/cards). Edit it in Sanity Studio to preserve it — other fields here save normally.</p>
-            </div>
+          {richRows ? (
+            <>
+              <p className="text-[12px] text-text3 -mt-2">
+                Each paragraph and heading on your listing page is editable below. Cards, photo
+                rows and formatted passages are locked so they stay exactly as they look now.
+              </p>
+              <DescriptionRows rows={richRows} onChangeText={setRowText} onRemove={removeRow} onAdd={addRow} />
+              <p className={`text-[12px] ${wcColor}`}>{wcLabel}</p>
+            </>
           ) : (
             <>
               <AiHighlight active={aiFieldsApplied.has("description")}>

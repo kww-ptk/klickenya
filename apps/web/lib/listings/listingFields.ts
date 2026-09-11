@@ -1,6 +1,15 @@
 // apps/web/lib/listings/listingFields.ts
 import { z } from "zod/v4";
 import type { UploadedImage } from "@/components/shared/ImageUploader";
+import {
+  descriptionToRows,
+  descriptionToText,
+  isSimpleDescription,
+  textToDescription,
+  type DescriptionRow,
+} from "@/lib/listings/description";
+
+export * from "@/lib/listings/description";
 
 /* ── Validation schema (superset used by create + edit) ── */
 export const uploadedImageSchema = z.object({
@@ -19,7 +28,11 @@ export const listingInputSchema = z.object({
   address: z.string().optional(),
   status: z.enum(["draft", "published", "archived"]),
   description: z.string().optional(),
-  descriptionLocked: z.boolean().optional(),
+  /* Ordered rebuild of a rich description (cards, headings, links). When present it
+     replaces `description` — see lib/listings/description.ts. */
+  descriptionParts: z
+    .array(z.object({ op: z.enum(["keep", "edit", "add"]), key: z.string().optional(), text: z.string().optional() }))
+    .optional(),
   price: z.number().min(0).optional(),
   priceUnit: z.string().optional(),
   bookingType: z.string().optional(),
@@ -79,7 +92,9 @@ export interface ListingScheduleRow { day: string; startTime: string; endTime: s
 /* ── Client-side form state shape (all strings, for controlled inputs) ── */
 export interface ListingFormValues {
   title: string; slug: string; type: string; subcategory: string; city: string; county: string; address: string;
-  status: "draft" | "published" | "archived"; description: string; descriptionLocked: boolean;
+  status: "draft" | "published" | "archived"; description: string;
+  /** null = plain prose, edited as one textarea. Otherwise one row per portable-text block. */
+  descriptionRows: DescriptionRow[] | null;
   price: string; priceUnit: string; bookingType: string; maxGuests: string; rentingType: string;
   website: string; instagram: string; facebook: string; phone: string; email: string;
   notificationEmail: string; notificationEmail2: string; hostEmail: string;
@@ -95,7 +110,7 @@ export interface ListingFormValues {
 
 export const emptyListingForm: ListingFormValues = {
   title: "", slug: "", type: "stay", subcategory: "", city: "", county: "", address: "",
-  status: "draft", description: "", descriptionLocked: false,
+  status: "draft", description: "", descriptionRows: null,
   price: "", priceUnit: "night", bookingType: "contact_form", maxGuests: "", rentingType: "entire_place",
   website: "", instagram: "", facebook: "", phone: "", email: "",
   notificationEmail: "", notificationEmail2: "", hostEmail: "",
@@ -109,52 +124,9 @@ export const emptyListingForm: ListingFormValues = {
   seoTitle: "", seoDescription: "",
 };
 
-/* ── Portable-text description helpers (data-safety) ── */
+/* ── Photo mapping ── */
 const rnd = () => Math.random().toString(36).slice(2, 10);
 
-/** A description is "plain" (safe to edit as text) only if every block is a
- *  vanilla `block` with normal style and no marks — i.e. no Photo Rows, tip
- *  cards, headings, links, etc. Empty description also counts as plain. */
-export function isPlainDescription(desc: unknown): boolean {
-  if (!desc) return true;
-  if (!Array.isArray(desc)) return false;
-  return desc.every((b) => {
-    if (!b || typeof b !== "object") return false;
-    const block = b as Record<string, unknown>;
-    if (block._type !== "block") return false;
-    if (block.style && block.style !== "normal") return false;
-    if (Array.isArray(block.markDefs) && block.markDefs.length > 0) return false;
-    const children = (block.children as Array<Record<string, unknown>>) ?? [];
-    return children.every((c) => c._type === "span" && (!Array.isArray(c.marks) || c.marks.length === 0));
-  });
-}
-
-/** Join plain portable-text blocks into a textarea string (paragraph per block). */
-export function descriptionToText(desc: unknown): string {
-  if (!Array.isArray(desc)) return "";
-  return desc
-    .map((b) => {
-      const children = ((b as Record<string, unknown>).children as Array<{ text?: string }>) ?? [];
-      return children.map((c) => c.text ?? "").join("");
-    })
-    .join("\n\n")
-    .trim();
-}
-
-/** Convert textarea text back into portable-text blocks (one block per paragraph). */
-export function textToDescription(text: string) {
-  const paras = text.split(/\n{2,}/).map((p) => p.trim()).filter(Boolean);
-  const source = paras.length ? paras : [text.trim()].filter(Boolean);
-  return source.map((p) => ({
-    _type: "block" as const,
-    _key: rnd(),
-    style: "normal",
-    markDefs: [],
-    children: [{ _type: "span" as const, _key: rnd(), text: p, marks: [] }],
-  }));
-}
-
-/* ── Photo mapping ── */
 export function uploadedToSanityPhotos(photos?: UploadedImage[], fallbackAlt = "") {
   if (!photos?.length) return undefined;
   return photos.map((p) => ({
@@ -254,7 +226,9 @@ export function inputToSanityFields(data: ListingInput) {
     seoDescription: data.seoDescription || undefined,
   };
 
-  if (!data.descriptionLocked) {
+  // A rich description is rebuilt server-side from `descriptionParts` against the stored
+  // document, so leave it alone here.
+  if (!data.descriptionParts) {
     fields.description = data.description ? textToDescription(data.description) : undefined;
   }
 
@@ -265,7 +239,7 @@ export function inputToSanityFields(data: ListingInput) {
  *  `doc.photos` must be projected with asset->{_id,url}. */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function sanityDocToForm(doc: Record<string, any>): ListingFormValues {
-  const plain = isPlainDescription(doc.description);
+  const simple = isSimpleDescription(doc.description);
   return {
     ...emptyListingForm,
     title: doc.title ?? "",
@@ -276,8 +250,8 @@ export function sanityDocToForm(doc: Record<string, any>): ListingFormValues {
     county: doc.county ?? "",
     address: doc.address ?? "",
     status: (doc.status ?? "draft") as ListingFormValues["status"],
-    description: descriptionToText(doc.description),
-    descriptionLocked: !plain,
+    description: simple ? descriptionToText(doc.description) : "",
+    descriptionRows: simple ? null : descriptionToRows(doc.description),
     price: doc.price != null ? String(doc.price) : "",
     priceUnit: doc.priceUnit ?? "night",
     bookingType: doc.bookingType ?? "contact_form",
