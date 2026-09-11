@@ -794,6 +794,7 @@ export function ListingEditor({ mode, role, initialValues, listingId, onSuccessR
                   className="w-28 border border-border rounded-xl px-3.5 py-2.5 text-[14px] text-dark focus:outline-none focus:ring-2 focus:ring-amber/40 focus:border-amber bg-white"
                 />
                 <Select value={form.priceUnit} onChange={(v) => set("priceUnit", v)}>
+                  {!form.priceUnit && <option value="">Not set</option>}
                   {PRICE_UNITS.map((u) => <option key={u.value} value={u.value}>{u.label}</option>)}
                 </Select>
               </div>
@@ -801,6 +802,7 @@ export function ListingEditor({ mode, role, initialValues, listingId, onSuccessR
 
             <Field label="Booking method" optional>
               <Select value={form.bookingType} onChange={(v) => set("bookingType", v)}>
+                {!form.bookingType && <option value="">Not set</option>}
                 {BOOKING_TYPES.map((b) => <option key={b.value} value={b.value}>{b.label}</option>)}
               </Select>
             </Field>
@@ -812,6 +814,7 @@ export function ListingEditor({ mode, role, initialValues, listingId, onSuccessR
             {isStay && (
               <Field label="Renting type">
                 <Select value={form.rentingType} onChange={(v) => set("rentingType", v)}>
+                  {!form.rentingType && <option value="">Not set</option>}
                   {RENTING_TYPES.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}
                 </Select>
               </Field>

@@ -253,10 +253,13 @@ export function sanityDocToForm(doc: Record<string, any>): ListingFormValues {
     description: simple ? descriptionToText(doc.description) : "",
     descriptionRows: simple ? null : descriptionToRows(doc.description),
     price: doc.price != null ? String(doc.price) : "",
-    priceUnit: doc.priceUnit ?? "night",
-    bookingType: doc.bookingType ?? "contact_form",
+    priceUnit: doc.priceUnit ?? "",
+    // "" means the document has no value. Falling back to a display default here
+    // wrote that default straight back on the next save, so editing a description
+    // silently configured how the listing takes bookings.
+    bookingType: doc.bookingType ?? "",
     maxGuests: doc.maxGuests != null ? String(doc.maxGuests) : "",
-    rentingType: doc.rentingType ?? "entire_place",
+    rentingType: doc.rentingType ?? "",
     website: doc.website ?? "", instagram: doc.instagram ?? "", facebook: doc.facebook ?? "",
     phone: doc.phone ?? "", email: doc.email ?? "",
     notificationEmail: doc.notificationEmail1 ?? "", notificationEmail2: doc.notificationEmail2 ?? "",

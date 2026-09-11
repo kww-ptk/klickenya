@@ -2,6 +2,7 @@ import { type Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { sanityClient, sanityFetch } from "@/lib/sanity/client";
+import { LISTINGS_TAG } from "@/lib/listings/revalidate";
 import {
   LISTINGS_BY_TYPE_CITY_QUERY,
   LISTING_SLUGS_QUERY,
@@ -117,6 +118,7 @@ export default async function CityPage({ params }: PageProps) {
   const { data: listings } = await sanityFetch({
     query: LISTINGS_BY_TYPE_CITY_QUERY,
     params: { type: sanityType, city: cityName },
+    tags: [LISTINGS_TAG],
   });
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
