@@ -21,6 +21,7 @@ import {
   type EatCard,
   type CuisineTile,
 } from "./_components/EatExplorer";
+import { BestSellers, type BestSeller } from "@/components/eat/BestSellers";
 
 /**
  * /eat — public food discovery for the Kenyan coast.
@@ -143,6 +144,28 @@ export default async function EatPage() {
     .map(([name, v]) => ({ name, count: v.count, photo: v.photo }))
     .sort((a, b) => b.count - a.count);
 
+  // Attach each dish to its restaurant so the card can carry real trust
+  // signals — the kitchen's photo, whether it is open, whether it is verified.
+  const listingBySlug = new Map<string, EatListing>();
+  for (const r of restaurants) {
+    const slug =
+      typeof r.slug === "string" ? r.slug : (r.slug?.current ?? "");
+    if (slug) listingBySlug.set(slug, r);
+  }
+  const bestSellers: BestSeller[] = dishes.map((d) => {
+    const listing = listingBySlug.get(d.listingSlug);
+    return {
+      name: d.name,
+      priceKes: d.priceKes,
+      restaurant: listing?.title ?? d.restaurant,
+      menuSlug: d.menuSlug,
+      restaurantPhoto: listing ? photoOf(listing, 200) : "",
+      openingHours: listing?.openingHours,
+      isVerified: Boolean(listing?.isVerified),
+      city: listing?.city ?? "",
+    };
+  });
+
   const cityCounts = new Map<string, number>();
   for (const r of restaurants) {
     const city = (r.city ?? "").trim();
@@ -220,7 +243,28 @@ export default async function EatPage() {
 
       </section>
 
-      {/* ── Explorer — rail continues the dark hero, grid sits on canvas ── */}
+      {/* ── Best sellers — first thing after the hero, because the dish is
+             the product. Real items off live menus, real prices. ─────────── */}
+      {bestSellers.length > 0 && (
+        <section className="max-w-[1280px] mx-auto px-5 md:px-10 py-12 md:py-16">
+          <div className="flex items-end justify-between gap-4 mb-7">
+            <div>
+              <span className="text-[11px] font-bold tracking-[0.09em] uppercase text-amber-600 mb-1.5 block">
+                Best sellers
+              </span>
+              <h2 className="font-display text-[clamp(24px,3.5vw,34px)] font-extrabold text-text tracking-[-0.03em]">
+                What people are eating
+              </h2>
+              <p className="text-text2 text-[15px] mt-1.5">
+                Straight off menus published by the kitchens themselves.
+              </p>
+            </div>
+          </div>
+          <BestSellers items={bestSellers} />
+        </section>
+      )}
+
+      {/* ── Explorer — dark rail, grid on canvas ─────────────────────────── */}
       <section id="browse" className="pb-14 md:pb-20 scroll-mt-16">
         {cards.length > 0 ? (
           <EatExplorer cards={cards} cuisines={cuisines} />
@@ -238,43 +282,6 @@ export default async function EatPage() {
           </div>
         )}
       </section>
-
-      {/* ── On the menu — real dishes off live menus ────────── */}
-      {dishes.length > 0 && (
-        <section className="bg-surface border-y border-border py-14 md:py-20">
-          <div className="max-w-[1280px] mx-auto px-5 md:px-10">
-            <span className="text-[11px] font-bold tracking-[0.09em] uppercase text-amber-600 mb-1.5 block">
-              On the menu
-            </span>
-            <h2 className="font-display text-[clamp(24px,3.5vw,34px)] font-extrabold text-text tracking-[-0.03em] mb-2">
-              What people are eating
-            </h2>
-            <p className="text-text2 text-[15px] mb-8">
-              Straight off menus published by the kitchens themselves.
-            </p>
-
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-              {dishes.map((d, i) => (
-                <Link
-                  key={`${d.menuSlug}-${d.name}-${i}`}
-                  href={`/m/${d.menuSlug}`}
-                  className="group rounded-[18px] border border-border bg-white p-4 hover:border-amber transition-colors flex flex-col justify-between min-h-[128px]"
-                >
-                  <div>
-                    <p className="font-display text-[15px] font-extrabold text-text leading-[1.25] tracking-[-0.01em] group-hover:text-amber-700 transition-colors">
-                      {d.name}
-                    </p>
-                    <p className="text-text3 text-[12px] mt-1 truncate">{d.restaurant}</p>
-                  </div>
-                  <p className="font-display text-[17px] font-extrabold text-amber-700 mt-3 tabular-nums">
-                    KSh {d.priceKes.toLocaleString()}
-                  </p>
-                </Link>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
 
       {/* ── How it works ────────────────────────────────────── */}
       <section className="max-w-[1280px] mx-auto px-5 md:px-10 py-14 md:py-20">

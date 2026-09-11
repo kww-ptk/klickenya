@@ -10,7 +10,13 @@ import { adminClient } from "@/lib/supabase/admin";
  */
 export type MenuCapability = {
   menuSlug: string;
-  canOrder: boolean; // takeaway or in-venue ordering is live
+  /** Can a guest order from home? Takeaway only.
+   *  NOT table_ordering — that is QR ordering while already seated in the
+   *  venue, which is a different product and must never be advertised as
+   *  "order online" to someone browsing from their sofa. */
+  canOrder: boolean;
+  /** QR ordering at a table inside the restaurant. */
+  canOrderAtTable: boolean;
   canBook: boolean; // table reservations are live
   canDeliver: boolean; // delivery — dormant until P0 ships
 };
@@ -62,7 +68,8 @@ export const getMenuCapabilities = cache(
         }
         map.set(key, {
           menuSlug: row.slug ?? "",
-          canOrder: Boolean(row.takeaway_enabled || row.ordering_enabled || row.table_ordering),
+          canOrder: Boolean(row.takeaway_enabled),
+          canOrderAtTable: Boolean(row.table_ordering || row.ordering_enabled),
           canBook: Boolean(row.reservations_enabled),
           canDeliver: Boolean(row.delivery_enabled),
         });
@@ -83,6 +90,9 @@ export type Dish = {
   section: string;
   restaurant: string;
   menuSlug: string;
+  /** Sanity listing slug, so callers can attach the restaurant's photo,
+   *  opening hours and verified status to the dish. */
+  listingSlug: string;
 };
 
 type DishRow = {
@@ -90,7 +100,11 @@ type DishRow = {
   price_kes: number | null;
   menu_sections: {
     title: string | null;
-    menus: { slug: string | null; name: string | null } | null;
+    menus: {
+      slug: string | null;
+      name: string | null;
+      listing_slug: string | null;
+    } | null;
   } | null;
 };
 
@@ -111,7 +125,7 @@ export const getSampleDishes = cache(async (limit = 12): Promise<Dish[]> => {
     const { data, error } = await adminClient
       .from("menu_items")
       .select(
-        "name, price_kes, menu_sections!inner(title, menus!inner(slug, name, is_published))",
+        "name, price_kes, menu_sections!inner(title, menus!inner(slug, name, listing_slug, is_published))",
       )
       .eq("is_available", true)
       .eq("menu_sections.menus.is_published", true)
@@ -158,6 +172,7 @@ export const getSampleDishes = cache(async (limit = 12): Promise<Dish[]> => {
             .replace(/\s+menu$/i, "")
             .trim(),
           menuSlug: row.menu_sections!.menus!.slug!,
+          listingSlug: row.menu_sections!.menus!.listing_slug ?? "",
         });
         added = true;
         if (out.length >= limit) break;
