@@ -2,12 +2,12 @@
 export default function Loading() {
   return (
     <>
-      <div className="border-b border-border bg-surface">
-        <div className="max-w-[1280px] mx-auto px-5 md:px-10 pt-10 pb-10 md:pt-14 md:pb-12">
-          <div className="h-3 w-24 rounded bg-surface2 mb-5" />
-          <div className="h-3 w-32 rounded bg-surface2 mb-4" />
-          <div className="h-10 w-80 max-w-full rounded bg-surface2 mb-4" />
-          <div className="h-4 w-full max-w-[560px] rounded bg-surface2" />
+      <div className="bg-dark">
+        <div className="max-w-[1280px] mx-auto px-5 md:px-10 pt-[120px] pb-12 md:pb-14">
+          <div className="h-3 w-24 rounded bg-white/10 mb-5" />
+          <div className="h-3 w-32 rounded bg-white/10 mb-4" />
+          <div className="h-10 w-80 max-w-full rounded bg-white/10 mb-4" />
+          <div className="h-4 w-full max-w-[560px] rounded bg-white/10" />
         </div>
       </div>
       <div className="max-w-[1280px] mx-auto px-5 md:px-10 py-10 md:py-14">

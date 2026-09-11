@@ -176,32 +176,38 @@ export default async function EatCityPage({ params }: PageProps) {
         }}
       />
 
-      <Nav />
+      <Nav transparent />
 
-      <header className="border-b border-border bg-surface">
-        <div className="max-w-[1280px] mx-auto px-5 md:px-10 pt-10 pb-10 md:pt-14 md:pb-12">
+      <header className="relative overflow-hidden bg-dark">
+        <div
+          aria-hidden
+          className="absolute inset-0 bg-[radial-gradient(120%_90%_at_50%_0%,rgba(232,160,32,0.20),transparent_62%)]"
+        />
+        <div className="relative z-10 max-w-[1280px] mx-auto px-5 md:px-10 pt-[120px] pb-12 md:pb-14">
           <nav aria-label="Breadcrumb" className="mb-5">
             <Link
               href="/eat"
-              className="text-[13px] font-semibold text-text3 hover:text-text transition-colors"
+              className="text-[13px] font-semibold text-white/50 hover:text-white transition-colors"
             >
               Eat
             </Link>
-            <span className="text-text3 mx-2">/</span>
-            <span className="text-[13px] font-semibold text-text">{cityName}</span>
+            <span className="text-white/30 mx-2">/</span>
+            <span className="text-[13px] font-semibold text-white">{cityName}</span>
           </nav>
 
           <div className="flex items-center gap-2 mb-3">
-            <UtensilsCrossed className="size-4 text-amber-600" />
-            <span className="text-[11px] font-bold tracking-[0.09em] uppercase text-amber-600">
+            <UtensilsCrossed className="size-4 text-amber" />
+            <span className="text-[11px] font-bold tracking-[0.09em] uppercase text-amber">
               {cards.length} {cards.length === 1 ? "restaurant" : "restaurants"}
             </span>
           </div>
 
-          <h1 className="font-display text-[clamp(30px,5vw,48px)] font-bold text-text tracking-[-0.035em] leading-[1.08] mb-4">
-            Where to eat in {cityName}
+          <h1 className="font-display text-[clamp(38px,7vw,72px)] font-extrabold text-white uppercase tracking-[-0.045em] leading-[0.94] mb-5">
+            Where to eat
+            <br />
+            in {cityName}
           </h1>
-          <p className="text-text2 text-[16px] leading-[1.65] max-w-[620px]">
+          <p className="text-white/55 text-[16px] leading-[1.65] max-w-[620px]">
             {cuisines.length > 0
               ? `${cuisines.slice(0, 4).join(", ")} and more — filter by what you feel like, what you want to spend, or what's open right now.`
               : `Every restaurant we know in ${cityName}, with menus and opening hours.`}
@@ -218,7 +224,7 @@ export default async function EatCityPage({ params }: PageProps) {
           <span className="text-[11px] font-bold tracking-[0.09em] uppercase text-amber-600 mb-1.5 block">
             Read first
           </span>
-          <h2 className="font-display text-[clamp(22px,3vw,30px)] font-bold text-text tracking-[-0.03em] mb-6">
+          <h2 className="font-display text-[clamp(22px,3vw,30px)] font-extrabold text-text tracking-[-0.03em] mb-6">
             More on {cityName}
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
