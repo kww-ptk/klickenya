@@ -110,7 +110,7 @@ export default async function EatPage() {
     .map(([name, count]) => ({
       name,
       count,
-      href: `/restaurants/${name.toLowerCase().replace(/\s+/g, "-")}`,
+      href: `/eat/${name.toLowerCase().replace(/\s+/g, "-")}`,
     }));
 
   const cuisines = [

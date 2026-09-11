@@ -142,6 +142,20 @@ export const EAT_RESTAURANTS_QUERY = groq`
   }
 `
 
+// Journal guides for a city, used by the /eat city hubs to link readers into
+// the existing Watamu/Kilifi coverage. Keyed on blogPost.location so adding a
+// guide surfaces it automatically rather than needing a hardcoded slug list.
+export const CITY_GUIDES_QUERY = groq`
+  *[_type == "blogPost" && status == "published" && lower(location) == lower($city)]
+    | order(publishedAt desc) [0...$limit] {
+    _id,
+    title,
+    slug,
+    excerpt,
+    readingTime
+  }
+`
+
 export const LISTINGS_BY_TYPE_CITY_QUERY = groq`
   *[_type == "listing" && status == "published" && type == $type && lower(city) == lower($city) && ${MARKETPLACE_PARTNER_FILTER}] | order(_createdAt desc) {
     ${LISTING_CARD_FIELDS}

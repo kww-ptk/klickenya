@@ -27,9 +27,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const [listings, posts, destinations, properties, agents, neighbourhoods] =
     await Promise.all([
       sanityClient
-        .fetch<{ slug: string; type: string; city: string }[]>(
+        .fetch<
+          { slug: string; type: string; city: string; subcategory?: string }[]
+        >(
           groq`*[_type == "listing" && status == "published" && (!defined(partner) || publishToMarketplace == true)]{
-            "slug": slug.current, type, city
+            "slug": slug.current, type, city, subcategory
           }`
         )
         .catch(() => []),
@@ -94,6 +96,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       '/rentals',
       '/services',
       '/restaurants',
+      '/eat',
       '/real-estate',
       '/journal',
       '/destinations',
@@ -165,6 +168,23 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       citySet.add(listingPublicPath(l.type, l.city, '').replace(/\/$/, ''))
     }
   })
+
+  // ── /eat city hubs ─────────────────────────────────
+  // Editorial food hubs, one per town that actually has restaurants. Derived
+  // from the same listing set as the city routes above so the two cannot
+  // disagree about which towns exist.
+  const eatCitySet = new Set<string>()
+  listings.forEach((l) => {
+    if (l.city && (l.type === 'restaurant' || l.subcategory === 'restaurants')) {
+      eatCitySet.add(l.city.toLowerCase().trim().replace(/\s+/g, '-'))
+    }
+  })
+  const eatCityRoutes: MetadataRoute.Sitemap = Array.from(eatCitySet).map((city) => ({
+    url: `${BASE_URL}/eat/${city}`,
+    lastModified: new Date(),
+    changeFrequency: 'weekly' as const,
+    priority: 0.7,
+  }))
 
   const cityRoutes: MetadataRoute.Sitemap = Array.from(citySet).map(
     (path) => ({
@@ -259,6 +279,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...staticRoutes,
     ...listingRoutes,
     ...cityRoutes,
+    ...eatCityRoutes,
     ...blogRoutes,
     ...destinationRoutes,
     ...propertyRoutes,
