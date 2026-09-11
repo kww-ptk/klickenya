@@ -1,7 +1,8 @@
 # Food Delivery — Program Plan
 
 Date: 2026-09-11 · Status: **planning only, nothing approved for build**
-Destination: `eat.klickenya.com` as a full delivery aggregator with an owned rider fleet.
+Destination: a full delivery aggregator with an owned rider fleet, served at
+**`klickenya.com/eat`** (subdirectory, not a subdomain — see §2a).
 
 This is a program plan, not an implementation spec. It exists so the programme can be
 funded (or cut) in stages before any implementation spec is written. Each sub-project
@@ -42,6 +43,29 @@ multi-country (see `docs/` country-agnostic work), rider-owned vehicle financing
 
 **Explicitly not a rewrite.** The restaurant-facing side (menu, kitchen, POS, stock)
 stays exactly where it is and is consumed, not replaced.
+
+---
+
+## 2a. URL structure — decided 2026-09-11
+
+The consumer surface lives at **`klickenya.com/eat`**, not `eat.klickenya.com`.
+
+Reason: the go-to-market goal is ranking for restaurant searches in Watamu and Kilifi, and
+klickenya.com already owns that query space. Live on the domain today:
+
+- `/restaurants/watamu/<slug>` and `/restaurants/kilifi/<slug>` (`lib/listings/url.ts`),
+  with city-level pages already emitted into `sitemap.ts`
+- restaurant listings already seeded for both towns (`seed-kilifi-restaurants.ts`,
+  `seed-kilifi-restaurants-batch2.ts`, `add-watamu-restaurants.ts`)
+- ~25 Watamu/Kilifi posts linking into them, including `seed-blog-best-restaurants-watamu.ts`
+  and `seed-blog-best-restaurants-kilifi.ts`
+
+A subdomain would start from zero authority, compete with those pages for the same keywords,
+and split signals across two versions of every restaurant. The subdirectory inherits all of it.
+
+**Consequence:** `/eat` currently hosts the restaurant command center, which must move to
+`app.klickenya.com`. CLAUDE.md already defines business tools as belonging there, so this
+follows the documented architecture rather than bending it. Scheduled as part of **P2**.
 
 ---
 
@@ -108,12 +132,17 @@ that may already have deducted stock.
 **Shippable alone:** yes, on top of P0.
 **Size:** ticketing-class, minus the scanner.
 
-### P2 — Consumer surface (`eat.klickenya.com`)
+### P2 — Consumer surface (`klickenya.com/eat`)
 Subdomain shell, multi-restaurant discovery and search, saved addresses, cross-restaurant
 cart rules, checkout, order status.
 **Reuses:** marketplace search, `/m/[slug]` cart, host-routing middleware.
 **New:** consumer accounts distinct from marketplace guests, saved addresses, address →
-serviceable-restaurant matching.
+serviceable-restaurant matching. Also moves the restaurant command center off `/eat` to
+`app.klickenya.com` (see §2a).
+**Scope reduction (2026-09-11):** the launch restaurants are already Sanity listings in
+Watamu and Kilifi, so onboarding is flipping `delivery_enabled` and adding zones per listing.
+No self-serve signup and no new identity model are needed for launch, which removes the
+largest unknown originally scoped here.
 **Shippable alone:** yes. **At the end of P2 there is a live, revenue-generating delivery
 marketplace** with restaurants fulfilling. This is the funding gate.
 **Size:** white-label-class (multi-branch, several plans).
@@ -160,6 +189,9 @@ override from day one.
 ## 6. Sequencing and funding gates
 
 **Phase A — marketplace without fleet: P0 → P1 → P2.**
+Indicative sizing at the March–July 2026 velocity (one pair; see §10): P0 1–2 weeks,
+P1 2–3 weeks, P2 4–6 weeks — roughly **2–3 months**. August–September commit volume ran
+4–10x lower than that period; if that is the new normal, scale accordingly.
 Exit: real prepaid delivery orders flowing, restaurants fulfilling, commission collected.
 *Gate: do the order volumes and margins justify buying logistics? If not, stop here — the
 product is complete and sellable as it stands.*
@@ -208,7 +240,9 @@ Deferred deliberately; each is listed with the sub-project that forces it.
 
 | Decision | Forced by |
 |---|---|
-| Geo approach — PostGIS extension vs lat/lng + bounding box vs external routing API | P0 (radius) / P4 (nearest rider) |
+| ~~Geo approach for P0~~ — **decided 2026-09-11: named zones with per-zone flat fees, no coordinates.** Map pins deferred to P5 when riders need navigation. See the P0 spec. | — |
+| ~~Subdomain vs subdirectory~~ — **decided 2026-09-11: `klickenya.com/eat`** (§2a) | — |
+| Geo approach for dispatch — lat/lng + haversine vs PostGIS vs external routing API | P4 (nearest rider) |
 | Payment rail — Paystack M-Pesa vs direct Daraja integration | P1 |
 | Do consumers get accounts distinct from marketplace guests, or one identity? | P2 |
 | Cross-restaurant cart: single-restaurant per order, or multi? | P2 |
