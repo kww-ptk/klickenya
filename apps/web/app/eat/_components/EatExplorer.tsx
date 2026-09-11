@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { ChevronLeft, ChevronRight, Clock } from "lucide-react";
 import { ListingGrid } from "@/components/listings/ListingGrid";
@@ -60,22 +60,69 @@ export function EatExplorer({
     [cards, active, openOnly],
   );
 
-  const scroll = (dir: -1 | 1) => {
-    railRef.current?.scrollBy({ left: dir * 360, behavior: "smooth" });
-  };
+  const [atStart, setAtStart] = useState(true);
+  const [atEnd, setAtEnd] = useState(false);
+
+  /** Which arrows to show. Tolerance absorbs sub-pixel scroll positions. */
+  const updateEdges = useCallback(() => {
+    const el = railRef.current;
+    if (!el) return;
+    setAtStart(el.scrollLeft <= 2);
+    setAtEnd(el.scrollLeft + el.clientWidth >= el.scrollWidth - 2);
+  }, []);
+
+  // Run once mounted, and again on resize — a wide viewport can fit every
+  // tile, in which case neither arrow should ever appear.
+  useEffect(() => {
+    updateEdges();
+    window.addEventListener("resize", updateEdges);
+    return () => window.removeEventListener("resize", updateEdges);
+  }, [updateEdges]);
+
+  const scroll = useCallback((dir: -1 | 1) => {
+    const el = railRef.current;
+    if (!el) return;
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    // Advance by a viewport of tiles, less one, so nothing is skipped over.
+    const step = Math.max(el.clientWidth - 160, 200);
+    el.scrollBy({ left: dir * step, behavior: reduced ? "auto" : "smooth" });
+  }, []);
+
+  /** Arrow keys page the rail when it has focus. */
+  const onRailKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === "ArrowRight") {
+        e.preventDefault();
+        scroll(1);
+      } else if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        scroll(-1);
+      }
+    },
+    [scroll],
+  );
 
   return (
     <>
-      {/* ── Cuisine rail — dark strip continuing the hero ── */}
+      {/* ── Cuisine slider — dark strip continuing the hero ── */}
       <div className="relative bg-dark pb-11 md:pb-14">
-        <div className="max-w-[1280px] mx-auto px-5 md:px-10 pb-4">
+        <div className="max-w-[1280px] mx-auto px-5 md:px-10 pb-4 flex items-end justify-between gap-4">
           <span className="text-[11px] font-bold tracking-[0.09em] uppercase text-amber block">
             Pick a craving
           </span>
+          <span className="text-[11px] font-semibold text-white/35 tabular-nums hidden sm:block">
+            {cuisines.length} cuisines
+          </span>
         </div>
+
         <div
           ref={railRef}
-          className="flex gap-3.5 overflow-x-auto pb-2 snap-x snap-mandatory scroll-px-5 px-5 md:px-10 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          role="group"
+          aria-label="Filter restaurants by cuisine"
+          tabIndex={0}
+          onScroll={updateEdges}
+          onKeyDown={onRailKeyDown}
+          className="flex gap-3.5 overflow-x-auto pb-2 snap-x snap-mandatory scroll-px-5 md:scroll-px-10 px-5 md:px-10 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber focus-visible:ring-offset-2 focus-visible:ring-offset-dark rounded-[4px]"
         >
           {cuisines.map((c, i) => {
             const tone = PALETTE[i % PALETTE.length];
@@ -86,30 +133,39 @@ export function EatExplorer({
                 type="button"
                 onClick={() => setActive((v) => (v === c.name ? null : c.name))}
                 aria-pressed={isActive}
-                className={`group relative shrink-0 snap-start w-[150px] sm:w-[180px] rounded-[18px] overflow-hidden border-[3px] ${tone.border} transition-transform duration-200 hover:-translate-y-1 ${
-                  isActive ? "-translate-y-1 ring-2 ring-white/70" : ""
+                className={`group relative shrink-0 snap-start w-[142px] sm:w-[172px] aspect-[3/4] rounded-[18px] overflow-hidden ${tone.bar} transition-transform duration-200 hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-dark ${
+                  isActive ? "-translate-y-1 ring-2 ring-white ring-offset-2 ring-offset-dark" : ""
                 }`}
               >
-                <div className="relative aspect-[3/4] bg-dark">
-                  {c.photo ? (
-                    <Image
-                      src={c.photo}
-                      alt=""
-                      fill
-                      sizes="180px"
-                      className="object-cover"
-                    />
-                  ) : null}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/45 to-transparent" />
-                </div>
+                {/* Photo is TEXTURE, not subject. Restaurant cover shots are
+                    venue photography — a beach, a villa, a boat — so showing
+                    one as "this is Seafood" reads as a mistake. Desaturated
+                    and dropped behind the colour, it adds depth without
+                    claiming to depict the cuisine. */}
+                {c.photo ? (
+                  <Image
+                    src={c.photo}
+                    alt=""
+                    fill
+                    sizes="(max-width: 640px) 142px, 172px"
+                    className="object-cover opacity-25 grayscale mix-blend-luminosity"
+                  />
+                ) : null}
                 <div
-                  className={`${tone.bar} ${tone.label} px-3 py-2.5 flex items-baseline justify-between gap-2`}
-                >
-                  <span className="font-display font-extrabold text-[14px] tracking-[-0.01em] uppercase truncate">
+                  aria-hidden
+                  className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-white/10"
+                />
+
+                <div className="absolute inset-0 p-3.5 flex flex-col justify-end text-left">
+                  <span
+                    className={`font-display font-extrabold uppercase leading-[0.95] tracking-[-0.02em] text-[clamp(16px,1.6vw,20px)] ${tone.label}`}
+                  >
                     {c.name}
                   </span>
-                  <span className="text-[11px] font-bold opacity-70 tabular-nums">
-                    {c.count}
+                  <span
+                    className={`text-[11px] font-bold tabular-nums opacity-65 mt-1 ${tone.label}`}
+                  >
+                    {c.count} {c.count === 1 ? "place" : "places"}
                   </span>
                 </div>
               </button>
@@ -117,24 +173,30 @@ export function EatExplorer({
           })}
         </div>
 
-        {/* Rail arrows — pointer devices only; touch users just swipe. */}
+        {/* Arrows: pointer devices only — touch users swipe. 44px minimum
+            touch target, and they disappear at the ends rather than sitting
+            there doing nothing. */}
         <div className="hidden md:block">
-          <button
-            type="button"
-            onClick={() => scroll(-1)}
-            aria-label="Scroll cuisines left"
-            className="absolute left-2 top-[38%] -translate-y-1/2 size-10 rounded-full bg-white/90 backdrop-blur border border-border shadow-sm flex items-center justify-center hover:bg-white transition-colors"
-          >
-            <ChevronLeft className="size-5 text-dark" />
-          </button>
-          <button
-            type="button"
-            onClick={() => scroll(1)}
-            aria-label="Scroll cuisines right"
-            className="absolute right-2 top-[38%] -translate-y-1/2 size-10 rounded-full bg-white/90 backdrop-blur border border-border shadow-sm flex items-center justify-center hover:bg-white transition-colors"
-          >
-            <ChevronRight className="size-5 text-dark" />
-          </button>
+          {!atStart && (
+            <button
+              type="button"
+              onClick={() => scroll(-1)}
+              aria-label="Previous cuisines"
+              className="absolute left-3 top-1/2 -translate-y-1/2 size-11 rounded-full bg-white shadow-md flex items-center justify-center hover:bg-amber transition-colors"
+            >
+              <ChevronLeft className="size-5 text-dark" />
+            </button>
+          )}
+          {!atEnd && (
+            <button
+              type="button"
+              onClick={() => scroll(1)}
+              aria-label="More cuisines"
+              className="absolute right-3 top-1/2 -translate-y-1/2 size-11 rounded-full bg-white shadow-md flex items-center justify-center hover:bg-amber transition-colors"
+            >
+              <ChevronRight className="size-5 text-dark" />
+            </button>
+          )}
         </div>
       </div>
 

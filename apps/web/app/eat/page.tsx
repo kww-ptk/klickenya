@@ -102,17 +102,25 @@ export default async function EatPage() {
 
   const cards = restaurants.map(toCard);
 
-  // Cuisine tiles, each borrowing a photo from a restaurant that serves it.
+  // Cuisine tiles. The photo is background texture only (the tile renders it
+  // desaturated behind a colour field), but two tiles showing the same image
+  // still reads as a bug, so prefer one no other tile has taken.
   const cuisineMap = new Map<string, { count: number; photo: string }>();
+  const takenPhotos = new Set<string>();
   for (const r of restaurants) {
+    const photo = photoOf(r, 400);
     for (const c of r.cuisine ?? []) {
       if (!c) continue;
       const existing = cuisineMap.get(c);
       if (existing) {
         existing.count += 1;
-        if (!existing.photo) existing.photo = photoOf(r, 400);
+        if ((!existing.photo || takenPhotos.has(existing.photo)) && photo && !takenPhotos.has(photo)) {
+          existing.photo = photo;
+          takenPhotos.add(photo);
+        }
       } else {
-        cuisineMap.set(c, { count: 1, photo: photoOf(r, 400) });
+        cuisineMap.set(c, { count: 1, photo });
+        if (photo) takenPhotos.add(photo);
       }
     }
   }
