@@ -22,7 +22,7 @@ interface Props {
   initialTables: InitialTable[];
   /**
    * "full"          — legacy /dashboard layout; back link to /dashboard/listings/<id>.
-   * "ordering-only" — /eat layout; back link to /eat/listings/<id>; live-ops links
+   * "ordering-only" — /manage layout; back link to /manage/listings/<id>; live-ops links
    *                   bounce back to /eat after; surface POS related card +
    *                   "Next: Kitchen costing" hint.
    */

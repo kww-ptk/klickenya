@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 /**
- * /eat/settings — placeholder. Account-level settings (profile, password,
+ * /manage/settings — placeholder. Account-level settings (profile, password,
  * plan, billing) shared with the legacy dashboard.
  */
 export default function EatSettingsPage() {

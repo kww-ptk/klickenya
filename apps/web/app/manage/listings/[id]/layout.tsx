@@ -11,7 +11,7 @@ import {
 } from "../../../dashboard/listings/[id]/_lib/features.config";
 
 /**
- * /eat/listings/[id] — restaurant command center (preview).
+ * /manage/listings/[id] — restaurant command center (preview).
  *
  * Re-imagined tab structure: Overview · Menu · Reservations · Orders · Kitchen
  * · POS · Features. Tabs are driven by features.config.ts (the single source
@@ -35,7 +35,7 @@ export default async function EatListingLayout({
   const { id } = await params;
 
   const { user } = await getAuthUser();
-  if (!user) redirect(`/login?returnTo=/eat/listings/${id}`);
+  if (!user) redirect(`/login?returnTo=/manage/listings/${id}`);
 
   const isAdmin = await getIsAdmin(user.id);
   const hostProfile = await getHostProfile(user.id);
@@ -132,7 +132,7 @@ export default async function EatListingLayout({
     return f ? f.getStatus(featureCtx) === "active" : false;
   }
 
-  const baseHref = `/eat/listings/${id}`;
+  const baseHref = `/manage/listings/${id}`;
   const tabs: TabItem[] = [
     { label: "Overview", href: baseHref },
   ];
@@ -167,7 +167,7 @@ export default async function EatListingLayout({
       {/* Header */}
       <div className="mb-5">
         <Link
-          href="/eat/listings"
+          href="/manage/listings"
           className="text-[13px] text-[#9C9485] hover:text-[#16130C] transition-colors"
         >
           ← Restaurants

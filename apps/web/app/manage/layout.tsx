@@ -6,15 +6,16 @@ import { EatSidebar } from "./_components/EatSidebar";
 import { EatBottomNav } from "./_components/EatBottomNav";
 
 /**
- * /eat — restaurant-only command center preview.
+ * /manage — restaurant-only command center preview.
  *
- * Conceptually a separate eat.klickenya.com subdomain. For the preview we
- * mount it under /eat in the same Next.js app — same auth, same Supabase,
+ * Conceptually a separate host. For now we
+ * mount it under /manage in the same Next.js app — same auth, same Supabase,
  * but a stripped-down navigation that hides everything stays/PMS/events
  * related so a restaurateur sees only what's relevant to them.
  *
  * If/when this graduates to a real subdomain, the layout and routes move
- * to the apex of an `apps/eat` workspace; the underlying components stay.
+ * to app.klickenya.com (see the P2 spec — isHouseHost() must learn the
+ * subdomain first); the underlying components stay either way.
  */
 export default async function EatLayout({
   children,
@@ -22,7 +23,7 @@ export default async function EatLayout({
   children: React.ReactNode;
 }) {
   const { user } = await getAuthUser();
-  if (!user) redirect("/login?returnTo=/eat");
+  if (!user) redirect("/login?returnTo=/manage");
 
   const [profile, hostProfile] = await Promise.all([
     getUserProfile(user.id),

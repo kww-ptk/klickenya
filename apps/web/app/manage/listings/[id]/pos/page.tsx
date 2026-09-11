@@ -10,13 +10,13 @@ interface PageProps {
 }
 
 /**
- * /eat/listings/[id]/pos — POS terminal management in the /eat shell.
+ * /manage/listings/[id]/pos — POS terminal management in the /manage shell.
  * Forks from the legacy page so it can pass mode="pos-only" + featureBaseHref.
  */
 export default async function EatPosPage({ params }: PageProps) {
   const { id } = await params;
   const { user } = await getAuthUser();
-  if (!user) redirect(`/login?returnTo=/eat/listings/${id}/pos`);
+  if (!user) redirect(`/login?returnTo=/manage/listings/${id}/pos`);
 
   const isAdmin = await getIsAdmin(user.id);
   const hostProfile = await getHostProfile(user.id);
@@ -32,7 +32,7 @@ export default async function EatPosPage({ params }: PageProps) {
         }`,
     { id, userId: user.id, sanityHostId: hostProfile?.sanity_host_id ?? "" },
   );
-  if (!listing?.slug) redirect("/eat/listings");
+  if (!listing?.slug) redirect("/manage/listings");
 
   let menuQuery = adminClient
     .from("menus")
@@ -45,7 +45,7 @@ export default async function EatPosPage({ params }: PageProps) {
     return (
       <div>
         <Link
-          href={`/eat/listings/${id}`}
+          href={`/manage/listings/${id}`}
           className="text-[13px] text-[#9C9485] hover:text-[#16130C]"
         >
           ← Back to overview
@@ -57,7 +57,7 @@ export default async function EatPosPage({ params }: PageProps) {
           Set up your menu first — the POS reads from your menu items.
         </p>
         <Link
-          href={`/eat/listings/${id}/menu`}
+          href={`/manage/listings/${id}/menu`}
           className="inline-block bg-[#E8A020] text-[#16130C] font-bold text-[13px] px-5 h-[44px] leading-[44px] rounded-full hover:bg-[#d4911c]"
         >
           Set up menu →
@@ -73,7 +73,7 @@ export default async function EatPosPage({ params }: PageProps) {
       menuName={menu.name}
       menuSlug={menu.slug}
       mode="pos-only"
-      featureBaseHref={`/eat/listings/${id}`}
+      featureBaseHref={`/manage/listings/${id}`}
     />
   );
 }

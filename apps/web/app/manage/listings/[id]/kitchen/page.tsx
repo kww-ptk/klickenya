@@ -11,24 +11,24 @@ interface PageProps {
 }
 
 /**
- * /eat/listings/[id]/kitchen — Klickenya Kitchen landing inside the /eat shell.
+ * /manage/listings/[id]/kitchen — Klickenya Kitchen landing inside the /manage shell.
  *
  * The full Kitchen workspace (ingredients, recipes, purchases, suppliers,
  * reports) lives at /dashboard/menu/<menuId>/stock — a large set of pages
- * that haven't been migrated under /eat yet. Rather than redirect there and
+ * that haven't been migrated under /manage yet. Rather than redirect there and
  * lose the eat sidebar, this page shows a landing:
  *   - off  → enable button + value-prop explainer
  *   - on   → key metrics + a single primary "Open kitchen workspace" CTA that
  *            opens the full toolset in the legacy route (with back link
- *            returning to /eat).
+ *            returning to /manage).
  *
  * The deep workspace pages still live at /dashboard/menu/<id>/stock/* — they
- * will move under /eat in a future pass once IA is settled.
+ * will move under /manage in a future pass once IA is settled.
  */
 export default async function EatKitchenPage({ params }: PageProps) {
   const { id } = await params;
   const { user } = await getAuthUser();
-  if (!user) redirect(`/login?returnTo=/eat/listings/${id}/kitchen`);
+  if (!user) redirect(`/login?returnTo=/manage/listings/${id}/kitchen`);
 
   const isAdmin = await getIsAdmin(user.id);
   const hostProfile = await getHostProfile(user.id);
@@ -44,7 +44,7 @@ export default async function EatKitchenPage({ params }: PageProps) {
         }`,
     { id, userId: user.id, sanityHostId: hostProfile?.sanity_host_id ?? "" },
   );
-  if (!listing?.slug) redirect("/eat/listings");
+  if (!listing?.slug) redirect("/manage/listings");
 
   let menuQuery = adminClient
     .from("menus")
@@ -58,7 +58,7 @@ export default async function EatKitchenPage({ params }: PageProps) {
       <div className="space-y-5">
         <div>
           <Link
-            href={`/eat/listings/${id}`}
+            href={`/manage/listings/${id}`}
             className="text-[13px] text-[#9C9485] hover:text-[#16130C]"
           >
             ← Back to overview
@@ -72,7 +72,7 @@ export default async function EatKitchenPage({ params }: PageProps) {
           </p>
         </div>
         <Link
-          href={`/eat/listings/${id}/menu`}
+          href={`/manage/listings/${id}/menu`}
           className="inline-block bg-[#E8A020] text-[#16130C] font-bold text-[13px] px-5 h-[44px] leading-[44px] rounded-full hover:bg-[#d4911c]"
         >
           Set up menu →
@@ -84,8 +84,8 @@ export default async function EatKitchenPage({ params }: PageProps) {
   // Metrics only matter when stock is enabled. Off → show value prop + CTA.
   const stockEnabled = menu.stock_enabled ?? false;
 
-  // Build back= URL so the legacy stock pages know to return to /eat.
-  const backToEat = `back=${encodeURIComponent(`/eat/listings/${id}/kitchen`)}`;
+  // Build back= URL so the legacy stock pages know to return to /manage.
+  const backToEat = `back=${encodeURIComponent(`/manage/listings/${id}/kitchen`)}`;
   const workspaceHref = `/dashboard/menu/${menu.id}/stock?${backToEat}`;
 
   /* ── OFF state ── */
@@ -94,7 +94,7 @@ export default async function EatKitchenPage({ params }: PageProps) {
       <div className="space-y-5">
         <div>
           <Link
-            href={`/eat/listings/${id}`}
+            href={`/manage/listings/${id}`}
             className="text-[13px] text-[#9C9485] hover:text-[#16130C]"
           >
             ← Back to overview
@@ -165,7 +165,7 @@ export default async function EatKitchenPage({ params }: PageProps) {
     <div className="space-y-5">
       <div>
         <Link
-          href={`/eat/listings/${id}`}
+          href={`/manage/listings/${id}`}
           className="text-[13px] text-[#9C9485] hover:text-[#16130C]"
         >
           ← Back to overview
@@ -231,7 +231,7 @@ export default async function EatKitchenPage({ params }: PageProps) {
           </p>
         </div>
         <Link
-          href={`/eat/listings/${id}/features`}
+          href={`/manage/listings/${id}/features`}
           className="shrink-0 text-[12px] font-semibold text-[#E8A020] hover:underline self-center"
         >
           Manage →

@@ -12,18 +12,18 @@ interface PageProps {
 }
 
 /**
- * /eat/listings/<sanityListingId>/menu — same MenuBuilder as /dashboard/menu/<menuId>,
+ * /manage/listings/<sanityListingId>/menu — same MenuBuilder as /dashboard/menu/<menuId>,
  * but addressed by listing id so the URL stays within the eat shell.
  *
  * Resolves the menu via the listing → slug → menu lookup chain that the
- * /eat layout already used; here we do it again because page components
+ * /manage layout already used; here we do it again because page components
  * don't receive layout-fetched data.
  */
 export default async function EatMenuPage({ params }: PageProps) {
   const { id: listingId } = await params;
 
   const { user } = await getAuthUser();
-  if (!user) redirect(`/login?returnTo=/eat/listings/${listingId}/menu`);
+  if (!user) redirect(`/login?returnTo=/manage/listings/${listingId}/menu`);
 
   const isAdmin = await getIsAdmin(user.id);
   const hostProfile = await getHostProfile(user.id);
@@ -101,13 +101,13 @@ export default async function EatMenuPage({ params }: PageProps) {
         listingId={listingId}
         stockEnabled={stockEnabled}
         orderViewMode={(settings?.order_view_mode as "combined" | "split") ?? "combined"}
-        backHref={`/eat/listings/${listingId}`}
+        backHref={`/manage/listings/${listingId}`}
         backLabel="← Back to overview"
-        // Restaurant menu page in /eat is single-purpose: create menu, publish,
+        // Restaurant menu page in /manage is single-purpose: create menu, publish,
         // download QR. All other features (reservations, ordering, kitchen)
         // get their own tabs — surface as hint cards that link out.
         mode="menu-only"
-        featureBaseHref={`/eat/listings/${listingId}`}
+        featureBaseHref={`/manage/listings/${listingId}`}
       />
     </ToastProvider>
   );

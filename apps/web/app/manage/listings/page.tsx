@@ -16,7 +16,7 @@ interface EatListing {
 
 export default async function EatListingsPage() {
   const { user } = await getAuthUser();
-  if (!user) redirect("/login?returnTo=/eat/listings");
+  if (!user) redirect("/login?returnTo=/manage/listings");
 
   const isAdmin = await getIsAdmin(user.id);
   const hostProfile = await getHostProfile(user.id);
@@ -71,7 +71,7 @@ export default async function EatListingsPage() {
       isVerified: l.isVerified,
     }));
   } catch (err) {
-    console.error("[/eat/listings] Sanity fetch error:", err);
+    console.error("[/manage/listings] Sanity fetch error:", err);
   }
 
   return (
@@ -115,7 +115,7 @@ export default async function EatListingsPage() {
           {listings.map((listing) => (
             <Link
               key={listing._id}
-              href={`/eat/listings/${listing._id}`}
+              href={`/manage/listings/${listing._id}`}
               className="bg-white rounded-xl lg:rounded-2xl border border-[#E2DDD5] p-3 lg:p-4 shadow-sm hover:shadow-md hover:border-[#E8A020]/40 transition-all flex gap-3"
             >
               <div className="shrink-0 w-[72px] h-[72px] lg:w-[100px] lg:h-[100px] rounded-lg lg:rounded-xl overflow-hidden bg-[#F4F1EC] relative">

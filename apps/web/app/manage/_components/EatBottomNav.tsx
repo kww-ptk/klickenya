@@ -12,14 +12,14 @@ interface TabItem {
 }
 
 const TABS: TabItem[] = [
-  { href: "/eat/listings", label: "Restaurants", Icon: Building2 },
-  { href: "/eat/stats", label: "Stats", Icon: BarChart3 },
-  { href: "/eat/inbox", label: "Inbox", Icon: Inbox },
-  { href: "/eat/settings", label: "Settings", Icon: Settings },
+  { href: "/manage/listings", label: "Restaurants", Icon: Building2 },
+  { href: "/manage/stats", label: "Stats", Icon: BarChart3 },
+  { href: "/manage/inbox", label: "Inbox", Icon: Inbox },
+  { href: "/manage/settings", label: "Settings", Icon: Settings },
 ];
 
 /**
- * Mobile-only 4-icon bar at the bottom of /eat/*. Mirrors DashboardBottomNav
+ * Mobile-only 4-icon bar at the bottom of /manage/*. Mirrors DashboardBottomNav
  * but with the restaurant-only set.
  */
 export function EatBottomNav({ enquiryCount = 0 }: { enquiryCount?: number }) {
@@ -54,7 +54,7 @@ export function EatBottomNav({ enquiryCount = 0 }: { enquiryCount?: number }) {
               >
                 {label}
               </span>
-              {href === "/eat/inbox" && enquiryCount > 0 && (
+              {href === "/manage/inbox" && enquiryCount > 0 && (
                 <span className="absolute top-0.5 right-1 min-w-[16px] h-4 px-1 rounded-full bg-[#E8A020] text-[#16130C] text-[9px] font-bold flex items-center justify-center">
                   {enquiryCount > 99 ? "99+" : enquiryCount}
                 </span>

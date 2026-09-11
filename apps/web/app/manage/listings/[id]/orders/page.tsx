@@ -11,20 +11,20 @@ interface PageProps {
 }
 
 /**
- * /eat/listings/[id]/orders — Table Ordering setup page in the /eat shell.
+ * /manage/listings/[id]/orders — Table Ordering setup page in the /manage shell.
  * Forks from the legacy page so it can pass mode="ordering-only" +
  * featureBaseHref. Same data fetching as legacy.
  */
 export default async function EatOrdersPage({ params }: PageProps) {
   const { id } = await params;
   const { user } = await getAuthUser();
-  if (!user) redirect(`/login?returnTo=/eat/listings/${id}/orders`);
+  if (!user) redirect(`/login?returnTo=/manage/listings/${id}/orders`);
 
   const isAdmin = await getIsAdmin(user.id);
   const hostProfile = await getHostProfile(user.id);
   if (!hostProfile && !isAdmin) redirect("/dashboard");
 
-  // Dual restaurant check (type OR subcategory) — see /eat/listings/[id]/layout.tsx.
+  // Dual restaurant check (type OR subcategory) — see /manage/listings/[id]/layout.tsx.
   const listing = await sanityClient.fetch<{ slug: string; title: string } | null>(
     isAdmin
       ? `*[_id == $id && _type == "listing" && (type == "restaurant" || subcategory == "restaurants")][0]{
@@ -35,7 +35,7 @@ export default async function EatOrdersPage({ params }: PageProps) {
         }`,
     { id, userId: user.id, sanityHostId: hostProfile?.sanity_host_id ?? "" },
   );
-  if (!listing?.slug) redirect("/eat/listings");
+  if (!listing?.slug) redirect("/manage/listings");
 
   let menuQuery = adminClient
     .from("menus")
@@ -48,7 +48,7 @@ export default async function EatOrdersPage({ params }: PageProps) {
     return (
       <div>
         <Link
-          href={`/eat/listings/${id}`}
+          href={`/manage/listings/${id}`}
           className="text-[13px] text-[#9C9485] hover:text-[#16130C]"
         >
           ← Back to overview
@@ -60,7 +60,7 @@ export default async function EatOrdersPage({ params }: PageProps) {
           Set up your menu first before turning on table ordering.
         </p>
         <Link
-          href={`/eat/listings/${id}/menu`}
+          href={`/manage/listings/${id}/menu`}
           className="inline-block bg-[#E8A020] text-[#16130C] font-bold text-[13px] px-5 h-[44px] leading-[44px] rounded-full hover:bg-[#d4911c]"
         >
           Set up menu →
@@ -94,7 +94,7 @@ export default async function EatOrdersPage({ params }: PageProps) {
       areas={(areasRaw ?? []) as AreaOption[]}
       initialTables={(tablesRaw ?? []) as InitialTable[]}
       mode="ordering-only"
-      featureBaseHref={`/eat/listings/${id}`}
+      featureBaseHref={`/manage/listings/${id}`}
     />
   );
 }

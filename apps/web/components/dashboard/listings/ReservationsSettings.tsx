@@ -45,7 +45,7 @@ interface ReservationsSettingsProps {
   mode?: "full" | "reservation-only";
   /**
    * URL prefix for the "Next feature" hint card link in reservation-only mode.
-   * Example: "/eat/listings/<sanityId>" → hint links to ".../orders".
+   * Example: "/manage/listings/<sanityId>" → hint links to ".../orders".
    * Required when mode === "reservation-only".
    */
   featureBaseHref?: string;

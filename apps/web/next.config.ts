@@ -122,6 +122,20 @@ const nextConfig: NextConfig = {
   async redirects() {
     return [
       ...legacyListingRedirects(),
+      // The restaurant command center lived at /eat until 2026-09-11, when /eat
+      // became the public food-discovery surface. Hosts have these on their
+      // phones, so the old paths must keep working. Only the command-center
+      // SUBPATHS redirect — bare /eat is the new public page and must not.
+      ...["listings", "inbox", "settings", "stats"].map((seg) => ({
+        source: `/eat/${seg}/:path*`,
+        destination: `/manage/${seg}/:path*`,
+        permanent: false,
+      })),
+      ...["listings", "inbox", "settings", "stats"].map((seg) => ({
+        source: `/eat/${seg}`,
+        destination: `/manage/${seg}`,
+        permanent: false,
+      })),
       {
         source: "/kenya/watamu/beach/garoda-beach",
         destination: "/experiences/watamu/garoda-beach",

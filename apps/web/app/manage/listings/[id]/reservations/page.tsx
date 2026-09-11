@@ -7,10 +7,10 @@ import { ReservationsDashboard } from "@/components/dashboard/listings/Reservati
 import { ToastProvider } from "@/components/ui/Toast";
 
 /**
- * /eat/listings/[id]/reservations
+ * /manage/listings/[id]/reservations
  *
  * Forks the legacy /dashboard/listings/[id]/reservations page so it can pass
- * mode="reservation-only" + featureBaseHref="/eat/listings/<id>" into the
+ * mode="reservation-only" + featureBaseHref="/manage/listings/<id>" into the
  * dashboard. Same data fetching as legacy — only the chrome changes.
  *
  * The shared ReservationsDashboard component handles both modes; this page
@@ -24,13 +24,13 @@ export default async function EatReservationsPage({
   const { id } = await params;
 
   const { user } = await getAuthUser();
-  if (!user) redirect(`/login?returnTo=/eat/listings/${id}/reservations`);
+  if (!user) redirect(`/login?returnTo=/manage/listings/${id}/reservations`);
 
   const isAdmin = await getIsAdmin(user.id);
   const hostProfile = await getHostProfile(user.id);
   if (!hostProfile && !isAdmin) redirect("/dashboard");
 
-  // Same restaurant-only listing fetch as elsewhere in /eat (dual type/subcategory check).
+  // Same restaurant-only listing fetch as elsewhere in /manage (dual type/subcategory check).
   const listing = await sanityClient.fetch<{
     slug: string;
     city: string | null;
@@ -49,7 +49,7 @@ export default async function EatReservationsPage({
     },
   );
 
-  if (!listing) redirect("/eat/listings");
+  if (!listing) redirect("/manage/listings");
 
   // Fetch linked menu — restaurant-only.
   let menuQuery = adminClient
@@ -67,7 +67,7 @@ export default async function EatReservationsPage({
   if (!menu || !menu.reservations_enabled) {
     // Send user back to the overview when reservations aren't enabled —
     // overview's Features section will offer the toggle.
-    redirect(`/eat/listings/${id}`);
+    redirect(`/manage/listings/${id}`);
   }
 
   const [initialReservations, areasResult, windowsResult] = await Promise.all([
@@ -112,9 +112,9 @@ export default async function EatReservationsPage({
           timeWindows,
         }}
         // eat-specific: strip POS/ordering cards from Settings, surface the
-        // next-step hint pointing into the /eat tree.
+        // next-step hint pointing into the /manage tree.
         mode="reservation-only"
-        featureBaseHref={`/eat/listings/${id}`}
+        featureBaseHref={`/manage/listings/${id}`}
       />
     </ToastProvider>
   );

@@ -48,10 +48,10 @@ export function EatSidebar({
   const pathname = usePathname();
 
   const NAV: NavItem[] = [
-    { href: "/eat/listings", label: "Restaurants", Icon: Building2 },
-    { href: "/eat/stats", label: "Stats", Icon: BarChart3 },
-    { href: "/eat/inbox", label: "Inbox", Icon: Inbox, badge: enquiryCount },
-    { href: "/eat/settings", label: "Settings", Icon: Settings },
+    { href: "/manage/listings", label: "Restaurants", Icon: Building2 },
+    { href: "/manage/stats", label: "Stats", Icon: BarChart3 },
+    { href: "/manage/inbox", label: "Inbox", Icon: Inbox, badge: enquiryCount },
+    { href: "/manage/settings", label: "Settings", Icon: Settings },
   ];
 
   const planColor =
@@ -112,8 +112,8 @@ export function EatSidebar({
       <nav className="flex-1 py-4 space-y-0.5 overflow-y-auto">
         {NAV.map(({ href, label, Icon, badge }) => {
           const active =
-            href === "/eat"
-              ? pathname === "/eat"
+            href === "/manage"
+              ? pathname === "/manage"
               : pathname === href || pathname.startsWith(href + "/");
           return (
             <Link

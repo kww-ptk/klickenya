@@ -30,7 +30,7 @@ const STATUS_STYLES: Record<FeatureStatus, { label: string; className: string }>
 };
 
 /**
- * /eat/listings/[id]/features
+ * /manage/listings/[id]/features
  *
  * The real switchboard. Replaces the legacy /dashboard/listings/[id]/features
  * placeholder ("coming soon — go to menu builder instead"). Lists every
@@ -51,7 +51,7 @@ export default async function EatFeaturesPage({
   const { id } = await params;
 
   const { user } = await getAuthUser();
-  if (!user) redirect(`/login?returnTo=/eat/listings/${id}/features`);
+  if (!user) redirect(`/login?returnTo=/manage/listings/${id}/features`);
 
   const isAdmin = await getIsAdmin(user.id);
   const hostProfile = await getHostProfile(user.id);
@@ -110,10 +110,10 @@ export default async function EatFeaturesPage({
   }
   function configureHrefFor(featureId: string): string | null {
     switch (featureId) {
-      case "table_ordering": return `/eat/listings/${id}/orders`;
-      case "takeaway":       return `/eat/listings/${id}/orders`;
-      case "reservations":   return `/eat/listings/${id}/reservations`;
-      case "klickenya_kitchen": return `/eat/listings/${id}/kitchen`;
+      case "table_ordering": return `/manage/listings/${id}/orders`;
+      case "takeaway":       return `/manage/listings/${id}/orders`;
+      case "reservations":   return `/manage/listings/${id}/reservations`;
+      case "klickenya_kitchen": return `/manage/listings/${id}/kitchen`;
       default: return null;
     }
   }
@@ -144,7 +144,7 @@ export default async function EatFeaturesPage({
           label="Digital menu"
           shortDescription="Your live menu. QR-accessible for guests."
           statusBadge={menuStatus === "active" ? "active" : "inactive"}
-          configureHref={menu ? `/eat/listings/${id}/menu` : null}
+          configureHref={menu ? `/manage/listings/${id}/menu` : null}
           toggleColumn={null}
           menuId={menu?.id ?? null}
           currentValue={!!menu}
@@ -198,7 +198,7 @@ export default async function EatFeaturesPage({
           label="POS terminal"
           shortDescription="Tablet sign-in for waiters: take orders, settle bills, manage tables."
           statusBadge={menu ? "active" : "inactive"}
-          configureHref={menu ? `/eat/listings/${id}/pos` : null}
+          configureHref={menu ? `/manage/listings/${id}/pos` : null}
           toggleColumn={null}
           menuId={null}
           currentValue={!!menu}

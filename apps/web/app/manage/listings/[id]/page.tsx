@@ -10,7 +10,7 @@ import {
 } from "../../../dashboard/listings/[id]/_lib/features.config";
 
 /**
- * /eat/listings/[id] — restaurant overview.
+ * /manage/listings/[id] — restaurant overview.
  *
  * Three sections, no fluff:
  *   1. KPI strip — pending reservations · scans this week · active features
@@ -30,13 +30,13 @@ export default async function EatOverviewPage({
   const { id } = await params;
 
   const { user } = await getAuthUser();
-  if (!user) redirect(`/login?returnTo=/eat/listings/${id}`);
+  if (!user) redirect(`/login?returnTo=/manage/listings/${id}`);
 
   const isAdmin = await getIsAdmin(user.id);
   const hostProfile = await getHostProfile(user.id);
   if (!hostProfile && !isAdmin) redirect("/dashboard");
 
-  // Dual restaurant check — see /eat/listings/[id]/layout.tsx for the rationale.
+  // Dual restaurant check — see /manage/listings/[id]/layout.tsx for the rationale.
   const listing = await sanityClient.fetch<{
     slug: string;
     city: string | null;
@@ -140,7 +140,7 @@ export default async function EatOverviewPage({
     ChefHat,
   };
 
-  const baseHref = `/eat/listings/${id}`;
+  const baseHref = `/manage/listings/${id}`;
 
   // Where does each feature's primary tab live?
   const featureHref: Record<string, string> = {
