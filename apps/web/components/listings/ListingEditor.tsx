@@ -270,7 +270,7 @@ function DescriptionRows({ rows, onChangeText, onRemove, onAdd }: {
                 {textRowLabel(row)}
               </span>
               <button type="button" onClick={() => onRemove(row.key)}
-                className="text-[11px] font-semibold text-text3 hover:text-red-600 transition-colors">
+                className="-mr-2 px-2 py-1 text-[12px] font-semibold text-text3 hover:text-red-600 transition-colors">
                 Remove
               </button>
             </div>
@@ -345,6 +345,31 @@ export function ListingEditor({ mode, role, initialValues, listingId, onSuccessR
   /* Rich-description rows. `originalRowText` lets an untouched block be sent back
      as "keep" so a save rewrites only what the host actually changed. */
   const loadedRowText = useRef(originalRowText(initialValues?.descriptionRows ?? []));
+
+  /* Unsaved-changes guard.
+     The form has eleven sections and "Save changes" lives at the bottom of all
+     of them, so it is easy to edit something near the top — the description —
+     and navigate away believing it is saved. Nothing warned you, and the edit
+     was gone. Comparing whole snapshots rather than setting a flag in each
+     handler means a new field cannot quietly opt out of the guard. */
+  const savedSnapshot = useRef(JSON.stringify(initialValues ?? emptyListingForm));
+  const formJson = JSON.stringify(form);
+  const dirty = formJson !== savedSnapshot.current;
+
+  useEffect(() => {
+    if (!dirty) return;
+    const warn = (e: BeforeUnloadEvent) => { e.preventDefault(); e.returnValue = ""; };
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, [dirty]);
+
+  /* Guards the two links we own. The browser's own back button cannot be
+     intercepted in the App Router, so it stays unguarded — beforeunload does
+     not fire on a client-side navigation either. */
+  function confirmLeave(e: React.MouseEvent) {
+    if (!dirty) return;
+    if (!window.confirm("You have unsaved changes. Leave without saving?")) e.preventDefault();
+  }
 
   function setRowText(key: string, text: string) {
     setForm((f) => ({
@@ -555,6 +580,7 @@ export function ListingEditor({ mode, role, initialValues, listingId, onSuccessR
       const res = await fetch(endpoint, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
       const json = await res.json();
       if (!res.ok) { setError(json.error ?? "Something went wrong."); return; }
+      savedSnapshot.current = formJson; // stop the guard firing on our own redirect
       router.push(onSuccessRedirect);
     } catch {
       setError("Something went wrong. Please try again.");
@@ -571,7 +597,7 @@ export function ListingEditor({ mode, role, initialValues, listingId, onSuccessR
     <>
       {/* Header */}
       <div>
-        <Link href={backHref}
+        <Link href={backHref} onClick={confirmLeave}
           className="flex items-center gap-1.5 text-[13px] text-text3 hover:text-dark transition-colors mb-4">
           <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
@@ -1112,15 +1138,23 @@ export function ListingEditor({ mode, role, initialValues, listingId, onSuccessR
           <div className="rounded-xl bg-red-50 border border-red-100 px-4 py-3 text-[13px] text-red-600">{error}</div>
         )}
 
-        <div className="flex items-center gap-3 pb-8">
-          <button type="submit" disabled={!canSubmit || loading}
-            className="flex-1 sm:flex-none sm:px-8 py-3 bg-amber hover:bg-[#D4901C] disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold text-[14px] rounded-xl transition-colors">
-            {loading ? (mode === "create" ? "Creating…" : "Saving…") : (mode === "create" ? "Create listing" : "Save changes")}
-          </button>
-          <Link href={backHref}
-            className="px-6 py-3 text-[14px] font-semibold text-text2 hover:text-dark transition-colors">
-            Cancel
-          </Link>
+        {/* Sticky so Save is reachable from any section rather than only after
+            scrolling past all eleven. The bar's own bottom padding keeps the
+            buttons clear of the fixed mobile nav, which paints over the rest. */}
+        <div className="sticky bottom-0 pt-3 pb-[76px] lg:pb-3 bg-canvas/95 backdrop-blur-sm border-t border-[#F0EDE8]">
+          <div className="flex items-center gap-3">
+            <button type="submit" disabled={!canSubmit || loading}
+              className="flex-1 sm:flex-none sm:px-8 py-3 bg-amber hover:bg-[#D4901C] disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold text-[14px] rounded-xl transition-colors">
+              {loading ? (mode === "create" ? "Creating…" : "Saving…") : (mode === "create" ? "Create listing" : "Save changes")}
+            </button>
+            <Link href={backHref} onClick={confirmLeave}
+              className="px-6 py-3 text-[14px] font-semibold text-text2 hover:text-dark transition-colors">
+              Cancel
+            </Link>
+            {dirty && (
+              <span className="ml-auto text-[12px] font-semibold text-amber whitespace-nowrap">Unsaved changes</span>
+            )}
+          </div>
         </div>
       </form>
     </>
