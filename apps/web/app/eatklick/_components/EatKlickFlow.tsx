@@ -42,6 +42,8 @@ export type Place = {
   foodTags: string[];
   menu: MenuSectionLite[];
   menuId: string;
+  /** menus.slug — the tracking link needs it whether or not ordering is on. */
+  menuSlug: string;
 };
 
 type CategoryKey = "restaurant" | "grocery" | "pharmacy" | "liquor";
@@ -636,7 +638,7 @@ function MenuSheet({
                         onAdd(
                           {
                             menuId: data.menuId,
-                            menuSlug: data.orderHref?.replace("/m/", "") ?? "",
+                            menuSlug: data.menuSlug,
                             restaurant: data.name,
                           },
                           { id: item.id, name: item.name, priceKes: item.priceKes },

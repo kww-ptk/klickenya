@@ -73,6 +73,7 @@ export default async function EatKlickPage() {
       foodTags: menu?.foodTags ?? [],
       menu: menu?.sections ?? [],
       menuId: menu?.menuId ?? "",
+      menuSlug: menu?.menuSlug ?? "",
     };
   });
 
