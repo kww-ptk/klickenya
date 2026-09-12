@@ -85,17 +85,22 @@ export default async function EatKlickPage() {
   });
 
   // Towns come from the listings themselves, so a town never appears empty.
-  const counts = new Map<string, { label: string; n: number }>();
+  const counts = new Map<string, { label: string; n: number; photo: string }>();
   for (const l of listings) {
     const label = (l.city ?? "").trim();
     if (!label) continue;
     const key = toSlug(label);
+    const photo = l.coverPhoto ? urlForImage(l.coverPhoto).width(600).url() : "";
     const existing = counts.get(key);
-    if (existing) existing.n += 1;
-    else counts.set(key, { label, n: 1 });
+    if (existing) {
+      existing.n += 1;
+      if (!existing.photo) existing.photo = photo;
+    } else {
+      counts.set(key, { label, n: 1, photo });
+    }
   }
   const towns: Town[] = [...counts.entries()]
-    .map(([slug, v]) => ({ slug, label: v.label, count: v.n }))
+    .map(([slug, v]) => ({ slug, label: v.label, count: v.n, photo: v.photo }))
     .sort((a, b) => b.count - a.count);
 
   return <EatKlickFlow towns={towns} places={places} />;

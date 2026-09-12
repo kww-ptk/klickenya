@@ -23,7 +23,7 @@ import type { MenuSectionLite, MenuItemLite } from "@/lib/eat/menus";
 import { useEatCart } from "@/components/eat/useEatCart";
 import { CartPanel } from "@/components/eat/CartPanel";
 
-export type Town = { slug: string; label: string; count: number };
+export type Town = { slug: string; label: string; count: number; photo: string };
 
 export type Place = {
   id: string;
@@ -70,6 +70,16 @@ function titleCase(slug?: string): string {
     .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
     .join(" ");
 }
+
+/** Full class strings — Tailwind cannot see classes built from template
+ *  literals, so a computed `border-${tone}` would ship unstyled. */
+const TOWN_PALETTE = [
+  { border: "border-amber", bar: "bg-amber", label: "text-dark" },
+  { border: "border-teal", bar: "bg-teal", label: "text-white" },
+  { border: "border-purple2", bar: "bg-purple2", label: "text-white" },
+  { border: "border-amber2", bar: "bg-amber2", label: "text-dark" },
+  { border: "border-green", bar: "bg-green", label: "text-white" },
+];
 
 const PRICE_GLYPH: Record<string, string> = {
   budget: "$",
@@ -167,27 +177,59 @@ export function EatKlickFlow({ towns, places }: { towns: Town[]; places: Place[]
           {/* ── Step 1 · Town ────────────────────────────── */}
           <section hidden={step !== 1} aria-label="Choose your town">
             <Panel active={step === 1}>
-              <Eyebrow>Step one</Eyebrow>
-              <Heading>Where are you?</Heading>
-              <Sub>Pick a town and we&apos;ll show what&apos;s open near you.</Sub>
+              <div className="text-center">
+                <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-white/10 backdrop-blur-[16px] border border-white/15 mb-7">
+                  <UtensilsCrossed className="size-3.5 text-amber" />
+                  <span className="text-[13px] font-semibold text-white/85">
+                    Watamu · Kilifi · the Kenyan coast
+                  </span>
+                </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-8">
-                {towns.map((t) => (
-                  <button
-                    key={t.slug}
-                    type="button"
-                    onClick={() => setTown(t)}
-                    className="group rounded-[18px] border border-white/15 bg-white/[0.06] hover:bg-white/[0.12] hover:border-amber px-5 py-5 text-left transition-all duration-200 hover:-translate-y-0.5"
-                  >
-                    <MapPin className="size-4 text-amber mb-2.5" />
-                    <p className="font-display text-[19px] font-extrabold tracking-[-0.02em]">
-                      {t.label}
-                    </p>
-                    <p className="text-[12px] font-semibold text-white/45 tabular-nums mt-0.5">
-                      {t.count} {t.count === 1 ? "place" : "places"}
-                    </p>
-                  </button>
-                ))}
+                <h1 className="font-display font-extrabold text-white uppercase tracking-[-0.045em] leading-[0.92] text-[clamp(34px,7vw,72px)] mb-4">
+                  Crave it.
+                  <br />
+                  Tap it. Eat it.
+                </h1>
+                <p className="text-white/55 text-[15.5px] md:text-[16px] max-w-[460px] mx-auto mb-9">
+                  Start with your town — we&apos;ll show what&apos;s open near you.
+                </p>
+              </div>
+
+              {/* Same colour-blocked tile language as /eat's cuisine slider. */}
+              <div className="flex gap-3.5 overflow-x-auto snap-x snap-mandatory pb-2 -mx-5 px-5 md:mx-0 md:px-0 md:justify-center [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                {towns.map((t, i) => {
+                  const tone = TOWN_PALETTE[i % TOWN_PALETTE.length];
+                  return (
+                    <button
+                      key={t.slug}
+                      type="button"
+                      onClick={() => setTown(t)}
+                      className={`group relative shrink-0 snap-start w-[150px] sm:w-[190px] rounded-[16px] overflow-hidden border-[3px] ${tone.border} transition-transform duration-200 hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-purple-dark`}
+                    >
+                      <div className="relative aspect-square sm:aspect-[3/4] bg-purple-dark">
+                        {t.photo ? (
+                          <Image
+                            src={t.photo}
+                            alt=""
+                            fill
+                            sizes="(max-width: 640px) 150px, 190px"
+                            className="object-cover transition-transform duration-300 group-hover:scale-[1.04]"
+                          />
+                        ) : (
+                          <span className={`absolute inset-0 ${tone.bar}`} />
+                        )}
+                      </div>
+                      <div className={`${tone.bar} ${tone.label} px-3 py-2.5 text-left`}>
+                        <span className="block font-display font-extrabold uppercase leading-none tracking-[-0.01em] text-[14px] sm:text-[15px] truncate">
+                          {t.label}
+                        </span>
+                        <span className="block text-[10.5px] font-bold opacity-70 tabular-nums mt-0.5">
+                          {t.count} {t.count === 1 ? "place" : "places"}
+                        </span>
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
             </Panel>
           </section>
