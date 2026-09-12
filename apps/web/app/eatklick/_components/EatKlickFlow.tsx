@@ -19,7 +19,12 @@ import {
   Check,
 } from "lucide-react";
 import { isOpenNow } from "@/lib/listings/openingHours";
-import type { MenuSectionLite, MenuItemLite } from "@/lib/eat/menus";
+import type {
+  MenuSectionLite,
+  MenuItemLite,
+  ReservationConfig,
+} from "@/lib/eat/menus";
+import { ReservationSheet } from "@/components/reservations/ReservationSheet";
 import { matchesFoodTag } from "@/lib/eat/foodTags";
 import { useEatCart } from "@/components/eat/useEatCart";
 import { CartPanel } from "@/components/eat/CartPanel";
@@ -40,6 +45,8 @@ export type Place = {
   orderHref?: string;
   canBook: boolean;
   canDeliver: boolean;
+  /** Booking settings, when this kitchen takes reservations. */
+  reservation: ReservationConfig | null;
   /** Dish tags derived from this kitchen's own item names. */
   foodTags: string[];
   menu: MenuSectionLite[];
@@ -763,38 +770,54 @@ function MenuSheet({
           )}
         </div>
 
-        <footer className="border-t border-border px-5 md:px-8 py-3.5 flex flex-wrap items-center gap-2.5">
+        <footer className="border-t border-border px-4 md:px-8 py-3 flex items-center gap-2">
+          {/* Secondary on the left. Booking is the fallback action — most
+              people opening a menu are here to order. */}
+          {data?.reservation ? (
+            // Booking opens over the menu rather than sending the guest to the
+            // listing page. Leaving the flow to book — and losing a part-filled
+            // basket on the way — is the opposite of seamless.
+            <ReservationSheet
+              key={data.reservation.menuId}
+              menuId={data.reservation.menuId}
+              menuName={data.name || data.reservation.menuName}
+              source="qr_menu"
+              timeWindows={data.reservation.timeWindows}
+              areas={data.reservation.areas}
+              maxPartySize={data.reservation.maxPartySize}
+              maxAdvanceDays={data.reservation.maxAdvanceDays}
+              leadTimeHours={data.reservation.leadTimeHours}
+              restaurantPhone={data.reservation.restaurantPhone}
+              triggerLabel="Book"
+              triggerClassName="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full border border-border text-text2 text-[12.5px] font-bold hover:border-amber hover:text-text transition-colors shrink-0"
+            />
+          ) : (
+            <Link
+              href={data?.href ?? "#"}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full border border-border text-text2 text-[12.5px] font-bold hover:border-amber hover:text-text transition-colors shrink-0"
+            >
+              Restaurant
+            </Link>
+          )}
+
+          {/* Basket on the right, where a thumb reaches. Dark rather than
+              amber: every dish row already has an amber "+", so an amber bar
+              here competed with them instead of reading as the next step. */}
           {cartCount > 0 ? (
             <button
               type="button"
               onClick={onOpenCart}
-              className="inline-flex items-center gap-3 px-6 py-3 rounded-full bg-amber text-dark text-[14px] font-extrabold hover:bg-amber2 transition-colors"
+              aria-label={`View basket, ${cartCount} ${cartCount === 1 ? "item" : "items"}`}
+              className="ml-auto inline-flex items-center gap-2 px-4 py-2 rounded-full bg-dark text-white text-[13px] font-extrabold hover:bg-text2 transition-colors shrink-0"
             >
               <ShoppingBag className="size-4" />
-              View basket · {cartCount}
-              <span className="tabular-nums opacity-80">
-                KSh {cartTotal.toLocaleString()}
-              </span>
+              {cartCount} {cartCount === 1 ? "item" : "items"}
             </button>
           ) : (
-            <p className="text-text3 text-[13px]">
-              Add something to start a basket.
+            <p className="ml-auto text-text3 text-[12px] shrink-0">
+              Tap + to start a basket
             </p>
           )}
-
-          <Link
-            href={data?.href ?? "#"}
-            className="inline-flex items-center gap-2 px-5 py-3 rounded-full border border-border text-text text-[13.5px] font-bold hover:border-amber transition-colors ml-auto"
-          >
-            {data?.canBook ? (
-              <>
-                <CalendarCheck className="size-4" />
-                Book a table
-              </>
-            ) : (
-              "View restaurant"
-            )}
-          </Link>
         </footer>
       </div>
     </div>
