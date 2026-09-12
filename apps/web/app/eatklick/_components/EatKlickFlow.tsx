@@ -24,6 +24,7 @@ import type {
   MenuItemLite,
   ReservationConfig,
 } from "@/lib/eat/menus";
+import type { SelectedOption } from "@/components/eat/useEatCart";
 import { ReservationSheet } from "@/components/reservations/ReservationSheet";
 import { matchesFoodTag } from "@/lib/eat/foodTags";
 import { useEatCart } from "@/components/eat/useEatCart";
@@ -547,6 +548,7 @@ function MenuSheet({
     item: { id: string; name: string; priceKes: number },
     qty: number,
     note: string,
+    options: SelectedOption[],
   ) => void;
   cartCount: number;
   cartTotal: number;
@@ -743,7 +745,7 @@ function MenuSheet({
                     <MenuItemRow
                       key={`${item.id}-${i}`}
                       item={item}
-                      onAdd={(qty, note) =>
+                      onAdd={(qty, note, options) =>
                         data &&
                         onAdd(
                           {
@@ -756,6 +758,7 @@ function MenuSheet({
                           { id: item.id, name: item.name, priceKes: item.priceKes },
                           qty,
                           note,
+                          options,
                         )
                       }
                     />
@@ -835,18 +838,63 @@ function MenuItemRow({
   onAdd,
 }: {
   item: MenuItemLite;
-  onAdd: (qty: number, note: string) => void;
+  onAdd: (qty: number, note: string, options: SelectedOption[]) => void;
 }) {
   const [expanded, setExpanded] = useState(false);
   const [qty, setQty] = useState(1);
   const [note, setNote] = useState("");
   const [justAdded, setJustAdded] = useState(false);
+  /** group id → set of chosen option ids. "single" holds at most one. */
+  const [picked, setPicked] = useState<Record<string, Set<string>>>({});
+
+  const groups = item.optionGroups ?? [];
+
+  const toggleOption = (group: (typeof groups)[number], optionId: string) => {
+    setPicked((prev) => {
+      const current = new Set(prev[group.id] ?? []);
+      if (group.groupType === "single") {
+        // Radio: choosing replaces, choosing the same one again clears it
+        // unless the group is required.
+        if (current.has(optionId)) {
+          if (group.isRequired) return prev;
+          return { ...prev, [group.id]: new Set<string>() };
+        }
+        return { ...prev, [group.id]: new Set([optionId]) };
+      }
+      if (current.has(optionId)) current.delete(optionId);
+      else if (!group.maxSelect || current.size < group.maxSelect) current.add(optionId);
+      return { ...prev, [group.id]: current };
+    });
+  };
+
+  const selected: SelectedOption[] = groups.flatMap((g) =>
+    [...(picked[g.id] ?? [])].flatMap((id) => {
+      const opt = g.options.find((o) => o.id === id);
+      return opt
+        ? [{ option_id: opt.id, group: g.name, choice: opt.name, price_add: opt.priceModifier }]
+        : [];
+    }),
+  );
+
+  // A required group with nothing chosen blocks the add — the kitchen cannot
+  // cook "a samosa" without knowing which size.
+  const missing = groups.find((g) => {
+    const n = (picked[g.id] ?? new Set()).size;
+    if (g.groupType === "single" && g.isRequired && n === 0) return true;
+    if (g.groupType !== "single" && g.minSelect > 0 && n < g.minSelect) return true;
+    return false;
+  });
+
+  const addOns = selected.reduce((n, o) => n + o.price_add, 0);
+  const lineTotal = (item.priceKes + addOns) * qty;
 
   const commit = () => {
-    onAdd(qty, note.trim());
+    if (missing) return;
+    onAdd(qty, note.trim(), selected);
     setExpanded(false);
     setQty(1);
     setNote("");
+    setPicked({});
     setJustAdded(true);
     window.setTimeout(() => setJustAdded(false), 1400);
   };
@@ -904,6 +952,40 @@ function MenuItemRow({
       >
         <div className="overflow-hidden">
           <div className="px-3 pb-3 pt-1 border-t border-border">
+            {groups.map((g) => (
+              <div key={g.id} className="mb-3">
+                <p className="text-[11px] font-bold uppercase tracking-[0.06em] text-text3 mb-1.5">
+                  {g.name}
+                  {g.isRequired && <span className="text-amber-700 ml-1">Required</span>}
+                </p>
+                <div className="flex flex-wrap gap-1.5">
+                  {g.options.map((o) => {
+                    const on = (picked[g.id] ?? new Set()).has(o.id);
+                    return (
+                      <button
+                        key={o.id}
+                        type="button"
+                        onClick={() => toggleOption(g, o.id)}
+                        aria-pressed={on}
+                        className={`px-2.5 py-1.5 rounded-full border text-[12px] font-bold transition-colors ${
+                          on
+                            ? "border-amber bg-amber-dim text-amber-700"
+                            : "border-border bg-canvas text-text2 hover:border-amber"
+                        }`}
+                      >
+                        {o.name}
+                        {o.priceModifier > 0 && (
+                          <span className="ml-1 opacity-70 tabular-nums">
+                            +{o.priceModifier.toLocaleString()}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+
             <input
               value={note}
               onChange={(e) => setNote(e.target.value)}
@@ -936,9 +1018,10 @@ function MenuItemRow({
               <button
                 type="button"
                 onClick={commit}
-                className="flex-1 px-4 py-2.5 rounded-full bg-amber text-dark text-[13.5px] font-extrabold hover:bg-amber2 transition-colors tabular-nums"
+                disabled={Boolean(missing)}
+                className="flex-1 px-4 py-2.5 rounded-full bg-amber text-dark text-[13.5px] font-extrabold hover:bg-amber2 disabled:opacity-45 disabled:cursor-not-allowed transition-colors tabular-nums"
               >
-                Add · KSh {(item.priceKes * qty).toLocaleString()}
+                {missing ? `Choose ${missing.name}` : `Add · KSh ${lineTotal.toLocaleString()}`}
               </button>
             </div>
           </div>

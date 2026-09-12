@@ -8,6 +8,7 @@ import {
   type Fulfilment,
 } from "@/lib/eat/whatsappOrder";
 import type { Cart } from "./useEatCart";
+import { lineTotal } from "./useEatCart";
 
 /**
  * Cart and checkout.
@@ -159,13 +160,20 @@ export function CartPanel({
                         <p className="font-display text-[14px] font-extrabold leading-[1.25]">
                           {l.name}
                         </p>
+                        {(l.options ?? []).length > 0 && (
+                          <p className="text-text2 text-[12px] mt-0.5">
+                            {l.options
+                              .map((o) => o.choice + (o.price_add ? ` +${o.price_add}` : ""))
+                              .join(", ")}
+                          </p>
+                        )}
                         {l.note && (
                           <p className="text-text3 text-[12px] italic mt-0.5 line-clamp-2">
                             “{l.note}”
                           </p>
                         )}
                         <p className="text-amber-700 text-[13px] font-extrabold mt-1 tabular-nums">
-                          KSh {(l.priceKes * l.qty).toLocaleString()}
+                          KSh {lineTotal(l).toLocaleString()}
                         </p>
                       </div>
                       <div className="flex items-center gap-1.5 shrink-0">
