@@ -3,6 +3,7 @@ import { adminClient } from "@/lib/supabase/admin";
 import { sanityClient } from "@/lib/sanity/client";
 import { revalidateTag, revalidatePath } from "next/cache";
 import { getMenuAuth, verifyMenuAccess } from "../_lib/auth";
+import { normalizeKenyanPhone } from "@/lib/orders/phone";
 
 /* ── PATCH — update menu settings ──────────────────────────────────────────
  *
@@ -82,6 +83,7 @@ export async function PATCH(req: NextRequest) {
       default_service_charge_pct,
       order_view_mode,
       listing_city,
+      whatsapp_phone,
     } = body;
 
     if (!menu_id) {
@@ -112,6 +114,26 @@ export async function PATCH(req: NextRequest) {
     }
     if (typeof takeaway_enabled === "boolean") {
       updates.takeaway_enabled = takeaway_enabled;
+    }
+    // Number that receives WhatsApp orders. Empty string clears it, which is
+    // how an owner turns the channel off without us needing a second flag.
+    if (typeof whatsapp_phone === "string") {
+      const trimmed = whatsapp_phone.trim();
+      if (trimmed === "") {
+        updates.whatsapp_phone = null;
+      } else {
+        const normalised = normalizeKenyanPhone(trimmed);
+        if (!normalised) {
+          return NextResponse.json(
+            {
+              error:
+                "Enter a valid number — 0712 345 678, or with a country code like +254712345678",
+            },
+            { status: 400 },
+          );
+        }
+        updates.whatsapp_phone = normalised;
+      }
     }
     if (typeof reservations_enabled === "boolean") {
       updates.reservations_enabled = reservations_enabled;

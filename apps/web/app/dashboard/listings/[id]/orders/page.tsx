@@ -98,6 +98,20 @@ export default async function TableOrderingSetupPage({ params }: PageProps) {
       .order("display_order", { ascending: true }),
   ]);
 
+
+  // whatsapp_phone arrives in migration 086. Read separately so a database
+  // without it yet costs only this field instead of failing the whole menu
+  // query and breaking the page (CLAUDE.md column-drift rule).
+  let whatsappPhone: string | null = null;
+  {
+    const { data: waRow } = await adminClient
+      .from("menus")
+      .select("whatsapp_phone")
+      .eq("id", menu.id)
+      .maybeSingle();
+    whatsappPhone = (waRow as { whatsapp_phone?: string | null } | null)?.whatsapp_phone ?? null;
+  }
+
   return (
     <TableOrderingClient
       listingId={id}
@@ -106,6 +120,7 @@ export default async function TableOrderingSetupPage({ params }: PageProps) {
       menuSlug={menu.slug}
       initialTableOrdering={menu.table_ordering ?? false}
       initialTakeawayEnabled={menu.takeaway_enabled ?? false}
+      initialWhatsappPhone={whatsappPhone}
       areas={(areasRaw ?? []) as AreaOption[]}
       initialTables={(tablesRaw ?? []) as InitialTable[]}
       // ordering-only mode routes back-links + back= params through the

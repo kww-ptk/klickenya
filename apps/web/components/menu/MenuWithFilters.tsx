@@ -5,6 +5,7 @@ import Image from "next/image";
 import type { MenuSection, MenuItem } from "@/components/listings/detail/restaurant/MenuDisplay";
 import { MenuTabBar } from "@/components/menu/MenuTabBar";
 import { DietaryFilter } from "@/components/menu/DietaryFilter";
+import { isAllowedImageHost } from "@/lib/images/remoteHost";
 
 /* ── Dietary tag config ────────────────────────────── */
 
@@ -26,7 +27,7 @@ function formatPrice(amount: number): string {
 /* ── Item card ─────────────────────────────────────── */
 
 function ItemCard({ item }: { item: MenuItem }) {
-  const hasPhoto = !!item.photo_url;
+  const hasPhoto = isAllowedImageHost(item.photo_url);
 
   return (
     <div

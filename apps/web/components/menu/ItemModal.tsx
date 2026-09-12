@@ -3,6 +3,7 @@
 import { useState, useMemo, useRef } from "react";
 import Image from "next/image";
 import type { MenuItem, ItemOptionGroup } from "@/components/listings/detail/restaurant/MenuDisplay";
+import { isAllowedImageHost } from "@/lib/images/remoteHost";
 
 /* ── Exported types ─────────────────────────────────── */
 
@@ -353,10 +354,10 @@ export function ItemModal({ item, existingCartItem, onClose, onConfirm }: ItemMo
         onClick={(e) => e.stopPropagation()}
       >
         {/* Photo */}
-        {item.photo_url && (
+        {isAllowedImageHost(item.photo_url) && (
           <div className="relative w-full h-[200px] md:h-[240px] shrink-0">
             <Image
-              src={item.photo_url}
+              src={item.photo_url!}
               alt={item.name}
               fill
               className="object-cover rounded-t-2xl"
@@ -389,7 +390,7 @@ export function ItemModal({ item, existingCartItem, onClose, onConfirm }: ItemMo
               <p className="text-[16px] font-bold text-amber mt-2">{formatPrice(item.price_kes)}</p>
             </div>
             {/* Close button when there's no photo */}
-            {!item.photo_url && (
+            {!isAllowedImageHost(item.photo_url) && (
               <button
                 onClick={onClose}
                 className="shrink-0 p-1.5 text-text3 hover:text-dark transition-colors mt-0.5"

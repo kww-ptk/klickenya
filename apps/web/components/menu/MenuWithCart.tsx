@@ -7,6 +7,7 @@ import type { MenuSection, MenuItem } from "@/components/listings/detail/restaur
 import { MenuTabBar } from "@/components/menu/MenuTabBar";
 import { DietaryFilter } from "@/components/menu/DietaryFilter";
 import { ItemModal, type CartItem } from "@/components/menu/ItemModal";
+import { isAllowedImageHost } from "@/lib/images/remoteHost";
 
 /* ── Types ─────────────────────────────────────────── */
 
@@ -65,7 +66,7 @@ interface CartItemCardProps {
 }
 
 function CartItemCard({ item, totalQty, onAdd, onRemove }: CartItemCardProps) {
-  const hasPhoto = !!item.photo_url;
+  const hasPhoto = isAllowedImageHost(item.photo_url);
 
   return (
     <div

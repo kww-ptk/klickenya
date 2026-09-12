@@ -50,8 +50,8 @@ interface MenuBuilderProps {
   mode?: "full" | "menu-only";
   /**
    * URL prefix for the "Other features" hint cards in menu-only mode.
-   * Example: "/eat/listings/<sanityId>" → cards link to
-   *   "/eat/listings/<sanityId>/reservations", "/.../orders", "/.../kitchen".
+   * Example: "/manage/listings/<sanityId>" → cards link to
+   *   "/manage/listings/<sanityId>/reservations", "/.../orders", "/.../kitchen".
    * Required when mode === "menu-only".
    */
   featureBaseHref?: string;
