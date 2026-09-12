@@ -18,6 +18,7 @@ interface Props {
   menuSlug:  string;
   initialTableOrdering: boolean;
   initialTakeawayEnabled: boolean;
+  initialDeliveryEnabled?: boolean;
   /** menus.whatsapp_phone — null until the owner sets one. */
   initialWhatsappPhone?: string | null;
   areas:     AreaOption[];
@@ -48,6 +49,7 @@ function Inner({
   menuSlug,
   initialTableOrdering,
   initialTakeawayEnabled,
+  initialDeliveryEnabled,
   initialWhatsappPhone,
   areas,
   initialTables,
@@ -59,6 +61,29 @@ function Inner({
   const [toggling, setToggling] = useState(false);
   const [takeaway, setTakeaway] = useState(initialTakeawayEnabled);
   const [togglingTakeaway, setTogglingTakeaway] = useState(false);
+  const [delivery, setDelivery] = useState(initialDeliveryEnabled ?? false);
+  const [togglingDelivery, setTogglingDelivery] = useState(false);
+
+  /** Delivery the restaurant runs itself — its own rider, its own area. */
+  async function toggleDelivery() {
+    const next = !delivery;
+    setTogglingDelivery(true);
+    try {
+      const res = await fetch("/api/menu/settings", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ menu_id: menuId, delivery_enabled: next }),
+      });
+      if (!res.ok) throw new Error();
+      setDelivery(next);
+      showToast(next ? "Delivery enabled" : "Delivery disabled");
+    } catch {
+      showToast("Failed to update delivery setting", "error");
+    } finally {
+      setTogglingDelivery(false);
+    }
+  }
+
   const [waPhone, setWaPhone] = useState(initialWhatsappPhone ?? "");
   const [savedWaPhone, setSavedWaPhone] = useState(initialWhatsappPhone ?? "");
   const [savingWa, setSavingWa] = useState(false);
@@ -215,6 +240,21 @@ function Inner({
             </p>
           </div>
           <Toggle checked={takeaway} onChange={toggleTakeaway} disabled={togglingTakeaway} />
+        </div>
+      </div>
+
+      {/* Delivery toggle card */}
+      <div className="bg-white rounded-2xl border border-border shadow-sm p-5">
+        <div className="flex items-center justify-between gap-4 flex-wrap">
+          <div>
+            <p className="text-[14px] font-bold text-dark">Delivery</p>
+            <p className="text-[12px] text-text3 mt-0.5 max-w-[480px]">
+              {delivery
+                ? "Active — guests can ask for delivery and give an address when they order. You arrange the rider; Klickenya does not deliver."
+                : "Off. Turn it on if you deliver yourself — guests can then send an address with their order."}
+            </p>
+          </div>
+          <Toggle checked={delivery} onChange={toggleDelivery} disabled={togglingDelivery} />
         </div>
       </div>
 

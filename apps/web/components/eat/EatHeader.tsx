@@ -73,6 +73,7 @@ export function EatHeader({ backHref }: { backHref?: string }) {
         onSetQty={setQty}
         onCleared={clear}
         whatsappPhone={cart?.whatsappPhone ?? ""}
+        canDeliver={cart?.canDeliver ?? false}
       />
     </>
   );

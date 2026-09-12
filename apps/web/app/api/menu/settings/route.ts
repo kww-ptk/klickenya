@@ -75,6 +75,7 @@ export async function PATCH(req: NextRequest) {
       menu_id,
       table_ordering,
       takeaway_enabled,
+      delivery_enabled,
       reservations_enabled,
       default_reservation_duration,
       reservations_lead_time_hours,
@@ -114,6 +115,9 @@ export async function PATCH(req: NextRequest) {
     }
     if (typeof takeaway_enabled === "boolean") {
       updates.takeaway_enabled = takeaway_enabled;
+    }
+    if (typeof delivery_enabled === "boolean") {
+      updates.delivery_enabled = delivery_enabled;
     }
     // Number that receives WhatsApp orders. Empty string clears it, which is
     // how an owner turns the channel off without us needing a second flag.

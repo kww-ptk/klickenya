@@ -20,10 +20,6 @@ import type { Cart } from "./useEatCart";
  * orders yet") instead of a generic failure, because it is a setting the
  * restaurant controls, not a bug the guest can retry their way out of.
  */
-/** Flip to true the day riders exist. The delivery path is built and wired;
- *  only the availability of a rider is missing. */
-const DELIVERY_AVAILABLE = false;
-
 export function CartPanel({
   cart,
   total,
@@ -32,6 +28,7 @@ export function CartPanel({
   onSetQty,
   onCleared,
   whatsappPhone,
+  canDeliver,
 }: {
   cart: Cart | null;
   total: number;
@@ -41,6 +38,8 @@ export function CartPanel({
   onCleared: () => void;
   /** Number that receives the order; "" when the kitchen has not set one. */
   whatsappPhone: string;
+  /** This kitchen delivers with its own rider. */
+  canDeliver: boolean;
 }) {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -220,21 +219,21 @@ export function CartPanel({
 
                     <button
                       type="button"
-                      disabled={!DELIVERY_AVAILABLE}
+                      disabled={!canDeliver}
                       onClick={() => setFulfilment("delivery")}
                       aria-pressed={fulfilment === "delivery"}
                       className={`rounded-[12px] border px-3 py-3 text-left transition-colors ${
                         fulfilment === "delivery"
                           ? "border-amber bg-amber-dim"
                           : "border-border bg-white"
-                      } ${DELIVERY_AVAILABLE ? "hover:border-amber" : "opacity-55 cursor-not-allowed"}`}
+                      } ${canDeliver ? "hover:border-amber" : "opacity-55 cursor-not-allowed"}`}
                     >
                       <Bike className="size-4 text-text3 mb-1.5" />
                       <p className="text-[13px] font-extrabold leading-tight">
                         Arrange delivery
                       </p>
                       <p className="text-text3 text-[11px] mt-0.5">
-                        {DELIVERY_AVAILABLE ? "To your address" : "Not available yet"}
+                        {canDeliver ? "To your address" : "This kitchen doesn\u2019t deliver"}
                       </p>
                     </button>
                   </div>

@@ -39,6 +39,7 @@ export type Place = {
   href: string;
   orderHref?: string;
   canBook: boolean;
+  canDeliver: boolean;
   /** Dish tags derived from this kitchen's own item names. */
   foodTags: string[];
   menu: MenuSectionLite[];
@@ -367,6 +368,7 @@ export function EatKlickFlow({ towns, places }: { towns: Town[]; places: Place[]
         onSetQty={setQty}
         onCleared={clear}
         whatsappPhone={cart?.whatsappPhone ?? ""}
+        canDeliver={cart?.canDeliver ?? false}
       />
 
       {/* Basket bar — visible across the flow, not just inside a menu, so a
@@ -528,7 +530,13 @@ function MenuSheet({
   focusTag: string | null;
   onClose: () => void;
   onAdd: (
-    menu: { menuId: string; menuSlug: string; restaurant: string; whatsappPhone: string },
+    menu: {
+      menuId: string;
+      menuSlug: string;
+      restaurant: string;
+      whatsappPhone: string;
+      canDeliver: boolean;
+    },
     item: { id: string; name: string; priceKes: number },
     qty: number,
     note: string,
@@ -736,6 +744,7 @@ function MenuSheet({
                             menuSlug: data.menuSlug,
                             restaurant: data.name,
                             whatsappPhone: data.whatsappPhone,
+                            canDeliver: data.canDeliver,
                           },
                           { id: item.id, name: item.name, priceKes: item.priceKes },
                           qty,
