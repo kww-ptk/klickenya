@@ -394,3 +394,133 @@ export function isEatEligible(cap: MenuCapability | undefined): boolean {
 }
 
 
+
+/* ── Reservation settings ───────────────────────────────── */
+
+export type ReservationConfig = {
+  menuId: string;
+  menuName: string;
+  leadTimeHours: number;
+  maxPartySize: number;
+  maxAdvanceDays: number;
+  areas: {
+    id: string;
+    name: string;
+    capacity_total: number;
+    color_hex: string | null;
+    display_order: number;
+  }[];
+  timeWindows: { open_time: string; close_time: string; is_active?: boolean }[];
+  restaurantPhone: string | null;
+};
+
+/**
+ * Everything ReservationSheet needs, for every restaurant that takes bookings,
+ * keyed by listing slug.
+ *
+ * Fetched up front with the rest of the flow so booking can open in place
+ * rather than sending the guest to the listing page. Three queries for the
+ * whole set beats one per restaurant on tap, and the panel then opens with no
+ * spinner.
+ *
+ * Only menus with reservations_enabled are included — there is nothing to
+ * configure for the others and no reason to pay for their rows.
+ */
+export const getReservationConfigs = cache(
+  async (): Promise<Map<string, ReservationConfig>> => {
+    const out = new Map<string, ReservationConfig>();
+
+    try {
+      const { data: menus, error } = await adminClient
+        .from("menus")
+        .select(
+          "id, name, listing_slug, business_id, reservations_lead_time_hours, reservations_max_party_size, reservations_max_advance_days",
+        )
+        .eq("is_published", true)
+        .eq("reservations_enabled", true);
+
+      if (error) {
+        console.error("[eat/reservations] query failed:", error.message);
+        return out;
+      }
+
+      const rows = (menus ?? []) as {
+        id: string;
+        name: string | null;
+        listing_slug: string | null;
+        business_id: string | null;
+        reservations_lead_time_hours: number | null;
+        reservations_max_party_size: number | null;
+        reservations_max_advance_days: number | null;
+      }[];
+      if (rows.length === 0) return out;
+
+      const menuIds = rows.map((r) => r.id);
+      const ownerIds = [...new Set(rows.map((r) => r.business_id).filter(Boolean))] as string[];
+
+      const [areasRes, windowsRes, hostsRes] = await Promise.all([
+        adminClient
+          .from("restaurant_areas")
+          .select("id, name, capacity_total, color_hex, display_order, menu_id")
+          .in("menu_id", menuIds)
+          .eq("is_active", true),
+        adminClient
+          .from("reservation_time_windows")
+          .select("menu_id, open_time, close_time, is_active")
+          .in("menu_id", menuIds),
+        ownerIds.length
+          ? adminClient.from("host_profiles").select("user_id, phone").in("user_id", ownerIds)
+          : Promise.resolve({ data: [] as { user_id: string; phone: string | null }[] }),
+      ]);
+
+      const areasByMenu = new Map<string, ReservationConfig["areas"]>();
+      for (const a of (areasRes.data ?? []) as (ReservationConfig["areas"][number] & {
+        menu_id: string;
+      })[]) {
+        const list = areasByMenu.get(a.menu_id) ?? [];
+        list.push({
+          id: a.id,
+          name: a.name,
+          capacity_total: a.capacity_total ?? 0,
+          color_hex: a.color_hex ?? null,
+          display_order: a.display_order ?? 0,
+        });
+        areasByMenu.set(a.menu_id, list);
+      }
+
+      const windowsByMenu = new Map<string, ReservationConfig["timeWindows"]>();
+      for (const w of (windowsRes.data ?? []) as (ReservationConfig["timeWindows"][number] & {
+        menu_id: string;
+      })[]) {
+        const list = windowsByMenu.get(w.menu_id) ?? [];
+        list.push({ open_time: w.open_time, close_time: w.close_time, is_active: w.is_active });
+        windowsByMenu.set(w.menu_id, list);
+      }
+
+      const phones = new Map<string, string>();
+      for (const h of ((hostsRes as { data?: { user_id: string; phone: string | null }[] })
+        .data ?? [])) {
+        if (h.phone) phones.set(h.user_id, h.phone);
+      }
+
+      for (const r of rows) {
+        const key = r.listing_slug?.trim();
+        if (!key || out.has(key)) continue;
+        out.set(key, {
+          menuId: r.id,
+          menuName: r.name ?? "",
+          leadTimeHours: r.reservations_lead_time_hours ?? 2,
+          maxPartySize: r.reservations_max_party_size ?? 12,
+          maxAdvanceDays: r.reservations_max_advance_days ?? 30,
+          areas: areasByMenu.get(r.id) ?? [],
+          timeWindows: windowsByMenu.get(r.id) ?? [],
+          restaurantPhone: r.business_id ? (phones.get(r.business_id) ?? null) : null,
+        });
+      }
+    } catch (err) {
+      console.error("[eat/reservations] unexpected error:", err);
+    }
+
+    return out;
+  },
+);

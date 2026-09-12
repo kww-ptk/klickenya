@@ -2,7 +2,12 @@ import type { Metadata } from "next";
 import { sanityFetch } from "@/lib/sanity/client";
 import { EAT_RESTAURANTS_QUERY } from "@/lib/sanity/queries";
 import { urlForImage } from "@/lib/sanity/image";
-import { getMenuCapabilities, getMenusWithItems, isEatEligible } from "@/lib/eat/menus";
+import {
+  getMenuCapabilities,
+  getMenusWithItems,
+  getReservationConfigs,
+  isEatEligible,
+} from "@/lib/eat/menus";
 import { EatKlickFlow, type Place, type Town } from "./_components/EatKlickFlow";
 
 /**
@@ -48,9 +53,10 @@ export default async function EatKlickPage() {
     console.error("[/eatklick] Sanity fetch error:", err);
   }
 
-  const [caps, menus] = await Promise.all([
+  const [caps, menus, reservations] = await Promise.all([
     getMenuCapabilities(),
     getMenusWithItems(),
+    getReservationConfigs(),
   ]);
 
   // Same gate as /eat: a town's count and its cards must describe the same set.
@@ -77,6 +83,7 @@ export default async function EatKlickPage() {
       orderHref: cap?.canOrder && cap.menuSlug ? `/m/${cap.menuSlug}` : undefined,
       canBook: Boolean(cap?.canBook),
       canDeliver: Boolean(cap?.canDeliver),
+      reservation: reservations.get(slug) ?? null,
       foodTags: menu?.foodTags ?? [],
       menu: menu?.sections ?? [],
       menuId: menu?.menuId ?? "",

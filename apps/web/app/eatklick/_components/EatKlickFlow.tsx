@@ -19,7 +19,12 @@ import {
   Check,
 } from "lucide-react";
 import { isOpenNow } from "@/lib/listings/openingHours";
-import type { MenuSectionLite, MenuItemLite } from "@/lib/eat/menus";
+import type {
+  MenuSectionLite,
+  MenuItemLite,
+  ReservationConfig,
+} from "@/lib/eat/menus";
+import { ReservationSheet } from "@/components/reservations/ReservationSheet";
 import { matchesFoodTag } from "@/lib/eat/foodTags";
 import { useEatCart } from "@/components/eat/useEatCart";
 import { CartPanel } from "@/components/eat/CartPanel";
@@ -40,6 +45,8 @@ export type Place = {
   orderHref?: string;
   canBook: boolean;
   canDeliver: boolean;
+  /** Booking settings, when this kitchen takes reservations. */
+  reservation: ReservationConfig | null;
   /** Dish tags derived from this kitchen's own item names. */
   foodTags: string[];
   menu: MenuSectionLite[];
@@ -766,20 +773,32 @@ function MenuSheet({
         <footer className="border-t border-border px-4 md:px-8 py-3 flex items-center gap-2">
           {/* Secondary on the left. Booking is the fallback action — most
               people opening a menu are here to order. */}
-          <Link
-            href={data?.href ?? "#"}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full border border-border text-text2 text-[12.5px] font-bold hover:border-amber hover:text-text transition-colors shrink-0"
-          >
-            {data?.canBook ? (
-              <>
-                <CalendarCheck className="size-3.5" />
-                <span className="hidden sm:inline">Book a table</span>
-                <span className="sm:hidden">Book</span>
-              </>
-            ) : (
-              "Restaurant"
-            )}
-          </Link>
+          {data?.reservation ? (
+            // Booking opens over the menu rather than sending the guest to the
+            // listing page. Leaving the flow to book — and losing a part-filled
+            // basket on the way — is the opposite of seamless.
+            <ReservationSheet
+              key={data.reservation.menuId}
+              menuId={data.reservation.menuId}
+              menuName={data.name || data.reservation.menuName}
+              source="qr_menu"
+              timeWindows={data.reservation.timeWindows}
+              areas={data.reservation.areas}
+              maxPartySize={data.reservation.maxPartySize}
+              maxAdvanceDays={data.reservation.maxAdvanceDays}
+              leadTimeHours={data.reservation.leadTimeHours}
+              restaurantPhone={data.reservation.restaurantPhone}
+              triggerLabel="Book"
+              triggerClassName="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full border border-border text-text2 text-[12.5px] font-bold hover:border-amber hover:text-text transition-colors shrink-0"
+            />
+          ) : (
+            <Link
+              href={data?.href ?? "#"}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full border border-border text-text2 text-[12.5px] font-bold hover:border-amber hover:text-text transition-colors shrink-0"
+            >
+              Restaurant
+            </Link>
+          )}
 
           {/* Basket on the right, where a thumb reaches. Dark rather than
               amber: every dish row already has an amber "+", so an amber bar
