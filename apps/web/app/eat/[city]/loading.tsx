@@ -2,7 +2,7 @@
 export default function Loading() {
   return (
     <>
-      <div className="bg-dark">
+      <div className="bg-purple-dark">
         <div className="max-w-[1280px] mx-auto px-5 md:px-10 pt-[120px] pb-12 md:pb-14">
           <div className="h-3 w-24 rounded bg-white/10 mb-5" />
           <div className="h-3 w-32 rounded bg-white/10 mb-4" />

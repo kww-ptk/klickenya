@@ -2,7 +2,7 @@
 export default function Loading() {
   return (
     <>
-      <div className="min-h-[520px] md:min-h-[600px] bg-dark" />
+      <div className="min-h-[520px] md:min-h-[600px] bg-purple-dark" />
       <div className="max-w-[1280px] mx-auto px-5 md:px-10 py-14 md:py-20">
         <div className="h-3 w-24 rounded bg-surface2 mb-3" />
         <div className="h-8 w-72 max-w-full rounded bg-surface2 mb-8" />

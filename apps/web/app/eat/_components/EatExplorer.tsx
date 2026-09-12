@@ -123,7 +123,7 @@ export function EatExplorer({
   return (
     <>
       {/* ── Cuisine slider — dark strip continuing the hero ── */}
-      <div className="relative bg-dark pb-11 md:pb-14">
+      <div className="relative bg-purple-dark pb-11 md:pb-14">
         <div className="max-w-[1280px] mx-auto px-5 md:px-10 pb-4 flex items-end justify-between gap-4">
           <span className="text-[11px] font-bold tracking-[0.09em] uppercase text-amber block">
             Pick a craving
@@ -140,7 +140,7 @@ export function EatExplorer({
           tabIndex={0}
           onScroll={updateEdges}
           onKeyDown={onRailKeyDown}
-          className="flex gap-3.5 overflow-x-auto pb-2 snap-x snap-mandatory scroll-px-5 md:scroll-px-10 px-5 md:px-10 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber focus-visible:ring-offset-2 focus-visible:ring-offset-dark rounded-[4px]"
+          className="flex gap-3.5 overflow-x-auto pb-2 snap-x snap-mandatory scroll-px-5 md:scroll-px-10 px-5 md:px-10 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber focus-visible:ring-offset-2 focus-visible:ring-offset-purple-dark rounded-[4px]"
         >
           {cuisines.map((c, i) => {
             const tone = PALETTE[i % PALETTE.length];
@@ -154,38 +154,31 @@ export function EatExplorer({
                   setActive((v) => (v === c.name ? null : c.name));
                 }}
                 aria-pressed={isActive}
-                className={`group relative shrink-0 snap-start w-[142px] sm:w-[172px] aspect-[3/4] rounded-[18px] overflow-hidden ${tone.bar} transition-transform duration-200 hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-dark ${
-                  isActive ? "-translate-y-1 ring-2 ring-white ring-offset-2 ring-offset-dark" : ""
+                className={`group relative shrink-0 snap-start w-[148px] sm:w-[178px] rounded-[16px] overflow-hidden border-[3px] ${tone.border} transition-transform duration-200 hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-purple-dark ${
+                  isActive ? "-translate-y-1 ring-2 ring-white ring-offset-2 ring-offset-purple-dark" : ""
                 }`}
               >
-                {/* Photo is TEXTURE, not subject. Restaurant cover shots are
-                    venue photography — a beach, a villa, a boat — so showing
-                    one as "this is Seafood" reads as a mistake. Desaturated
-                    and dropped behind the colour, it adds depth without
-                    claiming to depict the cuisine. */}
-                {c.photo ? (
-                  <Image
-                    src={c.photo}
-                    alt=""
-                    fill
-                    sizes="(max-width: 640px) 142px, 172px"
-                    className="object-cover opacity-25 grayscale mix-blend-luminosity"
-                  />
-                ) : null}
-                <div
-                  aria-hidden
-                  className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-white/10"
-                />
+                <div className="relative aspect-square sm:aspect-[3/4] bg-purple-dark">
+                  {c.photo ? (
+                    <Image
+                      src={c.photo}
+                      alt=""
+                      fill
+                      sizes="(max-width: 640px) 148px, 178px"
+                      className="object-cover transition-transform duration-300 group-hover:scale-[1.04]"
+                    />
+                  ) : (
+                    <span className={`absolute inset-0 ${tone.bar}`} />
+                  )}
+                </div>
 
-                <div className="absolute inset-0 p-3.5 flex flex-col justify-end text-left">
-                  <span
-                    className={`font-display font-extrabold uppercase leading-[0.95] tracking-[-0.02em] text-[clamp(16px,1.6vw,20px)] ${tone.label}`}
-                  >
+                {/* Solid label bar, like the reference — the colour band is what
+                    makes the row read as a set rather than a strip of photos. */}
+                <div className={`${tone.bar} ${tone.label} px-2.5 py-2 text-left`}>
+                  <span className="block font-display font-extrabold uppercase leading-none tracking-[-0.01em] text-[13px] sm:text-[14px] truncate">
                     {c.name}
                   </span>
-                  <span
-                    className={`text-[11px] font-bold tabular-nums opacity-65 mt-1 ${tone.label}`}
-                  >
+                  <span className="block text-[10px] font-bold opacity-70 tabular-nums mt-0.5">
                     {c.count} {c.count === 1 ? "place" : "places"}
                   </span>
                 </div>

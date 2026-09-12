@@ -202,7 +202,7 @@ export default async function EatPage() {
       <Nav transparent />
 
       {/* ── Hero ───────────────────────────────────────────── */}
-      <section className="relative overflow-hidden bg-dark">
+      <section className="relative overflow-hidden bg-purple-dark">
         <div
           aria-hidden
           className="absolute inset-0 bg-[radial-gradient(120%_90%_at_50%_0%,rgba(232,160,32,0.22),transparent_62%)]"
@@ -356,7 +356,7 @@ export default async function EatPage() {
           </div>
           <Link
             href="/contact"
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-dark text-white text-[14px] font-extrabold hover:bg-text2 transition-colors shrink-0"
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-purple-dark text-white text-[14px] font-extrabold hover:bg-text2 transition-colors shrink-0"
           >
             Tell us your town
             <ArrowRight className="size-4" />
@@ -400,7 +400,7 @@ export default async function EatPage() {
 
       {/* ── Restaurant owner CTA ───────────────────────────── */}
       <section className="max-w-[1280px] mx-auto px-5 md:px-10 pb-16 md:pb-24">
-        <div className="relative overflow-hidden rounded-[30px] bg-dark px-7 py-12 md:px-14 md:py-16">
+        <div className="relative overflow-hidden rounded-[30px] bg-purple-dark px-7 py-12 md:px-14 md:py-16">
           <div
             aria-hidden
             className="absolute inset-0 bg-[radial-gradient(90%_120%_at_100%_0%,rgba(232,160,32,0.22),transparent_55%)]"

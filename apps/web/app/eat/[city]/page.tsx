@@ -177,7 +177,7 @@ export default async function EatCityPage({ params }: PageProps) {
 
       <Nav transparent />
 
-      <header className="relative overflow-hidden bg-dark">
+      <header className="relative overflow-hidden bg-purple-dark">
         <div
           aria-hidden
           className="absolute inset-0 bg-[radial-gradient(120%_90%_at_50%_0%,rgba(232,160,32,0.20),transparent_62%)]"
