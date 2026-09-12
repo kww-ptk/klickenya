@@ -468,18 +468,6 @@ function ResultCard({ place, onOpen }: { place: Place; onOpen: () => void }) {
               {[place.cuisine.slice(0, 2).join(", "), price].filter(Boolean).join(" · ")}
             </span>
 
-            {open !== null && (
-              <span
-                className={`inline-flex items-center gap-1 text-[11px] font-bold mt-1 ${
-                  open ? "text-green" : "text-white/40"
-                }`}
-              >
-                <span
-                  className={`size-1.5 rounded-full ${open ? "bg-green" : "bg-white/35"}`}
-                />
-                {open ? "Open now" : "Closed"}
-              </span>
-            )}
           </span>
 
           <span className="flex items-center gap-1.5 mt-2 flex-wrap">
@@ -489,10 +477,22 @@ function ResultCard({ place, onOpen }: { place: Place; onOpen: () => void }) {
                 <ChevronRight className="size-3 transition-transform group-hover:translate-x-0.5" />
               </span>
             )}
-            {place.canBook && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full border border-white/20 text-white/70 text-[10.5px] font-bold">
-                <CalendarCheck className="size-2.5" />
-                Bookings
+            {/* Whether they are open beats whether they take bookings: it is
+                the thing that decides if this card is worth tapping right now.
+                Hidden entirely when the opening hours cannot be parsed —
+                guessing would be worse than saying nothing. */}
+            {open !== null && (
+              <span
+                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10.5px] font-extrabold ${
+                  open
+                    ? "bg-green/15 text-green border border-green/30"
+                    : "border border-white/15 text-white/40"
+                }`}
+              >
+                <span
+                  className={`size-1.5 rounded-full ${open ? "bg-green" : "bg-white/35"}`}
+                />
+                {open ? "Open now" : "Closed"}
               </span>
             )}
           </span>
