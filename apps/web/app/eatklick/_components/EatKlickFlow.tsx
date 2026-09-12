@@ -316,7 +316,7 @@ export function EatKlickFlow({ towns, places }: { towns: Town[]; places: Place[]
               )}
 
               {results.length > 0 ? (
-                <div className="mt-6 max-h-[42vh] overflow-y-auto pr-1 -mr-1 flex flex-col gap-2.5">
+                <div className="mt-6 max-h-[42vh] overflow-y-auto pr-1 -mr-1 grid grid-cols-1 lg:grid-cols-2 gap-2.5 items-start">
                   {results.map((p) => (
                     <ResultCard key={p.id} place={p} onOpen={() => setOpen(p)} />
                   ))}
@@ -432,7 +432,7 @@ function ResultCard({ place, onOpen }: { place: Place; onOpen: () => void }) {
   const dishes = place.menu.reduce((n, s) => n + s.items.length, 0);
 
   return (
-    <article className="w-full max-w-[560px]">
+    <article className="w-full">
       <button
         type="button"
         onClick={onOpen}
