@@ -385,3 +385,29 @@ export const getMenusWithItems = cache(
     return out;
   },
 );
+
+/* ── Who earns a place on /eat ──────────────────────────── */
+
+/**
+ * Should this restaurant appear on the eat surfaces?
+ *
+ * The marketplace lists everywhere worth knowing about. /eat is for places a
+ * guest can act on right now, so a restaurant needs a published menu AND at
+ * least one live capability behind it. That takes the list from 38 to 6 and
+ * removes cards that do nothing when tapped.
+ *
+ * The intent is to gate on delivery. Today `delivery_enabled` is false on
+ * every published menu and `takeaway_enabled` is too, so gating on either
+ * would render an empty page — not a filter, an outage. The gate therefore
+ * accepts booking as well, and tightens on its own as restaurants switch
+ * things on:
+ *
+ *   delivery only  → change the body to `Boolean(cap?.canDeliver)`
+ *   ordering only  → `Boolean(cap?.canOrder || cap?.canDeliver)`
+ *
+ * Both are one line, and both are correct the day the data supports them.
+ */
+export function isEatEligible(cap: MenuCapability | undefined): boolean {
+  if (!cap) return false; // no published menu linked to this listing
+  return cap.canDeliver || cap.canOrder || cap.canOrderAtTable || cap.canBook;
+}

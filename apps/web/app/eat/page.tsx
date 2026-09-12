@@ -12,7 +12,7 @@ import {
 import { sanityFetch } from "@/lib/sanity/client";
 import { EAT_RESTAURANTS_QUERY } from "@/lib/sanity/queries";
 import { urlForImage } from "@/lib/sanity/image";
-import { getMenuCapabilities, getSampleDishes } from "@/lib/eat/menus";
+import { getMenuCapabilities, getSampleDishes, isEatEligible } from "@/lib/eat/menus";
 import { EatHeader } from "@/components/eat/EatHeader";
 import { Footer } from "@/components/shared/Footer";
 import { JsonLd } from "@/components/seo/JsonLd";
@@ -115,6 +115,14 @@ export default async function EatPage() {
     getMenuCapabilities(),
     getSampleDishes(12),
   ]);
+  // Only kitchens a guest can act on. Everything below — cuisine tiles, town
+  // counts, structured data — derives from this filtered set so nothing
+  // promises a count the grid cannot show.
+  restaurants = restaurants.filter((r) => {
+    const slug = typeof r.slug === "string" ? r.slug : (r.slug?.current ?? "");
+    return isEatEligible(caps.get(slug));
+  });
+
   const cards = restaurants.map((r) => toCard(r, caps));
   const orderableCount = cards.filter((c) => c.canOrder).length;
 

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { sanityFetch } from "@/lib/sanity/client";
 import { EAT_RESTAURANTS_QUERY } from "@/lib/sanity/queries";
 import { urlForImage } from "@/lib/sanity/image";
-import { getMenuCapabilities, getMenusWithItems } from "@/lib/eat/menus";
+import { getMenuCapabilities, getMenusWithItems, isEatEligible } from "@/lib/eat/menus";
 import { EatKlickFlow, type Place, type Town } from "./_components/EatKlickFlow";
 
 /**
@@ -52,6 +52,12 @@ export default async function EatKlickPage() {
     getMenuCapabilities(),
     getMenusWithItems(),
   ]);
+
+  // Same gate as /eat: a town's count and its cards must describe the same set.
+  listings = listings.filter((l) => {
+    const slug = typeof l.slug === "string" ? l.slug : (l.slug?.current ?? "");
+    return isEatEligible(caps.get(slug));
+  });
 
   const places: Place[] = listings.map((l) => {
     const slug = typeof l.slug === "string" ? l.slug : (l.slug?.current ?? "");

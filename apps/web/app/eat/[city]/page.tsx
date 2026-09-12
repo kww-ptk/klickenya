@@ -5,7 +5,7 @@ import { ArrowRight, BookOpen, UtensilsCrossed } from "lucide-react";
 import { sanityFetch } from "@/lib/sanity/client";
 import { EAT_RESTAURANTS_QUERY, CITY_GUIDES_QUERY } from "@/lib/sanity/queries";
 import { urlForImage } from "@/lib/sanity/image";
-import { getMenuCapabilities } from "@/lib/eat/menus";
+import { getMenuCapabilities, isEatEligible } from "@/lib/eat/menus";
 import { EatHeader } from "@/components/eat/EatHeader";
 import { Footer } from "@/components/shared/Footer";
 import { JsonLd } from "@/components/seo/JsonLd";
@@ -152,7 +152,11 @@ export default async function EatCityPage({ params }: PageProps) {
   }
 
   const caps = await getMenuCapabilities();
-  const cards = inCity.map((r) => toCard(r, caps));
+  const eligible = inCity.filter((r) => {
+    const slug = typeof r.slug === "string" ? r.slug : (r.slug?.current ?? "");
+    return isEatEligible(caps.get(slug));
+  });
+  const cards = eligible.map((r) => toCard(r, caps));
   const cuisines = [...new Set(cards.flatMap((c) => c.cuisine).filter(Boolean))].sort();
   const priceRanges = ["budget", "mid-range", "fine-dining"].filter((p) =>
     cards.some((c) => c.priceRangeKey === p),
