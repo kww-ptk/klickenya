@@ -1,6 +1,7 @@
 import { cache } from "react";
 import { adminClient } from "@/lib/supabase/admin";
 import { isAllowedImageHost } from "@/lib/images/remoteHost";
+import { FOOD_TAGS } from "./foodTags";
 
 /**
  * What a restaurant can actually do right now, keyed by its Sanity listing slug.
@@ -273,26 +274,6 @@ export type RestaurantMenu = {
   foodTags: string[];
 };
 
-/**
- * Dish tags, matched against item names.
- *
- * Section titles are free text and inconsistent ("Mains", "Main Courses",
- * "Main Menu", "sandwiches", "Burger" vs "Burgers"), and half of them are
- * course names rather than food types. Item names are the more reliable
- * signal for "does this kitchen do pizza".
- */
-export const FOOD_TAGS: { tag: string; re: RegExp }[] = [
-  { tag: "Pizza", re: /\b(pizza|calzone|margherita)/i },
-  { tag: "Burgers", re: /\bburger/i },
-  { tag: "Pasta", re: /\b(pasta|spaghetti|lasagn|penne|tagliatell|ravioli|gnocchi|linguin)/i },
-  { tag: "Sushi", re: /\b(sushi|sashimi|maki|nigiri)/i },
-  { tag: "Seafood", re: /\b(prawn|shrimp|octopus|calamari|squid|snapper|lobster|crab|fish|tuna|seafood|oyster)/i },
-  { tag: "Grills", re: /\b(grill|bbq|steak|wagyu|fillet|ribs|skewer)/i },
-  { tag: "Salads", re: /\bsalad/i },
-  { tag: "Desserts", re: /\b(dessert|gelato|tiramis|cake|ice ?cream|brownie|panna)/i },
-  { tag: "Vegetarian", re: /\b(vegetarian|vegan|veggie)/i },
-  { tag: "Drinks", re: /\b(cocktail|mojito|juice|coffee|beer|wine|smoothie|dawa)/i },
-];
 
 type ItemRow = {
   id: string | null;
@@ -413,16 +394,3 @@ export function isEatEligible(cap: MenuCapability | undefined): boolean {
 }
 
 
-/**
- * Does this text belong to a dish tag?
- *
- * Used both to build the tags and, later, to find which menu section a chosen
- * tag refers to. Section titles are free text — "Pizza", "Burger", "Burgers",
- * "sandwiches" — so a title is checked against the same pattern as item names
- * rather than compared literally.
- */
-export function matchesFoodTag(text: string, tag: string): boolean {
-  const entry = FOOD_TAGS.find((t) => t.tag === tag);
-  if (!entry) return false;
-  return entry.re.test(text);
-}

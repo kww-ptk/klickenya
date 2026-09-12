@@ -20,7 +20,7 @@ import {
 } from "lucide-react";
 import { isOpenNow } from "@/lib/listings/openingHours";
 import type { MenuSectionLite, MenuItemLite } from "@/lib/eat/menus";
-import { matchesFoodTag } from "@/lib/eat/menus";
+import { matchesFoodTag } from "@/lib/eat/foodTags";
 import { useEatCart } from "@/components/eat/useEatCart";
 import { CartPanel } from "@/components/eat/CartPanel";
 
@@ -261,7 +261,11 @@ export function EatKlickFlow({ towns, places }: { towns: Town[]; places: Place[]
                         {c.label}
                       </p>
                       <p className="text-[12px] font-semibold text-white/45 mt-0.5">
-                        {c.live ? `${n} in ${town?.label}` : "Coming soon"}
+                        {!c.live
+                          ? "Coming soon"
+                          : town
+                            ? `${n} in ${town.label}`
+                            : ""}
                       </p>
                     </button>
                   );
@@ -312,7 +316,7 @@ export function EatKlickFlow({ towns, places }: { towns: Town[]; places: Place[]
               )}
 
               {results.length > 0 ? (
-                <div className="flex gap-3.5 overflow-x-auto snap-x snap-mandatory pb-3 mt-7 -mx-5 px-5 md:-mx-8 md:px-8 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                <div className="mt-6 max-h-[42vh] overflow-y-auto pr-1 -mr-1 flex flex-col gap-2.5">
                   {results.map((p) => (
                     <ResultCard key={p.id} place={p} onOpen={() => setOpen(p)} />
                   ))}
@@ -552,21 +556,36 @@ function MenuSheet({
 
   // Open where the guest was looking. Filtering by Pizza and then opening a
   // menu should land on the pizzas, not at the top of a menu that starts with
-  // drinks. Falls back to the first section when nothing matches.
+  // burgers.
+  //
+  // Keyed on `shown`, not `place`: the sections only exist in the DOM once the
+  // sheet has rendered its content, and `shown` is what puts them there. Keying
+  // on `place` scrolled a panel that was still empty.
   useEffect(() => {
-    if (!place) return;
+    if (!place || !shown) return;
 
-    const target = focusTag
-      ? (place.menu.find((sec) => matchesFoodTag(sec.title, focusTag)) ??
-        place.menu.find((sec) =>
-          sec.items.some((it) => matchesFoodTag(it.name, focusTag)),
-        ))
+    // An exact title wins over a pattern match. "Pizza" matches the Calzone
+    // section too — calzone is a pizza — and sections sort alphabetically, so
+    // a plain find() would land on Calzone and skip the pizzas entirely.
+    const exact = focusTag
+      ? shown.menu.find(
+          (sec) => sec.title.trim().toLowerCase() === focusTag.toLowerCase(),
+        )
       : undefined;
 
-    const section = target ?? place.menu[0];
+    const target =
+      exact ??
+      (focusTag
+        ? (shown.menu.find((sec) => matchesFoodTag(sec.title, focusTag)) ??
+          shown.menu.find((sec) =>
+            sec.items.some((it) => matchesFoodTag(it.name, focusTag)),
+          ))
+        : undefined);
+
+    const section = target ?? shown.menu[0];
     setActiveSection(section?.title ?? "");
 
-    // After paint, so the section has a real offsetTop to scroll to.
+    // After paint, so the section has a real offsetTop to measure.
     const id = window.requestAnimationFrame(() => {
       const root = scrollRef.current;
       if (!root) return;
@@ -577,10 +596,10 @@ function MenuSheet({
       const el = root.querySelector<HTMLElement>(
         `[data-section="${CSS.escape(target.title)}"]`,
       );
-      root.scrollTo({ top: el ? el.offsetTop - 12 : 0 });
+      root.scrollTo({ top: el ? Math.max(el.offsetTop - 12, 0) : 0 });
     });
     return () => window.cancelAnimationFrame(id);
-  }, [place, focusTag]);
+  }, [place, shown, focusTag]);
 
   // Scroll spy. Root is the panel's own scroller, not the viewport, and the
   // top margin biases towards the section under the nav rather than the one
