@@ -18,6 +18,8 @@ interface Props {
   menuSlug:  string;
   initialTableOrdering: boolean;
   initialTakeawayEnabled: boolean;
+  /** menus.whatsapp_phone — null until the owner sets one. */
+  initialWhatsappPhone?: string | null;
   areas:     AreaOption[];
   initialTables: InitialTable[];
   /**
@@ -46,6 +48,7 @@ function Inner({
   menuSlug,
   initialTableOrdering,
   initialTakeawayEnabled,
+  initialWhatsappPhone,
   areas,
   initialTables,
   mode = "full",
@@ -56,6 +59,34 @@ function Inner({
   const [toggling, setToggling] = useState(false);
   const [takeaway, setTakeaway] = useState(initialTakeawayEnabled);
   const [togglingTakeaway, setTogglingTakeaway] = useState(false);
+  const [waPhone, setWaPhone] = useState(initialWhatsappPhone ?? "");
+  const [savedWaPhone, setSavedWaPhone] = useState(initialWhatsappPhone ?? "");
+  const [savingWa, setSavingWa] = useState(false);
+
+  /** Save the WhatsApp order number. Empty clears it. */
+  async function saveWhatsapp() {
+    setSavingWa(true);
+    try {
+      const res = await fetch("/api/menu/settings", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ menu_id: menuId, whatsapp_phone: waPhone.trim() }),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        showToast(body?.error ?? "Couldn't save that number", "error");
+        return;
+      }
+      setSavedWaPhone(waPhone.trim());
+      showToast(
+        waPhone.trim() ? "WhatsApp order number saved" : "WhatsApp ordering turned off",
+      );
+    } catch {
+      showToast("Couldn't save that number", "error");
+    } finally {
+      setSavingWa(false);
+    }
+  }
 
   // Same toggle endpoint the menu builder's Publish panel uses, so behaviour
   // (warnings about open orders etc) stays consistent.
@@ -185,6 +216,41 @@ function Inner({
           </div>
           <Toggle checked={takeaway} onChange={toggleTakeaway} disabled={togglingTakeaway} />
         </div>
+      </div>
+
+      {/* WhatsApp order number */}
+      <div className="bg-white rounded-2xl border border-border shadow-sm p-5">
+        <p className="text-[14px] font-bold text-dark">WhatsApp orders</p>
+        <p className="text-[12px] text-text3 mt-0.5 max-w-[560px]">
+          {savedWaPhone
+            ? "Guests can send their order straight to this number on WhatsApp. It arrives written out — items, notes and total — ready for you to confirm."
+            : "Add the number that should receive orders. Guests get a WhatsApp message written out for them, so you see the whole order without anyone phoning it in."}
+        </p>
+
+        <div className="flex flex-wrap items-center gap-2 mt-3">
+          <input
+            value={waPhone}
+            onChange={(e) => setWaPhone(e.target.value)}
+            placeholder="0712 345 678"
+            inputMode="tel"
+            autoComplete="tel"
+            aria-label="WhatsApp number for orders"
+            className="flex-1 min-w-[200px] rounded-xl border border-border bg-canvas px-4 py-2.5 text-[16px] outline-none focus:border-amber"
+          />
+          <button
+            type="button"
+            onClick={saveWhatsapp}
+            disabled={savingWa || waPhone.trim() === savedWaPhone.trim()}
+            className="px-5 py-2.5 rounded-xl bg-dark text-white text-[13px] font-bold disabled:opacity-40 disabled:cursor-not-allowed hover:bg-text2 transition-colors"
+          >
+            {savingWa ? "Saving…" : "Save"}
+          </button>
+        </div>
+
+        <p className="text-[11.5px] text-text3 mt-2">
+          Use the number that is actually on WhatsApp and watched during service.
+          Leave it empty to turn WhatsApp ordering off.
+        </p>
       </div>
 
       {/* Tables — switch between list (CRUD) and floor map (positions) */}
