@@ -203,6 +203,8 @@ export const getSampleDishes = cache(async (limit = 12): Promise<Dish[]> => {
 /* ── Menus with items ───────────────────────────────────── */
 
 export type MenuItemLite = {
+  /** menu_items.id — required by POST /api/orders. */
+  id: string;
   name: string;
   priceKes: number;
   description: string;
@@ -212,6 +214,8 @@ export type MenuItemLite = {
 export type MenuSectionLite = { title: string; items: MenuItemLite[] };
 
 export type RestaurantMenu = {
+  /** menus.id — POST /api/orders keys on the uuid, not the slug. */
+  menuId: string;
   menuSlug: string;
   sections: MenuSectionLite[];
   /** Dish tags derived from item names — pizza, sushi, burgers and so on. */
@@ -240,6 +244,7 @@ const FOOD_TAGS: { tag: string; re: RegExp }[] = [
 ];
 
 type ItemRow = {
+  id: string | null;
   name: string | null;
   price_kes: number | null;
   description: string | null;
@@ -248,7 +253,7 @@ type ItemRow = {
   menu_sections: {
     title: string | null;
     display_order: number | null;
-    menus: { slug: string | null; listing_slug: string | null } | null;
+    menus: { id: string | null; slug: string | null; listing_slug: string | null } | null;
   } | null;
 };
 
@@ -268,7 +273,7 @@ export const getMenusWithItems = cache(
       const { data, error } = await adminClient
         .from("menu_items")
         .select(
-          "name, price_kes, description, photo_url, display_order, menu_sections!inner(title, display_order, menus!inner(slug, listing_slug, is_published))",
+          "id, name, price_kes, description, photo_url, display_order, menu_sections!inner(title, display_order, menus!inner(id, slug, listing_slug, is_published))",
         )
         .eq("is_available", true)
         .eq("menu_sections.menus.is_published", true);
@@ -283,11 +288,16 @@ export const getMenusWithItems = cache(
       for (const row of rows) {
         const menu = row.menu_sections?.menus;
         const key = menu?.listing_slug?.trim();
-        if (!key || !row.name) continue;
+        if (!key || !row.name || !row.id) continue;
 
         let entry = out.get(key);
         if (!entry) {
-          entry = { menuSlug: menu?.slug ?? "", sections: [], foodTags: [] };
+          entry = {
+            menuId: menu?.id ?? "",
+            menuSlug: menu?.slug ?? "",
+            sections: [],
+            foodTags: [],
+          };
           out.set(key, entry);
         }
 
@@ -299,6 +309,7 @@ export const getMenusWithItems = cache(
         }
 
         section.items.push({
+          id: row.id,
           name: row.name,
           priceKes: row.price_kes ?? 0,
           description: row.description ?? "",

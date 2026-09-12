@@ -72,6 +72,7 @@ export default async function EatKlickPage() {
       canBook: Boolean(cap?.canBook),
       foodTags: menu?.foodTags ?? [],
       menu: menu?.sections ?? [],
+      menuId: menu?.menuId ?? "",
     };
   });
 

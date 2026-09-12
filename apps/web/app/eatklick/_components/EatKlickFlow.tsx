@@ -7,6 +7,8 @@ import {
   UtensilsCrossed,
   X,
   ChevronRight,
+  Plus,
+  Minus,
   ShoppingBasket,
   Pill,
   Wine,
@@ -17,7 +19,9 @@ import {
   Check,
 } from "lucide-react";
 import { isOpenNow } from "@/lib/listings/openingHours";
-import type { MenuSectionLite } from "@/lib/eat/menus";
+import type { MenuSectionLite, MenuItemLite } from "@/lib/eat/menus";
+import { useEatCart } from "./useEatCart";
+import { CartPanel } from "./CartPanel";
 
 export type Town = { slug: string; label: string; count: number };
 
@@ -37,6 +41,7 @@ export type Place = {
   /** Dish tags derived from this kitchen's own item names. */
   foodTags: string[];
   menu: MenuSectionLite[];
+  menuId: string;
 };
 
 type CategoryKey = "restaurant" | "grocery" | "pharmacy" | "liquor";
@@ -82,6 +87,8 @@ export function EatKlickFlow({ towns, places }: { towns: Town[]; places: Place[]
   const [category, setCategory] = useState<CategoryKey | null>(null);
   const [foodTag, setFoodTag] = useState<string | null>(null);
   const [open, setOpen] = useState<Place | null>(null);
+  const [cartOpen, setCartOpen] = useState(false);
+  const { cart, add, setQty, clear, total, count } = useEatCart();
 
   const step = category ? 3 : town ? 2 : 1;
 
@@ -292,7 +299,41 @@ export function EatKlickFlow({ towns, places }: { towns: Town[]; places: Place[]
         </div>
       </div>
 
-      <MenuSheet place={open} onClose={() => setOpen(null)} />
+      <MenuSheet
+        place={open}
+        onClose={() => setOpen(null)}
+        onAdd={add}
+        cartCount={count}
+        cartTotal={total}
+        onOpenCart={() => setCartOpen(true)}
+      />
+
+      <CartPanel
+        cart={cart}
+        total={total}
+        open={cartOpen}
+        onClose={() => setCartOpen(false)}
+        onSetQty={setQty}
+        onCleared={clear}
+      />
+
+      {/* Basket bar — visible across the flow, not just inside a menu, so a
+          part-filled basket is never forgotten behind a closed panel. */}
+      {count > 0 && !open && !cartOpen && (
+        <button
+          type="button"
+          onClick={() => setCartOpen(true)}
+          className="fixed bottom-20 md:bottom-6 left-1/2 -translate-x-1/2 z-40 inline-flex items-center gap-3 pl-5 pr-4 py-3 rounded-full bg-amber text-dark shadow-lg hover:bg-amber2 transition-colors"
+        >
+          <ShoppingBag className="size-4" />
+          <span className="text-[14px] font-extrabold">
+            {count} {count === 1 ? "item" : "items"}
+          </span>
+          <span className="text-[14px] font-extrabold tabular-nums opacity-80">
+            KSh {total.toLocaleString()}
+          </span>
+        </button>
+      )}
     </main>
   );
 }
@@ -418,7 +459,26 @@ function ResultCard({ place, onOpen }: { place: Place; onOpen: () => void }) {
  * back to a warm field rather than a grey hole. 160 of 162 items are in that
  * position today.
  */
-function MenuSheet({ place, onClose }: { place: Place | null; onClose: () => void }) {
+function MenuSheet({
+  place,
+  onClose,
+  onAdd,
+  cartCount,
+  cartTotal,
+  onOpenCart,
+}: {
+  place: Place | null;
+  onClose: () => void;
+  onAdd: (
+    menu: { menuId: string; menuSlug: string; restaurant: string },
+    item: { id: string; name: string; priceKes: number },
+    qty: number,
+    note: string,
+  ) => void;
+  cartCount: number;
+  cartTotal: number;
+  onOpenCart: () => void;
+}) {
   const [shown, setShown] = useState<Place | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const [activeSection, setActiveSection] = useState<string>("");
@@ -568,39 +628,23 @@ function MenuSheet({ place, onClose }: { place: Place | null; onClose: () => voi
                 </h3>
                 <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                   {section.items.map((item, i) => (
-                    <li
-                      key={`${item.name}-${i}`}
-                      className="rounded-[16px] border border-border bg-white overflow-hidden flex"
-                    >
-                      <span className="relative w-[86px] shrink-0 bg-amber-dim">
-                        {item.photo ? (
-                          <Image
-                            src={item.photo}
-                            alt=""
-                            fill
-                            sizes="86px"
-                            className="object-cover"
-                          />
-                        ) : (
-                          <span className="absolute inset-0 flex items-center justify-center">
-                            <UtensilsCrossed className="size-5 text-amber-700/35" />
-                          </span>
-                        )}
-                      </span>
-                      <div className="p-3 min-w-0 flex-1">
-                        <p className="font-display text-[14px] font-extrabold leading-[1.25] tracking-[-0.01em]">
-                          {item.name}
-                        </p>
-                        {item.description && (
-                          <p className="text-text2 text-[12px] leading-[1.45] mt-0.5 line-clamp-2">
-                            {item.description}
-                          </p>
-                        )}
-                        <p className="font-display text-[13.5px] font-extrabold text-amber-700 mt-1.5 tabular-nums">
-                          KSh {item.priceKes.toLocaleString()}
-                        </p>
-                      </div>
-                    </li>
+                    <MenuItemRow
+                      key={`${item.id}-${i}`}
+                      item={item}
+                      onAdd={(qty, note) =>
+                        data &&
+                        onAdd(
+                          {
+                            menuId: data.menuId,
+                            menuSlug: data.orderHref?.replace("/m/", "") ?? "",
+                            restaurant: data.name,
+                          },
+                          { id: item.id, name: item.name, priceKes: item.priceKes },
+                          qty,
+                          note,
+                        )
+                      }
+                    />
                   ))}
                 </ul>
               </section>
@@ -612,19 +656,28 @@ function MenuSheet({ place, onClose }: { place: Place | null; onClose: () => voi
           )}
         </div>
 
-        <footer className="border-t border-border px-5 md:px-8 py-4 flex flex-wrap gap-2.5">
-          {data?.orderHref && (
-            <Link
-              href={data.orderHref}
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-amber text-dark text-[14px] font-extrabold hover:bg-amber2 transition-colors"
+        <footer className="border-t border-border px-5 md:px-8 py-3.5 flex flex-wrap items-center gap-2.5">
+          {cartCount > 0 ? (
+            <button
+              type="button"
+              onClick={onOpenCart}
+              className="inline-flex items-center gap-3 px-6 py-3 rounded-full bg-amber text-dark text-[14px] font-extrabold hover:bg-amber2 transition-colors"
             >
               <ShoppingBag className="size-4" />
-              Order online
-            </Link>
+              View basket · {cartCount}
+              <span className="tabular-nums opacity-80">
+                KSh {cartTotal.toLocaleString()}
+              </span>
+            </button>
+          ) : (
+            <p className="text-text3 text-[13px]">
+              Add something to start a basket.
+            </p>
           )}
+
           <Link
             href={data?.href ?? "#"}
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-full border border-border text-text text-[14px] font-bold hover:border-amber transition-colors"
+            className="inline-flex items-center gap-2 px-5 py-3 rounded-full border border-border text-text text-[13.5px] font-bold hover:border-amber transition-colors ml-auto"
           >
             {data?.canBook ? (
               <>
@@ -638,5 +691,129 @@ function MenuSheet({ place, onClose }: { place: Place | null; onClose: () => voi
         </footer>
       </div>
     </div>
+  );
+}
+
+
+/**
+ * One dish. Tapping it opens the note-and-quantity step inline rather than in
+ * another modal — a modal on top of a modal is where these flows usually start
+ * to feel heavy, and the note is short enough to take here.
+ */
+function MenuItemRow({
+  item,
+  onAdd,
+}: {
+  item: MenuItemLite;
+  onAdd: (qty: number, note: string) => void;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const [qty, setQty] = useState(1);
+  const [note, setNote] = useState("");
+  const [justAdded, setJustAdded] = useState(false);
+
+  const commit = () => {
+    onAdd(qty, note.trim());
+    setExpanded(false);
+    setQty(1);
+    setNote("");
+    setJustAdded(true);
+    window.setTimeout(() => setJustAdded(false), 1400);
+  };
+
+  return (
+    <li className="rounded-[16px] border border-border bg-white overflow-hidden">
+      <div className="flex">
+        <span className="relative w-[86px] shrink-0 bg-amber-dim">
+          {item.photo ? (
+            <Image src={item.photo} alt="" fill sizes="86px" className="object-cover" />
+          ) : (
+            <span className="absolute inset-0 flex items-center justify-center">
+              <UtensilsCrossed className="size-5 text-amber-700/35" />
+            </span>
+          )}
+        </span>
+
+        <div className="p-3 min-w-0 flex-1">
+          <p className="font-display text-[14px] font-extrabold leading-[1.25] tracking-[-0.01em]">
+            {item.name}
+          </p>
+          {item.description && (
+            <p className="text-text2 text-[12px] leading-[1.45] mt-0.5 line-clamp-2">
+              {item.description}
+            </p>
+          )}
+          <div className="flex items-center justify-between gap-2 mt-1.5">
+            <p className="font-display text-[13.5px] font-extrabold text-amber-700 tabular-nums">
+              KSh {item.priceKes.toLocaleString()}
+            </p>
+            <button
+              type="button"
+              onClick={() => setExpanded((v) => !v)}
+              aria-expanded={expanded}
+              aria-label={`Add ${item.name}`}
+              className={`size-8 rounded-full flex items-center justify-center shrink-0 transition-colors ${
+                justAdded
+                  ? "bg-green text-white"
+                  : expanded
+                    ? "bg-surface2 text-text"
+                    : "bg-amber text-dark hover:bg-amber2"
+              }`}
+            >
+              {justAdded ? <Check className="size-4" /> : <Plus className="size-4" />}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Grid-rows trick: animates height without measuring the content. */}
+      <div
+        className={`grid transition-[grid-template-rows] duration-300 ease-out motion-reduce:transition-none ${
+          expanded ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
+        }`}
+      >
+        <div className="overflow-hidden">
+          <div className="px-3 pb-3 pt-1 border-t border-border">
+            <input
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              placeholder="Note — no onions, extra spicy…"
+              maxLength={200}
+              className="w-full rounded-[10px] border border-border bg-canvas px-3 py-2.5 text-[16px] outline-none focus:border-amber"
+            />
+            <div className="flex items-center gap-2 mt-2.5">
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => setQty((q) => Math.max(1, q - 1))}
+                  aria-label="Fewer"
+                  className="size-8 rounded-full border border-border flex items-center justify-center hover:border-amber transition-colors"
+                >
+                  <Minus className="size-3.5" />
+                </button>
+                <span className="w-5 text-center text-[14px] font-extrabold tabular-nums">
+                  {qty}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setQty((q) => Math.min(20, q + 1))}
+                  aria-label="More"
+                  className="size-8 rounded-full border border-border flex items-center justify-center hover:border-amber transition-colors"
+                >
+                  <Plus className="size-3.5" />
+                </button>
+              </div>
+              <button
+                type="button"
+                onClick={commit}
+                className="flex-1 px-4 py-2.5 rounded-full bg-amber text-dark text-[13.5px] font-extrabold hover:bg-amber2 transition-colors tabular-nums"
+              >
+                Add · KSh {(item.priceKes * qty).toLocaleString()}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </li>
   );
 }
