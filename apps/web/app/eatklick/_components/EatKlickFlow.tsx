@@ -763,38 +763,42 @@ function MenuSheet({
           )}
         </div>
 
-        <footer className="border-t border-border px-5 md:px-8 py-3.5 flex flex-wrap items-center gap-2.5">
+        <footer className="border-t border-border px-4 md:px-8 py-3 flex items-center gap-2">
+          {/* Secondary on the left. Booking is the fallback action — most
+              people opening a menu are here to order. */}
+          <Link
+            href={data?.href ?? "#"}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full border border-border text-text2 text-[12.5px] font-bold hover:border-amber hover:text-text transition-colors shrink-0"
+          >
+            {data?.canBook ? (
+              <>
+                <CalendarCheck className="size-3.5" />
+                <span className="hidden sm:inline">Book a table</span>
+                <span className="sm:hidden">Book</span>
+              </>
+            ) : (
+              "Restaurant"
+            )}
+          </Link>
+
+          {/* Basket on the right, where a thumb reaches. Dark rather than
+              amber: every dish row already has an amber "+", so an amber bar
+              here competed with them instead of reading as the next step. */}
           {cartCount > 0 ? (
             <button
               type="button"
               onClick={onOpenCart}
-              className="inline-flex items-center gap-3 px-6 py-3 rounded-full bg-amber text-dark text-[14px] font-extrabold hover:bg-amber2 transition-colors"
+              aria-label={`View basket, ${cartCount} ${cartCount === 1 ? "item" : "items"}`}
+              className="ml-auto inline-flex items-center gap-2 px-4 py-2 rounded-full bg-dark text-white text-[13px] font-extrabold hover:bg-text2 transition-colors shrink-0"
             >
               <ShoppingBag className="size-4" />
-              View basket · {cartCount}
-              <span className="tabular-nums opacity-80">
-                KSh {cartTotal.toLocaleString()}
-              </span>
+              {cartCount} {cartCount === 1 ? "item" : "items"}
             </button>
           ) : (
-            <p className="text-text3 text-[13px]">
-              Add something to start a basket.
+            <p className="ml-auto text-text3 text-[12px] shrink-0">
+              Tap + to start a basket
             </p>
           )}
-
-          <Link
-            href={data?.href ?? "#"}
-            className="inline-flex items-center gap-2 px-5 py-3 rounded-full border border-border text-text text-[13.5px] font-bold hover:border-amber transition-colors ml-auto"
-          >
-            {data?.canBook ? (
-              <>
-                <CalendarCheck className="size-4" />
-                Book a table
-              </>
-            ) : (
-              "View restaurant"
-            )}
-          </Link>
         </footer>
       </div>
     </div>
