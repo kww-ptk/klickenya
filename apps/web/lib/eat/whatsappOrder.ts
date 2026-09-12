@@ -1,4 +1,4 @@
-import type { CartLine } from "@/app/eatklick/_components/useEatCart";
+import type { CartLine } from "@/components/eat/useEatCart";
 
 export type Fulfilment = "pickup" | "delivery";
 

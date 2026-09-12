@@ -13,7 +13,7 @@ import { sanityFetch } from "@/lib/sanity/client";
 import { EAT_RESTAURANTS_QUERY } from "@/lib/sanity/queries";
 import { urlForImage } from "@/lib/sanity/image";
 import { getMenuCapabilities, getSampleDishes } from "@/lib/eat/menus";
-import { Nav } from "@/components/shared/Nav";
+import { EatHeader } from "@/components/eat/EatHeader";
 import { Footer } from "@/components/shared/Footer";
 import { JsonLd } from "@/components/seo/JsonLd";
 import {
@@ -199,7 +199,7 @@ export default async function EatPage() {
         }}
       />
 
-      <Nav transparent />
+      <EatHeader />
 
       {/* ── Hero ───────────────────────────────────────────── */}
       <section className="relative overflow-hidden bg-purple-dark">

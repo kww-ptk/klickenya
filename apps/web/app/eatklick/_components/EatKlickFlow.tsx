@@ -20,8 +20,8 @@ import {
 } from "lucide-react";
 import { isOpenNow } from "@/lib/listings/openingHours";
 import type { MenuSectionLite, MenuItemLite } from "@/lib/eat/menus";
-import { useEatCart } from "./useEatCart";
-import { CartPanel } from "./CartPanel";
+import { useEatCart } from "@/components/eat/useEatCart";
+import { CartPanel } from "@/components/eat/CartPanel";
 
 export type Town = { slug: string; label: string; count: number };
 

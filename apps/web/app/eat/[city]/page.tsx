@@ -6,7 +6,7 @@ import { sanityFetch } from "@/lib/sanity/client";
 import { EAT_RESTAURANTS_QUERY, CITY_GUIDES_QUERY } from "@/lib/sanity/queries";
 import { urlForImage } from "@/lib/sanity/image";
 import { getMenuCapabilities } from "@/lib/eat/menus";
-import { Nav } from "@/components/shared/Nav";
+import { EatHeader } from "@/components/eat/EatHeader";
 import { Footer } from "@/components/shared/Footer";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { EatCityFilters, type EatCityCard } from "./_components/EatCityFilters";
@@ -175,7 +175,7 @@ export default async function EatCityPage({ params }: PageProps) {
         }}
       />
 
-      <Nav transparent />
+      <EatHeader backHref="/eat" />
 
       <header className="relative overflow-hidden bg-purple-dark">
         <div
