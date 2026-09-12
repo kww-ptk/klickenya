@@ -426,69 +426,72 @@ function ResultCard({ place, onOpen }: { place: Place; onOpen: () => void }) {
   const dishes = place.menu.reduce((n, s) => n + s.items.length, 0);
 
   return (
-    <article className="shrink-0 snap-start w-[210px] sm:w-[238px]">
-      <button type="button" onClick={onOpen} className="block w-full text-left group">
-        <div className="relative aspect-[4/3] rounded-[16px] overflow-hidden bg-white/10">
+    <article className="shrink-0 snap-start w-[290px] sm:w-[320px]">
+      <button
+        type="button"
+        onClick={onOpen}
+        className="group w-full text-left rounded-[16px] border border-white/12 bg-white/[0.06] hover:bg-white/[0.11] hover:border-amber/60 transition-colors p-2.5 flex gap-3"
+      >
+        {/* Image left, info right — the same shape the marketplace card uses
+            on mobile. A wide card fits the name, cuisine and state on one
+            line each, which a portrait tile could not. */}
+        <span className="relative size-[86px] shrink-0 rounded-[12px] overflow-hidden bg-white/10">
           {place.photo ? (
             <Image
               src={place.photo}
               alt=""
               fill
-              sizes="238px"
-              className={`object-cover transition-transform duration-300 group-hover:scale-[1.04] ${
+              sizes="86px"
+              className={`object-cover transition-transform duration-300 group-hover:scale-[1.05] ${
                 open === false ? "grayscale opacity-70" : ""
               }`}
             />
           ) : null}
-          {open !== null && (
-            <span
-              className={`absolute top-2 left-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold ${
-                open ? "bg-white text-green" : "bg-purple-dark/85 text-white"
-              }`}
-            >
-              <span className={`size-1.5 rounded-full ${open ? "bg-green" : "bg-white/60"}`} />
-              {open ? "Open" : "Closed"}
+        </span>
+
+        <span className="min-w-0 flex-1 flex flex-col justify-between py-0.5">
+          <span className="block">
+            <span className="flex items-center gap-1">
+              <span className="font-display text-[15px] font-extrabold tracking-[-0.015em] text-white truncate">
+                {place.name}
+              </span>
+              {place.isVerified && <Check className="size-3.5 text-amber shrink-0" />}
             </span>
-          )}
-        </div>
 
-        <p className="font-display text-[15px] font-extrabold tracking-[-0.015em] mt-2.5 flex items-center gap-1">
-          <span className="truncate">{place.name}</span>
-          {place.isVerified && <Check className="size-3.5 text-amber shrink-0" />}
-        </p>
-        <p className="text-[12px] text-white/45 truncate">
-          {[place.cuisine.slice(0, 2).join(", "), price].filter(Boolean).join(" · ")}
-        </p>
-        {dishes > 0 && (
-          <span className="inline-flex items-center gap-1 text-[11.5px] font-bold text-amber mt-1">
-            See {dishes} {dishes === 1 ? "dish" : "dishes"}
-            <ChevronRight className="size-3 transition-transform group-hover:translate-x-0.5" />
+            <span className="block text-[12px] text-white/45 truncate mt-0.5">
+              {[place.cuisine.slice(0, 2).join(", "), price].filter(Boolean).join(" · ")}
+            </span>
+
+            {open !== null && (
+              <span
+                className={`inline-flex items-center gap-1 text-[11px] font-bold mt-1 ${
+                  open ? "text-green" : "text-white/40"
+                }`}
+              >
+                <span
+                  className={`size-1.5 rounded-full ${open ? "bg-green" : "bg-white/35"}`}
+                />
+                {open ? "Open now" : "Closed"}
+              </span>
+            )}
           </span>
-        )}
-      </button>
 
-      {(place.orderHref || place.canBook) && (
-        <div className="flex flex-wrap gap-1.5 mt-2">
-          {place.orderHref && (
-            <Link
-              href={place.orderHref}
-              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber text-dark text-[11px] font-extrabold"
-            >
-              <ShoppingBag className="size-3" />
-              Order
-            </Link>
-          )}
-          {place.canBook && (
-            <Link
-              href={place.href}
-              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full border border-white/25 text-white text-[11px] font-bold hover:bg-white/10 transition-colors"
-            >
-              <CalendarCheck className="size-3" />
-              Book
-            </Link>
-          )}
-        </div>
-      )}
+          <span className="flex items-center gap-1.5 mt-2 flex-wrap">
+            {dishes > 0 && (
+              <span className="inline-flex items-center gap-1 text-[11.5px] font-bold text-amber">
+                {dishes} {dishes === 1 ? "dish" : "dishes"}
+                <ChevronRight className="size-3 transition-transform group-hover:translate-x-0.5" />
+              </span>
+            )}
+            {place.canBook && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full border border-white/20 text-white/70 text-[10.5px] font-bold">
+                <CalendarCheck className="size-2.5" />
+                Bookings
+              </span>
+            )}
+          </span>
+        </span>
+      </button>
     </article>
   );
 }
