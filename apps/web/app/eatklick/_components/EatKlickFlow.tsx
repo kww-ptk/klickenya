@@ -92,62 +92,41 @@ export function EatKlickFlow({ towns, places }: { towns: Town[]; places: Place[]
           klick<span className="text-amber">.</span>
         </Link>
 
-        {step > 1 && (
-          <button
-            type="button"
-            onClick={() => (category ? setCategory(null) : setTown(null))}
-            className="inline-flex items-center gap-1.5 text-[13px] font-bold text-white/55 hover:text-white transition-colors"
-          >
-            <ArrowLeft className="size-4" />
-            Back
-          </button>
-        )}
+        <ol className="flex items-center gap-2" aria-label="Progress">
+          {[1, 2, 3].map((n) => (
+            <li
+              key={n}
+              aria-current={step === n ? "step" : undefined}
+              className={`h-1.5 rounded-full transition-all duration-300 ${
+                step === n ? "w-7 bg-amber" : step > n ? "w-3 bg-amber/50" : "w-3 bg-white/15"
+              }`}
+            />
+          ))}
+        </ol>
       </header>
 
       <div className="relative z-10 flex-1 flex flex-col justify-center px-5 md:px-8 pb-24 md:pb-10">
         <div className="w-full max-w-[1040px] mx-auto">
-          {/* ── Hero ── the three words ARE the three steps, so the tagline
-                 doubles as the progress indicator. */}
-          <div className="text-center mb-9 md:mb-11">
-            <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-white/10 backdrop-blur-[16px] border border-white/15 mb-7">
-              <UtensilsCrossed className="size-3.5 text-amber" />
-              <span className="text-[13px] font-semibold text-white/85">
-                {step === 1
-                  ? "Watamu · Kilifi · the Kenyan coast"
-                  : step === 2
-                    ? town?.label
-                    : `${town?.label} · ${activeCategory?.label}`}
-              </span>
-            </div>
-
-            <h1 className="font-display font-extrabold uppercase tracking-[-0.045em] leading-[0.92] text-[clamp(34px,7.5vw,76px)]">
-              {[
-                { n: 1, word: "Crave it." },
-                { n: 2, word: "Pick it." },
-                { n: 3, word: "Book it." },
-              ].map(({ n, word }) => (
-                <span
-                  key={n}
-                  className={`inline-block mr-[0.3em] transition-colors duration-500 ${
-                    step === n
-                      ? "text-white"
-                      : step > n
-                        ? "text-amber/70"
-                        : "text-white/20"
-                  }`}
-                >
-                  {word}
-                </span>
-              ))}
-            </h1>
-          </div>
+          {/* Back */}
+          {step > 1 && (
+            <button
+              type="button"
+              onClick={() => (category ? setCategory(null) : setTown(null))}
+              className="inline-flex items-center gap-1.5 text-[13px] font-bold text-white/55 hover:text-white transition-colors mb-5"
+            >
+              <ArrowLeft className="size-4" />
+              Back
+            </button>
+          )}
 
           {/* ── Step 1 · Town ────────────────────────────── */}
           <section hidden={step !== 1} aria-label="Choose your town">
             <Panel active={step === 1}>
-              <Question>Where are you?</Question>
+              <Eyebrow>Step one</Eyebrow>
+              <Heading>Where are you?</Heading>
+              <Sub>Pick a town and we&apos;ll show what&apos;s open near you.</Sub>
 
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-6 max-w-[720px] mx-auto">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-8">
                 {towns.map((t) => (
                   <button
                     key={t.slug}
@@ -171,9 +150,11 @@ export function EatKlickFlow({ towns, places }: { towns: Town[]; places: Place[]
           {/* ── Step 2 · Category ────────────────────────── */}
           <section hidden={step !== 2} aria-label="Choose a category">
             <Panel active={step === 2}>
-              <Question>What do you need?</Question>
+              <Eyebrow>Step two · {town?.label}</Eyebrow>
+              <Heading>What do you need?</Heading>
+              <Sub>Restaurants are live. The rest are on the way.</Sub>
 
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-6">
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-8">
                 {CATEGORIES.map((c) => {
                   const n = countFor(c.key);
                   return (
@@ -204,25 +185,28 @@ export function EatKlickFlow({ towns, places }: { towns: Town[]; places: Place[]
           {/* ── Step 3 · Browse ──────────────────────────── */}
           <section hidden={step !== 3} aria-label="Browse results">
             <Panel active={step === 3}>
-              <Question>
+              <Eyebrow>
+                {town?.label} · {activeCategory?.label}
+              </Eyebrow>
+              <Heading>
                 {results.length > 0
                   ? `${results.length} to choose from`
                   : `No ${activeCategory?.label.toLowerCase()} yet`}
-              </Question>
+              </Heading>
 
               {results.length > 0 ? (
-                <div className="flex gap-3.5 overflow-x-auto snap-x snap-mandatory pb-3 mt-6 -mx-5 px-5 md:-mx-8 md:px-8 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                <div className="flex gap-3.5 overflow-x-auto snap-x snap-mandatory pb-3 mt-7 -mx-5 px-5 md:-mx-8 md:px-8 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                   {results.map((p) => (
                     <ResultCard key={p.id} place={p} />
                   ))}
                 </div>
               ) : (
-                <div className="mt-6 rounded-[20px] border border-white/15 bg-white/[0.06] px-6 py-10 max-w-[560px] mx-auto text-center">
+                <div className="mt-7 rounded-[20px] border border-white/15 bg-white/[0.06] px-6 py-10 max-w-[560px]">
                   <p className="text-white/70 text-[15px] leading-[1.6]">
                     {activeCategory?.label} isn&apos;t live in {town?.label} yet. Restaurants
                     are — try those, or tell us what you want here.
                   </p>
-                  <div className="flex flex-wrap gap-2.5 mt-5 justify-center">
+                  <div className="flex flex-wrap gap-2.5 mt-5">
                     <button
                       type="button"
                       onClick={() => setCategory("restaurant")}
@@ -263,16 +247,25 @@ function Panel({ active, children }: { active: boolean; children: React.ReactNod
   );
 }
 
-function Question({ children }: { children: React.ReactNode }) {
+function Eyebrow({ children }: { children: React.ReactNode }) {
   return (
-    <p className="text-center font-display text-[clamp(17px,2.2vw,22px)] font-extrabold text-white/70 tracking-[-0.02em]">
+    <span className="text-[11px] font-bold tracking-[0.09em] uppercase text-amber block mb-2">
       {children}
-    </p>
+    </span>
   );
 }
 
+function Heading({ children }: { children: React.ReactNode }) {
+  return (
+    <h1 className="font-display font-extrabold uppercase tracking-[-0.04em] leading-[0.95] text-[clamp(32px,6vw,60px)]">
+      {children}
+    </h1>
+  );
+}
 
-
+function Sub({ children }: { children: React.ReactNode }) {
+  return <p className="text-white/50 text-[15px] mt-3 max-w-[460px]">{children}</p>;
+}
 
 function ResultCard({ place }: { place: Place }) {
   const open = isOpenNow(place.openingHours);
