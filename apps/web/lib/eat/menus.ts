@@ -281,7 +281,7 @@ export type RestaurantMenu = {
  * course names rather than food types. Item names are the more reliable
  * signal for "does this kitchen do pizza".
  */
-const FOOD_TAGS: { tag: string; re: RegExp }[] = [
+export const FOOD_TAGS: { tag: string; re: RegExp }[] = [
   { tag: "Pizza", re: /\b(pizza|calzone|margherita)/i },
   { tag: "Burgers", re: /\bburger/i },
   { tag: "Pasta", re: /\b(pasta|spaghetti|lasagn|penne|tagliatell|ravioli|gnocchi|linguin)/i },
@@ -410,4 +410,19 @@ export const getMenusWithItems = cache(
 export function isEatEligible(cap: MenuCapability | undefined): boolean {
   if (!cap) return false; // no published menu linked to this listing
   return cap.canDeliver || cap.canOrder || cap.canOrderAtTable || cap.canBook;
+}
+
+
+/**
+ * Does this text belong to a dish tag?
+ *
+ * Used both to build the tags and, later, to find which menu section a chosen
+ * tag refers to. Section titles are free text — "Pizza", "Burger", "Burgers",
+ * "sandwiches" — so a title is checked against the same pattern as item names
+ * rather than compared literally.
+ */
+export function matchesFoodTag(text: string, tag: string): boolean {
+  const entry = FOOD_TAGS.find((t) => t.tag === tag);
+  if (!entry) return false;
+  return entry.re.test(text);
 }

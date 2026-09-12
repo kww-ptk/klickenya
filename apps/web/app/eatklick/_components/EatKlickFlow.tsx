@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { isOpenNow } from "@/lib/listings/openingHours";
 import type { MenuSectionLite, MenuItemLite } from "@/lib/eat/menus";
+import { matchesFoodTag } from "@/lib/eat/menus";
 import { useEatCart } from "@/components/eat/useEatCart";
 import { CartPanel } from "@/components/eat/CartPanel";
 
@@ -346,6 +347,7 @@ export function EatKlickFlow({ towns, places }: { towns: Town[]; places: Place[]
 
       <MenuSheet
         place={open}
+        focusTag={foodTag}
         onClose={() => setOpen(null)}
         onAdd={add}
         cartCount={count}
@@ -426,7 +428,7 @@ function ResultCard({ place, onOpen }: { place: Place; onOpen: () => void }) {
   const dishes = place.menu.reduce((n, s) => n + s.items.length, 0);
 
   return (
-    <article className="shrink-0 snap-start w-[290px] sm:w-[320px]">
+    <article className="w-full max-w-[560px]">
       <button
         type="button"
         onClick={onOpen}
@@ -510,6 +512,7 @@ function ResultCard({ place, onOpen }: { place: Place; onOpen: () => void }) {
  */
 function MenuSheet({
   place,
+  focusTag,
   onClose,
   onAdd,
   cartCount,
@@ -517,6 +520,8 @@ function MenuSheet({
   onOpenCart,
 }: {
   place: Place | null;
+  /** Dish tag the guest filtered by, so the menu opens at that section. */
+  focusTag: string | null;
   onClose: () => void;
   onAdd: (
     menu: { menuId: string; menuSlug: string; restaurant: string; whatsappPhone: string },
@@ -545,13 +550,37 @@ function MenuSheet({
     return () => window.removeEventListener("keydown", onKey);
   }, [place, onClose]);
 
-  // A reopened sheet must start at the top on its first section, not wherever
-  // the previous restaurant was left.
+  // Open where the guest was looking. Filtering by Pizza and then opening a
+  // menu should land on the pizzas, not at the top of a menu that starts with
+  // drinks. Falls back to the first section when nothing matches.
   useEffect(() => {
     if (!place) return;
-    scrollRef.current?.scrollTo({ top: 0 });
-    setActiveSection(place.menu[0]?.title ?? "");
-  }, [place]);
+
+    const target = focusTag
+      ? (place.menu.find((sec) => matchesFoodTag(sec.title, focusTag)) ??
+        place.menu.find((sec) =>
+          sec.items.some((it) => matchesFoodTag(it.name, focusTag)),
+        ))
+      : undefined;
+
+    const section = target ?? place.menu[0];
+    setActiveSection(section?.title ?? "");
+
+    // After paint, so the section has a real offsetTop to scroll to.
+    const id = window.requestAnimationFrame(() => {
+      const root = scrollRef.current;
+      if (!root) return;
+      if (!target) {
+        root.scrollTo({ top: 0 });
+        return;
+      }
+      const el = root.querySelector<HTMLElement>(
+        `[data-section="${CSS.escape(target.title)}"]`,
+      );
+      root.scrollTo({ top: el ? el.offsetTop - 12 : 0 });
+    });
+    return () => window.cancelAnimationFrame(id);
+  }, [place, focusTag]);
 
   // Scroll spy. Root is the panel's own scroller, not the viewport, and the
   // top margin biases towards the section under the nav rather than the one
