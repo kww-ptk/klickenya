@@ -76,6 +76,7 @@ export default async function EatKlickPage() {
       href: `/restaurants/${toSlug(l.city ?? "")}/${slug}`,
       orderHref: cap?.canOrder && cap.menuSlug ? `/m/${cap.menuSlug}` : undefined,
       canBook: Boolean(cap?.canBook),
+      canDeliver: Boolean(cap?.canDeliver),
       foodTags: menu?.foodTags ?? [],
       menu: menu?.sections ?? [],
       menuId: menu?.menuId ?? "",

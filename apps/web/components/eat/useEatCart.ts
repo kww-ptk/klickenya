@@ -16,6 +16,8 @@ export type Cart = {
   restaurant: string;
   /** Where the order gets sent; "" when the kitchen has not set a number. */
   whatsappPhone: string;
+  /** Does this kitchen deliver? Its own rider — Klickenya has no fleet. */
+  canDeliver: boolean;
   lines: CartLine[];
 };
 
@@ -64,7 +66,13 @@ export function useEatCart() {
 
   const add = useCallback(
     (
-      menu: { menuId: string; menuSlug: string; restaurant: string; whatsappPhone: string },
+      menu: {
+        menuId: string;
+        menuSlug: string;
+        restaurant: string;
+        whatsappPhone: string;
+        canDeliver: boolean;
+      },
       item: { id: string; name: string; priceKes: number },
       qty: number,
       note: string,

@@ -39,6 +39,7 @@ export type Place = {
   href: string;
   orderHref?: string;
   canBook: boolean;
+  canDeliver: boolean;
   /** Dish tags derived from this kitchen's own item names. */
   foodTags: string[];
   menu: MenuSectionLite[];
@@ -316,7 +317,7 @@ export function EatKlickFlow({ towns, places }: { towns: Town[]; places: Place[]
               )}
 
               {results.length > 0 ? (
-                <div className="mt-6 max-h-[42vh] overflow-y-auto pr-1 -mr-1 flex flex-col gap-2.5">
+                <div className="mt-6 max-h-[42vh] overflow-y-auto pr-1 -mr-1 grid grid-cols-1 lg:grid-cols-2 gap-2.5 items-start">
                   {results.map((p) => (
                     <ResultCard key={p.id} place={p} onOpen={() => setOpen(p)} />
                   ))}
@@ -367,6 +368,7 @@ export function EatKlickFlow({ towns, places }: { towns: Town[]; places: Place[]
         onSetQty={setQty}
         onCleared={clear}
         whatsappPhone={cart?.whatsappPhone ?? ""}
+        canDeliver={cart?.canDeliver ?? false}
       />
 
       {/* Basket bar — visible across the flow, not just inside a menu, so a
@@ -432,7 +434,7 @@ function ResultCard({ place, onOpen }: { place: Place; onOpen: () => void }) {
   const dishes = place.menu.reduce((n, s) => n + s.items.length, 0);
 
   return (
-    <article className="w-full max-w-[560px]">
+    <article className="w-full">
       <button
         type="button"
         onClick={onOpen}
@@ -528,7 +530,13 @@ function MenuSheet({
   focusTag: string | null;
   onClose: () => void;
   onAdd: (
-    menu: { menuId: string; menuSlug: string; restaurant: string; whatsappPhone: string },
+    menu: {
+      menuId: string;
+      menuSlug: string;
+      restaurant: string;
+      whatsappPhone: string;
+      canDeliver: boolean;
+    },
     item: { id: string; name: string; priceKes: number },
     qty: number,
     note: string,
@@ -736,6 +744,7 @@ function MenuSheet({
                             menuSlug: data.menuSlug,
                             restaurant: data.name,
                             whatsappPhone: data.whatsappPhone,
+                            canDeliver: data.canDeliver,
                           },
                           { id: item.id, name: item.name, priceKes: item.priceKes },
                           qty,
