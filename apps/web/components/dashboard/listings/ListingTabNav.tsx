@@ -15,7 +15,7 @@ interface ListingTabNavProps {
   /**
    * Optional override for the "overview" route (the one that needs exact-
    * match active detection). Defaults to /dashboard/listings/<id> for the
-   * legacy command center; the /eat preview passes /eat/listings/<id>.
+   * legacy command center; the /manage command center passes /manage/listings/<id>.
    */
   overviewHref?: string;
 }

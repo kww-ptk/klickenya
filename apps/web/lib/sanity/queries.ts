@@ -128,6 +128,34 @@ export const SUBCATEGORY_COUNTS_QUERY = groq`
   }
 `
 
+// Restaurants for the /eat food-discovery surface. Detection mirrors the
+// command center convention: `type == "restaurant"` (modern) OR
+// `subcategory == "restaurants"` (legacy listings). Carries the marketplace
+// partner filter like every other public listing query — a white-label
+// partner's restaurant must not surface here unless it opted in.
+export const EAT_RESTAURANTS_QUERY = groq`
+  *[_type == "listing" && status == "published"
+    && (type == "restaurant" || subcategory == "restaurants")
+    && ${MARKETPLACE_PARTNER_FILTER}] | order(_createdAt desc) {
+    ${LISTING_CARD_FIELDS},
+    cuisine
+  }
+`
+
+// Journal guides for a city, used by the /eat city hubs to link readers into
+// the existing Watamu/Kilifi coverage. Keyed on blogPost.location so adding a
+// guide surfaces it automatically rather than needing a hardcoded slug list.
+export const CITY_GUIDES_QUERY = groq`
+  *[_type == "blogPost" && status == "published" && lower(location) == lower($city)]
+    | order(publishedAt desc) [0...$limit] {
+    _id,
+    title,
+    slug,
+    excerpt,
+    readingTime
+  }
+`
+
 export const LISTINGS_BY_TYPE_CITY_QUERY = groq`
   *[_type == "listing" && status == "published" && type == $type && lower(city) == lower($city) && ${MARKETPLACE_PARTNER_FILTER}] | order(_createdAt desc) {
     ${LISTING_CARD_FIELDS}

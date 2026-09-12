@@ -1,51 +1,42 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { getAuthUser, getHostProfile, getIsAdmin } from "@/app/dashboard/_lib/auth";
+import { getAuthUser, getHostProfile, getIsAdmin } from "../../../../dashboard/_lib/auth";
 import { adminClient } from "@/lib/supabase/admin";
 import { sanityClient } from "@/lib/sanity/client";
-import { TableOrderingClient } from "./TableOrderingClient";
-import type { AreaOption, InitialTable } from "./TableOrderingClient";
+import { TableOrderingClient } from "../../../../dashboard/listings/[id]/orders/TableOrderingClient";
+import type { AreaOption, InitialTable } from "../../../../dashboard/listings/[id]/orders/TableOrderingClient";
 
 interface PageProps {
   params: Promise<{ id: string }>;
 }
 
 /**
- * Table ordering setup page.
- *
- * Three things owners care about here:
- *   1. Toggle the feature on/off
- *   2. Manage the list of tables (CRUD via the existing TableSetup component)
- *   3. Quick deep-links to live operational surfaces (Kitchen view, Audit log, QR)
- *
- * The live kitchen-view screen lives at /dashboard/menu/[menu.id]/orders --
- * that's a separate route, linked-to but not embedded.
+ * /manage/listings/[id]/orders — Table Ordering setup page in the /manage shell.
+ * Forks from the legacy page so it can pass mode="ordering-only" +
+ * featureBaseHref. Same data fetching as legacy.
  */
-export default async function TableOrderingSetupPage({ params }: PageProps) {
+export default async function EatOrdersPage({ params }: PageProps) {
   const { id } = await params;
   const { user } = await getAuthUser();
-  if (!user) redirect("/login");
+  if (!user) redirect(`/login?returnTo=/manage/listings/${id}/orders`);
 
   const isAdmin = await getIsAdmin(user.id);
-
   const hostProfile = await getHostProfile(user.id);
-  // Admin users may not have a host_profile — only redirect non-admins
   if (!hostProfile && !isAdmin) redirect("/dashboard");
 
-  // Mirror layout's pattern: admin bypasses ownership filter
+  // Dual restaurant check (type OR subcategory) — see /manage/listings/[id]/layout.tsx.
   const listing = await sanityClient.fetch<{ slug: string; title: string } | null>(
     isAdmin
-      ? `*[_id == $id && (_type == "listing" || _type == "event")][0]{
+      ? `*[_id == $id && _type == "listing" && (type == "restaurant" || subcategory == "restaurants")][0]{
           "slug": slug.current, title
         }`
-      : `*[_id == $id && (hostId == $userId || host._ref == $sanityHostId)][0]{
+      : `*[_id == $id && _type == "listing" && (type == "restaurant" || subcategory == "restaurants") && (hostId == $userId || host._ref == $sanityHostId)][0]{
           "slug": slug.current, title
         }`,
     { id, userId: user.id, sanityHostId: hostProfile?.sanity_host_id ?? "" },
   );
-  if (!listing?.slug) redirect("/dashboard/listings");
+  if (!listing?.slug) redirect("/manage/listings");
 
-  // Admin bypasses business_id ownership filter (layout already validated listing ownership).
   let menuQuery = adminClient
     .from("menus")
     .select("id, name, slug, table_ordering, takeaway_enabled, listing_slug")
@@ -57,20 +48,20 @@ export default async function TableOrderingSetupPage({ params }: PageProps) {
     return (
       <div>
         <Link
-          href={`/dashboard/listings/${id}`}
-          className="text-[13px] text-text3 hover:text-dark"
+          href={`/manage/listings/${id}`}
+          className="text-[13px] text-[#9C9485] hover:text-[#16130C]"
         >
-          ← Back to dashboard
+          ← Back to overview
         </Link>
-        <h1 className="font-display text-[22px] lg:text-[28px] font-bold tracking-[-0.03em] text-dark mt-2">
+        <h1 className="font-display text-[22px] lg:text-[28px] font-bold tracking-[-0.03em] text-[#16130C] mt-2">
           Table ordering
         </h1>
-        <p className="text-[13px] text-text3 mt-1 mb-5">
+        <p className="text-[13px] text-[#9C9485] mt-1 mb-5">
           Set up your menu first before turning on table ordering.
         </p>
         <Link
-          href={`/dashboard/listings/${id}`}
-          className="inline-block bg-amber text-dark font-bold text-[13px] px-5 h-[44px] leading-[44px] rounded-full hover:bg-[#d4911c]"
+          href={`/manage/listings/${id}/menu`}
+          className="inline-block bg-[#E8A020] text-[#16130C] font-bold text-[13px] px-5 h-[44px] leading-[44px] rounded-full hover:bg-[#d4911c]"
         >
           Set up menu →
         </Link>
@@ -78,10 +69,6 @@ export default async function TableOrderingSetupPage({ params }: PageProps) {
     );
   }
 
-  // Reservation areas double as floor sections in TableSetup AND drive
-  // the floor-map area picker. color_hex tints the picker's active pill.
-  // Tables are fetched in the same parallel batch — the floor map needs
-  // pos_x / pos_y / area_id beyond the list-view fields.
   const [{ data: areasRaw }, { data: tablesRaw }] = await Promise.all([
     adminClient
       .from("restaurant_areas")
@@ -91,8 +78,6 @@ export default async function TableOrderingSetupPage({ params }: PageProps) {
       .order("display_order", { ascending: true }),
     adminClient
       .from("restaurant_tables")
-      // floor_section is the legacy text label (migration 045). The canvas
-      // uses it as a fallback when area_id is null so pre-V1 data shows up.
       .select("id, table_number, capacity, pos_x, pos_y, area_id, floor_section, is_active")
       .eq("menu_id", menu.id)
       .order("display_order", { ascending: true }),
@@ -123,10 +108,8 @@ export default async function TableOrderingSetupPage({ params }: PageProps) {
       initialWhatsappPhone={whatsappPhone}
       areas={(areasRaw ?? []) as AreaOption[]}
       initialTables={(tablesRaw ?? []) as InitialTable[]}
-      // ordering-only mode routes back-links + back= params through the
-      // /dashboard tree, surfaces a "Next: POS terminal" hint at the bottom.
       mode="ordering-only"
-      featureBaseHref={`/dashboard/listings/${id}`}
+      featureBaseHref={`/manage/listings/${id}`}
     />
   );
 }

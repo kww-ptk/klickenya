@@ -103,12 +103,15 @@ export async function middleware(request: NextRequest) {
   const isAdmin = pathname.startsWith("/admin");
   const isAccount = pathname.startsWith("/account");
   const isProfile = pathname.startsWith("/profile");
-  // /eat/* is the restaurant-only command center preview. Same gating as
+  // /manage/* is the restaurant-only command center. Same gating as
   // /dashboard (host or admin), different navigation shell + route tree.
-  // Will move to a real eat.klickenya.com subdomain once the IA is proven.
-  const isEat = pathname.startsWith("/eat");
+  // Lived at /eat until 2026-09-11; /eat is now the public food-discovery
+  // surface, so the command center moved here. Next stop is
+  // app.klickenya.com, which needs isHouseHost() taught about the subdomain
+  // first (see the P2 spec) — until then it stays a path on the house host.
+  const isManage = pathname.startsWith("/manage");
 
-  if ((isDashboard || isAdmin || isAccount || isProfile || isEat) && !user) {
+  if ((isDashboard || isAdmin || isAccount || isProfile || isManage) && !user) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     url.searchParams.set("returnTo", pathname);
@@ -116,7 +119,7 @@ export async function middleware(request: NextRequest) {
   }
 
   // Role-based access: fetch role once for protected routes
-  if ((isAdmin || isDashboard || isProfile || isEat) && user) {
+  if ((isAdmin || isDashboard || isProfile || isManage) && user) {
     const { createClient } = await import("@supabase/supabase-js");
     const adminSupabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -146,8 +149,8 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(url);
     }
 
-    // /eat: same gating as /dashboard — host or admin only
-    if (isEat && role !== "host" && role !== "admin") {
+    // /manage: same gating as /dashboard — host or admin only
+    if (isManage && role !== "host" && role !== "admin") {
       const url = request.nextUrl.clone();
       url.pathname = "/profile";
       return NextResponse.redirect(url);

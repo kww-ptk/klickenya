@@ -33,6 +33,9 @@ interface ListingCardProps {
   photos: string[];
   href: string;
   initialSaved?: boolean;
+  /** Restaurant takes orders online — surfaced as a small marker on the card.
+   *  Set from the Supabase menus row; see lib/eat/menus.ts. */
+  canOrder?: boolean;
 }
 
 /* ── Type badge config ─────────────────────────── */
@@ -134,6 +137,7 @@ function ListingCard({
   photos,
   href,
   initialSaved = false,
+  canOrder = false,
 }: ListingCardProps) {
   const { isSaved: isSavedInContext, addSaved, removeSaved } = useSavedListings();
   const [saved, setSaved] = useState(initialSaved || isSavedInContext(id));
@@ -331,6 +335,12 @@ function ListingCard({
             <p className="mt-1 text-[12.5px] text-text2 line-clamp-1">
               {renderSubtitle()}
             </p>
+{canOrder && (
+              <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-700">
+                <span className="size-1.5 rounded-full bg-amber" />
+                Order online
+              </span>
+            )}
             {/* Open Now badge (mobile) */}
             {type === "restaurant" && openStatus !== null && (
               <span className={cn(
@@ -459,6 +469,12 @@ function ListingCard({
             <span>
               {renderSubtitle()}
             </span>
+{canOrder && (
+              <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-700">
+                <span className="size-1.5 rounded-full bg-amber" />
+                Order online
+              </span>
+            )}
             {/* Open Now badge (desktop) */}
             {type === "restaurant" && openStatus !== null && (
               <span className={cn(

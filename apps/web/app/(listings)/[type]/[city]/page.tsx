@@ -8,6 +8,7 @@ import {
 } from "@/lib/sanity/queries";
 import { urlForImage } from "@/lib/sanity/image";
 import { ListingGrid } from "@/components/listings/ListingGrid";
+import { getMenuCapabilities } from "@/lib/eat/menus";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { LocationHeading } from "@/components/listings/LocationHeading";
 import type { ListingCardProps } from "@/components/listings/ListingCard";
@@ -119,6 +120,11 @@ export default async function CityPage({ params }: PageProps) {
     params: { type: sanityType, city: cityName },
   });
 
+  // Restaurants that take orders online get a marker on their card. One query
+  // for the whole page, and only for restaurants — no other type can order.
+  const caps =
+    sanityType === "restaurant" ? await getMenuCapabilities() : new Map();
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const cards: ListingCardProps[] = (listings ?? []).map((l: any) => {
     const slug = l.slug?.current ?? l.slug ?? "";
@@ -142,6 +148,7 @@ export default async function CityPage({ params }: PageProps) {
       hostName: l.hostName,
       photos: photoUrl ? [photoUrl] : [],
       href: `/${type}/${city}/${slug}`,
+      canOrder: Boolean(caps.get(slug)?.canOrder),
     };
   });
 
