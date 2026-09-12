@@ -44,6 +44,7 @@ export type Place = {
   menuId: string;
   /** menus.slug — the tracking link needs it whether or not ordering is on. */
   menuSlug: string;
+  whatsappPhone: string;
 };
 
 type CategoryKey = "restaurant" | "grocery" | "pharmacy" | "liquor";
@@ -317,6 +318,7 @@ export function EatKlickFlow({ towns, places }: { towns: Town[]; places: Place[]
         onClose={() => setCartOpen(false)}
         onSetQty={setQty}
         onCleared={clear}
+        whatsappPhone={cart?.whatsappPhone ?? ""}
       />
 
       {/* Basket bar — visible across the flow, not just inside a menu, so a
@@ -472,7 +474,7 @@ function MenuSheet({
   place: Place | null;
   onClose: () => void;
   onAdd: (
-    menu: { menuId: string; menuSlug: string; restaurant: string },
+    menu: { menuId: string; menuSlug: string; restaurant: string; whatsappPhone: string },
     item: { id: string; name: string; priceKes: number },
     qty: number,
     note: string,
@@ -640,6 +642,7 @@ function MenuSheet({
                             menuId: data.menuId,
                             menuSlug: data.menuSlug,
                             restaurant: data.name,
+                            whatsappPhone: data.whatsappPhone,
                           },
                           { id: item.id, name: item.name, priceKes: item.priceKes },
                           qty,

@@ -74,6 +74,7 @@ export default async function EatKlickPage() {
       menu: menu?.sections ?? [],
       menuId: menu?.menuId ?? "",
       menuSlug: menu?.menuSlug ?? "",
+      whatsappPhone: cap?.whatsappPhone ?? "",
     };
   });
 

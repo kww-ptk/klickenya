@@ -1,7 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { X, Minus, Plus, ShoppingBag, Loader2 } from "lucide-react";
+import { X, Minus, Plus, Loader2, Bike, ShoppingBag as Bag, MapPin } from "lucide-react";
+import {
+  buildOrderMessage,
+  buildWhatsAppUrl,
+  type Fulfilment,
+} from "@/lib/eat/whatsappOrder";
 import type { Cart } from "./useEatCart";
 
 /**
@@ -15,6 +20,10 @@ import type { Cart } from "./useEatCart";
  * orders yet") instead of a generic failure, because it is a setting the
  * restaurant controls, not a bug the guest can retry their way out of.
  */
+/** Flip to true the day riders exist. The delivery path is built and wired;
+ *  only the availability of a rider is missing. */
+const DELIVERY_AVAILABLE = false;
+
 export function CartPanel({
   cart,
   total,
@@ -22,6 +31,7 @@ export function CartPanel({
   onClose,
   onSetQty,
   onCleared,
+  whatsappPhone,
 }: {
   cart: Cart | null;
   total: number;
@@ -29,55 +39,60 @@ export function CartPanel({
   onClose: () => void;
   onSetQty: (idx: number, qty: number) => void;
   onCleared: () => void;
+  /** Number that receives the order; "" when the kitchen has not set one. */
+  whatsappPhone: string;
 }) {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [note, setNote] = useState("");
+  const [fulfilment, setFulfilment] = useState<Fulfilment>("pickup");
+  const [address, setAddress] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [placed, setPlaced] = useState<string | null>(null);
 
-  const submit = async () => {
-    if (!cart) return;
+  /**
+   * Hand the order to the kitchen over WhatsApp.
+   *
+   * Opened in a new tab rather than replacing this one, so the basket and the
+   * page survive if the guest comes straight back — and on desktop, where
+   * WhatsApp Web may not be signed in, they are not stranded on a dead page.
+   */
+  const submit = () => {
+    if (!cart || !whatsappPhone) return;
     setBusy(true);
     setError(null);
-    try {
-      const res = await fetch("/api/orders", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          menu_id: cart.menuId,
-          order_type: "takeaway",
-          customer_name: name.trim(),
-          customer_phone: phone.trim(),
-          order_note: note.trim() || undefined,
-          items: cart.lines.map((l) => ({
-            menu_item_id: l.itemId,
-            quantity: l.qty,
-            allergy_notes: l.note || undefined,
-          })),
-        }),
-      });
 
-      const body = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        setError(
-          res.status === 400 && /takeaway/i.test(JSON.stringify(body))
-            ? "This kitchen isn't taking online orders yet. Your basket is saved — call them or book a table instead."
-            : (body?.error ?? "Couldn't place that order. Try again in a moment."),
-        );
-        return;
-      }
-      setPlaced(body.order_id ?? "");
-      onCleared();
-    } catch {
-      setError("Couldn't reach the kitchen. Check your connection and try again.");
-    } finally {
-      setBusy(false);
+    const message = buildOrderMessage({
+      restaurant: cart.restaurant,
+      lines: cart.lines,
+      totalKes: total,
+      fulfilment,
+      deliveryAddress: address.trim(),
+      customerName: name.trim(),
+      customerPhone: phone.trim(),
+      note: note.trim() || undefined,
+    });
+
+    const win = window.open(buildWhatsAppUrl(whatsappPhone, message), "_blank", "noopener");
+    setBusy(false);
+
+    if (!win) {
+      setError("Your browser blocked the WhatsApp window. Allow pop-ups and try again.");
+      return;
     }
+    // Deliberately NOT clearing the basket: the guest still has to press send
+    // inside WhatsApp, and we cannot know whether they did.
+    setPlaced("sent");
   };
 
-  const canSubmit = Boolean(cart?.lines.length) && name.trim() && phone.trim() && !busy;
+  const canSubmit =
+    Boolean(cart?.lines.length) &&
+    Boolean(whatsappPhone) &&
+    name.trim().length > 0 &&
+    phone.trim().length > 0 &&
+    (fulfilment !== "delivery" || address.trim().length > 0) &&
+    !busy;
 
   return (
     <div
@@ -123,15 +138,11 @@ export function CartPanel({
         {placed ? (
           <div className="flex-1 px-5 py-8">
             <p className="text-text2 text-[15px] leading-[1.6]">
-              Sent to {cart?.restaurant ?? "the kitchen"}. They&apos;ll confirm with a
-              ready time — keep an eye on your phone.
+              Your order is written out in WhatsApp — press send there to reach{" "}
+              {cart?.restaurant ?? "the kitchen"}. They&apos;ll reply with a ready
+              time. Your basket is still here until you do.
             </p>
-            <a
-              href={placed ? `/m/${cart?.menuSlug}/order/${placed}` : "#"}
-              className="inline-flex items-center gap-2 mt-6 px-6 py-3 rounded-full bg-amber text-dark text-[14px] font-extrabold"
-            >
-              Track your order
-            </a>
+
           </div>
         ) : (
           <>
@@ -186,6 +197,61 @@ export function CartPanel({
 
               {cart && cart.lines.length > 0 && (
                 <div className="mt-5 space-y-2.5">
+                  {/* How it gets to them. Delivery is a real intention with no
+                      riders behind it yet, so it is visible but not selectable —
+                      hiding it would lose the signal that people want it. */}
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setFulfilment("pickup")}
+                      aria-pressed={fulfilment === "pickup"}
+                      className={`rounded-[12px] border px-3 py-3 text-left transition-colors ${
+                        fulfilment === "pickup"
+                          ? "border-amber bg-amber-dim"
+                          : "border-border bg-white hover:border-amber"
+                      }`}
+                    >
+                      <Bag className="size-4 text-amber-700 mb-1.5" />
+                      <p className="text-[13px] font-extrabold leading-tight">
+                        I&apos;ll pick it up
+                      </p>
+                      <p className="text-text3 text-[11px] mt-0.5">Collect at the counter</p>
+                    </button>
+
+                    <button
+                      type="button"
+                      disabled={!DELIVERY_AVAILABLE}
+                      onClick={() => setFulfilment("delivery")}
+                      aria-pressed={fulfilment === "delivery"}
+                      className={`rounded-[12px] border px-3 py-3 text-left transition-colors ${
+                        fulfilment === "delivery"
+                          ? "border-amber bg-amber-dim"
+                          : "border-border bg-white"
+                      } ${DELIVERY_AVAILABLE ? "hover:border-amber" : "opacity-55 cursor-not-allowed"}`}
+                    >
+                      <Bike className="size-4 text-text3 mb-1.5" />
+                      <p className="text-[13px] font-extrabold leading-tight">
+                        Arrange delivery
+                      </p>
+                      <p className="text-text3 text-[11px] mt-0.5">
+                        {DELIVERY_AVAILABLE ? "To your address" : "Not available yet"}
+                      </p>
+                    </button>
+                  </div>
+
+                  {fulfilment === "delivery" && (
+                    <div className="relative">
+                      <MapPin className="size-4 text-text3 absolute left-3.5 top-3.5" />
+                      <textarea
+                        value={address}
+                        onChange={(e) => setAddress(e.target.value)}
+                        placeholder="Where are you? Landmark, road, house — whatever gets a rider to you"
+                        rows={2}
+                        className="w-full rounded-[12px] border border-border bg-white pl-10 pr-4 py-3 text-[16px] outline-none focus:border-amber resize-none"
+                      />
+                    </div>
+                  )}
+
                   <input
                     value={name}
                     onChange={(e) => setName(e.target.value)}
@@ -239,13 +305,15 @@ export function CartPanel({
                     </>
                   ) : (
                     <>
-                      <ShoppingBag className="size-4" />
-                      Place order
+                      <WhatsAppGlyph />
+                      Send order on WhatsApp
                     </>
                   )}
                 </button>
                 <p className="text-text3 text-[11.5px] text-center mt-2">
-                  Pay at the counter when you collect.
+                  {whatsappPhone
+                    ? "Opens WhatsApp with your order written out — press send."
+                    : "This kitchen hasn't added a WhatsApp number yet."}
                 </p>
               </footer>
             )}
@@ -253,5 +321,16 @@ export function CartPanel({
         )}
       </div>
     </div>
+  );
+}
+
+
+/** WhatsApp mark. lucide has no brand glyphs, and an inline path avoids
+ *  pulling a whole icon pack for one logo. */
+function WhatsAppGlyph() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden className="size-4" fill="currentColor">
+      <path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38a9.9 9.9 0 0 0 4.79 1.22h.01c5.46 0 9.91-4.45 9.91-9.91C21.96 6.45 17.5 2 12.04 2Zm0 18.15h-.01a8.2 8.2 0 0 1-4.19-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.22 8.22 0 0 1-1.26-4.38c0-4.54 3.7-8.23 8.25-8.23a8.23 8.23 0 0 1 8.24 8.24c0 4.54-3.7 8.23-8.24 8.23Zm4.52-6.16c-.25-.12-1.47-.72-1.69-.81-.23-.08-.39-.12-.56.13-.16.25-.64.8-.79.97-.14.16-.29.18-.54.06-.25-.12-1.05-.39-1.99-1.23-.74-.66-1.23-1.47-1.38-1.72-.14-.25-.01-.38.11-.5.11-.11.25-.29.37-.43.12-.15.16-.25.25-.41.08-.17.04-.31-.02-.43-.06-.12-.56-1.34-.76-1.84-.2-.48-.4-.42-.56-.43h-.48c-.17 0-.43.06-.66.31-.23.25-.86.84-.86 2.05s.89 2.38 1.01 2.54c.12.17 1.75 2.67 4.23 3.74.59.26 1.05.41 1.41.52.59.19 1.13.16 1.56.1.48-.07 1.47-.6 1.68-1.18.21-.58.21-1.07.14-1.18-.06-.11-.22-.17-.47-.29Z" />
+    </svg>
   );
 }

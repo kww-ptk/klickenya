@@ -18,12 +18,15 @@ export type MenuCapability = {
   canOrder: boolean;
   /** QR ordering at a table inside the restaurant. */
   canOrderAtTable: boolean;
+  /** Number that receives orders over WhatsApp; "" when none is set. */
+  whatsappPhone: string;
   canBook: boolean; // table reservations are live
   canDeliver: boolean; // delivery — dormant until P0 ships
 };
 
 type MenuRow = {
   slug: string | null;
+  business_id: string | null;
   listing_slug: string | null;
   ordering_enabled: boolean | null;
   table_ordering: boolean | null;
@@ -51,7 +54,7 @@ export const getMenuCapabilities = cache(
       const { data, error } = await adminClient
         .from("menus")
         .select(
-          "slug, listing_slug, ordering_enabled, table_ordering, takeaway_enabled, delivery_enabled, reservations_enabled",
+          "slug, listing_slug, ordering_enabled, table_ordering, takeaway_enabled, delivery_enabled, reservations_enabled, business_id",
         )
         .eq("is_published", true);
 
@@ -60,7 +63,52 @@ export const getMenuCapabilities = cache(
         return map;
       }
 
-      for (const row of (data ?? []) as MenuRow[]) {
+      const rows = (data ?? []) as MenuRow[];
+
+      // menus.whatsapp_phone arrives in migration 086 and is read in its OWN
+      // query on purpose. Folding it into the select above would mean that,
+      // on any database where the migration has not run yet, PostgREST fails
+      // the whole request and every capability silently disappears — the exact
+      // column-drift failure CLAUDE.md documents. Here a missing column costs
+      // only the phone numbers.
+      const menuPhones = new Map<string, string>();
+      {
+        const { data: phoneRows, error: phoneErr } = await adminClient
+          .from("menus")
+          .select("listing_slug, whatsapp_phone")
+          .eq("is_published", true);
+        if (phoneErr) {
+          console.warn(
+            "[eat/menus] whatsapp_phone unavailable (migration 086 not applied?):",
+            phoneErr.message,
+          );
+        } else {
+          for (const r of (phoneRows ?? []) as {
+            listing_slug: string | null;
+            whatsapp_phone: string | null;
+          }[]) {
+            if (r.listing_slug && r.whatsapp_phone?.trim()) {
+              menuPhones.set(r.listing_slug.trim(), r.whatsapp_phone.trim());
+            }
+          }
+        }
+      }
+
+      // Fallback only: the account holder's personal number, shared across all
+      // their listings. Used when a menu has not set its own.
+      const ownerPhones = new Map<string, string>();
+      const ownerIds = [...new Set(rows.map((r) => r.business_id).filter(Boolean))] as string[];
+      if (ownerIds.length > 0) {
+        const { data: hosts } = await adminClient
+          .from("host_profiles")
+          .select("user_id, phone")
+          .in("user_id", ownerIds);
+        for (const h of (hosts ?? []) as { user_id: string; phone: string | null }[]) {
+          if (h.phone) ownerPhones.set(h.user_id, h.phone);
+        }
+      }
+
+      for (const row of rows) {
         const key = row.listing_slug?.trim();
         if (!key) continue;
         if (map.has(key)) {
@@ -73,6 +121,9 @@ export const getMenuCapabilities = cache(
           canOrderAtTable: Boolean(row.table_ordering || row.ordering_enabled),
           canBook: Boolean(row.reservations_enabled),
           canDeliver: Boolean(row.delivery_enabled),
+          whatsappPhone:
+            menuPhones.get(key) ||
+            (row.business_id ? (ownerPhones.get(row.business_id) ?? "") : ""),
         });
       }
     } catch (err) {

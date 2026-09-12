@@ -14,6 +14,8 @@ export type Cart = {
   menuId: string;
   menuSlug: string;
   restaurant: string;
+  /** Where the order gets sent; "" when the kitchen has not set a number. */
+  whatsappPhone: string;
   lines: CartLine[];
 };
 
@@ -62,7 +64,7 @@ export function useEatCart() {
 
   const add = useCallback(
     (
-      menu: { menuId: string; menuSlug: string; restaurant: string },
+      menu: { menuId: string; menuSlug: string; restaurant: string; whatsappPhone: string },
       item: { id: string; name: string; priceKes: number },
       qty: number,
       note: string,
