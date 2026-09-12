@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import {
@@ -420,6 +420,8 @@ function ResultCard({ place, onOpen }: { place: Place; onOpen: () => void }) {
  */
 function MenuSheet({ place, onClose }: { place: Place | null; onClose: () => void }) {
   const [shown, setShown] = useState<Place | null>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [activeSection, setActiveSection] = useState<string>("");
 
   // Keep the last place while animating out, so the panel has content to show
   // on its way off screen.
@@ -433,6 +435,51 @@ function MenuSheet({ place, onClose }: { place: Place | null; onClose: () => voi
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [place, onClose]);
+
+  // A reopened sheet must start at the top on its first section, not wherever
+  // the previous restaurant was left.
+  useEffect(() => {
+    if (!place) return;
+    scrollRef.current?.scrollTo({ top: 0 });
+    setActiveSection(place.menu[0]?.title ?? "");
+  }, [place]);
+
+  // Scroll spy. Root is the panel's own scroller, not the viewport, and the
+  // top margin biases towards the section under the nav rather than the one
+  // just leaving it.
+  useEffect(() => {
+    const root = scrollRef.current;
+    if (!place || !root) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((e) => e.isIntersecting)
+          .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)[0];
+        if (visible) {
+          setActiveSection(visible.target.getAttribute("data-section") ?? "");
+        }
+      },
+      { root, rootMargin: "-8px 0px -70% 0px", threshold: 0 },
+    );
+
+    root.querySelectorAll("[data-section]").forEach((el) => observer.observe(el));
+    return () => observer.disconnect();
+  }, [place, shown]);
+
+  const goToSection = (title: string) => {
+    const root = scrollRef.current;
+    const target = root?.querySelector<HTMLElement>(
+      `[data-section="${CSS.escape(title)}"]`,
+    );
+    if (!root || !target) return;
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    root.scrollTo({
+      top: target.offsetTop - 12,
+      behavior: reduced ? "auto" : "smooth",
+    });
+    setActiveSection(title);
+  };
 
   const isOpen = Boolean(place);
   const data = shown;
@@ -480,10 +527,42 @@ function MenuSheet({ place, onClose }: { place: Place | null; onClose: () => voi
           </button>
         </header>
 
-        <div className="flex-1 overflow-y-auto px-5 md:px-8 py-6">
+        {data && data.menu.length > 1 && (
+          <nav
+            aria-label="Menu sections"
+            className="border-b border-border bg-canvas/95 backdrop-blur px-5 md:px-8"
+          >
+            <div className="flex gap-1.5 overflow-x-auto py-2.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              {data.menu.map((section) => (
+                <button
+                  key={section.title}
+                  type="button"
+                  onClick={() => goToSection(section.title)}
+                  aria-current={activeSection === section.title ? "true" : undefined}
+                  className={`shrink-0 px-3.5 py-1.5 rounded-full text-[12.5px] font-bold whitespace-nowrap transition-colors ${
+                    activeSection === section.title
+                      ? "bg-amber text-dark"
+                      : "text-text2 hover:bg-surface hover:text-text"
+                  }`}
+                >
+                  {section.title}
+                  <span className="ml-1.5 opacity-55 tabular-nums">
+                    {section.items.length}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </nav>
+        )}
+
+        <div ref={scrollRef} className="flex-1 overflow-y-auto px-5 md:px-8 py-6">
           {data && data.menu.length > 0 ? (
             data.menu.map((section) => (
-              <section key={section.title} className="mb-8 last:mb-0">
+              <section
+                key={section.title}
+                data-section={section.title}
+                className="mb-8 last:mb-0 scroll-mt-4"
+              >
                 <h3 className="text-[11px] font-bold tracking-[0.09em] uppercase text-amber-600 mb-3">
                   {section.title}
                 </h3>
