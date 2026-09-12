@@ -1,10 +1,12 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import {
   UtensilsCrossed,
+  X,
+  ChevronRight,
   ShoppingBasket,
   Pill,
   Wine,
@@ -15,6 +17,7 @@ import {
   Check,
 } from "lucide-react";
 import { isOpenNow } from "@/lib/listings/openingHours";
+import type { MenuSectionLite } from "@/lib/eat/menus";
 
 export type Town = { slug: string; label: string; count: number };
 
@@ -31,6 +34,9 @@ export type Place = {
   href: string;
   orderHref?: string;
   canBook: boolean;
+  /** Dish tags derived from this kitchen's own item names. */
+  foodTags: string[];
+  menu: MenuSectionLite[];
 };
 
 type CategoryKey = "restaurant" | "grocery" | "pharmacy" | "liquor";
@@ -47,6 +53,15 @@ const CATEGORIES: {
   { key: "pharmacy", label: "Pharmacy", icon: Pill, tone: "bg-teal text-white", live: false },
   { key: "liquor", label: "Liquor", icon: Wine, tone: "bg-purple2 text-white", live: false },
 ];
+
+/** `town` is a slug for filtering; it needs a label when shown to a reader. */
+function titleCase(slug?: string): string {
+  if (!slug) return "";
+  return slug
+    .split("-")
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ");
+}
 
 const PRICE_GLYPH: Record<string, string> = {
   budget: "$",
@@ -65,13 +80,26 @@ const PRICE_GLYPH: Record<string, string> = {
 export function EatKlickFlow({ towns, places }: { towns: Town[]; places: Place[] }) {
   const [town, setTown] = useState<Town | null>(null);
   const [category, setCategory] = useState<CategoryKey | null>(null);
+  const [foodTag, setFoodTag] = useState<string | null>(null);
+  const [open, setOpen] = useState<Place | null>(null);
 
   const step = category ? 3 : town ? 2 : 1;
 
-  const results = useMemo(() => {
+  const inScope = useMemo(() => {
     if (!town || !category) return [];
     return places.filter((p) => p.town === town.slug && p.category === category);
   }, [places, town, category]);
+
+  /** Dish tags actually present in this town, so a chip never returns nothing. */
+  const foodTags = useMemo(
+    () => [...new Set(inScope.flatMap((p) => p.foodTags))].sort(),
+    [inScope],
+  );
+
+  const results = useMemo(
+    () => (foodTag ? inScope.filter((p) => p.foodTags.includes(foodTag)) : inScope),
+    [inScope, foodTag],
+  );
 
   const activeCategory = CATEGORIES.find((c) => c.key === category);
 
@@ -111,7 +139,14 @@ export function EatKlickFlow({ towns, places }: { towns: Town[]; places: Place[]
           {step > 1 && (
             <button
               type="button"
-              onClick={() => (category ? setCategory(null) : setTown(null))}
+              onClick={() => {
+                if (category) {
+                  setCategory(null);
+                  setFoodTag(null);
+                } else {
+                  setTown(null);
+                }
+              }}
               className="inline-flex items-center gap-1.5 text-[13px] font-bold text-white/55 hover:text-white transition-colors mb-5"
             >
               <ArrowLeft className="size-4" />
@@ -194,10 +229,39 @@ export function EatKlickFlow({ towns, places }: { towns: Town[]; places: Place[]
                   : `No ${activeCategory?.label.toLowerCase()} yet`}
               </Heading>
 
+              {foodTags.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-6">
+                  {foodTags.map((t) => (
+                    <button
+                      key={t}
+                      type="button"
+                      onClick={() => setFoodTag((v) => (v === t ? null : t))}
+                      aria-pressed={foodTag === t}
+                      className={`px-3.5 py-2 rounded-full text-[13px] font-bold border transition-colors ${
+                        foodTag === t
+                          ? "border-amber bg-amber text-dark"
+                          : "border-white/20 text-white/70 hover:border-amber hover:text-white"
+                      }`}
+                    >
+                      {t}
+                    </button>
+                  ))}
+                  {foodTag && (
+                    <button
+                      type="button"
+                      onClick={() => setFoodTag(null)}
+                      className="px-2 text-[13px] font-bold text-white/45 hover:text-white underline underline-offset-4"
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
+              )}
+
               {results.length > 0 ? (
                 <div className="flex gap-3.5 overflow-x-auto snap-x snap-mandatory pb-3 mt-7 -mx-5 px-5 md:-mx-8 md:px-8 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                   {results.map((p) => (
-                    <ResultCard key={p.id} place={p} />
+                    <ResultCard key={p.id} place={p} onOpen={() => setOpen(p)} />
                   ))}
                 </div>
               ) : (
@@ -227,6 +291,8 @@ export function EatKlickFlow({ towns, places }: { towns: Town[]; places: Place[]
           </section>
         </div>
       </div>
+
+      <MenuSheet place={open} onClose={() => setOpen(null)} />
     </main>
   );
 }
@@ -267,14 +333,14 @@ function Sub({ children }: { children: React.ReactNode }) {
   return <p className="text-white/50 text-[15px] mt-3 max-w-[460px]">{children}</p>;
 }
 
-function ResultCard({ place }: { place: Place }) {
+function ResultCard({ place, onOpen }: { place: Place; onOpen: () => void }) {
   const open = isOpenNow(place.openingHours);
   const price = place.priceRange ? PRICE_GLYPH[place.priceRange] : undefined;
-  const href = place.orderHref ?? place.href;
+  const dishes = place.menu.reduce((n, s) => n + s.items.length, 0);
 
   return (
     <article className="shrink-0 snap-start w-[210px] sm:w-[238px]">
-      <Link href={href} className="block group">
+      <button type="button" onClick={onOpen} className="block w-full text-left group">
         <div className="relative aspect-[4/3] rounded-[16px] overflow-hidden bg-white/10">
           {place.photo ? (
             <Image
@@ -306,7 +372,13 @@ function ResultCard({ place }: { place: Place }) {
         <p className="text-[12px] text-white/45 truncate">
           {[place.cuisine.slice(0, 2).join(", "), price].filter(Boolean).join(" · ")}
         </p>
-      </Link>
+        {dishes > 0 && (
+          <span className="inline-flex items-center gap-1 text-[11.5px] font-bold text-amber mt-1">
+            See {dishes} {dishes === 1 ? "dish" : "dishes"}
+            <ChevronRight className="size-3 transition-transform group-hover:translate-x-0.5" />
+          </span>
+        )}
+      </button>
 
       {(place.orderHref || place.canBook) && (
         <div className="flex flex-wrap gap-1.5 mt-2">
@@ -331,5 +403,161 @@ function ResultCard({ place }: { place: Place }) {
         </div>
       )}
     </article>
+  );
+}
+
+/**
+ * The menu, revealed in place.
+ *
+ * Stays mounted and animates on the `place` prop so the panel can slide out
+ * as well as in — unmounting would make it vanish. `pointer-events-none` while
+ * closed keeps the invisible layer from swallowing clicks, and `inert` keeps
+ * its contents out of tab order.
+ *
+ * Photos: most kitchens have not uploaded any, so an item without one falls
+ * back to a warm field rather than a grey hole. 160 of 162 items are in that
+ * position today.
+ */
+function MenuSheet({ place, onClose }: { place: Place | null; onClose: () => void }) {
+  const [shown, setShown] = useState<Place | null>(null);
+
+  // Keep the last place while animating out, so the panel has content to show
+  // on its way off screen.
+  useEffect(() => {
+    if (place) setShown(place);
+  }, [place]);
+
+  useEffect(() => {
+    if (!place) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [place, onClose]);
+
+  const isOpen = Boolean(place);
+  const data = shown;
+
+  return (
+    <div
+      className={`fixed inset-0 z-50 transition-opacity duration-300 ${
+        isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+      }`}
+      aria-hidden={!isOpen}
+    >
+      <button
+        type="button"
+        aria-label="Close menu"
+        onClick={onClose}
+        className="absolute inset-0 bg-purple-dark/70 backdrop-blur-sm"
+      />
+
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label={data ? `${data.name} menu` : "Menu"}
+        className={`absolute inset-x-0 bottom-0 top-[8%] md:top-[10%] rounded-t-[26px] bg-canvas text-text overflow-hidden flex flex-col transition-transform duration-400 ease-out motion-reduce:transition-none ${
+          isOpen ? "translate-y-0" : "translate-y-full"
+        }`}
+      >
+        <header className="flex items-start justify-between gap-4 px-5 md:px-8 pt-5 pb-4 border-b border-border">
+          <div className="min-w-0">
+            <h2 className="font-display text-[21px] font-extrabold tracking-[-0.025em] truncate">
+              {data?.name}
+            </h2>
+            <p className="text-text2 text-[13px] truncate">
+              {[data?.cuisine.slice(0, 2).join(", "), titleCase(data?.town)]
+                .filter(Boolean)
+                .join(" · ")}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close"
+            className="size-10 rounded-full bg-surface hover:bg-surface2 flex items-center justify-center shrink-0 transition-colors"
+          >
+            <X className="size-5" />
+          </button>
+        </header>
+
+        <div className="flex-1 overflow-y-auto px-5 md:px-8 py-6">
+          {data && data.menu.length > 0 ? (
+            data.menu.map((section) => (
+              <section key={section.title} className="mb-8 last:mb-0">
+                <h3 className="text-[11px] font-bold tracking-[0.09em] uppercase text-amber-600 mb-3">
+                  {section.title}
+                </h3>
+                <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {section.items.map((item, i) => (
+                    <li
+                      key={`${item.name}-${i}`}
+                      className="rounded-[16px] border border-border bg-white overflow-hidden flex"
+                    >
+                      <span className="relative w-[86px] shrink-0 bg-amber-dim">
+                        {item.photo ? (
+                          <Image
+                            src={item.photo}
+                            alt=""
+                            fill
+                            sizes="86px"
+                            className="object-cover"
+                          />
+                        ) : (
+                          <span className="absolute inset-0 flex items-center justify-center">
+                            <UtensilsCrossed className="size-5 text-amber-700/35" />
+                          </span>
+                        )}
+                      </span>
+                      <div className="p-3 min-w-0 flex-1">
+                        <p className="font-display text-[14px] font-extrabold leading-[1.25] tracking-[-0.01em]">
+                          {item.name}
+                        </p>
+                        {item.description && (
+                          <p className="text-text2 text-[12px] leading-[1.45] mt-0.5 line-clamp-2">
+                            {item.description}
+                          </p>
+                        )}
+                        <p className="font-display text-[13.5px] font-extrabold text-amber-700 mt-1.5 tabular-nums">
+                          KSh {item.priceKes.toLocaleString()}
+                        </p>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            ))
+          ) : (
+            <p className="text-text2 text-[15px]">
+              This kitchen hasn&apos;t published a menu yet.
+            </p>
+          )}
+        </div>
+
+        <footer className="border-t border-border px-5 md:px-8 py-4 flex flex-wrap gap-2.5">
+          {data?.orderHref && (
+            <Link
+              href={data.orderHref}
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-amber text-dark text-[14px] font-extrabold hover:bg-amber2 transition-colors"
+            >
+              <ShoppingBag className="size-4" />
+              Order online
+            </Link>
+          )}
+          <Link
+            href={data?.href ?? "#"}
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-full border border-border text-text text-[14px] font-bold hover:border-amber transition-colors"
+          >
+            {data?.canBook ? (
+              <>
+                <CalendarCheck className="size-4" />
+                Book a table
+              </>
+            ) : (
+              "View restaurant"
+            )}
+          </Link>
+        </footer>
+      </div>
+    </div>
   );
 }

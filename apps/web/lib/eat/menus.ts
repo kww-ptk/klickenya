@@ -1,5 +1,6 @@
 import { cache } from "react";
 import { adminClient } from "@/lib/supabase/admin";
+import { isAllowedImageHost } from "@/lib/images/remoteHost";
 
 /**
  * What a restaurant can actually do right now, keyed by its Sanity listing slug.
@@ -198,3 +199,127 @@ export const getSampleDishes = cache(async (limit = 12): Promise<Dish[]> => {
     return [];
   }
 });
+
+/* ── Menus with items ───────────────────────────────────── */
+
+export type MenuItemLite = {
+  name: string;
+  priceKes: number;
+  description: string;
+  photo: string; // "" when absent or from a host we will not serve
+};
+
+export type MenuSectionLite = { title: string; items: MenuItemLite[] };
+
+export type RestaurantMenu = {
+  menuSlug: string;
+  sections: MenuSectionLite[];
+  /** Dish tags derived from item names — pizza, sushi, burgers and so on. */
+  foodTags: string[];
+};
+
+/**
+ * Dish tags, matched against item names.
+ *
+ * Section titles are free text and inconsistent ("Mains", "Main Courses",
+ * "Main Menu", "sandwiches", "Burger" vs "Burgers"), and half of them are
+ * course names rather than food types. Item names are the more reliable
+ * signal for "does this kitchen do pizza".
+ */
+const FOOD_TAGS: { tag: string; re: RegExp }[] = [
+  { tag: "Pizza", re: /\b(pizza|calzone|margherita)/i },
+  { tag: "Burgers", re: /\bburger/i },
+  { tag: "Pasta", re: /\b(pasta|spaghetti|lasagn|penne|tagliatell|ravioli|gnocchi|linguin)/i },
+  { tag: "Sushi", re: /\b(sushi|sashimi|maki|nigiri)/i },
+  { tag: "Seafood", re: /\b(prawn|shrimp|octopus|calamari|squid|snapper|lobster|crab|fish|tuna|seafood|oyster)/i },
+  { tag: "Grills", re: /\b(grill|bbq|steak|wagyu|fillet|ribs|skewer)/i },
+  { tag: "Salads", re: /\bsalad/i },
+  { tag: "Desserts", re: /\b(dessert|gelato|tiramis|cake|ice ?cream|brownie|panna)/i },
+  { tag: "Vegetarian", re: /\b(vegetarian|vegan|veggie)/i },
+  { tag: "Drinks", re: /\b(cocktail|mojito|juice|coffee|beer|wine|smoothie|dawa)/i },
+];
+
+type ItemRow = {
+  name: string | null;
+  price_kes: number | null;
+  description: string | null;
+  photo_url: string | null;
+  display_order: number | null;
+  menu_sections: {
+    title: string | null;
+    display_order: number | null;
+    menus: { slug: string | null; listing_slug: string | null } | null;
+  } | null;
+};
+
+/**
+ * Every published menu's items, grouped by listing slug.
+ *
+ * One query for the lot — there are ~160 available items in total, so paging
+ * per restaurant would be far more expensive than fetching everything once.
+ * Photos are filtered through the host allowlist here rather than at render:
+ * a hotlinked URL took a whole menu page down in production once already.
+ */
+export const getMenusWithItems = cache(
+  async (): Promise<Map<string, RestaurantMenu>> => {
+    const out = new Map<string, RestaurantMenu>();
+
+    try {
+      const { data, error } = await adminClient
+        .from("menu_items")
+        .select(
+          "name, price_kes, description, photo_url, display_order, menu_sections!inner(title, display_order, menus!inner(slug, listing_slug, is_published))",
+        )
+        .eq("is_available", true)
+        .eq("menu_sections.menus.is_published", true);
+
+      if (error) {
+        console.error("[eat/menu-items] query failed:", error.message);
+        return out;
+      }
+
+      const rows = (data ?? []) as unknown as ItemRow[];
+
+      for (const row of rows) {
+        const menu = row.menu_sections?.menus;
+        const key = menu?.listing_slug?.trim();
+        if (!key || !row.name) continue;
+
+        let entry = out.get(key);
+        if (!entry) {
+          entry = { menuSlug: menu?.slug ?? "", sections: [], foodTags: [] };
+          out.set(key, entry);
+        }
+
+        const title = row.menu_sections?.title?.trim() || "Menu";
+        let section = entry.sections.find((s) => s.title === title);
+        if (!section) {
+          section = { title, items: [] };
+          entry.sections.push(section);
+        }
+
+        section.items.push({
+          name: row.name,
+          priceKes: row.price_kes ?? 0,
+          description: row.description ?? "",
+          photo: isAllowedImageHost(row.photo_url) ? row.photo_url! : "",
+        });
+
+        for (const { tag, re } of FOOD_TAGS) {
+          if (!entry.foodTags.includes(tag) && re.test(row.name)) {
+            entry.foodTags.push(tag);
+          }
+        }
+      }
+
+      for (const entry of out.values()) {
+        entry.sections.sort((a, b) => a.title.localeCompare(b.title));
+        entry.foodTags.sort();
+      }
+    } catch (err) {
+      console.error("[eat/menu-items] unexpected error:", err);
+    }
+
+    return out;
+  },
+);

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { sanityFetch } from "@/lib/sanity/client";
 import { EAT_RESTAURANTS_QUERY } from "@/lib/sanity/queries";
 import { urlForImage } from "@/lib/sanity/image";
-import { getMenuCapabilities } from "@/lib/eat/menus";
+import { getMenuCapabilities, getMenusWithItems } from "@/lib/eat/menus";
 import { EatKlickFlow, type Place, type Town } from "./_components/EatKlickFlow";
 
 /**
@@ -48,11 +48,15 @@ export default async function EatKlickPage() {
     console.error("[/eatklick] Sanity fetch error:", err);
   }
 
-  const caps = await getMenuCapabilities();
+  const [caps, menus] = await Promise.all([
+    getMenuCapabilities(),
+    getMenusWithItems(),
+  ]);
 
   const places: Place[] = listings.map((l) => {
     const slug = typeof l.slug === "string" ? l.slug : (l.slug?.current ?? "");
     const cap = caps.get(slug);
+    const menu = menus.get(slug);
     return {
       id: l._id,
       name: l.title ?? "Untitled",
@@ -66,6 +70,8 @@ export default async function EatKlickPage() {
       href: `/restaurants/${toSlug(l.city ?? "")}/${slug}`,
       orderHref: cap?.canOrder && cap.menuSlug ? `/m/${cap.menuSlug}` : undefined,
       canBook: Boolean(cap?.canBook),
+      foodTags: menu?.foodTags ?? [],
+      menu: menu?.sections ?? [],
     };
   });
 
