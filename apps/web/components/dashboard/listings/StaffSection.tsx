@@ -9,7 +9,7 @@ import { Copy, Check, Trash2 } from "lucide-react";
 export interface StaffMember {
   id: string;
   name: string;
-  role: "waiter" | "manager" | "cashier" | "kitchen" | "bar";
+  role: "waiter" | "manager" | "cashier" | "kitchen" | "bar" | "delivery";
   is_active: boolean;
   created_at: string;
   can_access_all_stations: boolean;
@@ -296,6 +296,7 @@ export function StaffSection({
                 onChange={(e) => setAddRole(e.target.value as StaffMember["role"])}
                 className="border border-border rounded-lg px-3 py-1.5 text-[13px] text-dark focus:outline-none focus:border-amber bg-white"
               >
+                <option value="delivery">Food Delivery Station</option>
                 <option value="waiter">Waiter</option>
                 <option value="kitchen">Kitchen</option>
                 <option value="bar">Bar</option>
@@ -309,16 +310,19 @@ export function StaffSection({
                 screen instead of the order queue — the PIN looks wrong when
                 it is the role that is. */}
             <p className="text-[12px] text-text2 leading-snug">
-              {addRole === "kitchen" || addRole === "bar" || addRole === "manager" ? (
+              {addRole === "delivery" ||
+              addRole === "kitchen" ||
+              addRole === "bar" ||
+              addRole === "manager" ? (
                 <>
-                  Signs in to the <strong>order tablet</strong> — incoming orders,
+                  Signs in to <strong>Food Delivery Orders</strong> — incoming orders,
                   deliveries, and the handover code riders need.
                 </>
               ) : (
                 <>
                   Signs in to the <strong>POS terminal</strong> for tables and bills. For
                   someone working delivery or takeaway orders, choose{" "}
-                  <strong>Kitchen</strong> or <strong>Manager</strong> instead.
+                  <strong>Food Delivery Station</strong> instead.
                 </>
               )}
             </p>
@@ -488,6 +492,7 @@ function StaffRowEdit({
           onChange={(e) => setEditRole(e.target.value as StaffMember["role"])}
           className="border border-border rounded-lg px-3 py-1.5 text-[13px] text-dark focus:outline-none focus:border-amber bg-white"
         >
+          <option value="delivery">Food Delivery Station</option>
           <option value="waiter">Waiter</option>
           <option value="kitchen">Kitchen</option>
           <option value="bar">Bar</option>

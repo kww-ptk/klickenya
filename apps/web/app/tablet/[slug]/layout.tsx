@@ -3,7 +3,7 @@ import type { Metadata, Viewport } from "next";
 import { getPosMenuBySlug } from "@/app/pos/[slug]/_lib/menuFromSlug";
 
 /**
- * Order tablet layout. Mirrors /pos/[slug]/layout.tsx but trimmer:
+ * Food Delivery Orders layout. Mirrors /pos/[slug]/layout.tsx but trimmer:
  *   - Same dark, full-bleed, no-chrome look so it can be docked to a tablet.
  *   - No PosShellProvider — the kitchen view doesn't need menu sections,
  *     staff context, or the realtime/cache machinery the waiter UI uses.
@@ -13,8 +13,8 @@ import { getPosMenuBySlug } from "@/app/pos/[slug]/_lib/menuFromSlug";
 
 export const metadata: Metadata = {
   // Bare: the root layout applies template "%s | Klickenya". Spelling the
-  // brand here too renders "Order tablet · Klickenya | Klickenya".
-  title: "Order tablet",
+  // brand here too renders "Food Delivery Orders · Klickenya | Klickenya".
+  title: "Food Delivery Orders",
   robots: { index: false, follow: false },
 };
 

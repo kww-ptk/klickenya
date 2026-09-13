@@ -68,7 +68,7 @@ interface ReservationsSettingsProps {
 export interface StaffMember {
   id: string;
   name: string;
-  role: "waiter" | "manager" | "cashier" | "kitchen" | "bar";
+  role: "waiter" | "manager" | "cashier" | "kitchen" | "bar" | "delivery";
   is_active: boolean;
   created_at: string;
 }

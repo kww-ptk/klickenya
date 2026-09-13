@@ -38,8 +38,29 @@ export default async function KitchenLoginPage({ params }: PageProps) {
 
   const cookieStore = await cookies();
   const session = verifyPosSession(cookieStore.get(POS_SESSION_COOKIE)?.value);
+
+  // The session cookie says who signed in; it cannot say whether they are
+  // still switched on. Every screen behind this one re-checks is_active and
+  // bounces back here — so honouring a stale cookie without the same check
+  // sent a deactivated person round and round between the two, which is the
+  // flashing. Fall through to the PIN pad instead.
+  let sessionIsActive = false;
   if (session && session.menu_id === menu.id) {
-    if (session.role === "kitchen" || session.role === "manager" || session.role === "bar") {
+    const { data: staffRow } = await adminClient
+      .from("restaurant_staff")
+      .select("is_active")
+      .eq("id", session.staff_id)
+      .maybeSingle();
+    sessionIsActive = Boolean(staffRow?.is_active);
+  }
+
+  if (session && session.menu_id === menu.id && sessionIsActive) {
+    if (
+      session.role === "delivery" ||
+      session.role === "kitchen" ||
+      session.role === "manager" ||
+      session.role === "bar"
+    ) {
       redirect(kitchenHome);
     }
     // Already signed in as a waiter/cashier. The POS terminal is where they
@@ -53,7 +74,7 @@ export default async function KitchenLoginPage({ params }: PageProps) {
       slug={slug}
       menuId={menu.id}
       menuName={menu.name}
-      contextLabel="Order Tablet"
+      contextLabel="Food Delivery Orders"
       redirectTo={kitchenHome}
     />
   );

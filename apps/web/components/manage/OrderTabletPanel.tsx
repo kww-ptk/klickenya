@@ -8,7 +8,7 @@ import { StaffSection } from "@/components/dashboard/listings/StaffSection";
 /**
  * Everything needed to put this order queue on a tablet, on the Orders page.
  *
- * Called the ORDER TABLET, not the kitchen terminal. "Kitchen" already means
+ * Called the FOOD DELIVERY ORDERS, not the kitchen terminal. "Kitchen" already means
  * Klickenya Kitchen here — stock, recipes, costing — and two different things
  * sharing a word is how an owner ends up on the wrong screen.
  *
@@ -18,7 +18,12 @@ import { StaffSection } from "@/components/dashboard/listings/StaffSection";
  * either existed. Orders are the reason to open it, so the Orders page is
  * where it belongs.
  */
-export function OrderTabletPanel(props: { menuId: string; menuSlug: string }) {
+export function OrderTabletPanel(props: {
+  menuId: string;
+  menuSlug: string;
+  /** The auto-created Food Delivery Station, when there is one. */
+  stationPin?: string | null;
+}) {
   return (
     <ToastProvider>
       <Inner {...props} />
@@ -26,7 +31,15 @@ export function OrderTabletPanel(props: { menuId: string; menuSlug: string }) {
   );
 }
 
-function Inner({ menuId, menuSlug }: { menuId: string; menuSlug: string }) {
+function Inner({
+  menuId,
+  menuSlug,
+  stationPin,
+}: {
+  menuId: string;
+  menuSlug: string;
+  stationPin?: string | null;
+}) {
   const { showToast } = useToast();
   const [copied, setCopied] = useState(false);
 
@@ -45,16 +58,16 @@ function Inner({ menuId, menuSlug }: { menuId: string; menuSlug: string }) {
   }
 
   return (
-    <details className="rounded-2xl border border-[#E2DDD5] bg-white">
+    <details open className="rounded-2xl border border-[#E2DDD5] bg-white">
       <summary className="cursor-pointer list-none p-4 flex items-center gap-2 text-[13.5px] font-bold text-[#16130C]">
         <Monitor className="size-4 text-[#9C9485]" aria-hidden />
-        Open orders on a tablet
+        Food Delivery Orders — open on a tablet
       </summary>
 
       <div className="border-t border-[#F4F1EC] p-4 space-y-4">
         <div>
           <p className="text-[11px] font-bold uppercase tracking-wide text-[#9C9485] mb-2">
-            Order tablet URL
+            Food Delivery Orders URL
           </p>
           <div className="flex items-center gap-2 rounded-xl border border-[#E2DDD5] bg-[#FDFCFB] px-3 py-3">
             <code className="flex-1 truncate text-[13px] text-[#16130C]">{tabletUrl}</code>
@@ -74,13 +87,31 @@ function Inner({ menuId, menuSlug }: { menuId: string; menuSlug: string }) {
             deliveries and the rider handover code, and <strong>Stations</strong> for what
             each section is cooking.
           </p>
+          {/* The PIN belongs beside the link. Splitting them across two
+              screens is what turned "open this on a tablet" into a support
+              question. */}
+          {stationPin && (
+            <div className="mt-3 rounded-xl border border-[#E2DDD5] bg-[#FDFCFB] p-3.5">
+              <p className="text-[11px] font-bold uppercase tracking-wide text-[#9C9485]">
+                Sign in with this PIN
+              </p>
+              <p className="font-mono text-[26px] font-bold tracking-[0.3em] text-[#16130C] mt-0.5">
+                {stationPin}
+              </p>
+              <p className="text-[12px] text-[#6B6355] mt-1">
+                Created for you when delivery was switched on. Change it below like any
+                other staff PIN.
+              </p>
+            </div>
+          )}
+
           <a
             href={`/tablet/${menuSlug}`}
             target="_blank"
             rel="noopener noreferrer"
             className="mt-3 inline-block rounded-full bg-[#16130C] px-6 h-[44px] leading-[44px] text-[13.5px] font-bold text-white hover:bg-[#2A251A]"
           >
-            Open the order tablet →
+            Open Food Delivery Orders →
           </a>
         </div>
 
@@ -89,7 +120,7 @@ function Inner({ menuId, menuSlug }: { menuId: string; menuSlug: string }) {
             Staff &amp; PINs
           </h3>
           <p className="text-[12.5px] text-[#6B6355] mb-3">
-            Anyone who should open the order tablet needs a PIN here.
+            Anyone who should open Food Delivery Orders needs a PIN here.
           </p>
           <StaffSection
             menuId={menuId}

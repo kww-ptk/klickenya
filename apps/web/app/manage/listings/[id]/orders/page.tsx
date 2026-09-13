@@ -54,6 +54,9 @@ export default async function ManageOrdersPage({ params }: PageProps) {
 
   const setupHref = `/manage/listings/${id}/orders/setup`;
 
+  // The Food Delivery Station's PIN, shown next to the link it opens.
+  let deliveryStationPin: string | null = null;
+
   if (!menu) {
     return (
       <div>
@@ -109,6 +112,18 @@ export default async function ManageOrdersPage({ params }: PageProps) {
   // fetched on demand: there is no GET on /api/menu/items, a restaurant menu
   // is ~40-150 rows, and the owner opening this page is about to work orders
   // from it. !inner on menu_sections scopes to THIS menu.
+  {
+    const { data: stationRow } = await adminClient
+      .from("restaurant_staff")
+      .select("pin")
+      .eq("menu_id", menu.id)
+      .eq("role", "delivery")
+      .eq("is_active", true)
+      .limit(1)
+      .maybeSingle();
+    deliveryStationPin = (stationRow as { pin?: string } | null)?.pin ?? null;
+  }
+
   const { data: dishRows } = await adminClient
     .from("menu_items")
     .select("id, name, price_kes, is_available, menu_sections!inner ( menu_id )")
@@ -179,7 +194,11 @@ export default async function ManageOrdersPage({ params }: PageProps) {
       {/* Putting this queue on the counter. Here rather than on the POS tab,
           because that tab disappears when POS is off — and a delivery-only
           kitchen is exactly the one that needs a tablet. */}
-      <OrderTabletPanel menuId={menu.id} menuSlug={menu.slug as string} />
+      <OrderTabletPanel
+        menuId={menu.id}
+        menuSlug={menu.slug as string}
+        stationPin={deliveryStationPin}
+      />
 
       {/* Clearing test data. Below the queue, not beside it — this is a setup
           task, not part of working a shift. */}
