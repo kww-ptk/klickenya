@@ -202,12 +202,40 @@ export function StaffSection({
         )}
       </div>
 
+      {/* Everyone switched off is not the same as nobody added, and it is the
+          case that looks like a broken app: sign-in rejects a CORRECT PIN
+          with "Invalid PIN", because the lookup filters on is_active. The
+          owner meanwhile saw "No active staff yet" above a small toggle and
+          no reason to connect the two. */}
+      {!loading && staff.length > 0 && staff.every((s) => !s.is_active) && (
+        <div className="mx-4 mt-3 rounded-xl border border-[#E8A020]/50 bg-[#E8A020]/10 p-3.5">
+          <p className="text-[13px] font-bold text-[#B4541A]">
+            Nobody can sign in right now
+          </p>
+          <p className="text-[12.5px] text-[#6B6355] mt-1">
+            All {staff.length} staff are switched off. A correct PIN will still be refused
+            as &ldquo;Invalid PIN&rdquo; until someone is switched back on.
+          </p>
+          <button
+            type="button"
+            onClick={() => setShowInactive(true)}
+            className="mt-2 text-[12.5px] font-bold text-[#16130C] underline"
+          >
+            Show them
+          </button>
+        </div>
+      )}
+
       {/* List */}
       {loading ? (
         <div className="px-4 py-6 text-center text-[12px] text-text3">Loading staff…</div>
       ) : visibleStaff.length === 0 ? (
         <div className="px-4 py-5 text-center text-[12px] text-text3">
-          {showInactive ? "No staff yet." : "No active staff yet. Add one below."}
+          {showInactive
+            ? "No staff yet."
+            : staff.length > 0
+            ? "Everyone here is switched off."
+            : "No staff yet. Add one below."}
         </div>
       ) : (
         <div>
