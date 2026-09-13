@@ -6,6 +6,8 @@ import Link from "next/link";
 interface StatusOrder {
   id: string;
   short_id: string;
+  order_type?: "takeaway" | "delivery" | null;
+  delivery_address?: string | null;
   status: "new" | "preparing" | "ready" | "delivered" | "cancelled";
   created_at: string;
   accepted_at: string | null;
@@ -14,6 +16,15 @@ interface StatusOrder {
   total_kes: number | null;
   items: Array<{ name: string; quantity: number; line_total: number | null }>;
   restaurant: { name: string; slug: string };
+}
+
+/**
+ * Menus are named for the dashboard ("Napul'è Restaurant Menu"), which reads
+ * badly in a sentence addressed to a guest — "call Napul'è Restaurant Menu".
+ * Drop the trailing word for display only; the stored name is untouched.
+ */
+function restaurantLabel(name: string): string {
+  return name.replace(/\s+menu\s*$/i, "").trim() || name;
 }
 
 function readyTimeLabel(iso: string | null): string | null {
@@ -25,16 +36,32 @@ function readyTimeLabel(iso: string | null): string | null {
   }).format(new Date(iso));
 }
 
-const STATUS_UI: Record<
-  StatusOrder["status"],
-  { emoji: string; title: string; tone: string }
-> = {
-  new:       { emoji: "⏳", title: "Waiting for the restaurant to confirm", tone: "text-amber" },
-  preparing: { emoji: "👨‍🍳", title: "Order accepted — being prepared",     tone: "text-purple" },
-  ready:     { emoji: "🎉", title: "Ready for pickup!",                     tone: "text-emerald-600" },
-  delivered: { emoji: "✅", title: "Picked up — thank you!",                tone: "text-emerald-700" },
-  cancelled: { emoji: "😔", title: "Order declined",                        tone: "text-[#DC2626]" },
-};
+/**
+ * The last two steps mean different things depending on how the food gets to
+ * you. "Ready for pickup!" is actively wrong when a rider is on the way, so
+ * the wording follows the order type rather than one set covering both.
+ */
+function statusUi(
+  status: StatusOrder["status"],
+  isDelivery: boolean,
+): { emoji: string; title: string; tone: string } {
+  switch (status) {
+    case "new":
+      return { emoji: "⏳", title: "Waiting for the restaurant to confirm", tone: "text-amber" };
+    case "preparing":
+      return { emoji: "👨‍🍳", title: "Order accepted — being prepared", tone: "text-purple" };
+    case "ready":
+      return isDelivery
+        ? { emoji: "🛵", title: "On its way to you", tone: "text-emerald-600" }
+        : { emoji: "🎉", title: "Ready for pickup!", tone: "text-emerald-600" };
+    case "delivered":
+      return isDelivery
+        ? { emoji: "✅", title: "Delivered — enjoy!", tone: "text-emerald-700" }
+        : { emoji: "✅", title: "Picked up — thank you!", tone: "text-emerald-700" };
+    case "cancelled":
+      return { emoji: "😔", title: "Order declined", tone: "text-[#DC2626]" };
+  }
+}
 
 export function OrderStatusClient({ orderId }: { orderId: string }) {
   const [order, setOrder] = useState<StatusOrder | null>(null);
@@ -83,7 +110,9 @@ export function OrderStatusClient({ orderId }: { orderId: string }) {
     );
   }
 
-  const ui = STATUS_UI[order.status];
+  const isDelivery = order.order_type === "delivery";
+  const restaurant = restaurantLabel(order.restaurant.name);
+  const ui = statusUi(order.status, isDelivery);
   const readyAt = readyTimeLabel(order.estimated_ready_at);
 
   return (
@@ -96,7 +125,7 @@ export function OrderStatusClient({ orderId }: { orderId: string }) {
 
         {order.status === "new" && (
           <p className="text-[13px] text-text2 mt-2">
-            {order.restaurant.name} will confirm your order shortly. Keep this page open —
+            {restaurant} will confirm your order shortly. Keep this page open —
             it updates automatically.
           </p>
         )}
@@ -107,7 +136,9 @@ export function OrderStatusClient({ orderId }: { orderId: string }) {
         )}
         {order.status === "ready" && (
           <p className="text-[13px] text-text2 mt-2">
-            Head to {order.restaurant.name} to collect your order.
+            {isDelivery
+              ? `${restaurant} is bringing it to ${order.delivery_address || "you"}.`
+              : `Head to ${restaurant} to collect your order.`}
           </p>
         )}
         {order.status === "cancelled" && order.decline_reason && (
@@ -115,9 +146,19 @@ export function OrderStatusClient({ orderId }: { orderId: string }) {
         )}
 
         <p className="text-[11px] font-bold text-text3 uppercase tracking-widest mt-5 mb-1">
-          Takeaway order
+          {isDelivery ? "Delivery order" : "Takeaway order"}
         </p>
         <p className="font-mono text-[18px] font-bold text-dark">#{order.short_id}</p>
+        <p className="text-[11.5px] text-text3 mt-1">
+          Quote this code if you call {restaurant}.
+        </p>
+
+        {isDelivery && order.delivery_address && (
+          <p className="text-[12.5px] text-text2 mt-3 leading-snug">
+            Delivering to{" "}
+            <span className="font-medium text-dark">{order.delivery_address}</span>
+          </p>
+        )}
 
         {/* Items */}
         <div className="mt-5 text-left border-t border-surface pt-4 space-y-1.5">
@@ -136,7 +177,9 @@ export function OrderStatusClient({ orderId }: { orderId: string }) {
           ))}
           {order.total_kes != null && (
             <div className="flex items-center justify-between pt-2 mt-2 border-t border-surface">
-              <span className="text-[13px] font-semibold text-text2">Total (pay at pickup)</span>
+              <span className="text-[13px] font-semibold text-text2">
+                Total (pay {isDelivery ? "on delivery" : "at pickup"})
+              </span>
               <span className="text-[15px] font-extrabold text-dark tabular-nums">
                 KSh {order.total_kes.toLocaleString("en-KE")}
               </span>

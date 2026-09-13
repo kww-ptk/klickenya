@@ -58,6 +58,7 @@ export function CartPanel({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [placed, setPlaced] = useState<string | null>(null);
+  const [trackUrl, setTrackUrl] = useState<string | null>(null);
 
   /**
    * Hand the order to the kitchen over WhatsApp.
@@ -73,6 +74,7 @@ export function CartPanel({
 
     // ── Step 1: record the order ──────────────────────────────────────
     let orderRef: string | undefined;
+    let track: string | undefined;
     try {
       const res = await fetch("/api/orders", {
         method: "POST",
@@ -112,6 +114,12 @@ export function CartPanel({
         return;
       }
       orderRef = payload?.short_id ?? undefined;
+      if (payload?.order_id) {
+        // window.location.origin, not a configured base: the guest should
+        // stay on whichever host they are already on.
+        track = `${window.location.origin}/order/${payload.order_id}`;
+        setTrackUrl(track);
+      }
     } catch {
       setError("Could not reach the kitchen. Check your connection and try again.");
       setBusy(false);
@@ -129,6 +137,7 @@ export function CartPanel({
       customerPhone: phone.trim(),
       note: note.trim() || undefined,
       orderRef,
+      trackUrl: track,
     });
 
     const win = window.open(buildWhatsAppUrl(whatsappPhone, message), "_blank", "noopener");
@@ -206,6 +215,28 @@ export function CartPanel({
               time. Your basket is still here until you do.
             </p>
 
+            {placed !== "sent" && (
+              <div className="mt-6 rounded-2xl border border-border bg-white p-5 text-center">
+                <p className="text-[11px] font-bold text-text3 uppercase tracking-widest">
+                  Your order code
+                </p>
+                <p className="font-mono text-[22px] font-bold text-dark mt-1">
+                  #{placed}
+                </p>
+                <p className="text-[12.5px] text-text2 mt-1.5">
+                  Quote this if you call the restaurant.
+                </p>
+
+                {trackUrl && (
+                  <a
+                    href={trackUrl}
+                    className="mt-4 inline-block w-full rounded-full bg-dark text-white text-[14px] font-extrabold py-3"
+                  >
+                    Track my order
+                  </a>
+                )}
+              </div>
+            )}
           </div>
         ) : (
           <>
