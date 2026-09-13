@@ -303,6 +303,26 @@ export function StaffSection({
                 <option value="cashier">Cashier</option>
               </select>
             </div>
+            {/* Which screen a PIN opens is decided by the role, and nothing
+                said so. Someone hired to work delivery orders is naturally
+                added as a "waiter", whose PIN then opens the POS tables
+                screen instead of the order queue — the PIN looks wrong when
+                it is the role that is. */}
+            <p className="text-[12px] text-text2 leading-snug">
+              {addRole === "kitchen" || addRole === "bar" || addRole === "manager" ? (
+                <>
+                  Signs in to the <strong>order tablet</strong> — incoming orders,
+                  deliveries, and the handover code riders need.
+                </>
+              ) : (
+                <>
+                  Signs in to the <strong>POS terminal</strong> for tables and bills. For
+                  someone working delivery or takeaway orders, choose{" "}
+                  <strong>Kitchen</strong> or <strong>Manager</strong> instead.
+                </>
+              )}
+            </p>
+
             {(addRole === "kitchen" || addRole === "bar") && (
               <label className="flex items-center gap-2 text-[12px] text-text2 cursor-pointer">
                 <input
