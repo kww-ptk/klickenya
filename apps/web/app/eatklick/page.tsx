@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { sanityFetch } from "@/lib/sanity/client";
+import { eatOrigin } from "@/lib/storefront/houseHost";
 import { EAT_RESTAURANTS_QUERY } from "@/lib/sanity/queries";
 import { urlForImage } from "@/lib/sanity/image";
 import {
@@ -11,10 +12,13 @@ import {
 import { EatKlickFlow, type Place, type Town } from "./_components/EatKlickFlow";
 
 /**
- * /eatklick — TEST SCREEN, not linked from anywhere.
+ * The food app — served at the ROOT of eat.klickenya.com.
  *
- * A single-screen, three-step flow: town → category → browse. Exists to try
- * the "one screen, no scrolling" shape before deciding whether /eat adopts it.
+ * Middleware rewrites eat.klickenya.com/ to this route and 308s the bare
+ * /eatklick path back to "/", so the flow has exactly one public URL. On the
+ * marketplace host /eatklick 308s to the subdomain for the same reason.
+ *
+ * A single screen, three steps: town → category → browse.
  *
  * Only Restaurant has inventory. Grocery, Pharmacy and Liquor are real
  * intentions with no listings behind them, so they are selectable but land on
@@ -24,10 +28,31 @@ import { EatKlickFlow, type Place, type Town } from "./_components/EatKlickFlow"
 
 export const revalidate = 3600;
 
+// Canonical follows wherever the app actually lives. metadataBase is
+// klickenya.com (the marketplace), so once the subdomain is live the canonical
+// has to be absolute or it points at the wrong host. Until then the relative
+// path is correct — and pointing at a host that does not resolve yet would be
+// worse than not having a subdomain at all.
+const EAT_ORIGIN = eatOrigin();
+// Trailing slash so the canonical is byte-identical to the URL actually
+// served at the subdomain root.
+const CANONICAL = EAT_ORIGIN ? `${EAT_ORIGIN}/` : "/eatklick";
+
 export const metadata: Metadata = {
-  title: "Klick — order on the coast",
-  description: "Pick your town, pick what you need, browse what's open.",
-  robots: { index: false, follow: false }, // test surface
+  // Bare title: the root layout applies template "%s | Klickenya". Spelling
+  // the brand here too renders "... | Klickenya | Klickenya".
+  title: "Food delivery in Watamu & Kilifi — order online",
+  description:
+    "Order food for delivery or pickup in Watamu and Kilifi. Browse menus from local restaurants, see what's open now, and order in a few taps.",
+  alternates: { canonical: CANONICAL },
+  openGraph: {
+    title: "Food delivery in Watamu & Kilifi",
+    description:
+      "Browse menus from local restaurants, see what's open now, and order in a few taps.",
+    url: CANONICAL,
+    siteName: "Klickenya Eat",
+    type: "website",
+  },
 };
 
 type Listing = {
