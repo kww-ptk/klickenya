@@ -59,6 +59,39 @@ export type QueueOrder = {
   }[];
 };
 
+/**
+ * Call / WhatsApp for the rider on a job.
+ *
+ * Shown both while they are riding TO the kitchen and after they have the
+ * food. The second one matters more: that is when a customer rings asking
+ * where their order is, and before this the card said "with the rider" and
+ * gave nobody a way to reach them.
+ */
+function RiderContact({ phone, tone }: { phone: string; tone: "amber" | "purple" }) {
+  return (
+    <div className="flex gap-2 mt-2.5">
+      <a
+        href={`tel:${phone}`}
+        className={`flex-1 inline-flex items-center justify-center gap-1.5 rounded-full bg-white py-2 text-[12.5px] font-bold text-[#16130C] border ${
+          tone === "amber" ? "border-[#E2DDD5]" : "border-[#6B2D8B]/25"
+        }`}
+      >
+        <Phone className="size-3.5" aria-hidden />
+        Call
+      </a>
+      <a
+        href={`https://wa.me/${waNumber(phone)}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-full bg-[#25D366] py-2 text-[12.5px] font-bold text-[#0B3D22]"
+      >
+        <MessageCircle className="size-3.5" aria-hidden />
+        WhatsApp
+      </a>
+    </div>
+  );
+}
+
 /** What pressing the primary button does next, per status. */
 const NEXT: Record<string, { to: string; label: string } | undefined> = {
   new: { to: "preparing", label: "Start preparing" },
@@ -428,26 +461,7 @@ export function LiveOrderQueue({
                     : "A rider is on the way to collect"}
                 </p>
 
-                {order.rider_phone && (
-                  <div className="flex gap-2 mt-2.5">
-                    <a
-                      href={`tel:${order.rider_phone}`}
-                      className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-full bg-white py-2 text-[12.5px] font-bold text-[#16130C] border border-[#E2DDD5]"
-                    >
-                      <Phone className="size-3.5" aria-hidden />
-                      Call
-                    </a>
-                    <a
-                      href={`https://wa.me/${waNumber(order.rider_phone)}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-full bg-[#25D366] py-2 text-[12.5px] font-bold text-[#0B3D22]"
-                    >
-                      <MessageCircle className="size-3.5" aria-hidden />
-                      WhatsApp
-                    </a>
-                  </div>
-                )}
+                {order.rider_phone && <RiderContact phone={order.rider_phone} tone="amber" />}
 
                 {/* Only once it is actually ready. Showing the code while the
                     food is still cooking invites handing it over early, which
@@ -469,10 +483,15 @@ export function LiveOrderQueue({
             )}
 
             {order.picked_up_at ? (
-              <p className="mt-3.5 flex items-center justify-center gap-2 rounded-full bg-[#6B2D8B]/10 py-3 text-[13.5px] font-bold text-[#6B2D8B]">
-                <Bike className="size-4" aria-hidden />
-                With the rider — they&apos;ll complete it
-              </p>
+              <div className="mt-3.5 rounded-2xl bg-[#6B2D8B]/10 p-3.5">
+                <p className="flex items-center gap-2 text-[13.5px] font-bold text-[#6B2D8B]">
+                  <Bike className="size-4 shrink-0" aria-hidden />
+                  {order.rider_name
+                    ? `${order.rider_name} has it — they'll complete it`
+                    : "With the rider — they'll complete it"}
+                </p>
+                {order.rider_phone && <RiderContact phone={order.rider_phone} tone="purple" />}
+              </div>
             ) : (
               next && (
                 <button
