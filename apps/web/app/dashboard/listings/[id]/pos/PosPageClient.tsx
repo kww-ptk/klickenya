@@ -121,7 +121,7 @@ function PosPageInner({ listingId, menuId, menuName, menuSlug, mode = "full", fe
 
         <div className="border-t border-border pt-5">
           <p className="text-[11px] font-bold text-text3 uppercase tracking-wide mb-2">
-            Order tablet URL — kitchen &amp; bar
+            Food Delivery Orders URL — kitchen &amp; bar
           </p>
           <div className="flex items-center gap-2 bg-[#FDFCFB] border border-border rounded-xl px-3 py-3">
             <code className="flex-1 text-[13px] text-dark truncate">{tabletUrl}</code>
@@ -146,7 +146,7 @@ function PosPageInner({ listingId, menuId, menuName, menuSlug, mode = "full", fe
             rel="noopener noreferrer"
             className="mt-3 block w-full sm:w-auto sm:inline-block bg-dark text-white font-bold text-[14px] px-6 h-[48px] leading-[48px] text-center rounded-full hover:bg-[#2A251A] transition-colors"
           >
-            🍳 Open the order tablet in new tab →
+            🍳 Open Food Delivery Orders in new tab →
           </a>
         </div>
 
