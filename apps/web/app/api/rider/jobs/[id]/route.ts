@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminClient } from "@/lib/supabase/admin";
 import { getRiderSession } from "@/lib/rider/auth";
+import { menusForRider } from "@/lib/rider/scope";
 
 interface RouteContext {
   params: Promise<{ id: string }>;
@@ -52,15 +53,11 @@ export async function PATCH(req: NextRequest, ctx: RouteContext) {
 
   if (!order) return NextResponse.json({ error: "Order not found" }, { status: 404 });
 
-  // Scope: a rider may only touch orders at kitchens they are linked to.
-  const { data: link } = await adminClient
-    .from("rider_menus")
-    .select("menu_id")
-    .eq("rider_id", session.rider_id)
-    .eq("menu_id", order.menu_id)
-    .maybeSingle();
-
-  if (!link) {
+  // Scope: a rider may only touch orders at kitchens they can work. Resolved
+  // through the same helper the job list uses, so the list and the actions
+  // can never disagree about what a rider is allowed to do.
+  const allowed = await menusForRider(session.rider_id);
+  if (!allowed || !allowed.includes(order.menu_id)) {
     return NextResponse.json({ error: "Not your restaurant" }, { status: 403 });
   }
 

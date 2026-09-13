@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminClient } from "@/lib/supabase/admin";
 import { getRiderSession } from "@/lib/rider/auth";
+import { menusForRider } from "@/lib/rider/scope";
 
 /**
  * GET /api/rider/jobs — everything this rider should be looking at.
@@ -37,13 +38,9 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Not signed in" }, { status: 401 });
   }
 
-  // Which kitchens is this rider allowed to see at all?
-  const { data: links } = await adminClient
-    .from("rider_menus")
-    .select("menu_id")
-    .eq("rider_id", session.rider_id);
-
-  const menuIds = (links ?? []).map((l) => l.menu_id as string);
+  // Which kitchens is this rider allowed to see at all? A Klickenya rider
+  // gets every delivering restaurant; a restaurant's own rider gets theirs.
+  const menuIds = (await menusForRider(session.rider_id)) ?? [];
   if (menuIds.length === 0) {
     return NextResponse.json({ mine: [], available: [], restaurants: {} });
   }

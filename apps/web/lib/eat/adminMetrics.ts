@@ -15,6 +15,15 @@ import { adminClient } from "@/lib/supabase/admin";
 export const EAT_ORDER_TYPES = ["delivery", "takeaway"] as const;
 export const ACTIVE_STATUSES = ["new", "preparing", "ready"] as const;
 
+export type RiderRecord = {
+  id: string;
+  name: string;
+  phone: string;
+  is_active: boolean;
+  /** Klickenya-employed: works every delivering restaurant (089). */
+  is_platform: boolean;
+};
+
 export type EatOrder = {
   id: string;
   menu_id: string;
@@ -38,7 +47,7 @@ export type EatOrder = {
 export type EatMetrics = {
   orders: EatOrder[];
   restaurants: Map<string, string>;
-  riders: Map<string, { id: string; name: string; phone: string; is_active: boolean }>;
+  riders: Map<string, RiderRecord>;
   /** True when migration 088 has not been applied — riders read as empty. */
   ridersUnavailable: boolean;
   /**
@@ -98,7 +107,7 @@ export async function getEatMetrics(days = 30): Promise<EatMetrics> {
     menuIds.length
       ? adminClient.from("menus").select("id, name").in("id", menuIds)
       : Promise.resolve({ data: [] }),
-    adminClient.from("riders").select("id, name, phone, is_active"),
+    adminClient.from("riders").select("id, name, phone, is_active, is_platform"),
   ]);
 
   const restaurants = new Map<string, string>();
@@ -108,13 +117,11 @@ export async function getEatMetrics(days = 30): Promise<EatMetrics> {
     }
   }
 
-  const riders = new Map<string, { id: string; name: string; phone: string; is_active: boolean }>();
+  const riders = new Map<string, RiderRecord>();
   let ridersUnavailable = true;
   if (ridersRes.status === "fulfilled" && Array.isArray(ridersRes.value.data)) {
     ridersUnavailable = false;
-    for (const r of ridersRes.value.data as {
-      id: string; name: string; phone: string; is_active: boolean;
-    }[]) {
+    for (const r of ridersRes.value.data as RiderRecord[]) {
       riders.set(r.id, r);
     }
   }
