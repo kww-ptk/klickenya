@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Bike, ShoppingBag, Utensils, Phone, MapPin, Pencil, X, Plus, Navigation, MessageCircle } from "lucide-react";
 import { mapsUrl } from "@/lib/orders/location";
 import { waNumber } from "@/lib/eat/whatsappOrder";
+import { DeleteOrders } from "@/components/orders/DeleteOrders";
 
 /**
  * The owner's live order queue — every active order for one menu, in one list.
@@ -362,6 +363,20 @@ export function LiveOrderQueue({
                 </li>
               ))}
             </ul>
+
+            {/* Deleting lives behind Edit rather than on the card: it is not
+                a thing to have one tap away from "Mark ready". */}
+            {isEditing && (
+              <div className="mt-3">
+                <DeleteOrders
+                  menuId={menuId}
+                  orderId={order.id}
+                  mode="one"
+                  onDone={refresh}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-[#DC2626]/40 px-3.5 py-1.5 text-[12.5px] font-bold text-[#DC2626] hover:bg-[#DC2626]/5"
+                />
+              </div>
+            )}
 
             {isEditing && dishes.length > 0 && (
               <div className="mt-3 flex gap-2">

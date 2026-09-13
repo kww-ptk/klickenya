@@ -6,6 +6,7 @@ import { adminClient } from "@/lib/supabase/admin";
 import { sanityClient } from "@/lib/sanity/client";
 import { ORDER_QUEUE_SELECT, ACTIVE_ORDER_STATUSES } from "@/lib/orders/projection";
 import { LiveOrderQueue, type QueueOrder, type AddableDish } from "@/components/manage/LiveOrderQueue";
+import { DeleteOrders } from "@/components/orders/DeleteOrders";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -173,6 +174,22 @@ export default async function ManageOrdersPage({ params }: PageProps) {
       ) : (
         <LiveOrderQueue menuId={menu.id} initialOrders={orders} dishes={dishes} />
       )}
+
+      {/* Clearing test data. Below the queue, not beside it — this is a setup
+          task, not part of working a shift. */}
+      <details className="rounded-2xl border border-[#E2DDD5] bg-white">
+        <summary className="cursor-pointer list-none p-4 text-[13px] font-bold text-[#9C9485] hover:text-[#16130C]">
+          Clear test orders…
+        </summary>
+        <div className="border-t border-[#F4F1EC] p-4 space-y-3">
+          <p className="text-[13px] text-[#6B6355] max-w-[560px]">
+            Deletes orders for this restaurant permanently, including delivered ones.
+            Intended for clearing test data while you set up — not for tidying a real
+            service.
+          </p>
+          <DeleteOrders menuId={menu.id} mode="all" />
+        </div>
+      </details>
     </div>
   );
 }
