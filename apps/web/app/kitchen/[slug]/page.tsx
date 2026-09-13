@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { getPosMenuBySlug } from "@/app/pos/[slug]/_lib/menuFromSlug";
 import { POS_SESSION_COOKIE, verifyPosSession } from "@/app/api/pos/_lib/auth";
+import { adminClient } from "@/lib/supabase/admin";
 import { PosLogin } from "@/components/pos/PosLogin";
 
 interface PageProps {
@@ -21,15 +22,30 @@ export default async function KitchenLoginPage({ params }: PageProps) {
   const menu = await getPosMenuBySlug(slug);
   if (!menu) return null;
 
+  // Where this terminal should land depends on how the restaurant works.
+  // A kitchen with no table ordering has no station board worth opening and
+  // may have POS switched off entirely — sending its staff to either is a
+  // dead end. The whole-order queue is the right home for them.
+  const { data: menuModes } = await adminClient
+    .from("menus")
+    .select("table_ordering, pos_enabled")
+    .eq("id", menu.id)
+    .maybeSingle();
+  const hasTables = Boolean(menuModes?.table_ordering);
+  const hasPos = Boolean(menuModes?.pos_enabled);
+
+  const kitchenHome = hasTables ? `/kitchen/${slug}/orders` : `/kitchen/${slug}/deliveries`;
+
   const cookieStore = await cookies();
   const session = verifyPosSession(cookieStore.get(POS_SESSION_COOKIE)?.value);
   if (session && session.menu_id === menu.id) {
     if (session.role === "kitchen" || session.role === "manager" || session.role === "bar") {
-      redirect(`/kitchen/${slug}/orders`);
+      redirect(kitchenHome);
     }
-    // Already signed in as a waiter/cashier — bounce to the POS terminal
-    // they're authorised for instead of trapping them on a login screen.
-    redirect(`/pos/${slug}/tables`);
+    // Already signed in as a waiter/cashier. The POS terminal is where they
+    // belong when there is one; when there is not, the order queue beats
+    // bouncing them to a screen this restaurant does not use.
+    redirect(hasPos ? `/pos/${slug}/tables` : `/kitchen/${slug}/deliveries`);
   }
 
   return (
@@ -38,7 +54,7 @@ export default async function KitchenLoginPage({ params }: PageProps) {
       menuId={menu.id}
       menuName={menu.name}
       contextLabel="Kitchen Terminal"
-      redirectTo={`/kitchen/${slug}/orders`}
+      redirectTo={kitchenHome}
     />
   );
 }

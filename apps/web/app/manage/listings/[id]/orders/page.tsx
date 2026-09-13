@@ -7,6 +7,7 @@ import { sanityClient } from "@/lib/sanity/client";
 import { ORDER_QUEUE_SELECT, ACTIVE_ORDER_STATUSES } from "@/lib/orders/projection";
 import { LiveOrderQueue, type QueueOrder, type AddableDish } from "@/components/manage/LiveOrderQueue";
 import { DeleteOrders } from "@/components/orders/DeleteOrders";
+import { KitchenTabletPanel } from "@/components/manage/KitchenTabletPanel";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -46,7 +47,7 @@ export default async function ManageOrdersPage({ params }: PageProps) {
 
   let menuQuery = adminClient
     .from("menus")
-    .select("id, name, table_ordering, takeaway_enabled, delivery_enabled")
+    .select("id, name, slug, table_ordering, takeaway_enabled, delivery_enabled")
     .eq("listing_slug", listing.slug);
   if (!isAdmin) menuQuery = menuQuery.eq("business_id", user.id);
   const { data: menu } = await menuQuery.maybeSingle();
@@ -174,6 +175,11 @@ export default async function ManageOrdersPage({ params }: PageProps) {
       ) : (
         <LiveOrderQueue menuId={menu.id} initialOrders={orders} dishes={dishes} />
       )}
+
+      {/* Putting this queue on the counter. Here rather than only on the POS
+          tab, because that tab disappears when POS is switched off — and a
+          delivery-only kitchen is exactly the one that needs the terminal. */}
+      <KitchenTabletPanel menuId={menu.id} menuSlug={menu.slug as string} />
 
       {/* Clearing test data. Below the queue, not beside it — this is a setup
           task, not part of working a shift. */}
