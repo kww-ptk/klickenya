@@ -5,7 +5,7 @@ import { getAuthUser, getHostProfile, getIsAdmin } from "../../../../dashboard/_
 import { adminClient } from "@/lib/supabase/admin";
 import { sanityClient } from "@/lib/sanity/client";
 import { ORDER_QUEUE_SELECT, ACTIVE_ORDER_STATUSES } from "@/lib/orders/projection";
-import { LiveOrderQueue, type QueueOrder } from "@/components/manage/LiveOrderQueue";
+import { LiveOrderQueue, type QueueOrder, type AddableDish } from "@/components/manage/LiveOrderQueue";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -83,6 +83,23 @@ export default async function ManageOrdersPage({ params }: PageProps) {
 
   const orders = (rows ?? []) as unknown as QueueOrder[];
 
+  // Dishes for the "add to this order" picker. Server-rendered rather than
+  // fetched on demand: there is no GET on /api/menu/items, a restaurant menu
+  // is ~40-150 rows, and the owner opening this page is about to work orders
+  // from it. !inner on menu_sections scopes to THIS menu.
+  const { data: dishRows } = await adminClient
+    .from("menu_items")
+    .select("id, name, price_kes, is_available, menu_sections!inner ( menu_id )")
+    .eq("menu_sections.menu_id", menu.id)
+    .eq("is_available", true)
+    .order("name", { ascending: true });
+
+  const dishes: AddableDish[] = (dishRows ?? []).map((d) => ({
+    id: d.id as string,
+    name: d.name as string,
+    priceKes: Number(d.price_kes ?? 0),
+  }));
+
   // Which channels are actually open. If none are, the empty queue would be
   // indistinguishable from a quiet afternoon — so say which it is.
   const channels = [
@@ -134,7 +151,7 @@ export default async function ManageOrdersPage({ params }: PageProps) {
           </Link>
         </div>
       ) : (
-        <LiveOrderQueue menuId={menu.id} initialOrders={orders} />
+        <LiveOrderQueue menuId={menu.id} initialOrders={orders} dishes={dishes} />
       )}
     </div>
   );

@@ -86,9 +86,20 @@ export function OrderStatusClient({ orderId }: { orderId: string }) {
     };
     poll();
     const i = setInterval(poll, 8000);
+
+    // Poll the moment the tab comes back, instead of leaving the guest
+    // looking at a stale status for up to 8 more seconds. This is the common
+    // case, not an edge one: they switch to WhatsApp to message the
+    // restaurant and switch straight back to see if anything changed.
+    const onVisible = () => {
+      if (!document.hidden) poll();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+
     return () => {
       cancelled = true;
       clearInterval(i);
+      document.removeEventListener("visibilitychange", onVisible);
     };
   }, [orderId]);
 

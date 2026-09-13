@@ -3,6 +3,7 @@ import { adminClient } from "@/lib/supabase/admin";
 import { getPosOrOwnerAuth } from "@/app/api/pos/_lib/auth";
 import { resolveManagerApproval, writeAuditLog } from "@/app/api/pos/_lib/managerOverride";
 import { recomputeSessionTotals } from "@/app/api/menu/sessions/_lib/sessions";
+import { recomputeOrderTotals } from "@/lib/orders/totals";
 
 interface RouteContext {
   params: Promise<{ id: string }>;
@@ -298,6 +299,12 @@ export async function PATCH(req: NextRequest, ctx: RouteContext) {
     console.error("[order-items PATCH] error:", updateErr);
     return NextResponse.json({ error: "Failed to update item" }, { status: 500 });
   }
+
+  // The order's own totals, always. recomputeSessionTotals covers the bill a
+  // table is running, but takeaway and delivery orders have no session — for
+  // those, nothing used to update orders.total_kes at all, so a voided line
+  // left the guest looking at the old price.
+  await recomputeOrderTotals(orderJoin.id);
 
   if (orderJoin.table_session_id) {
     await recomputeSessionTotals(orderJoin.table_session_id);
