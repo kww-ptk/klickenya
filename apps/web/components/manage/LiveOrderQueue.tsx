@@ -146,6 +146,7 @@ export function LiveOrderQueue({
   // the audit log — removing food someone ordered is the classic fraud path,
   // so it is recorded, not silent.
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [filter, setFilter] = useState<"all" | "delivery" | "takeaway" | "table">("all");
   const [removing, setRemoving] = useState<{ itemId: string; reason: string } | null>(null);
 
   async function removeLine(itemId: string, reason: string) {
@@ -224,6 +225,48 @@ export function LiveOrderQueue({
     }
   }
 
+  // Focus the list by how the food leaves. The queue shows whole orders of
+  // every kind on purpose — a rider collects the burger AND the beer — but a
+  // busy floor can bury the two deliveries under twenty table orders, and the
+  // person watching for riders is usually not the person watching the floor.
+  const counts = {
+    all: orders.length,
+    delivery: orders.filter((o) => o.order_type === "delivery").length,
+    takeaway: orders.filter((o) => o.order_type === "takeaway").length,
+    table: orders.filter((o) => o.order_type !== "delivery" && o.order_type !== "takeaway").length,
+  };
+  const visible =
+    filter === "all"
+      ? orders
+      : filter === "table"
+      ? orders.filter((o) => o.order_type !== "delivery" && o.order_type !== "takeaway")
+      : orders.filter((o) => o.order_type === filter);
+
+  const FilterChips = (
+    <div className="flex flex-wrap gap-1.5">
+      {([
+        ["all", "All", counts.all],
+        ["delivery", "Delivery", counts.delivery],
+        ["takeaway", "Takeaway", counts.takeaway],
+        ["table", "Table", counts.table],
+      ] as const).map(([key, label, n]) => (
+        <button
+          key={key}
+          type="button"
+          onClick={() => setFilter(key)}
+          className={`rounded-full px-3.5 py-1.5 text-[12.5px] font-bold border transition-colors ${
+            filter === key
+              ? "bg-[#16130C] text-white border-[#16130C]"
+              : "bg-white text-[#6B6355] border-[#E2DDD5] hover:border-[#C8C0B2]"
+          }`}
+        >
+          {label}
+          <span className={filter === key ? "text-white/60" : "text-[#9C9485]"}> {n}</span>
+        </button>
+      ))}
+    </div>
+  );
+
   if (orders.length === 0) {
     return (
       <div className="rounded-2xl border border-[#E2DDD5] bg-white p-10 text-center">
@@ -243,7 +286,17 @@ export function LiveOrderQueue({
         </p>
       )}
 
-      {orders.map((order) => {
+      {FilterChips}
+
+      {visible.length === 0 && (
+        <div className="rounded-2xl border border-[#E2DDD5] bg-white p-8 text-center">
+          <p className="text-[13.5px] text-[#9C9485]">
+            No {filter === "table" ? "table" : filter} orders right now.
+          </p>
+        </div>
+      )}
+
+      {visible.map((order) => {
         const next = NEXT[order.status];
         const isDelivery = order.order_type === "delivery";
         const isTakeaway = order.order_type === "takeaway";
