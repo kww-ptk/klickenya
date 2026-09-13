@@ -5,6 +5,7 @@ import { Resend } from "resend";
 import { updateOpportunityStage, GHL_STAGES } from "@/lib/integrations/ghl";
 import { upgradeGuestToHost } from "@/lib/admin/upgradeGuestToHost";
 import { uniqueHostSlug } from "@/lib/sanity/hostSlug";
+import { assertAdmin, AdminAuthError } from "@/lib/admin/auth";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -24,8 +25,16 @@ const SITE_URL =
 
 type RouteContext = { params: Promise<{ id: string }> };
 
+/**
+ * ADMIN ONLY. Guarded here, in the handler — middleware does NOT cover this.
+ * Its check is `pathname.startsWith("/admin")`, which matches the /admin PAGES
+ * and never /api/admin/*. This route answered unauthenticated callers until
+ * this guard was added.
+ */
 export async function POST(req: NextRequest, ctx: RouteContext) {
   try {
+    await assertAdmin(req);
+
     const { id } = await ctx.params;
     const body = await req.json();
     const action: string = body.action; // "approve" or "reject"
@@ -376,6 +385,11 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
 
     return NextResponse.json({ success: true, action: "rejected" });
   } catch (err) {
+    // assertAdmin throws here. Without this it would surface as a 500 and
+    // look like a server fault rather than a refused request.
+    if (err instanceof AdminAuthError) {
+      return NextResponse.json({ error: err.message }, { status: err.status });
+    }
     console.error("Admin claim action error:", err);
     return NextResponse.json({ error: "Something went wrong" }, { status: 500 });
   }
