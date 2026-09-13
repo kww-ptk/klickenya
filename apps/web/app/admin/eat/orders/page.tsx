@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getEatMetrics } from "@/lib/eat/adminMetrics";
 import { mapsUrl } from "@/lib/orders/location";
+import { DeleteOrders } from "@/components/orders/DeleteOrders";
 
 export const dynamic = "force-dynamic";
 
@@ -88,6 +89,7 @@ export default async function EatAdminOrders({
                 <th className="px-4 py-3 font-semibold">Total</th>
                 <th className="px-4 py-3 font-semibold">Cash</th>
                 <th className="px-4 py-3 font-semibold">Status</th>
+                <th className="px-4 py-3 font-semibold sr-only">Delete</th>
               </tr>
             </thead>
             <tbody>
@@ -188,6 +190,13 @@ export default async function EatAdminOrders({
                       >
                         {o.status}
                       </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      {/* Scoped to this order's own restaurant — the endpoint
+                          verifies menu access, so an admin deleting from here
+                          is still deleting a specific restaurant's order, not
+                          reaching across the platform. */}
+                      <DeleteOrders menuId={o.menu_id} orderId={o.id} mode="one" />
                     </td>
                   </tr>
                 );

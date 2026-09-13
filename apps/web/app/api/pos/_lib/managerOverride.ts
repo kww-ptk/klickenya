@@ -23,7 +23,8 @@ export type AuditAction =
   | "void_order_after_send"
   | "void_order_item"
   | "cancel_order_item_post_send"
-  | "add_order_item_post_send";
+  | "add_order_item_post_send"
+  | "delete_order";
 
 export type AuditTargetType = "session" | "order";
 
