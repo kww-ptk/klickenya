@@ -81,7 +81,27 @@ export default async function ManageOrdersPage({ params }: PageProps) {
     .in("status", [...ACTIVE_ORDER_STATUSES])
     .order("created_at", { ascending: false });
 
-  const orders = (rows ?? []) as unknown as QueueOrder[];
+  const rawOrders = (rows ?? []) as unknown as QueueOrder[];
+
+  // Rider names for the FIRST paint. The poll enriches them after 10s, but an
+  // owner opening the page to "a rider is on the way" and no name for ten
+  // seconds is a worse answer than waiting one query for it.
+  const riderIds = Array.from(
+    new Set(rawOrders.map((o) => o.rider_id).filter((v): v is string => !!v)),
+  );
+  const riderMap = new Map<string, { name: string; phone: string }>();
+  if (riderIds.length > 0) {
+    const { data: riderRows } = await adminClient
+      .from("riders")
+      .select("id, name, phone")
+      .in("id", riderIds);
+    for (const r of riderRows ?? []) riderMap.set(r.id as string, { name: r.name, phone: r.phone });
+  }
+  const orders: QueueOrder[] = rawOrders.map((o) => ({
+    ...o,
+    rider_name: o.rider_id ? riderMap.get(o.rider_id)?.name ?? null : null,
+    rider_phone: o.rider_id ? riderMap.get(o.rider_id)?.phone ?? null : null,
+  }));
 
   // Dishes for the "add to this order" picker. Server-rendered rather than
   // fetched on demand: there is no GET on /api/menu/items, a restaurant menu

@@ -25,6 +25,8 @@ import { menusForRider } from "@/lib/rider/scope";
  * wrong.
  */
 
+// NOTE: pickup_code is deliberately absent. The rider is the party the code
+// checks; handing it to their app would make the check theatre.
 const JOB_SELECT = `
   id, status, order_type, customer_name, customer_phone,
   delivery_address, delivery_lat, delivery_lng,

@@ -1,8 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Bike, ShoppingBag, Utensils, Phone, MapPin, Pencil, X, Plus, Navigation } from "lucide-react";
+import { Bike, ShoppingBag, Utensils, Phone, MapPin, Pencil, X, Plus, Navigation, MessageCircle } from "lucide-react";
 import { mapsUrl } from "@/lib/orders/location";
+import { waNumber } from "@/lib/eat/whatsappOrder";
 
 /**
  * The owner's live order queue — every active order for one menu, in one list.
@@ -37,6 +38,12 @@ export type QueueOrder = {
   rider_accepted_at?: string | null;
   /** Set when the rider has the food. status stays "ready" — see 088. */
   picked_up_at?: string | null;
+  rider_id?: string | null;
+  /** Resolved by /api/menu/orders — who is collecting, and how to reach them. */
+  rider_name?: string | null;
+  rider_phone?: string | null;
+  /** Read out to the rider at handover. Delivery orders only. */
+  pickup_code?: string | null;
   notes?: string | null;
   total_kes: number | null;
   created_at: string;
@@ -398,10 +405,52 @@ export function LiveOrderQueue({
                 button after that invites two people to close the same
                 delivery from different screens. */}
             {order.rider_accepted_at && !order.picked_up_at && (
-              <p className="mt-3.5 flex items-center justify-center gap-2 rounded-full bg-[#E8A020]/10 py-2.5 text-[13px] font-bold text-[#B4541A]">
-                <Bike className="size-4" aria-hidden />
-                A rider is on the way to collect
-              </p>
+              <div className="mt-3.5 rounded-2xl bg-[#E8A020]/10 p-3.5">
+                <p className="flex items-center gap-2 text-[13px] font-bold text-[#B4541A]">
+                  <Bike className="size-4 shrink-0" aria-hidden />
+                  {order.rider_name
+                    ? `${order.rider_name} is on the way to collect`
+                    : "A rider is on the way to collect"}
+                </p>
+
+                {order.rider_phone && (
+                  <div className="flex gap-2 mt-2.5">
+                    <a
+                      href={`tel:${order.rider_phone}`}
+                      className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-full bg-white py-2 text-[12.5px] font-bold text-[#16130C] border border-[#E2DDD5]"
+                    >
+                      <Phone className="size-3.5" aria-hidden />
+                      Call
+                    </a>
+                    <a
+                      href={`https://wa.me/${waNumber(order.rider_phone)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-full bg-[#25D366] py-2 text-[12.5px] font-bold text-[#0B3D22]"
+                    >
+                      <MessageCircle className="size-3.5" aria-hidden />
+                      WhatsApp
+                    </a>
+                  </div>
+                )}
+
+                {/* Only once it is actually ready. Showing the code while the
+                    food is still cooking invites handing it over early, which
+                    is the one thing the code exists to prevent. */}
+                {order.status === "ready" && order.pickup_code && (
+                  <div className="mt-3 rounded-xl bg-white border border-[#E2DDD5] p-3 text-center">
+                    <p className="text-[11px] font-bold uppercase tracking-widest text-[#9C9485]">
+                      Read this to the rider
+                    </p>
+                    <p className="font-mono text-[26px] font-bold tracking-[0.35em] text-[#16130C] mt-0.5">
+                      {order.pickup_code}
+                    </p>
+                    <p className="text-[11.5px] text-[#9C9485] mt-0.5">
+                      They cannot collect without it
+                    </p>
+                  </div>
+                )}
+              </div>
             )}
 
             {order.picked_up_at ? (

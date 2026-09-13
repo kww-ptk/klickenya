@@ -67,9 +67,25 @@ export async function GET(req: NextRequest) {
       for (const w of waiters ?? []) waiterMap.set(w.id, w.name);
     }
 
+    // Rider names, same follow-up-query shape as waiters above. The kitchen
+    // needs to know who is coming, and needs to be able to reach them.
+    const riderIds = Array.from(
+      new Set((orders ?? []).map((o) => o.rider_id).filter((v): v is string => !!v)),
+    );
+    const riderMap = new Map<string, { name: string; phone: string }>();
+    if (riderIds.length > 0) {
+      const { data: riders } = await adminClient
+        .from("riders")
+        .select("id, name, phone")
+        .in("id", riderIds);
+      for (const r of riders ?? []) riderMap.set(r.id, { name: r.name, phone: r.phone });
+    }
+
     const enriched = (orders ?? []).map((o) => ({
       ...o,
       waiter_name: o.waiter_id ? waiterMap.get(o.waiter_id) ?? null : null,
+      rider_name: o.rider_id ? riderMap.get(o.rider_id)?.name ?? null : null,
+      rider_phone: o.rider_id ? riderMap.get(o.rider_id)?.phone ?? null : null,
     }));
 
     return NextResponse.json({ orders: enriched });

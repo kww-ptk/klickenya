@@ -433,6 +433,13 @@ export async function POST(req: NextRequest) {
         // pin is a bonus for the rider, not a replacement for directions.
         delivery_lat: deliveryCoords?.lat ?? null,
         delivery_lng: deliveryCoords?.lng ?? null,
+        // Handover code. Random, not derived from the id: a derived code
+        // cannot be rotated, and working out the derivation once would let
+        // someone collect any order.
+        pickup_code:
+          data.order_type === "delivery"
+            ? String(Math.floor(1000 + Math.random() * 9000))
+            : null,
         subtotal_kes:     subtotal,
         delivery_fee_kes: 0,
         total_kes:        total,
