@@ -37,14 +37,15 @@ function PosPageInner({ listingId, menuId, menuName, menuSlug, mode = "full", fe
   const origin =
     typeof window !== "undefined" ? window.location.origin : "https://klickenya.com";
   const posUrl = `${origin}/pos/${menuSlug}`;
-  // The kitchen terminal — a different screen for different people. Waiters
-  // take orders on POS; the kitchen watches and advances them here, including
-  // the delivery queue and the rider handover code.
-  const kitchenUrl = `${origin}/kitchen/${menuSlug}`;
+  // The order tablet — a different screen for different people. Waiters take
+  // orders on POS; the kitchen watches and advances them on the tablet,
+  // including the delivery queue and the rider handover code. Not called the
+  // "kitchen" terminal: that word already means Klickenya Kitchen here.
+  const tabletUrl = `${origin}/tablet/${menuSlug}`;
 
   async function copyUrl(which: "pos" | "kitchen") {
     try {
-      await navigator.clipboard.writeText(which === "pos" ? posUrl : kitchenUrl);
+      await navigator.clipboard.writeText(which === "pos" ? posUrl : tabletUrl);
       setCopied(which);
       setTimeout(() => setCopied(null), 1500);
     } catch {
@@ -120,10 +121,10 @@ function PosPageInner({ listingId, menuId, menuName, menuSlug, mode = "full", fe
 
         <div className="border-t border-border pt-5">
           <p className="text-[11px] font-bold text-text3 uppercase tracking-wide mb-2">
-            Kitchen sign-in URL — kitchen &amp; bar
+            Order tablet URL — kitchen &amp; bar
           </p>
           <div className="flex items-center gap-2 bg-[#FDFCFB] border border-border rounded-xl px-3 py-3">
-            <code className="flex-1 text-[13px] text-dark truncate">{kitchenUrl}</code>
+            <code className="flex-1 text-[13px] text-dark truncate">{tabletUrl}</code>
             <button
               type="button"
               onClick={() => copyUrl("kitchen")}
@@ -140,12 +141,12 @@ function PosPageInner({ listingId, menuId, menuName, menuSlug, mode = "full", fe
             handover code a rider needs.
           </p>
           <a
-            href={`/kitchen/${menuSlug}`}
+            href={`/tablet/${menuSlug}`}
             target="_blank"
             rel="noopener noreferrer"
             className="mt-3 block w-full sm:w-auto sm:inline-block bg-dark text-white font-bold text-[14px] px-6 h-[48px] leading-[48px] text-center rounded-full hover:bg-[#2A251A] transition-colors"
           >
-            🍳 Open kitchen terminal in new tab →
+            🍳 Open the order tablet in new tab →
           </a>
         </div>
 

@@ -6,21 +6,21 @@ import { LogOut } from "lucide-react";
 import Link from "next/link";
 
 /**
- * Persistent header for the kitchen terminal. Standalone version of
+ * Persistent header for the order tablet. Standalone version of
  * PosHeader — the kitchen shell doesn't have PosShellProvider so we pass
  * staff/menu info via props from the server page.
  */
-interface KitchenHeaderProps {
+interface TabletHeaderProps {
   slug:      string;
   menuName:  string;
   staffName: string;
   role:      "kitchen" | "manager" | "waiter" | "cashier" | "bar";
 }
 
-export function KitchenHeader({ slug, menuName, staffName, role }: KitchenHeaderProps) {
+export function TabletHeader({ slug, menuName, staffName, role }: TabletHeaderProps) {
   const router = useRouter();
   const pathname = usePathname();
-  const onDeliveries = pathname?.endsWith("/deliveries") ?? false;
+  const onOrders = pathname?.endsWith("/orders") ?? false;
   const [signingOut, setSigningOut] = useState(false);
 
   const stationLabel =
@@ -36,7 +36,7 @@ export function KitchenHeader({ slug, menuName, staffName, role }: KitchenHeader
     } catch {
       /* network — cookie still expires server-side */
     }
-    router.replace(`/kitchen/${slug}`);
+    router.replace(`/tablet/${slug}`);
     router.refresh();
   };
 
@@ -52,17 +52,17 @@ export function KitchenHeader({ slug, menuName, staffName, role }: KitchenHeader
             route nothing points at is a route nobody finds. */}
         <nav className="flex items-center gap-1 shrink-0">
           <Link
-            href={`/kitchen/${slug}/orders`}
+            href={`/tablet/${slug}/stations`}
             className={`h-9 px-3 rounded-full text-[12px] font-bold flex items-center ${
-              onDeliveries ? "text-text3 hover:text-white" : "bg-[#2A2520] text-white"
+              onOrders ? "text-text3 hover:text-white" : "bg-[#2A2520] text-white"
             }`}
           >
             Stations
           </Link>
           <Link
-            href={`/kitchen/${slug}/deliveries`}
+            href={`/tablet/${slug}/orders`}
             className={`h-9 px-3 rounded-full text-[12px] font-bold flex items-center ${
-              onDeliveries ? "bg-[#2A2520] text-white" : "text-text3 hover:text-white"
+              onOrders ? "bg-[#2A2520] text-white" : "text-text3 hover:text-white"
             }`}
           >
             Orders

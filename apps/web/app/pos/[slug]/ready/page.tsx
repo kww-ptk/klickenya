@@ -12,7 +12,7 @@ interface PageProps {
  * Waiter "Ready" tab. Shows orders that have come back from the kitchen
  * (status = "ready") for this menu. Tapping "Mark delivered" closes the
  * order. Auth: any signed-in waiter / manager / cashier — kitchen role
- * has its own /kitchen/[slug] view and is bounced from here.
+ * has its own /tablet/[slug] view and is bounced from here.
  */
 export default async function PosReadyPage({ params }: PageProps) {
   const { slug } = await params;
@@ -25,7 +25,7 @@ export default async function PosReadyPage({ params }: PageProps) {
     redirect(`/pos/${slug}`);
   }
   if (session.role === "kitchen") {
-    redirect(`/kitchen/${slug}/orders`);
+    redirect(`/tablet/${slug}/stations`);
   }
 
   return <PosReadyOrders staffId={session.staff_id} />;

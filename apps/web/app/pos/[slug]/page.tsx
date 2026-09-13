@@ -25,7 +25,7 @@ export default async function PosLoginPage({ params }: PageProps) {
     // station dashboard, which will further route bar → /orders/bar and
     // kitchen → /orders/kitchen (or render the tabbed combined view).
     if (session.role === "kitchen" || session.role === "bar") {
-      redirect(`/kitchen/${slug}/orders`);
+      redirect(`/tablet/${slug}/stations`);
     }
     redirect(`/pos/${slug}/tables`);
   }

@@ -82,7 +82,7 @@ export default async function PosLayout({ params, children }: LayoutProps) {
       // guest orders, they prepare incoming items. Route them to the station
       // dashboard regardless of which /pos/* URL they direct-navigated to.
       if (row.role === "kitchen" || row.role === "bar") {
-        redirect(`/kitchen/${slug}/orders`);
+        redirect(`/tablet/${slug}/stations`);
       }
       staff = {
         id:      row.id,
