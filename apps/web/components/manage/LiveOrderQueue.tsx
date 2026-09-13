@@ -33,6 +33,8 @@ export type QueueOrder = {
   delivery_address?: string | null;
   delivery_lat?: number | null;
   delivery_lng?: number | null;
+  /** Set the moment a rider claims it. status stays "ready" — see 088. */
+  picked_up_at?: string | null;
   notes?: string | null;
   total_kes: number | null;
   created_at: string;
@@ -387,15 +389,25 @@ export function LiveOrderQueue({
               </p>
             )}
 
-            {next && (
-              <button
-                type="button"
-                onClick={() => advance(order)}
-                disabled={busyId === order.id}
-                className="mt-3.5 w-full rounded-full bg-[#16130C] text-white text-[14px] font-extrabold py-3 disabled:opacity-50 hover:bg-[#2A251A] transition-colors"
-              >
-                {busyId === order.id ? "Saving…" : next.label}
-              </button>
+            {/* Once a rider has it, the order is theirs to finish. Showing the
+                owner a "Complete" button here invites two people to close the
+                same delivery from different screens. */}
+            {order.picked_up_at ? (
+              <p className="mt-3.5 flex items-center justify-center gap-2 rounded-full bg-[#6B2D8B]/10 py-3 text-[13.5px] font-bold text-[#6B2D8B]">
+                <Bike className="size-4" aria-hidden />
+                With the rider — they&apos;ll complete it
+              </p>
+            ) : (
+              next && (
+                <button
+                  type="button"
+                  onClick={() => advance(order)}
+                  disabled={busyId === order.id}
+                  className="mt-3.5 w-full rounded-full bg-[#16130C] text-white text-[14px] font-extrabold py-3 disabled:opacity-50 hover:bg-[#2A251A] transition-colors"
+                >
+                  {busyId === order.id ? "Saving…" : next.label}
+                </button>
+              )
             )}
           </article>
         );
