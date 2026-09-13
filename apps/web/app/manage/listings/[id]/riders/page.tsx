@@ -59,6 +59,16 @@ export default async function ManageRidersPage({ params }: PageProps) {
     riders = data ?? [];
   }
 
+  // Klickenya's own riders also deliver for this kitchen. The owner does not
+  // manage them and cannot change them, but seeing who can turn up matters.
+  const { data: platformRows } = await adminClient
+    .from("riders")
+    .select("id, name, phone")
+    .eq("is_platform", true)
+    .eq("is_active", true)
+    .order("name", { ascending: true });
+  const platformRiders = platformRows ?? [];
+
   return (
     <div className="space-y-5">
       <div>
@@ -69,12 +79,38 @@ export default async function ManageRidersPage({ params }: PageProps) {
           Riders
         </h1>
         <p className="text-[13px] text-[#9C9485] mt-1">
-          They sign in at <span className="font-bold">klickenya.com/rider</span> and take
-          deliveries once the kitchen marks an order ready.
+          Your own riders. They sign in at{" "}
+          <span className="font-bold">klickenya.com/rider</span> and can take a job as soon
+          as you press Start preparing.
         </p>
       </div>
 
       <RidersClient menuId={menu.id} initialRiders={riders} />
+
+      {platformRiders.length > 0 && (
+        <section>
+          <h2 className="font-display text-[16px] font-bold text-[#16130C] mb-1">
+            Klickenya riders
+          </h2>
+          <p className="text-[13px] text-[#9C9485] mb-3 max-w-[560px]">
+            Hired by Klickenya and available to every restaurant that delivers. They can
+            take your orders too — you don&apos;t manage them here.
+          </p>
+          <ul className="bg-white rounded-2xl border border-[#E2DDD5] shadow-sm divide-y divide-[#F4F1EC]">
+            {platformRiders.map((r) => (
+              <li key={r.id} className="flex items-center justify-between gap-3 p-4">
+                <div className="min-w-0">
+                  <p className="font-bold text-[14.5px] text-[#16130C]">{r.name}</p>
+                  <p className="text-[13px] text-[#9C9485]">{r.phone}</p>
+                </div>
+                <span className="shrink-0 rounded-full bg-[#16130C] px-2.5 py-0.5 text-[11px] font-bold uppercase text-white">
+                  Klickenya
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
     </div>
   );
 }
