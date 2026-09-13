@@ -148,7 +148,14 @@ export default async function EatListingLayout({
       badge: pendingReservations > 0 ? pendingReservations : undefined,
     });
   }
-  if (isFeatureActive("table_ordering")) {
+  // Any ordering channel, not just table ordering. A delivery-only kitchen
+  // had no Orders tab at all before this — its orders were arriving with
+  // nowhere in the dashboard to see them.
+  if (
+    isFeatureActive("table_ordering") ||
+    isFeatureActive("takeaway") ||
+    isFeatureActive("delivery")
+  ) {
     tabs.push({ label: "Orders", href: `${baseHref}/orders` });
   }
   if (menu) {

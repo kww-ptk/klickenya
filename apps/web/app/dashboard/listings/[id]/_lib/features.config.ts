@@ -75,16 +75,19 @@ export const LISTING_FEATURES: FeatureDefinition[] = [
       'Guests order from your public menu without a table, you accept with a ready time, they pick up and pay at the counter.',
     icon: 'ShoppingBag',
     appliesTo: ['restaurant'],
+    tabSegment: 'orders',
     getStatus: (ctx) => (ctx.menu?.takeaway_enabled ? 'active' : 'inactive'),
   },
   {
     id: 'delivery',
     label: 'Food delivery',
-    shortDescription: 'Riders deliver orders to guests.',
-    longDescription: 'Coming Q4 2026. Full delivery with live rider tracking.',
+    shortDescription: 'Guests order from eat.klickenya.com for delivery.',
+    longDescription:
+      'Your restaurant appears on eat.klickenya.com. Guests order for delivery, the order lands in your Orders queue with the address, and the kitchen is messaged on WhatsApp. Your own rider delivers — Klickenya has no fleet yet.',
     icon: 'Bike',
     appliesTo: ['restaurant'],
-    getStatus: () => 'coming_soon',
+    tabSegment: 'orders',
+    getStatus: (ctx) => (ctx.menu?.delivery_enabled ? 'active' : 'inactive'),
   },
 ];
 

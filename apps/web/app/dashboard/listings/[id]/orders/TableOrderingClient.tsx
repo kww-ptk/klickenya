@@ -172,9 +172,12 @@ function Inner({
   // Back-link target for the legacy /dashboard/menu/<id>/* operational pages
   // (kitchen view, QR, audit) so they know where to return. In ordering-only
   // mode we hand them the /eat URL so the user stays in the eat shell.
+  // In the /manage shell this component IS the setup page, which now lives at
+  // /orders/setup — /orders is the live queue. Legacy /dashboard keeps its
+  // own URL, where setup and queue were never split.
   const ordersOwnHref =
     mode === "ordering-only" && featureBaseHref
-      ? `${featureBaseHref}/orders`
+      ? `${featureBaseHref}/orders/setup`
       : `/dashboard/listings/${listingId}/orders`;
   const back = `back=${encodeURIComponent(ordersOwnHref)}`;
   const overviewHref =

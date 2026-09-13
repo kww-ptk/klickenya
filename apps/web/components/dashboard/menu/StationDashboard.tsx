@@ -39,6 +39,9 @@ export interface DashboardOrder {
   created_at: string;
   waiter_id?: string | null;
   waiter_name?: string | null;
+  /** Where it goes. Only ever set on order_type === "delivery". */
+  delivery_address?: string | null;
+  delivery_fee_kes?: number | null;
   order_items: OrderItem[];
 }
 
@@ -159,7 +162,32 @@ function OrderCard({ order, items, status, isNew, updating, onAdvance, onCancel,
       {/* Table number + status badge */}
       <div className="flex items-start justify-between mb-3">
         <div>
-          {order.order_type === "takeaway" ? (
+          {order.order_type === "delivery" ? (
+            <>
+              <p className="text-[11px] font-bold text-purple uppercase tracking-widest mb-0.5">
+                🛵 Delivery
+              </p>
+              <p className="font-display text-[22px] font-extrabold text-dark leading-tight tracking-tight">
+                {order.customer_name ?? "Guest"}
+              </p>
+              {order.customer_phone && (
+                <a
+                  href={`tel:${order.customer_phone}`}
+                  className="text-[13px] text-text2 mt-0.5 underline decoration-border underline-offset-2 block"
+                >
+                  {order.customer_phone}
+                </a>
+              )}
+              {/* The address is the whole job on a delivery ticket, so it is
+                  not tucked in with the notes. Selectable for copy-paste into
+                  a maps app. */}
+              {order.delivery_address && (
+                <p className="text-[13px] text-dark mt-1.5 font-medium leading-snug select-text">
+                  {order.delivery_address}
+                </p>
+              )}
+            </>
+          ) : order.order_type === "takeaway" ? (
             <>
               <p className="text-[11px] font-bold text-amber uppercase tracking-widest mb-0.5">
                 🛍 Takeaway
