@@ -116,8 +116,11 @@ export async function middleware(request: NextRequest) {
         url.pathname = "/";
         return NextResponse.redirect(url, 308);
       }
-      // /m/<slug> is the public menu the flow links out to — part of the app.
-      if (!pathname.startsWith("/m/")) {
+      // /m/<slug> is the public menu the flow links out to, and /order/<id>
+      // is the tracking page whose link the guest is handed at checkout.
+      // Both belong to the app and must answer on this host — bouncing a
+      // guest to the marketplace to watch their own order would be absurd.
+      if (!pathname.startsWith("/m/") && !pathname.startsWith("/order/")) {
         const url = new URL(
           pathname,
           process.env.NEXT_PUBLIC_SITE_URL || "https://klickenya.com",
