@@ -6,7 +6,7 @@ import Link from "next/link";
 interface Props {
   activeStation: "kitchen" | "bar";
   hasBarStation: boolean;
-  /** e.g. "/dashboard/menu/abc/orders" or "/kitchen/slug/orders" */
+  /** e.g. "/dashboard/menu/abc/orders" or "/tablet/slug/stations" */
   baseHref: string;
   /**
    * Which tabs the viewer is allowed to operate. Set by the page wrapper
