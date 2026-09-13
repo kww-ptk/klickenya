@@ -76,6 +76,8 @@ export async function PATCH(req: NextRequest) {
       table_ordering,
       takeaway_enabled,
       delivery_enabled,
+      pos_enabled,
+      stock_enabled,
       reservations_enabled,
       default_reservation_duration,
       reservations_lead_time_hours,
@@ -118,6 +120,16 @@ export async function PATCH(req: NextRequest) {
     }
     if (typeof delivery_enabled === "boolean") {
       updates.delivery_enabled = delivery_enabled;
+    }
+    if (typeof pos_enabled === "boolean") {
+      updates.pos_enabled = pos_enabled;
+    }
+    // stock_enabled was missing from this allowlist, so the Klickenya Kitchen
+    // switch on the features page PATCHed, got a 200 and changed nothing —
+    // it flipped back on the next load. A switch that silently does nothing
+    // is worse than one that is absent.
+    if (typeof stock_enabled === "boolean") {
+      updates.stock_enabled = stock_enabled;
     }
     // Number that receives WhatsApp orders. Empty string clears it, which is
     // how an owner turns the channel off without us needing a second flag.

@@ -83,13 +83,14 @@ export default async function EatListingLayout({
     takeaway_enabled: boolean;
     delivery_enabled: boolean;
     stock_enabled: boolean;
+    pos_enabled: boolean;
   } | null = null;
 
   if (listing.slug) {
     let menuQuery = adminClient
       .from("menus")
       .select(
-        "id, name, listing_slug, table_ordering, reservations_enabled, ordering_enabled, takeaway_enabled, delivery_enabled, stock_enabled",
+        "id, name, listing_slug, table_ordering, reservations_enabled, ordering_enabled, takeaway_enabled, delivery_enabled, stock_enabled, pos_enabled",
       )
       .eq("listing_slug", listing.slug);
     if (!isAdmin) menuQuery = menuQuery.eq("business_id", user.id);
@@ -108,6 +109,7 @@ export default async function EatListingLayout({
           takeaway_enabled: menu.takeaway_enabled ?? false,
           delivery_enabled: menu.delivery_enabled ?? false,
           stock_enabled: menu.stock_enabled ?? false,
+          pos_enabled: menu.pos_enabled ?? false,
         }
       : undefined,
   };
@@ -158,10 +160,11 @@ export default async function EatListingLayout({
   ) {
     tabs.push({ label: "Orders", href: `${baseHref}/orders` });
   }
-  if (menu) {
-    // POS sits between Orders and Kitchen in the setup chain: it's the
-    // staff-driven side of the same order pipeline. Available whenever a
-    // menu exists (waiter-only restaurants can use POS without QR ordering).
+  // POS sits between Orders and Kitchen: the staff-driven side of the same
+  // pipeline. It used to render for ANY menu, with no way to switch it off —
+  // a delivery-only kitchen saw a waiter terminal it will never open. Now it
+  // is a flag like every other feature (migration 087).
+  if (isFeatureActive("pos")) {
     tabs.push({ label: "POS", href: `${baseHref}/pos` });
   }
   if (isFeatureActive("klickenya_kitchen")) {
