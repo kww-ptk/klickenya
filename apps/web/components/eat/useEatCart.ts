@@ -2,12 +2,23 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 
+/** Snapshot of a chosen add-on. Mirrors what POST /api/orders expects, and
+ *  what order_items.selected_options stores — never a live join back. */
+export type SelectedOption = {
+  option_id: string;
+  group: string;
+  choice: string;
+  price_add: number;
+};
+
 export type CartLine = {
   itemId: string;
   name: string;
+  /** Base price. Add-ons are priced separately so the line can be re-read. */
   priceKes: number;
   qty: number;
   note: string;
+  options: SelectedOption[];
 };
 
 export type Cart = {
@@ -21,7 +32,13 @@ export type Cart = {
   lines: CartLine[];
 };
 
-const KEY = "eatklick.cart.v1";
+const KEY = "eatklick.cart.v2"; // v1 lines had no options
+
+/** Base plus add-ons, times quantity. */
+export function lineTotal(l: CartLine): number {
+  const addOns = (l.options ?? []).reduce((n, o) => n + (o.price_add ?? 0), 0);
+  return (l.priceKes + addOns) * l.qty;
+}
 
 /**
  * A cart for one restaurant at a time.
@@ -76,6 +93,7 @@ export function useEatCart() {
       item: { id: string; name: string; priceKes: number },
       qty: number,
       note: string,
+      options: SelectedOption[] = [],
     ) => {
       setCart((prev) => {
         const base: Cart =
@@ -83,10 +101,13 @@ export function useEatCart() {
             ? prev
             : { ...menu, lines: [] };
 
-        // Same item with the same note stacks; a different note is a
-        // different thing to cook, so it gets its own line.
+        // Same item with the same note AND the same add-ons stacks. Change
+        // either and it is a different thing to cook, so it gets its own line.
+        const sig = (o: SelectedOption[]) =>
+          o.map((x) => x.option_id).sort().join(",");
+        const target = sig(options);
         const idx = base.lines.findIndex(
-          (l) => l.itemId === item.id && l.note === note,
+          (l) => l.itemId === item.id && l.note === note && sig(l.options) === target,
         );
         const lines = [...base.lines];
         if (idx >= 0) {
@@ -98,6 +119,7 @@ export function useEatCart() {
             priceKes: item.priceKes,
             qty,
             note,
+            options,
           });
         }
         return { ...base, lines };
@@ -119,7 +141,7 @@ export function useEatCart() {
   const clear = useCallback(() => setCart(null), []);
 
   const total = useMemo(
-    () => (cart?.lines ?? []).reduce((n, l) => n + l.priceKes * l.qty, 0),
+    () => (cart?.lines ?? []).reduce((n, l) => n + lineTotal(l), 0),
     [cart],
   );
   const count = useMemo(

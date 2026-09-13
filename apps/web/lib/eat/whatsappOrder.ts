@@ -45,8 +45,15 @@ export function buildOrderMessage(input: {
 
   const items = lines
     .map((l) => {
-      const base = `• ${l.qty} × ${l.name} — KSh ${(l.priceKes * l.qty).toLocaleString()}`;
-      return l.note ? `${base}\n   (${l.note})` : base;
+      const addOns = (l.options ?? []).reduce((n, o) => n + (o.price_add ?? 0), 0);
+      const lineKes = (l.priceKes + addOns) * l.qty;
+      const parts = [`• ${l.qty} × ${l.name} — KSh ${lineKes.toLocaleString()}`];
+      // Add-ons go on their own lines: the kitchen reads this while cooking.
+      for (const o of l.options ?? []) {
+        parts.push(`   + ${o.choice}${o.price_add ? ` (+${o.price_add})` : ""}`);
+      }
+      if (l.note) parts.push(`   (${l.note})`);
+      return parts.join("\n");
     })
     .join("\n");
 

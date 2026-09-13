@@ -254,6 +254,23 @@ export const getSampleDishes = cache(async (limit = 12): Promise<Dish[]> => {
 
 /* ── Menus with items ───────────────────────────────────── */
 
+export type ItemOption = {
+  id: string;
+  name: string;
+  priceModifier: number;
+};
+
+export type ItemOptionGroup = {
+  id: string;
+  name: string;
+  /** single = pick one, multi = pick any, allergy = flags, never priced. */
+  groupType: "single" | "multi" | "allergy";
+  isRequired: boolean;
+  minSelect: number;
+  maxSelect: number | null;
+  options: ItemOption[];
+};
+
 export type MenuItemLite = {
   /** menu_items.id — required by POST /api/orders. */
   id: string;
@@ -261,6 +278,8 @@ export type MenuItemLite = {
   priceKes: number;
   description: string;
   photo: string; // "" when absent or from a host we will not serve
+  /** Add-ons — "Extra cheese +250". Same groups the POS and QR menu use. */
+  optionGroups: ItemOptionGroup[];
 };
 
 export type MenuSectionLite = { title: string; items: MenuItemLite[] };
@@ -274,6 +293,23 @@ export type RestaurantMenu = {
   foodTags: string[];
 };
 
+
+type OptionGroupRow = {
+  id: string;
+  name: string | null;
+  group_type: string | null;
+  is_required: boolean | null;
+  min_select: number | null;
+  max_select: number | null;
+  display_order: number | null;
+  item_options: {
+    id: string;
+    name: string | null;
+    price_modifier: number | null;
+    is_available: boolean | null;
+    display_order: number | null;
+  }[] | null;
+};
 
 type ItemRow = {
   id: string | null;
@@ -317,6 +353,54 @@ export const getMenusWithItems = cache(
 
       const rows = (data ?? []) as unknown as ItemRow[];
 
+      // Option groups come in their own query. Joining them onto the item
+      // select made PostgREST time out across ~160 items, and there are only a
+      // handful of groups in total — two light queries beat one heavy join.
+      const groupsByItem = new Map<string, ItemOptionGroup[]>();
+      {
+        const { data: groupRows, error: groupErr } = await adminClient
+          .from("item_option_groups")
+          .select(
+            "id, menu_item_id, name, group_type, is_required, min_select, max_select, display_order, item_options(id, name, price_modifier, is_available, display_order)",
+          );
+
+        if (groupErr) {
+          console.warn("[eat/menu-items] option groups unavailable:", groupErr.message);
+        } else {
+          for (const g of (groupRows ?? []) as unknown as (OptionGroupRow & {
+            menu_item_id: string;
+          })[]) {
+            const options = (g.item_options ?? [])
+              .filter((o) => o.is_available !== false)
+              .sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0))
+              .map((o) => ({
+                id: o.id,
+                name: o.name ?? "",
+                // Allergy flags never carry a price, per the POS schema.
+                priceModifier: g.group_type === "allergy" ? 0 : (o.price_modifier ?? 0),
+              }));
+            if (options.length === 0) continue;
+
+            const list = groupsByItem.get(g.menu_item_id) ?? [];
+            list.push({
+              id: g.id,
+              name: g.name ?? "",
+              groupType: (g.group_type === "single" || g.group_type === "allergy"
+                ? g.group_type
+                : "multi") as ItemOptionGroup["groupType"],
+              isRequired: Boolean(g.is_required),
+              minSelect: g.min_select ?? 0,
+              maxSelect: g.max_select ?? null,
+              options,
+            });
+            groupsByItem.set(g.menu_item_id, list);
+          }
+          for (const list of groupsByItem.values()) {
+            list.sort((a, b) => a.name.localeCompare(b.name));
+          }
+        }
+      }
+
       for (const row of rows) {
         const menu = row.menu_sections?.menus;
         const key = menu?.listing_slug?.trim();
@@ -346,6 +430,7 @@ export const getMenusWithItems = cache(
           priceKes: row.price_kes ?? 0,
           description: row.description ?? "",
           photo: isAllowedImageHost(row.photo_url) ? row.photo_url! : "",
+          optionGroups: groupsByItem.get(row.id) ?? [],
         });
 
         for (const { tag, re } of FOOD_TAGS) {
