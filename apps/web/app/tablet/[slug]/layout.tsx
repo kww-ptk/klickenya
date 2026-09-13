@@ -12,7 +12,9 @@ import { getPosMenuBySlug } from "@/app/pos/[slug]/_lib/menuFromSlug";
  */
 
 export const metadata: Metadata = {
-  title: "Order tablet · Klickenya",
+  // Bare: the root layout applies template "%s | Klickenya". Spelling the
+  // brand here too renders "Order tablet · Klickenya | Klickenya".
+  title: "Order tablet",
   robots: { index: false, follow: false },
 };
 
