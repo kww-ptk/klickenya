@@ -6,7 +6,7 @@ import { LogOut } from "lucide-react";
 import Link from "next/link";
 
 /**
- * Persistent header for the order tablet. Standalone version of
+ * Persistent header for Food Delivery Orders. Standalone version of
  * PosHeader — the kitchen shell doesn't have PosShellProvider so we pass
  * staff/menu info via props from the server page.
  */
@@ -14,7 +14,7 @@ interface TabletHeaderProps {
   slug:      string;
   menuName:  string;
   staffName: string;
-  role:      "kitchen" | "manager" | "waiter" | "cashier" | "bar";
+  role:      "kitchen" | "manager" | "waiter" | "cashier" | "bar" | "delivery";
 }
 
 export function TabletHeader({ slug, menuName, staffName, role }: TabletHeaderProps) {
@@ -25,6 +25,7 @@ export function TabletHeader({ slug, menuName, staffName, role }: TabletHeaderPr
 
   const stationLabel =
     role === "bar" ? "Bar" :
+    role === "delivery" ? "Delivery" :
     role === "manager" ? "Station" :
     "Kitchen";
   const labelClass = role === "bar" ? "text-teal-400" : "text-amber";

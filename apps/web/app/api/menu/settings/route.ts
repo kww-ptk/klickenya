@@ -4,6 +4,7 @@ import { sanityClient } from "@/lib/sanity/client";
 import { revalidateTag, revalidatePath } from "next/cache";
 import { getMenuAuth, verifyMenuAccess } from "../_lib/auth";
 import { normalizeKenyanPhone } from "@/lib/orders/phone";
+import { ensureDeliveryStation } from "@/lib/orders/deliveryStation";
 
 /* ── PATCH — update menu settings ──────────────────────────────────────────
  *
@@ -121,6 +122,10 @@ export async function PATCH(req: NextRequest) {
     if (typeof delivery_enabled === "boolean") {
       updates.delivery_enabled = delivery_enabled;
     }
+    // Switching delivery on is the moment a restaurant needs a screen for it,
+    // so the station and its PIN are created here rather than left as a step
+    // the owner has to discover after the first order does not appear.
+    const turningDeliveryOn = delivery_enabled === true;
     if (typeof pos_enabled === "boolean") {
       updates.pos_enabled = pos_enabled;
     }
@@ -230,6 +235,14 @@ export async function PATCH(req: NextRequest) {
     if (error) {
       console.error("[menu/settings PATCH] error:", error);
       return NextResponse.json({ error: "Failed to update settings." }, { status: 500 });
+    }
+
+    // ── Food Delivery Station, created with delivery itself ──────────────
+    // Same shape as the reservation-areas seed below: turning a feature on
+    // brings the thing that feature needs, instead of leaving a step the
+    // owner only discovers when the screen refuses every PIN.
+    if (turningDeliveryOn) {
+      await ensureDeliveryStation(menu_id);
     }
 
     // ── Seed default areas when enabling reservations for the first time ──
