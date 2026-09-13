@@ -11,6 +11,7 @@ import {
   isPropertyCategory,
   propertyPath,
 } from "@/lib/real-estate/constants";
+import { assertAdmin, AdminAuthError } from "@/lib/admin/auth";
 
 /**
  * PATCH /api/admin/real-estate/[id]/status
@@ -24,7 +25,22 @@ import {
 
 type RouteContext = { params: Promise<{ id: string }> };
 
+/**
+ * ADMIN ONLY. Guarded here, in the handler — middleware does NOT cover this.
+ * Its check is `pathname.startsWith("/admin")`, which matches the /admin PAGES
+ * and never /api/admin/*. This route answered unauthenticated callers until
+ * this guard was added.
+ */
 export async function PATCH(req: NextRequest, ctx: RouteContext) {
+  try {
+    await assertAdmin(req);
+  } catch (err) {
+    if (err instanceof AdminAuthError) {
+      return NextResponse.json({ error: err.message }, { status: err.status });
+    }
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const { id } = await ctx.params;
 
   const supabase = await createClient();

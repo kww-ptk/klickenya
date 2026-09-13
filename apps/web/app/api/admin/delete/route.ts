@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod/v4";
 import { adminClient } from "@/lib/supabase/admin";
+import { assertAdmin, AdminAuthError } from "@/lib/admin/auth";
 
 const ALLOWED_TABLES = [
   "contact_requests",
@@ -17,8 +18,16 @@ const deleteSchema = z.object({
   id: z.string().uuid(),
 });
 
+/**
+ * ADMIN ONLY. Guarded here, in the handler — middleware does NOT cover this.
+ * Its check is `pathname.startsWith("/admin")`, which matches the /admin PAGES
+ * and never /api/admin/*. This route answered unauthenticated callers until
+ * this guard was added.
+ */
 export async function POST(request: NextRequest) {
   try {
+    await assertAdmin(request);
+
     const body = await request.json();
     const parsed = deleteSchema.safeParse(body);
 
@@ -46,6 +55,9 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (err) {
+    if (err instanceof AdminAuthError) {
+      return NextResponse.json({ error: err.message }, { status: err.status });
+    }
     console.error("Delete API error:", err);
     return NextResponse.json(
       { error: "An unexpected error occurred" },
