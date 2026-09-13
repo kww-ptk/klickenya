@@ -59,6 +59,8 @@ export function CartPanel({
   const [error, setError] = useState<string | null>(null);
   const [placed, setPlaced] = useState<string | null>(null);
   const [trackUrl, setTrackUrl] = useState<string | null>(null);
+  const [waUrl, setWaUrl] = useState<string | null>(null);
+  const [popupBlocked, setPopupBlocked] = useState(false);
 
   /**
    * Hand the order to the kitchen over WhatsApp.
@@ -71,6 +73,26 @@ export function CartPanel({
     if (!cart || !whatsappPhone) return;
     setBusy(true);
     setError(null);
+
+    // Open the tab NOW, synchronously, while we are still inside the click.
+    //
+    // Safari only allows window.open during a user gesture, and an `await`
+    // ends that gesture — so opening WhatsApp after the order POST is blocked
+    // on iPhone even when the guest has never disabled anything. Claiming a
+    // blank tab first and pointing it at WhatsApp once the order is saved is
+    // the standard way round it.
+    //
+    // No "noopener" in the feature string: per spec that makes window.open
+    // return null, leaving nothing to navigate. The same protection comes
+    // from clearing `opener` on the handle instead.
+    const win = window.open("", "_blank");
+    if (win) {
+      try {
+        win.opener = null;
+      } catch {
+        /* cross-origin about:blank in some browsers — not worth failing over */
+      }
+    }
 
     // ── Step 1: record the order ──────────────────────────────────────
     let orderRef: string | undefined;
@@ -109,6 +131,7 @@ export function CartPanel({
         | null;
 
       if (!res.ok) {
+        win?.close(); // don't leave the guest staring at a blank tab
         setError(payload?.error ?? "Could not place the order. Please try again.");
         setBusy(false);
         return;
@@ -121,6 +144,7 @@ export function CartPanel({
         setTrackUrl(track);
       }
     } catch {
+      win?.close();
       setError("Could not reach the kitchen. Check your connection and try again.");
       setBusy(false);
       return;
@@ -140,19 +164,23 @@ export function CartPanel({
       trackUrl: track,
     });
 
-    const win = window.open(buildWhatsAppUrl(whatsappPhone, message), "_blank", "noopener");
+    const url = buildWhatsAppUrl(whatsappPhone, message);
+    // Kept regardless of what happens next: the confirmation screen always
+    // offers a tap-to-open link, and a link tap is a navigation, not a popup,
+    // so it cannot be blocked by anything.
+    setWaUrl(url);
     setBusy(false);
 
-    if (!win) {
-      // The order IS saved at this point — the kitchen can see it. Say so,
-      // rather than implying nothing happened and inviting a duplicate.
-      setError(
-        orderRef
-          ? `Your order is placed (#${orderRef}), but the WhatsApp window was blocked. Allow pop-ups to message the kitchen.`
-          : "Your browser blocked the WhatsApp window. Allow pop-ups and try again.",
-      );
-      return;
+    if (win) {
+      win.location.href = url;
+    } else {
+      // Blocked despite claiming the tab early. Nothing is lost: the order is
+      // already saved and the kitchen can see it. The guest taps the link on
+      // the confirmation screen instead — so this is not an error state, and
+      // saying "blocked" here would only invite a duplicate order.
+      setPopupBlocked(true);
     }
+
     // Deliberately NOT clearing the basket: the guest still has to press send
     // inside WhatsApp, and we cannot know whether they did.
     setPlaced(orderRef ?? "sent");
@@ -210,10 +238,37 @@ export function CartPanel({
         {placed ? (
           <div className="flex-1 px-5 py-8">
             <p className="text-text2 text-[15px] leading-[1.6]">
-              Your order is written out in WhatsApp — press send there to reach{" "}
-              {cart?.restaurant ?? "the kitchen"}. They&apos;ll reply with a ready
-              time. Your basket is still here until you do.
+              {popupBlocked ? (
+                <>
+                  Your order is saved and {cart?.restaurant ?? "the kitchen"} can
+                  see it. Tap below to send them the details on WhatsApp.
+                </>
+              ) : (
+                <>
+                  Your order is written out in WhatsApp — press send there to reach{" "}
+                  {cart?.restaurant ?? "the kitchen"}. They&apos;ll reply with a ready
+                  time. Your basket is still here until you do.
+                </>
+              )}
             </p>
+
+            {/* Always offered, not only when the popup failed: a tap on a link
+                is a navigation, which no browser blocks, so this is the path
+                that always works. It doubles as "it didn't open, try again". */}
+            {waUrl && (
+              <a
+                href={waUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`mt-5 flex items-center justify-center gap-2 w-full rounded-full py-3.5 text-[15px] font-extrabold ${
+                  popupBlocked
+                    ? "bg-[#25D366] text-white"
+                    : "border border-border text-dark"
+                }`}
+              >
+                {popupBlocked ? "Open WhatsApp" : "WhatsApp didn't open? Tap here"}
+              </a>
+            )}
 
             {placed !== "sent" && (
               <div className="mt-6 rounded-2xl border border-border bg-white p-5 text-center">
