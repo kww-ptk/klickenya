@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Bike, ShoppingBag, Utensils, Phone, MapPin } from "lucide-react";
+import { Bike, ShoppingBag, Utensils, Phone, MapPin, Pencil, X, Plus } from "lucide-react";
 
 /**
  * The owner's live order queue — every active order for one menu, in one list.
@@ -14,6 +14,13 @@ import { Bike, ShoppingBag, Utensils, Phone, MapPin } from "lucide-react";
  * One button drives the lifecycle. The owner should never have to learn a
  * status model — they see what to do next and press it.
  */
+
+/** A dish the owner can add to an order already placed. */
+export type AddableDish = {
+  id: string;
+  name: string;
+  priceKes: number;
+};
 
 export type QueueOrder = {
   id: string;
@@ -55,9 +62,11 @@ function minutesAgo(iso: string): string {
 export function LiveOrderQueue({
   menuId,
   initialOrders,
+  dishes = [],
 }: {
   menuId: string;
   initialOrders: QueueOrder[];
+  dishes?: AddableDish[];
 }) {
   const [orders, setOrders] = useState<QueueOrder[]>(initialOrders);
   const [busyId, setBusyId] = useState<string | null>(null);
@@ -82,6 +91,59 @@ export function LiveOrderQueue({
     const id = setInterval(refresh, 10_000);
     return () => clearInterval(id);
   }, [refresh]);
+
+  // ── Editing an order already placed ───────────────────────────────
+  // Which order is open for editing, which line is mid-removal, and the
+  // reason for that removal. The reason is required by the API and lands in
+  // the audit log — removing food someone ordered is the classic fraud path,
+  // so it is recorded, not silent.
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [removing, setRemoving] = useState<{ itemId: string; reason: string } | null>(null);
+
+  async function removeLine(itemId: string, reason: string) {
+    setBusyId(itemId);
+    setError(null);
+    try {
+      const res = await fetch(`/api/menu/order-items/${itemId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "void", reason }),
+      });
+      if (!res.ok) {
+        const p = (await res.json().catch(() => null)) as { error?: string } | null;
+        setError(p?.error ?? "Could not remove that item.");
+        return;
+      }
+      setRemoving(null);
+      await refresh(); // totals are recomputed server-side; re-read them
+    } catch {
+      setError("Could not reach the server.");
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  async function addLine(orderId: string, dishId: string) {
+    setBusyId(orderId);
+    setError(null);
+    try {
+      const res = await fetch(`/api/menu/orders/${orderId}/items`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ menu_item_id: dishId, quantity: 1 }),
+      });
+      if (!res.ok) {
+        const p = (await res.json().catch(() => null)) as { error?: string } | null;
+        setError(p?.error ?? "Could not add that item.");
+        return;
+      }
+      await refresh();
+    } catch {
+      setError("Could not reach the server.");
+    } finally {
+      setBusyId(null);
+    }
+  }
 
   async function advance(order: QueueOrder) {
     const next = NEXT[order.status];
@@ -144,6 +206,7 @@ export function LiveOrderQueue({
           ? "Takeaway"
           : `Table ${order.table_number ?? "—"}`;
         const items = (order.order_items ?? []).filter((i) => !i.is_voided);
+        const isEditing = editingId === order.id;
 
         return (
           <article
@@ -187,13 +250,38 @@ export function LiveOrderQueue({
                   KSh {(order.total_kes ?? 0).toLocaleString()}
                 </p>
                 <p className="text-[11.5px] text-[#9C9485] mt-1">{minutesAgo(order.created_at)}</p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditingId(isEditing ? null : order.id);
+                    setRemoving(null);
+                  }}
+                  className="mt-1.5 inline-flex items-center gap-1 text-[12px] font-bold text-[#6B6355] hover:text-[#16130C]"
+                >
+                  <Pencil className="size-3" aria-hidden />
+                  {isEditing ? "Done" : "Edit items"}
+                </button>
               </div>
             </div>
 
             <ul className="mt-3 pt-3 border-t border-[#F0EDE7] space-y-1.5">
               {items.map((it) => (
                 <li key={it.id} className="text-[13.5px] text-[#3A352C]">
-                  <span className="font-bold">{it.quantity}×</span> {it.item_name}
+                  <span className="flex items-start gap-2">
+                    <span className="flex-1">
+                      <span className="font-bold">{it.quantity}×</span> {it.item_name}
+                    </span>
+                    {isEditing && (
+                      <button
+                        type="button"
+                        aria-label={`Remove ${it.item_name}`}
+                        onClick={() => setRemoving({ itemId: it.id, reason: "" })}
+                        className="shrink-0 rounded-full p-1 text-[#9C9485] hover:text-[#DC2626] hover:bg-[#DC2626]/10"
+                      >
+                        <X className="size-4" aria-hidden />
+                      </button>
+                    )}
+                  </span>
                   {(it.selected_options ?? []).map((o, i) => (
                     <span key={i} className="block pl-5 text-[12.5px] text-[#6B6355]">
                       + {o.choice}
@@ -205,9 +293,74 @@ export function LiveOrderQueue({
                       {it.allergy_notes}
                     </span>
                   )}
+
+                  {/* Removal needs a reason — it goes to the audit log. */}
+                  {removing?.itemId === it.id && (
+                    <span className="mt-2 flex flex-col gap-2 rounded-xl bg-[#FAF8F5] p-3">
+                      <label
+                        htmlFor={`reason-${it.id}`}
+                        className="text-[12px] font-semibold text-[#6B6355]"
+                      >
+                        Why is this coming off the order?
+                      </label>
+                      <input
+                        id={`reason-${it.id}`}
+                        value={removing.reason}
+                        onChange={(e) => setRemoving({ itemId: it.id, reason: e.target.value })}
+                        placeholder="Out of stock, customer changed their mind…"
+                        className="rounded-lg border border-[#E2DDD5] px-3 py-2 text-[16px]"
+                      />
+                      <span className="flex gap-2">
+                        <button
+                          type="button"
+                          disabled={!removing.reason.trim() || busyId === it.id}
+                          onClick={() => removeLine(it.id, removing.reason.trim())}
+                          className="flex-1 rounded-full bg-[#DC2626] text-white text-[13px] font-bold py-2 disabled:opacity-40"
+                        >
+                          {busyId === it.id ? "Removing…" : "Remove"}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setRemoving(null)}
+                          className="flex-1 rounded-full border border-[#E2DDD5] text-[13px] font-bold py-2"
+                        >
+                          Keep
+                        </button>
+                      </span>
+                    </span>
+                  )}
                 </li>
               ))}
             </ul>
+
+            {isEditing && dishes.length > 0 && (
+              <div className="mt-3 flex gap-2">
+                <label htmlFor={`add-${order.id}`} className="sr-only">
+                  Add a dish to this order
+                </label>
+                <select
+                  id={`add-${order.id}`}
+                  defaultValue=""
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    e.target.value = "";
+                    if (v) addLine(order.id, v);
+                  }}
+                  disabled={busyId === order.id}
+                  className="flex-1 min-w-0 rounded-full border border-[#E2DDD5] bg-white px-4 py-2 text-[16px]"
+                >
+                  <option value="">Add a dish…</option>
+                  {dishes.map((d) => (
+                    <option key={d.id} value={d.id}>
+                      {d.name} — KSh {d.priceKes.toLocaleString()}
+                    </option>
+                  ))}
+                </select>
+                <span className="flex items-center text-[#9C9485]" aria-hidden>
+                  <Plus className="size-4" />
+                </span>
+              </div>
+            )}
 
             {order.notes && (
               <p className="mt-2.5 text-[12.5px] text-[#6B6355] bg-[#FAF8F5] rounded-lg px-3 py-2">
