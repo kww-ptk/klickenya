@@ -30,12 +30,17 @@ const selectedOptionSchema = z.object({
 
 const orderSchema = z.object({
   menu_id:        z.string().uuid(),
-  order_type:     z.enum(["dine_in", "takeaway"]).default("dine_in"),
+  order_type:     z.enum(["dine_in", "takeaway", "delivery"]).default("dine_in"),
   table_number:   z.string().min(1).max(20).optional(),
   table_id:       z.string().uuid().optional(), // registered table (optional)
   customer_name:  z.string().max(100).optional(),
   customer_phone: z.string().max(30).optional(),
   order_note:     z.string().max(500).optional(),
+  // Free text on purpose. Kenyan coastal addresses are landmarks and
+  // directions ("Beyond Sunset Lab, blue gate"), not house numbers, and a
+  // structured form would reject the way people actually give directions.
+  // Geocoding can come later via the dormant delivery_lat/lng columns.
+  delivery_address: z.string().max(300).optional(),
   items: z
     .array(
       z.object({
@@ -59,7 +64,9 @@ export async function POST(req: NextRequest) {
     /* STEP 1 — Verify menu exists and the requested ordering mode is enabled */
     const { data: menu } = await adminClient
       .from("menus")
-      .select("id, table_ordering, takeaway_enabled, is_published, default_service_charge_pct")
+      .select(
+        "id, table_ordering, takeaway_enabled, delivery_enabled, is_published, default_service_charge_pct",
+      )
       .eq("id", data.menu_id)
       .single();
 
@@ -69,7 +76,31 @@ export async function POST(req: NextRequest) {
 
     let normalizedPhone: string | null = null;
 
-    if (data.order_type === "takeaway") {
+    if (data.order_type === "delivery") {
+      if (!menu.delivery_enabled) {
+        return NextResponse.json(
+          { error: "This kitchen isn't delivering yet." },
+          { status: 400 }
+        );
+      }
+      if (!data.customer_name?.trim()) {
+        return NextResponse.json({ error: "Please enter your name." }, { status: 400 });
+      }
+      normalizedPhone = normalizeKenyanPhone(data.customer_phone ?? "");
+      if (!normalizedPhone) {
+        return NextResponse.json(
+          { error: "Enter a valid phone number (e.g. 0712 345 678 or +254712345678)." },
+          { status: 400 }
+        );
+      }
+      // A delivery with no address is not an order anyone can fulfil.
+      if (!data.delivery_address?.trim()) {
+        return NextResponse.json(
+          { error: "Please say where the order should go." },
+          { status: 400 }
+        );
+      }
+    } else if (data.order_type === "takeaway") {
       if (!menu.takeaway_enabled) {
         return NextResponse.json(
           { error: "Takeaway ordering is not enabled for this menu." },
@@ -259,7 +290,10 @@ export async function POST(req: NextRequest) {
     let tableDisplayNumber: string | null = data.table_number ?? null;
     let resolvedTableId: string | null = null;
 
-    if (data.order_type === "takeaway") {
+    if (data.order_type === "takeaway" || data.order_type === "delivery") {
+      // Tableless by definition. Explicit rather than relying on the client
+      // omitting table_number: a stray value would otherwise attach the
+      // order to a table session and land it on the floor plan.
       tableDisplayNumber = null;
     } else if (data.table_id) {
       const { data: tableRow } = await adminClient
@@ -372,6 +406,9 @@ export async function POST(req: NextRequest) {
         customer_name:    data.customer_name ?? null,
         customer_phone:   normalizedPhone,
         notes:            sanitizeNotes(data.order_note),
+        delivery_address: data.order_type === "delivery"
+          ? sanitizeNotes(data.delivery_address)
+          : null,
         subtotal_kes:     subtotal,
         delivery_fee_kes: 0,
         total_kes:        total,

@@ -103,6 +103,7 @@ export default async function EatFeaturesPage({
     switch (featureId) {
       case "table_ordering": return "table_ordering";
       case "takeaway":       return "takeaway_enabled";
+      case "delivery":       return "delivery_enabled";
       case "reservations":   return "reservations_enabled";
       case "klickenya_kitchen": return "stock_enabled";
       default: return null;
@@ -110,8 +111,10 @@ export default async function EatFeaturesPage({
   }
   function configureHrefFor(featureId: string): string | null {
     switch (featureId) {
-      case "table_ordering": return `/manage/listings/${id}/orders`;
-      case "takeaway":       return `/manage/listings/${id}/orders`;
+      // Configure = the setup screen, not the live queue.
+      case "table_ordering": return `/manage/listings/${id}/orders/setup`;
+      case "takeaway":       return `/manage/listings/${id}/orders/setup`;
+      case "delivery":       return `/manage/listings/${id}/orders/setup`;
       case "reservations":   return `/manage/listings/${id}/reservations`;
       case "klickenya_kitchen": return `/manage/listings/${id}/kitchen`;
       default: return null;

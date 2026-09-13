@@ -1,6 +1,6 @@
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
-import { ChefHat, CalendarCheck, UtensilsCrossed, ShoppingCart, Settings as SettingsIcon, ExternalLink, QrCode } from "lucide-react";
+import { ChefHat, CalendarCheck, UtensilsCrossed, ShoppingCart, ShoppingBag, Bike, Settings as SettingsIcon, ExternalLink, QrCode } from "lucide-react";
 import { getAuthUser, getHostProfile, getIsAdmin } from "../../../dashboard/_lib/auth";
 import { adminClient } from "@/lib/supabase/admin";
 import { sanityClient } from "@/lib/sanity/client";
@@ -8,6 +8,7 @@ import {
   LISTING_FEATURES,
   type FeatureContext,
 } from "../../../dashboard/listings/[id]/_lib/features.config";
+import { ACTIVE_ORDER_STATUSES } from "@/lib/orders/projection";
 
 /**
  * /manage/listings/[id] — restaurant overview.
@@ -83,7 +84,7 @@ export default async function EatOverviewPage({
   const nowMs = Date.now();
   const sevenDaysAgo = new Date(nowMs - 7 * 24 * 60 * 60 * 1000).toISOString();
 
-  const [pendingReservationsRes, scanCountRes] = await Promise.allSettled([
+  const [pendingReservationsRes, scanCountRes, liveOrdersRes] = await Promise.allSettled([
     menu
       ? adminClient
           .from("reservations")
@@ -98,6 +99,15 @@ export default async function EatOverviewPage({
           .eq("menu_id", menu.id)
           .gte("scanned_at", sevenDaysAgo)
       : Promise.resolve({ count: 0 }),
+    // Orders still being worked — the number that decides whether the owner
+    // needs to go to the kitchen right now.
+    menu
+      ? adminClient
+          .from("orders")
+          .select("id", { count: "exact", head: true })
+          .eq("menu_id", menu.id)
+          .in("status", [...ACTIVE_ORDER_STATUSES])
+      : Promise.resolve({ count: 0 }),
   ]);
 
   const pendingReservations =
@@ -108,6 +118,11 @@ export default async function EatOverviewPage({
     scanCountRes.status === "fulfilled"
       ? scanCountRes.value.count ?? 0
       : 0;
+  const liveOrders =
+    liveOrdersRes.status === "fulfilled" ? liveOrdersRes.value.count ?? 0 : 0;
+  const orderingOn = Boolean(
+    menu?.delivery_enabled || menu?.takeaway_enabled || menu?.table_ordering,
+  );
 
   const featureCtx: FeatureContext = {
     listingType: "restaurant",
@@ -136,6 +151,8 @@ export default async function EatOverviewPage({
   const ICONS: Record<string, typeof ChefHat> = {
     UtensilsCrossed,
     ShoppingCart,
+    ShoppingBag,
+    Bike,
     CalendarCheck,
     ChefHat,
   };
@@ -147,6 +164,10 @@ export default async function EatOverviewPage({
     menu: `${baseHref}/menu`,
     reservations: `${baseHref}/reservations`,
     table_ordering: `${baseHref}/orders`,
+    // All three ordering channels land on the one queue — an owner should not
+    // have to remember which channel an order arrived on to find it.
+    takeaway: `${baseHref}/orders`,
+    delivery: `${baseHref}/orders`,
     klickenya_kitchen: `${baseHref}/kitchen`,
   };
 
@@ -154,6 +175,34 @@ export default async function EatOverviewPage({
     <div className="space-y-5">
       {/* ── KPI strip ── */}
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 lg:gap-3">
+        {/* Live orders — first, because it is the only one that is urgent. */}
+        {orderingOn && (
+          <Link
+            href={`${baseHref}/orders`}
+            className={`rounded-xl lg:rounded-2xl border p-4 shadow-sm transition-shadow hover:shadow-md ${
+              liveOrders > 0
+                ? "bg-[#E8A020]/[0.06] border-[#E8A020]/30"
+                : "bg-white border-[#E2DDD5]"
+            }`}
+          >
+            <div className="flex items-center gap-1.5 mb-1">
+              <p className="text-[11px] font-semibold text-[#9C9485] uppercase tracking-wide">
+                Orders in progress
+              </p>
+              {liveOrders > 0 && (
+                <span className="size-1.5 rounded-full bg-[#E8A020] animate-pulse" />
+              )}
+            </div>
+            <p
+              className={`font-display text-[26px] font-bold tracking-[-0.02em] leading-none ${
+                liveOrders > 0 ? "text-[#E8A020]" : "text-[#16130C]"
+              }`}
+            >
+              {liveOrders}
+            </p>
+          </Link>
+        )}
+
         {/* Pending reservations */}
         {menu?.reservations_enabled ? (
           <Link

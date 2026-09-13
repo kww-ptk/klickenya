@@ -11,10 +11,11 @@ export type Fulfilment = "pickup" | "delivery";
  * business may start a conversation — days of setup — whereas a wa.me link
  * works this afternoon and lands in the app restaurants already watch all day.
  *
- * The trade-off is honest and worth stating: nothing is recorded server-side
- * by this path. The kitchen gets a message; Klickenya gets no order row, no
- * status, no history. It is a handoff, not an ordering system. Real orders
- * still need takeaway_enabled and POST /api/orders.
+ * This is the HANDOFF only. The order itself is recorded first, by POST
+ * /api/orders, and this message carries the resulting reference so the
+ * WhatsApp thread and the dashboard ticket are obviously the same order.
+ * Never send this without persisting first — a message the owner cannot find
+ * in their dashboard is exactly the gap this replaced.
  */
 
 /** wa.me wants digits only — no +, spaces, dashes or brackets. */
@@ -31,6 +32,8 @@ export function buildOrderMessage(input: {
   customerName: string;
   customerPhone: string;
   note?: string;
+  /** Short reference of the saved order, so the thread matches the ticket. */
+  orderRef?: string;
 }): string {
   const {
     restaurant,
@@ -41,6 +44,7 @@ export function buildOrderMessage(input: {
     customerName,
     customerPhone,
     note,
+    orderRef,
   } = input;
 
   const items = lines
@@ -59,6 +63,7 @@ export function buildOrderMessage(input: {
 
   const parts = [
     `*New order — ${restaurant}*`,
+    ...(orderRef ? [`Order #${orderRef}`] : []),
     "",
     items,
     "",

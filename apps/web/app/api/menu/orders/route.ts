@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { adminClient } from "@/lib/supabase/admin";
 import { getPosOrOwnerAuth } from "@/app/api/pos/_lib/auth";
 import { resolveManagerApproval, writeAuditLog } from "@/app/api/pos/_lib/managerOverride";
+import { ORDER_QUEUE_SELECT } from "@/lib/orders/projection";
 
 /* ── GET — fetch active orders for a menu (kitchen + waiter polling) ── */
 //
@@ -42,32 +43,7 @@ export async function GET(req: NextRequest) {
     // Fetch active orders with their items
     const { data: orders, error } = await adminClient
       .from("orders")
-      .select(`
-        id,
-        status,
-        order_type,
-        table_number,
-        customer_name,
-        customer_phone,
-        estimated_ready_at,
-        notes,
-        total_kes,
-        created_at,
-        waiter_id,
-        order_items (
-          id,
-          item_name,
-          item_price,
-          quantity,
-          notes,
-          selected_options,
-          allergy_notes,
-          line_total,
-          station,
-          station_status,
-          is_voided
-        )
-      `)
+      .select(ORDER_QUEUE_SELECT)
       .eq("menu_id", menuId)
       .in("status", statuses)
       .order("created_at", { ascending: false });
