@@ -31,18 +31,22 @@ export function PosPageClient(props: Props) {
 
 function PosPageInner({ listingId, menuId, menuName, menuSlug, mode = "full", featureBaseHref }: Props) {
   const { showToast } = useToast();
-  const [copied, setCopied] = useState(false);
+  // Which of the two URLs was last copied, so the tick lands on that one.
+  const [copied, setCopied] = useState<"pos" | "kitchen" | null>(null);
 
-  const posUrl =
-    typeof window !== "undefined"
-      ? `${window.location.origin}/pos/${menuSlug}`
-      : `https://klickenya.com/pos/${menuSlug}`;
+  const origin =
+    typeof window !== "undefined" ? window.location.origin : "https://klickenya.com";
+  const posUrl = `${origin}/pos/${menuSlug}`;
+  // The kitchen terminal — a different screen for different people. Waiters
+  // take orders on POS; the kitchen watches and advances them here, including
+  // the delivery queue and the rider handover code.
+  const kitchenUrl = `${origin}/kitchen/${menuSlug}`;
 
-  async function copyUrl() {
+  async function copyUrl(which: "pos" | "kitchen") {
     try {
-      await navigator.clipboard.writeText(posUrl);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
+      await navigator.clipboard.writeText(which === "pos" ? posUrl : kitchenUrl);
+      setCopied(which);
+      setTimeout(() => setCopied(null), 1500);
     } catch {
       showToast("Could not copy URL", "error");
     }
@@ -71,39 +75,84 @@ function PosPageInner({ listingId, menuId, menuName, menuSlug, mode = "full", fe
           POS terminal
         </h1>
         <p className="text-[13px] text-text3 mt-1">
-          Tablet sign-in for waiters, kitchen and managers — for {menuName}.
+          Tablet sign-in for waiters, kitchen and managers — for {menuName}. Nobody
+          here needs your password; each person signs in with their own PIN.
+        </p>
+        {/* The Kitchen TAB is Klickenya Kitchen — stock, recipes, costing. The
+            kitchen TERMINAL is a tablet screen, and lives here. Saying so is
+            cheaper than renaming a feature owners already know. */}
+        <p className="text-[12px] text-text3 mt-1.5">
+          Looking for stock and recipes? That&apos;s the <strong>Kitchen</strong> tab.
         </p>
       </div>
 
-      {/* Open + URL block — the two things owners actually look for */}
-      <div className="bg-white rounded-2xl border border-border shadow-sm p-5 space-y-4">
+      {/* The two screens staff sign in to, and the two things owners come
+          here to find. They were one before: the kitchen terminal existed but
+          its URL appeared nowhere, so the only way to reach it was to know it. */}
+      <div className="bg-white rounded-2xl border border-border shadow-sm p-5 space-y-5">
         <div>
           <p className="text-[11px] font-bold text-text3 uppercase tracking-wide mb-2">
-            POS sign-in URL
+            POS sign-in URL — waiters
           </p>
           <div className="flex items-center gap-2 bg-[#FDFCFB] border border-border rounded-xl px-3 py-3">
             <code className="flex-1 text-[13px] text-dark truncate">{posUrl}</code>
             <button
               type="button"
-              onClick={copyUrl}
+              onClick={() => copyUrl("pos")}
               className="shrink-0 inline-flex items-center gap-1.5 text-[12px] font-semibold text-dark hover:text-amber px-2 h-9 rounded-full"
             >
-              {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-              {copied ? "Copied" : "Copy"}
+              {copied === "pos" ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+              {copied === "pos" ? "Copied" : "Copy"}
             </button>
           </div>
           <p className="text-[12px] text-text3 mt-2 leading-relaxed">
-            Open this on your kitchen tablet. Each staff member signs in with their own 4-digit PIN — no email, no password.
+            Taking orders at the table, settling bills, the floor plan.
           </p>
+          <a
+            href={`/pos/${menuSlug}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-3 block w-full sm:w-auto sm:inline-block bg-amber text-dark font-bold text-[14px] px-6 h-[48px] leading-[48px] text-center rounded-full hover:bg-[#d4911c] transition-colors"
+          >
+            📱 Open POS terminal in new tab →
+          </a>
         </div>
-        <a
-          href={`/pos/${menuSlug}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="block w-full sm:w-auto sm:inline-block bg-amber text-dark font-bold text-[14px] px-6 h-[48px] leading-[48px] text-center rounded-full hover:bg-[#d4911c] transition-colors"
-        >
-          📱 Open POS terminal in new tab →
-        </a>
+
+        <div className="border-t border-border pt-5">
+          <p className="text-[11px] font-bold text-text3 uppercase tracking-wide mb-2">
+            Kitchen sign-in URL — kitchen &amp; bar
+          </p>
+          <div className="flex items-center gap-2 bg-[#FDFCFB] border border-border rounded-xl px-3 py-3">
+            <code className="flex-1 text-[13px] text-dark truncate">{kitchenUrl}</code>
+            <button
+              type="button"
+              onClick={() => copyUrl("kitchen")}
+              className="shrink-0 inline-flex items-center gap-1.5 text-[12px] font-semibold text-dark hover:text-amber px-2 h-9 rounded-full"
+            >
+              {copied === "kitchen" ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+              {copied === "kitchen" ? "Copied" : "Copy"}
+            </button>
+          </div>
+          <p className="text-[12px] text-text3 mt-2 leading-relaxed">
+            Watching and advancing orders. Two views, switched in its header:{" "}
+            <strong>Stations</strong> for what each section is cooking, and{" "}
+            <strong>Orders</strong> for whole orders — including deliveries and the
+            handover code a rider needs.
+          </p>
+          <a
+            href={`/kitchen/${menuSlug}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-3 block w-full sm:w-auto sm:inline-block bg-dark text-white font-bold text-[14px] px-6 h-[48px] leading-[48px] text-center rounded-full hover:bg-[#2A251A] transition-colors"
+          >
+            🍳 Open kitchen terminal in new tab →
+          </a>
+        </div>
+
+        <p className="text-[12px] text-text3 leading-relaxed border-t border-border pt-4">
+          Both use the same staff PINs below — no email, no password. A person&apos;s role
+          decides which screen they land on.
+        </p>
       </div>
 
       {/* Staff CRUD — extracted from the old reservations-settings page */}
