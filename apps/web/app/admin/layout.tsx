@@ -310,7 +310,7 @@ export default async function AdminLayout({
           <p className="px-4 pt-4 pb-1 text-[10px] font-semibold uppercase tracking-widest text-white/30">Activity</p>
           <AdminNavLink href="/admin/bookings" label="Bookings" icon={<CalendarIcon />} />
           <AdminNavLink href="/admin/reservations" label="Reservations" icon={<CalendarIcon />} badge={pendingReservations} />
-          <AdminNavLink href="/admin/food-delivery" label="Food Delivery" icon={<ScooterIcon />} />
+          <AdminNavLink href="/admin/eat" label="Eat" icon={<ScooterIcon />} />
           <AdminNavLink href="/admin/events" label="Events" icon={<CalendarIcon />} badge={pendingEvents} />
 
           {/* System */}
