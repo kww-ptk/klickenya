@@ -29,6 +29,7 @@ import { ReservationSheet } from "@/components/reservations/ReservationSheet";
 import { matchesFoodTag } from "@/lib/eat/foodTags";
 import { useEatCart } from "@/components/eat/useEatCart";
 import { CartPanel } from "@/components/eat/CartPanel";
+import { EatLogo } from "@/components/eat/EatLogo";
 
 export type Town = { slug: string; label: string; count: number; photo: string };
 
@@ -146,9 +147,10 @@ export function EatKlickFlow({ towns, places }: { towns: Town[]; places: Place[]
 
       {/* ── Top bar ─────────────────────────────────────── */}
       <header className="relative z-10 flex items-center justify-between px-5 md:px-8 py-5">
-        <Link href="/eat" className="font-display text-[17px] font-extrabold tracking-[-0.02em]">
-          klick<span className="text-amber">.</span>
-        </Link>
+        {/* "/" not "/eat": on eat.klickenya.com the flow IS the root, and
+            /eat 308s off to the marketplace — the mark must not walk the
+            user out of the app they are ordering in. */}
+        <EatLogo href="/" className="text-[17px]" />
 
         <ol className="flex items-center gap-2" aria-label="Progress">
           {[1, 2, 3].map((n) => (
