@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ShoppingBag, ArrowLeft } from "lucide-react";
 import { useEatCart } from "./useEatCart";
 import { CartPanel } from "./CartPanel";
+import { EatLogo } from "@/components/eat/EatLogo";
 
 /**
  * Header for the eat surfaces.
@@ -35,12 +36,7 @@ export function EatHeader({ backHref }: { backHref?: string }) {
                 <ArrowLeft className="size-4.5" />
               </Link>
             )}
-            <Link
-              href="/eat"
-              className="font-display text-[18px] font-extrabold tracking-[-0.025em] text-white"
-            >
-              klick<span className="text-amber">.</span>
-            </Link>
+            <EatLogo href="/eat" className="text-[18px]" />
           </div>
 
           <button
