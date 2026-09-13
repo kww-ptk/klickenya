@@ -1,6 +1,6 @@
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
-import { ChefHat, CalendarCheck, UtensilsCrossed, ShoppingCart, ShoppingBag, Bike, Settings as SettingsIcon, ExternalLink, QrCode } from "lucide-react";
+import { ChefHat, CalendarCheck, UtensilsCrossed, ShoppingCart, ShoppingBag, Bike, Smartphone, Settings as SettingsIcon, ExternalLink, QrCode } from "lucide-react";
 import { getAuthUser, getHostProfile, getIsAdmin } from "../../../dashboard/_lib/auth";
 import { adminClient } from "@/lib/supabase/admin";
 import { sanityClient } from "@/lib/sanity/client";
@@ -66,12 +66,13 @@ export default async function EatOverviewPage({
     takeaway_enabled: boolean;
     delivery_enabled: boolean;
     stock_enabled: boolean;
+    pos_enabled: boolean;
   } | null = null;
 
   let menuQuery = adminClient
     .from("menus")
     .select(
-      "id, slug, table_ordering, reservations_enabled, ordering_enabled, takeaway_enabled, delivery_enabled, stock_enabled",
+      "id, slug, table_ordering, reservations_enabled, ordering_enabled, takeaway_enabled, delivery_enabled, stock_enabled, pos_enabled",
     )
     .eq("listing_slug", listing.slug);
   if (!isAdmin) menuQuery = menuQuery.eq("business_id", user.id);
@@ -135,6 +136,7 @@ export default async function EatOverviewPage({
           takeaway_enabled: menu.takeaway_enabled ?? false,
           delivery_enabled: menu.delivery_enabled ?? false,
           stock_enabled: menu.stock_enabled ?? false,
+          pos_enabled: menu.pos_enabled ?? false,
         }
       : undefined,
   };
@@ -153,6 +155,7 @@ export default async function EatOverviewPage({
     ShoppingCart,
     ShoppingBag,
     Bike,
+    Smartphone,
     CalendarCheck,
     ChefHat,
   };
@@ -168,6 +171,7 @@ export default async function EatOverviewPage({
     // have to remember which channel an order arrived on to find it.
     takeaway: `${baseHref}/orders`,
     delivery: `${baseHref}/orders`,
+    pos: `${baseHref}/pos`,
     klickenya_kitchen: `${baseHref}/kitchen`,
   };
 

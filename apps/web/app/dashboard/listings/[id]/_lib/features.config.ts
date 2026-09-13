@@ -11,6 +11,7 @@ export type FeatureContext = {
     takeaway_enabled: boolean;
     delivery_enabled: boolean;
     stock_enabled: boolean;
+    pos_enabled: boolean;
   };
   property?: { id: string; is_active: boolean };
 };
@@ -23,6 +24,17 @@ export type FeatureDefinition = {
   icon: string; // lucide-react icon name as string — imported at render site
   appliesTo: ListingType[];
   tabSegment?: string; // if present, shows as a tab when status === 'active'
+  /**
+   * The `menus` column this feature's switch writes, and the same column
+   * getStatus reads. Absent means there is no switch — the feature is
+   * always-on, or not wired yet.
+   *
+   * Declared here so the switchboard, the tab strip and the status badge all
+   * read one definition. They used to keep their own parallel switch
+   * statements, which is how the delivery toggle ended up able to write a
+   * column it could not read back.
+   */
+  flagColumn?: keyof NonNullable<FeatureContext['menu']>;
   getStatus: (ctx: FeatureContext) => FeatureStatus;
 };
 
@@ -45,6 +57,7 @@ export const LISTING_FEATURES: FeatureDefinition[] = [
     icon: 'ShoppingCart',
     appliesTo: ['restaurant'],
     tabSegment: 'orders',
+    flagColumn: 'table_ordering',
     getStatus: (ctx) => (ctx.menu?.table_ordering ? 'active' : 'inactive'),
   },
   {
@@ -55,6 +68,7 @@ export const LISTING_FEATURES: FeatureDefinition[] = [
     icon: 'CalendarCheck',
     appliesTo: ['restaurant'],
     tabSegment: 'reservations',
+    flagColumn: 'reservations_enabled',
     getStatus: (ctx) => (ctx.menu?.reservations_enabled ? 'active' : 'inactive'),
   },
   {
@@ -65,6 +79,7 @@ export const LISTING_FEATURES: FeatureDefinition[] = [
     icon: 'ChefHat',
     appliesTo: ['restaurant'],
     tabSegment: 'kitchen',
+    flagColumn: 'stock_enabled',
     getStatus: (ctx) => (ctx.menu?.stock_enabled ? 'active' : 'inactive'),
   },
   {
@@ -76,7 +91,20 @@ export const LISTING_FEATURES: FeatureDefinition[] = [
     icon: 'ShoppingBag',
     appliesTo: ['restaurant'],
     tabSegment: 'orders',
+    flagColumn: 'takeaway_enabled',
     getStatus: (ctx) => (ctx.menu?.takeaway_enabled ? 'active' : 'inactive'),
+  },
+  {
+    id: 'pos',
+    label: 'POS terminal',
+    shortDescription: 'Tablet sign-in for waiters: take orders, settle bills, manage tables.',
+    longDescription:
+      'Staff sign in on a tablet with a 4-digit PIN, take orders at the table, move them through the kitchen and settle the bill. Independent of guest QR ordering — a waiter-only restaurant can run on this alone.',
+    icon: 'Smartphone',
+    appliesTo: ['restaurant'],
+    tabSegment: 'pos',
+    flagColumn: 'pos_enabled',
+    getStatus: (ctx) => (ctx.menu?.pos_enabled ? 'active' : 'inactive'),
   },
   {
     id: 'delivery',
@@ -87,6 +115,7 @@ export const LISTING_FEATURES: FeatureDefinition[] = [
     icon: 'Bike',
     appliesTo: ['restaurant'],
     tabSegment: 'orders',
+    flagColumn: 'delivery_enabled',
     getStatus: (ctx) => (ctx.menu?.delivery_enabled ? 'active' : 'inactive'),
   },
 ];

@@ -103,6 +103,7 @@ export default async function ListingDashboardLayout({
     takeaway_enabled: boolean;
     delivery_enabled: boolean;
     stock_enabled: boolean;
+    pos_enabled: boolean;
   } | null = null;
 
   if (listing.slug) {
@@ -110,7 +111,7 @@ export default async function ListingDashboardLayout({
     let menuQuery = adminClient
       .from("menus")
       .select(
-        "id, name, listing_slug, table_ordering, reservations_enabled, ordering_enabled, takeaway_enabled, delivery_enabled, stock_enabled",
+        "id, name, listing_slug, table_ordering, reservations_enabled, ordering_enabled, takeaway_enabled, delivery_enabled, stock_enabled, pos_enabled",
       )
       .eq("listing_slug", listing.slug);
     if (!isAdmin) menuQuery = menuQuery.eq("business_id", user.id);
@@ -129,6 +130,7 @@ export default async function ListingDashboardLayout({
           takeaway_enabled: menu.takeaway_enabled ?? false,
           delivery_enabled: menu.delivery_enabled ?? false,
           stock_enabled: menu.stock_enabled ?? false,
+          pos_enabled: menu.pos_enabled ?? false,
         }
       : undefined,
   };
@@ -168,12 +170,18 @@ export default async function ListingDashboardLayout({
       badge: pendingReservations > 0 ? pendingReservations : undefined,
     });
   }
-  if (isFeatureActive("table_ordering")) {
+  // Any ordering channel opens the Orders tab, not just table ordering —
+  // a takeaway- or delivery-only kitchen has orders too.
+  if (
+    isFeatureActive("table_ordering") ||
+    isFeatureActive("takeaway") ||
+    isFeatureActive("delivery")
+  ) {
     tabs.push({ label: "Orders", href: `${baseHref}/orders` });
   }
-  if (menu) {
-    // POS is the staff-side of the order pipeline; available whenever a menu
-    // exists (waiter-only restaurants can use POS without QR ordering).
+  // POS is the staff side of the same pipeline, and now a flag like the rest
+  // (migration 087) rather than "any menu at all".
+  if (isFeatureActive("pos")) {
     tabs.push({ label: "POS", href: `${baseHref}/pos` });
   }
   if (isFeatureActive("klickenya_kitchen")) {
