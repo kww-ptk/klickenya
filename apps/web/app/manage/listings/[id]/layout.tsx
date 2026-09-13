@@ -167,6 +167,11 @@ export default async function EatListingLayout({
   if (isFeatureActive("pos")) {
     tabs.push({ label: "POS", href: `${baseHref}/pos` });
   }
+  // Only when this kitchen actually delivers — a takeaway-only restaurant has
+  // nobody to ride anything.
+  if (isFeatureActive("delivery")) {
+    tabs.push({ label: "Riders", href: `${baseHref}/riders` });
+  }
   if (isFeatureActive("klickenya_kitchen")) {
     tabs.push({ label: "Kitchen", href: `${baseHref}/kitchen` });
   }
