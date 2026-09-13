@@ -14,9 +14,12 @@ interface RouteContext {
  *     Claim it and start riding. Allowed while the food is still cooking, so
  *     the journey overlaps the cooking instead of following it.
  *
- *   { action: "pickup" }
+ *   { action: "pickup", pickup_code: "1234" }
  *     Confirm they have the food. Requires status='ready' — a rider cannot
- *     collect something the kitchen has not finished.
+ *     collect something the kitchen has not finished — and the handover code
+ *     the kitchen reads out. Without the code this step is a rider asserting
+ *     they collected something; with it, it takes a number only someone at
+ *     that counter has been given.
  *
  *   { action: "deliver", cash_collected_kes?: number }
  *     Finish it. Sets status='delivered', which the existing stock and
@@ -38,7 +41,7 @@ export async function PATCH(req: NextRequest, ctx: RouteContext) {
     return NextResponse.json({ error: "Not signed in" }, { status: 401 });
   }
 
-  let body: { action?: string; cash_collected_kes?: number };
+  let body: { action?: string; cash_collected_kes?: number; pickup_code?: string };
   try {
     body = await req.json();
   } catch {
@@ -47,7 +50,7 @@ export async function PATCH(req: NextRequest, ctx: RouteContext) {
 
   const { data: order } = await adminClient
     .from("orders")
-    .select("id, menu_id, status, order_type, rider_id, rider_accepted_at, picked_up_at, total_kes")
+    .select("id, menu_id, status, order_type, rider_id, rider_accepted_at, picked_up_at, total_kes, pickup_code")
     .eq("id", id)
     .maybeSingle();
 
@@ -99,6 +102,18 @@ export async function PATCH(req: NextRequest, ctx: RouteContext) {
         { error: "The kitchen hasn't finished cooking this yet." },
         { status: 400 },
       );
+    }
+    // Orders placed before 090 have no code. Requiring one would strand them
+    // forever, so an absent code means no check — a missing code is not a
+    // wrong code.
+    if (order.pickup_code) {
+      const given = String(body.pickup_code ?? "").trim();
+      if (given !== order.pickup_code) {
+        return NextResponse.json(
+          { error: "That code doesn't match. Ask the kitchen to read it again." },
+          { status: 400 },
+        );
+      }
     }
     const { error } = await adminClient
       .from("orders")
