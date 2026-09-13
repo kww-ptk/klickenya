@@ -55,6 +55,9 @@ export function CartPanel({
   const [note, setNote] = useState("");
   const [fulfilment, setFulfilment] = useState<Fulfilment>("pickup");
   const [address, setAddress] = useState("");
+  const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [locating, setLocating] = useState(false);
+  const [locationError, setLocationError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [placed, setPlaced] = useState<string | null>(null);
@@ -69,6 +72,40 @@ export function CartPanel({
    * page survive if the guest comes straight back — and on desktop, where
    * WhatsApp Web may not be signed in, they are not stranded on a dead page.
    */
+  /**
+   * Ask the device where it is.
+   *
+   * Failure here is never fatal — the written address is the real field and
+   * this is a shortcut. Denying the permission must not block the order, so
+   * the message says what to do instead rather than treating it as an error.
+   */
+  const useMyLocation = () => {
+    if (!("geolocation" in navigator)) {
+      setLocationError("This browser can't share a location. Type or paste it instead.");
+      return;
+    }
+    setLocating(true);
+    setLocationError(null);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        setLocating(false);
+        // Give the field something readable if it is still empty, so the
+        // kitchen never receives a delivery with a blank "where".
+        setAddress((prev) =>
+          prev.trim() ? prev : `Pinned location (±${Math.round(pos.coords.accuracy)}m)`,
+        );
+      },
+      () => {
+        setLocating(false);
+        setLocationError(
+          "Couldn't get your location. Paste a Maps link or type directions instead.",
+        );
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 },
+    );
+  };
+
   const submit = async () => {
     if (!cart || !whatsappPhone) return;
     setBusy(true);
@@ -107,6 +144,8 @@ export function CartPanel({
           customer_name: name.trim(),
           customer_phone: phone.trim(),
           delivery_address: fulfilment === "delivery" ? address.trim() : undefined,
+          delivery_lat: fulfilment === "delivery" ? coords?.lat : undefined,
+          delivery_lng: fulfilment === "delivery" ? coords?.lng : undefined,
           order_note: note.trim() || undefined,
           items: cart.lines.map((l) => ({
             menu_item_id: l.itemId,
@@ -157,6 +196,7 @@ export function CartPanel({
       totalKes: total,
       fulfilment,
       deliveryAddress: address.trim(),
+      deliveryCoords: fulfilment === "delivery" ? coords : null,
       customerName: name.trim(),
       customerPhone: phone.trim(),
       note: note.trim() || undefined,
@@ -396,15 +436,57 @@ export function CartPanel({
                   </div>
 
                   {fulfilment === "delivery" && (
-                    <div className="relative">
-                      <MapPin className="size-4 text-text3 absolute left-3.5 top-3.5" />
-                      <textarea
-                        value={address}
-                        onChange={(e) => setAddress(e.target.value)}
-                        placeholder="Where are you? Landmark, road, house — whatever gets a rider to you"
-                        rows={2}
-                        className="w-full rounded-[12px] border border-border bg-white pl-10 pr-4 py-3 text-[16px] outline-none focus:border-amber resize-none"
-                      />
+                    <div className="space-y-2">
+                      <label
+                        htmlFor="delivery-address"
+                        className="block text-[13px] font-bold text-dark"
+                      >
+                        Where should we bring it?
+                      </label>
+
+                      {/* The one-tap path. Offered first because typing
+                          directions on a phone, in the dark, is the worst way
+                          to do this — and a pin is what the rider actually
+                          wants. */}
+                      <button
+                        type="button"
+                        onClick={useMyLocation}
+                        disabled={locating}
+                        className={`w-full flex items-center justify-center gap-2 rounded-[12px] border py-3 text-[14px] font-bold transition-colors ${
+                          coords
+                            ? "border-emerald-500 bg-emerald-50 text-emerald-700"
+                            : "border-border bg-white text-dark hover:border-amber"
+                        }`}
+                      >
+                        <MapPin className="size-4" aria-hidden />
+                        {locating
+                          ? "Finding you…"
+                          : coords
+                          ? "Location pinned ✓  Tap to redo"
+                          : "Use my current location"}
+                      </button>
+
+                      <p className="text-[12px] text-text3 leading-snug">
+                        Or paste a Google Maps link — open Maps, hold your spot,
+                        tap <span className="font-semibold">Share</span>, and paste
+                        it below. Plain directions are fine too.
+                      </p>
+
+                      <div className="relative">
+                        <MapPin className="size-4 text-text3 absolute left-3.5 top-3.5" />
+                        <textarea
+                          id="delivery-address"
+                          value={address}
+                          onChange={(e) => setAddress(e.target.value)}
+                          placeholder="Paste a Maps link, or: blue gate past Sunset Lab, Watamu"
+                          rows={2}
+                          className="w-full rounded-[12px] border border-border bg-white pl-10 pr-4 py-3 text-[16px] outline-none focus:border-amber resize-none"
+                        />
+                      </div>
+
+                      {locationError && (
+                        <p className="text-[12px] text-[#B4541A]">{locationError}</p>
+                      )}
                     </div>
                   )}
 
