@@ -22,6 +22,7 @@ export async function GET(
       .select(`
         id, menu_id, order_type, status, created_at,
         accepted_at, estimated_ready_at, decline_reason, total_kes,
+        delivery_address,
         order_items ( item_name, quantity, line_total, is_voided )
       `)
       .eq("id", id)
@@ -44,6 +45,10 @@ export async function GET(
       order: {
         id:                 order.id,
         short_id:           order.id.slice(0, 8).toUpperCase(),
+        // The page reads very differently for a delivery than a pickup —
+        // "Ready for pickup!" is wrong when a rider is on the way.
+        order_type:         order.order_type,
+        delivery_address:   order.delivery_address ?? null,
         status:             order.status,
         created_at:         order.created_at,
         accepted_at:        order.accepted_at,

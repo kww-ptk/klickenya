@@ -34,6 +34,8 @@ export function buildOrderMessage(input: {
   note?: string;
   /** Short reference of the saved order, so the thread matches the ticket. */
   orderRef?: string;
+  /** Live status page for this order. Unguessable — it carries the order id. */
+  trackUrl?: string;
 }): string {
   const {
     restaurant,
@@ -45,6 +47,7 @@ export function buildOrderMessage(input: {
     customerPhone,
     note,
     orderRef,
+    trackUrl,
   } = input;
 
   const items = lines
@@ -78,6 +81,10 @@ export function buildOrderMessage(input: {
   ];
 
   if (note) parts.push("", `Note: ${note}`);
+  // The guest sends this message, so the link lands in their own chat too —
+  // which is exactly where they will look for it later. The restaurant gets
+  // the same view of the order it is cooking.
+  if (trackUrl) parts.push("", `Track this order: ${trackUrl}`);
   parts.push("", "Sent via Klickenya");
 
   return parts.join("\n");
