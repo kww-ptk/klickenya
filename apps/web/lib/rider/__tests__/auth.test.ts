@@ -7,7 +7,12 @@ import {
   verifyRiderSession,
 } from "@/lib/rider/auth";
 
-process.env.JWT_SECRET ||= "test-secret-for-rider-sessions";
+const TEST_SECRET = "test-secret-for-rider-sessions";
+process.env.JWT_SECRET ||= TEST_SECRET;
+// Signing resolves POS_JWT_SECRET first; clear it so the hand-rolled HMAC
+// below uses the same key the library will.
+delete process.env.POS_JWT_SECRET;
+const SECRET = process.env.JWT_SECRET as string;
 
 describe("rider PIN", () => {
   it("accepts the right PIN and rejects the wrong one", () => {
@@ -63,7 +68,7 @@ describe("rider session", () => {
     ).toString("base64url");
     // Signed correctly, but the shift ended — must still be refused.
     const sig = crypto
-      .createHmac("sha256", process.env.JWT_SECRET)
+      .createHmac("sha256", SECRET)
       .update(expired)
       .digest()
       .toString("base64url");

@@ -33,7 +33,9 @@ export type QueueOrder = {
   delivery_address?: string | null;
   delivery_lat?: number | null;
   delivery_lng?: number | null;
-  /** Set the moment a rider claims it. status stays "ready" — see 088. */
+  /** A rider claimed it and is riding over. The kitchen still cooks. */
+  rider_accepted_at?: string | null;
+  /** Set when the rider has the food. status stays "ready" — see 088. */
   picked_up_at?: string | null;
   notes?: string | null;
   total_kes: number | null;
@@ -389,9 +391,19 @@ export function LiveOrderQueue({
               </p>
             )}
 
-            {/* Once a rider has it, the order is theirs to finish. Showing the
-                owner a "Complete" button here invites two people to close the
-                same delivery from different screens. */}
+            {/* A rider on the way is NOT a reason to stop driving the order:
+                the kitchen still has to mark it ready, which is what unlocks
+                collection. Only once they physically have the food does the
+                order become theirs to finish — showing the owner a "Complete"
+                button after that invites two people to close the same
+                delivery from different screens. */}
+            {order.rider_accepted_at && !order.picked_up_at && (
+              <p className="mt-3.5 flex items-center justify-center gap-2 rounded-full bg-[#E8A020]/10 py-2.5 text-[13px] font-bold text-[#B4541A]">
+                <Bike className="size-4" aria-hidden />
+                A rider is on the way to collect
+              </p>
+            )}
+
             {order.picked_up_at ? (
               <p className="mt-3.5 flex items-center justify-center gap-2 rounded-full bg-[#6B2D8B]/10 py-3 text-[13.5px] font-bold text-[#6B2D8B]">
                 <Bike className="size-4" aria-hidden />
@@ -403,7 +415,9 @@ export function LiveOrderQueue({
                   type="button"
                   onClick={() => advance(order)}
                   disabled={busyId === order.id}
-                  className="mt-3.5 w-full rounded-full bg-[#16130C] text-white text-[14px] font-extrabold py-3 disabled:opacity-50 hover:bg-[#2A251A] transition-colors"
+                  className={`w-full rounded-full bg-[#16130C] text-white text-[14px] font-extrabold py-3 disabled:opacity-50 hover:bg-[#2A251A] transition-colors ${
+                    order.rider_accepted_at ? "mt-2" : "mt-3.5"
+                  }`}
                 >
                   {busyId === order.id ? "Saving…" : next.label}
                 </button>

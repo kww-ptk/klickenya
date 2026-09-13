@@ -45,14 +45,24 @@ create index if not exists idx_rider_menus_menu on rider_menus(menu_id);
 
 -- ─── 3. the delivery leg on an order ──────────────────────────────────────
 alter table orders add column if not exists rider_id           uuid references riders(id) on delete set null;
+-- When the RIDER took the job — distinct from orders.accepted_at (083), which
+-- is when the RESTAURANT accepted it. Two different people accepting two
+-- different things; sharing a column would have been a nasty little bug.
+--
+-- A rider accepts while the food is still cooking and rides over during it.
+-- Waiting for 'ready' means the food sits on the pass for the length of the
+-- journey, which is how delivery gets cold.
+alter table orders add column if not exists rider_accepted_at  timestamptz;
 alter table orders add column if not exists picked_up_at       timestamptz;
 alter table orders add column if not exists delivered_at       timestamptz;
 -- What the rider actually took at the door. Null until they say. Kept apart
 -- from total_kes so "collected less than billed" is visible rather than lost.
 alter table orders add column if not exists cash_collected_kes numeric;
 
-create index if not exists idx_orders_rider on orders(rider_id, picked_up_at desc);
+create index if not exists idx_orders_rider on orders(rider_id, rider_accepted_at desc);
 
+comment on column orders.rider_accepted_at is
+  'A rider claimed this and is on their way to collect. Not orders.accepted_at, which is the restaurant accepting (083).';
 comment on column orders.picked_up_at is
   'Rider has the food. status stays ''ready'' — out-for-delivery is derived, see 088.';
 

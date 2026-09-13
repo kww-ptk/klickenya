@@ -7,20 +7,28 @@ interface RouteContext {
 }
 
 /**
- * PATCH /api/rider/jobs/[id] — the two buttons.
+ * PATCH /api/rider/jobs/[id] — the three steps of a delivery.
+ *
+ *   { action: "accept" }
+ *     Claim it and start riding. Allowed while the food is still cooking, so
+ *     the journey overlaps the cooking instead of following it.
  *
  *   { action: "pickup" }
- *     Claim the order. Only if it is ready, a delivery, at a kitchen this
- *     rider serves, and nobody else has it.
+ *     Confirm they have the food. Requires status='ready' — a rider cannot
+ *     collect something the kitchen has not finished.
  *
  *   { action: "deliver", cash_collected_kes?: number }
- *     Finish it. Sets status='delivered', which is what the existing stock
- *     and reporting triggers already key on (062, 063).
+ *     Finish it. Sets status='delivered', which the existing stock and
+ *     reporting triggers already key on (062, 063).
  *
- * The claim is guarded by matching on rider_id IS NULL in the UPDATE itself,
- * not by a read-then-write. Two riders tapping the same job at the same
- * moment is the expected case on a shared list, and the loser must be told
- * rather than silently overwriting the winner.
+ * Accept and pickup are separate on purpose. Collapsed into one tap, a rider
+ * could not reserve a job while travelling, so two riders would set off for
+ * the same order and one would arrive to find it gone.
+ *
+ * The claim is guarded by matching rider_id IS NULL inside the UPDATE, not by
+ * a read-then-write. Two riders tapping the same job at the same moment is
+ * the expected case on a shared list, and the loser must be told rather than
+ * silently overwriting the winner.
  */
 export async function PATCH(req: NextRequest, ctx: RouteContext) {
   const { id } = await ctx.params;
@@ -38,7 +46,7 @@ export async function PATCH(req: NextRequest, ctx: RouteContext) {
 
   const { data: order } = await adminClient
     .from("orders")
-    .select("id, menu_id, status, order_type, rider_id, picked_up_at, total_kes")
+    .select("id, menu_id, status, order_type, rider_id, rider_accepted_at, picked_up_at, total_kes")
     .eq("id", id)
     .maybeSingle();
 
@@ -56,25 +64,24 @@ export async function PATCH(req: NextRequest, ctx: RouteContext) {
     return NextResponse.json({ error: "Not your restaurant" }, { status: 403 });
   }
 
-  if (body.action === "pickup") {
+  if (body.action === "accept") {
     if (order.order_type !== "delivery") {
       return NextResponse.json({ error: "Not a delivery order" }, { status: 400 });
     }
-    if (order.status !== "ready") {
+    if (order.status !== "preparing" && order.status !== "ready") {
       return NextResponse.json(
-        { error: "The kitchen hasn't marked this ready yet." },
+        { error: "The kitchen hasn't started this one yet." },
         { status: 400 },
       );
     }
 
-    // Atomic claim: the filters are part of the write, so the second rider
+    // Atomic claim: the filter is part of the write, so the second rider
     // updates zero rows and is told, instead of stealing the job.
     const { data: claimed } = await adminClient
       .from("orders")
-      .update({ rider_id: session.rider_id, picked_up_at: new Date().toISOString() })
+      .update({ rider_id: session.rider_id, rider_accepted_at: new Date().toISOString() })
       .eq("id", id)
       .is("rider_id", null)
-      .is("picked_up_at", null)
       .select("id");
 
     if (!claimed || claimed.length === 0) {
@@ -82,6 +89,29 @@ export async function PATCH(req: NextRequest, ctx: RouteContext) {
         { error: "Another rider just took this one." },
         { status: 409 },
       );
+    }
+    return NextResponse.json({ success: true, action: "accept" });
+  }
+
+  if (body.action === "pickup") {
+    if (order.rider_id !== session.rider_id) {
+      return NextResponse.json({ error: "This isn't your delivery." }, { status: 403 });
+    }
+    if (order.status !== "ready") {
+      return NextResponse.json(
+        { error: "The kitchen hasn't finished cooking this yet." },
+        { status: 400 },
+      );
+    }
+    const { error } = await adminClient
+      .from("orders")
+      .update({ picked_up_at: new Date().toISOString() })
+      .eq("id", id)
+      .eq("rider_id", session.rider_id);
+
+    if (error) {
+      console.error("[rider/jobs PATCH pickup]", error);
+      return NextResponse.json({ error: "Could not update that." }, { status: 500 });
     }
     return NextResponse.json({ success: true, action: "pickup" });
   }

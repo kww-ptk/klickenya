@@ -6,12 +6,18 @@ import { getRiderSession } from "@/lib/rider/auth";
  * GET /api/rider/jobs — everything this rider should be looking at.
  *
  * Two lists:
- *   mine      already picked up, not yet delivered — the job in hand
- *   available ready for collection and unclaimed, at kitchens they serve
+ *   mine      accepted and not yet delivered — travelling to the kitchen,
+ *             waiting for the food, or out delivering it
+ *   available unclaimed, at kitchens they serve, and ALREADY COOKING
  *
- * "Out for delivery" is derived from picked_up_at, not stored as a status —
- * see migration 088 for why adding an enum value would have broken the
- * margin report for every order in flight.
+ * Jobs appear at 'preparing', not 'ready'. A rider who only learns about an
+ * order once it is ready leaves the food sitting on the pass for the length
+ * of their journey, which is how delivery arrives cold. They accept while it
+ * cooks and ride over during it.
+ *
+ * Both states are derived from timestamps, never from a new order status —
+ * see migration 088 for why adding an enum value would have broken the margin
+ * report for every order in flight.
  *
  * No dispatch, deliberately. A shared list that the nearest rider claims
  * first beats an assignment algorithm at this size, and has far less to go
@@ -21,7 +27,7 @@ import { getRiderSession } from "@/lib/rider/auth";
 const JOB_SELECT = `
   id, status, order_type, customer_name, customer_phone,
   delivery_address, delivery_lat, delivery_lng,
-  total_kes, created_at, picked_up_at, rider_id, menu_id,
+  total_kes, created_at, rider_accepted_at, picked_up_at, rider_id, menu_id,
   order_items ( id, item_name, quantity, is_voided )
 `;
 
@@ -48,15 +54,16 @@ export async function GET(req: NextRequest) {
       .select(JOB_SELECT)
       .eq("rider_id", session.rider_id)
       .is("delivered_at", null)
-      .not("picked_up_at", "is", null)
-      .order("picked_up_at", { ascending: true }),
+      .order("rider_accepted_at", { ascending: true }),
     adminClient
       .from("orders")
       .select(JOB_SELECT)
       .in("menu_id", menuIds)
       .eq("order_type", "delivery")
-      .eq("status", "ready")
-      .is("picked_up_at", null)
+      // preparing OR ready: the kitchen has started, so there is a real job
+      // to ride towards. 'new' is excluded — the restaurant has not committed
+      // to cooking it yet and may still decline.
+      .in("status", ["preparing", "ready"])
       .is("rider_id", null)
       .order("created_at", { ascending: true }),
   ]);
