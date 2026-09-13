@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod/v4";
 import { adminClient } from "@/lib/supabase/admin";
 import { normalizeKenyanPhone } from "@/lib/orders/phone";
+import { parseCoordinates, isPlausible } from "@/lib/orders/location";
 import {
   findOpenSessionForTable,
   openSessionForTable,
@@ -41,6 +42,10 @@ const orderSchema = z.object({
   // structured form would reject the way people actually give directions.
   // Geocoding can come later via the dormant delivery_lat/lng columns.
   delivery_address: z.string().max(300).optional(),
+  // Sent when the guest taps "use my current location". Optional: a written
+  // address is always acceptable on its own.
+  delivery_lat: z.number().optional(),
+  delivery_lng: z.number().optional(),
   items: z
     .array(
       z.object({
@@ -328,6 +333,20 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    /* Resolve the delivery pin, if there is one to resolve. */
+    let deliveryCoords: { lat: number; lng: number } | null = null;
+    if (data.order_type === "delivery") {
+      if (
+        typeof data.delivery_lat === "number" &&
+        typeof data.delivery_lng === "number" &&
+        isPlausible(data.delivery_lat, data.delivery_lng)
+      ) {
+        deliveryCoords = { lat: data.delivery_lat, lng: data.delivery_lng };
+      } else {
+        deliveryCoords = parseCoordinates(data.delivery_address);
+      }
+    }
+
     /* STEP 7 — Build per-item snapshots and compute totals using DB prices only */
     const orderItemRows = data.items.map((orderItem) => {
       const dbItem = itemMap.get(orderItem.menu_item_id)!;
@@ -409,6 +428,11 @@ export async function POST(req: NextRequest) {
         delivery_address: data.order_type === "delivery"
           ? sanitizeNotes(data.delivery_address)
           : null,
+        // Prefer the device's own fix; otherwise try to read a pin out of
+        // whatever was pasted. Either way the written address is kept — the
+        // pin is a bonus for the rider, not a replacement for directions.
+        delivery_lat: deliveryCoords?.lat ?? null,
+        delivery_lng: deliveryCoords?.lng ?? null,
         subtotal_kes:     subtotal,
         delivery_fee_kes: 0,
         total_kes:        total,

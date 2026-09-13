@@ -1,4 +1,5 @@
 import type { CartLine } from "@/components/eat/useEatCart";
+import { mapsUrl } from "@/lib/orders/location";
 
 export type Fulfilment = "pickup" | "delivery";
 
@@ -29,6 +30,9 @@ export function buildOrderMessage(input: {
   totalKes: number;
   fulfilment: Fulfilment;
   deliveryAddress?: string;
+  /** Pin, when the guest shared one. The kitchen reads the order here, so
+   *  this is the single most useful line on a delivery. */
+  deliveryCoords?: { lat: number; lng: number } | null;
   customerName: string;
   customerPhone: string;
   note?: string;
@@ -43,6 +47,7 @@ export function buildOrderMessage(input: {
     totalKes,
     fulfilment,
     deliveryAddress,
+    deliveryCoords,
     customerName,
     customerPhone,
     note,
@@ -75,6 +80,9 @@ export function buildOrderMessage(input: {
     fulfilment === "delivery"
       ? `🛵 Delivery to: ${deliveryAddress || "(address not given)"}`
       : "🥡 Collecting in person",
+    ...(fulfilment === "delivery" && deliveryCoords
+      ? [`📍 Map: ${mapsUrl(deliveryCoords)}`]
+      : []),
     "",
     `Name: ${customerName}`,
     `Phone: ${customerPhone}`,
