@@ -1,6 +1,7 @@
 import { type Metadata } from "next";
 import { notFound } from "next/navigation";
 import { sanityFetch } from "@/lib/sanity/client";
+import { LISTINGS_TAG } from "@/lib/listings/revalidate";
 import {
   LISTINGS_FILTERED_QUERY,
   EVENTS_FILTERED_QUERY,
@@ -151,12 +152,14 @@ export default async function TypePage({ params, searchParams }: PageProps) {
     params: isEventType
       ? { subcategory: subcategory ?? "", city: city ?? "", limit: 48 }
       : { type: sanityType, subcategory: subcategory ?? "", city: city ?? "", limit: 48 },
+    tags: [LISTINGS_TAG],
   });
 
   // Fetch subcategory counts
   const { data: countsData } = await sanityFetch({
     query: isEventType ? EVENT_SUBCATEGORY_COUNTS_QUERY : SUBCATEGORY_COUNTS_QUERY,
     params: isEventType ? {} : { type: sanityType },
+    tags: [LISTINGS_TAG],
   });
 
   // Build counts map

@@ -4,6 +4,7 @@ import { z } from "zod/v4";
 import { assertAdmin, AdminAuthError } from "@/lib/admin/auth";
 import { sanityWriteClient } from "@/lib/sanity/writeClient";
 import { listingInputSchema, inputToSanityFields } from "@/lib/listings/listingFields";
+import { applyDescriptionParts } from "@/lib/listings/description";
 import { syncEventPending } from "@/lib/listings/events";
 import { revalidateListing, revalidateHostPagesForListing } from "@/lib/listings/revalidate";
 
@@ -13,8 +14,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     const { id } = await params;
     const data = listingInputSchema.parse(await req.json());
 
-    const existing = await sanityWriteClient.fetch<{ _id: string; type: string } | null>(
-      `*[_id == $id && _type == "listing"][0]{ _id, type }`, { id });
+    const existing = await sanityWriteClient.fetch<{ _id: string; type: string; description?: unknown } | null>(
+      `*[_id == $id && _type == "listing"][0]{ _id, type, description }`, { id });
     if (!existing) return NextResponse.json({ error: "Listing not found." }, { status: 404 });
 
     const clash = await sanityWriteClient.fetch<string | null>(
@@ -22,6 +23,10 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     if (clash) return NextResponse.json({ error: "Another listing already uses this slug." }, { status: 409 });
 
     const fields = inputToSanityFields(data);
+    // Rich descriptions are rebuilt against what Sanity stores — see the host route.
+    if (data.descriptionParts) {
+      fields.description = applyDescriptionParts(existing.description, data.descriptionParts);
+    }
     await sanityWriteClient.patch(id).set(fields).commit();
     await syncEventPending(id, data.type, "update", { title: data.title, city: data.city });
     revalidateListing(data.type, data.city, data.slug);

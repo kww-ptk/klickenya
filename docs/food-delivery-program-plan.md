@@ -46,26 +46,39 @@ stays exactly where it is and is consumed, not replaced.
 
 ---
 
-## 2a. URL structure — decided 2026-09-11
+## 2a. URL structure — decided 2026-09-11, revised 2026-09-13
 
-The consumer surface lives at **`klickenya.com/eat`**, not `eat.klickenya.com`.
+Two surfaces, two hosts, because they do two different jobs:
 
-Reason: the go-to-market goal is ranking for restaurant searches in Watamu and Kilifi, and
-klickenya.com already owns that query space. Live on the domain today:
+| Surface | Host | Job |
+|---|---|---|
+| The app — the town → category → browse flow | **`eat.klickenya.com`** (root) | ordering |
+| The editorial pages — `/eat`, `/eat/<city>` | **`klickenya.com`** | ranking |
 
-- `/restaurants/watamu/<slug>` and `/restaurants/kilifi/<slug>` (`lib/listings/url.ts`),
-  with city-level pages already emitted into `sitemap.ts`
-- restaurant listings already seeded for both towns (`seed-kilifi-restaurants.ts`,
-  `seed-kilifi-restaurants-batch2.ts`, `add-watamu-restaurants.ts`)
-- ~25 Watamu/Kilifi posts linking into them, including `seed-blog-best-restaurants-watamu.ts`
-  and `seed-blog-best-restaurants-kilifi.ts`
+**Why not everything on the subdomain.** The asset is `klickenya.com`, not the
+`/eat` path. The domain already ranks for restaurant queries in Watamu and Kilifi via
+`/restaurants/watamu/<slug>` (`lib/listings/url.ts`, city pages already in `sitemap.ts`),
+seeded listings for both towns, and ~25 posts linking into them. A new *page* on that
+domain inherits the authority; a new *subdomain* does not. So the city hubs stay put.
 
-A subdomain would start from zero authority, compete with those pages for the same keywords,
-and split signals across two versions of every restaurant. The subdirectory inherits all of it.
+**Why not everything on the path.** The flow is a product, not an article. It wants a
+host you can write on a poster, and eventually its own shell. It carries no accumulated
+ranking of its own — it was `noindex` until this change — so moving it costs nothing.
 
-**Consequence:** `/eat` currently hosts the restaurant command center, which must move to
-`app.klickenya.com`. CLAUDE.md already defines business tools as belonging there, so this
-follows the documented architecture rather than bending it. Scheduled as part of **P2**.
+Nothing competes: the hubs target search, the app is the destination they hand off to.
+
+**Enforcement.** The subdomain refuses to be a second copy of the marketplace. Middleware
+308s every non-app path on `eat.klickenya.com` back to `klickenya.com`, so no marketplace
+page ever answers on two hosts. `/eatklick` on the marketplace host 308s to the subdomain,
+so the flow has exactly one public URL.
+
+**Rollout is decoupled from DNS.** `NEXT_PUBLIC_EAT_ORIGIN` gates everything that points
+*at* the subdomain (the redirect, the canonical). Unset, the code is inert and `/eatklick`
+keeps working on the marketplace host. Set it only after the Vercel domain resolves.
+
+**Consequence:** `/eat` previously hosted the restaurant command center, which moved to
+`/manage` on 2026-09-11 and is still destined for `app.klickenya.com`. `isHouseHost()` now
+knows about house subdomains, which was the blocker — `app.` is already in the allowlist.
 
 ---
 

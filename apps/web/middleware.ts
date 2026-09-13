@@ -1,6 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
-import { isHouseHost } from "@/lib/storefront/houseHost";
+import { eatOrigin, isEatHost, isHouseHost } from "@/lib/storefront/houseHost";
 
 export async function middleware(request: NextRequest) {
   const host = request.headers.get("host");
@@ -68,6 +68,75 @@ export async function middleware(request: NextRequest) {
     const url = request.nextUrl.clone();
     url.pathname = "/";
     return NextResponse.redirect(url);
+  }
+
+  // ── eat.klickenya.com — the food app, and only the food app ─────────────
+  // The subdomain serves ONE product: the town → category → browse flow that
+  // lives at /eatklick. Everything else on it 308s back to the marketplace.
+  //
+  // That redirect is the point, not a leftover. Without it every marketplace
+  // page would answer on two hosts and Google would have to pick a winner.
+  // Putting the food app on a subdomain is only safe because the subdomain
+  // refuses to be a second copy of klickenya.com.
+  //
+  // `?eathost=1` forces this branch where there is no real subdomain to test
+  // on: localhost and Vercel preview deployments. It is gated on the host
+  // rather than NODE_ENV because previews run with NODE_ENV=production, and a
+  // preview URL is where this actually gets verified.
+  const bareHost = (host ?? "").split(":")[0].toLowerCase();
+  const isTestHost =
+    bareHost === "localhost" ||
+    bareHost === "127.0.0.1" ||
+    bareHost.endsWith(".vercel.app");
+  const forceEatHost =
+    isTestHost && request.nextUrl.searchParams.get("eathost") === "1";
+  const onEatHost = isEatHost(host) || forceEatHost;
+
+  if (onEatHost) {
+    // Infrastructure and the app's own data plane must answer on this host —
+    // the cart POSTs to /api/orders from eat.klickenya.com.
+    const passThrough =
+      pathname.startsWith("/api") ||
+      pathname.startsWith("/_next") ||
+      pathname === "/favicon.ico" ||
+      pathname === "/robots.txt" ||
+      pathname === "/sitemap.xml";
+
+    if (!passThrough) {
+      // Root serves the flow.
+      if (pathname === "/") {
+        const url = request.nextUrl.clone();
+        url.pathname = "/eatklick";
+        return NextResponse.rewrite(url);
+      }
+      // The flow answers at "/" here, so its internal path is not a second
+      // public URL for it. Collapse rather than bounce to the marketplace.
+      if (pathname.startsWith("/eatklick")) {
+        const url = request.nextUrl.clone();
+        url.pathname = "/";
+        return NextResponse.redirect(url, 308);
+      }
+      // /m/<slug> is the public menu the flow links out to — part of the app.
+      if (!pathname.startsWith("/m/")) {
+        const url = new URL(
+          pathname,
+          process.env.NEXT_PUBLIC_SITE_URL || "https://klickenya.com",
+        );
+        url.search = request.nextUrl.search;
+        // Carrying ?eathost=1 through would re-enter this branch on arrival.
+        // On localhost the marketplace origin IS this origin, so the redirect
+        // would target the page it just left: an infinite loop.
+        url.searchParams.delete("eathost");
+        return NextResponse.redirect(url, 308);
+      }
+    }
+  } else if (pathname.startsWith("/eatklick")) {
+    // House host: once the subdomain is live, the flow has one public home
+    // and it is there — this keeps it from being indexed at two URLs.
+    // Dormant until NEXT_PUBLIC_EAT_ORIGIN is set, so shipping this before
+    // DNS exists cannot strand /eatklick on an unresolvable host.
+    const origin = eatOrigin();
+    if (origin) return NextResponse.redirect(new URL("/", origin), 308);
   }
 
   let supabaseResponse = NextResponse.next({ request });

@@ -1,6 +1,7 @@
 import { type Metadata } from "next";
 import { notFound } from "next/navigation";
 import { sanityClient, sanityFetch } from "@/lib/sanity/client";
+import { LISTINGS_TAG, listingTag } from "@/lib/listings/revalidate";
 import { adminClient } from "@/lib/supabase/admin";
 import {
   LISTING_BY_SLUG_QUERY,
@@ -158,7 +159,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   if (!isValidType(type)) return {};
 
   const metaQuery = TYPE_TO_SANITY[type] === "event" ? EVENT_BY_SLUG_QUERY : LISTING_BY_SLUG_QUERY;
-  const listing = await sanityClient.fetch(metaQuery, { slug });
+  const listing = await sanityClient.fetch(metaQuery, { slug }, {
+    next: { revalidate: 60, tags: [listingTag(slug)] },
+  });
 
   if (!listing) return {};
 
@@ -205,6 +208,7 @@ export default async function ListingDetailPage({ params }: PageProps) {
   const { data: listing } = await sanityFetch({
     query: slugQuery,
     params: { slug },
+    tags: [listingTag(slug)],
   });
 
   if (!listing) notFound();
@@ -223,6 +227,7 @@ export default async function ListingDetailPage({ params }: PageProps) {
   const { data: similar } = await sanityFetch({
     query: SIMILAR_LISTINGS_QUERY,
     params: { type: sanityType, city: cityName, slug },
+    tags: [LISTINGS_TAG],
   });
 
   // Events happening at THIS listing (its venueListing points here). Runs for
@@ -231,6 +236,7 @@ export default async function ListingDetailPage({ params }: PageProps) {
   const { data: venueEvents } = await sanityFetch({
     query: EVENTS_AT_VENUE_QUERY,
     params: { id: listing._id },
+    tags: [LISTINGS_TAG],
   });
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const eventsHereItems: EventsHereItem[] = (venueEvents ?? []).map((e: any) => ({

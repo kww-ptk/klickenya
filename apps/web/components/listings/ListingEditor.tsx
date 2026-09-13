@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { SUBCATEGORIES_BY_TYPE, SUBCATEGORY_LABELS } from "@/lib/constants/subcategories";
@@ -14,6 +14,14 @@ import {
 import { ImageUploader } from "@/components/shared/ImageUploader";
 import VenueListingPicker from "@/components/events/VenueListingPicker";
 import { emptyListingForm, type ListingFormValues, type ListingScheduleRow } from "@/lib/listings/listingFields";
+import {
+  newRowKey,
+  originalRowText,
+  rowsToParts,
+  rowsWordCount,
+  textRowLabel,
+  type DescriptionRow,
+} from "@/lib/listings/description";
 
 /* ---------- Constants ---------- */
 
@@ -225,6 +233,72 @@ function AiHighlight({ active, children }: { active: boolean; children: React.Re
   );
 }
 
+/* ---------- Rich description rows ----------
+   A listing description is portable text: prose interleaved with cards (Quick
+   Facts, Tip Card, Photo Row…). Flattening all of that into one textarea would
+   destroy the cards, so the editor used to disable the box and say "edit it in
+   Sanity Studio" — which hosts have no account for. Instead each prose block
+   gets its own box and everything that cannot survive a plain-text round trip
+   is shown locked and carried through untouched. */
+
+function DescriptionRows({ rows, onChangeText, onRemove, onAdd }: {
+  rows: DescriptionRow[];
+  onChangeText: (key: string, text: string) => void;
+  onRemove: (key: string) => void;
+  onAdd: () => void;
+}) {
+  return (
+    <div className="space-y-3">
+      {rows.map((row) => {
+        if (row.kind === "fixed") {
+          return (
+            <div key={row.key}
+              className="flex items-start gap-2 rounded-xl border border-dashed border-border bg-[#FAF9F7] px-3.5 py-2.5">
+              <span className="text-[13px] leading-5">🔒</span>
+              <div className="min-w-0">
+                <p className="text-[12px] font-semibold text-text2">{row.label}</p>
+                {row.detail && <p className="text-[12px] text-text3 truncate">{row.detail}</p>}
+              </div>
+            </div>
+          );
+        }
+        const isHeading = row.style !== "normal" && !row.listItem;
+        return (
+          <div key={row.key}>
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-[11px] font-semibold uppercase tracking-wide text-text3">
+                {textRowLabel(row)}
+              </span>
+              <button type="button" onClick={() => onRemove(row.key)}
+                className="-mr-2 px-2 py-1 text-[12px] font-semibold text-text3 hover:text-red-600 transition-colors">
+                Remove
+              </button>
+            </div>
+            {isHeading ? (
+              <input type="text" value={row.text}
+                onChange={(e) => onChangeText(row.key, e.target.value)}
+                placeholder="Heading"
+                className="w-full border border-border rounded-xl px-3.5 py-2.5 text-[14px] font-semibold text-dark placeholder-text3 focus:outline-none focus:ring-2 focus:ring-amber/40 focus:border-amber bg-white"
+              />
+            ) : (
+              <textarea value={row.text}
+                onChange={(e) => onChangeText(row.key, e.target.value)}
+                placeholder="Write this paragraph…"
+                rows={Math.min(8, Math.max(3, Math.ceil(row.text.length / 70)))}
+                className="w-full border border-border rounded-xl px-3.5 py-2.5 text-[14px] text-dark placeholder-text3 focus:outline-none focus:ring-2 focus:ring-amber/40 focus:border-amber bg-white resize-none"
+              />
+            )}
+          </div>
+        );
+      })}
+      <button type="button" onClick={onAdd}
+        className="text-[13px] font-semibold text-amber hover:text-[#D4901C] transition-colors">
+        + Add paragraph
+      </button>
+    </div>
+  );
+}
+
 /* ---------- Editor ---------- */
 
 interface ListingEditorProps {
@@ -266,6 +340,56 @@ export function ListingEditor({ mode, role, initialValues, listingId, onSuccessR
       const arr = (f[key] as string[]);
       return { ...f, [key]: arr.includes(item) ? arr.filter((x) => x !== item) : [...arr, item] };
     });
+  }
+
+  /* Rich-description rows. `originalRowText` lets an untouched block be sent back
+     as "keep" so a save rewrites only what the host actually changed. */
+  const loadedRowText = useRef(originalRowText(initialValues?.descriptionRows ?? []));
+
+  /* Unsaved-changes guard.
+     The form has eleven sections and "Save changes" lives at the bottom of all
+     of them, so it is easy to edit something near the top — the description —
+     and navigate away believing it is saved. Nothing warned you, and the edit
+     was gone. Comparing whole snapshots rather than setting a flag in each
+     handler means a new field cannot quietly opt out of the guard. */
+  const savedSnapshot = useRef(JSON.stringify(initialValues ?? emptyListingForm));
+  const formJson = JSON.stringify(form);
+  const dirty = formJson !== savedSnapshot.current;
+
+  useEffect(() => {
+    if (!dirty) return;
+    const warn = (e: BeforeUnloadEvent) => { e.preventDefault(); e.returnValue = ""; };
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, [dirty]);
+
+  /* Guards the two links we own. The browser's own back button cannot be
+     intercepted in the App Router, so it stays unguarded — beforeunload does
+     not fire on a client-side navigation either. */
+  function confirmLeave(e: React.MouseEvent) {
+    if (!dirty) return;
+    if (!window.confirm("You have unsaved changes. Leave without saving?")) e.preventDefault();
+  }
+
+  function setRowText(key: string, text: string) {
+    setForm((f) => ({
+      ...f,
+      descriptionRows: (f.descriptionRows ?? []).map((r) =>
+        r.key === key && r.kind === "text" ? { ...r, text } : r,
+      ),
+    }));
+  }
+  function removeRow(key: string) {
+    setForm((f) => ({ ...f, descriptionRows: (f.descriptionRows ?? []).filter((r) => r.key !== key) }));
+  }
+  function addRow() {
+    setForm((f) => ({
+      ...f,
+      descriptionRows: [
+        ...(f.descriptionRows ?? []),
+        { kind: "text", key: newRowKey(), style: "normal", text: "" },
+      ],
+    }));
   }
 
   /* Recurring-event weekly schedule handlers */
@@ -310,7 +434,8 @@ export function ListingEditor({ mode, role, initialValues, listingId, onSuccessR
   const displayedTags = showAllTags ? TAG_SUGGESTIONS : relevantTags;
 
   /* Description quality */
-  const wc = wordCount(form.description);
+  const richRows = form.descriptionRows;
+  const wc = richRows ? rowsWordCount(richRows) : wordCount(form.description);
   const wcColor = wc === 0 ? "text-text3" : wc < 50 ? "text-red-500" : wc < 80 ? "text-amber-500" : "text-green-600";
   const wcLabel = wc === 0 ? "No description yet" : wc < 50 ? `${wc} words — too short` : wc < 80 ? `${wc} words — a bit short` : `${wc} words ✓`;
 
@@ -342,8 +467,10 @@ export function ListingEditor({ mode, role, initialValues, listingId, onSuccessR
 
       setForm((f) => {
         const next = { ...f };
-        // Always fill description (improve if exists, create if empty)
-        if (s.description) {
+        // Always fill description (improve if exists, create if empty). A rich
+        // description is a block layout the AI's single blob cannot be mapped onto,
+        // so leave it alone rather than claim a change that gets dropped on save.
+        if (s.description && !f.descriptionRows) {
           next.description = s.description;
           applied.push({ label: "Description", value: `${wordCount(s.description)} words` });
           appliedKeys.add("description");
@@ -442,8 +569,8 @@ export function ListingEditor({ mode, role, initialValues, listingId, onSuccessR
         seoDescription: form.seoDescription || undefined,
         submissionSource: "admin",
         status: form.status,
-        descriptionLocked: form.descriptionLocked,
-        description: form.descriptionLocked ? undefined : (form.description || undefined),
+        descriptionParts: richRows ? rowsToParts(richRows, loadedRowText.current) : undefined,
+        description: richRows ? undefined : (form.description || undefined),
       };
       const endpoint =
         mode === "create" ? "/api/admin/listings"
@@ -453,6 +580,7 @@ export function ListingEditor({ mode, role, initialValues, listingId, onSuccessR
       const res = await fetch(endpoint, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
       const json = await res.json();
       if (!res.ok) { setError(json.error ?? "Something went wrong."); return; }
+      savedSnapshot.current = formJson; // stop the guard firing on our own redirect
       router.push(onSuccessRedirect);
     } catch {
       setError("Something went wrong. Please try again.");
@@ -469,7 +597,7 @@ export function ListingEditor({ mode, role, initialValues, listingId, onSuccessR
     <>
       {/* Header */}
       <div>
-        <Link href={backHref}
+        <Link href={backHref} onClick={confirmLeave}
           className="flex items-center gap-1.5 text-[13px] text-text3 hover:text-dark transition-colors mb-4">
           <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
@@ -480,7 +608,7 @@ export function ListingEditor({ mode, role, initialValues, listingId, onSuccessR
         <p className="mt-1 text-[14px] text-text3">
           {mode === "create"
             ? "Creates a listing directly in Sanity. Edit all details in Sanity Studio afterwards."
-            : "Changes save straight to the live listing. Rich descriptions and advanced fields stay editable in Sanity Studio."}
+            : "Changes save straight to the live listing."}
         </p>
       </div>
 
@@ -631,12 +759,15 @@ export function ListingEditor({ mode, role, initialValues, listingId, onSuccessR
 
         {/* ── Description ── */}
         <SectionCard title="Description">
-          {form.descriptionLocked ? (
-            <div>
-              <textarea value={form.description} disabled rows={7}
-                className="w-full border border-border rounded-xl px-3.5 py-2.5 text-[14px] text-text2 bg-[#F7F5F2] resize-none" />
-              <p className="mt-1 text-[12px] text-amber">This description has rich content (photos/cards). Edit it in Sanity Studio to preserve it — other fields here save normally.</p>
-            </div>
+          {richRows ? (
+            <>
+              <p className="text-[12px] text-text3 -mt-2">
+                Each paragraph and heading on your listing page is editable below. Cards, photo
+                rows and formatted passages are locked so they stay exactly as they look now.
+              </p>
+              <DescriptionRows rows={richRows} onChangeText={setRowText} onRemove={removeRow} onAdd={addRow} />
+              <p className={`text-[12px] ${wcColor}`}>{wcLabel}</p>
+            </>
           ) : (
             <>
               <AiHighlight active={aiFieldsApplied.has("description")}>
@@ -663,6 +794,7 @@ export function ListingEditor({ mode, role, initialValues, listingId, onSuccessR
                   className="w-28 border border-border rounded-xl px-3.5 py-2.5 text-[14px] text-dark focus:outline-none focus:ring-2 focus:ring-amber/40 focus:border-amber bg-white"
                 />
                 <Select value={form.priceUnit} onChange={(v) => set("priceUnit", v)}>
+                  {!form.priceUnit && <option value="">Not set</option>}
                   {PRICE_UNITS.map((u) => <option key={u.value} value={u.value}>{u.label}</option>)}
                 </Select>
               </div>
@@ -670,6 +802,7 @@ export function ListingEditor({ mode, role, initialValues, listingId, onSuccessR
 
             <Field label="Booking method" optional>
               <Select value={form.bookingType} onChange={(v) => set("bookingType", v)}>
+                {!form.bookingType && <option value="">Not set</option>}
                 {BOOKING_TYPES.map((b) => <option key={b.value} value={b.value}>{b.label}</option>)}
               </Select>
             </Field>
@@ -681,6 +814,7 @@ export function ListingEditor({ mode, role, initialValues, listingId, onSuccessR
             {isStay && (
               <Field label="Renting type">
                 <Select value={form.rentingType} onChange={(v) => set("rentingType", v)}>
+                  {!form.rentingType && <option value="">Not set</option>}
                   {RENTING_TYPES.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}
                 </Select>
               </Field>
@@ -1007,15 +1141,23 @@ export function ListingEditor({ mode, role, initialValues, listingId, onSuccessR
           <div className="rounded-xl bg-red-50 border border-red-100 px-4 py-3 text-[13px] text-red-600">{error}</div>
         )}
 
-        <div className="flex items-center gap-3 pb-8">
-          <button type="submit" disabled={!canSubmit || loading}
-            className="flex-1 sm:flex-none sm:px-8 py-3 bg-amber hover:bg-[#D4901C] disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold text-[14px] rounded-xl transition-colors">
-            {loading ? (mode === "create" ? "Creating…" : "Saving…") : (mode === "create" ? "Create listing" : "Save changes")}
-          </button>
-          <Link href={backHref}
-            className="px-6 py-3 text-[14px] font-semibold text-text2 hover:text-dark transition-colors">
-            Cancel
-          </Link>
+        {/* Sticky so Save is reachable from any section rather than only after
+            scrolling past all eleven. The bar's own bottom padding keeps the
+            buttons clear of the fixed mobile nav, which paints over the rest. */}
+        <div className="sticky bottom-0 pt-3 pb-[76px] lg:pb-3 bg-canvas/95 backdrop-blur-sm border-t border-[#F0EDE8]">
+          <div className="flex items-center gap-3">
+            <button type="submit" disabled={!canSubmit || loading}
+              className="flex-1 sm:flex-none sm:px-8 py-3 bg-amber hover:bg-[#D4901C] disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold text-[14px] rounded-xl transition-colors">
+              {loading ? (mode === "create" ? "Creating…" : "Saving…") : (mode === "create" ? "Create listing" : "Save changes")}
+            </button>
+            <Link href={backHref} onClick={confirmLeave}
+              className="px-6 py-3 text-[14px] font-semibold text-text2 hover:text-dark transition-colors">
+              Cancel
+            </Link>
+            {dirty && (
+              <span className="ml-auto text-[12px] font-semibold text-amber whitespace-nowrap">Unsaved changes</span>
+            )}
+          </div>
         </div>
       </form>
     </>

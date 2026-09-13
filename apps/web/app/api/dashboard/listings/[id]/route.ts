@@ -3,6 +3,7 @@ import { z } from "zod/v4";
 import { getAuthUser, getHostProfile, getIsAdmin } from "@/app/dashboard/_lib/auth";
 import { sanityWriteClient } from "@/lib/sanity/writeClient";
 import { listingInputSchema, inputToSanityFields, type ListingInput } from "@/lib/listings/listingFields";
+import { applyDescriptionParts } from "@/lib/listings/description";
 import { hostOwnsListing } from "@/lib/listings/ownership";
 import { syncEventPending } from "@/lib/listings/events";
 import { revalidateListing, revalidateHostPagesForListing } from "@/lib/listings/revalidate";
@@ -20,11 +21,16 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     if (!type) return NextResponse.json({ error: "Listing not found." }, { status: 404 });
 
     const data = listingInputSchema.parse(await req.json());
-    const stored = await sanityWriteClient.fetch<{ slug: string; type: string } | null>(
-      `*[_id == $id][0]{ "slug": slug.current, type }`, { id });
+    const stored = await sanityWriteClient.fetch<{ slug: string; type: string; description?: unknown } | null>(
+      `*[_id == $id][0]{ "slug": slug.current, type, description }`, { id });
     if (!stored) return NextResponse.json({ error: "Listing not found." }, { status: 404 });
     const safe: ListingInput = { ...data, slug: stored.slug, type: stored.type, status: data.status === "archived" ? "archived" : "published" };
     const fields = inputToSanityFields(safe);
+    // Rich descriptions are rebuilt against what Sanity stores, so the cards and links
+    // the editor showed as read-only survive a host save untouched.
+    if (safe.descriptionParts) {
+      fields.description = applyDescriptionParts(stored.description, safe.descriptionParts);
+    }
     await sanityWriteClient.patch(id).set(fields).commit();
     await syncEventPending(id, stored.type, "update", { title: safe.title, city: safe.city });
     revalidateListing(stored.type, safe.city, stored.slug);

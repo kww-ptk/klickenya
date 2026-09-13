@@ -1,4 +1,10 @@
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
+
+/** Cache tag for every query that renders listing cards or grids. */
+export const LISTINGS_TAG = "listings";
+
+/** Cache tag for one listing's own detail queries. */
+export const listingTag = (slug: string) => `listing:${slug}`;
 
 /** Minimal Sanity client shape — just the fetch we need. */
 type SanityFetcher = {
@@ -46,6 +52,13 @@ const SANITY_TYPE_TO_URL: Record<string, string> = {
  * Pass no args (or a non-listing type) to just refresh the grids/home.
  */
 export function revalidateListing(type?: string, city?: string, slug?: string) {
+  // Tags first. revalidatePath only drops the rendered page; the Sanity reads
+  // underneath it are cached separately for 60s and would otherwise feed
+  // pre-write data straight back into the rebuild.
+  // Next 16 wants a cache-life profile; "max" expires the entry whatever its age.
+  revalidateTag(LISTINGS_TAG, "max");
+  if (slug) revalidateTag(listingTag(slug), "max");
+
   revalidatePath("/", "page");
 
   if (!type || !city || !slug) return;
