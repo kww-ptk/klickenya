@@ -139,6 +139,18 @@ function ShieldIcon() {
   );
 }
 
+function ScooterIcon() {
+  return (
+    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M5.25 18.75a2.25 2.25 0 100-4.5 2.25 2.25 0 000 4.5zM18.75 18.75a2.25 2.25 0 100-4.5 2.25 2.25 0 000 4.5zM7.5 16.5h9M13.5 5.25h2.25l2.25 9M13.5 5.25V9"
+      />
+    </svg>
+  );
+}
+
 function CalendarIcon() {
   return (
     <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
@@ -298,6 +310,7 @@ export default async function AdminLayout({
           <p className="px-4 pt-4 pb-1 text-[10px] font-semibold uppercase tracking-widest text-white/30">Activity</p>
           <AdminNavLink href="/admin/bookings" label="Bookings" icon={<CalendarIcon />} />
           <AdminNavLink href="/admin/reservations" label="Reservations" icon={<CalendarIcon />} badge={pendingReservations} />
+          <AdminNavLink href="/admin/food-delivery" label="Food Delivery" icon={<ScooterIcon />} />
           <AdminNavLink href="/admin/events" label="Events" icon={<CalendarIcon />} badge={pendingEvents} />
 
           {/* System */}

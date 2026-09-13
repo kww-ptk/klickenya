@@ -7,6 +7,7 @@ import { adminClient } from "@/lib/supabase/admin";
 import { KitchenHeader } from "@/components/kitchen/KitchenHeader";
 import { StationDashboard, type DashboardOrder } from "@/components/dashboard/menu/StationDashboard";
 import { StationTabs } from "@/components/dashboard/menu/StationTabs";
+import { ORDER_QUEUE_SELECT } from "@/lib/orders/projection";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -75,15 +76,7 @@ export default async function KitchenOrdersPage({ params, searchParams }: PagePr
 
   const { data: orders } = await adminClient
     .from("orders")
-    .select(`
-      id, status, order_type, table_number, customer_name, customer_phone, estimated_ready_at, notes,
-      total_kes, created_at, waiter_id,
-      order_items (
-        id, item_name, item_price, quantity, notes,
-        selected_options, allergy_notes, line_total,
-        station, station_status, is_voided
-      )
-    `)
+    .select(ORDER_QUEUE_SELECT)
     .eq("menu_id", menu.id)
     .in("status", ["new", "preparing", "ready"])
     .order("created_at", { ascending: false });

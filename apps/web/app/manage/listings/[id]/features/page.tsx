@@ -75,7 +75,7 @@ export default async function EatFeaturesPage({
   let menuQuery = adminClient
     .from("menus")
     .select(
-      "id, table_ordering, reservations_enabled, ordering_enabled, takeaway_enabled, delivery_enabled, stock_enabled",
+      "id, table_ordering, reservations_enabled, ordering_enabled, takeaway_enabled, delivery_enabled, stock_enabled, pos_enabled",
     )
     .eq("listing_slug", listing.slug);
   if (!isAdmin) menuQuery = menuQuery.eq("business_id", user.id);
@@ -92,6 +92,7 @@ export default async function EatFeaturesPage({
           takeaway_enabled: menu.takeaway_enabled ?? false,
           delivery_enabled: menu.delivery_enabled ?? false,
           stock_enabled: menu.stock_enabled ?? false,
+          pos_enabled: menu.pos_enabled ?? false,
         }
       : undefined,
   };
@@ -99,19 +100,13 @@ export default async function EatFeaturesPage({
   // Per-feature wiring: which menus column the toggle writes to, and where
   // "Configure" deep-links to once it's on. null = no toggle yet (coming
   // soon features are read-only with a Lock icon).
-  function toggleColumnFor(featureId: string): string | null {
-    switch (featureId) {
-      case "table_ordering": return "table_ordering";
-      case "takeaway":       return "takeaway_enabled";
-      case "reservations":   return "reservations_enabled";
-      case "klickenya_kitchen": return "stock_enabled";
-      default: return null;
-    }
-  }
   function configureHrefFor(featureId: string): string | null {
     switch (featureId) {
-      case "table_ordering": return `/manage/listings/${id}/orders`;
-      case "takeaway":       return `/manage/listings/${id}/orders`;
+      // Configure = the setup screen, not the live queue.
+      case "table_ordering": return `/manage/listings/${id}/orders/setup`;
+      case "takeaway":       return `/manage/listings/${id}/orders/setup`;
+      case "delivery":       return `/manage/listings/${id}/orders/setup`;
+      case "pos":            return `/manage/listings/${id}/pos`;
       case "reservations":   return `/manage/listings/${id}/reservations`;
       case "klickenya_kitchen": return `/manage/listings/${id}/kitchen`;
       default: return null;
@@ -155,19 +150,13 @@ export default async function EatFeaturesPage({
         {restaurantFeatures.map((feature) => {
           const status = feature.getStatus(featureCtx);
           const Icon = ICON_MAP[feature.icon] ?? UtensilsCrossed;
-          const toggleColumn = toggleColumnFor(feature.id);
+          const toggleColumn = feature.flagColumn ?? null;
           const configureHref = configureHrefFor(feature.id);
           const isComingSoon = status === "coming_soon" || status === "paid_coming_soon";
-          const currentValue = (() => {
-            if (!menu) return false;
-            switch (feature.id) {
-              case "table_ordering": return menu.table_ordering ?? false;
-              case "takeaway": return menu.takeaway_enabled ?? false;
-              case "reservations": return menu.reservations_enabled ?? false;
-              case "klickenya_kitchen": return menu.stock_enabled ?? false;
-              default: return false;
-            }
-          })();
+          // The switch position IS the feature's status. Deriving it from a
+          // second switch statement is what let the delivery toggle write a
+          // column it then read back as false.
+          const currentValue = status === "active";
 
           return (
             <FeatureRow
@@ -192,19 +181,6 @@ export default async function EatFeaturesPage({
           );
         })}
 
-        {/* POS — first-class concept that LISTING_FEATURES doesn't track yet. */}
-        <FeatureRow
-          icon={Smartphone}
-          label="POS terminal"
-          shortDescription="Tablet sign-in for waiters: take orders, settle bills, manage tables."
-          statusBadge={menu ? "active" : "inactive"}
-          configureHref={menu ? `/manage/listings/${id}/pos` : null}
-          toggleColumn={null}
-          menuId={null}
-          currentValue={!!menu}
-          locked={!menu}
-          lockedReason={menu ? undefined : "Requires a menu"}
-        />
       </div>
 
       {/* Honest note about preview status */}

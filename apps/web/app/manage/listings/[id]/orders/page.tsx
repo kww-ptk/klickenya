@@ -1,21 +1,27 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { Settings as SettingsIcon } from "lucide-react";
 import { getAuthUser, getHostProfile, getIsAdmin } from "../../../../dashboard/_lib/auth";
 import { adminClient } from "@/lib/supabase/admin";
 import { sanityClient } from "@/lib/sanity/client";
-import { TableOrderingClient } from "../../../../dashboard/listings/[id]/orders/TableOrderingClient";
-import type { AreaOption, InitialTable } from "../../../../dashboard/listings/[id]/orders/TableOrderingClient";
+import { ORDER_QUEUE_SELECT, ACTIVE_ORDER_STATUSES } from "@/lib/orders/projection";
+import { LiveOrderQueue, type QueueOrder } from "@/components/manage/LiveOrderQueue";
 
 interface PageProps {
   params: Promise<{ id: string }>;
 }
 
 /**
- * /manage/listings/[id]/orders — Table Ordering setup page in the /manage shell.
- * Forks from the legacy page so it can pass mode="ordering-only" +
- * featureBaseHref. Same data fetching as legacy.
+ * /manage/listings/[id]/orders — the LIVE ORDER QUEUE.
+ *
+ * "Orders" used to open the setup screen, which is not what an owner means by
+ * the word. Settings now live at /orders/setup; this is what comes in today.
+ *
+ * Server-renders the first page so the queue is populated on arrival, then
+ * the client polls. Delivery, takeaway and table orders share one list —
+ * splitting them would make the owner check three places during a rush.
  */
-export default async function EatOrdersPage({ params }: PageProps) {
+export default async function ManageOrdersPage({ params }: PageProps) {
   const { id } = await params;
   const { user } = await getAuthUser();
   if (!user) redirect(`/login?returnTo=/manage/listings/${id}/orders`);
@@ -39,25 +45,24 @@ export default async function EatOrdersPage({ params }: PageProps) {
 
   let menuQuery = adminClient
     .from("menus")
-    .select("id, name, slug, table_ordering, takeaway_enabled, delivery_enabled, listing_slug")
+    .select("id, name, table_ordering, takeaway_enabled, delivery_enabled")
     .eq("listing_slug", listing.slug);
   if (!isAdmin) menuQuery = menuQuery.eq("business_id", user.id);
   const { data: menu } = await menuQuery.maybeSingle();
 
+  const setupHref = `/manage/listings/${id}/orders/setup`;
+
   if (!menu) {
     return (
       <div>
-        <Link
-          href={`/manage/listings/${id}`}
-          className="text-[13px] text-[#9C9485] hover:text-[#16130C]"
-        >
+        <Link href={`/manage/listings/${id}`} className="text-[13px] text-[#9C9485] hover:text-[#16130C]">
           ← Back to overview
         </Link>
         <h1 className="font-display text-[22px] lg:text-[28px] font-bold tracking-[-0.03em] text-[#16130C] mt-2">
-          Table ordering
+          Orders
         </h1>
         <p className="text-[13px] text-[#9C9485] mt-1 mb-5">
-          Set up your menu first before turning on table ordering.
+          Set up your menu first — orders come from it.
         </p>
         <Link
           href={`/manage/listings/${id}/menu`}
@@ -69,48 +74,68 @@ export default async function EatOrdersPage({ params }: PageProps) {
     );
   }
 
-  const [{ data: areasRaw }, { data: tablesRaw }] = await Promise.all([
-    adminClient
-      .from("restaurant_areas")
-      .select("id, name, color_hex")
-      .eq("menu_id", menu.id)
-      .eq("is_active", true)
-      .order("display_order", { ascending: true }),
-    adminClient
-      .from("restaurant_tables")
-      .select("id, table_number, capacity, pos_x, pos_y, area_id, floor_section, is_active")
-      .eq("menu_id", menu.id)
-      .order("display_order", { ascending: true }),
-  ]);
+  const { data: rows } = await adminClient
+    .from("orders")
+    .select(ORDER_QUEUE_SELECT)
+    .eq("menu_id", menu.id)
+    .in("status", [...ACTIVE_ORDER_STATUSES])
+    .order("created_at", { ascending: false });
 
+  const orders = (rows ?? []) as unknown as QueueOrder[];
 
-  // whatsapp_phone arrives in migration 086. Read separately so a database
-  // without it yet costs only this field instead of failing the whole menu
-  // query and breaking the page (CLAUDE.md column-drift rule).
-  let whatsappPhone: string | null = null;
-  {
-    const { data: waRow } = await adminClient
-      .from("menus")
-      .select("whatsapp_phone")
-      .eq("id", menu.id)
-      .maybeSingle();
-    whatsappPhone = (waRow as { whatsapp_phone?: string | null } | null)?.whatsapp_phone ?? null;
-  }
+  // Which channels are actually open. If none are, the empty queue would be
+  // indistinguishable from a quiet afternoon — so say which it is.
+  const channels = [
+    menu.delivery_enabled ? "Delivery" : null,
+    menu.takeaway_enabled ? "Takeaway" : null,
+    menu.table_ordering ? "Table" : null,
+  ].filter(Boolean) as string[];
 
   return (
-    <TableOrderingClient
-      listingId={id}
-      menuId={menu.id}
-      menuName={menu.name}
-      menuSlug={menu.slug}
-      initialTableOrdering={menu.table_ordering ?? false}
-      initialTakeawayEnabled={menu.takeaway_enabled ?? false}
-      initialDeliveryEnabled={menu.delivery_enabled ?? false}
-      initialWhatsappPhone={whatsappPhone}
-      areas={(areasRaw ?? []) as AreaOption[]}
-      initialTables={(tablesRaw ?? []) as InitialTable[]}
-      mode="ordering-only"
-      featureBaseHref={`/manage/listings/${id}`}
-    />
+    <div className="space-y-5">
+      <div className="flex items-start justify-between gap-3 flex-wrap">
+        <div>
+          <Link href={`/manage/listings/${id}`} className="text-[13px] text-[#9C9485] hover:text-[#16130C]">
+            ← Back to overview
+          </Link>
+          <h1 className="font-display text-[22px] lg:text-[28px] font-bold tracking-[-0.03em] text-[#16130C] mt-2">
+            Orders
+          </h1>
+          <p className="text-[13px] text-[#9C9485] mt-1">
+            {channels.length > 0
+              ? `Live queue — ${channels.join(" · ")} · updates on its own`
+              : "No ordering channel is switched on yet."}
+          </p>
+        </div>
+
+        <Link
+          href={setupHref}
+          className="inline-flex items-center gap-1.5 rounded-full border border-[#E2DDD5] bg-white px-4 h-[40px] text-[13px] font-bold text-[#16130C] hover:border-[#C8C0B2]"
+        >
+          <SettingsIcon className="size-4" aria-hidden />
+          Ordering setup
+        </Link>
+      </div>
+
+      {channels.length === 0 ? (
+        <div className="rounded-2xl border border-[#E8A020]/40 bg-[#E8A020]/[0.06] p-6">
+          <p className="font-display text-[16px] font-bold text-[#16130C]">
+            Nobody can order yet
+          </p>
+          <p className="text-[13px] text-[#6B6355] mt-1 mb-4 max-w-[520px]">
+            Turn on delivery or takeaway and add the WhatsApp number that should receive
+            orders. Until then your restaurant is listed but cannot be ordered from.
+          </p>
+          <Link
+            href={setupHref}
+            className="inline-block bg-[#16130C] text-white font-bold text-[13px] px-5 h-[42px] leading-[42px] rounded-full hover:bg-[#2A251A]"
+          >
+            Open ordering setup →
+          </Link>
+        </div>
+      ) : (
+        <LiveOrderQueue menuId={menu.id} initialOrders={orders} />
+      )}
+    </div>
   );
 }

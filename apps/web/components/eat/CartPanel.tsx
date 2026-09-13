@@ -13,13 +13,21 @@ import { lineTotal } from "./useEatCart";
 /**
  * Cart and checkout.
  *
- * Submits to POST /api/orders as a takeaway order — the same endpoint
- * /m/[slug] uses, rather than a second ordering path to keep in step.
+ * Two steps, in this order and never the other way round:
  *
- * Today every published menu has takeaway_enabled false, so the API answers
- * 400. That is surfaced as what it is ("this kitchen isn't taking online
- * orders yet") instead of a generic failure, because it is a setting the
- * restaurant controls, not a bug the guest can retry their way out of.
+ *   1. POST /api/orders — the same endpoint /m/[slug] uses, so there is one
+ *      ordering path and one order table, not a parallel one to keep in step.
+ *   2. Open WhatsApp, carrying the saved order's reference.
+ *
+ * Recording first is the whole point. Before this, placing an order only
+ * opened WhatsApp: the kitchen got a message and the owner's dashboard got
+ * nothing — no ticket, no status, no history, nothing to report on.
+ *
+ * If step 1 fails the handoff does NOT happen. An order the owner cannot see
+ * in their dashboard is the bug being fixed here, so sending one anyway would
+ * reintroduce it. The API's own message is shown instead, because the usual
+ * cause ("this kitchen isn't delivering yet") is a setting the restaurant
+ * controls rather than something the guest can retry their way out of.
  */
 export function CartPanel({
   cart,
@@ -58,11 +66,59 @@ export function CartPanel({
    * page survive if the guest comes straight back — and on desktop, where
    * WhatsApp Web may not be signed in, they are not stranded on a dead page.
    */
-  const submit = () => {
+  const submit = async () => {
     if (!cart || !whatsappPhone) return;
     setBusy(true);
     setError(null);
 
+    // ── Step 1: record the order ──────────────────────────────────────
+    let orderRef: string | undefined;
+    try {
+      const res = await fetch("/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          menu_id: cart.menuId,
+          order_type: fulfilment === "delivery" ? "delivery" : "takeaway",
+          customer_name: name.trim(),
+          customer_phone: phone.trim(),
+          delivery_address: fulfilment === "delivery" ? address.trim() : undefined,
+          order_note: note.trim() || undefined,
+          items: cart.lines.map((l) => ({
+            menu_item_id: l.itemId,
+            quantity: l.qty,
+            // Prices are deliberately NOT sent — the server re-reads every
+            // price and add-on from the database. Nothing the client says
+            // about money is trusted.
+            selected_options: (l.options ?? []).map((o) => ({
+              option_id: o.option_id,
+              group: o.group,
+              choice: o.choice,
+            })),
+            allergy_notes: l.note || undefined,
+          })),
+        }),
+      });
+      // short_id, not id: the API already derives the reference, and using
+      // its value keeps the WhatsApp thread, the guest's status page and the
+      // dashboard ticket showing the same string.
+      const payload = (await res.json().catch(() => null)) as
+        | { order_id?: string; short_id?: string; error?: string }
+        | null;
+
+      if (!res.ok) {
+        setError(payload?.error ?? "Could not place the order. Please try again.");
+        setBusy(false);
+        return;
+      }
+      orderRef = payload?.short_id ?? undefined;
+    } catch {
+      setError("Could not reach the kitchen. Check your connection and try again.");
+      setBusy(false);
+      return;
+    }
+
+    // ── Step 2: hand it to the kitchen over WhatsApp ──────────────────
     const message = buildOrderMessage({
       restaurant: cart.restaurant,
       lines: cart.lines,
@@ -72,18 +128,25 @@ export function CartPanel({
       customerName: name.trim(),
       customerPhone: phone.trim(),
       note: note.trim() || undefined,
+      orderRef,
     });
 
     const win = window.open(buildWhatsAppUrl(whatsappPhone, message), "_blank", "noopener");
     setBusy(false);
 
     if (!win) {
-      setError("Your browser blocked the WhatsApp window. Allow pop-ups and try again.");
+      // The order IS saved at this point — the kitchen can see it. Say so,
+      // rather than implying nothing happened and inviting a duplicate.
+      setError(
+        orderRef
+          ? `Your order is placed (#${orderRef}), but the WhatsApp window was blocked. Allow pop-ups to message the kitchen.`
+          : "Your browser blocked the WhatsApp window. Allow pop-ups and try again.",
+      );
       return;
     }
     // Deliberately NOT clearing the basket: the guest still has to press send
     // inside WhatsApp, and we cannot know whether they did.
-    setPlaced("sent");
+    setPlaced(orderRef ?? "sent");
   };
 
   const canSubmit =

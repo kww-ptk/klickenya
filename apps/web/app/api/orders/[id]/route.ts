@@ -27,7 +27,10 @@ export async function GET(
       .eq("id", id)
       .single();
 
-    if (!order || order.order_type !== "takeaway") {
+    // Delivery uses the same accept/decline/ready lifecycle as takeaway, so it
+    // gets the same public status page. Dine-in does not — a seated guest has
+    // a waiter, not a tracking link.
+    if (!order || (order.order_type !== "takeaway" && order.order_type !== "delivery")) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 

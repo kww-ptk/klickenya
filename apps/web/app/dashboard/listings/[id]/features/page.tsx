@@ -75,7 +75,7 @@ export default async function ListingFeaturesPage({
   let menuQuery = adminClient
     .from("menus")
     .select(
-      "id, table_ordering, reservations_enabled, ordering_enabled, takeaway_enabled, delivery_enabled, stock_enabled",
+      "id, table_ordering, reservations_enabled, ordering_enabled, takeaway_enabled, delivery_enabled, stock_enabled, pos_enabled",
     )
     .eq("listing_slug", listing.slug);
   if (!isAdmin) menuQuery = menuQuery.eq("business_id", user.id);
@@ -92,21 +92,17 @@ export default async function ListingFeaturesPage({
           takeaway_enabled: menu.takeaway_enabled ?? false,
           delivery_enabled: menu.delivery_enabled ?? false,
           stock_enabled: menu.stock_enabled ?? false,
+          pos_enabled: menu.pos_enabled ?? false,
         }
       : undefined,
   };
 
-  function toggleColumnFor(featureId: string): string | null {
-    switch (featureId) {
-      case "table_ordering": return "table_ordering";
-      case "reservations":   return "reservations_enabled";
-      case "klickenya_kitchen": return "stock_enabled";
-      default: return null;
-    }
-  }
   function configureHrefFor(featureId: string): string | null {
     switch (featureId) {
       case "table_ordering": return `/dashboard/listings/${id}/orders`;
+      case "takeaway":       return `/dashboard/listings/${id}/orders`;
+      case "delivery":       return `/dashboard/listings/${id}/orders`;
+      case "pos":            return `/dashboard/listings/${id}/pos`;
       case "reservations":   return `/dashboard/listings/${id}/reservations`;
       case "klickenya_kitchen": return `/dashboard/listings/${id}/kitchen`;
       default: return null;
@@ -147,18 +143,14 @@ export default async function ListingFeaturesPage({
         {restaurantFeatures.map((feature) => {
           const status = feature.getStatus(featureCtx);
           const Icon = ICON_MAP[feature.icon] ?? UtensilsCrossed;
-          const toggleColumn = toggleColumnFor(feature.id);
+          // Registry-driven, same as the /manage switchboard. The local
+          // switch statements this replaces had drifted: takeaway, delivery
+          // and POS were all missing, so their rows rendered with no toggle
+          // and a permanently-off switch.
+          const toggleColumn = feature.flagColumn ?? null;
           const configureHref = configureHrefFor(feature.id);
           const isComingSoon = status === "coming_soon" || status === "paid_coming_soon";
-          const currentValue = (() => {
-            if (!menu) return false;
-            switch (feature.id) {
-              case "table_ordering": return menu.table_ordering ?? false;
-              case "reservations": return menu.reservations_enabled ?? false;
-              case "klickenya_kitchen": return menu.stock_enabled ?? false;
-              default: return false;
-            }
-          })();
+          const currentValue = status === "active";
 
           return (
             <FeatureRow
