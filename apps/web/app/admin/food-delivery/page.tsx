@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { adminClient } from "@/lib/supabase/admin";
 import { ORDER_QUEUE_SELECT, ACTIVE_ORDER_STATUSES } from "@/lib/orders/projection";
+import { mapsUrl } from "@/lib/orders/location";
 
 export const dynamic = "force-dynamic";
 
@@ -20,6 +21,8 @@ type Row = {
   customer_name: string | null;
   customer_phone: string | null;
   delivery_address: string | null;
+  delivery_lat: number | null;
+  delivery_lng: number | null;
   total_kes: number | null;
   created_at: string;
   menu_id: string;
@@ -164,6 +167,17 @@ export default async function AdminFoodDeliveryPage() {
                               no address recorded
                             </em>
                           )}
+                          {typeof o.delivery_lat === "number" &&
+                            typeof o.delivery_lng === "number" && (
+                              <a
+                                href={mapsUrl({ lat: o.delivery_lat, lng: o.delivery_lng })}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="block text-[12px] font-semibold text-zinc-900 underline mt-0.5"
+                              >
+                                Open pin in Maps
+                              </a>
+                            )}
                         </span>
                       )}
                     </td>

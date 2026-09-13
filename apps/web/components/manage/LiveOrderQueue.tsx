@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Bike, ShoppingBag, Utensils, Phone, MapPin, Pencil, X, Plus } from "lucide-react";
+import { Bike, ShoppingBag, Utensils, Phone, MapPin, Pencil, X, Plus, Navigation } from "lucide-react";
+import { mapsUrl } from "@/lib/orders/location";
 
 /**
  * The owner's live order queue — every active order for one menu, in one list.
@@ -30,6 +31,8 @@ export type QueueOrder = {
   customer_name: string | null;
   customer_phone?: string | null;
   delivery_address?: string | null;
+  delivery_lat?: number | null;
+  delivery_lng?: number | null;
   notes?: string | null;
   total_kes: number | null;
   created_at: string;
@@ -243,6 +246,22 @@ export function LiveOrderQueue({
                     <span className="select-text">{order.delivery_address}</span>
                   </p>
                 )}
+
+                {/* A pin beats directions. Shown as its own action so whoever
+                    is riding can open it without reading anything. */}
+                {isDelivery &&
+                  typeof order.delivery_lat === "number" &&
+                  typeof order.delivery_lng === "number" && (
+                    <a
+                      href={mapsUrl({ lat: order.delivery_lat, lng: order.delivery_lng })}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-[#16130C] px-3.5 py-1.5 text-[12.5px] font-bold text-white"
+                    >
+                      <Navigation className="size-3.5" aria-hidden />
+                      Open in Maps
+                    </a>
+                  )}
               </div>
 
               <div className="text-right shrink-0">
