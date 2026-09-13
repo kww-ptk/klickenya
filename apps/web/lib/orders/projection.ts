@@ -18,6 +18,7 @@ export const ORDER_QUEUE_SELECT = `
   estimated_ready_at, notes, total_kes, created_at, waiter_id,
   delivery_address, delivery_fee_kes, delivery_lat, delivery_lng,
   rider_id, rider_accepted_at, picked_up_at, delivered_at, cash_collected_kes,
+  pickup_code,
   order_items (
     id, item_name, item_price, quantity, notes,
     selected_options, allergy_notes, line_total,

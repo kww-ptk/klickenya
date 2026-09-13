@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { MapPin, Phone, Navigation, LogOut, RefreshCw } from "lucide-react";
+import { MapPin, Phone, Navigation, LogOut, RefreshCw, MessageCircle } from "lucide-react";
+import { waNumber } from "@/lib/eat/whatsappOrder";
 import { mapsUrl } from "@/lib/orders/location";
 
 type Job = {
@@ -66,14 +67,19 @@ export function RiderApp() {
     };
   }, [rider, load]);
 
-  async function act(jobId: string, action: "accept" | "pickup" | "deliver", cash?: number) {
+  async function act(
+    jobId: string,
+    action: "accept" | "pickup" | "deliver",
+    cash?: number,
+    pickupCode?: string,
+  ) {
     setBusy(jobId);
     setError(null);
     try {
       const res = await fetch(`/api/rider/jobs/${jobId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action, cash_collected_kes: cash }),
+        body: JSON.stringify({ action, cash_collected_kes: cash, pickup_code: pickupCode }),
       });
       if (!res.ok) {
         const p = (await res.json().catch(() => null)) as { error?: string } | null;
@@ -141,7 +147,7 @@ export function RiderApp() {
           restaurant={data.restaurants[job.menu_id] ?? "Restaurant"}
           stage={job.picked_up_at ? "delivering" : "collecting"}
           busy={busy === job.id}
-          onPickup={() => act(job.id, "pickup")}
+          onPickup={(code) => act(job.id, "pickup", undefined, code)}
           onDeliver={(cash) => act(job.id, "deliver", cash)}
         />
       ) : (
@@ -195,10 +201,11 @@ function JobCard({
   stage: "open" | "collecting" | "delivering";
   busy: boolean;
   onAccept?: () => void;
-  onPickup?: () => void;
+  onPickup?: (pickupCode: string) => void;
   onDeliver?: (cash?: number) => void;
 }) {
   const [confirming, setConfirming] = useState(false);
+  const [code, setCode] = useState("");
   const [cash, setCash] = useState(String(job.total_kes ?? ""));
   const items = (job.order_items ?? []).filter((i) => !i.is_voided);
   const cooked = job.status === "ready";
@@ -260,13 +267,27 @@ function JobCard({
             </a>
           )}
           {job.customer_phone && (
-            <a
-              href={`tel:${job.customer_phone}`}
-              className="flex-1 inline-flex items-center justify-center gap-2 rounded-full bg-white/10 py-3 text-[14px] font-bold"
-            >
-              <Phone className="size-4" aria-hidden />
-              Call
-            </a>
+            <>
+              <a
+                href={`tel:${job.customer_phone}`}
+                className="flex-1 inline-flex items-center justify-center gap-2 rounded-full bg-white/10 py-3 text-[14px] font-bold"
+              >
+                <Phone className="size-4" aria-hidden />
+                Call
+              </a>
+              {/* Usually the better option: cheaper than a call, and it
+                  leaves the customer a thread rather than a missed call from
+                  a number they do not know. */}
+              <a
+                href={`https://wa.me/${waNumber(job.customer_phone)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-1 inline-flex items-center justify-center gap-2 rounded-full bg-[#25D366] py-3 text-[14px] font-bold text-[#0B3D22]"
+              >
+                <MessageCircle className="size-4" aria-hidden />
+                WhatsApp
+              </a>
+            </>
           )}
         </div>
       )}
@@ -292,18 +313,42 @@ function JobCard({
 
       {stage === "collecting" && onPickup && (
         <>
-          <button
-            type="button"
-            onClick={onPickup}
-            disabled={busy || !cooked}
-            className="mt-4 w-full rounded-full bg-[#E8A020] py-4 text-[16px] font-extrabold text-[#16130C] disabled:opacity-40"
-          >
-            {busy ? "…" : cooked ? "I have the food" : "Waiting for the kitchen"}
-          </button>
-          {!cooked && (
-            <p className="text-[12.5px] text-white/50 text-center mt-2">
-              Head over now. This unlocks the moment the kitchen marks it ready.
-            </p>
+          {cooked ? (
+            <div className="mt-4 space-y-2">
+              <label htmlFor={`code-${job.id}`} className="block text-[13px] font-bold text-white/80">
+                Ask the kitchen for the 4-digit code
+              </label>
+              <input
+                id={`code-${job.id}`}
+                inputMode="numeric"
+                maxLength={4}
+                value={code}
+                onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
+                placeholder="••••"
+                className="w-full rounded-xl bg-white/10 px-4 py-3 text-[24px] font-bold tracking-[0.5em] text-white placeholder:text-white/25"
+              />
+              <button
+                type="button"
+                onClick={() => onPickup(code)}
+                disabled={busy || code.length !== 4}
+                className="w-full rounded-full bg-[#E8A020] py-4 text-[16px] font-extrabold text-[#16130C] disabled:opacity-40"
+              >
+                {busy ? "…" : "I have the food"}
+              </button>
+            </div>
+          ) : (
+            <>
+              <button
+                type="button"
+                disabled
+                className="mt-4 w-full rounded-full bg-[#E8A020] py-4 text-[16px] font-extrabold text-[#16130C] opacity-40"
+              >
+                Waiting for the kitchen
+              </button>
+              <p className="text-[12.5px] text-white/50 text-center mt-2">
+                Head over now. This unlocks the moment the kitchen marks it ready.
+              </p>
+            </>
           )}
         </>
       )}

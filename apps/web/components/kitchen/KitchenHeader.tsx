@@ -1,8 +1,9 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useState } from "react";
 import { LogOut } from "lucide-react";
+import Link from "next/link";
 
 /**
  * Persistent header for the kitchen terminal. Standalone version of
@@ -18,6 +19,8 @@ interface KitchenHeaderProps {
 
 export function KitchenHeader({ slug, menuName, staffName, role }: KitchenHeaderProps) {
   const router = useRouter();
+  const pathname = usePathname();
+  const onDeliveries = pathname?.endsWith("/deliveries") ?? false;
   const [signingOut, setSigningOut] = useState(false);
 
   const stationLabel =
@@ -44,8 +47,30 @@ export function KitchenHeader({ slug, menuName, staffName, role }: KitchenHeader
           <span className={`text-[10px] uppercase tracking-[0.18em] ${labelClass} font-bold`}>{stationLabel}</span>
           <p className="text-[12px] text-text3 truncate">{menuName}</p>
         </div>
+        {/* Two views of the same shift: the station board next door, and the
+            whole-order queue a rider collects from. Linked here because a
+            route nothing points at is a route nobody finds. */}
+        <nav className="flex items-center gap-1 shrink-0">
+          <Link
+            href={`/kitchen/${slug}/orders`}
+            className={`h-9 px-3 rounded-full text-[12px] font-bold flex items-center ${
+              onDeliveries ? "text-text3 hover:text-white" : "bg-[#2A2520] text-white"
+            }`}
+          >
+            Stations
+          </Link>
+          <Link
+            href={`/kitchen/${slug}/deliveries`}
+            className={`h-9 px-3 rounded-full text-[12px] font-bold flex items-center ${
+              onDeliveries ? "bg-[#2A2520] text-white" : "text-text3 hover:text-white"
+            }`}
+          >
+            Orders
+          </Link>
+        </nav>
+
         <div className="flex items-center gap-2 shrink-0">
-          <span className="text-[14px] font-semibold text-white">{staffName}</span>
+          <span className="hidden sm:inline text-[14px] font-semibold text-white">{staffName}</span>
           <span className="px-2 py-0.5 rounded-full text-[10px] uppercase tracking-wide bg-[#2A2520] text-text3">
             {role}
           </span>
