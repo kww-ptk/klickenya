@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { adminClient } from "@/lib/supabase/admin";
 import { getEatMetrics, riderStats } from "@/lib/eat/adminMetrics";
+import { AddRider } from "./AddRider";
 
 export const dynamic = "force-dynamic";
 
@@ -19,6 +20,18 @@ export default async function EatAdminRiders() {
   } catch {
     /* pre-088 — fall through to zero */
   }
+
+  // Restaurants a rider could be assigned to. Only ones that deliver — the
+  // rest have nothing to ride.
+  const { data: menuRows } = await adminClient
+    .from("menus")
+    .select("id, name")
+    .eq("delivery_enabled", true)
+    .order("name", { ascending: true });
+  const menuOptions = (menuRows ?? []).map((x) => ({
+    id: x.id as string,
+    name: String(x.name ?? "").replace(/\s+menu\s*$/i, "").trim() || String(x.name),
+  }));
 
   const riders = [...m.riders.values()]
     .map((r) => ({ rider: r, stats: riderStats(m.orders, r.id) }))
@@ -39,16 +52,20 @@ export default async function EatAdminRiders() {
 
   return (
     <div className="space-y-4">
-      <p className="text-[13px] text-zinc-500">
-        {riders.length} rider{riders.length === 1 ? "" : "s"}. Figures cover the last 30 days.
-      </p>
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <p className="text-[13px] text-zinc-500">
+          {riders.length} rider{riders.length === 1 ? "" : "s"}. Figures cover the last 30 days.
+        </p>
+      </div>
+
+      <AddRider menus={menuOptions} />
 
       {riders.length === 0 ? (
         <div className="rounded-2xl border border-zinc-200 bg-white p-10 text-center">
           <p className="font-display text-[17px] font-bold text-zinc-900">No riders yet</p>
-          <p className="text-[13px] text-zinc-500 mt-1 max-w-[460px] mx-auto">
-            Riders are added per restaurant, from that restaurant&apos;s Riders tab — an owner
-            hands out the PIN in person.
+          <p className="text-[13px] text-zinc-500 mt-1 max-w-[500px] mx-auto">
+            Hire a Klickenya rider above — they work every restaurant that delivers. A
+            restaurant can also add its own from its Riders tab.
           </p>
         </div>
       ) : (
@@ -57,7 +74,7 @@ export default async function EatAdminRiders() {
             <thead className="bg-zinc-50 text-left">
               <tr className="text-[11px] uppercase tracking-wide text-zinc-500">
                 <th className="px-4 py-3 font-semibold">Rider</th>
-                <th className="px-4 py-3 font-semibold">Kitchens</th>
+                <th className="px-4 py-3 font-semibold">Works for</th>
                 <th className="px-4 py-3 font-semibold">Delivered</th>
                 <th className="px-4 py-3 font-semibold">In flight</th>
                 <th className="px-4 py-3 font-semibold">Avg time</th>
@@ -77,7 +94,18 @@ export default async function EatAdminRiders() {
                     </Link>
                     <span className="block text-[12px] text-zinc-500">{rider.phone}</span>
                   </td>
-                  <td className="px-4 py-3 text-zinc-600">{linkCounts.get(rider.id) ?? 0}</td>
+                  <td className="px-4 py-3">
+                    {rider.is_platform ? (
+                      <span className="inline-block text-[11px] font-bold uppercase px-2 py-0.5 rounded-full bg-zinc-900 text-white">
+                        Klickenya
+                      </span>
+                    ) : (
+                      <span className="text-zinc-600">
+                        {linkCounts.get(rider.id) ?? 0} restaurant
+                        {(linkCounts.get(rider.id) ?? 0) === 1 ? "" : "s"}
+                      </span>
+                    )}
+                  </td>
                   <td className="px-4 py-3 font-semibold text-zinc-900">{stats.delivered}</td>
                   <td className="px-4 py-3 text-zinc-600">{stats.inFlight}</td>
                   <td className="px-4 py-3 text-zinc-600">
