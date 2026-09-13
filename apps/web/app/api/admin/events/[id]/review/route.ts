@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { adminClient } from "@/lib/supabase/admin";
 import { createClient as createSanityClient } from "next-sanity";
 import { Resend } from "resend";
+import { assertAdmin, AdminAuthError } from "@/lib/admin/auth";
 
 const sanityWrite = createSanityClient({
   projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID!,
@@ -14,11 +15,19 @@ const sanityWrite = createSanityClient({
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
+/**
+ * ADMIN ONLY. Guarded here, in the handler — middleware does NOT cover this.
+ * Its check is `pathname.startsWith("/admin")`, which matches the /admin PAGES
+ * and never /api/admin/*. This route answered unauthenticated callers until
+ * this guard was added.
+ */
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    await assertAdmin(req);
+
     const { id } = await params;
     const body = await req.json();
     const action = body.action as "approve" | "reject";
@@ -90,6 +99,9 @@ export async function POST(
             `,
           });
         } catch (emailErr) {
+          if (emailErr instanceof AdminAuthError) {
+            return NextResponse.json({ error: emailErr.message }, { status: emailErr.status });
+          }
           console.error("[Admin] Approval email failed:", emailErr);
         }
       }

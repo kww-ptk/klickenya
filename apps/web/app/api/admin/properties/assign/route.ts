@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { adminClient } from "@/lib/supabase/admin";
+import { assertAdmin, AdminAuthError } from "@/lib/admin/auth";
 
 /**
  * POST /api/admin/properties/assign
@@ -10,7 +11,22 @@ import { adminClient } from "@/lib/supabase/admin";
  * This is the admin-assign path — equivalent to what happens
  * automatically on claim for stay listings, but triggered manually.
  */
+/**
+ * ADMIN ONLY. Guarded here, in the handler — middleware does NOT cover this.
+ * Its check is `pathname.startsWith("/admin")`, which matches the /admin PAGES
+ * and never /api/admin/*. This route answered unauthenticated callers until
+ * this guard was added.
+ */
 export async function POST(req: NextRequest) {
+  try {
+    await assertAdmin(req);
+  } catch (err) {
+    if (err instanceof AdminAuthError) {
+      return NextResponse.json({ error: err.message }, { status: err.status });
+    }
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const supabase = await createClient();
   const {
     data: { user },
