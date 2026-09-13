@@ -8,13 +8,17 @@ import { StaffSection } from "@/components/dashboard/listings/StaffSection";
 /**
  * Everything needed to put this order queue on a tablet, on the Orders page.
  *
- * It used to live only on the POS tab — and the POS tab only renders when
- * pos_enabled is on. A delivery-only restaurant therefore had no way to reach
- * the kitchen terminal, no way to create the PINs it needs, and no hint that
- * either existed. Orders are the reason to open the terminal at all, so the
- * Orders page is where this belongs; POS keeps its copy for the waiter flow.
+ * Called the ORDER TABLET, not the kitchen terminal. "Kitchen" already means
+ * Klickenya Kitchen here — stock, recipes, costing — and two different things
+ * sharing a word is how an owner ends up on the wrong screen.
+ *
+ * It needs nothing from POS. It once lived only on the POS tab, which is
+ * hidden when pos_enabled is off, so a delivery-only restaurant could not
+ * reach the tablet, could not create the PINs it needs, and was given no hint
+ * either existed. Orders are the reason to open it, so the Orders page is
+ * where it belongs.
  */
-export function KitchenTabletPanel(props: { menuId: string; menuSlug: string }) {
+export function OrderTabletPanel(props: { menuId: string; menuSlug: string }) {
   return (
     <ToastProvider>
       <Inner {...props} />
@@ -28,11 +32,11 @@ function Inner({ menuId, menuSlug }: { menuId: string; menuSlug: string }) {
 
   const origin =
     typeof window !== "undefined" ? window.location.origin : "https://klickenya.com";
-  const kitchenUrl = `${origin}/kitchen/${menuSlug}`;
+  const tabletUrl = `${origin}/tablet/${menuSlug}`;
 
   async function copy() {
     try {
-      await navigator.clipboard.writeText(kitchenUrl);
+      await navigator.clipboard.writeText(tabletUrl);
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     } catch {
@@ -44,16 +48,16 @@ function Inner({ menuId, menuSlug }: { menuId: string; menuSlug: string }) {
     <details className="rounded-2xl border border-[#E2DDD5] bg-white">
       <summary className="cursor-pointer list-none p-4 flex items-center gap-2 text-[13.5px] font-bold text-[#16130C]">
         <Monitor className="size-4 text-[#9C9485]" aria-hidden />
-        Open this on a kitchen tablet
+        Open orders on a tablet
       </summary>
 
       <div className="border-t border-[#F4F1EC] p-4 space-y-4">
         <div>
           <p className="text-[11px] font-bold uppercase tracking-wide text-[#9C9485] mb-2">
-            Kitchen sign-in URL
+            Order tablet URL
           </p>
           <div className="flex items-center gap-2 rounded-xl border border-[#E2DDD5] bg-[#FDFCFB] px-3 py-3">
-            <code className="flex-1 truncate text-[13px] text-[#16130C]">{kitchenUrl}</code>
+            <code className="flex-1 truncate text-[13px] text-[#16130C]">{tabletUrl}</code>
             <button
               type="button"
               onClick={copy}
@@ -65,17 +69,18 @@ function Inner({ menuId, menuSlug }: { menuId: string; menuSlug: string }) {
           </div>
           <p className="mt-2 text-[12px] text-[#6B6355] leading-relaxed">
             The same orders you see here, on the counter. Staff sign in with a 4-digit PIN —
-            they never need your password. Two views, switched in its header:{" "}
-            <strong>Orders</strong> for whole orders, deliveries and the rider handover code,
-            and <strong>Stations</strong> for what each section is cooking.
+            they never need your password, and this works whether or not POS is switched on.
+            Two views, switched in its header: <strong>Orders</strong> for whole orders,
+            deliveries and the rider handover code, and <strong>Stations</strong> for what
+            each section is cooking.
           </p>
           <a
-            href={`/kitchen/${menuSlug}`}
+            href={`/tablet/${menuSlug}`}
             target="_blank"
             rel="noopener noreferrer"
             className="mt-3 inline-block rounded-full bg-[#16130C] px-6 h-[44px] leading-[44px] text-[13.5px] font-bold text-white hover:bg-[#2A251A]"
           >
-            Open kitchen terminal →
+            Open the order tablet →
           </a>
         </div>
 
@@ -84,7 +89,7 @@ function Inner({ menuId, menuSlug }: { menuId: string; menuSlug: string }) {
             Staff &amp; PINs
           </h3>
           <p className="text-[12.5px] text-[#6B6355] mb-3">
-            Anyone who should open the kitchen terminal needs a PIN here.
+            Anyone who should open the order tablet needs a PIN here.
           </p>
           <StaffSection
             menuId={menuId}

@@ -33,7 +33,7 @@ export default async function PosTablesPage({ params }: PageProps) {
   // to the kitchen view. Defence in depth; the page.tsx login already does
   // this when they're signing in, but a direct nav here would slip through.
   if (session.role === "kitchen") {
-    redirect(`/kitchen/${slug}/orders`);
+    redirect(`/tablet/${slug}/stations`);
   }
 
   // Tables (with positions + area links + legacy floor_section) and areas in

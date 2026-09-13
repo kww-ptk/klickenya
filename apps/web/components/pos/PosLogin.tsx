@@ -12,9 +12,9 @@ interface PosLoginProps {
   /**
    * Where to send the staff member after a successful PIN sign-in.
    * Defaults to the waiter tables grid; the kitchen entry overrides this
-   * to land on /kitchen/[slug]/orders. Layouts on the destination route
+   * to land on /tablet/[slug]/orders. Layouts on the destination route
    * enforce role match (e.g. a kitchen-role staff signing in here gets
-   * redirected to /kitchen/[slug] by the destination layout).
+   * redirected to /tablet/[slug] by the destination layout).
    */
   redirectTo?: string;
   /** Override the "POS Terminal" label above the restaurant name. */

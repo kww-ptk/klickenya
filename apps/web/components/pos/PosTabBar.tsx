@@ -14,7 +14,7 @@ export function PosTabBar() {
     { id: "tables",  href: `/pos/${slug}/tables`,  icon: LayoutGrid, label: "Tables"  },
     // "Ready" replaces the old Kitchen link for waiters: a curated view of
     // orders that have come back from the kitchen and need to be picked up.
-    // Kitchen-role staff have their own dedicated /kitchen/[slug] terminal.
+    // Kitchen-role staff have their own dedicated /tablet/[slug] order tablet.
     { id: "ready",   href: `/pos/${slug}/ready`,   icon: BellRing,   label: "Ready"   },
     { id: "history", href: `/pos/${slug}/history`, icon: History,    label: "History" },
   ] as const;
