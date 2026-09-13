@@ -150,14 +150,10 @@ export const PROPERTY_FEATURES = [
 
 /**
  * Canonical URLs and JSON-LD identifiers are always the production origin.
- *
- * NEXT_PUBLIC_SITE_URL is http://localhost:3000 in development and would be the
- * deployment URL on a Vercel preview. Deriving canonicals from it would ship
- * self-referencing canonicals pointing at a preview domain, which is the kind
- * of mistake that quietly deindexes pages. The pages this replaces hardcoded
- * klickenya.com for exactly this reason.
+ * Re-exported from lib/seo/site so the marketplace and real-estate sides of
+ * the site cannot drift onto different hosts.
  */
-export const SITE_URL = "https://klickenya.com";
+export { SITE_URL } from "@/lib/seo/site";
 
 export const REAL_ESTATE_BASE = "/real-estate";
 

@@ -12,6 +12,14 @@ import {
 } from "@/lib/sanity/queries";
 import { urlForImage } from "@/lib/sanity/image";
 import { JsonLd } from "@/components/seo/JsonLd";
+import { SITE_URL, absoluteUrl } from "@/lib/seo/site";
+import {
+  pickSocialImages,
+  schemaImages,
+  breadcrumbJsonLd,
+  openingHoursSpecification,
+  type Crumb,
+} from "@/lib/seo/listing";
 import type { ListingCardProps } from "@/components/listings/ListingCard";
 import type { MenuData } from "@/components/listings/detail/restaurant/MenuDisplay";
 import type { RestaurantArea } from "@/components/reservations/ReservationSheet";
@@ -70,61 +78,267 @@ function capitalize(str: string): string {
 
 /* ── JSON-LD helpers ─────────────────────────────── */
 
+/**
+ * Sanity stores the restaurant price band as budget | mid-range | fine-dining.
+ * schema.org priceRange expects the "$$" convention, which is what Google
+ * renders in the local pack; the raw slug renders as literal text.
+ */
+const PRICE_BAND_TO_SCHEMA: Record<string, string> = {
+  budget: "$",
+  "mid-range": "$$",
+  "fine-dining": "$$$",
+};
+
+/**
+ * The Sanity `type` a listing is filed under is not always the thing it is.
+ * 38 of the 39 restaurants on the marketplace are `type: "experience"` with
+ * `subcategory: "restaurants"` — they live at /experiences/<city>/<slug> and
+ * the page already reads the subcategory to decide whether to render a menu.
+ * The structured data has to read it too, otherwise every restaurant on the
+ * site is published to Google as a TouristAttraction and forfeits the
+ * Restaurant rich result (cuisine, hours, price range, menu).
+ */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function buildJsonLd(listing: any, urlType: UrlType, photoUrls: string[]) {
-  const sanityType = TYPE_TO_SANITY[urlType];
-  const base = {
-    "@context": "https://schema.org",
+function effectiveSchemaType(listing: any, sanityType: string): string {
+  if (listing?.subcategory === "restaurants") return "restaurant";
+  return sanityType;
+}
+
+function buildJsonLd(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  listing: any,
+  urlType: UrlType,
+  photoUrls: string[],
+  pagePath: string,
+) {
+  const sanityType = effectiveSchemaType(listing, TYPE_TO_SANITY[urlType]);
+  const pageUrl = absoluteUrl(pagePath);
+  const cityName = listing.city ?? "";
+  const description =
+    listing.seoDescription ??
+    `${SINGULAR_LABELS[sanityType] ?? "Listing"} in ${cityName}, Kenya.`;
+
+  const crumbs: Crumb[] = [
+    { name: "Home", path: "/" },
+    { name: TYPE_LABELS[urlType], path: `/${urlType}` },
+    ...(cityName
+      ? [
+          {
+            name: cityName,
+            path: `/${urlType}/${cityName.toLowerCase().trim().replace(/\s+/g, "-")}`,
+          },
+        ]
+      : []),
+    { name: listing.title, path: pagePath },
+  ];
+
+  const base: Record<string, unknown> = {
+    "@id": `${pageUrl}#listing`,
     name: listing.title,
-    description: listing.seoDescription ?? listing.title,
-    image: photoUrls[0],
+    description,
+    url: pageUrl,
+    ...(photoUrls.length > 0 ? { image: photoUrls } : {}),
     address: {
       "@type": "PostalAddress",
-      addressLocality: listing.city,
+      ...(listing.address ? { streetAddress: listing.address } : {}),
+      addressLocality: cityName,
       addressRegion: listing.county,
       addressCountry: "KE",
     },
+    isPartOf: { "@id": `${SITE_URL}/#website` },
   };
+
+  // A price of 0 is "free", not "unpriced" — only drop the offer when there is
+  // genuinely no number. Offers without a price are invalid and get ignored.
+  const hasPrice = typeof listing.price === "number";
+  const offer = hasPrice
+    ? {
+        "@type": "Offer",
+        price: listing.price,
+        priceCurrency: "KES",
+        url: pageUrl,
+        availability: "https://schema.org/InStock",
+      }
+    : undefined;
+
+  const openingHours = openingHoursSpecification(listing.openingHours);
+
+  let entity: Record<string, unknown>;
 
   switch (sanityType) {
     case "stay":
-      return {
+      entity = {
         ...base,
         "@type": "LodgingBusiness",
-        priceRange: `KSh ${listing.price}`,
+        ...(hasPrice ? { priceRange: `From KSh ${listing.price}` } : {}),
+        ...(listing.maxGuests ? { maximumAttendeeCapacity: listing.maxGuests } : {}),
+        ...(Array.isArray(listing.amenities) && listing.amenities.length > 0
+          ? {
+              amenityFeature: listing.amenities.map((a: string) => ({
+                "@type": "LocationFeatureSpecification",
+                name: a,
+                value: true,
+              })),
+            }
+          : {}),
       };
-    case "experience":
-      return {
-        ...base,
-        "@type": "TouristAttraction",
-      };
+      break;
+
     case "restaurant":
-      return {
+      entity = {
         ...base,
         "@type": "Restaurant",
-        servesCuisine: listing.cuisine,
+        ...(listing.cuisine ? { servesCuisine: listing.cuisine } : {}),
+        ...(listing.priceRange
+          ? { priceRange: PRICE_BAND_TO_SCHEMA[listing.priceRange] ?? listing.priceRange }
+          : {}),
+        ...(openingHours ? { openingHoursSpecification: openingHours } : {}),
+        ...(typeof listing.reservationRequired === "boolean"
+          ? { acceptsReservations: listing.reservationRequired }
+          : {}),
+        ...(Array.isArray(listing.menu) && listing.menu.length > 0
+          ? { hasMenu: `${pageUrl}#menu` }
+          : {}),
       };
-    case "event":
-      return {
+      break;
+
+    case "experience":
+      entity = {
+        ...base,
+        "@type": "TouristAttraction",
+        ...(cityName ? { touristType: "Leisure" } : {}),
+        ...(offer ? { isAccessibleForFree: listing.price === 0 } : {}),
+      };
+      break;
+
+    case "event": {
+      // Google drops an Event with no startDate outright. A weekly night out
+      // ("Every Saturday") has no single start date but does have a schedule,
+      // and schema.org models that with eventSchedule — which is how both live
+      // recurring events on the site get to be Events at all. Only a dateless
+      // event with no schedule either falls back to a plain Place.
+      const weekly = Array.isArray(listing.schedule)
+        ? listing.schedule.filter(
+            (sl: { day?: string; startTime?: string }) => sl?.day && sl?.startTime,
+          )
+        : [];
+
+      if (!listing.eventDate && weekly.length === 0) {
+        entity = { ...base, "@type": "Place" };
+        break;
+      }
+      const priceFrom =
+        typeof listing.priceFrom === "number"
+          ? listing.priceFrom
+          : listing.isFree
+            ? 0
+            : hasPrice
+              ? listing.price
+              : undefined;
+
+      entity = {
         ...base,
         "@type": "Event",
-        offers: {
-          "@type": "Offer",
-          price: listing.price,
-          priceCurrency: "KES",
+        ...(listing.eventDate
+          ? {
+              startDate: listing.eventDate,
+              ...(listing.eventEndDate ? { endDate: listing.eventEndDate } : {}),
+            }
+          : {
+              eventSchedule: weekly.map(
+                (sl: { day: string; startTime: string; endTime?: string }) => ({
+                  "@type": "Schedule",
+                  repeatFrequency: "P1W",
+                  byDay: `https://schema.org/${sl.day.charAt(0).toUpperCase()}${sl.day.slice(1)}`,
+                  startTime: sl.startTime,
+                  ...(sl.endTime ? { endTime: sl.endTime } : {}),
+                  scheduleTimezone: "Africa/Nairobi",
+                }),
+              ),
+            }),
+        eventStatus: "https://schema.org/EventScheduled",
+        eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
+        location: {
+          "@type": "Place",
+          name: listing.venue ?? listing.title,
+          address: listing.venueAddress
+            ? {
+                "@type": "PostalAddress",
+                streetAddress: listing.venueAddress,
+                addressLocality: cityName,
+                addressRegion: listing.county,
+                addressCountry: "KE",
+              }
+            : base.address,
         },
+        ...(listing.organizer
+          ? { organizer: { "@type": "Organization", name: listing.organizer } }
+          : {}),
+        ...(Array.isArray(listing.performers) && listing.performers.length > 0
+          ? {
+              performer: listing.performers.map((p: { name: string }) => ({
+                "@type": "PerformingGroup",
+                name: p.name,
+              })),
+            }
+          : {}),
+        ...(typeof priceFrom === "number"
+          ? {
+              offers: {
+                "@type": "Offer",
+                price: priceFrom,
+                priceCurrency: "KES",
+                url: pageUrl,
+                availability: "https://schema.org/InStock",
+              },
+            }
+          : {}),
       };
+      break;
+    }
+
     default:
-      return {
+      // Services and rentals are businesses with an address, not Products.
+      // LocalBusiness is what Google matches against local intent queries.
+      entity = {
         ...base,
-        "@type": "Product",
-        offers: {
-          "@type": "Offer",
-          price: listing.price,
-          priceCurrency: "KES",
-        },
+        "@type": "LocalBusiness",
+        ...(hasPrice ? { priceRange: `From KSh ${listing.price}` } : {}),
+        ...(openingHours ? { openingHoursSpecification: openingHours } : {}),
+        ...(offer ? { makesOffer: offer } : {}),
       };
   }
+
+  // A WebPage node naming its own primaryImageOfPage is the one explicit way
+  // to tell Google which image represents this page. Without it Google picks
+  // the largest prominent image it can find, which on a listing page is often
+  // a photo from the "Similar listings" rail — i.e. a different business's
+  // storefront shown as this listing's thumbnail.
+  const webPage: Record<string, unknown> = {
+    "@type": "WebPage",
+    "@id": `${pageUrl}#webpage`,
+    url: pageUrl,
+    name: listing.seoTitle ?? listing.title,
+    description,
+    isPartOf: { "@id": `${SITE_URL}/#website` },
+    about: { "@id": `${pageUrl}#listing` },
+    breadcrumb: { "@id": `${pageUrl}#breadcrumb` },
+    ...(photoUrls.length > 0
+      ? {
+          primaryImageOfPage: {
+            "@type": "ImageObject",
+            "@id": `${pageUrl}#primaryimage`,
+            url: photoUrls[0],
+            contentUrl: photoUrls[0],
+          },
+        }
+      : {}),
+  };
+
+  return {
+    "@context": "https://schema.org",
+    "@graph": [webPage, entity, breadcrumbJsonLd(crumbs, pageUrl)],
+  };
 }
 
 /* ── Static params ───────────────────────────────── */
@@ -165,33 +379,41 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   if (!listing) return {};
 
-  const title = listing.seoTitle ?? `${listing.title} | Klickenya`;
+  const cityName = listing.city ?? capitalize(city);
+  const pagePath = `/${type}/${city}/${slug}`;
+  const canonical = absoluteUrl(pagePath);
+
+  // Bare — the root layout's "%s | Klickenya" template appends the brand.
+  // Appending it here as well would double it in the <title>.
+  const title = listing.seoTitle ?? listing.title;
+
   const description =
     listing.seoDescription ??
-    `${SINGULAR_LABELS[TYPE_TO_SANITY[type]] ?? "Listing"} in ${listing.city ?? capitalize(city)}, Kenya.`;
+    `${SINGULAR_LABELS[TYPE_TO_SANITY[type]] ?? "Listing"} in ${cityName}, Kenya.`;
 
-  const ogImages =
-    listing.photos?.slice(0, 3).map(
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (p: any) => urlForImage(p).width(1200).height(630).url()
-    ) ?? [];
+  const images = pickSocialImages(listing.photos, `${listing.title} — ${cityName}`);
 
   return {
     title,
     description,
-    alternates: { canonical: `https://klickenya.com/${type}/${city}/${slug}` },
+    alternates: { canonical },
     openGraph: {
       title,
       description,
-      url: `https://klickenya.com/${type}/${city}/${slug}`,
-      images: ogImages,
+      url: canonical,
+      images,
+      // siteName and locale live on the root layout, but Next replaces the
+      // openGraph object wholesale rather than merging it, so every listing
+      // page was shipping social cards with no site name and no locale.
+      siteName: "Klickenya",
+      locale: "en_US",
       type: "website",
     },
     twitter: {
       card: "summary_large_image",
       title,
       description,
-      images: ogImages,
+      images: images.map((i) => i.url),
     },
   };
 }
@@ -378,7 +600,7 @@ export default async function ListingDetailPage({ params }: PageProps) {
     };
   });
 
-  const jsonLd = buildJsonLd(listing, type, photos);
+  const jsonLd = buildJsonLd(listing, type, schemaImages(listing.photos), `/${type}/${city}/${slug}`);
   const citySlug = city;
 
   // For restaurant subcategory, override labels
