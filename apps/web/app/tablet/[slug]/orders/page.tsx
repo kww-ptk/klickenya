@@ -43,12 +43,17 @@ export default async function KitchenDeliveriesPage({ params }: PageProps) {
     .single();
   if (!staffRow || !staffRow.is_active) redirect(`/tablet/${slug}`);
 
-  const { data: rows } = await adminClient
+  const { data: rows, error: ordersError } = await adminClient
     .from("orders")
     .select(ORDER_QUEUE_SELECT)
     .eq("menu_id", menu.id)
     .in("status", [...ACTIVE_ORDER_STATUSES])
     .order("created_at", { ascending: false });
+
+  // A failed read must not look like a quiet afternoon. PostgREST answers a
+  // missing column with 400 and `data` is then null — which used to render
+  // "No orders right now" over a live queue. Surface it instead.
+  if (ordersError) console.error("[tablet/orders] orders query failed:", ordersError);
 
   const rawOrders = (rows ?? []) as unknown as QueueOrder[];
 
@@ -83,6 +88,12 @@ export default async function KitchenDeliveriesPage({ params }: PageProps) {
         <h1 className="font-display text-[20px] font-bold text-[#16130C] mb-4">
           Orders
         </h1>
+        {ordersError && (
+          <div role="alert" className="rounded-2xl border border-red-300 bg-red-50 p-4 mb-4">
+            <p className="text-[13.5px] font-bold text-red-800">The order queue could not be read</p>
+            <p className="text-[12px] font-mono text-red-700 mt-1">{ordersError.message}</p>
+          </div>
+        )}
         <LiveOrderQueue menuId={menu.id} initialOrders={orders} />
       </div>
     </div>

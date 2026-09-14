@@ -28,8 +28,7 @@ export default async function ManageOrdersPage({ params }: PageProps) {
   const { user } = await getAuthUser();
   if (!user) redirect(`/login?returnTo=/manage/listings/${id}/orders`);
 
-  const isAdmin = await getIsAdmin(user.id);
-  const hostProfile = await getHostProfile(user.id);
+  const [isAdmin, hostProfile] = await Promise.all([getIsAdmin(user.id), getHostProfile(user.id)]);
   if (!hostProfile && !isAdmin) redirect("/dashboard");
 
   // Dual restaurant check (type OR subcategory) — see /manage/listings/[id]/layout.tsx.
@@ -54,9 +53,6 @@ export default async function ManageOrdersPage({ params }: PageProps) {
 
   const setupHref = `/manage/listings/${id}/orders/setup`;
 
-  // The Food Delivery Station's PIN, shown next to the link it opens.
-  let deliveryStationPin: string | null = null;
-
   if (!menu) {
     return (
       <div>
@@ -79,12 +75,41 @@ export default async function ManageOrdersPage({ params }: PageProps) {
     );
   }
 
-  const { data: rows } = await adminClient
-    .from("orders")
-    .select(ORDER_QUEUE_SELECT)
-    .eq("menu_id", menu.id)
-    .in("status", [...ACTIVE_ORDER_STATUSES])
-    .order("created_at", { ascending: false });
+  // The queue, the Food Delivery Station's PIN and the dish picker all hang
+  // off menu.id alone, so they go out together rather than one after another.
+  //
+  // Dishes for the "add to this order" picker are server-rendered rather than
+  // fetched on demand: there is no GET on /api/menu/items, a restaurant menu
+  // is ~40-150 rows, and the owner opening this page is about to work orders
+  // from it. !inner on menu_sections scopes to THIS menu.
+  const [{ data: rows, error: ordersError }, { data: stationRow }, { data: dishRows }] =
+    await Promise.all([
+      adminClient
+        .from("orders")
+        .select(ORDER_QUEUE_SELECT)
+        .eq("menu_id", menu.id)
+        .in("status", [...ACTIVE_ORDER_STATUSES])
+        .order("created_at", { ascending: false }),
+      adminClient
+        .from("restaurant_staff")
+        .select("pin")
+        .eq("menu_id", menu.id)
+        .eq("role", "delivery")
+        .eq("is_active", true)
+        .limit(1)
+        .maybeSingle(),
+      adminClient
+        .from("menu_items")
+        .select("id, name, price_kes, is_available, menu_sections!inner ( menu_id )")
+        .eq("menu_sections.menu_id", menu.id)
+        .eq("is_available", true)
+        .order("name", { ascending: true }),
+    ]);
+
+  // A failed read must not look like a quiet afternoon. PostgREST answers a
+  // missing column with 400 and `data` is then null — which used to render
+  // "No orders right now" over a live queue. Surface it instead.
+  if (ordersError) console.error("[manage/orders] orders query failed:", ordersError);
 
   const rawOrders = (rows ?? []) as unknown as QueueOrder[];
 
@@ -108,28 +133,9 @@ export default async function ManageOrdersPage({ params }: PageProps) {
     rider_phone: o.rider_id ? riderMap.get(o.rider_id)?.phone ?? null : null,
   }));
 
-  // Dishes for the "add to this order" picker. Server-rendered rather than
-  // fetched on demand: there is no GET on /api/menu/items, a restaurant menu
-  // is ~40-150 rows, and the owner opening this page is about to work orders
-  // from it. !inner on menu_sections scopes to THIS menu.
-  {
-    const { data: stationRow } = await adminClient
-      .from("restaurant_staff")
-      .select("pin")
-      .eq("menu_id", menu.id)
-      .eq("role", "delivery")
-      .eq("is_active", true)
-      .limit(1)
-      .maybeSingle();
-    deliveryStationPin = (stationRow as { pin?: string } | null)?.pin ?? null;
-  }
-
-  const { data: dishRows } = await adminClient
-    .from("menu_items")
-    .select("id, name, price_kes, is_available, menu_sections!inner ( menu_id )")
-    .eq("menu_sections.menu_id", menu.id)
-    .eq("is_available", true)
-    .order("name", { ascending: true });
+  // The Food Delivery Station's PIN, shown next to the link it opens.
+  const deliveryStationPin: string | null =
+    (stationRow as { pin?: string } | null)?.pin ?? null;
 
   const dishes: AddableDish[] = (dishRows ?? []).map((d) => ({
     id: d.id as string,
@@ -170,6 +176,13 @@ export default async function ManageOrdersPage({ params }: PageProps) {
           Ordering setup
         </Link>
       </div>
+
+      {ordersError && (
+        <div role="alert" className="rounded-2xl border border-red-300 bg-red-50 p-4">
+          <p className="text-[13.5px] font-bold text-red-800">The order queue could not be read</p>
+          <p className="text-[12px] font-mono text-red-700 mt-1">{ordersError.message}</p>
+        </div>
+      )}
 
       {channels.length === 0 ? (
         <div className="rounded-2xl border border-[#E8A020]/40 bg-[#E8A020]/[0.06] p-6">
