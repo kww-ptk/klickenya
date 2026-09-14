@@ -1,5 +1,5 @@
 # Food delivery — where it stands
-**Last updated: 13 September 2026.** Read this before touching anything under
+**Last updated: 14 September 2026.** Read this before touching anything under
 `/eat`, `/eatklick`, `/tablet`, `/rider` or `/admin/eat`.
 
 This is the state of the delivery programme, not a plan. The plan is
@@ -26,13 +26,28 @@ can be paid. All of it is live on production.
 ### The order lifecycle
 
 ```
-guest orders            → status new      · pickup_code generated (delivery only)
-kitchen "Start preparing" → status preparing · JOB APPEARS TO RIDERS
-rider "Take this job"     →                   rider_accepted_at set
-kitchen "Mark ready"      → status ready    · handover code shown to the kitchen
-rider "I have the food"   →                   picked_up_at set (code required)
-rider "Delivered" + cash  → status delivered · cash_collected_kes recorded
+guest orders              → status new      · pickup_code generated (delivery only)
+                                            · restaurant EMAILED (notificationEmail1/2, else host email, + ADMIN_EMAIL)
+guest "Cancel"            → status cancelled (only while new; POST /api/orders/<id>/cancel)
+kitchen "Start preparing" → status preparing · accepted_at · lines cascade · JOB APPEARS TO RIDERS
+kitchen "Decline"         → status cancelled · reason shown on the tracking page
+rider "Take this job"     →                   rider_accepted_at set (atomic; status must be preparing/ready)
+rider "I can't do this"   →                   rider_id cleared (before pickup only) — job back on the list
+kitchen "Mark ready"      → status ready    · lines cascade · handover code shown to the kitchen
+rider "I have the food"   →                   picked_up_at set (code required; 5 misses lock 15 min)
+rider "Delivered" + cash  → status delivered · only from ready, only once · lines cascade
 ```
+
+**Who may do what.** The status machine lives in `lib/orders/transitions.ts` and
+nowhere else: the order PATCH, the item PATCH and the queue button all read it.
+The `delivery` role (091) drives the full lifecycle like kitchen/manager/bar.
+Once a rider has claimed a delivery, the counter can no longer "Complete" it
+(409) — the rider closes it at the door. Every status write carries its
+precondition in the UPDATE filter, so a stale screen loses instead of
+overwriting. Where a delivery actually is comes from `deliveryStage()` in
+`lib/orders/deliveryStage.ts` (waiting · cooking · rider_assigned ·
+awaiting_rider · out_for_delivery · delivered · cancelled), and the guest
+tracking page reads that, not `status`.
 
 **There is no `out_for_delivery` status, and adding one would be a mistake.**
 `063:333` (`mv_dish_margin_30d`) filters `status in ('preparing','ready','delivered')`,
@@ -53,8 +68,11 @@ delivery leg is carried by timestamps instead — `rider_accepted_at`,
 | 090 | `orders.pickup_code` — the handover code |
 | 091 | `restaurant_staff.role` gains `'delivery'` |
 | 092 | commission rates on `menus`, money snapshots on `orders` |
+| 093 | drops the anonymous insert policies on `orders`/`order_items` (043); `orders.pickup_attempts` + `pickup_locked_until`; `menus.pos_failed_attempts` + `pos_locked_until`; index on `orders(order_type, created_at)` for the admin; index on `menus(listing_slug)` |
 
-**Next migration number: 093.**
+**Next migration number: 094.** Code reading the 093 lock columns does so in
+its own small select and tolerates their absence, so a deploy before the
+migration degrades to "no lockout", not a 400.
 
 ---
 
@@ -115,6 +133,23 @@ with `{menu_id, pin}`, keep the cookie, and fetch the page. Do that.
 
 ---
 
+**Throttles and lockouts (14 Sep).** `lib/security/rateLimit.ts` is an
+in-memory per-instance fixed window — a speed bump, not a wall. POST
+/api/orders: 10 per IP per minute and 5 per phone per 10 minutes. Rider
+sign-in: 20 per IP per 10 minutes on top of the per-account lockout. Staff PIN
+sign-in: 20 per IP per 10 minutes, plus ten wrong PINs lock the MENU for ten
+minutes (PINs are looked up by menu + pin, so a miss cannot be pinned on one
+staff row). Handover code: five wrong codes lock that order's pickup for
+fifteen minutes. The middleware no longer calls Supabase Auth for `/api/*`
+(each route authenticates itself); it does gate `/api/admin/*` with a JSON
+401 as defence in depth.
+
+**An owner cannot take over a rider by phone number any more.** POST
+/api/menu/riders used to reset the PIN of ANY existing rider whose phone
+matched, platform riders included. It now refuses (409) unless that rider is
+already linked to the caller's menu, and never reactivates a rider an admin
+deactivated.
+
 ## 5. Current data state
 
 - **One restaurant delivers**: Napul'è. Fee KSh 200, WhatsApp set, 10% / 7%.
@@ -139,9 +174,11 @@ identical to one that works.
 
 Then, roughly in order of value:
 
-1. **Notifications.** Nothing is pushed anywhere. Riders only see a job if the
-   app is open (15s poll); owners only see an order if the queue is open. This
-   is the largest functional gap.
+1. **Notifications.** The restaurant is now EMAILED on every delivery and
+   takeaway order (`lib/orders/notifyRestaurant.ts`, same recipient rule as
+   reservations). Riders still only see a job if the app is open (15 s poll,
+   paused while the tab is hidden); nothing is pushed to phones. Supabase
+   Realtime on `orders` is the next step and also replaces the owner poll.
 2. **Rider payouts.** Earnings are recorded per order; there is no payout run,
    no statement, no "settled" marker. Needed before rider #2.
 3. **Prepay.** Everything is cash on delivery. `PaymentProvider` has no
@@ -149,7 +186,12 @@ Then, roughly in order of value:
 4. **Photos.** 160 of 162 menu items have none. Every surface is built to show
    them; this is the single biggest visual lift available.
 5. `/admin/eat` **has never been rendered.** Its data layer has been run against
-   production, its pages have not.
+   production, its pages have not. It is now cached (30 s, tag `eat:orders`),
+   auto-refreshes while visible, no longer pulls line items, and has its own
+   skeleton — but nobody has looked at it yet.
+6. **WhatsApp number still required to order.** The cart refuses to submit
+   without one even though the restaurant is now emailed. Worth relaxing once
+   a restaurant proves it watches email.
 
 **Explicitly not built, and deliberately:** dispatch algorithm, live GPS
 tracking, offer/accept timeouts, batching. With one restaurant and a shared job
