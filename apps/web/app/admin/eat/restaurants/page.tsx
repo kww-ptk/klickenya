@@ -2,6 +2,7 @@ import Link from "next/link";
 import { adminClient } from "@/lib/supabase/admin";
 import { sanityClient } from "@/lib/sanity/client";
 import { getEatMetrics } from "@/lib/eat/adminMetrics";
+import { CommissionRow } from "./CommissionRow";
 
 export const dynamic = "force-dynamic";
 
@@ -14,6 +15,9 @@ type MenuRow = {
   delivery_enabled: boolean | null;
   table_ordering: boolean | null;
   whatsapp_phone: string | null;
+  commission_delivery_bps: number | null;
+  commission_pickup_bps: number | null;
+  delivery_fee_kes: number | null;
 };
 
 function Flag({ on, label }: { on: boolean; label: string }) {
@@ -42,7 +46,7 @@ export default async function EatAdminRestaurants() {
   const { data: menuRows } = await adminClient
     .from("menus")
     .select(
-      "id, name, listing_slug, is_published, takeaway_enabled, delivery_enabled, table_ordering, whatsapp_phone",
+      "id, name, listing_slug, is_published, takeaway_enabled, delivery_enabled, table_ordering, whatsapp_phone, commission_delivery_bps, commission_pickup_bps, delivery_fee_kes",
     )
     .order("name", { ascending: true });
 
@@ -77,6 +81,7 @@ export default async function EatAdminRestaurants() {
               <th className="px-4 py-3 font-semibold">Restaurant</th>
               <th className="px-4 py-3 font-semibold">Channels</th>
               <th className="px-4 py-3 font-semibold">WhatsApp</th>
+              <th className="px-4 py-3 font-semibold">Commission</th>
               <th className="px-4 py-3 font-semibold">Orders 30d</th>
               <th className="px-4 py-3 font-semibold">Blockers</th>
             </tr>
@@ -116,6 +121,14 @@ export default async function EatAdminRestaurants() {
                   </td>
                   <td className="px-4 py-3 text-zinc-600 whitespace-nowrap">
                     {x.whatsapp_phone ?? <span className="text-red-600 font-medium">not set</span>}
+                  </td>
+                  <td className="px-4 py-3">
+                    <CommissionRow
+                      menuId={x.id}
+                      deliveryBps={x.commission_delivery_bps ?? 1000}
+                      pickupBps={x.commission_pickup_bps ?? 700}
+                      deliveryFeeKes={Number(x.delivery_fee_kes ?? 0)}
+                    />
                   </td>
                   <td className="px-4 py-3 text-zinc-700">{orderCount.get(x.id) ?? 0}</td>
                   <td className="px-4 py-3">

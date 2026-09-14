@@ -22,7 +22,7 @@ export async function recomputeOrderTotals(orderId: string): Promise<void> {
       .eq("order_id", orderId),
     adminClient
       .from("orders")
-      .select("delivery_fee_kes")
+      .select("delivery_fee_kes, commission_bps")
       .eq("id", orderId)
       .maybeSingle(),
   ]);
@@ -38,9 +38,28 @@ export async function recomputeOrderTotals(orderId: string): Promise<void> {
     .reduce((sum, l) => sum + Number(l.line_total ?? 0), 0);
   const deliveryFee = Number(order?.delivery_fee_kes ?? 0);
 
+  // Commission follows the food. Remove a dish and the restaurant's payout
+  // and Klickenya's cut both have to move with it, or the ledger describes an
+  // order that no longer exists.
+  //
+  // Uses the rate FROZEN on the order, never the menu's current one: an order
+  // placed under an old rate stays on that rate, even if it is edited after a
+  // renegotiation. Orders from before 092 have no rate and keep a null
+  // commission rather than being retro-charged one they never agreed to.
+  const commissionBps = order?.commission_bps;
+  const money: Record<string, unknown> = {
+    subtotal_kes: subtotal,
+    total_kes: subtotal + deliveryFee,
+  };
+  if (typeof commissionBps === "number") {
+    const commission = Math.round((subtotal * commissionBps) / 10000);
+    money.commission_kes = commission;
+    money.restaurant_payout_kes = subtotal - commission;
+  }
+
   const { error } = await adminClient
     .from("orders")
-    .update({ subtotal_kes: subtotal, total_kes: subtotal + deliveryFee })
+    .update(money)
     .eq("id", orderId);
 
   if (error) {

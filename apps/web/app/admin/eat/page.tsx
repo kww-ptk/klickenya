@@ -100,6 +100,35 @@ export default async function EatAdminOverview() {
         </div>
       </section>
 
+      <section>
+        <h2 className="text-[12px] font-bold uppercase tracking-widest text-zinc-400 mb-2.5">
+          Klickenya earnings — delivered orders
+        </h2>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <Kpi
+            label="Earned"
+            value={`KSh ${t.platformEarnedKes.toLocaleString()}`}
+            tone="good"
+            hint="Commission plus our share of delivery fees"
+          />
+          <Kpi
+            label="Commission"
+            value={`KSh ${t.commissionKes.toLocaleString()}`}
+            hint="On the food"
+          />
+          <Kpi
+            label="Owed to riders"
+            value={`KSh ${t.riderOwedKes.toLocaleString()}`}
+            hint="Their share of delivery fees"
+          />
+          <Kpi
+            label="Owed to restaurants"
+            value={`KSh ${t.restaurantOwedKes.toLocaleString()}`}
+            hint="Food, less commission"
+          />
+        </div>
+      </section>
+
       <div className="grid lg:grid-cols-2 gap-5">
         <section>
           <h2 className="text-[12px] font-bold uppercase tracking-widest text-zinc-400 mb-2.5">
