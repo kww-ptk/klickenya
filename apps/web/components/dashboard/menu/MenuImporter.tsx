@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 
 /* ── Types ─────────────────────────────────────────── */
 
@@ -15,6 +15,40 @@ interface ImportedSection {
   title: string;
   items: ImportedItem[];
 }
+
+type ImportMode = "append" | "replace";
+
+interface PlannedRename {
+  section: string;
+  from: string;
+  to: string;
+  confidence: number;
+  needsReview: boolean;
+}
+
+interface ImportPlan {
+  counts: {
+    sectionsCreated: number;
+    sectionsKept: number;
+    sectionsDeleted: number;
+    itemsCreated: number;
+    itemsUpdated: number;
+    itemsRenamed: number;
+    itemsDeleted: number;
+  };
+  removals: { section: string; name: string }[];
+  removedSections: { title: string; itemCount: number }[];
+  renames: PlannedRename[];
+  dependencies: { withOptions: number; withRecipe: number; withOrders: number };
+}
+
+/**
+ * Stable key for a rename the owner has rejected. JSON rather than a
+ * delimiter, because a dish name may contain any character — "Fish & Chips |
+ * Large" would collide with a plain pipe-joined key.
+ */
+const renameKey = (r: { section: string; from: string; to: string }) =>
+  JSON.stringify([r.section, r.from, r.to].map((x) => x.toLowerCase()));
 
 /* ── Constants ─────────────────────────────────────── */
 
@@ -64,7 +98,12 @@ export function MenuImporter({ menuId, onComplete, onClose }: MenuImporterProps)
   const [summary, setSummary] = useState("");
   const [committing, setCommitting] = useState(false);
   const [commitError, setCommitError] = useState<string | null>(null);
-  const [result, setResult] = useState<{ created_sections: number; created_items: number } | null>(null);
+  const [result, setResult] = useState<Record<string, number> & { mode?: ImportMode } | null>(null);
+  const [mode, setMode] = useState<ImportMode>("append");
+  const [plan, setPlan] = useState<ImportPlan | null>(null);
+  const [planning, setPlanning] = useState(false);
+  const [planError, setPlanError] = useState<string | null>(null);
+  const [rejected, setRejected] = useState<Set<string>>(new Set());
 
   /* ── Step 1 → 2: parse ─────────────────────────────── */
 
@@ -96,6 +135,58 @@ export function MenuImporter({ menuId, onComplete, onClose }: MenuImporterProps)
     }
   }, [menuId, rawText]);
 
+  /* ── Replace preview ────────────────────────────────── */
+  /* Only "replace" can remove anything, so only replace needs a preview.
+     Debounced because the owner can still edit the parsed rows above.    */
+
+  const usableSections = sections.filter(
+    (s) => s.title.trim() && s.items.some((i) => i.name.trim())
+  );
+
+  useEffect(() => {
+    if (step !== "review" || mode !== "replace" || usableSections.length === 0) {
+      setPlan(null);
+      return;
+    }
+    let cancelled = false;
+    setPlanning(true);
+    setPlanError(null);
+
+    const t = setTimeout(async () => {
+      try {
+        const res = await fetch("/api/menu/import", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "plan", menu_id: menuId, sections: usableSections }),
+        });
+        const data = await res.json();
+        if (cancelled) return;
+        if (!res.ok) {
+          setPlanError(data.error ?? "Could not preview the changes");
+          setPlan(null);
+          return;
+        }
+        setPlan(data);
+      } catch {
+        if (!cancelled) setPlanError("Network error — could not preview the changes");
+      } finally {
+        if (!cancelled) setPlanning(false);
+      }
+    }, 500);
+
+    return () => { cancelled = true; clearTimeout(t); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step, mode, menuId, JSON.stringify(usableSections)]);
+
+  const toggleRejected = (r: PlannedRename) => {
+    setRejected((prev) => {
+      const next = new Set(prev);
+      const k = renameKey(r);
+      if (next.has(k)) next.delete(k); else next.add(k);
+      return next;
+    });
+  };
+
   /* ── Step 2 → 3: commit ─────────────────────────────── */
 
   const handleCommit = useCallback(async () => {
@@ -106,10 +197,20 @@ export function MenuImporter({ menuId, onComplete, onClose }: MenuImporterProps)
     setCommitError(null);
 
     try {
+      const rejectedRenames = (plan?.renames ?? [])
+        .filter((r) => rejected.has(renameKey(r)))
+        .map(({ section, from, to }) => ({ section, from, to }));
+
       const res = await fetch("/api/menu/import", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "commit", menu_id: menuId, sections: nonEmpty }),
+        body: JSON.stringify({
+          action: "commit",
+          menu_id: menuId,
+          mode,
+          sections: nonEmpty,
+          ...(mode === "replace" ? { rejected_renames: rejectedRenames } : {}),
+        }),
       });
       const data = await res.json();
 
@@ -125,7 +226,7 @@ export function MenuImporter({ menuId, onComplete, onClose }: MenuImporterProps)
     } finally {
       setCommitting(false);
     }
-  }, [menuId, sections]);
+  }, [menuId, sections, mode, plan, rejected]);
 
   /* ── Section / item editors ─────────────────────────── */
 
@@ -380,6 +481,163 @@ export function MenuImporter({ menuId, onComplete, onClose }: MenuImporterProps)
               + Add section
             </button>
 
+            {/* ── How to apply ───────────────────────── */}
+            <div className="bg-white border border-border rounded-xl overflow-hidden">
+              <p className="px-4 py-2.5 text-[11px] font-semibold text-text3 uppercase tracking-wide bg-canvas border-b border-surface">
+                How should we apply this?
+              </p>
+              {([
+                {
+                  value: "append" as const,
+                  title: "Add to my menu",
+                  blurb: "Keeps everything you already have and adds these sections below it.",
+                },
+                {
+                  value: "replace" as const,
+                  title: "Replace my menu",
+                  blurb: "Updates dishes you already have, adds new ones, and removes anything not in this list. Renames are matched so past orders and recipes are kept.",
+                },
+              ]).map((opt) => (
+                <label
+                  key={opt.value}
+                  className={`flex gap-3 px-4 py-3 cursor-pointer border-b border-surface last:border-b-0 transition-colors ${
+                    mode === opt.value ? "bg-amber/5" : "hover:bg-canvas"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="import-mode"
+                    checked={mode === opt.value}
+                    onChange={() => { setMode(opt.value); setRejected(new Set()); }}
+                    className="mt-0.5 accent-amber w-4 h-4 shrink-0"
+                  />
+                  <span>
+                    <span className="block text-[13px] font-bold text-dark">{opt.title}</span>
+                    <span className="block text-[12px] text-text2 mt-0.5">{opt.blurb}</span>
+                  </span>
+                </label>
+              ))}
+            </div>
+
+            {/* ── Replace preview ─────────────────────── */}
+            {mode === "replace" && (
+              <>
+                {planning && (
+                  <p className="text-[12px] text-text3 text-center">Checking against your current menu…</p>
+                )}
+
+                {planError && (
+                  <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3">
+                    <p className="text-[13px] text-red-700 font-semibold">{planError}</p>
+                  </div>
+                )}
+
+                {plan && !planning && (
+                  <div className="space-y-3">
+                    <div className="bg-canvas border border-border rounded-xl px-4 py-3">
+                      <p className="text-[13px] text-dark font-semibold mb-1">What will change</p>
+                      <p className="text-[13px] text-text2">
+                        {plan.counts.itemsUpdated} updated · {plan.counts.itemsCreated} added ·{" "}
+                        <span className={plan.counts.itemsDeleted > 0 ? "text-[#DC2626] font-semibold" : ""}>
+                          {plan.counts.itemsDeleted} removed
+                        </span>
+                        {plan.counts.itemsRenamed > 0 && ` · ${plan.counts.itemsRenamed} renamed`}
+                      </p>
+                    </div>
+
+                    {/* Renames — a guess, so the owner confirms it */}
+                    {plan.renames.length > 0 && (
+                      <div className="bg-white border border-border rounded-xl overflow-hidden">
+                        <p className="px-4 py-2.5 text-[11px] font-semibold text-text3 uppercase tracking-wide bg-canvas border-b border-surface">
+                          Renamed dishes — untick any we got wrong
+                        </p>
+                        {plan.renames.map((r) => {
+                          const off = rejected.has(renameKey(r));
+                          return (
+                            <label
+                              key={renameKey(r)}
+                              className="flex items-start gap-2.5 px-4 py-2.5 border-b border-surface last:border-b-0 cursor-pointer hover:bg-canvas transition-colors"
+                            >
+                              <input
+                                type="checkbox"
+                                checked={!off}
+                                onChange={() => toggleRejected(r)}
+                                className="mt-0.5 accent-amber w-4 h-4 shrink-0"
+                              />
+                              <span className="min-w-0">
+                                <span className={`block text-[13px] ${off ? "text-text3 line-through" : "text-dark"}`}>
+                                  <span className="text-text2">{r.from}</span>
+                                  <span className="text-text3 mx-1.5">→</span>
+                                  <span className="font-semibold">{r.to}</span>
+                                </span>
+                                <span className="block text-[11px] text-text3 mt-0.5">
+                                  {r.section}
+                                  {r.needsReview && (
+                                    <span className="text-amber-700 font-semibold"> · not sure — please check</span>
+                                  )}
+                                </span>
+                                {off && (
+                                  <span className="block text-[11px] text-[#DC2626] mt-0.5">
+                                    Will be removed and re-added as a new dish
+                                  </span>
+                                )}
+                              </span>
+                            </label>
+                          );
+                        })}
+                      </div>
+                    )}
+
+                    {/* Removals — the only destructive part */}
+                    {plan.counts.itemsDeleted > 0 && (
+                      <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 space-y-2">
+                        <p className="text-[13px] font-semibold text-red-800">
+                          {plan.counts.itemsDeleted} item{plan.counts.itemsDeleted !== 1 ? "s" : ""} will be removed
+                          {plan.removedSections.length > 0 &&
+                            `, including ${plan.removedSections.length} whole section${plan.removedSections.length !== 1 ? "s" : ""}`}
+                        </p>
+
+                        {plan.removals.length > 0 && (
+                          <ul className="text-[12px] text-red-700 space-y-0.5">
+                            {plan.removals.slice(0, 8).map((r, i) => (
+                              <li key={i}>• {r.name} <span className="text-red-500">({r.section})</span></li>
+                            ))}
+                            {plan.removals.length > 8 && (
+                              <li className="text-red-500">…and {plan.removals.length - 8} more</li>
+                            )}
+                          </ul>
+                        )}
+
+                        {plan.removedSections.length > 0 && (
+                          <ul className="text-[12px] text-red-700 space-y-0.5">
+                            {plan.removedSections.map((s) => (
+                              <li key={s.title}>• Whole section “{s.title}” ({s.itemCount} item{s.itemCount !== 1 ? "s" : ""})</li>
+                            ))}
+                          </ul>
+                        )}
+
+                        {(plan.dependencies.withOptions > 0 ||
+                          plan.dependencies.withRecipe > 0 ||
+                          plan.dependencies.withOrders > 0) && (
+                          <p className="text-[12px] text-red-800 border-t border-red-200 pt-2">
+                            <span className="font-semibold">This also affects:</span>{" "}
+                            {[
+                              plan.dependencies.withOptions > 0 &&
+                                `${plan.dependencies.withOptions} with sizes or extras (those are deleted too)`,
+                              plan.dependencies.withRecipe > 0 &&
+                                `${plan.dependencies.withRecipe} with a stock recipe (deleted too)`,
+                              plan.dependencies.withOrders > 0 &&
+                                `${plan.dependencies.withOrders} that customers have ordered before (past orders are kept, but stop linking to the dish)`,
+                            ].filter(Boolean).join("; ")}.
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </>
+            )}
+
             {commitError && (
               <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3">
                 <p className="text-[13px] text-red-700 font-semibold">{commitError}</p>
@@ -395,10 +653,16 @@ export function MenuImporter({ menuId, onComplete, onClose }: MenuImporterProps)
               </button>
               <button
                 onClick={handleCommit}
-                disabled={committing || totalItems === 0}
+                disabled={committing || totalItems === 0 || (mode === "replace" && (planning || !plan))}
                 className="flex-[2] h-[44px] rounded-full bg-amber text-dark text-[14px] font-bold hover:bg-[#d4911c] transition-colors disabled:opacity-50"
               >
-                {committing ? "Importing…" : `Import ${totalItems} item${totalItems !== 1 ? "s" : ""}`}
+                {committing
+                  ? "Importing…"
+                  : mode === "replace"
+                    ? plan
+                      ? `Apply — ${plan.counts.itemsUpdated} updated, ${plan.counts.itemsCreated} added, ${plan.counts.itemsDeleted} removed`
+                      : "Apply changes"
+                    : `Import ${totalItems} item${totalItems !== 1 ? "s" : ""}`}
               </button>
             </div>
           </div>
@@ -412,19 +676,38 @@ export function MenuImporter({ menuId, onComplete, onClose }: MenuImporterProps)
             </div>
             <div>
               <h3 className="font-display text-[20px] font-bold text-dark mb-2">
-                Menu imported!
+                {result.mode === "replace" ? "Menu updated!" : "Menu imported!"}
               </h3>
-              <p className="text-[14px] text-text2">
-                Added{" "}
-                <span className="font-semibold text-dark">
-                  {result.created_sections} section{result.created_sections !== 1 ? "s" : ""}
-                </span>{" "}
-                and{" "}
-                <span className="font-semibold text-dark">
-                  {result.created_items} item{result.created_items !== 1 ? "s" : ""}
-                </span>{" "}
-                to your menu.
-              </p>
+              {result.mode === "replace" ? (
+                <p className="text-[14px] text-text2">
+                  <span className="font-semibold text-dark">{result.itemsUpdated ?? 0}</span> updated,{" "}
+                  <span className="font-semibold text-dark">{result.itemsCreated ?? 0}</span> added
+                  {(result.itemsDeleted ?? 0) > 0 && (
+                    <> and <span className="font-semibold text-dark">{result.itemsDeleted}</span> removed</>
+                  )}
+                  .
+                  {(result.itemsRenamed ?? 0) > 0 && (
+                    <>
+                      {" "}
+                      <span className="font-semibold text-dark">{result.itemsRenamed}</span> renamed dish
+                      {result.itemsRenamed !== 1 ? "es" : ""} kept {result.itemsRenamed !== 1 ? "their" : "its"} order
+                      history and options.
+                    </>
+                  )}
+                </p>
+              ) : (
+                <p className="text-[14px] text-text2">
+                  Added{" "}
+                  <span className="font-semibold text-dark">
+                    {result.created_sections} section{result.created_sections !== 1 ? "s" : ""}
+                  </span>{" "}
+                  and{" "}
+                  <span className="font-semibold text-dark">
+                    {result.created_items} item{result.created_items !== 1 ? "s" : ""}
+                  </span>{" "}
+                  to your menu.
+                </p>
+              )}
             </div>
             <p className="text-[12px] text-text3">
               Prices, descriptions, and options can be edited in the menu builder.
