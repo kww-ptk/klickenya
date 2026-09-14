@@ -36,6 +36,11 @@ export type EatOrder = {
   delivery_lng: number | null;
   total_kes: number | null;
   cash_collected_kes: number | null;
+  commission_kes: number | null;
+  restaurant_payout_kes: number | null;
+  rider_fee_kes: number | null;
+  platform_delivery_fee_kes: number | null;
+  delivery_fee_kes: number | null;
   rider_id: string | null;
   rider_accepted_at: string | null;
   picked_up_at: string | null;
@@ -74,12 +79,29 @@ export type EatMetrics = {
      *  accusation — usually a rider who skipped the field — but it is the
      *  number that has to be chased. */
     cashUnrecorded: number;
+    /** Klickenya's commission on delivered orders. */
+    commissionKes: number;
+    /** Klickenya's share of delivery fees on delivered orders. */
+    platformDeliveryFeeKes: number;
+    /** Everything Klickenya earned. */
+    platformEarnedKes: number;
+    /** Owed to riders for delivered orders. */
+    riderOwedKes: number;
+    /** Owed to restaurants for delivered orders. */
+    restaurantOwedKes: number;
   };
 };
+
+/** Sum one money column, treating nulls (pre-092 orders) as zero. */
+function sum(orders: EatOrder[], key: keyof EatOrder): number {
+  return orders.reduce((n, o) => n + Number((o[key] as number | null) ?? 0), 0);
+}
 
 const SELECT = `
   id, menu_id, order_type, status, customer_name, customer_phone,
   delivery_address, delivery_lat, delivery_lng, total_kes, cash_collected_kes,
+  delivery_fee_kes, commission_kes, restaurant_payout_kes, rider_fee_kes,
+  platform_delivery_fee_kes,
   rider_id, rider_accepted_at, picked_up_at, delivered_at, created_at,
   order_items ( id, item_name, quantity, is_voided )
 `;
@@ -151,6 +173,14 @@ export async function getEatMetrics(days = 30): Promise<EatMetrics> {
       ordersPerDay: Math.round((orders.length / days) * 10) / 10,
       cashCollectedKes: orders.reduce((n, o) => n + Number(o.cash_collected_kes ?? 0), 0),
       cashUnrecorded: deliveredDeliveries.filter((o) => o.cash_collected_kes === null).length,
+      // Delivered only. An order still being cooked has earned nobody
+      // anything yet, and counting it would overstate every line.
+      commissionKes: sum(delivered, "commission_kes"),
+      platformDeliveryFeeKes: sum(delivered, "platform_delivery_fee_kes"),
+      platformEarnedKes:
+        sum(delivered, "commission_kes") + sum(delivered, "platform_delivery_fee_kes"),
+      riderOwedKes: sum(delivered, "rider_fee_kes"),
+      restaurantOwedKes: sum(delivered, "restaurant_payout_kes"),
     },
   };
 }
