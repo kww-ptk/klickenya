@@ -1,5 +1,5 @@
 # Klickenya — CLAUDE.md
-# Last updated: August 23, 2026 (real-estate overhaul: search, SEO, property currency; migration counter → 084)
+# Last updated: September 13, 2026 (food delivery end to end: eat.klickenya.com, riders, order tablet, commission; migration counter → 092)
 # Read this at the start of every session before writing any code.
 
 ## What Klickenya is
@@ -10,7 +10,7 @@ Stack: Next.js 15 App Router · Sanity (content) · Supabase (auth + dynamic dat
 Monorepo: apps/web · apps/studio · packages/shared · packages/database.
 
 ## Current state (as of audit May 8, 2026)
-Migration count: 084 (last: 084_valuations_property_type.sql)
+Migration count: 092 (last: 092_commission.sql)
 Missing on disk: 046, 047, 050 (squashed or never committed — don't reuse these numbers)
 Collision on disk: 073 has TWO files (073_partner_linkage.sql + 073_staff_cross_station_access.sql) — historical, don't reuse 073
 LIVE and working end-to-end:
@@ -26,6 +26,10 @@ LIVE and working end-to-end:
   - Table reservations: /dashboard/listings/[id]/reservations (migrations 049–053)
   - Klickenya Kitchen: stock, recipes, purchase orders, auto-deduction, reports (migrations 060–066)
   - Events system: /dashboard/events — add event form, attendees, admin review
+  - Food delivery, end to end — READ docs/food-delivery-state.md BEFORE TOUCHING IT:
+      eat.klickenya.com (consumer app) · /order/<id> guest tracking · /manage owner queue
+      · /tablet/<menuSlug> Food Delivery Orders (staff PIN) · /rider rider app
+      · /admin/eat command centre · per-restaurant commission + 80/20 rider fee split
   - Event ticketing: Paystack checkout (M-Pesa/card) + unified free+paid QR tickets, door scanner at /dashboard/events/[id]/scan, ledger + manual host payouts (migration 079), host ticket-tier editing (price/availability), per-event coupons (%/fixed, max-redemptions/expiry/one-per-customer), sales/guest monitoring dashboard, admin access to any event's ticketing
   - Guest profile: /profile — bookings/enquiries/events/saved tabs
   - Real estate: /real-estate/list (3-step form, agent/owner/developer)
@@ -61,7 +65,8 @@ NOT YET BUILT:
   Mobile-first. Test on iPhone Safari before declaring done.
 
 ## Database — Supabase
-  Next migration number: 085 (084 adds valuations.property_type — the valuation route always inserted a column the table never had, so every insert failed with PGRST204 and was swallowed; 083 is takeaway orders; don't use 046, 047, 050 — gaps on disk; 073 is a double — already used twice)
+  Next migration number: 093 (087 pos_enabled · 088 riders · 089 platform riders · 090 pickup_code
+    · 091 delivery staff role · 092 commission. 084 adds valuations.property_type — the valuation route always inserted a column the table never had, so every insert failed with PGRST204 and was swallowed; 083 is takeaway orders; don't use 046, 047, 050 — gaps on disk; 073 is a double — already used twice)
   RLS enabled on all tables. Check policies before querying from client.
   create_booking_with_payment() RPC handles bookings — don't INSERT directly.
   guest_user_id present on bookings (040) and contact_requests (042).
@@ -98,6 +103,23 @@ NOT YET BUILT:
   Consider extracting the projection into a shared constant if a table is
   read from 4+ places — order_items is now at that threshold. Worth doing
   next time someone adds a column there.
+
+## /api/admin/* is NOT protected by middleware
+  The middleware check is `pathname.startsWith("/admin")`. That matches the /admin PAGES
+  and never /api/admin/*. Five routes shipped answering unauthenticated callers, including
+  claim-approve — the only path that sets isVerified, and it creates host accounts.
+  Every /api/admin route must call assertAdmin() itself. A test enforces this:
+    apps/web/lib/admin/__tests__/adminRoutesGuarded.test.ts
+  Still worth doing: cover /api/admin/* in middleware as defence in depth.
+
+## tsc cannot see inside a PostgREST query string
+  Table and column names in .select()/.from() are strings. Two invented table names
+  compiled, built, and would have failed only at runtime. Run a new query against the
+  live database before committing it — a curl with the service role key is enough.
+  Related: when a query fails, PostgREST returns 400 and our client reads `data` as null,
+  so the UI shows a confident empty state. Surface the error instead; see
+  lib/eat/adminMetrics.ts (schemaError). Better still, put new flags in a shared TS type —
+  that turns the column-drift rule below into a compile error instead of a grep.
 
 ## Real estate — property prices carry a currency
   `property.currency` (KES default, plus EUR/USD/GBP) says what `price` is quoted in.
