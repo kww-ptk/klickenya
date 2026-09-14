@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { MapPin, Phone, Navigation, LogOut, RefreshCw, MessageCircle } from "lucide-react";
 import { waNumber } from "@/lib/eat/whatsappOrder";
 import { mapsUrl } from "@/lib/orders/location";
+import { usePolling } from "@/hooks/usePolling";
 
 type Job = {
   id: string;
@@ -54,22 +55,13 @@ export function RiderApp() {
   }, []);
 
   useEffect(() => {
-    if (!rider) return;
-    load();
-    const i = setInterval(load, 15000);
-    const onVisible = () => {
-      if (!document.hidden) load();
-    };
-    document.addEventListener("visibilitychange", onVisible);
-    return () => {
-      clearInterval(i);
-      document.removeEventListener("visibilitychange", onVisible);
-    };
+    if (rider) void load();
   }, [rider, load]);
+  usePolling(load, 15000, Boolean(rider));
 
   async function act(
     jobId: string,
-    action: "accept" | "pickup" | "deliver",
+    action: "accept" | "pickup" | "deliver" | "release",
     cash?: number,
     pickupCode?: string,
   ) {
@@ -149,6 +141,11 @@ export function RiderApp() {
           busy={busy === job.id}
           onPickup={(code) => act(job.id, "pickup", undefined, code)}
           onDeliver={(cash) => act(job.id, "deliver", cash)}
+          onRelease={() => {
+            if (window.confirm("Hand this job back? Another rider will be able to take it.")) {
+              void act(job.id, "release");
+            }
+          }}
         />
       ) : (
         <>
@@ -193,6 +190,7 @@ function JobCard({
   onAccept,
   onPickup,
   onDeliver,
+  onRelease,
 }: {
   job: Job;
   restaurant: string;
@@ -203,6 +201,8 @@ function JobCard({
   onAccept?: () => void;
   onPickup?: (pickupCode: string) => void;
   onDeliver?: (cash?: number) => void;
+  /** Hand the job back before pickup — a puncture, a shift ending. */
+  onRelease?: () => void;
 }) {
   const [confirming, setConfirming] = useState(false);
   const [code, setCode] = useState("");
@@ -349,6 +349,16 @@ function JobCard({
                 Head over now. This unlocks the moment the kitchen marks it ready.
               </p>
             </>
+          )}
+          {onRelease && (
+            <button
+              type="button"
+              onClick={onRelease}
+              disabled={busy}
+              className="mt-3 w-full rounded-full border border-white/20 py-3 text-[14px] font-bold text-white/70 disabled:opacity-50"
+            >
+              I can&apos;t do this one
+            </button>
           )}
         </>
       )}
