@@ -4,6 +4,11 @@ import { adminClient } from "@/lib/supabase/admin";
 import { normalizeKenyanPhone } from "@/lib/orders/phone";
 import { parseCoordinates, isPlausible } from "@/lib/orders/location";
 import {
+  splitOrderMoney,
+  DEFAULT_COMMISSION_DELIVERY_BPS,
+  DEFAULT_COMMISSION_PICKUP_BPS,
+} from "@/lib/orders/money";
+import {
   findOpenSessionForTable,
   openSessionForTable,
   recomputeSessionTotals,
@@ -70,7 +75,7 @@ export async function POST(req: NextRequest) {
     const { data: menu } = await adminClient
       .from("menus")
       .select(
-        "id, table_ordering, takeaway_enabled, delivery_enabled, is_published, default_service_charge_pct",
+        "id, table_ordering, takeaway_enabled, delivery_enabled, is_published, default_service_charge_pct, delivery_fee_kes, commission_delivery_bps, commission_pickup_bps",
       )
       .eq("id", data.menu_id)
       .single();
@@ -386,7 +391,22 @@ export async function POST(req: NextRequest) {
     });
 
     const subtotal = orderItemRows.reduce((s, r) => s + r.line_total, 0);
-    const total = subtotal; // delivery_fee_kes = 0 for dine_in V1
+    // ── Split the money, and freeze it onto the order ──────────────────
+    // A delivery order carries the restaurant's configured delivery fee; the
+    // guest is charged food + fee, the rider is owed their share of the fee,
+    // and Klickenya keeps a commission on the food plus the rest of the fee.
+    const money = splitOrderMoney({
+      subtotalKes: subtotal,
+      deliveryFeeKes: Number(menu.delivery_fee_kes ?? 0),
+      isDelivery: data.order_type === "delivery",
+      commissionDeliveryBps: Number(
+        menu.commission_delivery_bps ?? DEFAULT_COMMISSION_DELIVERY_BPS,
+      ),
+      commissionPickupBps: Number(
+        menu.commission_pickup_bps ?? DEFAULT_COMMISSION_PICKUP_BPS,
+      ),
+    });
+    const total = money.totalKes;
 
     /* STEP 7.5 — Attach to (or auto-create) a table session.
        Backward-compat bridge: every order with a registered table_id now lives
@@ -441,8 +461,13 @@ export async function POST(req: NextRequest) {
             ? String(Math.floor(1000 + Math.random() * 9000))
             : null,
         subtotal_kes:     subtotal,
-        delivery_fee_kes: 0,
+        delivery_fee_kes: money.deliveryFeeKes,
         total_kes:        total,
+        commission_bps:            money.commissionBps,
+        commission_kes:            money.commissionKes,
+        restaurant_payout_kes:     money.restaurantPayoutKes,
+        rider_fee_kes:             money.riderFeeKes,
+        platform_delivery_fee_kes: money.platformDeliveryFeeKes,
         payment_status:   "pending",
       })
       .select("id")
