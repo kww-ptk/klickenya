@@ -3,6 +3,7 @@ import { adminClient } from "@/lib/supabase/admin";
 import { getPosOrOwnerAuth } from "@/app/api/pos/_lib/auth";
 import { resolveManagerApproval, writeAuditLog } from "@/app/api/pos/_lib/managerOverride";
 import { ORDER_QUEUE_SELECT } from "@/lib/orders/projection";
+import { canDriveTransition, isTransitionAllowed } from "@/lib/orders/transitions";
 
 /* ── GET — fetch active orders for a menu (kitchen + waiter polling) ── */
 //
@@ -105,14 +106,6 @@ export async function GET(req: NextRequest) {
 // Other roles trying ready → delivered are fine because "everyone can complete
 // an order" was the explicit product call.
 
-const VALID_TRANSITIONS: Record<string, string[]> = {
-  new:       ["preparing", "cancelled"],
-  preparing: ["ready", "cancelled"],
-  ready:     ["delivered", "cancelled"],
-};
-
-const KITCHEN_DRIVING_ROLES: ReadonlySet<string> = new Set(["kitchen", "manager", "bar"]);
-
 export async function PATCH(req: NextRequest) {
   try {
     const body = await req.json();
@@ -132,7 +125,7 @@ export async function PATCH(req: NextRequest) {
     // Fetch the order so we can authorise against its menu_id.
     const { data: order } = await adminClient
       .from("orders")
-      .select("id, status, menu_id, order_type")
+      .select("id, status, menu_id, order_type, rider_id, picked_up_at")
       .eq("id", order_id)
       .single();
 
@@ -148,16 +141,15 @@ export async function PATCH(req: NextRequest) {
     // Role gate: a waiter shouldn't be able to mark a "new" order as
     // "preparing" — that's kitchen territory. Owners and kitchen staff drive
     // the full lifecycle; waiters can only complete ready→delivered.
-    const isKitchenDriver =
-      auth.type === "owner" || (auth.type === "staff" && KITCHEN_DRIVING_ROLES.has(auth.role));
-    if (!isKitchenDriver) {
-      const isWaiterCompleting = order.status === "ready" && newStatus === "delivered";
-      if (!isWaiterCompleting) {
-        return NextResponse.json(
-          { error: "Forbidden — only kitchen or manager can drive this transition." },
-          { status: 403 },
-        );
-      }
+    const actor =
+      auth.type === "owner"
+        ? { type: "owner" as const }
+        : { type: "staff" as const, role: auth.role };
+    if (!canDriveTransition(actor, order.status, newStatus)) {
+      return NextResponse.json(
+        { error: "Forbidden — only kitchen or manager can drive this transition." },
+        { status: 403 },
+      );
     }
 
     // Cancelling an order that's already been sent to the kitchen (status
@@ -199,11 +191,21 @@ export async function PATCH(req: NextRequest) {
     }
 
     // Validate the status transition
-    const allowed = VALID_TRANSITIONS[order.status] ?? [];
-    if (!allowed.includes(newStatus)) {
+    if (!isTransitionAllowed(order.status, newStatus)) {
       return NextResponse.json(
         { error: `Cannot transition from "${order.status}" to "${newStatus}".` },
         { status: 400 }
+      );
+    }
+
+    // The delivery leg belongs to the rider once one has claimed the job.
+    // "Complete" from the counter used to set status='delivered' with no
+    // delivered_at and no cash, and left the rider holding a job whose every
+    // button answered 400.
+    if (order.order_type === "delivery" && order.rider_id && newStatus === "delivered") {
+      return NextResponse.json(
+        { error: "A rider has this one — they complete it at the door." },
+        { status: 409 },
       );
     }
 
@@ -227,23 +229,27 @@ export async function PATCH(req: NextRequest) {
       await adminClient
         .from("orders")
         .update(
-          order.order_type === "takeaway" && reason
+          (order.order_type === "takeaway" || order.order_type === "delivery") && reason
             ? { status: "cancelled", decline_reason: reason }
             : { status: "cancelled" },
         )
-        .eq("id", order_id);
+        .eq("id", order_id)
+        .in("status", ["new", "preparing", "ready"]);
     } else {
       const updatePayload: Record<string, unknown> = { status: newStatus };
 
-      // Takeaway accept: new → preparing stamps acceptance + promised time,
-      // and cascades items so the station board and the derive_order_status
-      // trigger agree (same cascade idea the cancel path uses).
-      const isTakeawayAccept =
-        order.order_type === "takeaway" &&
-        order.status === "new" &&
-        newStatus === "preparing";
+      // Whole-order channels. Takeaway and delivery are driven from the
+      // queue rather than the station board, so the order row leads and the
+      // lines follow: acceptance is stamped here, and station_status is
+      // cascaded so the board and the derive_order_status trigger agree.
+      // Without the cascade a delivery's lines stayed at 'new' all the way
+      // to ready, and voiding one line let the trigger drop the order back
+      // to 'new' — taking the handover code off the screen while the rider
+      // stood at the counter.
+      const isWholeOrder = order.order_type === "takeaway" || order.order_type === "delivery";
+      const isAccept = isWholeOrder && order.status === "new" && newStatus === "preparing";
 
-      if (isTakeawayAccept) {
+      if (isAccept) {
         updatePayload.accepted_at = new Date().toISOString();
         if (
           Number.isFinite(estimatedReadyMinutes) &&
@@ -256,24 +262,43 @@ export async function PATCH(req: NextRequest) {
         }
       }
 
-      const { error } = await adminClient
+      // The precondition rides in the write. Four screens hit this route and
+      // a stale read must lose, not overwrite.
+      const { data: updated, error } = await adminClient
         .from("orders")
         .update(updatePayload)
-        .eq("id", order_id);
+        .eq("id", order_id)
+        .eq("status", order.status)
+        .select("id");
       if (error) {
         console.error("[menu/orders PATCH] error:", error);
         return NextResponse.json({ error: "Failed to update order." }, { status: 500 });
       }
+      if (!updated || updated.length === 0) {
+        return NextResponse.json(
+          { error: "This order changed on another screen. Refresh and try again." },
+          { status: 409 },
+        );
+      }
 
-      if (isTakeawayAccept) {
+      if (
+        isWholeOrder &&
+        (newStatus === "preparing" || newStatus === "ready" || newStatus === "delivered")
+      ) {
+        const from =
+          newStatus === "preparing"
+            ? ["new"]
+            : newStatus === "ready"
+            ? ["new", "preparing"]
+            : ["new", "preparing", "ready"];
         const { error: cascadeErr } = await adminClient
           .from("order_items")
-          .update({ station_status: "preparing" })
+          .update({ station_status: newStatus })
           .eq("order_id", order_id)
           .eq("is_voided", false)
-          .eq("station_status", "new");
+          .in("station_status", from);
         if (cascadeErr) {
-          console.error("[menu/orders PATCH takeaway cascade] error:", cascadeErr);
+          console.error("[menu/orders PATCH cascade] error:", cascadeErr);
         }
       }
     }

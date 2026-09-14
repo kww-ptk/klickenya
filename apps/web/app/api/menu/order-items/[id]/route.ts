@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminClient } from "@/lib/supabase/admin";
+import { KITCHEN_DRIVING_ROLES, isTransitionAllowed } from "@/lib/orders/transitions";
 import { getPosOrOwnerAuth } from "@/app/api/pos/_lib/auth";
 import { resolveManagerApproval, writeAuditLog } from "@/app/api/pos/_lib/managerOverride";
 import { recomputeSessionTotals } from "@/app/api/menu/sessions/_lib/sessions";
@@ -85,12 +86,12 @@ export async function PATCH(req: NextRequest, ctx: RouteContext) {
     const auth = await getPosOrOwnerAuth(req, orderJoin.menu_id);
     if (!auth) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    // Role gating mirrors api/menu/orders/route.ts PATCH:
-    //   owner/manager/kitchen drive the full lifecycle
+    // Role gating shares lib/orders/transitions with the order-level PATCH:
+    //   owner and kitchen-driving staff run the full lifecycle
     //   waiter/cashier can only complete ready -> delivered
     const isKitchenDriver =
       auth.type === "owner" ||
-      (auth.type === "staff" && (auth.role === "kitchen" || auth.role === "manager" || auth.role === "bar"));
+      (auth.type === "staff" && KITCHEN_DRIVING_ROLES.has(auth.role));
 
     // Cross-station opt-in: owner can grant a kitchen/bar staffer access to
     // the other station. We have to look it up — the cookie session doesn't
@@ -129,14 +130,8 @@ export async function PATCH(req: NextRequest, ctx: RouteContext) {
       }
     }
 
-    // Validate transition (same FSM as the order-level PATCH).
-    const VALID_NEXT: Record<string, string[]> = {
-      new:       ["preparing", "cancelled"],
-      preparing: ["ready", "cancelled"],
-      ready:     ["delivered", "cancelled"],
-    };
-    const allowed = VALID_NEXT[item.station_status] ?? [];
-    if (!allowed.includes(next)) {
+    // Validate transition (same table as the order-level PATCH).
+    if (!isTransitionAllowed(item.station_status, next)) {
       return NextResponse.json(
         { error: `Cannot transition item from "${item.station_status}" to "${next}".` },
         { status: 400 },
@@ -218,7 +213,7 @@ export async function PATCH(req: NextRequest, ctx: RouteContext) {
     .from("order_items")
     .select(`
       id, item_name, item_price, quantity, selected_options, is_voided,
-      orders!inner ( id, menu_id, table_session_id )
+      orders!inner ( id, menu_id, table_session_id, status )
     `)
     .eq("id", itemId)
     .single();
@@ -227,6 +222,17 @@ export async function PATCH(req: NextRequest, ctx: RouteContext) {
 
   const orderJoin = Array.isArray(item.orders) ? item.orders[0] : item.orders;
   if (!orderJoin) return NextResponse.json({ error: "Item has no parent order" }, { status: 500 });
+
+  // A settled order is a ledger entry. Voiding a line after delivery used to
+  // rewrite total_kes, commission_kes and restaurant_payout_kes while the
+  // cash the rider recorded and the rider's fee stayed put — a ledger that
+  // says the rider over-collected, with nothing to show why.
+  if (orderJoin.status === "delivered" || orderJoin.status === "cancelled") {
+    return NextResponse.json(
+      { error: `Order is ${orderJoin.status}; its items can no longer change.` },
+      { status: 400 },
+    );
+  }
 
   if (item.is_voided) {
     return NextResponse.json({ error: "Item is already voided" }, { status: 400 });
