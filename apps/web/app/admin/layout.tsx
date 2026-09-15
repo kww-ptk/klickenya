@@ -1,5 +1,6 @@
-import { createClient } from "@/lib/supabase/server";
+import { unstable_cache } from "next/cache";
 import { adminClient } from "@/lib/supabase/admin";
+import { getAuthUser } from "@/app/dashboard/_lib/auth";
 import { AdminNavLink } from "./_components/AdminNavLink";
 import { AdminSignOut } from "./_components/AdminSignOut";
 import { AdminBottomNav } from "./_components/AdminBottomNav";
@@ -200,6 +201,66 @@ function GearIcon() {
   );
 }
 
+/* ---------- Sidebar badge counts ---------- */
+
+// Nine count queries ran on every admin page view. The badges only need to be
+// roughly right, so they are cached for a minute across requests. Call
+// revalidateTag("admin:badges") to refresh them early.
+const getAdminBadgeCounts = unstable_cache(
+  async () => {
+    const [contactRes, enquiryRes, listingReqRes, generalContactRes, ambassadorRes, claimRes, newsletterRes, eventsRes, reservationsRes] = await Promise.all([
+      adminClient
+        .from("contact_requests")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "new"),
+      adminClient
+        .from("property_enquiries")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "new"),
+      adminClient
+        .from("listing_requests")
+        .select("id", { count: "exact", head: true })
+        .in("status", ["new", "submitted"]),
+      adminClient
+        .from("general_contacts")
+        .select("id", { count: "estimated", head: true }),
+      adminClient
+        .from("ambassador_applications")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "new"),
+      adminClient
+        .from("claim_requests")
+        .select("id", { count: "exact", head: true })
+        .in("status", ["pending", "verified"]),
+      adminClient
+        .from("newsletter_subscribers")
+        .select("id", { count: "estimated", head: true }),
+      adminClient
+        .from("events_pending")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "pending"),
+      adminClient
+        .from("reservations")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "pending"),
+    ]);
+
+    return {
+      unreadContacts: contactRes.count ?? 0,
+      unreadEnquiries: enquiryRes.count ?? 0,
+      unreadListingReqs: listingReqRes.count ?? 0,
+      unreadGeneralContacts: generalContactRes.count ?? 0,
+      unreadAmbassadors: ambassadorRes.count ?? 0,
+      pendingClaims: claimRes.count ?? 0,
+      totalSubscribers: newsletterRes.count ?? 0,
+      pendingEvents: eventsRes.count ?? 0,
+      pendingReservations: reservationsRes.count ?? 0,
+    };
+  },
+  ["admin-badge-counts"],
+  { revalidate: 60, tags: ["admin:badges"] },
+);
+
 /* ---------- Layout ---------- */
 
 export default async function AdminLayout({
@@ -207,58 +268,21 @@ export default async function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const supabase = await createClient();
+  const { user } = await getAuthUser();
+
+  // Unread counts (adminClient bypasses RLS; cached for 60s across requests)
+  const badges = await getAdminBadgeCounts();
   const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  // Fetch unread counts (using adminClient to bypass RLS)
-  const [contactRes, enquiryRes, listingReqRes, generalContactRes, ambassadorRes, claimRes, newsletterRes, eventsRes, reservationsRes] = await Promise.all([
-    adminClient
-      .from("contact_requests")
-      .select("id", { count: "exact", head: true })
-      .eq("status", "new"),
-    adminClient
-      .from("property_enquiries")
-      .select("id", { count: "exact", head: true })
-      .eq("status", "new"),
-    adminClient
-      .from("listing_requests")
-      .select("id", { count: "exact", head: true })
-      .in("status", ["new", "submitted"]),
-    adminClient
-      .from("general_contacts")
-      .select("id", { count: "exact", head: true }),
-    adminClient
-      .from("ambassador_applications")
-      .select("id", { count: "exact", head: true })
-      .eq("status", "new"),
-    adminClient
-      .from("claim_requests")
-      .select("id", { count: "exact", head: true })
-      .in("status", ["pending", "verified"]),
-    adminClient
-      .from("newsletter_subscribers")
-      .select("id", { count: "exact", head: true }),
-    adminClient
-      .from("events_pending")
-      .select("id", { count: "exact", head: true })
-      .eq("status", "pending"),
-    adminClient
-      .from("reservations")
-      .select("id", { count: "exact", head: true })
-      .eq("status", "pending"),
-  ]);
-
-  const unreadContacts = contactRes.count ?? 0;
-  const unreadEnquiries = enquiryRes.count ?? 0;
-  const unreadListingReqs = listingReqRes.count ?? 0;
-  const unreadGeneralContacts = generalContactRes.count ?? 0;
-  const unreadAmbassadors = ambassadorRes.count ?? 0;
-  const pendingClaims = claimRes.count ?? 0;
-  const totalSubscribers = newsletterRes.count ?? 0;
-  const pendingEvents = eventsRes.count ?? 0;
-  const pendingReservations = reservationsRes.count ?? 0;
+    unreadContacts,
+    unreadEnquiries,
+    unreadListingReqs,
+    unreadGeneralContacts,
+    unreadAmbassadors,
+    pendingClaims,
+    totalSubscribers,
+    pendingEvents,
+    pendingReservations,
+  } = badges;
 
 
   return (

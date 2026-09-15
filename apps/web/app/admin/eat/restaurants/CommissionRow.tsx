@@ -87,7 +87,7 @@ export function CommissionRow({
             value={delivery}
             onChange={(e) => setDelivery(e.target.value)}
             inputMode="decimal"
-            className="mt-0.5 w-full rounded-lg border border-zinc-200 px-2 py-1.5 text-[14px] text-zinc-900"
+            className="mt-0.5 w-full rounded-lg border border-zinc-200 px-2 py-1.5 text-[16px] text-zinc-900"
           />
         </label>
         <label className="text-[11px] font-semibold text-zinc-500">
@@ -96,7 +96,7 @@ export function CommissionRow({
             value={pickup}
             onChange={(e) => setPickup(e.target.value)}
             inputMode="decimal"
-            className="mt-0.5 w-full rounded-lg border border-zinc-200 px-2 py-1.5 text-[14px] text-zinc-900"
+            className="mt-0.5 w-full rounded-lg border border-zinc-200 px-2 py-1.5 text-[16px] text-zinc-900"
           />
         </label>
         <label className="text-[11px] font-semibold text-zinc-500">
@@ -105,7 +105,7 @@ export function CommissionRow({
             value={fee}
             onChange={(e) => setFee(e.target.value)}
             inputMode="numeric"
-            className="mt-0.5 w-full rounded-lg border border-zinc-200 px-2 py-1.5 text-[14px] text-zinc-900"
+            className="mt-0.5 w-full rounded-lg border border-zinc-200 px-2 py-1.5 text-[16px] text-zinc-900"
           />
         </label>
       </div>

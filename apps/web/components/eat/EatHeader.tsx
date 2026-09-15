@@ -19,7 +19,7 @@ import { EatLogo } from "@/components/eat/EatLogo";
  * transparent over the hero with a blurred ground once the page moves under it.
  */
 export function EatHeader({ backHref }: { backHref?: string }) {
-  const { cart, count, total, setQty, clear } = useEatCart();
+  const { cart, count, total, setQty, lastOrder, recordPlacedOrder } = useEatCart();
   const [open, setOpen] = useState(false);
 
   return (
@@ -67,7 +67,11 @@ export function EatHeader({ backHref }: { backHref?: string }) {
         open={open}
         onClose={() => setOpen(false)}
         onSetQty={setQty}
-        onCleared={clear}
+        canOrder={cart?.canOrder ?? true}
+        deliveryFeeKes={cart?.deliveryFeeKes ?? 0}
+        minOrderKes={cart?.minOrderKes ?? null}
+        lastOrder={lastOrder}
+        onPlaced={recordPlacedOrder}
         whatsappPhone={cart?.whatsappPhone ?? ""}
         canDeliver={cart?.canDeliver ?? false}
       />

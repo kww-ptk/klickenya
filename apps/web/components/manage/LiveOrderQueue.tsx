@@ -1,9 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { Bike, ShoppingBag, Utensils, Phone, MapPin, Pencil, X, Plus, Navigation, MessageCircle } from "lucide-react";
 import { mapsUrl } from "@/lib/orders/location";
 import { waNumber } from "@/lib/eat/whatsappOrder";
+import { nextAction } from "@/lib/orders/transitions";
+import { usePolling } from "@/hooks/usePolling";
 import { DeleteOrders } from "@/components/orders/DeleteOrders";
 
 /**
@@ -92,13 +94,6 @@ function RiderContact({ phone, tone }: { phone: string; tone: "amber" | "purple"
   );
 }
 
-/** What pressing the primary button does next, per status. */
-const NEXT: Record<string, { to: string; label: string } | undefined> = {
-  new: { to: "preparing", label: "Start preparing" },
-  preparing: { to: "ready", label: "Mark ready" },
-  ready: { to: "delivered", label: "Complete" },
-};
-
 function minutesAgo(iso: string): string {
   const mins = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 60000));
   if (mins < 1) return "just now";
@@ -135,10 +130,9 @@ export function LiveOrderQueue({
     }
   }, [menuId]);
 
-  useEffect(() => {
-    const id = setInterval(refresh, 10_000);
-    return () => clearInterval(id);
-  }, [refresh]);
+  // Pauses while the tab is hidden and refreshes the moment it is shown —
+  // a tablet left open overnight used to poll for nobody every ten seconds.
+  usePolling(refresh, 10_000);
 
   // ── Editing an order already placed ───────────────────────────────
   // Which order is open for editing, which line is mid-removal, and the
@@ -148,6 +142,51 @@ export function LiveOrderQueue({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [filter, setFilter] = useState<"all" | "delivery" | "takeaway" | "table">("all");
   const [removing, setRemoving] = useState<{ itemId: string; reason: string } | null>(null);
+  // Declining / cancelling. A reason is required by the API and goes to the
+  // audit log; staff below manager rank are asked for a manager's PIN.
+  const [declining, setDeclining] = useState<{
+    orderId: string;
+    reason: string;
+    managerPin: string;
+    needsPin: boolean;
+  } | null>(null);
+
+  async function declineOrder(orderId: string) {
+    if (!declining || declining.orderId !== orderId) return;
+    setBusyId(orderId);
+    setError(null);
+    try {
+      const res = await fetch("/api/menu/orders", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          order_id: orderId,
+          status: "cancelled",
+          reason: declining.reason.trim(),
+          manager_override_pin: declining.managerPin || undefined,
+        }),
+      });
+      if (!res.ok) {
+        const p = (await res.json().catch(() => null)) as
+          | { error?: string; requires_manager?: boolean }
+          | null;
+        if (p?.requires_manager) {
+          setDeclining({ ...declining, needsPin: true });
+          setError(p.error ?? "A manager's PIN is needed to cancel this order.");
+        } else {
+          setError(p?.error ?? "Could not cancel that order.");
+        }
+        return;
+      }
+      setDeclining(null);
+      setOrders((prev) => prev.filter((o) => o.id !== orderId));
+      await refresh();
+    } catch {
+      setError("Could not reach the server.");
+    } finally {
+      setBusyId(null);
+    }
+  }
 
   async function removeLine(itemId: string, reason: string) {
     setBusyId(itemId);
@@ -195,7 +234,7 @@ export function LiveOrderQueue({
   }
 
   async function advance(order: QueueOrder) {
-    const next = NEXT[order.status];
+    const next = nextAction(order.status);
     if (!next) return;
     setBusyId(order.id);
     setError(null);
@@ -297,8 +336,12 @@ export function LiveOrderQueue({
       )}
 
       {visible.map((order) => {
-        const next = NEXT[order.status];
+        const next = nextAction(order.status);
         const isDelivery = order.order_type === "delivery";
+        // Once a rider has claimed a delivery, the last step is theirs: the
+        // code is read out here, the tap happens at the customer's door.
+        const riderCompletes = isDelivery && Boolean(order.rider_id) && next?.to === "delivered";
+        const isDeclining = declining?.orderId === order.id;
         const isTakeaway = order.order_type === "takeaway";
         const Icon = isDelivery ? Bike : isTakeaway ? ShoppingBag : Utensils;
         const kind = isDelivery
@@ -545,6 +588,10 @@ export function LiveOrderQueue({
                 </p>
                 {order.rider_phone && <RiderContact phone={order.rider_phone} tone="purple" />}
               </div>
+            ) : riderCompletes ? (
+              <p className="mt-2 text-[12.5px] text-[#9C9485] text-center">
+                The rider completes this one at the door.
+              </p>
             ) : (
               next && (
                 <button
@@ -558,6 +605,74 @@ export function LiveOrderQueue({
                   {busyId === order.id ? "Saving…" : next.label}
                 </button>
               )
+            )}
+
+            {/* The way out that is not a delete. Declining a new order tells
+                the guest on their tracking page; deleting it told them
+                "Order not found". */}
+            {!order.picked_up_at && next && (
+              <div className="mt-2">
+                {!isDeclining ? (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setDeclining({ orderId: order.id, reason: "", managerPin: "", needsPin: false })
+                    }
+                    className="w-full text-[12.5px] font-bold text-[#9C9485] hover:text-[#DC2626] py-1.5"
+                  >
+                    {order.status === "new" ? "Decline this order" : "Cancel this order"}
+                  </button>
+                ) : (
+                  <div className="rounded-xl bg-[#FAF8F5] p-3 space-y-2">
+                    <label
+                      htmlFor={`decline-${order.id}`}
+                      className="block text-[12px] font-semibold text-[#6B6355]"
+                    >
+                      Tell the customer why
+                    </label>
+                    <input
+                      id={`decline-${order.id}`}
+                      value={declining.reason}
+                      onChange={(e) => setDeclining({ ...declining, reason: e.target.value })}
+                      placeholder="Out of stock, kitchen closing, too far to deliver…"
+                      className="w-full rounded-lg border border-[#E2DDD5] px-3 py-2 text-[16px]"
+                    />
+                    {declining.needsPin && (
+                      <input
+                        inputMode="numeric"
+                        maxLength={4}
+                        value={declining.managerPin}
+                        onChange={(e) =>
+                          setDeclining({ ...declining, managerPin: e.target.value.replace(/\D/g, "") })
+                        }
+                        placeholder="Manager PIN"
+                        className="w-full rounded-lg border border-[#E2DDD5] px-3 py-2 text-[16px] tracking-[0.3em]"
+                      />
+                    )}
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        disabled={!declining.reason.trim() || busyId === order.id}
+                        onClick={() => declineOrder(order.id)}
+                        className="flex-1 rounded-full bg-[#DC2626] text-white text-[13px] font-bold py-2 disabled:opacity-40"
+                      >
+                        {busyId === order.id
+                          ? "Cancelling…"
+                          : order.status === "new"
+                          ? "Decline"
+                          : "Cancel order"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setDeclining(null)}
+                        className="flex-1 rounded-full border border-[#E2DDD5] text-[13px] font-bold py-2"
+                      >
+                        Keep it
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
             )}
           </article>
         );

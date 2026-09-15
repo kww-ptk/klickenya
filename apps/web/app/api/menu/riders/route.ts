@@ -83,12 +83,45 @@ export async function POST(req: NextRequest) {
   let riderId: string;
 
   if (existing) {
-    // Already rides for someone. Link them, and reset the PIN to the one this
-    // owner just chose — they are handing it to the person in front of them.
+    // Already a rider somewhere. Only a kitchen that ALREADY has them may
+    // reset their PIN. Before this check, any owner who knew a phone number
+    // could take over any rider — Klickenya's own included — by posting a
+    // new PIN, then sign in at /rider as them and see every delivering
+    // restaurant's jobs, customer addresses and cash.
+    const [{ data: link }, { data: riderRow }] = await Promise.all([
+      adminClient
+        .from("rider_menus")
+        .select("rider_id")
+        .eq("rider_id", existing.id)
+        .eq("menu_id", menuId)
+        .maybeSingle(),
+      adminClient
+        .from("riders")
+        .select("is_platform, is_active")
+        .eq("id", existing.id)
+        .maybeSingle(),
+    ]);
+    if (!link || riderRow?.is_platform) {
+      return NextResponse.json(
+        {
+          error:
+            "That phone number already belongs to a rider. Ask them to sign in with their own PIN, or contact Klickenya to link them to your restaurant.",
+        },
+        { status: 409 },
+      );
+    }
+    if (!riderRow?.is_active) {
+      // Deactivation is an admin decision; an owner must not undo it by
+      // re-adding the same phone.
+      return NextResponse.json(
+        { error: "That rider has been deactivated by Klickenya." },
+        { status: 409 },
+      );
+    }
     const { hash, salt } = makePinHash(pin);
     await adminClient
       .from("riders")
-      .update({ name, pin_hash: hash, pin_salt: salt, is_active: true, failed_attempts: 0, locked_until: null })
+      .update({ name, pin_hash: hash, pin_salt: salt, failed_attempts: 0, locked_until: null })
       .eq("id", existing.id);
     riderId = existing.id;
   } else {

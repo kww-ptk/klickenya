@@ -7,27 +7,28 @@ export const dynamic = "force-dynamic";
 
 /** Every rider, with what they have actually done in the last 30 days. */
 export default async function EatAdminRiders() {
-  const m = await getEatMetrics(30);
+  // Three independent reads: the order window, which kitchens each rider
+  // serves, and the restaurants a rider could be assigned to.
+  const [m, linksRes, { data: menuRows }] = await Promise.all([
+    getEatMetrics(30),
+    // Caught rather than awaited bare: the table does not exist until 088
+    // is applied, and a pre-088 database must still render this page.
+    Promise.resolve(adminClient.from("rider_menus").select("rider_id")).catch(
+      () => ({ data: null }),
+    ),
+    // Only restaurants that deliver — the rest have nothing to ride.
+    adminClient
+      .from("menus")
+      .select("id, name")
+      .eq("delivery_enabled", true)
+      .order("name", { ascending: true }),
+  ]);
 
-  // Which kitchens each rider serves. Wrapped: the table does not exist
-  // until 088 is applied.
   const linkCounts = new Map<string, number>();
-  try {
-    const { data } = await adminClient.from("rider_menus").select("rider_id");
-    for (const l of (data ?? []) as { rider_id: string }[]) {
-      linkCounts.set(l.rider_id, (linkCounts.get(l.rider_id) ?? 0) + 1);
-    }
-  } catch {
-    /* pre-088 — fall through to zero */
+  for (const l of (linksRes.data ?? []) as { rider_id: string }[]) {
+    linkCounts.set(l.rider_id, (linkCounts.get(l.rider_id) ?? 0) + 1);
   }
 
-  // Restaurants a rider could be assigned to. Only ones that deliver — the
-  // rest have nothing to ride.
-  const { data: menuRows } = await adminClient
-    .from("menus")
-    .select("id, name")
-    .eq("delivery_enabled", true)
-    .order("name", { ascending: true });
   const menuOptions = (menuRows ?? []).map((x) => ({
     id: x.id as string,
     name: String(x.name ?? "").replace(/\s+menu\s*$/i, "").trim() || String(x.name),

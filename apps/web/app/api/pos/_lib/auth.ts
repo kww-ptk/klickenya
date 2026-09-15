@@ -149,12 +149,21 @@ export type PosOrOwnerAuth =
  * Caller must pass the requested menuId — the staff cookie is already scoped
  * to a menu, and we cross-check it here so a staff member from menu A cannot
  * call session endpoints for menu B.
+ *
+ * When BOTH are present the owner wins. The staff cookie used to be checked
+ * first because it is cheaper, and it won: an owner who had signed into the
+ * tablet with a waiter PIN in the same browser was then a waiter on their own
+ * /manage queue, and "Start preparing" answered 403. Both cookies on one
+ * device means the owner is at that device; their own session is the truth.
+ * The owner check costs nothing on a real tablet — with no Supabase cookie,
+ * getUser() answers locally without a network round-trip.
  */
 export async function getPosOrOwnerAuth(
   req: NextRequest,
   menuId: string,
 ): Promise<PosOrOwnerAuth | null> {
-  // Try staff first (cheap — just cookie verification).
+  let staffAuth: PosOrOwnerAuth | null = null;
+
   const staff = getPosStaffSession(req);
   if (staff && staff.menu_id === menuId) {
     // Confirm staff is still active in DB (they may have been deactivated mid-shift).
@@ -164,7 +173,7 @@ export async function getPosOrOwnerAuth(
       .eq("id", staff.staff_id)
       .single();
     if (row && row.is_active && row.menu_id === menuId) {
-      return {
+      staffAuth = {
         type: "staff",
         staffId: staff.staff_id,
         staffName: staff.staff_name,
@@ -172,14 +181,14 @@ export async function getPosOrOwnerAuth(
         menuId,
       };
     }
-    // Staff cookie present but invalid for this menu — fall through to owner.
+    // Staff cookie present but invalid for this menu — owner only, below.
   }
 
   const { userId, isAdmin, supabase } = await getMenuAuth();
-  if (!userId) return null;
+  if (userId) {
+    const access = await verifyMenuAccess(supabase, menuId, userId, isAdmin);
+    if (access) return { type: "owner", userId, isAdmin, menuId };
+  }
 
-  const access = await verifyMenuAccess(supabase, menuId, userId, isAdmin);
-  if (!access) return null;
-
-  return { type: "owner", userId, isAdmin, menuId };
+  return staffAuth;
 }

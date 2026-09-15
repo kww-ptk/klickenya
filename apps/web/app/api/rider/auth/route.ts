@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminClient } from "@/lib/supabase/admin";
 import { normalizeKenyanPhone } from "@/lib/orders/phone";
+import { clientIp, rateLimit } from "@/lib/security/rateLimit";
 import {
   RIDER_SESSION_COOKIE,
   RIDER_SESSION_MAX_AGE,
@@ -46,6 +47,18 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       { error: "Enter your phone number and 4-digit PIN." },
       { status: 400 },
+    );
+  }
+
+  // Per-connection throttle on top of the per-account lockout below. The
+  // lockout alone let anyone who knew a rider's phone number lock them out
+  // on demand with five wrong PINs; this bounds how fast one machine can do
+  // that, or walk the PIN space across many phones.
+  const ip = clientIp(req);
+  if (!rateLimit(`rider-auth:${ip}`, { limit: 20, windowMs: 10 * 60_000 }).ok) {
+    return NextResponse.json(
+      { error: "Too many sign-in attempts. Try again in a few minutes." },
+      { status: 429 },
     );
   }
 

@@ -22,7 +22,11 @@ export type MenuCapability = {
   /** Number that receives orders over WhatsApp; "" when none is set. */
   whatsappPhone: string;
   canBook: boolean; // table reservations are live
-  canDeliver: boolean; // delivery — dormant until P0 ships
+  canDeliver: boolean; // delivery is switched on for this kitchen
+  /** What the kitchen charges to deliver; 0 when it has not set one. */
+  deliveryFeeKes: number;
+  /** Smallest food total it will deliver for; null when there is none. */
+  minOrderKes: number | null;
 };
 
 type MenuRow = {
@@ -34,6 +38,8 @@ type MenuRow = {
   takeaway_enabled: boolean | null;
   delivery_enabled: boolean | null;
   reservations_enabled: boolean | null;
+  delivery_fee_kes: number | null;
+  min_order_kes: number | null;
 };
 
 /**
@@ -55,7 +61,7 @@ export const getMenuCapabilities = cache(
       const { data, error } = await adminClient
         .from("menus")
         .select(
-          "slug, listing_slug, ordering_enabled, table_ordering, takeaway_enabled, delivery_enabled, reservations_enabled, business_id",
+          "slug, listing_slug, ordering_enabled, table_ordering, takeaway_enabled, delivery_enabled, reservations_enabled, business_id, delivery_fee_kes, min_order_kes",
         )
         .eq("is_published", true);
 
@@ -122,6 +128,10 @@ export const getMenuCapabilities = cache(
           canOrderAtTable: Boolean(row.table_ordering || row.ordering_enabled),
           canBook: Boolean(row.reservations_enabled),
           canDeliver: Boolean(row.delivery_enabled),
+          // Both columns date from migration 028, so they are safe in the
+          // main select — unlike whatsapp_phone below.
+          deliveryFeeKes: Number(row.delivery_fee_kes ?? 0),
+          minOrderKes: row.min_order_kes == null ? null : Number(row.min_order_kes),
           whatsappPhone:
             menuPhones.get(key) ||
             (row.business_id ? (ownerPhones.get(row.business_id) ?? "") : ""),
@@ -469,13 +479,25 @@ export const getMenusWithItems = cache(
  * things on:
  *
  *   delivery only  → change the body to `Boolean(cap?.canDeliver)`
- *   ordering only  → `Boolean(cap?.canOrder || cap?.canDeliver)`
+ *   ordering only  → `isOrderable(cap)` below, which the food app already uses
  *
  * Both are one line, and both are correct the day the data supports them.
  */
 export function isEatEligible(cap: MenuCapability | undefined): boolean {
   if (!cap) return false; // no published menu linked to this listing
   return cap.canDeliver || cap.canOrder || cap.canOrderAtTable || cap.canBook;
+}
+
+/**
+ * Can a guest actually put something in a basket here?
+ *
+ * The food app (eat.klickenya.com) is an ORDERING surface, so it needs a
+ * tighter gate than the discovery hub: a kitchen that only takes table
+ * bookings would otherwise show "+" buttons leading to an order the API
+ * refuses. Pickup or delivery — either is enough.
+ */
+export function isOrderable(cap: MenuCapability | undefined): boolean {
+  return Boolean(cap && (cap.canOrder || cap.canDeliver));
 }
 
 

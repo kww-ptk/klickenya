@@ -1,3 +1,4 @@
+import { unstable_cache } from "next/cache";
 import { adminClient } from "@/lib/supabase/admin";
 
 /**
@@ -46,7 +47,10 @@ export type EatOrder = {
   picked_up_at: string | null;
   delivered_at: string | null;
   created_at: string;
-  order_items: { id: string; item_name: string; quantity: number; is_voided?: boolean | null }[];
+  /** Not selected here — no admin page renders line items, and the embed
+   *  was the heaviest part of the read. Optional so a caller that fetches
+   *  its own rows with the embed still fits the type. */
+  order_items?: { id: string; item_name: string; quantity: number; is_voided?: boolean | null }[];
 };
 
 export type EatMetrics = {
@@ -102,11 +106,23 @@ const SELECT = `
   delivery_address, delivery_lat, delivery_lng, total_kes, cash_collected_kes,
   delivery_fee_kes, commission_kes, restaurant_payout_kes, rider_fee_kes,
   platform_delivery_fee_kes,
-  rider_id, rider_accepted_at, picked_up_at, delivered_at, created_at,
-  order_items ( id, item_name, quantity, is_voided )
+  rider_id, rider_accepted_at, picked_up_at, delivered_at, created_at
 `;
 
-export async function getEatMetrics(days = 30): Promise<EatMetrics> {
+/**
+ * What the cache holds. unstable_cache round-trips through JSON, so this is
+ * plain data only — a Map would come back as `{}`. getEatMetrics rebuilds
+ * the Maps and derives the totals on the way out.
+ */
+type EatMetricsPayload = {
+  orders: EatOrder[];
+  restaurants: [string, string][];
+  riders: RiderRecord[];
+  ridersUnavailable: boolean;
+  schemaError: string | null;
+};
+
+async function loadEatMetrics(days: number): Promise<EatMetricsPayload> {
   const since = new Date(Date.now() - days * 86_400_000).toISOString();
 
   const { data: rows, error: ordersError } = await adminClient
@@ -132,25 +148,19 @@ export async function getEatMetrics(days = 30): Promise<EatMetrics> {
     adminClient.from("riders").select("id, name, phone, is_active, is_platform"),
   ]);
 
-  const restaurants = new Map<string, string>();
+  const restaurants: [string, string][] = [];
   if (menusRes.status === "fulfilled") {
     for (const m of (menusRes.value.data ?? []) as { id: string; name: string }[]) {
-      restaurants.set(m.id, String(m.name ?? "").replace(/\s+menu\s*$/i, "").trim());
+      restaurants.push([m.id, String(m.name ?? "").replace(/\s+menu\s*$/i, "").trim()]);
     }
   }
 
-  const riders = new Map<string, RiderRecord>();
+  const riders: RiderRecord[] = [];
   let ridersUnavailable = true;
   if (ridersRes.status === "fulfilled" && Array.isArray(ridersRes.value.data)) {
     ridersUnavailable = false;
-    for (const r of ridersRes.value.data as RiderRecord[]) {
-      riders.set(r.id, r);
-    }
+    riders.push(...(ridersRes.value.data as RiderRecord[]));
   }
-
-  const delivered = orders.filter((o) => o.status === "delivered");
-  const revenueKes = delivered.reduce((n, o) => n + Number(o.total_kes ?? 0), 0);
-  const deliveredDeliveries = delivered.filter((o) => o.order_type === "delivery");
 
   return {
     orders,
@@ -160,6 +170,37 @@ export async function getEatMetrics(days = 30): Promise<EatMetrics> {
     schemaError: ordersError
       ? ordersError.message || "The orders query was rejected by the database."
       : null,
+  };
+}
+
+/**
+ * Cached for 30 s — the freshness an ops console needs, and enough that the
+ * five pages of the console (and the auto-refresh behind them) share one
+ * read instead of each scanning the window. The tag lets a write path bust
+ * it later with revalidateTag("eat:orders") when a change must show at once.
+ */
+const cachedEatMetrics = unstable_cache(loadEatMetrics, ["eat-metrics"], {
+  revalidate: 30,
+  tags: ["eat:orders"],
+});
+
+export async function getEatMetrics(days = 30): Promise<EatMetrics> {
+  const { orders, restaurants, riders, ridersUnavailable, schemaError } =
+    await cachedEatMetrics(days);
+
+  const riderMap = new Map<string, RiderRecord>();
+  for (const r of riders) riderMap.set(r.id, r);
+
+  const delivered = orders.filter((o) => o.status === "delivered");
+  const revenueKes = delivered.reduce((n, o) => n + Number(o.total_kes ?? 0), 0);
+  const deliveredDeliveries = delivered.filter((o) => o.order_type === "delivery");
+
+  return {
+    orders,
+    restaurants: new Map(restaurants),
+    riders: riderMap,
+    ridersUnavailable,
+    schemaError,
     totals: {
       all: orders.length,
       delivered: delivered.length,

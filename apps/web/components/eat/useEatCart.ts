@@ -27,12 +27,40 @@ export type Cart = {
   restaurant: string;
   /** Where the order gets sent; "" when the kitchen has not set a number. */
   whatsappPhone: string;
-  /** Does this kitchen deliver? Its own rider — Klickenya has no fleet. */
+  /** Delivery is on for this kitchen — its own riders or Klickenya's. */
   canDeliver: boolean;
+  /** Pickup (takeaway) is on. False for a delivery-only kitchen. */
+  canOrder: boolean;
+  /** The kitchen's delivery charge; 0 when unset. Shown, never trusted —
+   *  the server re-reads it when the order is placed. */
+  deliveryFeeKes: number;
+  /** Smallest food total the kitchen delivers for; null when there is none. */
+  minOrderKes: number | null;
   lines: CartLine[];
 };
 
+/** Everything about the kitchen a basket carries, minus the lines. */
+export type CartMeta = Omit<Cart, "lines">;
+
+/**
+ * The most recent order placed from this device.
+ *
+ * Kept separately from the basket, which is emptied the moment an order is
+ * saved: a reload after ordering must still offer the tracking link and the
+ * WhatsApp thread, or the guest has no way back to what they just paid for.
+ */
+export type LastOrder = {
+  orderId: string;
+  shortId: string;
+  restaurant: string;
+  trackUrl: string;
+  waUrl: string | null;
+  /** ISO timestamp. */
+  placedAt: string;
+};
+
 const KEY = "eatklick.cart.v2"; // v1 lines had no options
+const LAST_ORDER_KEY = "eatklick.lastOrder";
 
 /** Base plus add-ons, times quantity. */
 export function lineTotal(l: CartLine): number {
@@ -54,6 +82,7 @@ export function lineTotal(l: CartLine): number {
  */
 export function useEatCart() {
   const [cart, setCart] = useState<Cart | null>(null);
+  const [lastOrder, setLastOrder] = useState<LastOrder | null>(null);
   const [hydrated, setHydrated] = useState(false);
 
   // Read after mount: localStorage does not exist during SSR, and reading it
@@ -61,9 +90,21 @@ export function useEatCart() {
   useEffect(() => {
     try {
       const raw = localStorage.getItem(KEY);
-      if (raw) setCart(JSON.parse(raw) as Cart);
+      if (raw) {
+        // Baskets saved before the fee fields existed get the pre-fee
+        // defaults — pickup on, no fee, no minimum. The next add refreshes
+        // them from the live menu, so nothing stays stale for long.
+        const stored = JSON.parse(raw) as Partial<Cart>;
+        setCart({ canOrder: true, deliveryFeeKes: 0, minOrderKes: null, ...stored } as Cart);
+      }
     } catch {
       /* private mode, blocked storage — start empty */
+    }
+    try {
+      const raw = localStorage.getItem(LAST_ORDER_KEY);
+      if (raw) setLastOrder(JSON.parse(raw) as LastOrder);
+    } catch {
+      /* same — no last order to offer */
     }
     setHydrated(true);
   }, []);
@@ -81,24 +122,31 @@ export function useEatCart() {
     }
   }, [cart, hydrated]);
 
+  useEffect(() => {
+    if (!hydrated) return;
+    try {
+      if (lastOrder) localStorage.setItem(LAST_ORDER_KEY, JSON.stringify(lastOrder));
+      else localStorage.removeItem(LAST_ORDER_KEY);
+    } catch {
+      /* the confirmation screen still shows the links for this session */
+    }
+  }, [lastOrder, hydrated]);
+
   const add = useCallback(
     (
-      menu: {
-        menuId: string;
-        menuSlug: string;
-        restaurant: string;
-        whatsappPhone: string;
-        canDeliver: boolean;
-      },
+      menu: CartMeta,
       item: { id: string; name: string; priceKes: number },
       qty: number,
       note: string,
       options: SelectedOption[] = [],
     ) => {
       setCart((prev) => {
+        // Same kitchen: keep the lines but REFRESH the metadata. A kitchen
+        // that switches delivery on, changes its fee or its WhatsApp number
+        // must not stay frozen in a basket started before the change.
         const base: Cart =
           prev && prev.menuId === menu.menuId
-            ? prev
+            ? { ...prev, ...menu }
             : { ...menu, lines: [] };
 
         // Same item with the same note AND the same add-ons stacks. Change
@@ -140,6 +188,16 @@ export function useEatCart() {
 
   const clear = useCallback(() => setCart(null), []);
 
+  /**
+   * The order is saved server-side: remember where to find it and empty the
+   * basket. Clearing here rather than in the panel keeps the two in step —
+   * a basket that survives its own order is how duplicates get placed.
+   */
+  const recordPlacedOrder = useCallback((o: LastOrder) => {
+    setLastOrder(o);
+    setCart(null);
+  }, []);
+
   const total = useMemo(
     () => (cart?.lines ?? []).reduce((n, l) => n + lineTotal(l), 0),
     [cart],
@@ -149,5 +207,5 @@ export function useEatCart() {
     [cart],
   );
 
-  return { cart, hydrated, add, setQty, clear, total, count };
+  return { cart, hydrated, add, setQty, clear, total, count, lastOrder, recordPlacedOrder };
 }

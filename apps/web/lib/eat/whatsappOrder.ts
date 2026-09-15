@@ -27,7 +27,12 @@ export function waNumber(phone: string): string {
 export function buildOrderMessage(input: {
   restaurant: string;
   lines: CartLine[];
+  /** What the guest pays: food plus the delivery fee on a delivery. */
   totalKes: number;
+  /** Food only, before the delivery fee. */
+  subtotalKes?: number;
+  /** The kitchen's delivery charge. Printed on a delivery when above zero. */
+  deliveryFeeKes?: number;
   fulfilment: Fulfilment;
   deliveryAddress?: string;
   /** Pin, when the guest shared one. The kitchen reads the order here, so
@@ -45,6 +50,8 @@ export function buildOrderMessage(input: {
     restaurant,
     lines,
     totalKes,
+    subtotalKes,
+    deliveryFeeKes,
     fulfilment,
     deliveryAddress,
     deliveryCoords,
@@ -75,6 +82,14 @@ export function buildOrderMessage(input: {
     "",
     items,
     "",
+    // The fee is itemised so the kitchen and the guest see the same split —
+    // a bare total that quietly includes it reads as the food being dearer.
+    ...(fulfilment === "delivery" && typeof deliveryFeeKes === "number" && deliveryFeeKes > 0
+      ? [
+          `Food: KSh ${(subtotalKes ?? totalKes - deliveryFeeKes).toLocaleString()}`,
+          `Delivery fee: KSh ${deliveryFeeKes.toLocaleString()}`,
+        ]
+      : []),
     `*Total: KSh ${totalKes.toLocaleString()}*`,
     "",
     fulfilment === "delivery"

@@ -31,13 +31,13 @@ export const getHostProfile = cache(async (userId: string) => {
   return data;
 });
 
-/** Returns true if the authenticated user has role = "admin".
+/** Cached per-request: returns true if the authenticated user has role = "admin".
  *  Uses adminClient (service role) so the check cannot be spoofed via RLS. */
-export async function getIsAdmin(userId: string): Promise<boolean> {
+export const getIsAdmin = cache(async (userId: string): Promise<boolean> => {
   const { data } = await adminClient
     .from("users")
     .select("role")
     .eq("id", userId)
     .single();
   return data?.role === "admin";
-}
+});

@@ -142,6 +142,19 @@ export async function middleware(request: NextRequest) {
     if (origin) return NextResponse.redirect(new URL("/", origin), 308);
   }
 
+  // ── API routes authenticate themselves ────────────────────────────────
+  // Every /api/* handler verifies its own caller (Supabase session, staff
+  // PIN cookie, rider cookie, or nothing for the public order endpoints).
+  // Running the Supabase Auth round-trip here as well doubled the cost of
+  // every 10-second owner poll and every rider poll for no decision this
+  // middleware ever made. /api/admin/* is the exception: it is gated below
+  // as defence in depth, because assertAdmin() inside each route is the only
+  // other thing standing between an anonymous caller and claim-approve.
+  const isAdminApi = pathname.startsWith("/api/admin");
+  if (pathname.startsWith("/api/") && !isAdminApi) {
+    return NextResponse.next();
+  }
+
   let supabaseResponse = NextResponse.next({ request });
 
   const supabase = createServerClient(
@@ -169,6 +182,29 @@ export async function middleware(request: NextRequest) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
+
+  // /api/admin/*: JSON, never a redirect. A missing session or a non-admin
+  // role is a 401 here; the route's own assertAdmin() still runs after.
+  if (isAdminApi) {
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    const { createClient } = await import("@supabase/supabase-js");
+    const adminSupabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      { auth: { autoRefreshToken: false, persistSession: false } }
+    );
+    const { data: profile } = await adminSupabase
+      .from("users")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+    if (profile?.role !== "admin") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    return supabaseResponse;
+  }
 
   // Protected routes
   const isDashboard = pathname.startsWith("/dashboard");
