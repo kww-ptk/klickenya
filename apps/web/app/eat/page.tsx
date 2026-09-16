@@ -209,7 +209,7 @@ export default async function EatPage() {
             "@type": "ListItem",
             position: i + 1,
             name: c.name,
-            url: `https://klickenya.com${c.href}`,
+            url: `https://www.klickenya.com${c.href}`,
           })),
         }}
       />

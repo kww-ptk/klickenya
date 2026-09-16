@@ -108,17 +108,17 @@ export default async function JournalPage() {
     name: "Klickenya Journal",
     description:
       "Expert travel guides, safari tips, beach getaways, and cultural insights for exploring Kenya.",
-    url: "https://klickenya.com/journal",
+    url: "https://www.klickenya.com/journal",
     publisher: {
       "@type": "Organization",
       name: "Klickenya",
-      url: "https://klickenya.com",
+      url: "https://www.klickenya.com",
     },
     ...(posts.length > 0 && {
       blogPost: posts.map((p) => ({
         "@type": "BlogPosting",
         headline: p.title,
-        url: `https://klickenya.com/journal/${p.slug.current}`,
+        url: `https://www.klickenya.com/journal/${p.slug.current}`,
         datePublished: p.publishedAt,
         ...(p.author && { author: { "@type": "Person", name: p.author.name } }),
       })),

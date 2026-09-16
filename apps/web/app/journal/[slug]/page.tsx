@@ -101,7 +101,7 @@ export default async function BlogPostPage({
     ? urlForImage(post.coverImage).width(1800).url()
     : "";
 
-  const postUrl = `https://klickenya.com/journal/${post.slug.current}`;
+  const postUrl = `https://www.klickenya.com/journal/${post.slug.current}`;
 
   /* ── Extract TOC headings from body ─────────────────────────── */
   const tocItems: { id: string; text: string }[] = [];
@@ -144,7 +144,7 @@ export default async function BlogPostPage({
       name: "Klickenya",
       logo: {
         "@type": "ImageObject",
-        url: "https://klickenya.com/logo.png",
+        url: "https://www.klickenya.com/logo.png",
       },
     },
     mainEntityOfPage: {

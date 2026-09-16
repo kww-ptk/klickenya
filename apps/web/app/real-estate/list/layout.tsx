@@ -15,13 +15,13 @@ export const metadata: Metadata = {
   description:
     "List your house, apartment, land or development on Klickenya. Free to list, no commission, and prices in shillings, euro, dollars or pounds.",
   alternates: {
-    canonical: "https://klickenya.com/real-estate/list",
+    canonical: "https://www.klickenya.com/real-estate/list",
   },
   openGraph: {
     title: "List Your Property | Klickenya",
     description:
       "Free property listing for owners, agents and developers in Kenya. No commission, and multi currency pricing built for the coast.",
-    url: "https://klickenya.com/real-estate/list",
+    url: "https://www.klickenya.com/real-estate/list",
     type: "website",
   },
 };

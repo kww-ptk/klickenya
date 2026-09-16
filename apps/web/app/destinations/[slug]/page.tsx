@@ -73,12 +73,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     title,
     description,
     alternates: {
-      canonical: `https://klickenya.com/destinations/${slug}`,
+      canonical: `https://www.klickenya.com/destinations/${slug}`,
     },
     openGraph: {
       title,
       description,
-      url: `https://klickenya.com/destinations/${slug}`,
+      url: `https://www.klickenya.com/destinations/${slug}`,
       images: ogImage ? [ogImage] : [],
       type: "website",
     },
