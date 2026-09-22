@@ -89,6 +89,9 @@ const PROPERTY_CARD_FIELDS = `
   completionPercentage,
   developerName,
   unitsAvailable,
+  // Aliased rather than kept under its real name: this is a stage-and-status
+  // slice, and the full milestone object is only ever fetched on the detail
+  // page. A different name stops anyone reaching for .completedDate here.
   "milestoneStages": constructionMilestones[]{ stage, status },
   "photoCount": count(photos),
   "coverPhoto": photos[0]{ ${IMAGE_FIELDS} }
