@@ -80,20 +80,28 @@ function indexEntries<T extends { stage?: string | null }>(
   return byStage;
 }
 
+/** The least an entry must carry to be scored. RawMilestone satisfies it. */
+interface StageEntry {
+  stage?: string | null;
+  status?: string | null;
+}
+
 /**
  * Null, not zero, when there is nothing to score. Zero is a real answer meaning
  * "nothing has started"; null means "this listing does not use milestones", and
  * callers need to tell them apart to fall back to the manual percentage.
  */
 export function computePercentage(
-  entries:
-    | readonly ({ stage?: string | null; status?: string | null } | null | undefined)[]
-    | null
-    | undefined
+  entries: readonly (StageEntry | null | undefined)[] | null | undefined
 ): number | null {
   if (!Array.isArray(entries) || entries.length === 0) return null;
 
-  const byStage = indexEntries(entries);
+  // Array.isArray is typed `(arg: any) => arg is any[]`, so narrowing through
+  // it collapses the element type and silently switches off checking for the
+  // rest of this function. Re-annotating puts it back.
+  const list: readonly (StageEntry | null | undefined)[] = entries;
+
+  const byStage = indexEntries(list);
   if (byStage.size === 0) return null;
 
   let earned = 0;
