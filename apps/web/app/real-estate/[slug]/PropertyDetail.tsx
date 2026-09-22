@@ -95,10 +95,17 @@ async function PropertyDetail({ slug }: { slug: string }) {
   // hand-typed percentage, otherwise null and the section below shows nothing.
   const progress = property.isNewDevelopment
     ? mapConstructionProgress(property.constructionMilestones, {
-        photoUrl: (photo) => urlForImage(photo as never).width(320).height(220).url(),
+        // 444 = the 148px render width at 3x, and 444/296 is exactly the 3:2 the
+        // component crops to, so nothing is thrown away to object-cover.
+        photoUrl: (photo: any) => urlForImage(photo).width(444).height(296).url(),
         fallbackPercentage: property.completionPercentage,
       })
     : null;
+
+  // Named once rather than compared four times below: the two shapes are
+  // mutually exclusive, and that is easier to see when it is stated.
+  const hasTimeline = progress?.source === "computed";
+  const hasManualCompletion = progress?.source === "manual";
 
   const similar = await sanityClient
     .fetch(SIMILAR_PROPERTIES_QUERY, {
@@ -367,56 +374,57 @@ async function PropertyDetail({ slug }: { slug: string }) {
                         named developer or unit count hits. An empty <dl> is a
                         definition list with no terms in it. */}
                     {(property.developerName ||
-                      progress?.source === "manual" ||
+                      hasManualCompletion ||
                       property.unitsAvailable != null) && (
-                    <dl
-                      className={cn(
-                        "grid grid-cols-1 gap-4",
-                        progress?.source === "computed"
-                          ? "sm:grid-cols-2"
-                          : "sm:grid-cols-3"
-                      )}
-                    >
-                      {property.developerName && (
-                        <div className="rounded-[18px] border border-border bg-surface p-4">
-                          <dt className="text-[12px] font-bold uppercase tracking-wide text-text3">
-                            Developer
-                          </dt>
-                          <dd className="mt-1 text-[15px] font-semibold text-text">
-                            {property.developerName}
-                          </dd>
-                        </div>
-                      )}
-                      {progress?.source === "manual" && (
-                        <div className="rounded-[18px] border border-border bg-surface p-4">
-                          <dt className="text-[12px] font-bold uppercase tracking-wide text-text3">
-                            Completion
-                          </dt>
-                          <dd className="mt-1 text-[15px] font-semibold text-text">
-                            {progress.percentage}%
-                          </dd>
-                          <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-border">
-                            <div
-                              className="h-full rounded-full bg-purple2"
-                              style={{ width: `${progress.percentage}%` }}
-                            />
+                      <dl
+                        className={cn(
+                          "grid grid-cols-1 gap-4",
+                          hasTimeline ? "sm:grid-cols-2" : "sm:grid-cols-3"
+                        )}
+                      >
+                        {property.developerName && (
+                          <div className="rounded-[18px] border border-border bg-surface p-4">
+                            <dt className="text-[12px] font-bold uppercase tracking-wide text-text3">
+                              Developer
+                            </dt>
+                            <dd className="mt-1 text-[15px] font-semibold text-text">
+                              {property.developerName}
+                            </dd>
                           </div>
-                        </div>
-                      )}
-                      {property.unitsAvailable != null && (
-                        <div className="rounded-[18px] border border-border bg-surface p-4">
-                          <dt className="text-[12px] font-bold uppercase tracking-wide text-text3">
-                            Units available
-                          </dt>
-                          <dd className="mt-1 text-[15px] font-semibold text-text">
-                            {property.unitsAvailable}
-                          </dd>
-                        </div>
-                      )}
-                    </dl>
+                        )}
+                        {hasManualCompletion && progress && (
+                          <div className="rounded-[18px] border border-border bg-surface p-4">
+                            <dt className="text-[12px] font-bold uppercase tracking-wide text-text3">
+                              Completion
+                            </dt>
+                            {/* Rounded by clampPercent, so a hand-typed 45.7
+                                shows as 46. The computed path rounds too, and
+                                one page should not carry two precisions. */}
+                            <dd className="mt-1 text-[15px] font-semibold text-text">
+                              {progress.percentage}%
+                            </dd>
+                            <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-border">
+                              <div
+                                className="h-full rounded-full bg-purple2"
+                                style={{ width: `${progress.percentage}%` }}
+                              />
+                            </div>
+                          </div>
+                        )}
+                        {property.unitsAvailable != null && (
+                          <div className="rounded-[18px] border border-border bg-surface p-4">
+                            <dt className="text-[12px] font-bold uppercase tracking-wide text-text3">
+                              Units available
+                            </dt>
+                            <dd className="mt-1 text-[15px] font-semibold text-text">
+                              {property.unitsAvailable}
+                            </dd>
+                          </div>
+                        )}
+                      </dl>
                     )}
 
-                    {progress?.source === "computed" && (
+                    {hasTimeline && progress && (
                       <div className="mt-5">
                         <ConstructionTimeline progress={progress} />
                       </div>
