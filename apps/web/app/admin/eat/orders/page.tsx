@@ -13,6 +13,10 @@ const STATUS_STYLE: Record<string, string> = {
   cancelled: "bg-red-100 text-red-700",
 };
 
+/** Rows painted per view. Thirty days of a busy platform is more than one
+ *  table should render; the filter chips reach whatever the cap cuts. */
+const MAX_ROWS = 200;
+
 /** Every delivery and takeaway order, newest first. Dine-in is the floor's
  *  business and would bury what this page exists to watch. */
 export default async function EatAdminOrders({
@@ -26,6 +30,10 @@ export default async function EatAdminOrders({
   let orders = m.orders;
   if (status) orders = orders.filter((o) => o.status === status);
   if (type) orders = orders.filter((o) => o.order_type === type);
+
+  // Newest first, so the cap keeps the orders an ops desk is watching.
+  const shown = orders.slice(0, MAX_ROWS);
+  const truncated = shown.length < orders.length;
 
   const filters: { label: string; href: string; on: boolean }[] = [
     { label: "All", href: "/admin/eat/orders", on: !status && !type },
@@ -70,6 +78,11 @@ export default async function EatAdminOrders({
       <p className="text-[13px] text-zinc-500">
         {orders.length} order{orders.length === 1 ? "" : "s"} in the last 30 days
       </p>
+      {truncated && (
+        <p className="text-[13px] text-zinc-400">
+          Showing the latest {MAX_ROWS} of {orders.length} orders
+        </p>
+      )}
 
       {orders.length === 0 ? (
         <div className="rounded-2xl border border-zinc-200 bg-white p-10 text-center">
@@ -93,7 +106,7 @@ export default async function EatAdminOrders({
               </tr>
             </thead>
             <tbody>
-              {orders.map((o) => {
+              {shown.map((o) => {
                 const rider = o.rider_id ? m.riders.get(o.rider_id) : null;
                 const isDelivery = o.order_type === "delivery";
                 const cashMissing =

@@ -7,7 +7,7 @@ import {
   buildWhatsAppUrl,
   type Fulfilment,
 } from "@/lib/eat/whatsappOrder";
-import type { Cart } from "./useEatCart";
+import type { Cart, LastOrder } from "./useEatCart";
 import { lineTotal } from "./useEatCart";
 
 /**
@@ -28,6 +28,16 @@ import { lineTotal } from "./useEatCart";
  * reintroduce it. The API's own message is shown instead, because the usual
  * cause ("this kitchen isn't delivering yet") is a setting the restaurant
  * controls rather than something the guest can retry their way out of.
+ *
+ * Once step 1 succeeds the basket is emptied (via `onPlaced`) and the order is
+ * remembered as `lastOrder`, so a reload still offers the tracking link and
+ * the WhatsApp thread. The server notifies the restaurant by email as well,
+ * so the WhatsApp message is the guest's copy of the thread, not the only
+ * way the kitchen hears about the order.
+ *
+ * Money: `total` is the food. On a delivery the kitchen's fee is added on
+ * top and shown as its own line, and the figure on the confirmation is the
+ * server's `order_total` — the number the guest will actually be asked for.
  */
 export function CartPanel({
   cart,
@@ -38,32 +48,92 @@ export function CartPanel({
   onCleared,
   whatsappPhone,
   canDeliver,
+  canOrder = true,
+  deliveryFeeKes = 0,
+  minOrderKes = null,
+  lastOrder = null,
+  onPlaced,
 }: {
   cart: Cart | null;
+  /** Food total, before any delivery fee. */
   total: number;
   open: boolean;
   onClose: () => void;
   onSetQty: (idx: number, qty: number) => void;
-  onCleared: () => void;
+  /** Fallback for callers that do not pass `onPlaced`: still empties the
+   *  basket once the order is saved, just without remembering it. */
+  onCleared?: () => void;
   /** Number that receives the order; "" when the kitchen has not set one. */
   whatsappPhone: string;
-  /** This kitchen delivers with its own rider. */
+  /** Delivery is on for this kitchen. */
   canDeliver: boolean;
+  /** Pickup is on. False for a delivery-only kitchen. */
+  canOrder?: boolean;
+  /** The kitchen's delivery charge; 0 when unset. */
+  deliveryFeeKes?: number;
+  /** Smallest food total it delivers for; null when there is none. */
+  minOrderKes?: number | null;
+  /** The last order placed from this device, for the empty-basket card. */
+  lastOrder?: LastOrder | null;
+  /** The order is saved: the caller clears the basket and remembers it. */
+  onPlaced?: (o: LastOrder) => void;
 }) {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [note, setNote] = useState("");
-  const [fulfilment, setFulfilment] = useState<Fulfilment>("pickup");
+  /** The guest's explicit pick, if any. Not the answer itself: the kitchen's
+   *  settings decide what is allowed, and they can change under a basket. */
+  const [fulfilmentChoice, setFulfilmentChoice] = useState<Fulfilment | null>(null);
   const [address, setAddress] = useState("");
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [locating, setLocating] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [placed, setPlaced] = useState<string | null>(null);
+  /** Snapshot taken at placement. The basket is cleared right after, so the
+   *  confirmation cannot read restaurant, total or fulfilment off `cart`. */
+  const [placed, setPlaced] = useState<{
+    shortId: string | null;
+    restaurant: string;
+    totalKes: number;
+    fulfilment: Fulfilment;
+  } | null>(null);
   const [trackUrl, setTrackUrl] = useState<string | null>(null);
   const [waUrl, setWaUrl] = useState<string | null>(null);
   const [popupBlocked, setPopupBlocked] = useState(false);
+
+  // Derived, not synced: the default follows the kitchen (pickup unless it is
+  // delivery-only), and a pick the kitchen no longer offers falls back to it
+  // rather than sticking on a disabled button. That covers a different
+  // restaurant landing in the basket and refreshed metadata alike — a
+  // delivery-only kitchen must never start the guest on "pickup".
+  const fulfilment: Fulfilment =
+    fulfilmentChoice && (fulfilmentChoice === "pickup" ? canOrder : canDeliver)
+      ? fulfilmentChoice
+      : canDeliver && !canOrder
+        ? "delivery"
+        : "pickup";
+
+  const fee = fulfilment === "delivery" ? deliveryFeeKes : 0;
+  const grand = total + fee;
+  const belowMinimum =
+    fulfilment === "delivery" && minOrderKes != null && minOrderKes > 0 && total < minOrderKes;
+
+  /**
+   * The confirmation stays up until the sheet is closed. The reset waits for
+   * the slide-out so the screen does not flip to an empty basket mid-animation;
+   * the next open then shows the basket, or the last-order card.
+   */
+  const close = () => {
+    onClose();
+    if (!placed) return;
+    window.setTimeout(() => {
+      setPlaced(null);
+      setTrackUrl(null);
+      setWaUrl(null);
+      setPopupBlocked(false);
+    }, 350);
+  };
 
   /**
    * Hand the order to the kitchen over WhatsApp.
@@ -132,8 +202,12 @@ export function CartPanel({
     }
 
     // ── Step 1: record the order ──────────────────────────────────────
+    let orderId: string | undefined;
     let orderRef: string | undefined;
     let track: string | undefined;
+    // What the guest will be asked for. The server's figure, not ours: it
+    // re-reads every price and the fee, so its total is the one on the ticket.
+    let orderTotal = grand;
     try {
       const res = await fetch("/api/orders", {
         method: "POST",
@@ -166,7 +240,7 @@ export function CartPanel({
       // its value keeps the WhatsApp thread, the guest's status page and the
       // dashboard ticket showing the same string.
       const payload = (await res.json().catch(() => null)) as
-        | { order_id?: string; short_id?: string; error?: string }
+        | { order_id?: string; short_id?: string; order_total?: number; error?: string }
         | null;
 
       if (!res.ok) {
@@ -175,11 +249,13 @@ export function CartPanel({
         setBusy(false);
         return;
       }
-      orderRef = payload?.short_id ?? undefined;
-      if (payload?.order_id) {
+      orderId = payload?.order_id ?? undefined;
+      orderRef = payload?.short_id ?? orderId?.slice(0, 8).toUpperCase();
+      if (typeof payload?.order_total === "number") orderTotal = payload.order_total;
+      if (orderId) {
         // window.location.origin, not a configured base: the guest should
         // stay on whichever host they are already on.
-        track = `${window.location.origin}/order/${payload.order_id}`;
+        track = `${window.location.origin}/order/${orderId}`;
         setTrackUrl(track);
       }
     } catch {
@@ -193,7 +269,9 @@ export function CartPanel({
     const message = buildOrderMessage({
       restaurant: cart.restaurant,
       lines: cart.lines,
-      totalKes: total,
+      totalKes: grand,
+      subtotalKes: total,
+      deliveryFeeKes: fee,
       fulfilment,
       deliveryAddress: address.trim(),
       deliveryCoords: fulfilment === "delivery" ? coords : null,
@@ -221,9 +299,29 @@ export function CartPanel({
       setPopupBlocked(true);
     }
 
-    // Deliberately NOT clearing the basket: the guest still has to press send
-    // inside WhatsApp, and we cannot know whether they did.
-    setPlaced(orderRef ?? "sent");
+    setPlaced({
+      shortId: orderRef ?? null,
+      restaurant: cart.restaurant,
+      totalKes: orderTotal,
+      fulfilment,
+    });
+
+    // The order exists server-side and the kitchen has been told, so the
+    // basket has done its job. Leaving it full is how the same order gets
+    // placed twice. The caller remembers the order so a reload can still
+    // reach the tracking page and the WhatsApp thread.
+    if (orderId && orderRef && track && onPlaced) {
+      onPlaced({
+        orderId,
+        shortId: orderRef,
+        restaurant: cart.restaurant,
+        trackUrl: track,
+        waUrl: url,
+        placedAt: new Date().toISOString(),
+      });
+    } else {
+      onCleared?.();
+    }
   };
 
   const canSubmit =
@@ -232,6 +330,7 @@ export function CartPanel({
     name.trim().length > 0 &&
     phone.trim().length > 0 &&
     (fulfilment !== "delivery" || address.trim().length > 0) &&
+    !belowMinimum &&
     !busy;
 
   return (
@@ -244,7 +343,7 @@ export function CartPanel({
       <button
         type="button"
         aria-label="Close basket"
-        onClick={onClose}
+        onClick={close}
         className="absolute inset-0 bg-purple-dark/70 backdrop-blur-sm"
       />
 
@@ -259,7 +358,7 @@ export function CartPanel({
         <header className="flex items-center justify-between gap-3 px-5 py-4 border-b border-border">
           <div className="min-w-0">
             <h2 className="font-display text-[18px] font-extrabold tracking-[-0.02em]">
-              {placed ? "Order sent" : "Your basket"}
+              {placed ? "Order placed" : "Your basket"}
             </h2>
             {cart && !placed && (
               <p className="text-text2 text-[12.5px] truncate">{cart.restaurant}</p>
@@ -267,7 +366,7 @@ export function CartPanel({
           </div>
           <button
             type="button"
-            onClick={onClose}
+            onClick={close}
             aria-label="Close"
             className="size-9 rounded-full bg-surface hover:bg-surface2 flex items-center justify-center shrink-0 transition-colors"
           >
@@ -276,18 +375,19 @@ export function CartPanel({
         </header>
 
         {placed ? (
-          <div className="flex-1 px-5 py-8">
+          <div className="flex-1 overflow-y-auto px-5 py-8">
             <p className="text-text2 text-[15px] leading-[1.6]">
               {popupBlocked ? (
                 <>
-                  Your order is saved and {cart?.restaurant ?? "the kitchen"} can
-                  see it. Tap below to send them the details on WhatsApp.
+                  Your order is saved and {placed.restaurant} has been notified.
+                  Tap below to send them the details on WhatsApp too, so you
+                  have the thread.
                 </>
               ) : (
                 <>
-                  Your order is written out in WhatsApp — press send there to reach{" "}
-                  {cart?.restaurant ?? "the kitchen"}. They&apos;ll reply with a ready
-                  time. Your basket is still here until you do.
+                  Your order is saved and {placed.restaurant} has been notified.
+                  WhatsApp is open with the details — press send there too, so
+                  you have the thread. Track it from the link below.
                 </>
               )}
             </p>
@@ -310,16 +410,23 @@ export function CartPanel({
               </a>
             )}
 
-            {placed !== "sent" && (
+            {placed.shortId && (
               <div className="mt-6 rounded-2xl border border-border bg-white p-5 text-center">
                 <p className="text-[11px] font-bold text-text3 uppercase tracking-widest">
                   Your order code
                 </p>
                 <p className="font-mono text-[22px] font-bold text-dark mt-1">
-                  #{placed}
+                  #{placed.shortId}
                 </p>
                 <p className="text-[12.5px] text-text2 mt-1.5">
                   Quote this if you call the restaurant.
+                </p>
+                <p className="text-[14px] font-extrabold text-dark mt-3 tabular-nums">
+                  Total to pay KSh {placed.totalKes.toLocaleString()}
+                  <span className="font-bold text-text2">
+                    {" "}
+                    {placed.fulfilment === "delivery" ? "on delivery" : "at pickup"}
+                  </span>
                 </p>
 
                 {trackUrl && (
@@ -337,7 +444,39 @@ export function CartPanel({
           <>
             <div className="flex-1 overflow-y-auto px-5 py-4">
               {!cart || cart.lines.length === 0 ? (
-                <p className="text-text2 text-[14px] py-8">Your basket is empty.</p>
+                <div className="py-6">
+                  <p className="text-text2 text-[14px]">Your basket is empty.</p>
+
+                  {/* The way back after a reload. The basket is emptied the
+                      moment an order is saved, so without this a refreshed
+                      page has no trace of the order the guest just placed. */}
+                  {lastOrder && (
+                    <div className="mt-5 rounded-2xl border border-border bg-white p-5">
+                      <p className="text-[11px] font-bold text-text3 uppercase tracking-widest">
+                        Your last order
+                      </p>
+                      <p className="font-display text-[15px] font-extrabold text-dark mt-1">
+                        #{lastOrder.shortId} at {lastOrder.restaurant}
+                      </p>
+                      <a
+                        href={lastOrder.trackUrl}
+                        className="mt-4 block w-full rounded-full bg-dark text-white text-[14px] font-extrabold py-3 text-center"
+                      >
+                        Track my order
+                      </a>
+                      {lastOrder.waUrl && (
+                        <a
+                          href={lastOrder.waUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="mt-2 block w-full rounded-full border border-border text-dark text-[14px] font-extrabold py-3 text-center"
+                        >
+                          Open WhatsApp again
+                        </a>
+                      )}
+                    </div>
+                  )}
+                </div>
               ) : (
                 <ul className="space-y-3">
                   {cart.lines.map((l, i) => (
@@ -393,31 +532,34 @@ export function CartPanel({
 
               {cart && cart.lines.length > 0 && (
                 <div className="mt-5 space-y-2.5">
-                  {/* How it gets to them. Delivery is a real intention with no
-                      riders behind it yet, so it is visible but not selectable —
-                      hiding it would lose the signal that people want it. */}
+                  {/* How it gets to them. Both options stay visible even when
+                      one is off, so the guest learns what this kitchen offers
+                      rather than wondering why a button is missing. */}
                   <div className="grid grid-cols-2 gap-2">
                     <button
                       type="button"
-                      onClick={() => setFulfilment("pickup")}
+                      disabled={!canOrder}
+                      onClick={() => setFulfilmentChoice("pickup")}
                       aria-pressed={fulfilment === "pickup"}
                       className={`rounded-[12px] border px-3 py-3 text-left transition-colors ${
                         fulfilment === "pickup"
                           ? "border-amber bg-amber-dim"
-                          : "border-border bg-white hover:border-amber"
-                      }`}
+                          : "border-border bg-white"
+                      } ${canOrder ? "hover:border-amber" : "opacity-55 cursor-not-allowed"}`}
                     >
                       <Bag className="size-4 text-amber-700 mb-1.5" />
                       <p className="text-[13px] font-extrabold leading-tight">
                         I&apos;ll pick it up
                       </p>
-                      <p className="text-text3 text-[11px] mt-0.5">Collect at the counter</p>
+                      <p className="text-text3 text-[11px] mt-0.5">
+                        {canOrder ? "Collect at the counter" : "Not offered here"}
+                      </p>
                     </button>
 
                     <button
                       type="button"
                       disabled={!canDeliver}
-                      onClick={() => setFulfilment("delivery")}
+                      onClick={() => setFulfilmentChoice("delivery")}
                       aria-pressed={fulfilment === "delivery"}
                       className={`rounded-[12px] border px-3 py-3 text-left transition-colors ${
                         fulfilment === "delivery"
@@ -524,10 +666,24 @@ export function CartPanel({
 
             {cart && cart.lines.length > 0 && (
               <footer className="border-t border-border px-5 py-4">
+                {/* The fee is its own line, never folded into the food: a
+                    total that quietly grew is read as the menu being wrong. */}
+                {fulfilment === "delivery" && (
+                  <dl className="mb-2 space-y-1 text-[13px] text-text2">
+                    <div className="flex items-center justify-between">
+                      <dt>Food</dt>
+                      <dd className="tabular-nums">KSh {total.toLocaleString()}</dd>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <dt>Delivery fee</dt>
+                      <dd className="tabular-nums">KSh {deliveryFeeKes.toLocaleString()}</dd>
+                    </div>
+                  </dl>
+                )}
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-text2 text-[13px] font-bold">Total</span>
                   <span className="font-display text-[19px] font-extrabold tabular-nums">
-                    KSh {total.toLocaleString()}
+                    KSh {grand.toLocaleString()}
                   </span>
                 </div>
                 <button
@@ -548,6 +704,11 @@ export function CartPanel({
                     </>
                   )}
                 </button>
+                {belowMinimum && minOrderKes != null && (
+                  <p className="text-[12.5px] font-bold text-[#B4541A] text-center mt-2">
+                    Minimum order for delivery is KSh {minOrderKes.toLocaleString()}.
+                  </p>
+                )}
                 <p className="text-text3 text-[11.5px] text-center mt-2">
                   {whatsappPhone
                     ? "Opens WhatsApp with your order written out — press send."

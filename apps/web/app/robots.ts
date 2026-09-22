@@ -1,4 +1,5 @@
 import type { MetadataRoute } from 'next'
+import { SITE_URL, absoluteUrl } from '@/lib/seo/site'
 
 export default function robots(): MetadataRoute.Robots {
   return {
@@ -9,6 +10,7 @@ export default function robots(): MetadataRoute.Robots {
         disallow: ['/admin/', '/dashboard/', '/api/', '/auth/', '/studio/'],
       },
     ],
-    sitemap: 'https://klickenya.com/sitemap.xml',
+    sitemap: absoluteUrl('/sitemap.xml'),
+    host: SITE_URL,
   }
 }

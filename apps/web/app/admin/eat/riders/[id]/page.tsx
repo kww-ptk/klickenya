@@ -13,17 +13,17 @@ export default async function RiderProfile({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const m = await getEatMetrics(30);
+  // The order window and this rider's kitchens do not depend on each other.
+  const [m, { data: links }] = await Promise.all([
+    getEatMetrics(30),
+    adminClient.from("rider_menus").select("menu_id").eq("rider_id", id),
+  ]);
   const rider = m.riders.get(id);
   if (!rider) notFound();
 
   const stats = riderStats(m.orders, id);
 
   // Which kitchens they ride for.
-  const { data: links } = await adminClient
-    .from("rider_menus")
-    .select("menu_id")
-    .eq("rider_id", id);
   const kitchens = (links ?? [])
     .map((l) => m.restaurants.get(l.menu_id as string))
     .filter(Boolean) as string[];

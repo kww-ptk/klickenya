@@ -1,5 +1,5 @@
 # Klickenya — CLAUDE.md
-# Last updated: September 13, 2026 (food delivery end to end: eat.klickenya.com, riders, order tablet, commission; migration counter → 092)
+# Last updated: September 14, 2026 (EAT review fixes: security, lifecycle, admin speed; migration counter → 093)
 # Read this at the start of every session before writing any code.
 
 ## What Klickenya is
@@ -10,7 +10,7 @@ Stack: Next.js 15 App Router · Sanity (content) · Supabase (auth + dynamic dat
 Monorepo: apps/web · apps/studio · packages/shared · packages/database.
 
 ## Current state (as of audit May 8, 2026)
-Migration count: 092 (last: 092_commission.sql)
+Migration count: 093 (last: 093_eat_hardening.sql)
 Missing on disk: 046, 047, 050 (squashed or never committed — don't reuse these numbers)
 Collision on disk: 073 has TWO files (073_partner_linkage.sql + 073_staff_cross_station_access.sql) — historical, don't reuse 073
 LIVE and working end-to-end:
@@ -65,7 +65,7 @@ NOT YET BUILT:
   Mobile-first. Test on iPhone Safari before declaring done.
 
 ## Database — Supabase
-  Next migration number: 093 (087 pos_enabled · 088 riders · 089 platform riders · 090 pickup_code
+  Next migration number: 094 (093 eat hardening · 087 pos_enabled · 088 riders · 089 platform riders · 090 pickup_code
     · 091 delivery staff role · 092 commission. 084 adds valuations.property_type — the valuation route always inserted a column the table never had, so every insert failed with PGRST204 and was swallowed; 083 is takeaway orders; don't use 046, 047, 050 — gaps on disk; 073 is a double — already used twice)
   RLS enabled on all tables. Check policies before querying from client.
   create_booking_with_payment() RPC handles bookings — don't INSERT directly.

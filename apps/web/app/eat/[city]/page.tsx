@@ -125,7 +125,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     title,
     description,
     alternates: { canonical: `/eat/${city}` },
-    openGraph: { title, description, url: `https://klickenya.com/eat/${city}` },
+    openGraph: { title, description, url: `https://www.klickenya.com/eat/${city}` },
   };
 }
 
@@ -174,7 +174,7 @@ export default async function EatCityPage({ params }: PageProps) {
             "@type": "ListItem",
             position: i + 1,
             name: c.name,
-            url: `https://klickenya.com${c.href}`,
+            url: `https://www.klickenya.com${c.href}`,
           })),
         }}
       />

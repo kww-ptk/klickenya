@@ -15,12 +15,12 @@ export const metadata: Metadata = {
   title: "Events in Kenya | Klickenya",
   description:
     "From music festivals to cultural celebrations, discover the best events happening across Kenya. Browse upcoming events in Nairobi, Mombasa, Diani, Lamu and beyond.",
-  alternates: { canonical: "https://klickenya.com/event" },
+  alternates: { canonical: "https://www.klickenya.com/event" },
   openGraph: {
     title: "Events in Kenya | Klickenya",
     description:
       "From music festivals to cultural celebrations, discover the best events happening across Kenya.",
-    url: "https://klickenya.com/event",
+    url: "https://www.klickenya.com/event",
     type: "website",
   },
 };

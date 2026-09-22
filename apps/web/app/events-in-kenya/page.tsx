@@ -26,12 +26,12 @@ export const metadata: Metadata = {
   title: "Events in Kenya | Klickenya",
   description:
     "Parties, fitness, workshops — find things to do near you. Discover upcoming events across Watamu, Kilifi, Diani, Nairobi, Lamu and beyond.",
-  alternates: { canonical: "https://klickenya.com/events-in-kenya" },
+  alternates: { canonical: "https://www.klickenya.com/events-in-kenya" },
   openGraph: {
     title: "Events in Kenya | Klickenya",
     description:
       "Parties, fitness, workshops — find things to do near you.",
-    url: "https://klickenya.com/events-in-kenya",
+    url: "https://www.klickenya.com/events-in-kenya",
     type: "website",
   },
 };

@@ -7,7 +7,7 @@ import {
   getMenuCapabilities,
   getMenusWithItems,
   getReservationConfigs,
-  isEatEligible,
+  isOrderable,
 } from "@/lib/eat/menus";
 import { EatKlickFlow, type Place, type Town } from "./_components/EatKlickFlow";
 
@@ -84,10 +84,13 @@ export default async function EatKlickPage() {
     getReservationConfigs(),
   ]);
 
-  // Same gate as /eat: a town's count and its cards must describe the same set.
+  // Tighter than /eat's gate: this flow is the ordering app, so a book-only
+  // kitchen would show "+" buttons on a menu nobody can order from. Town
+  // counts are derived from this same filtered set, so they always agree
+  // with the cards.
   listings = listings.filter((l) => {
     const slug = typeof l.slug === "string" ? l.slug : (l.slug?.current ?? "");
-    return isEatEligible(caps.get(slug));
+    return isOrderable(caps.get(slug));
   });
 
   const places: Place[] = listings.map((l) => {
@@ -108,6 +111,9 @@ export default async function EatKlickPage() {
       orderHref: cap?.canOrder && cap.menuSlug ? `/m/${cap.menuSlug}` : undefined,
       canBook: Boolean(cap?.canBook),
       canDeliver: Boolean(cap?.canDeliver),
+      canOrder: Boolean(cap?.canOrder),
+      deliveryFeeKes: cap?.deliveryFeeKes ?? 0,
+      minOrderKes: cap?.minOrderKes ?? null,
       reservation: reservations.get(slug) ?? null,
       foodTags: menu?.foodTags ?? [],
       menu: menu?.sections ?? [],

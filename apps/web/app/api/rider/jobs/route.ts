@@ -53,6 +53,10 @@ export async function GET(req: NextRequest) {
       .select(JOB_SELECT)
       .eq("rider_id", session.rider_id)
       .is("delivered_at", null)
+      // A cancelled order used to stay here forever — the rider's only job,
+      // with no button that worked. Cancelled leaves the list; the rider
+      // sees it vanish, which is what happened to it.
+      .in("status", ["preparing", "ready"])
       .order("rider_accepted_at", { ascending: true }),
     adminClient
       .from("orders")

@@ -100,8 +100,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return {
     title,
     description,
-    alternates: { canonical: `https://klickenya.com/${type}/${city}` },
-    openGraph: { title, description, url: `https://klickenya.com/${type}/${city}` },
+    alternates: { canonical: `https://www.klickenya.com/${type}/${city}` },
+    openGraph: { title, description, url: `https://www.klickenya.com/${type}/${city}` },
   };
 }
 
@@ -163,19 +163,19 @@ export default async function CityPage({ params }: PageProps) {
         "@type": "ListItem",
         position: 1,
         name: "Home",
-        item: "https://klickenya.com",
+        item: "https://www.klickenya.com",
       },
       {
         "@type": "ListItem",
         position: 2,
         name: label,
-        item: `https://klickenya.com/${type}`,
+        item: `https://www.klickenya.com/${type}`,
       },
       {
         "@type": "ListItem",
         position: 3,
         name: cityName,
-        item: `https://klickenya.com/${type}/${city}`,
+        item: `https://www.klickenya.com/${type}/${city}`,
       },
     ],
   };

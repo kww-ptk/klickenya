@@ -1,4 +1,5 @@
 import { adminClient } from "@/lib/supabase/admin";
+import { splitOrderMoney } from "@/lib/orders/money";
 
 /**
  * Recompute an order's money from its surviving lines.
@@ -12,7 +13,15 @@ import { adminClient } from "@/lib/supabase/admin";
  *
  * Voided lines are excluded, matching every read path. delivery_fee_kes is
  * added on top rather than recomputed: it is a property of the delivery, not
- * of the basket.
+ * of the basket. The rider's and Klickenya's shares of that fee are therefore
+ * untouched here — only the food-side figures move.
+ *
+ * The arithmetic is `splitOrderMoney`, the same function placement uses, so
+ * an order edited after placement is settled by the rule it was placed
+ * under. The rate itself comes FROZEN from the order, never from the menu:
+ * an order placed under an old rate stays on that rate even if it is edited
+ * after a renegotiation. Orders from before 092 have no rate and keep a null
+ * commission rather than being retro-charged one they never agreed to.
  */
 export async function recomputeOrderTotals(orderId: string): Promise<void> {
   const [{ data: lines }, { data: order }] = await Promise.all([
@@ -22,7 +31,7 @@ export async function recomputeOrderTotals(orderId: string): Promise<void> {
       .eq("order_id", orderId),
     adminClient
       .from("orders")
-      .select("delivery_fee_kes, commission_bps")
+      .select("order_type, delivery_fee_kes, commission_bps")
       .eq("id", orderId)
       .maybeSingle(),
   ]);
@@ -36,25 +45,25 @@ export async function recomputeOrderTotals(orderId: string): Promise<void> {
   const subtotal = lines
     .filter((l) => !l.is_voided)
     .reduce((sum, l) => sum + Number(l.line_total ?? 0), 0);
-  const deliveryFee = Number(order?.delivery_fee_kes ?? 0);
-
-  // Commission follows the food. Remove a dish and the restaurant's payout
-  // and Klickenya's cut both have to move with it, or the ledger describes an
-  // order that no longer exists.
-  //
-  // Uses the rate FROZEN on the order, never the menu's current one: an order
-  // placed under an old rate stays on that rate, even if it is edited after a
-  // renegotiation. Orders from before 092 have no rate and keep a null
-  // commission rather than being retro-charged one they never agreed to.
+  const isDelivery = order?.order_type === "delivery";
   const commissionBps = order?.commission_bps;
+
+  const split = splitOrderMoney({
+    subtotalKes: subtotal,
+    deliveryFeeKes: Number(order?.delivery_fee_kes ?? 0),
+    isDelivery,
+    // The frozen rate applies whichever channel the order came through.
+    commissionDeliveryBps: Number(commissionBps ?? 0),
+    commissionPickupBps: Number(commissionBps ?? 0),
+  });
+
   const money: Record<string, unknown> = {
-    subtotal_kes: subtotal,
-    total_kes: subtotal + deliveryFee,
+    subtotal_kes: split.subtotalKes,
+    total_kes: split.totalKes,
   };
   if (typeof commissionBps === "number") {
-    const commission = Math.round((subtotal * commissionBps) / 10000);
-    money.commission_kes = commission;
-    money.restaurant_payout_kes = subtotal - commission;
+    money.commission_kes = split.commissionKes;
+    money.restaurant_payout_kes = split.restaurantPayoutKes;
   }
 
   const { error } = await adminClient

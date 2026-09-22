@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { adminClient } from "@/lib/supabase/admin";
-import { sanityClient } from "@/lib/sanity/client";
+import { sanityFetch } from "@/lib/sanity/client";
 import { getEatMetrics } from "@/lib/eat/adminMetrics";
 import { CommissionRow } from "./CommissionRow";
 
@@ -41,28 +41,33 @@ function Flag({ on, label }: { on: boolean; label: string }) {
  * everywhere else.
  */
 export default async function EatAdminRestaurants() {
-  const m = await getEatMetrics(30);
-
-  const { data: menuRows } = await adminClient
-    .from("menus")
-    .select(
-      "id, name, listing_slug, is_published, takeaway_enabled, delivery_enabled, table_ordering, whatsapp_phone, commission_delivery_bps, commission_pickup_bps, delivery_fee_kes",
-    )
-    .order("name", { ascending: true });
+  // The order window and the menu list do not depend on each other.
+  const [m, { data: menuRows }] = await Promise.all([
+    getEatMetrics(30),
+    adminClient
+      .from("menus")
+      .select(
+        "id, name, listing_slug, is_published, takeaway_enabled, delivery_enabled, table_ordering, whatsapp_phone, commission_delivery_bps, commission_pickup_bps, delivery_fee_kes",
+      )
+      .order("name", { ascending: true }),
+  ]);
 
   const menus = (menuRows ?? []) as MenuRow[];
 
   // Which of these actually resolve to a live listing. A menu whose
-  // listing_slug matches nothing is orderable by nobody.
+  // listing_slug matches nothing is orderable by nobody. Cached 60 s like
+  // every other dashboard read of Sanity.
   const slugs = menus.map((x) => x.listing_slug).filter(Boolean) as string[];
-  const known = new Set<string>(
-    slugs.length
-      ? await sanityClient.fetch<string[]>(
-          `*[_type == "listing" && slug.current in $slugs].slug.current`,
-          { slugs },
-        )
-      : [],
-  );
+  let knownSlugs: string[] = [];
+  if (slugs.length) {
+    const { data } = await sanityFetch<string[]>({
+      query: `*[_type == "listing" && slug.current in $slugs].slug.current`,
+      params: { slugs },
+      tags: ["listings"],
+    });
+    knownSlugs = data ?? [];
+  }
+  const known = new Set<string>(knownSlugs);
 
   const orderCount = new Map<string, number>();
   for (const o of m.orders) orderCount.set(o.menu_id, (orderCount.get(o.menu_id) ?? 0) + 1);

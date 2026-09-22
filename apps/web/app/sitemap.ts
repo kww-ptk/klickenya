@@ -1,6 +1,7 @@
 import type { MetadataRoute } from 'next'
 import { groq } from 'next-sanity'
 import { sanityClient } from '@/lib/sanity/client'
+import { SITE_URL } from '@/lib/seo/site'
 import { listingPublicPath, TYPE_TO_URL_SEGMENT } from '@/lib/listings/url'
 import {
   PROPERTY_CATEGORIES,
@@ -13,7 +14,10 @@ import {
 } from '@/lib/real-estate/constants'
 import { PLACE_SLUGS } from '@/lib/real-estate/places'
 
-const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://klickenya.com'
+// Always the production origin, never NEXT_PUBLIC_SITE_URL: on a Vercel
+// preview that env var is the preview domain, and a sitemap full of preview
+// URLs is worse than no sitemap at all.
+const BASE_URL = SITE_URL
 
 /**
  * Regenerate hourly. Without this the sitemap is built once at deploy time, so

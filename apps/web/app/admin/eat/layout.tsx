@@ -1,3 +1,4 @@
+import { AutoRefresh } from "./_components/AutoRefresh";
 import { EatAdminNav } from "./_components/EatAdminNav";
 
 /**
@@ -19,6 +20,7 @@ export default function EatAdminLayout({ children }: { children: React.ReactNode
         </p>
       </div>
       <EatAdminNav />
+      <AutoRefresh />
       {children}
     </div>
   );

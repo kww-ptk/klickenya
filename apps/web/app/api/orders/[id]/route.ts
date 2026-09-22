@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminClient } from "@/lib/supabase/admin";
+import { deliveryStage } from "@/lib/orders/deliveryStage";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -21,8 +22,9 @@ export async function GET(
       .from("orders")
       .select(`
         id, menu_id, order_type, status, created_at,
-        accepted_at, estimated_ready_at, decline_reason, total_kes,
-        delivery_address,
+        accepted_at, estimated_ready_at, decline_reason,
+        subtotal_kes, delivery_fee_kes, total_kes,
+        delivery_address, rider_accepted_at, picked_up_at, delivered_at,
         order_items ( item_name, quantity, line_total, is_voided )
       `)
       .eq("id", id)
@@ -54,7 +56,16 @@ export async function GET(
         accepted_at:        order.accepted_at,
         estimated_ready_at: order.estimated_ready_at,
         decline_reason:     order.decline_reason,
+        subtotal_kes:       order.subtotal_kes,
+        delivery_fee_kes:   order.delivery_fee_kes,
         total_kes:          order.total_kes,
+        // The delivery leg lives in timestamps, not in status (088). The page
+        // used to say "On its way to you" the moment the kitchen pressed Mark
+        // ready; the stage says where the food actually is.
+        stage:              deliveryStage(order),
+        rider_accepted_at:  order.rider_accepted_at,
+        picked_up_at:       order.picked_up_at,
+        delivered_at:       order.delivered_at,
         items: (order.order_items ?? [])
           .filter((i) => !i.is_voided)
           .map((i) => ({

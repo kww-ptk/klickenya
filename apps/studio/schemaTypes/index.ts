@@ -10,6 +10,7 @@ import author from '../schemas/author'
 import agent from '../schemas/agent'
 import partner from '../schemas/partner'
 import homePage from '../schemas/homePage'
+import constructionMilestone from '../schemas/constructionMilestone'
 import {
   quickFactsBlock,
   tipCardBlock,
@@ -45,6 +46,7 @@ export const schemaTypes = [
   agent,
   partner,
   homePage,
+  constructionMilestone,
   quickFactsBlock,
   tipCardBlock,
   dayCardBlock,

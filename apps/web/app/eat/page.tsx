@@ -10,6 +10,7 @@ import {
   Bike,
 } from "lucide-react";
 import { sanityFetch } from "@/lib/sanity/client";
+import { eatOrigin } from "@/lib/storefront/houseHost";
 import { EAT_RESTAURANTS_QUERY } from "@/lib/sanity/queries";
 import { urlForImage } from "@/lib/sanity/image";
 import { getMenuCapabilities, getSampleDishes, isEatEligible } from "@/lib/eat/menus";
@@ -26,10 +27,11 @@ import { BestSellers, type BestSeller } from "@/components/eat/BestSellers";
 /**
  * /eat — public food discovery for the Kenyan coast.
  *
- * A DISCOVERY surface, not an ordering one. Delivery is not built yet (P0–P2
- * in docs/food-delivery-program-plan.md), so every call to action here does
- * something that works today: browse, filter by what's open, book a table.
- * The verbs become "order" when P0 ships — not before.
+ * A DISCOVERY surface, not an ordering one. Delivery and collection are live
+ * on the food app (eat.klickenya.com — see docs/food-delivery-state.md), and
+ * this page is the SEO hub that finds a kitchen and hands the guest over to
+ * it. Everything here does something that works today: browse, filter by
+ * what's open, book a table, or open the app to order.
  *
  * Visual register is deliberately louder than the rest of the marketplace
  * (dark ground, heavy caps, colour-blocked tiles) but uses only house tokens,
@@ -43,10 +45,15 @@ import { BestSellers, type BestSeller } from "@/components/eat/BestSellers";
 
 export const revalidate = 3600;
 
+// Where "order" actually happens. The subdomain once it is switched on
+// (NEXT_PUBLIC_EAT_ORIGIN), the in-app path until then — the flow is the
+// same either way, so this page never has to know which.
+const appHref = eatOrigin() ?? "/eatklick";
+
 export const metadata: Metadata = {
   title: "Food Delivery & Restaurant Ordering in Watamu & Kilifi",
   description:
-    "Order food online or book a table in Watamu, Kilifi and across the Kenyan coast. Browse menus, see what's open now, and order direct from the restaurant. Food delivery coming to the coast.",
+    "Order food online or book a table in Watamu, Kilifi and across the Kenyan coast. Browse menus, see what's open now, and order direct from the restaurant. Food delivery and collection across the coast.",
   alternates: { canonical: "/eat" },
 };
 
@@ -202,7 +209,7 @@ export default async function EatPage() {
             "@type": "ListItem",
             position: i + 1,
             name: c.name,
-            url: `https://klickenya.com${c.href}`,
+            url: `https://www.klickenya.com${c.href}`,
           })),
         }}
       />
@@ -233,8 +240,8 @@ export default async function EatPage() {
           </h1>
 
           <p className="max-w-[520px] leading-[1.6] mb-9 text-white/55 text-[16px] md:text-[17px]">
-            Order food online straight from the kitchen, or book a table. Watamu,
-            Kilifi and across the coast — delivery landing soon.
+            Order food for delivery or collection straight from the kitchen, or
+            book a table. Watamu, Kilifi and across the coast.
           </p>
 
           <div className="flex flex-wrap items-center justify-center gap-3">
@@ -244,6 +251,14 @@ export default async function EatPage() {
             >
               Order food now
               <ArrowRight className="size-4" />
+            </a>
+            {/* Plain anchor, not <Link>: the app may live on another origin. */}
+            <a
+              href={appHref}
+              className="inline-flex items-center gap-2 px-7 py-3.5 rounded-full border border-white/25 text-white text-[15px] font-bold hover:bg-white/10 transition-colors"
+            >
+              <Bike className="size-4 text-amber" />
+              Order delivery
             </a>
             {cities[0] && (
               <Link
@@ -353,22 +368,22 @@ export default async function EatPage() {
             </span>
             <div>
               <h2 className="font-display text-[19px] font-extrabold text-text tracking-[-0.02em] mb-1">
-                Food delivery is coming to the coast
+                Order delivery or collection on the Klickenya food app
               </h2>
               <p className="text-text2 text-[14px] leading-[1.6]">
-                Right now you can order ahead and collect, or book a table.
-                Delivery to your door is next — restaurants in Watamu and Kilifi
-                can register their interest today.
+                Browse kitchens by town, build a basket, and get it delivered by
+                a Klickenya rider or collect it yourself. Watamu and Kilifi
+                first, more towns as restaurants join.
               </p>
             </div>
           </div>
-          <Link
-            href="/contact"
+          <a
+            href={appHref}
             className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-purple-dark text-white text-[14px] font-extrabold hover:bg-text2 transition-colors shrink-0"
           >
-            Tell us your town
+            Open the food app
             <ArrowRight className="size-4" />
-          </Link>
+          </a>
         </div>
       </section>
 

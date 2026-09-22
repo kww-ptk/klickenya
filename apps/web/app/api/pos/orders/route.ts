@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod/v4";
 import { adminClient } from "@/lib/supabase/admin";
+import { distinctIds } from "@/lib/orders/placement";
 import { getPosStaffSession } from "@/app/api/pos/_lib/auth";
 import { recomputeSessionTotals } from "@/app/api/menu/sessions/_lib/sessions";
 
@@ -97,11 +98,13 @@ export async function POST(req: NextRequest) {
     const tableDisplayNumber = tableRow?.table_number ?? null;
 
     /* STEP 4 — Fetch all items from DB (never trust client prices) */
-    const itemIds = data.items.map((i) => i.menu_item_id);
+    // Distinct: a waiter may ring the same dish twice with different notes or
+    // add-ons, and PostgREST returns one row per id.
+    const itemIds = distinctIds(data.items.map((i) => i.menu_item_id));
 
     const { data: dbItems } = await adminClient
       .from("menu_items")
-      .select("id, name, price_kes, is_available, menu_sections!inner(menu_id)")
+      .select("id, name, price_kes, is_available, menu_sections!inner(menu_id, station)")
       .in("id", itemIds)
       .eq("menu_sections.menu_id", session.menu_id);
 
@@ -242,6 +245,13 @@ export async function POST(req: NextRequest) {
       });
       const optionTotal = selectedOptions.reduce((s, o) => s + o.price_add, 0);
       const lineTotal = (dbItem.price_kes + optionTotal) * orderItem.quantity;
+      // Station comes from the section, as in the guest route. Without it the
+      // column defaulted to 'kitchen' and a waiter-rung beer landed on the
+      // kitchen board instead of the bar.
+      const sectionRaw = (dbItem as unknown as { menu_sections: unknown }).menu_sections;
+      const section = Array.isArray(sectionRaw) ? sectionRaw[0] : sectionRaw;
+      const station: "kitchen" | "bar" =
+        (section as { station?: string } | undefined)?.station === "bar" ? "bar" : "kitchen";
       return {
         menu_item_id:     orderItem.menu_item_id,
         item_name:        dbItem.name,
@@ -252,6 +262,8 @@ export async function POST(req: NextRequest) {
         // matches the column the kitchen dashboard already renders.
         allergy_notes:    sanitizeNotes(orderItem.notes),
         line_total:       lineTotal,
+        station,
+        station_status:   "new" as const,
       };
     });
 

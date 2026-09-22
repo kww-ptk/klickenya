@@ -96,20 +96,20 @@ export function AddRider({ menus }: { menus: MenuOption[] }) {
         <div>
           <label htmlFor="r-name" className="block text-[12px] font-bold text-zinc-600 mb-1">Name</label>
           <input id="r-name" value={name} onChange={(e) => setName(e.target.value)}
-            className="w-full rounded-xl border border-zinc-200 px-4 py-2.5 text-[15px]" />
+            className="w-full rounded-xl border border-zinc-200 px-4 py-2.5 text-[16px]" />
         </div>
         <div>
           <label htmlFor="r-phone" className="block text-[12px] font-bold text-zinc-600 mb-1">Phone</label>
           <input id="r-phone" value={phone} onChange={(e) => setPhone(e.target.value)}
             placeholder="0712 345 678" inputMode="tel"
-            className="w-full rounded-xl border border-zinc-200 px-4 py-2.5 text-[15px]" />
+            className="w-full rounded-xl border border-zinc-200 px-4 py-2.5 text-[16px]" />
         </div>
         <div>
           <label htmlFor="r-pin" className="block text-[12px] font-bold text-zinc-600 mb-1">PIN</label>
           <input id="r-pin" value={pin}
             onChange={(e) => setPin(e.target.value.replace(/\D/g, "").slice(0, 4))}
             inputMode="numeric"
-            className="w-full rounded-xl border border-zinc-200 px-4 py-2.5 text-[15px] tracking-[0.3em]" />
+            className="w-full rounded-xl border border-zinc-200 px-4 py-2.5 text-[16px] tracking-[0.3em]" />
         </div>
       </div>
 

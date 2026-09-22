@@ -3,6 +3,15 @@ import { z } from "zod/v4";
 import { adminClient } from "@/lib/supabase/admin";
 import { revalidateTag, revalidatePath } from "next/cache";
 import { getMenuAuth, verifyMenuAccess } from "@/app/api/menu/_lib/auth";
+import { planReconcile } from "@/lib/menu/reconcile";
+import type { ReconcilePlan } from "@/lib/menu/reconcile";
+import {
+  toIncoming,
+  loadExistingMenu,
+  describeDependencies,
+  applyRejections,
+  applyPlan,
+} from "@/lib/menu/applyReconcile";
 
 /* ── Types returned by the parse action ─────────────── */
 
@@ -32,8 +41,26 @@ const commitSectionSchema = z.object({
   items: z.array(commitItemSchema).min(0).max(200),
 });
 
+/** A rename the owner looked at and rejected — applied as a removal plus an addition. */
+const rejectedRenameSchema = z.object({
+  section: z.string().max(200),
+  from:    z.string().max(200),
+  to:      z.string().max(200),
+});
+
 const commitSchema = z.object({
   action:   z.literal("commit"),
+  menu_id:  z.string().uuid(),
+  // "append" is the original behaviour: add these sections after the existing
+  // ones. "replace" reconciles, so re-importing a corrected menu updates rows
+  // in place instead of producing a second "Starters".
+  mode:     z.enum(["append", "replace"]).optional().default("append"),
+  sections: z.array(commitSectionSchema).min(1).max(50),
+  rejected_renames: z.array(rejectedRenameSchema).max(200).optional().default([]),
+});
+
+const planSchema = z.object({
+  action:   z.literal("plan"),
   menu_id:  z.string().uuid(),
   sections: z.array(commitSectionSchema).min(1).max(50),
 });
@@ -184,10 +211,12 @@ Rules:
     });
   }
 
-  /* ── action: commit ───────────────────────────────── */
+  /* ── action: plan ─────────────────────────────────── */
+  /* Preview a replace. Writes nothing — it exists so the owner can see what
+     would be removed, and confirm any renames, before committing.          */
 
-  if (action === "commit") {
-    const parsedBody = commitSchema.safeParse(body);
+  if (action === "plan") {
+    const parsedBody = planSchema.safeParse(body);
     if (!parsedBody.success) {
       return NextResponse.json({ error: "Invalid data" }, { status: 400 });
     }
@@ -195,6 +224,86 @@ Rules:
 
     const access = await verifyMenuAccess(supabase, menu_id, userId, isAdmin);
     if (!access) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
+    let plan: ReconcilePlan;
+    try {
+      plan = planReconcile(await loadExistingMenu(menu_id), toIncoming(sections));
+    } catch (err) {
+      return NextResponse.json(
+        { error: err instanceof Error ? err.message : "Could not read the current menu" },
+        { status: 502 }
+      );
+    }
+
+    const doomed = [
+      ...plan.sections.flatMap((s) => s.deletes.map((d) => d.id)),
+      ...plan.deletedSections.flatMap((s) => s.itemIds),
+    ];
+
+    return NextResponse.json({
+      counts: plan.counts,
+      removals: [
+        ...plan.sections.flatMap((s) => s.deletes.map((d) => ({ section: s.title, name: d.name }))),
+        ...plan.deletedSections.flatMap((s) =>
+          Array.from({ length: s.itemCount }, () => ({ section: s.title, name: null }))
+        ),
+      ].filter((r) => r.name !== null),
+      removedSections: plan.deletedSections.map((s) => ({ title: s.title, itemCount: s.itemCount })),
+      renames: plan.sections.flatMap((s) =>
+        s.updates
+          .filter((u) => u.renamed)
+          .map((u) => ({
+            section:     s.title,
+            from:        u.previousName,
+            to:          u.patch.name ?? u.previousName,
+            confidence:  Math.round(u.confidence * 100) / 100,
+            needsReview: u.needsReview,
+          }))
+      ),
+      dependencies: await describeDependencies(doomed),
+    });
+  }
+
+  /* ── action: commit ───────────────────────────────── */
+
+  if (action === "commit") {
+    const parsedBody = commitSchema.safeParse(body);
+    if (!parsedBody.success) {
+      return NextResponse.json({ error: "Invalid data" }, { status: 400 });
+    }
+    const { menu_id, sections, mode, rejected_renames } = parsedBody.data;
+
+    const access = await verifyMenuAccess(supabase, menu_id, userId, isAdmin);
+    if (!access) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
+    /* ── replace: reconcile against what is already there ── */
+    if (mode === "replace") {
+      const totalItems = sections.reduce((sum, s) => sum + s.items.length, 0);
+      if (totalItems > 200) {
+        return NextResponse.json({ error: "Too many items (max 200)" }, { status: 400 });
+      }
+
+      try {
+        // Re-plan here rather than trusting a plan from the client: row ids
+        // must never round-trip through the browser, and the menu may have
+        // changed since the preview.
+        const plan = applyRejections(
+          planReconcile(await loadExistingMenu(menu_id), toIncoming(sections)),
+          rejected_renames
+        );
+        await applyPlan(menu_id, plan);
+
+        revalidateTag(`menu:${menu_id}`, "default");
+        revalidatePath(`/m/${access.slug}`);
+        return NextResponse.json({ mode: "replace", ...plan.counts });
+      } catch (err) {
+        console.error("Menu reconcile error:", err);
+        return NextResponse.json(
+          { error: err instanceof Error ? err.message : "Could not update the menu" },
+          { status: 500 }
+        );
+      }
+    }
 
     // Check total item count across all sections
     const totalItems = sections.reduce((sum, s) => sum + s.items.length, 0);

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminClient } from "@/lib/supabase/admin";
+import { clientIp, rateLimit } from "@/lib/security/rateLimit";
 import {
   POS_SESSION_COOKIE,
   signPosSession,
@@ -41,21 +42,63 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid PIN" }, { status: 400 });
   }
 
-  // Verify menu exists and at least one of the POS-related features is on.
-  // (table_ordering OR reservations_enabled — either justifies running a POS.)
+  // Per-connection throttle. PINs are four digits and the menu id is in the
+  // public menu's HTML, so without this a script could walk the whole PIN
+  // space overnight and sign in as a manager.
+  const ip = clientIp(req);
+  if (!rateLimit(`pos-auth:${ip}`, { limit: 20, windowMs: 10 * 60_000 }).ok) {
+    return NextResponse.json(
+      { error: "Too many sign-in attempts. Try again in a few minutes." },
+      { status: 429 },
+    );
+  }
+
+  // Verify the menu exists and that ANY ordering channel is on. This used to
+  // require table ordering or reservations, which is how a delivery-only
+  // restaurant found its Food Delivery Orders tablet refusing every PIN.
   const { data: menu } = await adminClient
     .from("menus")
-    .select("id, table_ordering, reservations_enabled")
+    .select(
+      "id, table_ordering, reservations_enabled, takeaway_enabled, delivery_enabled, pos_enabled",
+    )
     .eq("id", menuId)
     .single();
 
   if (!menu) {
     return NextResponse.json({ error: "Menu not found" }, { status: 404 });
   }
-  if (!menu.table_ordering && !menu.reservations_enabled) {
+  if (
+    !menu.table_ordering &&
+    !menu.reservations_enabled &&
+    !menu.takeaway_enabled &&
+    !menu.delivery_enabled &&
+    !menu.pos_enabled
+  ) {
     return NextResponse.json(
-      { error: "POS is not enabled for this restaurant" },
+      { error: "No ordering channel is switched on for this restaurant yet." },
       { status: 400 },
+    );
+  }
+
+  // Lockout state, read on its own so a database without migration 093
+  // degrades to "no lockout" instead of failing the sign-in entirely.
+  let lock: { pos_failed_attempts: number | null; pos_locked_until: string | null } | null = null;
+  {
+    const { data, error } = await adminClient
+      .from("menus")
+      .select("pos_failed_attempts, pos_locked_until")
+      .eq("id", menuId)
+      .maybeSingle();
+    if (error) {
+      console.warn("[pos/auth] lock columns unavailable (093 not applied?):", error.message);
+    } else {
+      lock = data;
+    }
+  }
+  if (lock?.pos_locked_until && new Date(lock.pos_locked_until) > new Date()) {
+    return NextResponse.json(
+      { error: "Too many wrong PINs. Try again in 10 minutes." },
+      { status: 429 },
     );
   }
 
@@ -69,7 +112,28 @@ export async function POST(req: NextRequest) {
     .maybeSingle();
 
   if (!staff) {
+    // The PIN is looked up by (menu, pin), so a miss cannot be pinned on a
+    // staff row. Count it against the menu: ten misses lock sign-in for ten
+    // minutes, which turns 10,000 guesses into a week.
+    if (lock) {
+      const attempts = (lock.pos_failed_attempts ?? 0) + 1;
+      const locking = attempts >= 10;
+      await adminClient
+        .from("menus")
+        .update({
+          pos_failed_attempts: locking ? 0 : attempts,
+          pos_locked_until: locking ? new Date(Date.now() + 10 * 60_000).toISOString() : null,
+        })
+        .eq("id", menuId);
+    }
     return NextResponse.json({ error: "Invalid PIN" }, { status: 401 });
+  }
+
+  if (lock && (lock.pos_failed_attempts ?? 0) > 0) {
+    await adminClient
+      .from("menus")
+      .update({ pos_failed_attempts: 0, pos_locked_until: null })
+      .eq("id", menuId);
   }
 
   const { token, maxAge } = signPosSession({

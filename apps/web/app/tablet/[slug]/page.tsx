@@ -55,8 +55,13 @@ export default async function KitchenLoginPage({ params }: PageProps) {
   }
 
   if (session && session.menu_id === menu.id && sessionIsActive) {
+    // The delivery station has exactly one screen. Routing it through the
+    // station board — which rejects the role and bounces it to the waiter
+    // POS — was how the PIN looked broken at any restaurant with tables.
+    if (session.role === "delivery") {
+      redirect(`/tablet/${slug}/orders`);
+    }
     if (
-      session.role === "delivery" ||
       session.role === "kitchen" ||
       session.role === "manager" ||
       session.role === "bar"

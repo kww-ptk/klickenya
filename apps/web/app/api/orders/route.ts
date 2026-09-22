@@ -13,6 +13,15 @@ import {
   openSessionForTable,
   recomputeSessionTotals,
 } from "@/app/api/menu/sessions/_lib/sessions";
+import { clientIp, rateLimit } from "@/lib/security/rateLimit";
+import {
+  distinctIds,
+  requiredGroupsToEnforce,
+  availableOptionCounts,
+} from "@/lib/orders/placement";
+import { notifyRestaurantOfOrder } from "@/lib/orders/notifyRestaurant";
+import { sanityFetch } from "@/lib/sanity/client";
+import { isOpenNow } from "@/lib/listings/openingHours";
 
 /* ── Helpers ────────────────────────────────────────── */
 
@@ -68,6 +77,17 @@ const orderSchema = z.object({
 
 export async function POST(req: NextRequest) {
   try {
+    // Anonymous endpoint, public menu ids. Without a ceiling a script could
+    // fill a kitchen's tablet and every rider's job list with junk in a
+    // minute. Per connection here; per phone once the number is known.
+    const ip = clientIp(req);
+    if (!rateLimit(`orders:ip:${ip}`, { limit: 10, windowMs: 60_000 }).ok) {
+      return NextResponse.json(
+        { error: "Too many orders from this connection. Try again in a minute." },
+        { status: 429 },
+      );
+    }
+
     const body = await req.json();
     const data = orderSchema.parse(body);
 
@@ -75,14 +95,15 @@ export async function POST(req: NextRequest) {
     const { data: menu } = await adminClient
       .from("menus")
       .select(
-        "id, table_ordering, takeaway_enabled, delivery_enabled, is_published, default_service_charge_pct, delivery_fee_kes, commission_delivery_bps, commission_pickup_bps",
+        "id, name, listing_slug, table_ordering, takeaway_enabled, delivery_enabled, is_published, min_order_kes, default_service_charge_pct, delivery_fee_kes, commission_delivery_bps, commission_pickup_bps",
       )
       .eq("id", data.menu_id)
       .single();
 
-    if (!menu) {
+    if (!menu || menu.is_published === false) {
       return NextResponse.json({ error: "Menu not found." }, { status: 404 });
     }
+    const restaurantName = String(menu.name ?? "The restaurant").replace(/\s+menu\s*$/i, "").trim();
 
     let normalizedPhone: string | null = null;
 
@@ -145,8 +166,43 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    /* STEP 2 — Fetch all submitted items from DB (never trust client prices) */
-    const itemIds = data.items.map((i) => i.menu_item_id);
+    if (
+      normalizedPhone &&
+      !rateLimit(`orders:phone:${normalizedPhone}`, { limit: 5, windowMs: 10 * 60_000 }).ok
+    ) {
+      return NextResponse.json(
+        { error: "That phone number has placed several orders just now. Please wait a few minutes." },
+        { status: 429 },
+      );
+    }
+
+    /* STEP 1.5 — Opening hours. The app shows "Closed" on the card and lets
+       the guest order anyway; the order then sits at 'new' all night on a
+       phone nobody is watching. The listing's hours are the source of truth;
+       unknown hours (null) never block an order. Read through the 60 s data
+       cache so this costs one Sanity call a minute, not one per order. */
+    if (data.order_type !== "dine_in" && menu.listing_slug) {
+      try {
+        const { data: listing } = await sanityFetch<{ openingHours?: string | null } | null>({
+          query: `*[_type == "listing" && slug.current == $slug][0]{ openingHours }`,
+          params: { slug: menu.listing_slug },
+          tags: ["listings"],
+        });
+        if (isOpenNow(listing?.openingHours) === false) {
+          return NextResponse.json(
+            { error: `${restaurantName} is closed right now. Their hours: ${listing?.openingHours}` },
+            { status: 400 },
+          );
+        }
+      } catch (err) {
+        console.warn("[orders] opening hours check skipped:", err);
+      }
+    }
+
+    /* STEP 2 — Fetch all submitted items from DB (never trust client prices).
+       Distinct ids: the same dish twice with different add-ons is two lines
+       in the basket and one row from PostgREST. */
+    const itemIds = distinctIds(data.items.map((i) => i.menu_item_id));
 
     const { data: dbItems } = await adminClient
       .from("menu_items")
@@ -196,6 +252,7 @@ export async function POST(req: NextRequest) {
     type DbOption = {
       name: string;
       price_modifier: number;
+      is_available: boolean | null;
       group_id: string;
       group_name: string;
       group_is_required: boolean;
@@ -235,6 +292,7 @@ export async function POST(req: NextRequest) {
           dbOptionMap.set(opt.id, {
             name:              opt.name,
             price_modifier:    opt.price_modifier,
+            is_available:      opt.is_available ?? null,
             group_id:          grp.id,
             group_name:        grp.name,
             group_is_required: grp.is_required,
@@ -259,19 +317,42 @@ export async function POST(req: NextRequest) {
               { status: 400 }
             );
           }
+          // Availability was selected and never checked: an add-on switched
+          // off at 6pm was still accepted from a basket built at 5pm.
+          if (dbOpt.is_available === false) {
+            return NextResponse.json(
+              { error: `"${dbOpt.name}" is not available right now.` },
+              { status: 400 }
+            );
+          }
         }
       }
     }
 
     /* STEP 5 — Validate required option groups are satisfied.
        Fetch all is_required groups for the submitted menu_item_ids in one query. */
-    const { data: requiredGroups } = await adminClient
+    type RequiredGroupRow = {
+      id: string;
+      name: string;
+      menu_item_id: string;
+      item_options: { id: string; is_available: boolean | null }[] | null;
+    };
+    const { data: requiredGroupRows } = await adminClient
       .from("item_option_groups")
-      .select("id, name, menu_item_id")
+      .select("id, name, menu_item_id, item_options ( id, is_available )")
       .in("menu_item_id", itemIds)
       .eq("is_required", true);
 
-    if (requiredGroups && requiredGroups.length > 0) {
+    // A required group with no available option is hidden from the guest
+    // (lib/eat/menus.ts drops it), so it cannot be answered and must not be
+    // enforced — or every basket with that dish fails at checkout.
+    const requiredRows = (requiredGroupRows ?? []) as unknown as RequiredGroupRow[];
+    const requiredGroups = requiredGroupsToEnforce(
+      requiredRows,
+      availableOptionCounts(requiredRows),
+    );
+
+    if (requiredGroups.length > 0) {
       for (const orderItem of data.items) {
         // Build set of group_ids that this item's submission covers
         const coveredGroupIds = new Set(
@@ -391,6 +472,18 @@ export async function POST(req: NextRequest) {
     });
 
     const subtotal = orderItemRows.reduce((s, r) => s + r.line_total, 0);
+
+    if (
+      data.order_type === "delivery" &&
+      menu.min_order_kes != null &&
+      subtotal < Number(menu.min_order_kes)
+    ) {
+      return NextResponse.json(
+        { error: `Minimum order for delivery is KSh ${Number(menu.min_order_kes).toLocaleString()}.` },
+        { status: 400 },
+      );
+    }
+
     // ── Split the money, and freeze it onto the order ──────────────────
     // A delivery order carries the restaurant's configured delivery fee; the
     // guest is charged food + fee, the rider is owed their share of the fee,
@@ -487,6 +580,14 @@ export async function POST(req: NextRequest) {
 
     if (itemsErr) {
       console.error("[orders] order_items insert error:", itemsErr);
+      // Never leave a ticket with a total and no lines. The two inserts are
+      // not one transaction, so compensate: remove the order row and fail
+      // the request rather than confirm an order the kitchen cannot read.
+      await adminClient.from("orders").delete().eq("id", order.id);
+      return NextResponse.json(
+        { error: "Could not save the order lines. Please try again." },
+        { status: 500 },
+      );
     }
 
     /* STEP 9.5 — Refresh cached session totals so the POS table grid sees
@@ -497,6 +598,38 @@ export async function POST(req: NextRequest) {
         await recomputeSessionTotals(sessionId);
       } catch (e) {
         console.error("[orders] session totals recompute failed:", e);
+      }
+    }
+
+    /* STEP 9.7 — Tell the restaurant. Until now nothing did: the only signal
+       was the guest pressing Send inside WhatsApp, which is how orders sat at
+       'new' for hours. Email is the channel every listing already has for
+       reservations. Awaited (Vercel may stop the function after the response),
+       but never allowed to fail the order. */
+    if (data.order_type !== "dine_in") {
+      try {
+        await notifyRestaurantOfOrder({
+          menuId: data.menu_id,
+          orderId: order.id,
+          shortId: order.id.slice(0, 8).toUpperCase(),
+          orderType: data.order_type,
+          customerName: data.customer_name ?? null,
+          customerPhone: normalizedPhone,
+          deliveryAddress: data.order_type === "delivery" ? sanitizeNotes(data.delivery_address) : null,
+          note: sanitizeNotes(data.order_note),
+          lines: orderItemRows.map((row) => ({
+            name: row.item_name,
+            quantity: row.quantity,
+            lineTotal: row.line_total,
+            options:
+              row.selected_options.map((o) => `${o.group}: ${o.choice}`).join(" · ") || null,
+          })),
+          subtotalKes: money.subtotalKes,
+          deliveryFeeKes: money.deliveryFeeKes,
+          totalKes: money.totalKes,
+        });
+      } catch (err) {
+        console.error("[orders] restaurant notification failed:", err);
       }
     }
 
@@ -521,6 +654,8 @@ export async function POST(req: NextRequest) {
       estimated_minutes: 20,
       table_number:      tableDisplayNumber,
       line_items,
+      subtotal_kes:      money.subtotalKes,
+      delivery_fee_kes:  money.deliveryFeeKes,
       order_total:       total,
     });
 

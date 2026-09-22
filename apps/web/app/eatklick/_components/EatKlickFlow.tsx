@@ -24,7 +24,7 @@ import type {
   MenuItemLite,
   ReservationConfig,
 } from "@/lib/eat/menus";
-import type { SelectedOption } from "@/components/eat/useEatCart";
+import type { CartMeta, SelectedOption } from "@/components/eat/useEatCart";
 import { ReservationSheet } from "@/components/reservations/ReservationSheet";
 import { matchesFoodTag } from "@/lib/eat/foodTags";
 import { useEatCart } from "@/components/eat/useEatCart";
@@ -47,6 +47,12 @@ export type Place = {
   orderHref?: string;
   canBook: boolean;
   canDeliver: boolean;
+  /** Pickup (takeaway) is on. A delivery-only kitchen has this false. */
+  canOrder: boolean;
+  /** What this kitchen charges to deliver; 0 when unset. */
+  deliveryFeeKes: number;
+  /** Smallest food total it delivers for; null when there is none. */
+  minOrderKes: number | null;
   /** Booking settings, when this kitchen takes reservations. */
   reservation: ReservationConfig | null;
   /** Dish tags derived from this kitchen's own item names. */
@@ -112,7 +118,30 @@ export function EatKlickFlow({ towns, places }: { towns: Town[]; places: Place[]
   const [foodTag, setFoodTag] = useState<string | null>(null);
   const [open, setOpen] = useState<Place | null>(null);
   const [cartOpen, setCartOpen] = useState(false);
-  const { cart, add, setQty, clear, total, count } = useEatCart();
+  const { cart, add, setQty, total, count, lastOrder, recordPlacedOrder } = useEatCart();
+
+  /**
+   * One kitchen per basket. Adding from a different restaurant asks before
+   * the current basket is thrown away — useEatCart's contract promised this
+   * and, until now, nothing implemented it. Returns whether the item went in,
+   * so the row can skip its "added" feedback on a cancel.
+   */
+  const addToBasket = (
+    menu: CartMeta,
+    item: { id: string; name: string; priceKes: number },
+    qty: number,
+    note: string,
+    options: SelectedOption[],
+  ): boolean => {
+    if (cart && cart.lines.length > 0 && cart.menuId !== menu.menuId) {
+      const ok = window.confirm(
+        `Start a new basket at ${menu.restaurant}? Your ${cart.restaurant} basket will be cleared.`,
+      );
+      if (!ok) return false;
+    }
+    add(menu, item, qty, note, options);
+    return true;
+  };
 
   const step = category ? 3 : town ? 2 : 1;
 
@@ -364,7 +393,7 @@ export function EatKlickFlow({ towns, places }: { towns: Town[]; places: Place[]
         place={open}
         focusTag={foodTag}
         onClose={() => setOpen(null)}
-        onAdd={add}
+        onAdd={addToBasket}
         cartCount={count}
         cartTotal={total}
         onOpenCart={() => setCartOpen(true)}
@@ -376,9 +405,13 @@ export function EatKlickFlow({ towns, places }: { towns: Town[]; places: Place[]
         open={cartOpen}
         onClose={() => setCartOpen(false)}
         onSetQty={setQty}
-        onCleared={clear}
         whatsappPhone={cart?.whatsappPhone ?? ""}
         canDeliver={cart?.canDeliver ?? false}
+        canOrder={cart?.canOrder ?? true}
+        deliveryFeeKes={cart?.deliveryFeeKes ?? 0}
+        minOrderKes={cart?.minOrderKes ?? null}
+        lastOrder={lastOrder}
+        onPlaced={recordPlacedOrder}
       />
 
       {/* Basket bar — visible across the flow, not just inside a menu, so a
@@ -539,19 +572,14 @@ function MenuSheet({
   /** Dish tag the guest filtered by, so the menu opens at that section. */
   focusTag: string | null;
   onClose: () => void;
+  /** Returns false when the add was declined (basket at another kitchen). */
   onAdd: (
-    menu: {
-      menuId: string;
-      menuSlug: string;
-      restaurant: string;
-      whatsappPhone: string;
-      canDeliver: boolean;
-    },
+    menu: CartMeta,
     item: { id: string; name: string; priceKes: number },
     qty: number,
     note: string,
     options: SelectedOption[],
-  ) => void;
+  ) => boolean;
   cartCount: number;
   cartTotal: number;
   onOpenCart: () => void;
@@ -659,6 +687,9 @@ function MenuSheet({
 
   const isOpen = Boolean(place);
   const data = shown;
+  // null means the hours could not be parsed — treated as open, because
+  // refusing orders on a guess would be worse than taking one late.
+  const closed = isOpenNow(data?.openingHours) === false;
 
   return (
     <div
@@ -732,6 +763,16 @@ function MenuSheet({
         )}
 
         <div ref={scrollRef} className="flex-1 overflow-y-auto px-5 md:px-8 py-6">
+          {closed && (
+            <p
+              role="status"
+              className="mb-5 rounded-[14px] border border-border bg-surface px-4 py-3 text-[13.5px] leading-[1.5] text-text2"
+            >
+              <span className="font-extrabold text-text">Closed right now</span> — you
+              can browse, but orders open again when they do.
+            </p>
+          )}
+
           {data && data.menu.length > 0 ? (
             data.menu.map((section) => (
               <section
@@ -747,21 +788,26 @@ function MenuSheet({
                     <MenuItemRow
                       key={`${item.id}-${i}`}
                       item={item}
+                      disabled={closed}
                       onAdd={(qty, note, options) =>
-                        data &&
-                        onAdd(
-                          {
-                            menuId: data.menuId,
-                            menuSlug: data.menuSlug,
-                            restaurant: data.name,
-                            whatsappPhone: data.whatsappPhone,
-                            canDeliver: data.canDeliver,
-                          },
-                          { id: item.id, name: item.name, priceKes: item.priceKes },
-                          qty,
-                          note,
-                          options,
-                        )
+                        data
+                          ? onAdd(
+                              {
+                                menuId: data.menuId,
+                                menuSlug: data.menuSlug,
+                                restaurant: data.name,
+                                whatsappPhone: data.whatsappPhone,
+                                canDeliver: data.canDeliver,
+                                canOrder: data.canOrder,
+                                deliveryFeeKes: data.deliveryFeeKes,
+                                minOrderKes: data.minOrderKes,
+                              },
+                              { id: item.id, name: item.name, priceKes: item.priceKes },
+                              qty,
+                              note,
+                              options,
+                            )
+                          : false
                       }
                     />
                   ))}
@@ -838,9 +884,13 @@ function MenuSheet({
 function MenuItemRow({
   item,
   onAdd,
+  disabled = false,
 }: {
   item: MenuItemLite;
-  onAdd: (qty: number, note: string, options: SelectedOption[]) => void;
+  /** Returns false when nothing was added, so no "added" feedback is shown. */
+  onAdd: (qty: number, note: string, options: SelectedOption[]) => boolean;
+  /** The kitchen is closed: the dish can be read but not added. */
+  disabled?: boolean;
 }) {
   const [expanded, setExpanded] = useState(false);
   const [qty, setQty] = useState(1);
@@ -891,8 +941,8 @@ function MenuItemRow({
   const lineTotal = (item.priceKes + addOns) * qty;
 
   const commit = () => {
-    if (missing) return;
-    onAdd(qty, note.trim(), selected);
+    if (missing || disabled) return;
+    if (!onAdd(qty, note.trim(), selected)) return;
     setExpanded(false);
     setQty(1);
     setNote("");
@@ -929,10 +979,11 @@ function MenuItemRow({
             </p>
             <button
               type="button"
+              disabled={disabled}
               onClick={() => setExpanded((v) => !v)}
               aria-expanded={expanded}
               aria-label={`Add ${item.name}`}
-              className={`size-8 rounded-full flex items-center justify-center shrink-0 transition-colors ${
+              className={`size-8 rounded-full flex items-center justify-center shrink-0 transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
                 justAdded
                   ? "bg-green text-white"
                   : expanded
@@ -1020,10 +1071,14 @@ function MenuItemRow({
               <button
                 type="button"
                 onClick={commit}
-                disabled={Boolean(missing)}
-                className="flex-1 px-4 py-2.5 rounded-full bg-amber text-dark text-[13.5px] font-extrabold hover:bg-amber2 disabled:opacity-45 disabled:cursor-not-allowed transition-colors tabular-nums"
+                disabled={Boolean(missing) || disabled}
+                className="flex-1 px-4 py-2.5 rounded-full bg-amber text-dark text-[13.5px] font-extrabold hover:bg-amber2 disabled:opacity-40 disabled:cursor-not-allowed transition-colors tabular-nums"
               >
-                {missing ? `Choose ${missing.name}` : `Add · KSh ${lineTotal.toLocaleString()}`}
+                {disabled
+                  ? "Closed right now"
+                  : missing
+                    ? `Choose ${missing.name}`
+                    : `Add · KSh ${lineTotal.toLocaleString()}`}
               </button>
             </div>
           </div>
