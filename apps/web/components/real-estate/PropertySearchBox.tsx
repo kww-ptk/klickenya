@@ -29,17 +29,23 @@ import {
  * range, and hides fields that make no sense for the selected tab.
  */
 
+/**
+ * Rent is deliberately absent: the rental side has no stock worth searching
+ * yet, and a tab that always lands on an empty grid reads as a broken site.
+ * /real-estate/for-rent still exists and is still linked from the category
+ * nav — this only hides the hero entry point. Put the tab back when the
+ * listings are there.
+ */
 const TABS = [
   { id: "for-sale", href: "/real-estate/for-sale", icon: "🏠", label: "Buy" },
-  { id: "for-rent", href: "/real-estate/for-rent", icon: "🔑", label: "Rent" },
-  { id: "land", href: "/real-estate/land", icon: "🌍", label: "Land" },
-  { id: "commercial", href: "/real-estate/commercial", icon: "🏢", label: "Commercial" },
   {
     id: "new-developments",
     href: "/real-estate/new-developments",
     icon: "🏗",
     label: "New Developments",
   },
+  { id: "land", href: "/real-estate/land", icon: "🌍", label: "Land" },
+  { id: "commercial", href: "/real-estate/commercial", icon: "🏢", label: "Commercial" },
 ] as const;
 
 /** Bedrooms are meaningless on a plot or a warehouse. */
