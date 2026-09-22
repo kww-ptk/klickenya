@@ -172,10 +172,10 @@ Create `apps/web/lib/real-estate/progress.ts`:
  */
 
 export interface ConstructionStage {
-  value: string;
-  label: string;
+  readonly value: string;
+  readonly label: string;
   /** Share of the whole build this stage represents. The set sums to 100. */
-  weight: number;
+  readonly weight: number;
 }
 
 /**
@@ -221,7 +221,7 @@ export function clampPercent(n: number): number {
  * dates and photos back out of this map, and a cast there would be fragile.
  */
 function indexEntries<T extends { stage?: string | null }>(
-  entries: readonly T[]
+  entries: readonly (T | null | undefined)[]
 ): Map<string, T> {
   const byStage = new Map<string, T>();
   for (const entry of entries) {
@@ -239,17 +239,23 @@ function indexEntries<T extends { stage?: string | null }>(
  * callers need to tell them apart to fall back to the manual percentage.
  */
 export function computePercentage(
-  entries: readonly { stage?: string | null; status?: string | null }[] | null | undefined
+  entries:
+    | readonly ({ stage?: string | null; status?: string | null } | null | undefined)[]
+    | null
+    | undefined
 ): number | null {
   if (!Array.isArray(entries) || entries.length === 0) return null;
 
   const byStage = indexEntries(entries);
   if (byStage.size === 0) return null;
 
+  // Walk the known stages rather than what was reported: no lookup can miss, so
+  // there is no non-null assertion whose safety lives in another function.
   let earned = 0;
-  for (const [stage, entry] of byStage) {
-    const weight = STAGE_BY_VALUE.get(stage)!.weight;
-    earned += weight * STATUS_CREDIT[toStatus(entry.status)];
+  for (const stage of CONSTRUCTION_STAGES) {
+    const entry = byStage.get(stage.value);
+    if (!entry) continue;
+    earned += stage.weight * STATUS_CREDIT[toStatus(entry.status)];
   }
   return clampPercent(earned);
 }
@@ -261,7 +267,7 @@ export function computePercentage(
 npx vitest run lib/real-estate/__tests__/progress.test.ts
 ```
 
-Expected: PASS, 11 tests.
+Expected: PASS. (Code review added tests for `clampPercent`, last-occurrence-wins and null array entries, taking this to 19.)
 
 - [ ] **Step 5: Commit**
 
@@ -505,7 +511,11 @@ export function mapConstructionProgress(
   raw: unknown,
   options: MapProgressOptions
 ): ConstructionProgress | null {
-  const entries: RawMilestone[] = Array.isArray(raw) ? (raw as RawMilestone[]) : [];
+  // Nullable elements: GROQ can return an array with holes, and Task 1's
+  // helpers already tolerate them. Saying so in the type keeps it honest.
+  const entries: (RawMilestone | null | undefined)[] = Array.isArray(raw)
+    ? (raw as (RawMilestone | null | undefined)[])
+    : [];
   const computed = computePercentage(entries);
 
   if (computed == null) {
