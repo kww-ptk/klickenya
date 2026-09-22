@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { formatStageMonth } from "@/lib/real-estate/progress";
 import type {
   ConstructionMilestone,
   ConstructionProgress,
@@ -39,20 +40,13 @@ const SR_STATUS_TEXT: Partial<Record<MilestoneStatus, string>> = {
   upcoming: "Not started",
 };
 
-/** Month and year only. Day precision on a construction estimate is a fiction. */
-function formatMilestoneDate(value: string): string | null {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return null;
-  return date.toLocaleDateString("en-KE", { month: "long", year: "numeric" });
-}
-
 function dateLine(milestone: ConstructionMilestone): string | null {
   if (milestone.status === "done" && milestone.completedDate) {
-    const formatted = formatMilestoneDate(milestone.completedDate);
+    const formatted = formatStageMonth(milestone.completedDate);
     return formatted ? `Completed ${formatted}` : null;
   }
   if (milestone.status !== "done" && milestone.targetDate) {
-    const formatted = formatMilestoneDate(milestone.targetDate);
+    const formatted = formatStageMonth(milestone.targetDate);
     return formatted ? `Target ${formatted}` : null;
   }
   return null;

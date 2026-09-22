@@ -116,6 +116,35 @@ export function computePercentage(
 /** `alt` is required, not optional: Studio requires it on every photo, and
  *  mapPhotos falls back to a generated string when one is blank, so the
  *  renderer never has to decide whether to show alt text. */
+/**
+ * A milestone date as "March 2026".
+ *
+ * Sanity `date` fields arrive as "YYYY-MM-DD" — no time, no zone. Handing that
+ * to `new Date()` parses it as UTC midnight, which `toLocaleDateString` then
+ * shifts into the running host's zone, so anywhere west of UTC the first of a
+ * month renders as the month before. "2026-12-01" displayed as "November 2026"
+ * in dev before this was built from its parts instead. Vercel runs UTC, which
+ * is exactly what makes it the kind of bug that only shows up somewhere else.
+ *
+ * Month and year only: day precision on a construction estimate is a fiction.
+ */
+export function formatStageMonth(value: string | null | undefined): string | null {
+  if (typeof value !== "string") return null;
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value.trim());
+  if (!match) return null;
+
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  // Out-of-range parts would silently roll over — month 13 becoming January of
+  // the next year — which is worse than showing no date at all.
+  if (month < 1 || month > 12 || day < 1 || day > 31) return null;
+
+  const date = new Date(year, month - 1, day);
+  if (Number.isNaN(date.getTime())) return null;
+  return date.toLocaleDateString("en-KE", { month: "long", year: "numeric" });
+}
+
 export interface ConstructionPhoto {
   url: string;
   alt: string;

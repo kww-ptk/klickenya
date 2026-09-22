@@ -3,6 +3,7 @@ import {
   CONSTRUCTION_STAGES,
   clampPercent,
   computePercentage,
+  formatStageMonth,
   mapConstructionProgress,
 } from "../progress";
 
@@ -280,5 +281,33 @@ describe("mapConstructionProgress", () => {
     expect(
       mapConstructionProgress([], { photoUrl, fallbackPercentage: Infinity })
     ).toBeNull();
+  });
+});
+
+describe("formatStageMonth", () => {
+  it("keeps the first of a month in that month", () => {
+    // Regression: "YYYY-MM-DD" parsed by new Date() is UTC midnight, which
+    // toLocaleDateString shifts backwards on any host west of UTC. This
+    // rendered as "November 2026" before the date was built from its parts.
+    expect(formatStageMonth("2026-12-01")).toBe("December 2026");
+    expect(formatStageMonth("2026-04-01")).toBe("April 2026");
+    expect(formatStageMonth("2026-01-01")).toBe("January 2026");
+  });
+
+  it("formats a mid-month date as month and year", () => {
+    expect(formatStageMonth("2026-03-04")).toBe("March 2026");
+  });
+
+  it("returns null for anything that is not a plain YYYY-MM-DD date", () => {
+    expect(formatStageMonth("")).toBeNull();
+    expect(formatStageMonth(null)).toBeNull();
+    expect(formatStageMonth(undefined)).toBeNull();
+    expect(formatStageMonth("not a date")).toBeNull();
+    expect(formatStageMonth("2026-03-04T12:00:00Z")).toBeNull();
+  });
+
+  it("returns null rather than rolling an out-of-range month into next year", () => {
+    expect(formatStageMonth("2026-13-01")).toBeNull();
+    expect(formatStageMonth("2026-00-10")).toBeNull();
   });
 });
