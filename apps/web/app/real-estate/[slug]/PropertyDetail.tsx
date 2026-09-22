@@ -360,7 +360,15 @@ async function PropertyDetail({ slug }: { slug: string }) {
                     </h2>
                     {/* The Completion card only appears when there is no
                         timeline. With one, the timeline owns the percentage —
-                        two numbers in one section can disagree. */}
+                        two numbers in one section can disagree.
+
+                        The list is skipped entirely when none of its three
+                        cards apply, which a development with milestones but no
+                        named developer or unit count hits. An empty <dl> is a
+                        definition list with no terms in it. */}
+                    {(property.developerName ||
+                      progress?.source === "manual" ||
+                      property.unitsAvailable != null) && (
                     <dl
                       className={cn(
                         "grid grid-cols-1 gap-4",
@@ -406,6 +414,7 @@ async function PropertyDetail({ slug }: { slug: string }) {
                         </div>
                       )}
                     </dl>
+                    )}
 
                     {progress?.source === "computed" && (
                       <div className="mt-5">
