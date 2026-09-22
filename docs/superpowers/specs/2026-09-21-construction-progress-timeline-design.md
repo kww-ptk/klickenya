@@ -214,8 +214,22 @@ Dates render as month and year only (`March 2026`), via `toLocaleDateString("en-
 month: "long", year: "numeric" })`. Day precision on a construction estimate is false
 precision.
 
-No past-due highlighting. The page is statically rendered with `revalidate = 3600`, so any
-"this date has passed" wording would be comparing against build time rather than now.
+No past-due highlighting — the page simply does not need it, and nobody asked for it.
+
+An earlier draft of this spec justified that by saying the page is statically rendered with
+`revalidate = 3600`, so date-relative wording would compare against build time. **That is
+false and the correction is worth recording.** `/real-estate/[slug]` declares
+`generateStaticParams` and `revalidate = 3600`, but it appears nowhere in
+`.next/prerender-manifest.json` — not under `routes`, not under `dynamicRoutes`. It is
+server-rendered per request. Its sibling `/real-estate/[slug]/[city]` *is* prerendered, and
+the only relevant difference is that the sibling declares `export const dynamic =
+"force-static"`. The likely cause is the root layout reading `cookies()` for the currency
+preference, which opts descendants into dynamic rendering.
+
+So date-relative logic would in fact be accurate here. It is still out of scope, but for the
+honest reason — it was not asked for — rather than a technical constraint that does not exist.
+This is tracked separately; it is a pre-existing performance and SEO issue with the route,
+not something this feature introduced.
 
 ## Placement — `app/real-estate/[slug]/PropertyDetail.tsx`
 
