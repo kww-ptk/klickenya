@@ -96,8 +96,8 @@ export async function generateMetadata({
   return {
     title,
     description,
-    alternates: { canonical: `https://klickenya.com/${type}` },
-    openGraph: { title, description, url: `https://klickenya.com/${type}` },
+    alternates: { canonical: `https://www.klickenya.com/${type}` },
+    openGraph: { title, description, url: `https://www.klickenya.com/${type}` },
   };
 }
 

@@ -20,12 +20,12 @@ export const metadata: Metadata = {
   title: "Destinations in Kenya | Klickenya",
   description:
     "From the stunning Coast to the wild Mara, discover the places that make Kenya unforgettable. Explore stays, experiences, and hidden gems across all of Kenya's top destinations.",
-  alternates: { canonical: "https://klickenya.com/destinations" },
+  alternates: { canonical: "https://www.klickenya.com/destinations" },
   openGraph: {
     title: "Destinations in Kenya | Klickenya",
     description:
       "From the stunning Coast to the wild Mara, discover the places that make Kenya unforgettable.",
-    url: "https://klickenya.com/destinations",
+    url: "https://www.klickenya.com/destinations",
     type: "website",
   },
 };

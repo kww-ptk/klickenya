@@ -13,6 +13,7 @@ import { getRates } from "@/lib/currency/rates";
 import { CityCountsProvider } from "@/context/CityCountsContext";
 import { SavedListingsProvider } from "@/hooks/useSavedListings";
 import { getCityCounts } from "@/lib/sanity/getCityCounts";
+import { SITE_URL } from "@/lib/seo/site";
 import "./globals.css";
 
 const geist = Geist({
@@ -47,11 +48,23 @@ export const metadata: Metadata = {
   },
   description:
     "Kenya's all-in-one booking platform. Book stays, experiences, events, rentals and services — from Nairobi to Lamu, Mara to Mombasa.",
-  metadataBase: new URL(
-    process.env.NEXT_PUBLIC_SITE_URL || "https://klickenya.com"
-  ),
+  metadataBase: new URL(SITE_URL),
   alternates: {
     canonical: "/",
+  },
+  // Without max-image-preview:large Google may show a thumbnail-sized preview
+  // or none at all, whatever og:image says. Every image-led page on this site
+  // depends on the large preview.
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+      "max-video-preview": -1,
+    },
   },
   openGraph: {
     title: "Klickenya — Discover Kenya",
@@ -89,13 +102,15 @@ export const metadata: Metadata = {
 const websiteJsonLd = {
   "@context": "https://schema.org",
   "@type": "WebSite",
+  "@id": `${SITE_URL}/#website`,
   name: "Klickenya",
-  url: "https://klickenya.com",
+  url: SITE_URL,
+  publisher: { "@id": `${SITE_URL}/#organization` },
   potentialAction: {
     "@type": "SearchAction",
     target: {
       "@type": "EntryPoint",
-      urlTemplate: "https://klickenya.com/stays?q={search_term_string}",
+      urlTemplate: `${SITE_URL}/stays?q={search_term_string}`,
     },
     "query-input": "required name=search_term_string",
   },
@@ -104,9 +119,10 @@ const websiteJsonLd = {
 const organizationJsonLd = {
   "@context": "https://schema.org",
   "@type": "Organization",
+  "@id": `${SITE_URL}/#organization`,
   name: "Klickenya",
-  url: "https://klickenya.com",
-  logo: "https://klickenya.com/logo.png",
+  url: SITE_URL,
+  logo: `${SITE_URL}/logo.png`,
   sameAs: [
     "https://twitter.com/klickenya",
     "https://www.instagram.com/klickenya",
