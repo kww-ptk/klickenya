@@ -1,4 +1,5 @@
 import { defineType, defineField } from 'sanity'
+import { STAGES } from './constructionMilestone'
 
 const KENYAN_COUNTIES = [
   'Baringo', 'Bomet', 'Bungoma', 'Busia', 'Elgeyo-Marakwet',
@@ -313,7 +314,8 @@ export default defineType({
       name: 'completionPercentage',
       title: 'Completion %',
       type: 'number',
-      description: 'Completion % for new developments',
+      description:
+        'Completion % for new developments. Ignored once Construction milestones below are filled in — the timeline computes the percentage from the stages instead.',
       validation: (rule) => rule.min(0).max(100),
       hidden: ({document}: {document: {isNewDevelopment?: boolean}}) => !document?.isNewDevelopment,
       group: 'details',
@@ -332,6 +334,30 @@ export default defineType({
       type: 'number',
       description: 'Units still available',
       hidden: ({document}: {document: {isNewDevelopment?: boolean}}) => !document?.isNewDevelopment,
+      group: 'details',
+    }),
+    defineField({
+      name: 'constructionMilestones',
+      title: 'Construction milestones',
+      description:
+        'Build stages shown as a timeline on the listing page. Adding any milestone here makes the completion percentage computed from these stages — the Completion % field above is then ignored.',
+      type: 'array',
+      of: [{ type: 'constructionMilestone' }],
+      hidden: ({document}: {document: {isNewDevelopment?: boolean}}) => !document?.isNewDevelopment,
+      validation: (rule) =>
+        rule.custom((milestones: any) => {
+          if (!Array.isArray(milestones)) return true
+          const seen = new Set<string>()
+          for (const m of milestones) {
+            if (!m?.stage) continue
+            if (seen.has(m.stage)) {
+              const label = STAGES.find((s) => s.value === m.stage)?.title ?? m.stage
+              return `Stage "${label}" appears more than once`
+            }
+            seen.add(m.stage)
+          }
+          return true
+        }),
       group: 'details',
     }),
     defineField({

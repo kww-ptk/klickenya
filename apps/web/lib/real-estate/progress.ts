@@ -209,6 +209,9 @@ export function mapConstructionProgress(
       stage: stage.value,
       label: stage.label,
       status,
+      // Studio hides whichever date doesn't match the current status but never
+      // clears it, so a stage flipped back from done can still carry a stale
+      // completedDate in the document. This is what drops it.
       completedDate:
         status === "done" ? entry?.completedDate || undefined : undefined,
       targetDate:
