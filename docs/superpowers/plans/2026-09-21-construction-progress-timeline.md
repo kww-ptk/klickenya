@@ -552,7 +552,7 @@ export function mapConstructionProgress(
 npx vitest run lib/real-estate/__tests__/progress.test.ts
 ```
 
-Expected: PASS, 20 tests.
+Expected: PASS, 29 tests — the 20 from Task 1 plus the 9 added here.
 
 - [ ] **Step 5: Typecheck**
 
