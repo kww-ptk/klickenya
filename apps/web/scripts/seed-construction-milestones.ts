@@ -38,6 +38,10 @@ const PUBLISH = process.argv.includes("--publish");
 const SLUG =
   process.argv.find((a) => a.startsWith("--slug="))?.split("=")[1] ??
   "nuri-residence-watamu";
+/** Stage currently under way. Everything before it is done, everything after upcoming. */
+const AT = process.argv.find((a) => a.startsWith("--at="))?.split("=")[1];
+/** Target handover date, YYYY-MM-DD. */
+const HANDOVER = process.argv.find((a) => a.startsWith("--handover="))?.split("=")[1];
 
 const client = createClient({
   projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID ?? "b9zd8u9f",
@@ -112,6 +116,46 @@ const MILESTONES = [
   },
 ];
 
+const STAGE_ORDER = [
+  "groundbreaking",
+  "foundation",
+  "superstructure",
+  "roofing",
+  "walling-plaster",
+  "services",
+  "finishes",
+  "handover",
+];
+
+/**
+ * Build a programme from where the site actually is, without inventing history.
+ *
+ * Knowing a development is "at the door stage" tells you which stages are behind
+ * it. It does not tell you when each of them finished. So completed stages are
+ * marked done with NO completedDate — the rail renders a ticked label and no
+ * date line, which is the truth. Fill the dates in Studio if you know them.
+ */
+function programmeFrom(at: string, handover?: string) {
+  const i = STAGE_ORDER.indexOf(at);
+  if (i === -1) {
+    console.error(`Unknown stage "${at}". One of: ${STAGE_ORDER.join(", ")}`);
+    process.exit(1);
+  }
+  return STAGE_ORDER.map((stage, j) => {
+    const status = j < i ? "done" : j === i ? "in-progress" : "upcoming";
+    const entry: Record<string, unknown> = {
+      _type: "constructionMilestone",
+      _key: `m-${stage}`,
+      stage,
+      status,
+    };
+    if (stage === "handover" && handover && status !== "done") {
+      entry.targetDate = handover;
+    }
+    return entry;
+  });
+}
+
 async function main() {
   if (!process.env.SANITY_WRITE_TOKEN && !DRY_RUN) {
     console.error("SANITY_WRITE_TOKEN is not set. Nothing written.");
@@ -142,11 +186,18 @@ async function main() {
     process.exit(1);
   }
 
-  const targetId = PUBLISH ? property._id : `drafts.${property._id}`;
+  // A listing that exists only as a draft comes back with its drafts. prefix
+  // already attached. Prefixing again writes to drafts.drafts.<id>, a document
+  // nothing reads — silent, and exactly the kind of thing that looks like the
+  // write simply did not happen.
+  const publishedId = property._id.replace(/^drafts\./, "");
+  const targetId = PUBLISH ? publishedId : `drafts.${publishedId}`;
+
+  const milestones = AT ? programmeFrom(AT, HANDOVER) : MILESTONES;
 
   console.log(`Property : ${property.title} (${property._id})`);
   console.log(`Target   : ${targetId}`);
-  console.log(`Stages   : ${MILESTONES.length}`);
+  console.log(`Stages   : ${milestones.length}${AT ? ` (in progress at "${AT}")` : " (placeholder dates)"}`);
   console.log(
     `Mode     : ${PUBLISH ? "PUBLISHED — goes live on klickenya.com" : "draft — invisible on the site until you publish it in Studio"}`
   );
@@ -157,7 +208,7 @@ async function main() {
   }
 
   if (PUBLISH) {
-    await client.patch(property._id).set({ constructionMilestones: MILESTONES }).commit();
+    await client.patch(property._id).set({ constructionMilestones: milestones }).commit();
     console.log("\nPublished. The timeline is live. Check the dates.");
     return;
   }
@@ -171,13 +222,13 @@ async function main() {
   const base =
     existingDraft ??
     (await client.fetch<Record<string, unknown>>(`*[_id == $id][0]`, {
-      id: property._id,
+      id: publishedId,
     }));
 
   await client.createOrReplace({
     ...base,
     _id: targetId,
-    constructionMilestones: MILESTONES,
+    constructionMilestones: milestones,
   } as never);
 
   console.log(
