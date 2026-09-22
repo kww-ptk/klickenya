@@ -51,10 +51,10 @@ function toStatus(value: unknown): MilestoneStatus {
 
 /**
  * A percentage arrives here from places that don't guarantee a clean number:
- * Task 2 feeds it a hand-typed Sanity number field, which can be null, absent,
- * or garbage a host mistyped, as well as arithmetic that could in principle
- * drift outside 0..100. Clamp and round rather than propagate NaN or an
- * out-of-range value into the UI.
+ * mapConstructionProgress feeds it the hand-typed completionPercentage off the
+ * Sanity document, which can be null, absent, or garbage a host mistyped, as
+ * well as arithmetic that could in principle drift outside 0..100. Clamp and
+ * round rather than propagate NaN or an out-of-range value into the UI.
  */
 export function clampPercent(n: number): number {
   if (!Number.isFinite(n)) return 0;
