@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { CONSTRUCTION_STAGES, clampPercent, computePercentage } from "../progress";
+import {
+  CONSTRUCTION_STAGES,
+  clampPercent,
+  computePercentage,
+  mapConstructionProgress,
+} from "../progress";
 
 describe("CONSTRUCTION_STAGES", () => {
   it("weights sum to exactly 100", () => {
@@ -134,5 +139,146 @@ describe("clampPercent", () => {
 
   it("rounds up at the half", () => {
     expect(clampPercent(62.5)).toBe(63);
+  });
+});
+
+describe("mapConstructionProgress", () => {
+  const photoUrl = (photo: unknown) =>
+    `https://cdn.test/${(photo as { ref?: string })?.ref ?? "x"}.jpg`;
+
+  it("returns null with no milestones and no fallback", () => {
+    expect(mapConstructionProgress([], { photoUrl })).toBeNull();
+    expect(mapConstructionProgress(null, { photoUrl })).toBeNull();
+  });
+
+  it("falls back to the manual percentage when there are no milestones", () => {
+    const result = mapConstructionProgress([], {
+      photoUrl,
+      fallbackPercentage: 62,
+    });
+    expect(result).toEqual({ milestones: [], percentage: 62, source: "manual" });
+  });
+
+  it("clamps an out-of-range manual percentage", () => {
+    expect(
+      mapConstructionProgress([], { photoUrl, fallbackPercentage: 140 })
+        ?.percentage
+    ).toBe(100);
+    expect(
+      mapConstructionProgress([], { photoUrl, fallbackPercentage: -20 })
+        ?.percentage
+    ).toBe(0);
+  });
+
+  it("ignores the manual percentage once milestones exist", () => {
+    const result = mapConstructionProgress(
+      [{ stage: "foundation", status: "done" }],
+      { photoUrl, fallbackPercentage: 99 }
+    );
+    expect(result?.source).toBe("computed");
+    expect(result?.percentage).toBe(15);
+  });
+
+  it("returns all eight stages in canonical order whatever the input order", () => {
+    const result = mapConstructionProgress(
+      [
+        { stage: "roofing", status: "done" },
+        { stage: "foundation", status: "done" },
+      ],
+      { photoUrl }
+    );
+    expect(result?.milestones.map((m) => m.stage)).toEqual(
+      CONSTRUCTION_STAGES.map((s) => s.value)
+    );
+  });
+
+  it("fills unlisted stages as upcoming with no dates", () => {
+    const result = mapConstructionProgress(
+      [{ stage: "foundation", status: "done", completedDate: "2026-03-04" }],
+      { photoUrl }
+    );
+    const handover = result?.milestones.find((m) => m.stage === "handover");
+    expect(handover).toMatchObject({
+      status: "upcoming",
+      label: "Handover",
+      photos: [],
+    });
+    expect(handover?.completedDate).toBeUndefined();
+    expect(handover?.targetDate).toBeUndefined();
+  });
+
+  it("keeps completedDate only on done stages and targetDate only on the rest", () => {
+    const result = mapConstructionProgress(
+      [
+        {
+          stage: "foundation",
+          status: "done",
+          completedDate: "2026-03-04",
+          targetDate: "2026-02-01",
+        },
+        {
+          stage: "handover",
+          status: "upcoming",
+          completedDate: "2027-01-01",
+          targetDate: "2026-12-01",
+        },
+      ],
+      { photoUrl }
+    );
+    const foundation = result?.milestones.find((m) => m.stage === "foundation");
+    const handover = result?.milestones.find((m) => m.stage === "handover");
+    expect(foundation?.completedDate).toBe("2026-03-04");
+    expect(foundation?.targetDate).toBeUndefined();
+    expect(handover?.targetDate).toBe("2026-12-01");
+    expect(handover?.completedDate).toBeUndefined();
+  });
+
+  it("builds photo urls through the injected resolver and drops assetless entries", () => {
+    const result = mapConstructionProgress(
+      [
+        {
+          stage: "roofing",
+          status: "done",
+          photos: [
+            { asset: { _id: "a" }, ref: "one", alt: "New roof trusses" },
+            { alt: "no asset, dropped" },
+            { asset: { _id: "b" }, ref: "two" },
+          ],
+        },
+      ],
+      { photoUrl }
+    );
+    const roofing = result?.milestones.find((m) => m.stage === "roofing");
+    expect(roofing?.photos).toEqual([
+      { url: "https://cdn.test/one.jpg", alt: "New roof trusses" },
+      { url: "https://cdn.test/two.jpg", alt: "Roofing progress photo" },
+    ]);
+  });
+
+  it("drops an empty note rather than rendering a blank line", () => {
+    const result = mapConstructionProgress(
+      [{ stage: "finishes", status: "in-progress", note: "   " }],
+      { photoUrl }
+    );
+    expect(
+      result?.milestones.find((m) => m.stage === "finishes")?.note
+    ).toBeUndefined();
+  });
+
+  it("keeps a manual percentage of zero rather than treating it as absent", () => {
+    expect(mapConstructionProgress([], { photoUrl, fallbackPercentage: 0 })).toEqual({
+      milestones: [],
+      percentage: 0,
+      source: "manual",
+    });
+  });
+
+  it("rejects a non-finite manual percentage", () => {
+    expect(
+      mapConstructionProgress([], { photoUrl, fallbackPercentage: NaN })
+    ).toBeNull();
+    expect(
+      mapConstructionProgress([], { photoUrl, fallbackPercentage: Infinity })
+    ).toBeNull();
   });
 });

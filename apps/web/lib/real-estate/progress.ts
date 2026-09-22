@@ -104,3 +104,111 @@ export function computePercentage(
   }
   return clampPercent(earned);
 }
+
+/** `alt` is required, not optional: Studio requires it on every photo, and
+ *  mapPhotos falls back to a generated string when one is blank, so the
+ *  renderer never has to decide whether to show alt text. */
+export interface ConstructionPhoto {
+  url: string;
+  alt: string;
+}
+
+export interface ConstructionMilestone {
+  stage: string;
+  label: string;
+  status: MilestoneStatus;
+  /** Set only when status is "done". */
+  completedDate?: string;
+  /** Set only when status is not "done". */
+  targetDate?: string;
+  note?: string;
+  photos: ConstructionPhoto[];
+}
+
+export interface ConstructionProgress {
+  /** Always all eight stages, canonical order, whatever the admin entered. */
+  milestones: ConstructionMilestone[];
+  percentage: number;
+  source: "computed" | "manual";
+}
+
+/** The shape a milestone arrives in, whether from GROQ or anywhere later. */
+interface RawMilestone {
+  stage?: string | null;
+  status?: string | null;
+  completedDate?: string | null;
+  targetDate?: string | null;
+  note?: string | null;
+  photos?: unknown;
+}
+
+/** What one raw image looks like before its URL is resolved. */
+interface RawPhoto {
+  asset?: unknown;
+  alt?: string;
+}
+
+export interface MapProgressOptions {
+  /** Turns one raw image object into a URL. Injected so this module stays free
+   *  of the Sanity client, which throws at import time without env vars. */
+  photoUrl: (photo: unknown) => string;
+  /** The hand-typed completionPercentage, used only when there are no milestones. */
+  fallbackPercentage?: number | null;
+}
+
+function mapPhotos(
+  raw: unknown,
+  label: string,
+  photoUrl: (photo: unknown) => string
+): ConstructionPhoto[] {
+  if (!Array.isArray(raw)) return [];
+  return (raw as RawPhoto[])
+    .filter((photo) => Boolean(photo?.asset))
+    .map((photo) => ({
+      url: photoUrl(photo),
+      alt: photo?.alt?.trim() || `${label} progress photo`,
+    }));
+}
+
+/**
+ * Null when there is nothing worth rendering. Otherwise either a computed
+ * timeline, or — for every listing published before milestones existed — the
+ * hand-typed percentage with an empty milestone list.
+ */
+export function mapConstructionProgress(
+  raw: unknown,
+  options: MapProgressOptions
+): ConstructionProgress | null {
+  // Nullable elements: GROQ can return an array with holes, and the helpers
+  // above already tolerate them. Saying so in the type keeps it honest.
+  const entries: (RawMilestone | null | undefined)[] = Array.isArray(raw)
+    ? (raw as (RawMilestone | null | undefined)[])
+    : [];
+  const computed = computePercentage(entries);
+
+  if (computed == null) {
+    const fallback = options.fallbackPercentage;
+    if (typeof fallback !== "number" || !Number.isFinite(fallback)) return null;
+    return { milestones: [], percentage: clampPercent(fallback), source: "manual" };
+  }
+
+  const byStage = indexEntries(entries);
+
+  const milestones = CONSTRUCTION_STAGES.map<ConstructionMilestone>((stage) => {
+    const entry = byStage.get(stage.value);
+    const status = toStatus(entry?.status);
+    return {
+      stage: stage.value,
+      label: stage.label,
+      status,
+      completedDate:
+        status === "done" ? entry?.completedDate || undefined : undefined,
+      targetDate:
+        status === "done" ? undefined : entry?.targetDate || undefined,
+      note: entry?.note?.trim() || undefined,
+      photos: mapPhotos(entry?.photos, stage.label, options.photoUrl),
+    };
+  });
+
+  return { milestones, percentage: computed, source: "computed" };
+}
