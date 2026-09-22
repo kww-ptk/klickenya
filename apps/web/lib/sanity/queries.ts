@@ -89,6 +89,7 @@ const PROPERTY_CARD_FIELDS = `
   completionPercentage,
   developerName,
   unitsAvailable,
+  "milestoneStages": constructionMilestones[]{ stage, status },
   "photoCount": count(photos),
   "coverPhoto": photos[0]{ ${IMAGE_FIELDS} }
 `
@@ -500,6 +501,14 @@ export const PROPERTY_BY_SLUG_QUERY = groq`
     completionPercentage,
     developerName,
     unitsAvailable,
+    constructionMilestones[]{
+      stage,
+      status,
+      completedDate,
+      targetDate,
+      note,
+      photos[]{ ${IMAGE_FIELDS} }
+    },
     seoTitle,
     seoDescription,
     "agent": agent->{
