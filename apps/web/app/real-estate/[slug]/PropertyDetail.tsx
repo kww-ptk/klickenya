@@ -26,6 +26,7 @@ import { PropertyMap } from "@/components/real-estate/PropertyMap";
 import { PropertyEnquiryForm } from "@/components/real-estate/PropertyEnquiryForm";
 import { AgentContactCard } from "@/components/real-estate/AgentContactCard";
 import { SavePropertyButton } from "@/components/real-estate/SavePropertyButton";
+import { ConstructionTimeline } from "@/components/real-estate/ConstructionTimeline";
 import { PropertyPrice } from "@/components/real-estate/PropertyPrice";
 import {
   CATEGORY_BADGE_STYLES,
@@ -55,6 +56,7 @@ import {
 } from "@/lib/real-estate/format";
 import { mapPropertiesToCards } from "@/lib/real-estate/mappers";
 import { toCurrency } from "@/lib/real-estate/currency";
+import { mapConstructionProgress } from "@/lib/real-estate/progress";
 import { absoluteUrl, propertyListingSchema } from "@/lib/real-estate/schema";
 import { isKnownPlace } from "@/lib/real-estate/places";
 
@@ -88,6 +90,22 @@ async function PropertyDetail({ slug }: { slug: string }) {
       url: urlForImage(p).width(1600).url(),
       alt: p.alt || property.title,
     }));
+
+  // Computed from milestones when the listing has them, otherwise the
+  // hand-typed percentage, otherwise null and the section below shows nothing.
+  const progress = property.isNewDevelopment
+    ? mapConstructionProgress(property.constructionMilestones, {
+        // 444 = the 148px render width at 3x, and 444/296 is exactly the 3:2 the
+        // component crops to, so nothing is thrown away to object-cover.
+        photoUrl: (photo: any) => urlForImage(photo).width(444).height(296).url(),
+        fallbackPercentage: property.completionPercentage,
+      })
+    : null;
+
+  // Named once rather than compared four times below: the two shapes are
+  // mutually exclusive, and that is easier to see when it is stated.
+  const hasTimeline = progress?.source === "computed";
+  const hasManualCompletion = progress?.source === "manual";
 
   const similar = await sanityClient
     .fetch(SIMILAR_PROPERTIES_QUERY, {
@@ -340,51 +358,77 @@ async function PropertyDetail({ slug }: { slug: string }) {
 
             {property.isNewDevelopment &&
               (property.developerName ||
-                property.completionPercentage != null ||
-                property.unitsAvailable != null) && (
+                property.unitsAvailable != null ||
+                progress) && (
                 <>
                   <section className="mb-7">
                     <h2 className="font-display mb-5 text-[22px] font-bold tracking-[-0.02em] text-dark">
                       Development details
                     </h2>
-                    <dl className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                      {property.developerName && (
-                        <div className="rounded-[18px] border border-border bg-surface p-4">
-                          <dt className="text-[12px] font-bold uppercase tracking-wide text-text3">
-                            Developer
-                          </dt>
-                          <dd className="mt-1 text-[15px] font-semibold text-text">
-                            {property.developerName}
-                          </dd>
-                        </div>
-                      )}
-                      {property.completionPercentage != null && (
-                        <div className="rounded-[18px] border border-border bg-surface p-4">
-                          <dt className="text-[12px] font-bold uppercase tracking-wide text-text3">
-                            Completion
-                          </dt>
-                          <dd className="mt-1 text-[15px] font-semibold text-text">
-                            {property.completionPercentage}%
-                          </dd>
-                          <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-border">
-                            <div
-                              className="h-full rounded-full bg-purple2"
-                              style={{ width: `${Math.min(100, property.completionPercentage)}%` }}
-                            />
+                    {/* The Completion card only appears when there is no
+                        timeline. With one, the timeline owns the percentage —
+                        two numbers in one section can disagree.
+
+                        The list is skipped entirely when none of its three
+                        cards apply, which a development with milestones but no
+                        named developer or unit count hits. An empty <dl> is a
+                        definition list with no terms in it. */}
+                    {(property.developerName ||
+                      hasManualCompletion ||
+                      property.unitsAvailable != null) && (
+                      <dl
+                        className={cn(
+                          "grid grid-cols-1 gap-4",
+                          hasTimeline ? "sm:grid-cols-2" : "sm:grid-cols-3"
+                        )}
+                      >
+                        {property.developerName && (
+                          <div className="rounded-[18px] border border-border bg-surface p-4">
+                            <dt className="text-[12px] font-bold uppercase tracking-wide text-text3">
+                              Developer
+                            </dt>
+                            <dd className="mt-1 text-[15px] font-semibold text-text">
+                              {property.developerName}
+                            </dd>
                           </div>
-                        </div>
-                      )}
-                      {property.unitsAvailable != null && (
-                        <div className="rounded-[18px] border border-border bg-surface p-4">
-                          <dt className="text-[12px] font-bold uppercase tracking-wide text-text3">
-                            Units available
-                          </dt>
-                          <dd className="mt-1 text-[15px] font-semibold text-text">
-                            {property.unitsAvailable}
-                          </dd>
-                        </div>
-                      )}
-                    </dl>
+                        )}
+                        {hasManualCompletion && progress && (
+                          <div className="rounded-[18px] border border-border bg-surface p-4">
+                            <dt className="text-[12px] font-bold uppercase tracking-wide text-text3">
+                              Completion
+                            </dt>
+                            {/* Rounded by clampPercent, so a hand-typed 45.7
+                                shows as 46. The computed path rounds too, and
+                                one page should not carry two precisions. */}
+                            <dd className="mt-1 text-[15px] font-semibold text-text">
+                              {progress.percentage}%
+                            </dd>
+                            <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-border">
+                              <div
+                                className="h-full rounded-full bg-purple2"
+                                style={{ width: `${progress.percentage}%` }}
+                              />
+                            </div>
+                          </div>
+                        )}
+                        {property.unitsAvailable != null && (
+                          <div className="rounded-[18px] border border-border bg-surface p-4">
+                            <dt className="text-[12px] font-bold uppercase tracking-wide text-text3">
+                              Units available
+                            </dt>
+                            <dd className="mt-1 text-[15px] font-semibold text-text">
+                              {property.unitsAvailable}
+                            </dd>
+                          </div>
+                        )}
+                      </dl>
+                    )}
+
+                    {hasTimeline && progress && (
+                      <div className="mt-5">
+                        <ConstructionTimeline progress={progress} />
+                      </div>
+                    )}
                   </section>
                   <hr className="mb-7 border-border" />
                 </>
@@ -462,7 +506,7 @@ async function PropertyDetail({ slug }: { slug: string }) {
       </article>
 
       {/* ── Mobile enquiry ─────────────────── */}
-      <div id="enquire" className="mx-auto max-w-[560px] px-5 pb-[160px] md:pb-28 lg:hidden">
+      <div id="enquire" className="mx-auto max-w-[560px] px-5 pb-28 lg:hidden">
         <div className="rounded-[32px] border border-border bg-white p-7 shadow-lg">
           {agent && (
             <>
@@ -484,11 +528,10 @@ async function PropertyDetail({ slug }: { slug: string }) {
       </div>
 
       {/* ── Mobile bottom bar ──────────────────
-          MobileBottomNav in the root layout is fixed at bottom-0, 62px tall,
-          z-200 and md:hidden. Sitting this bar at bottom-0 too put the price
-          and the Enquire button underneath it. Below md it stacks above the
-          nav; from md up the nav is gone and this returns to the bottom. */}
-      <div className="fixed inset-x-0 bottom-[calc(62px+env(safe-area-inset-bottom))] z-[150] flex items-center justify-between gap-3 border-t border-border bg-white px-5 py-3.5 md:bottom-0 lg:hidden">
+          This used to sit 62px up to clear MobileBottomNav. That nav no longer
+          renders anywhere under /real-estate, so the offset left the bar
+          hovering over a strip of page. It belongs on the floor. */}
+      <div className="fixed inset-x-0 bottom-0 z-[150] flex items-center justify-between gap-3 border-t border-border bg-white px-5 py-3.5 pb-[calc(14px+env(safe-area-inset-bottom))] lg:hidden">
         <div className="min-w-0">
           <PropertyPrice
             price={property.price ?? 0}

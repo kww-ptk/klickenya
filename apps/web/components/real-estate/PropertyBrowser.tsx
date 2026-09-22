@@ -129,22 +129,9 @@ function PropertyBrowser({
 
   return (
     <div className="flex flex-col gap-6 lg:flex-row lg:gap-10">
-      {/* ── Desktop sidebar ─────────────────── */}
-      <aside className="hidden w-[276px] shrink-0 lg:block">
-        <div className="sticky top-[88px] rounded-[24px] border border-border bg-white p-5">
-          <h2 className="mb-4 text-[15px] font-bold text-text">Refine search</h2>
-          <PropertyFilterPanel
-            filters={filters}
-            facets={facets}
-            onChange={handleChange}
-            onReset={handleReset}
-            showCityFilter={showCityFilter}
-            showNeighbourhoodFilter={showNeighbourhoodFilter}
-          />
-        </div>
-      </aside>
-
       {/* ── Results ─────────────────────────── */}
+      {/* Results come first in the DOM, which also puts the sidebar on the
+          right of the row without a reversed flex direction. */}
       <div className="min-w-0 flex-1">
         {/* Toolbar */}
         <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
@@ -253,6 +240,21 @@ function PropertyBrowser({
           </div>
         )}
       </div>
+
+      {/* ── Desktop sidebar — right-hand column ─ */}
+      <aside className="hidden w-[276px] shrink-0 lg:block">
+        <div className="sticky top-[88px] rounded-[24px] border border-border bg-white p-5">
+          <h2 className="mb-4 text-[15px] font-bold text-text">Refine search</h2>
+          <PropertyFilterPanel
+            filters={filters}
+            facets={facets}
+            onChange={handleChange}
+            onReset={handleReset}
+            showCityFilter={showCityFilter}
+            showNeighbourhoodFilter={showNeighbourhoodFilter}
+          />
+        </div>
+      </aside>
 
       {/* ── Mobile filter sheet ─────────────── */}
       {sheetOpen && (

@@ -44,8 +44,12 @@ const NAV_ITEMS = [
   },
 ] as const;
 
-// Routes where the bottom nav should be hidden
-const HIDDEN_ROUTES = ["/admin", "/studio", "/api", "/coming-soon", "/claim", "/login", "/register", "/forgot-password", "/reset-password", "/dashboard", "/account", "/m", "/pos", "/receipt", "/kitchen", "/embed", "/scan", "/eat", "/eatklick", "/order", "/rider", "/tablet"];
+// Routes where the bottom nav should be hidden.
+// /real-estate is the whole section, not just its detail pages: real estate has
+// its own category strip at the top of every page, and two competing menus on a
+// phone screen left almost nothing for the properties themselves. The Real
+// Estate item below is still how people get in from the rest of the site.
+const HIDDEN_ROUTES = ["/admin", "/studio", "/api", "/coming-soon", "/claim", "/login", "/register", "/forgot-password", "/reset-password", "/dashboard", "/account", "/m", "/pos", "/receipt", "/kitchen", "/embed", "/scan", "/eat", "/eatklick", "/order", "/rider", "/tablet", "/real-estate"];
 
 // Pattern: /<type>/<city>/<slug> — listing detail pages have 3+ segments
 function isListingDetail(path: string): boolean {
@@ -59,12 +63,6 @@ function isListingDetail(path: string): boolean {
   ];
   const segments = path.split("/").filter(Boolean);
   return segments.length >= 3 && types.includes(segments[0]);
-}
-
-// Property detail pages: /real-estate/<category>/<city>/<slug>
-function isPropertyDetail(path: string): boolean {
-  const segments = path.split("/").filter(Boolean);
-  return segments[0] === "real-estate" && segments.length >= 3;
 }
 
 function MobileBottomNav() {
@@ -86,7 +84,6 @@ function MobileBottomNav() {
 
   if (HIDDEN_ROUTES.some((r) => pathname.startsWith(r))) return null;
   if (isListingDetail(pathname)) return null;
-  if (isPropertyDetail(pathname)) return null;
 
   return (
     <nav

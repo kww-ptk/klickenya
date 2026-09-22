@@ -1,6 +1,7 @@
 import { urlForImage } from "@/lib/sanity/image";
 import { toCurrency, type Currency } from "./currency";
 import { isListedBy, type ListedBy } from "./constants";
+import { computePercentage } from "./progress";
 
 /**
  * The shape every property grid renders. Built once here instead of the four
@@ -69,7 +70,12 @@ export function mapPropertyToCard(p: any): PropertyCardData {
     createdAt: p._createdAt,
     updatedAt: p._updatedAt,
     developerName: p.developerName ?? undefined,
-    completionPercentage: p.completionPercentage ?? undefined,
+    // Computed when the listing has milestones, so a card can never disagree
+    // with its own detail page. computePercentage returns null — not 0 — for a
+    // listing without milestones, which is what lets this fall through to the
+    // hand-typed number instead of showing every old listing as 0%.
+    completionPercentage:
+      computePercentage(p.milestoneStages) ?? p.completionPercentage ?? undefined,
     unitsAvailable: p.unitsAvailable ?? undefined,
   };
 }
