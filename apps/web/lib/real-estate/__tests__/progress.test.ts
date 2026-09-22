@@ -311,3 +311,37 @@ describe("formatStageMonth", () => {
     expect(formatStageMonth("2026-00-10")).toBeNull();
   });
 });
+
+describe("stage vocabulary parity with Sanity Studio", () => {
+  // The Studio schema and this module each carry their own copy of the eight
+  // stage values. A value that exists in Studio but not here scores nothing and
+  // drags the percentage down with no error anywhere — the same class of silent
+  // drift CLAUDE.md warns about for projections. A comment asking two people to
+  // remember is not a guard, so this reads the Studio file and compares.
+  //
+  // Read as text rather than imported: the Studio file imports `sanity`, which
+  // does not load in this node test environment.
+  it("matches STAGES in apps/studio/schemas/constructionMilestone.ts", async () => {
+    const { readFile } = await import("node:fs/promises");
+    const { fileURLToPath } = await import("node:url");
+    const { dirname, resolve } = await import("node:path");
+
+    const here = dirname(fileURLToPath(import.meta.url));
+    const schemaPath = resolve(
+      here,
+      "../../../../studio/schemas/constructionMilestone.ts"
+    );
+    const source = await readFile(schemaPath, "utf8");
+
+    const block = /export const STAGES = \[([\s\S]*?)\]/.exec(source);
+    expect(block, "STAGES array not found in the Studio schema").not.toBeNull();
+
+    const studio = Array.from(
+      block![1].matchAll(/\{\s*title:\s*'([^']+)',\s*value:\s*'([^']+)'\s*\}/g)
+    ).map((m) => ({ label: m[1], value: m[2] }));
+
+    expect(studio).toEqual(
+      CONSTRUCTION_STAGES.map((s) => ({ label: s.label, value: s.value }))
+    );
+  });
+});

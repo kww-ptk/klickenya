@@ -195,7 +195,8 @@ Props: `{ progress: ConstructionProgress }`.
 
 Structure, following Option A as approved:
 
-- **Header** — `h2` "Construction progress" with the percentage to its right at display
+- **Header** — `h3` "Construction progress" (an `h3`, not an `h2`: it nests under the
+  section's own "Development details" heading) with the percentage to its right at display
   weight, then a full-width bar. Bar uses `bg-purple2` on `bg-border`, matching the bar
   already in the Development details card.
 - **Rail** — one row per stage. Left column is a status icon over a 2px connector line
@@ -204,7 +205,10 @@ Structure, following Option A as approved:
 - **Row content** — stage label; an "In progress" pill on the active stage; the date line
   ("Completed March 2026" / "Target December 2026" / nothing); the note; then the photo
   strip.
-- **Photos** — `next/image` at `width(320).height(220)`, matching how `PropertyCard` and
+- **Photos** — `next/image` at `width(444).height(296)` — 444 is the 148px render width at
+  3x, and 444/296 is exactly the 3:2 the component crops to, so `object-cover` discards
+  nothing. (An earlier draft said 320x220, which was both soft on a 3x screen and a slightly
+  wrong ratio.), matching how `PropertyCard` and
   `PropertyGallery` already build Sanity URLs. Laid out as a horizontally scrollable strip
   (`overflow-x-auto scrollbar-none`), which is the pattern the category nav already uses.
   Alt text comes from the image's required `alt` field.

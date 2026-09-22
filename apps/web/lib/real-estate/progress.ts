@@ -4,10 +4,18 @@
  * Everything this module knows — the stage vocabulary, what each stage is
  * worth, how a percentage falls out of them — lives here and nowhere else. It
  * imports nothing from Sanity on purpose: milestones are admin-edited in Studio
- * today, but the intention is a developer-facing editor later, and when that
- * happens only the caller changes. That is also why the photo URL builder
- * arrives as a parameter rather than an import — `lib/sanity/client.ts` throws
- * at import time without env vars, which would make this module untestable.
+ * today, but the intention is a developer-facing editor later. That is also why
+ * the photo URL builder arrives as a parameter rather than an import —
+ * `lib/sanity/client.ts` throws at import time without env vars, which would
+ * make this module untestable.
+ *
+ * One honest caveat on that portability. Stages, weights, statuses, the
+ * percentage and the dates are all storage-agnostic: PostgREST hands back a
+ * `date` column as "YYYY-MM-DD", which is exactly what formatStageMonth parses.
+ * But mapPhotos still filters on `photo.asset`, which is a Sanity document
+ * shape. A caller storing photos as plain { url, alt } rows would pass a
+ * perfectly good photoUrl and get an empty strip back, silently. Fix that when
+ * a second caller actually exists rather than guessing its shape now.
  */
 
 export interface ConstructionStage {
@@ -193,6 +201,7 @@ export interface MapProgressOptions {
   fallbackPercentage?: number | null;
 }
 
+/** The `asset` guard is Sanity-shaped — see the caveat in the file header. */
 function mapPhotos(
   raw: unknown,
   label: string,
