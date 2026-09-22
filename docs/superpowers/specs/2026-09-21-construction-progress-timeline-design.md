@@ -75,7 +75,8 @@ defineType({
 })
 ```
 
-Registered in `apps/studio/schemas/index.ts`.
+Registered in `apps/studio/schemaTypes/index.ts`, which is where the schema array actually
+lives — it imports from `../schemas/`. There is no `apps/studio/schemas/index.ts`.
 
 ### On `property`
 
@@ -99,7 +100,14 @@ milestones are present.
 
 ## The portable seam — `apps/web/lib/real-estate/progress.ts`
 
-New pure module. No React, no Sanity imports beyond the image URL builder, no I/O.
+New pure module. No React, no Sanity imports at all, no I/O.
+
+The photo URL builder arrives as a parameter rather than an import. This is not
+fastidiousness: `lib/sanity/image.ts` imports `lib/sanity/client.ts`, which calls
+`createClient({ projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID! })` at import time and
+throws without env vars. A Vitest file importing this module would fail to load — verified
+by probe against the real config. Injecting the builder is also what makes the Supabase-later
+story concrete: that caller passes a different one.
 
 ```ts
 export interface ConstructionStage { value: string; label: string; weight: number }
@@ -129,7 +137,12 @@ export function computePercentage(
 
 export function mapConstructionProgress(
   raw: unknown,
-  fallbackPercentage?: number
+  options: {
+    /** Turns one raw image object into a URL. */
+    photoUrl: (photo: unknown) => string
+    /** The hand-typed completionPercentage, used only when there are no milestones. */
+    fallbackPercentage?: number | null
+  }
 ): ConstructionProgress | null
 ```
 
@@ -145,9 +158,9 @@ back to the manual number, so the distinction is load-bearing rather than stylis
 
 `mapConstructionProgress` returns `null` when there is nothing to show. When `raw` holds
 milestones it builds all eight (filling unlisted stages as `upcoming` with no dates) and
-sets `source: 'computed'`. When `raw` is empty but `fallbackPercentage` is a number, it
-returns an empty milestone list with that percentage and `source: 'manual'`, which is what
-every already-published listing hits.
+sets `source: 'computed'`. When `raw` is empty but `options.fallbackPercentage` is a number,
+it returns an empty milestone list with that percentage clamped, and `source: 'manual'`,
+which is what every already-published listing hits.
 
 **This function is the whole "developer later" hedge.** Moving progress to Supabase changes
 what feeds it. Nothing downstream changes.
