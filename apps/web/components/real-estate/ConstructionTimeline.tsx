@@ -15,9 +15,9 @@ import type {
  * showing all eight gives the buyer the whole roadmap and makes the gaps read
  * as "not there yet" rather than "not recorded".
  *
- * Server component on purpose — no state, no effects. The page is statically
- * rendered with revalidate = 3600, so every stage stays in the HTML for
- * indexing and nothing waits on hydration.
+ * Server component on purpose — no state, no effects. Every stage is in the
+ * HTML the server sends, so nothing waits on hydration — true whether the
+ * page renders statically or per request.
  */
 
 interface ConstructionTimelineProps {
